@@ -31,6 +31,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 + (NSArray <Class> *)registeredAuthenticationMethodClasses; //!< Array of registered authentication method classes
 
 #pragma mark - Identification
++ (OCAuthenticationMethodType)type;
 + (OCAuthenticationMethodIdentifier)identifier;
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
