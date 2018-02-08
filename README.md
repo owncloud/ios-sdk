@@ -1,4 +1,4 @@
-#  ownCloud iOS SDK  `WORK IN PROGRESS`
+#  ownCloud iOS SDK  `WORK IN PROGRESS`
 
 ## Introduction
 
