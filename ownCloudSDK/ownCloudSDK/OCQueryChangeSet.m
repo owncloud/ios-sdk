@@ -10,4 +10,9 @@
 
 @implementation OCQueryChangeSet
 
+- (void)enumerateChangesUsingBlock:(OCQueryChangeSetEnumerator)enumerator
+{
+	// Stub implementation
+}
+
 @end

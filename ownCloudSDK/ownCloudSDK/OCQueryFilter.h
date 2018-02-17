@@ -28,6 +28,9 @@ typedef BOOL(^OCQueryFilterHandler)(OCQuery *query, OCQueryFilter *filter, OCIte
 
 #pragma mark - Convenience class
 @interface OCQueryFilter : NSObject <OCQueryFilter>
+{
+	OCQueryFilterHandler _filterHandler;
+}
 
 @property(copy) OCQueryFilterHandler filterHandler;
 

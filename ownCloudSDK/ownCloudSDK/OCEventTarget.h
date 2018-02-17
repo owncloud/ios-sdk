@@ -10,6 +10,10 @@
 #import "OCEvent.h"
 
 @interface OCEventTarget : NSObject <NSSecureCoding>
+{
+	OCEventID _eventID;
+	OCEventHandlerIdentifier _eventHandlerIdentifier;
+}
 
 @property(readonly) OCEventID eventID;
 @property(readonly) OCEventHandlerIdentifier eventHandlerIdentifier;

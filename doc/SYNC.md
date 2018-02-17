@@ -1,7 +1,9 @@
 # Sync Strategies
-*by Felix Schwarz*
+*by Felix Schwarz for ownCloud GmbH*
 
 An overview of sync strategies for use by the ownCloud iOS SDK.
+
+This document only covers what happends at sync time. Other UI interactions are outside the scope of this document.
 
 # Guiding principles
 1. Avoid loss of any data changed by the user - locally or remotely.
@@ -56,9 +58,14 @@ An overview over which cases actions handle - and how they handle them. Please r
 
 ### Create Directory
 - **Item with same name and path exists on server**:
-  - existing item is a directory: do nothing.
-  - existing item is a file: Inform user and remove Sync Record.
-- **Item can't be created**: Inform user. Keep Sync Record if there are other, dependant Sync Records. Remove Sync Record if there are not.
+  - existing item is a directory:
+    - if the user didn't also add one or more items in that directory: do nothing and remove the Sync Record.
+    - if the user did also add one or more items in that directory: inform user and offer to either
+      - create the directory with a different name (and adjust the pending Sync Records and local copies of any connected items inside the new directory accordingly)
+      - add the items to the already existing directory on the server
+  - existing item is a file:
+    - prompt user for a different name for the directory (and adjust the pending Sync Records and local copies of any connected items inside the new directory accordingly)
+- **Item can't be created**: Inform user and offer picking a different name, retrying or - if there are no other, dependant Sync Records - cancel the folder creation (in which case the Sync Record can be removed immediately).
 - **Other server error**: Inform user and keep Sync Record.
 - Note: the creation of a directory can be a prerequisite of syncing additional files that were put into the new folder to create.
 

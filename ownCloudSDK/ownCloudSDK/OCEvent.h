@@ -34,6 +34,12 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 @end
 
 @interface OCEvent : NSObject
+{
+	OCEventID _eventID;
+	OCEventType _eventType;
+
+	NSDictionary *_attributes;
+}
 
 @property(assign) OCEventID eventID; 	//!< For events created in reaction to a command, the eventID passed to the command. OCEventIDUnknown otherwise.
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.

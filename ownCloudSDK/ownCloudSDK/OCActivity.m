@@ -10,4 +10,9 @@
 
 @implementation OCActivity
 
+- (void)cancel
+{
+	// Stub implementation
+}
+
 @end

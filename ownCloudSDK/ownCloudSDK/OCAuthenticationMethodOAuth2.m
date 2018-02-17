@@ -11,3 +11,5 @@
 @implementation OCAuthenticationMethodOAuth2
 
 @end
+
+OCAuthenticationMethodIdentifier OCAuthenticationMethodOAuth2Identifier = @"com.owncloud.oauth2";

@@ -14,6 +14,15 @@ typedef NSString* OCSyncAction NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
 
 @interface OCSyncRecord : NSObject <NSSecureCoding>
+{
+	OCSyncAction _action;
+	NSDate *_timestamp;
+
+	NSData *_archivedServerItemData;
+	OCItem *_archivedServerItem;
+
+	NSDictionary<OCSyncActionParameter, id> *_parameters;
+}
 
 @property(readonly) OCSyncAction action; //!< The action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered

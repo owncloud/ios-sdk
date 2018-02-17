@@ -29,6 +29,14 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @end
 
 @interface OCCore : NSObject <OCEventHandler>
+{
+	OCBookmark *_bookmark;
+
+	OCVault *_vault;
+	OCConnection *_connection;
+	
+	__weak id <OCCoreDelegate> _delegate;
+}
 
 @property(readonly) OCBookmark *bookmark; //!< Bookmark identifying the server this core manages.
 
@@ -38,6 +46,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(weak) id <OCCoreDelegate> delegate;
 
 #pragma mark - Init
+- (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
 #pragma mark - Query

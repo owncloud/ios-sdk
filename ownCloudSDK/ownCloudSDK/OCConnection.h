@@ -20,6 +20,15 @@
 @class OCConnectionQueue;
 
 @interface OCConnection : NSObject
+{
+	OCBookmark *_bookmark;
+	OCAuthenticationMethod *_authenticationMethod;
+
+	OCConnectionQueue *_commandQueue;
+
+	OCConnectionQueue *_uploadQueue;
+	OCConnectionQueue *_downloadQueue;
+}
 
 @property(strong) OCBookmark *bookmark;
 @property(strong) OCAuthenticationMethod *authenticationMethod;
@@ -29,6 +38,8 @@
 @property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
 @property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
 
+#pragma mark - Init
+- (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark;
 
 #pragma mark - Authentication

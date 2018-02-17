@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NS_ENUM(NSUInteger, OCShareType)
+typedef NS_ENUM(NSInteger, OCShareType)
 {
 	OCShareTypePublicLink,
 	OCShareTypeUserShare

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "OCKeychain.h"
 
 /*
 	OCAppIdentity groups information on an app's identifiers for use throughout the SDK (for keychain access, data shared between extensions and app, etc.).
@@ -24,13 +25,30 @@
 */
 
 @interface OCAppIdentity : NSObject
+{
+	NSString *_appIdentifierPrefix;
+	NSString *_keychainAccessGroupIdentifier;
+	NSString *_appGroupIdentifier;
+	NSURL *_appGroupContainerURL;
+	NSString *_appName;
+	
+	OCKeychain *_keychain;
+}
 
+#pragma mark - App Identifiers
 @property(strong,nonatomic) NSString *appIdentifierPrefix;
 
 @property(strong,nonatomic) NSString *keychainAccessGroupIdentifier;
 
 @property(strong,nonatomic) NSString *appGroupIdentifier;
+
+@property(strong,nonatomic) NSString *appName;
+
+#pragma mark - App Paths
 @property(strong,nonatomic) NSURL *appGroupContainerURL;
+
+#pragma mark - App Resources
+@property(strong,nonatomic) OCKeychain *keychain;
 
 + (instancetype)sharedAppIdentity;
 
