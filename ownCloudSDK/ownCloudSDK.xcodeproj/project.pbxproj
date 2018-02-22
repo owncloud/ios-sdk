@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
 		DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7E0A6D2036F28B006111FA /* OCKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A6E2036F28B006111FA /* OCKeychain.m */; };
 		DC7E0A7B203732B3006111FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A7A203732B3006111FA /* AppDelegate.m */; };
@@ -79,6 +81,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DC545E78203F7DD0006111FA /* OCUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCUser.h; sourceTree = "<group>"; };
+		DC545E79203F7DD0006111FA /* OCUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCUser.m; sourceTree = "<group>"; };
 		DC7E0A6D2036F28B006111FA /* OCKeychain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeychain.h; sourceTree = "<group>"; };
 		DC7E0A6E2036F28B006111FA /* OCKeychain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeychain.m; sourceTree = "<group>"; };
 		DC7E0A712036F60C006111FA /* BookmarkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkTests.m; sourceTree = "<group>"; };
@@ -172,10 +176,10 @@
 		DC7E0A78203732B3006111FA /* Ocean */ = {
 			isa = PBXGroup;
 			children = (
-				DC7E0A79203732B3006111FA /* AppDelegate.h */,
 				DC7E0A7A203732B3006111FA /* AppDelegate.m */,
-				DC7E0A7C203732B3006111FA /* ViewController.h */,
+				DC7E0A79203732B3006111FA /* AppDelegate.h */,
 				DC7E0A7D203732B3006111FA /* ViewController.m */,
+				DC7E0A7C203732B3006111FA /* ViewController.h */,
 				DC7E0A7F203732B3006111FA /* Main.storyboard */,
 				DC7E0A82203732B3006111FA /* Assets.xcassets */,
 				DC7E0A84203732B3006111FA /* LaunchScreen.storyboard */,
@@ -305,6 +309,8 @@
 			children = (
 				DCC8F9F5202855A200EB6701 /* OCShare.m */,
 				DCC8F9F4202855A200EB6701 /* OCShare.h */,
+				DC545E79203F7DD0006111FA /* OCUser.m */,
+				DC545E78203F7DD0006111FA /* OCUser.h */,
 			);
 			name = Share;
 			sourceTree = "<group>";
@@ -405,6 +411,7 @@
 			files = (
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
+				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
@@ -585,6 +592,7 @@
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DCC8F9E72028556500EB6701 /* OCConnection.m in Sources */,

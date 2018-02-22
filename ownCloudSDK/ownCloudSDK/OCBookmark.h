@@ -6,15 +6,30 @@
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2018, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import <Foundation/Foundation.h>
 #import "OCAuthenticationMethod.h"
 
+typedef NSUUID* OCBookmarkUUID;
+
 @interface OCBookmark : NSObject <NSSecureCoding>
 
-@property(readonly) NSUUID *uuid; //!< UUID uniquely identifying the bookmark
+@property(readonly) OCBookmarkUUID uuid; //!< UUID uniquely identifying the bookmark
 
 @property(strong) NSString *name; //!< Name of the server
 @property(strong) NSURL *url; //!< URL of the server
+
+@property(strong) NSData *certificateData; //!< Certificate last used by the server this bookmark refers to
+@property(strong) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
 
 @property(strong) OCAuthenticationMethodIdentifier authenticationMethodIdentifier; //!< Identifies the authentication method to use
 @property(strong,nonatomic) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain.
@@ -29,3 +44,4 @@
 - (NSData *)bookmarkData; //!< Returns the BookmarkData for the bookmark, suitable for saving to disk.
 
 @end
+

@@ -6,6 +6,16 @@
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2018, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import <Foundation/Foundation.h>
 
 @class OCConnection;
@@ -19,8 +29,8 @@ typedef void(^OCAuthenticationMethodAuthenticationCompletionHandler)(NSError *er
 
 typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 {
-	OCAuthenticationMethodTypePassphrase,	//!< Authentication method is password based (=> UI should show password entry field)
-	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no password entry field)
+	OCAuthenticationMethodTypePassphrase,	//!< Authentication method is password based (=> UI should show username and password entry field)
+	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
 };
 
 @interface OCAuthenticationMethod : NSObject
@@ -45,8 +55,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 @end
 
+extern OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey; //!< For passphrase-based authentication methods: the user name (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey; //!< For passphrase-based authentication methods: the passphrase (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey; //!< The UIViewController to use when presenting a view controller (for f.ex. token-based authentication mechanisms like OAuth2) (value type: UIViewController*)
 
 #import "OCConnection.h"
-#import "OCConnectionRequest.h"
