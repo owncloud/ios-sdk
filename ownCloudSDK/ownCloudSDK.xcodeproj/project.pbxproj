@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
+		DC72568020405752006111FA /* OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72567E20405752006111FA /* OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC72568120405752006111FA /* OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72567F20405752006111FA /* OCClassSettings.m */; };
 		DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7E0A6D2036F28B006111FA /* OCKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A6E2036F28B006111FA /* OCKeychain.m */; };
 		DC7E0A7B203732B3006111FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A7A203732B3006111FA /* AppDelegate.m */; };
@@ -83,6 +85,8 @@
 /* Begin PBXFileReference section */
 		DC545E78203F7DD0006111FA /* OCUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCUser.h; sourceTree = "<group>"; };
 		DC545E79203F7DD0006111FA /* OCUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCUser.m; sourceTree = "<group>"; };
+		DC72567E20405752006111FA /* OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettings.h; sourceTree = "<group>"; };
+		DC72567F20405752006111FA /* OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettings.m; sourceTree = "<group>"; };
 		DC7E0A6D2036F28B006111FA /* OCKeychain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeychain.h; sourceTree = "<group>"; };
 		DC7E0A6E2036F28B006111FA /* OCKeychain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeychain.m; sourceTree = "<group>"; };
 		DC7E0A712036F60C006111FA /* BookmarkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkTests.m; sourceTree = "<group>"; };
@@ -186,7 +190,8 @@
 				DC7E0A87203732B3006111FA /* Info.plist */,
 				DC7E0A88203732B3006111FA /* main.m */,
 			);
-			path = Ocean;
+			name = Ocean;
+			path = ../Example/Ocean;
 			sourceTree = "<group>";
 		};
 		DCC8F9A1202852A200EB6701 = {
@@ -385,6 +390,8 @@
 			children = (
 				DCC8FA20202B218100EB6701 /* OCAppIdentity.m */,
 				DCC8FA1F202B218100EB6701 /* OCAppIdentity.h */,
+				DC72567F20405752006111FA /* OCClassSettings.m */,
+				DC72567E20405752006111FA /* OCClassSettings.h */,
 				DC7E0A6E2036F28B006111FA /* OCKeychain.m */,
 				DC7E0A6D2036F28B006111FA /* OCKeychain.h */,
 			);
@@ -409,6 +416,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
@@ -588,6 +596,7 @@
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
 				DCC8F9DE2028553000EB6701 /* OCActivity.m in Sources */,
 				DCC8FA2A202B37B800EB6701 /* OCConnectionQueue.m in Sources */,
+				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
@@ -651,7 +660,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = Ocean/Info.plist;
+				INFOPLIST_FILE = ../Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -664,7 +673,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = Ocean/Info.plist;
+				INFOPLIST_FILE = ../Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";

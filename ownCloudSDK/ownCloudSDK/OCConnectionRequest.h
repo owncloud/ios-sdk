@@ -22,8 +22,8 @@
 #import "OCBookmark.h"
 
 typedef NSString* OCConnectionRequestMethod NS_TYPED_ENUM;
-typedef NSDictionary<NSString*,NSString*>* OCConnectionHeaderFields;
-typedef NSDictionary<NSString*,NSString*>* OCConnectionParameters;
+typedef NSMutableDictionary<NSString*,NSString*>* OCConnectionHeaderFields;
+typedef NSMutableDictionary<NSString*,NSString*>* OCConnectionParameters;
 
 typedef float OCConnectionRequestPriority;
 typedef NSString* OCConnectionRequestGroupID;
@@ -35,8 +35,10 @@ typedef NSString* OCConnectionRequestGroupID;
 
 	OCBookmarkUUID _bookmarkUUID;
 
-	NSURL *_url;
 	OCConnectionRequestMethod _method;
+
+	NSURL *_url;
+	OCConnectionParameters _parameters;
 	OCConnectionHeaderFields _headerFields;
 	NSData *_bodyData;
 	NSURL *_bodyURL;
@@ -64,6 +66,12 @@ typedef NSString* OCConnectionRequestGroupID;
 
 @property(assign) OCConnectionRequestPriority priority;	//!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority).
 @property(strong) OCConnectionRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
+
+- (NSString *)valueForParameter:(NSString *)parameter;
+- (void)setValue:(NSString *)value forParameter:(NSString *)parameter;
+
+- (NSString *)valueForHeaderField:(NSString *)headerField;
+- (void)setValue:(NSString *)value forHeaderField:(NSString *)headerField;
 
 @end
 

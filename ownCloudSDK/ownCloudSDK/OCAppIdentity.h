@@ -60,6 +60,7 @@
 #pragma mark - App Resources
 @property(strong,nonatomic) OCKeychain *keychain;
 
+#pragma mark - Singleton
 + (instancetype)sharedAppIdentity;
 
 @end

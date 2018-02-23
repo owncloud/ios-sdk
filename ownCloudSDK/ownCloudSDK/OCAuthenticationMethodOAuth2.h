@@ -17,9 +17,16 @@
  */
 
 #import "OCAuthenticationMethod.h"
+#import "OCClassSettings.h"
 
-@interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod
+@interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod <OCClassSettingsSupport>
 
 @end
 
 extern OCAuthenticationMethodIdentifier OCAuthenticationMethodOAuth2Identifier;
+
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2AuthorizationEndpoint;
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint;
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI;
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID;
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret;
