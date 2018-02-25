@@ -8,9 +8,9 @@ This document provides an overview over the available sections and variables.
 
 ## Connection
 
-**Section ID**: `connection`
+- **Section ID**: `connection`
 
-**Variables**:
+- **Variables**:
 	- `endpoint-capabilities`: Endpoint to use for retrieving server capabilities
 		- type: string
 		- default: `/ocs/v1.php/cloud/capabilities`
@@ -23,8 +23,9 @@ This document provides an overview over the available sections and variables.
 
 ## OAuth2
 
-**Section ID**: `authentication-oauth2`
-**Variables**:
+- **Section ID**: `authentication-oauth2`
+
+- **Variables**:
 	- `oa2-authorization-endpoint`: OAuth2 authorization endpoint
 		- type: string
 		- default: `index.php/apps/oauth2/authorize`
@@ -40,4 +41,3 @@ This document provides an overview over the available sections and variables.
 	- `oa2-client-secret`: OAuth2 Client Secret
 		- type: string
 		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`
-
