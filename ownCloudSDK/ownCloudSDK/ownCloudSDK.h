@@ -27,15 +27,17 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <ownCloudSDK/PublicHeader.h>
 
 #import <ownCloudSDK/OCTypes.h>
+#import <ownCloudSDK/NSError+OCError.h>
 
 #import <ownCloudSDK/OCAppIdentity.h>
 
 #import <ownCloudSDK/OCCore.h>
-#import <ownCloudSDK/OCActivity.h>
+#import <ownCloudSDK/NSProgress+OCActivity.h>
 
 #import <ownCloudSDK/OCBookmark.h>
 
 #import <ownCloudSDK/OCAuthenticationMethod.h>
+#import <ownCloudSDK/OCAuthenticationMethodBasicAuth.h>
 #import <ownCloudSDK/OCAuthenticationMethodOAuth2.h>
 
 #import <ownCloudSDK/OCConnection.h>

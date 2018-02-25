@@ -20,6 +20,10 @@
 
 @implementation OCAuthenticationMethodOAuth2
 
+// Automatically register
+OCAuthenticationMethodAutoRegister
+
+#pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (@"authentication-oauth2");
@@ -34,6 +38,17 @@
 		OCAuthenticationMethodOAuth2ClientID 		  : @"mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1",
 		OCAuthenticationMethodOAuth2ClientSecret 	  : @"KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx"
 	});
+}
+
+#pragma mark - Identification
++ (OCAuthenticationMethodType)type
+{
+	return (OCAuthenticationMethodTypeToken);
+}
+
++ (OCAuthenticationMethodIdentifier)identifier
+{
+	return (OCAuthenticationMethodOAuth2Identifier);
 }
 
 @end

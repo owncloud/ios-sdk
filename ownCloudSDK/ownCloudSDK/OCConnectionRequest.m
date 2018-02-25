@@ -17,32 +17,59 @@
  */
 
 #import "OCConnectionRequest.h"
+#import "OCConnectionQueue.h"
 
 @implementation OCConnectionRequest
 
 @synthesize urlSessionTask = _urlSessionTask;
-@synthesize activity = _activity;
+@synthesize progress = _progress;
+
+@synthesize urlSessionTaskIdentifier = _urlSessionTaskIdentifier;
 
 @synthesize bookmarkUUID = _bookmarkUUID;
 
 @synthesize method = _method;
 
 @synthesize url = _url;
+@synthesize effectiveURL = _effectiveURL;
 @synthesize headerFields = _headerFields;
 @synthesize parameters = _parameters;
 @synthesize bodyData = _bodyData;
 @synthesize bodyURL = _bodyURL;
 
 @synthesize resultHandlerAction = _resultHandlerAction;
+@synthesize ephermalResultHandler = _ephermalResultHandler;
 @synthesize eventTarget = _eventTarget;
+
+@synthesize priority = _priority;
+@synthesize groupID = _groupID;
+@synthesize skipAuthorization = _skipAuthorization;
+
+@synthesize downloadRequest = _downloadRequest;
+@synthesize downloadedFile = _downloadedFile;
+
+@synthesize responseBodyData = _responseBodyData;
+
+@synthesize cancelled = _cancelled;
+
+@synthesize error = _error;
 
 #pragma mark - Init & Dealloc
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
 	{
+		__weak OCConnectionRequest *weakSelf = self;
+		
+		self.method = OCConnectionRequestMethodGET;
+	
 		self.headerFields = [NSMutableDictionary new];
 		self.parameters = [NSMutableDictionary new];
+
+		self.progress = [[NSProgress alloc] initWithParent:nil userInfo:nil];
+		self.progress.cancellationHandler = ^{
+			[weakSelf cancel];
+		};
 	}
 	
 	return(self);
@@ -95,6 +122,192 @@
 	}
 }
 
+#pragma mark - Queue scheduling support
+- (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue
+{
+	// Apply connection's bookmarkUUID
+	self.bookmarkUUID = queue.connection.bookmark.uuid;
+	
+	// Handle parameters and set effective URL
+	if (_parameters.count > 0)
+	{
+		if ([_method isEqual:OCConnectionRequestMethodPOST])
+		{
+			// POST Method: Generate body from parameters
+			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
+			NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+			
+			[_parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL * _Nonnull stop) {
+				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
+			}];
+			
+			self.bodyData = [[urlComponents query] dataUsingEncoding:NSUTF8StringEncoding];
+		}
+		else
+		{
+			// All other methods: Append parameters to URL
+			NSURLComponents *urlComponents = [NSURLComponents componentsWithURL:_url resolvingAgainstBaseURL:YES];
+			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
+			
+			if (urlComponents.queryItems != nil)
+			{
+				[queryItems addObjectsFromArray:urlComponents.queryItems];
+			}
+			
+			[_parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL * _Nonnull stop) {
+				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
+			}];
+			
+			urlComponents.queryItems = queryItems;
+			
+			self.effectiveURL = [urlComponents URL];
+		}
+	}
+	
+	if (self.effectiveURL == nil)
+	{
+		self.effectiveURL = _url;
+	}
+}
+
+- (NSMutableURLRequest *)generateURLRequestForQueue:(OCConnectionQueue *)queue
+{
+	NSMutableURLRequest *urlRequest;
+	
+	if ((urlRequest = [[NSMutableURLRequest alloc] initWithURL:self.effectiveURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]) != nil)
+	{
+		// Apply method
+		urlRequest.HTTPMethod = self.method;
+	
+		// Apply header fields
+		[_headerFields enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull headerField, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+			[urlRequest setValue:value forHTTPHeaderField:headerField];
+		}];
+		
+		// Apply body
+		if (_bodyURL != nil)
+		{
+			if ((_bodyURLInputStream = [[NSInputStream alloc] initWithURL:_bodyURL]) != nil)
+			{
+				urlRequest.HTTPBodyStream = _bodyURLInputStream;
+			}
+		}
+		else if (_bodyData != nil)
+		{
+			urlRequest.HTTPBody = _bodyData;
+		}
+	}
+
+	return (urlRequest);
+}
+
+#pragma mark - Cancel support
+- (void)cancel
+{
+	@synchronized(self)
+	{
+		if (!_cancelled)
+		{
+			[self willChangeValueForKey:@"cancelled"];
+
+			_cancelled = YES;
+			
+			if (_urlSessionTask != nil)
+			{
+				[_urlSessionTask cancel];
+			}
+
+			[self didChangeValueForKey:@"cancelled"];
+		}
+	}
+}
+
+#pragma mark - Response Body
+- (NSHTTPURLResponse *)response
+{
+	NSURLResponse *response;
+	
+	if ((response = _urlSessionTask.response) != nil)
+	{
+		if ([response isKindOfClass:[NSHTTPURLResponse class]])
+		{
+			return ((NSHTTPURLResponse *)response);
+		}
+	}
+
+	return(nil);
+}
+
+- (void)appendDataToResponseBody:(NSData *)appendResponseBodyData
+{
+	@synchronized(self)
+	{
+		if (_responseBodyData == nil)
+		{
+			_responseBodyData = [[NSMutableData alloc] initWithData:appendResponseBodyData];
+		}
+		else
+		{
+			[_responseBodyData appendData:appendResponseBodyData];
+		}
+	}
+}
+
+- (NSString *)responseBodyAsString
+{
+	NSString *responseBodyAsString = nil;
+	NSData *responseBodyData;
+
+	if ((responseBodyData = self.responseBodyData) != nil)
+	{
+		NSString *textEncodingName;
+		NSStringEncoding stringEncoding;
+
+		if ((textEncodingName = self.urlSessionTask.response.textEncodingName) != nil)
+		{
+			stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
+		}
+		else
+		{
+			stringEncoding = NSISOLatin1StringEncoding; // ISO-8859-1
+		}
+			
+		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:stringEncoding];
+	}
+	
+	return (responseBodyAsString);
+}
+
+- (NSDictionary *)responseBodyConvertedFromJSONWithError:(NSError **)outError
+{
+	id jsonObject;
+	
+	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
+	{
+		if ([jsonObject isKindOfClass:[NSDictionary class]])
+		{
+			return (jsonObject);
+		}
+	}
+	
+	return (nil);
+}
+
+- (NSArray *)responseBodyConvertedArrayFromJSONWithError:(NSError **)outError
+{
+	id jsonObject;
+	
+	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
+	{
+		if ([jsonObject isKindOfClass:[NSArray class]])
+		{
+			return (jsonObject);
+		}
+	}
+	
+	return (nil);
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
@@ -107,19 +320,26 @@
 	{
 		NSString *resultHandlerActionString;
 
-		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
-
 		self.bookmarkUUID	= [decoder decodeObjectOfClass:[NSUUID class] forKey:@"bookmarkUUID"];
+		self.urlSessionTaskIdentifier = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"urlSessionTaskIdentifier"];
+
+		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
 		self.headerFields 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"headerFields"];
 		self.parameters 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"parameters"];
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
+		
+		self.priority		= [decoder decodeFloatForKey:@"priority"];
+		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
+
+		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
+		self.downloadedFile	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFile"];
 
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
-			self.resultHandlerAction= NSSelectorFromString(resultHandlerActionString);
+			self.resultHandlerAction = NSSelectorFromString(resultHandlerActionString);
 		}
 	}
 	
@@ -129,6 +349,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_bookmarkUUID	forKey:@"bookmarkUUID"];
+	[coder encodeObject:_urlSessionTaskIdentifier forKey:@"urlSessionTaskIdentifier"];
+
 	[coder encodeObject:_url 		forKey:@"url"];
 	[coder encodeObject:_method 		forKey:@"method"];
 	[coder encodeObject:_headerFields 	forKey:@"headerFields"];
@@ -136,6 +358,12 @@
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
+
+	[coder encodeFloat:_priority 		forKey:@"priority"];
+	[coder encodeObject:_groupID 		forKey:@"groupID"];
+
+	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
+	[coder encodeObject:_downloadedFile 	forKey:@"downloadedFile"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }

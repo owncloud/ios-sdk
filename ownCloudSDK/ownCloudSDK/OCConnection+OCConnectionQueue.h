@@ -1,8 +1,8 @@
 //
-//  OCActivity.m
+//  OCConnection+OCConnectionQueue.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.02.18.
+//  Created by Felix Schwarz on 24.02.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,13 +16,11 @@
  *
  */
 
-#import "OCActivity.h"
+#import "OCConnection.h"
 
-@implementation OCActivity
+@interface OCConnection (OCConnectionQueue)
 
-- (void)cancel
-{
-	// Stub implementation
-}
+#pragma mark - Prepare request
+- (OCConnectionRequest *)prepareRequest:(OCConnectionRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue;
 
 @end

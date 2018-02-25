@@ -22,14 +22,19 @@
 #import "OCTypes.h"
 #import "OCEventTarget.h"
 #import "OCShare.h"
+#import "OCClassSettings.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
 @class OCItem;
-@class OCActivity;
 @class OCConnectionQueue;
+@class OCConnectionRequest;
 
-@interface OCConnection : NSObject
+typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
+
+typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
+
+@interface OCConnection : NSObject <OCClassSettingsSupport>
 {
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
@@ -41,7 +46,7 @@
 }
 
 @property(strong) OCBookmark *bookmark;
-@property(strong) OCAuthenticationMethod *authenticationMethod;
+@property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
 @property(strong) OCConnectionQueue *commandQueue; //!< Queue for requests that carry metadata commands (move, delete, retrieve list, ..)
 
@@ -52,28 +57,41 @@
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark;
 
+#pragma mark - Endpoints
+- (NSString *)pathForEndpoint:(OCConnectionEndpointID)endpoint; //!< Returns the path of an endpoint identified by its OCConnectionEndpointID
+- (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <NSString *,id> *)options; //!< Returns the URL of an endpoint identified by its OCConnectionEndpointID, allowing additional options (reserved for future use)
+
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithCompletionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *))completionHandler; //!< Requests a list of supported authentication methods and returns the result
 
 - (void)generateAuthenticationDataWithMethod:(OCAuthenticationMethodIdentifier)methodIdentifier options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler; //!< Uses the OCAuthenticationMethod to generate the authenticationData for storing in the bookmark. It is not directly stored in the bookmark so that an app can decide on its own when to overwrite existing data - or save the result.
 
 #pragma mark - Metadata actions
-- (OCActivity *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
 
 #pragma mark - Actions
-- (OCActivity *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
-- (OCActivity *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCActivity *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
-- (OCActivity *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCActivity *)deleteItem:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)deleteItem:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCActivity *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
-- (OCActivity *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCActivity *)retrieveThumbnailFor:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)retrieveThumbnailFor:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCActivity *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
+
+- (NSProgress *)sendRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler;
 
 @end
+
+extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
+extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
+
+extern OCClassSettingsKey OCConnectionInsertXRequestTracingID;
+
+#import "OCConnectionRequest.h"

@@ -49,3 +49,5 @@ typedef NSString* OCClassSettingsKey;
 - (NSDictionary<NSString *, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
 
 @end
+
+#import "NSObject+OCClassSettings.h"

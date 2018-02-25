@@ -29,7 +29,7 @@ The iOS SDK comes as a framework that is easy to integrate and encapsulates all 
 
 - `OCShare` objects encapsulate all metadata of shared links, users with whom a file/directory was shared as well as users by whom a file/directory was shared.
 
-- **Commands** are methods provided by the Core to asynchronously perform file operations such as copy, move, rename, delete, download, upload and retrieving thumbnails. Apps pass in Item objects and a completion handler. When the file operation has finished, the completion handler is called and related queries updated accordingly. Command methods can return an `OCActivity` that provides status information and the ability to cancel a running or scheduled command.
+- **Commands** are methods provided by the Core to asynchronously perform file operations such as copy, move, rename, delete, download, upload and retrieving thumbnails. Apps pass in Item objects and a completion handler. When the file operation has finished, the completion handler is called and related queries updated accordingly. Command methods can return an `NSProgress` that provides status information and the ability to cancel a running or scheduled command.
 
 - `OCCore` objects tie everything together. When a new Query is added to a core, it consults the Database for immediate results - and makes requests to the server using the Connection as needed.
 

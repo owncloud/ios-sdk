@@ -21,7 +21,7 @@
 
 @class OCConnection;
 
-@interface OCConnectionQueue : NSObject
+@interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 {
 	__weak OCConnection *connection;
 
@@ -32,19 +32,30 @@
 	NSMutableArray<OCConnectionRequest *> *_runningRequests;
 	NSMutableSet<OCConnectionRequestGroupID> *_runningRequestsGroupIDs;
 	
-	NSUInteger maxConcurrentRequests;
+	NSMutableDictionary<NSNumber*, OCConnectionRequest *> *_runningRequestsByTaskIdentifier;
+	
+	NSUInteger _maxConcurrentRequests;
+	
+	dispatch_queue_t _actionQueue;
 }
 
 @property(weak) OCConnection *connection; //!< The connection this queue belongs to
 @property(assign,nonatomic) NSUInteger maxConcurrentRequests; //!< Maximum number of concurrent requests this queue should schedule on the NSURLSession
 
+#pragma mark - Init
+- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier connection:(OCConnection *)connection;
+- (instancetype)initEphermalQueueWithConnection:(OCConnection *)connection;
+
+#pragma mark - Queue management
 - (void)enqueueRequest:(OCConnectionRequest *)request; //!< Adds a request to the queue
 - (void)cancelRequest:(OCConnectionRequest *)request; //!< Cancels a request
 - (void)cancelRequestsWithGroupID:(OCConnectionRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests belonging to a certain group ID. Including running requests if NO is passed for queuedOnly.
 
-- (void)handleFinishedRequest:(OCConnectionRequest *)request; //!< Handles a finished request
+#pragma mark - Result handling
+- (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error; //!< Submits a finished request to handling.
 
-- (void)handleFinishedTask:(NSURLSessionTask *)task; //!< Uses the task's identifier to re-attach the task to a runningRequest and then proceed to calling -handleFinishedRequest: (used to resume from background NSURLSession task completion)
+#pragma mark - Request retrieval
+- (OCConnectionRequest *)requestForTask:(NSURLSessionTask *)task; //!< Uses the tasks's taskIdentifier to find the running request it belongs to. If the request has been restored (i.e. from a background NSURLSession) and doesn't have a task, the task is re-attached to the request.
 
 @end
 

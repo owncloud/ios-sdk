@@ -17,20 +17,81 @@
  */
 
 #import "OCConnectionQueue.h"
+#import "OCConnection+OCConnectionQueue.h"
+#import "NSError+OCError.h"
 
 @implementation OCConnectionQueue
 
 @synthesize connection = _connection;
 @synthesize maxConcurrentRequests = _maxConcurrentRequests;
 
+#pragma mark - Init
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_queuedRequests = [NSMutableArray new];
+
+		_runningRequests = [NSMutableArray new];
+		_runningRequestsGroupIDs = [NSMutableSet new];
+
+		_runningRequestsByTaskIdentifier = [NSMutableDictionary new];
+		
+		_actionQueue = dispatch_queue_create("OCConnectionQueue", DISPATCH_QUEUE_SERIAL);
+		
+		_maxConcurrentRequests = 10;
+	}
+	
+	return (self);
+}
+
+- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier connection:(OCConnection *)connection
+{
+	if ((self = [self init]) != nil)
+	{
+		_connection = connection;
+
+		_urlSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier]
+					    delegate:self
+					    delegateQueue:nil];
+	}
+	
+	return (self);
+}
+
+- (instancetype)initEphermalQueueWithConnection:(OCConnection *)connection
+{
+	if ((self = [self init]) != nil)
+	{
+		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
+
+		_connection = connection;
+
+		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
+					    delegate:self
+					    delegateQueue:nil];
+	}
+	
+	return (self);
+}
+
+#pragma mark - Queue management
 - (void)enqueueRequest:(OCConnectionRequest *)request
 {
-	// Stub implementation
+	@synchronized(self)
+	{
+		[_queuedRequests addObject:request];
+	}
+	
+	[self _queueBlock:^{
+		[self _scheduleQueuedRequests];
+	}];
 }
 
 - (void)cancelRequest:(OCConnectionRequest *)request
 {
-	// Stub implementation
+	[request cancel];
 }
 
 - (void)cancelRequestsWithGroupID:(OCConnectionRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly
@@ -38,15 +99,252 @@
 	// Stub implementation
 }
 
-- (void)handleFinishedRequest:(OCConnectionRequest *)request
+- (void)_scheduleQueuedRequests
 {
-	// Stub implementation
+	@synchronized(self)
+	{
+		if (((_maxConcurrentRequests==0) || (_runningRequests.count < _maxConcurrentRequests)) && // No limitation - or free slots?
+		    (_queuedRequests.count > 0)) // Something to schedule?
+		{
+			NSArray *queuedRequests = [NSArray arrayWithArray:_queuedRequests]; // Make a copy, because _queuedRequests will be modified during enumeration
+		
+			for (OCConnectionRequest *queuedRequest in queuedRequests)
+			{
+				if ((_maxConcurrentRequests==0) || (_runningRequests.count < _maxConcurrentRequests))
+				{
+					BOOL scheduleRequest = YES;
+				
+					// Does the request belong to a group?
+					if (queuedRequest.groupID!=nil)
+					{
+						// Make sure to only schedule this request if no other request from this group is running
+						scheduleRequest = ![_runningRequestsGroupIDs containsObject:queuedRequest.groupID];
+					}
+					
+					if (scheduleRequest)
+					{
+						// Schedule the request
+						[self _scheduleRequest:queuedRequest];
+					}
+				}
+				else
+				{
+					// Capacity reached
+					break;
+				}
+			}
+		}
+	}
 }
 
-
-- (void)handleFinishedTask:(NSURLSessionTask *)task
+- (void)_scheduleRequest:(OCConnectionRequest *)scheduleRequest
 {
-	// Stub implementation
+	OCConnectionRequest *request = scheduleRequest;
+	NSError *error = nil;
+
+	// Remove request from queue
+	[_queuedRequests removeObject:request];
+	
+	if (!request.cancelled) // Make sure this request hasn't been cancelled
+	{
+		// Prepare request
+		[self _prepareRequestForScheduling:request];
+
+		// Apply authentication
+		if (_connection!=nil)
+		{
+			request = [_connection prepareRequest:request forSchedulingInQueue:self];
+		}
+		
+		if (request != nil)
+		{
+			NSURLRequest *urlRequest;
+			NSURLSessionTask *task = nil;
+
+			// Generate NSURLRequest and create an NSURLSessionTask with it
+			if ((urlRequest = [request generateURLRequestForQueue:self]) != nil)
+			{
+				// Construct NSURLSessionTask
+				if (request.downloadRequest)
+				{
+					// Request is a download request. Make it a download task.
+					task = [_urlSession downloadTaskWithRequest:urlRequest];
+				}
+				else if (request.bodyURL != nil)
+				{
+					// Body comes from a file. Make it an upload task.
+					task = [_urlSession uploadTaskWithStreamedRequest:urlRequest];
+				}
+				else
+				{
+					// Create a regular data task
+					task = [_urlSession dataTaskWithRequest:urlRequest];
+				}
+				
+				// Apply priority
+				task.priority = request.priority;
+			}
+			
+			if (task != nil)
+			{
+				// Save task to request
+				request.urlSessionTask = task;
+				request.urlSessionTaskIdentifier = @(task.taskIdentifier);
+				
+				// Connect task progress to request progress
+				[request.progress addChild:task.progress withPendingUnitCount:100];
+			
+				// Update internal tracking collections
+				if (request.groupID!=nil)
+				{
+					[_runningRequestsGroupIDs addObject:request.groupID];
+				}
+
+				[_runningRequests addObject:request];
+				
+				_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
+				
+				// Start task
+				[task resume];
+			}
+			else
+			{
+				// Request failure
+				error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
+			}
+		}
+		else
+		{
+			request = scheduleRequest;
+			error = OCError(OCErrorRequestRemovedBeforeScheduling);
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorRequestCancelled);
+	}
+	
+	if (error != nil)
+	{
+		// Finish with error
+		[self _queueBlock:^{
+			[self handleFinishedRequest:request error:error];
+		}];
+	}
+}
+
+- (void)_prepareRequestForScheduling:(OCConnectionRequest *)request
+{
+	[request prepareForSchedulingInQueue:self];
+}
+
+- (void)_queueBlock:(dispatch_block_t)block
+{
+	if (block != NULL)
+	{
+		dispatch_async(_actionQueue, block);
+	}
+}
+
+#pragma mark - Result handling
+- (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error
+{
+	if (request==nil) { return; }
+	
+	// Deliver Finished Request
+	if ((_connection!=nil) && (request.resultHandlerAction != NULL))
+	{
+		// Below is identical to [_connection performSelector:request.resultHandlerAction withObject:request withObject:error], but in an ARC-friendly manner.
+		void (*impFunction)(id, SEL, OCConnectionRequest *, NSError *) = (void *)[_connection methodForSelector:request.resultHandlerAction];
+
+		if (impFunction != NULL)
+		{
+			impFunction(_connection, request.resultHandlerAction, request, error);
+		}
+	}
+	else
+	{
+		if (request.ephermalResultHandler != nil)
+		{
+			request.ephermalResultHandler(request, error);
+		}
+	}
+
+	// Update internal tracking collections
+	[self _queueBlock:^{
+		@synchronized(self)
+		{
+			if (request.groupID!=nil)
+			{
+				[_runningRequestsGroupIDs removeObject:request.groupID];
+			}
+
+			[_runningRequests removeObject:request];
+
+			if (request.urlSessionTaskIdentifier != nil)
+			{
+				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
+			}
+		}
+
+		[self _scheduleQueuedRequests];
+	}];
+}
+
+#pragma mark - Request retrieval
+- (OCConnectionRequest *)requestForTask:(NSURLSessionTask *)task
+{
+	OCConnectionRequest *request = nil;
+	
+	if (task != nil)
+	{
+		@synchronized(self)
+		{
+			request = _runningRequestsByTaskIdentifier[@(task.taskIdentifier)];
+			
+			if (request.urlSessionTask == nil)
+			{
+				request.urlSessionTask = task;
+			}
+		}
+	}
+	
+	return (request);
+}
+
+- (void)handleFinishedTask:(NSURLSessionTask *)task error:(NSError *)error
+{
+	OCConnectionRequest *request;
+	
+	if ((request = [self requestForTask:task]) != nil)
+	{
+		if (request.urlSessionTask == nil)
+		{
+			request.urlSessionTask = task;
+		}
+
+		[self handleFinishedRequest:request error:error];
+	}
+}
+
+#pragma mark - NSURLSessionTaskDelegate
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
+{
+	[self _queueBlock:^{
+		[self handleFinishedRequest:[self requestForTask:task] error:error];
+	}];
+}
+
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
+{
+	[self _queueBlock:^{
+		OCConnectionRequest *request = [self requestForTask:dataTask];
+		
+		if (!request.downloadRequest)
+		{
+			[request appendDataToResponseBody:data];
+		}
+	}];
 }
 
 @end

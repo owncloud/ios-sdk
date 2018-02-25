@@ -20,8 +20,6 @@
 #import "OCTypes.h"
 #import "OCShare.h"
 
-@class OCActivity;
-
 typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
 
 typedef NS_ENUM(NSUInteger, OCItemType)
@@ -54,7 +52,7 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
-@property(strong) OCActivity *activity; //!< If status is transient, an activity describing the status
+@property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
@@ -73,4 +71,3 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 
 @end
 
-#import "OCActivity.h"
