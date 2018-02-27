@@ -13,7 +13,7 @@ This document provides an overview over the available sections and variables.
 - **Variables**:
 	- `endpoint-capabilities`: Endpoint to use for retrieving server capabilities
 		- type: string
-		- default: `/ocs/v1.php/cloud/capabilities`
+		- default: `ocs/v1.php/cloud/capabilities`
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/webdav`

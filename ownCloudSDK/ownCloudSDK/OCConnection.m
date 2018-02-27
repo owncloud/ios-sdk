@@ -32,6 +32,8 @@
 @synthesize uploadQueue = _uploadQueue;
 @synthesize downloadQueue = _downloadQueue;
 
+@synthesize delegate = _delegate;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
@@ -42,7 +44,7 @@
 {
 	return (@{
 			
-		OCConnectionEndpointIDCapabilities  : @"/ocs/v1.php/cloud/capabilities",
+		OCConnectionEndpointIDCapabilities  : @"ocs/v1.php/cloud/capabilities",
 		OCConnectionEndpointIDWebDAV 	    : @"remote.php/webdav",
 		OCConnectionInsertXRequestTracingID : @(YES)
 	});
@@ -72,6 +74,7 @@
 			
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
 		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:_bookmark.uuid.UUIDString connection:self];
+		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
 	}
 	
 	return (self);
@@ -100,6 +103,16 @@
 	return (nil);
 }
 
+- (NSURL *)URLForEndpointPath:(OCPath)endpointPath
+{
+	if (endpointPath != nil)
+	{
+		return ([[NSURL URLWithString:endpointPath relativeToURL:_bookmark.url] absoluteURL]);
+	}
+	
+	return (_bookmark.url);
+}
+
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithCompletionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *))completionHandler
 {
@@ -118,6 +131,56 @@
 
 		[authenticationMethod generateBookmarkAuthenticationDataWithConnection:self options:options completionHandler:completionHandler];
 	}
+}
+
+- (BOOL)canSendAuthenticatedRequestsForQueue:(OCConnectionQueue *)queue availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+{
+	__weak id<OCConnectionDelegate> delegate = _delegate;
+	__weak OCConnection *weakSelf = self;
+	BOOL canSend = YES;
+	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *pendingAuthenticationAvailabilityHandlers = _pendingAuthenticationAvailabilityHandlers;
+
+	// Make sure the authentication method only receives calls to -canSendAuthenticatedRequestsForConnection:withAvailabilityHandler: after previous calls have finished
+	@synchronized(pendingAuthenticationAvailabilityHandlers)
+	{
+		// Add availabilityHandler to pending
+		[pendingAuthenticationAvailabilityHandlers addObject:availabilityHandler];
+
+		if (pendingAuthenticationAvailabilityHandlers.count > 1)
+		{
+			// If others were also already pending, the previous response must already have been NO
+			canSend = NO;
+		}
+		else
+		{
+			canSend = [self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+				// Share result with all pending Authentication Availability Handlers
+				@synchronized(pendingAuthenticationAvailabilityHandlers)
+				{
+					for (OCConnectionAuthenticationAvailabilityHandler handler in pendingAuthenticationAvailabilityHandlers)
+					{
+						handler(error, authenticationIsAvailable);
+					}
+					
+					[pendingAuthenticationAvailabilityHandlers removeAllObjects];
+				};
+				
+				//
+				if ((error != nil) && (weakSelf!=nil) && (delegate!=nil) && [delegate respondsToSelector:@selector(connection:handleError:)])
+				{
+					[delegate connection:weakSelf handleError:error];
+				}
+			}];
+			
+			if (canSend)
+			{
+				// Remove availabilityHandler from pending because it won't ever be called
+				[pendingAuthenticationAvailabilityHandlers removeObject:availabilityHandler];
+			}
+		}
+	}
+	
+	return (canSend);
 }
 
 - (OCAuthenticationMethod *)_authenticationMethodWithIdentifier:(OCAuthenticationMethodIdentifier)methodIdentifier

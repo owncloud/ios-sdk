@@ -126,6 +126,8 @@
 	{
 		[[OCAppIdentity sharedAppIdentity].keychain writeData:_authenticationData toKeychainItemForAccount:_uuid.UUIDString path:@"authenticationData"];
 	}
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
 }
 
 #pragma mark - Secure Coding
@@ -167,3 +169,5 @@
 
 
 @end
+
+NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";

@@ -60,7 +60,6 @@
 
 	OCBookmark *bookmark;
 	OCConnection *connection;
-	__block NSError *returnError = nil;
 
 	bookmark = [OCBookmark bookmarkForURL:url];
 
@@ -93,8 +92,8 @@
 							       	bookmark.authenticationData = authenticationData;
 								
 							       	// Request resource
-							       	OCConnectionRequest *request = [OCConnectionRequest new];
-							       	request.url = [connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil];
+							       	OCConnectionRequest *request = nil;
+								request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 								[request setValue:@"json" forParameter:@"format"];
 								
 							       	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
@@ -105,7 +104,7 @@
 										NSError *error = nil;
 										NSDictionary *capabilitiesDict;
 										
-										capabilitiesDict = [request responseBodyConvertedFromJSONWithError:&error];
+										capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error];
 										XCTAssert((capabilitiesDict!=nil), @"Conversion from JSON successful");
 										XCTAssert(([capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]!=nil), @"Capabilities structure intact");
 										

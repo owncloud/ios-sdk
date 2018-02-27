@@ -45,3 +45,4 @@ typedef NSUUID* OCBookmarkUUID;
 
 @end
 
+extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark#s authenticationData is changed. The object of the notification is the bookmark.

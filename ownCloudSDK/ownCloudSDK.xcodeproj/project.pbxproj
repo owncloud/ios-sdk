@@ -72,6 +72,12 @@
 		DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D42042312500189B9A /* ConnectionTests.m */; };
 		DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */; };
+		DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */; };
+		DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */; };
+		DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
+		DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */; };
+		DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,7 +95,27 @@
 			remoteGlobalIDString = DCC8F9AA202852A200EB6701;
 			remoteInfo = ownCloudSDK;
 		};
+		DCEEB2DE2044064C00189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DCC8F9AA202852A200EB6701;
+			remoteInfo = ownCloudSDK;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DCEEB2E12044065500189B9A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
@@ -166,6 +192,10 @@
 		DCEEB2D42042312500189B9A /* ConnectionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionTests.m; sourceTree = "<group>"; };
 		DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+OCClassSettings.h"; sourceTree = "<group>"; };
 		DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OCClassSettings.m"; sourceTree = "<group>"; };
+		DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCURLQueryParameterExtensions.h"; sourceTree = "<group>"; };
+		DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCURLQueryParameterExtensions.m"; sourceTree = "<group>"; };
+		DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+OCTools.h"; sourceTree = "<group>"; };
+		DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+OCTools.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +203,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +335,8 @@
 				DCC8FA28202B37B800EB6701 /* OCConnectionQueue.m */,
 				DCC8FA27202B37B800EB6701 /* OCConnectionQueue.h */,
 				DC39DC4F2041CA9B00189B9A /* OCConnection+OCConnectionQueue.h */,
+				DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */,
+				DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */,
 			);
 			name = Connection;
 			sourceTree = "<group>";
@@ -375,6 +408,8 @@
 			children = (
 				DCC8F9FA2028586900EB6701 /* OCAuthenticationMethod.m */,
 				DCC8F9F92028586900EB6701 /* OCAuthenticationMethod.h */,
+				DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */,
+				DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */,
 				DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */,
 				DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */,
 				DCC8F9FE20285C1500EB6701 /* OCAuthenticationMethodOAuth2.m */,
@@ -461,7 +496,9 @@
 				DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */,
 				DCC8FA122029D5EC00EB6701 /* OCTypes.h in Headers */,
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
+				DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */,
 				DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */,
+				DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */,
 				DCC8FA29202B37B800EB6701 /* OCConnectionQueue.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
 				DCC8F9EE2028558000EB6701 /* OCQuery.h in Headers */,
@@ -484,10 +521,12 @@
 				DC7E0A73203732B3006111FA /* Sources */,
 				DC7E0A74203732B3006111FA /* Frameworks */,
 				DC7E0A75203732B3006111FA /* Resources */,
+				DCEEB2E12044065500189B9A /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DCEEB2DF2044064C00189B9A /* PBXTargetDependency */,
 			);
 			name = Ocean;
 			productName = Ocean;
@@ -625,6 +664,7 @@
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
+				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
@@ -636,6 +676,7 @@
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
+				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DCC8F9E72028556500EB6701 /* OCConnection.m in Sources */,
 				DCC8F9FC2028586900EB6701 /* OCAuthenticationMethod.m in Sources */,
@@ -669,6 +710,11 @@
 			target = DCC8F9AA202852A200EB6701 /* ownCloudSDK */;
 			targetProxy = DCC8F9B6202852A200EB6701 /* PBXContainerItemProxy */;
 		};
+		DCEEB2DF2044064C00189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DCC8F9AA202852A200EB6701 /* ownCloudSDK */;
+			targetProxy = DCEEB2DE2044064C00189B9A /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -696,6 +742,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UH96K9N25C;
 				INFOPLIST_FILE = ../Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
@@ -709,6 +756,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UH96K9N25C;
 				INFOPLIST_FILE = ../Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;

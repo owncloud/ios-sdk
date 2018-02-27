@@ -20,6 +20,10 @@
 
 @interface ViewController : UIViewController
 
+@property(strong) IBOutlet UITextField *serverURLField;
+@property(strong) IBOutlet UITextView *logTextView;
+
+- (IBAction)connectAndGetInfo:(id)sender;
 
 @end
 

@@ -17,9 +17,11 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCTypes.h"
 
 @class OCConnection;
 @class OCConnectionRequest;
+@class OCConnectionQueue;
 
 typedef NSString* OCAuthenticationMethodIdentifier; //!< NSString identifier for an authentication method, f.ex. "owncloud.oauth2" for OAuth2
 typedef NSString* OCAuthenticationMethodKey NS_TYPED_ENUM; //!< NSString key used in the options dictionary used to generate the authentication data for a bookmark.
@@ -53,6 +55,10 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 + (BOOL)usesUserName; //!< This authentication method uses a user name
 + (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData; //!< Returns the user name stored inside authenticationData
 
+#pragma mark - Authentication Method Detection
++ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionURLsForConnection:) and then returns result via the completionHandler.
+
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.
 - (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Deauthenticates the connection.
@@ -66,6 +72,9 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 - (id)cachedAuthenticationSecretForConnection:(OCConnection *)connection; //!< Method that allows an authentication method to cache a secret in memory. If none is present in memory, -loadCachedAuthenticationSecretForConnection: is called.
 - (id)loadCachedAuthenticationSecretForConnection:(OCConnection *)connection; //!< Called by -cachedAuthenticationSecretForConnection: if no authentication secret is stored in memory. Should retrieve and return the authentication secret for the connection.
 - (void)flushCachedAuthenticationSecret; //!< Flushes the cached authentication secret. Called f.ex. if the device is locked or the user switches to another app.
+
+#pragma mark - Wait for authentication
+- (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called by the -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] to determine if the authentication method is currently in the position to authenticate requests for the given connection. If it is, YES should be returned and the availabilityHandler shouldn't be used. If it is not (if, f.ex. a token has expired and needs to be renewed first), this method should return NO, attempt the necessary changes (if this involves scheduling requests, make sure these have their skipAuthorization to YES) and then call the availabilityHandler with the outcome. If an error is returned, all queued requests fail with the provided error.
 
 @end
 

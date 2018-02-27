@@ -18,6 +18,7 @@
 
 #import "OCConnectionRequest.h"
 #import "OCConnectionQueue.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
 
 @implementation OCConnectionRequest
 
@@ -79,6 +80,15 @@
 {
 }
 
++ (instancetype)requestWithURL:(NSURL *)url
+{
+	OCConnectionRequest *request = [OCConnectionRequest new];
+	
+	request.url = url;
+	
+	return (request);
+}
+
 #pragma mark - Access
 - (NSString *)valueForParameter:(NSString *)parameter
 {
@@ -98,6 +108,14 @@
 	else
 	{
 		[_parameters setObject:value forKey:parameter];
+	}
+}
+
+- (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters
+{
+	if (parameters != nil)
+	{
+		[_parameters addEntriesFromDictionary:parameters];
 	}
 }
 
@@ -122,6 +140,14 @@
 	}
 }
 
+- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields
+{
+	if (headerFields != nil)
+	{
+		[_headerFields addEntriesFromDictionary:headerFields];
+	}
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue
 {
@@ -141,26 +167,19 @@
 				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
 			}];
 			
+			urlComponents.queryItems = queryItems;
+			
 			self.bodyData = [[urlComponents query] dataUsingEncoding:NSUTF8StringEncoding];
+
+			if (_headerFields[@"Content-Type"] == nil)
+			{
+				[self setValue:@"application/x-www-form-urlencoded" forHeaderField:@"Content-Type"];
+			}
 		}
 		else
 		{
 			// All other methods: Append parameters to URL
-			NSURLComponents *urlComponents = [NSURLComponents componentsWithURL:_url resolvingAgainstBaseURL:YES];
-			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
-			
-			if (urlComponents.queryItems != nil)
-			{
-				[queryItems addObjectsFromArray:urlComponents.queryItems];
-			}
-			
-			[_parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL * _Nonnull stop) {
-				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
-			}];
-			
-			urlComponents.queryItems = queryItems;
-			
-			self.effectiveURL = [urlComponents URL];
+			self.effectiveURL = [_url urlByAppendingQueryParameters:_parameters replaceExisting:YES];
 		}
 	}
 	
@@ -278,9 +297,11 @@
 	return (responseBodyAsString);
 }
 
-- (NSDictionary *)responseBodyConvertedFromJSONWithError:(NSError **)outError
+- (NSDictionary *)responseBodyConvertedDictionaryFromJSONWithError:(NSError **)outError
 {
 	id jsonObject;
+	
+	if (self.responseBodyData == nil) { return(nil); }
 	
 	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
 	{
@@ -296,7 +317,9 @@
 - (NSArray *)responseBodyConvertedArrayFromJSONWithError:(NSError **)outError
 {
 	id jsonObject;
-	
+
+	if (self.responseBodyData == nil) { return(nil); }
+
 	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
 	{
 		if ([jsonObject isKindOfClass:[NSArray class]])

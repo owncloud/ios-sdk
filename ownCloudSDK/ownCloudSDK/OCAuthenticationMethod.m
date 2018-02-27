@@ -19,6 +19,7 @@
 #import <UIKit/UIKit.h>
 
 #import "OCAuthenticationMethod.h"
+#import "OCBookmark.h"
 
 @implementation OCAuthenticationMethod
 
@@ -100,6 +101,7 @@
 	{
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_bookmarkChanged:)   name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 	}
 	
 	return(self);
@@ -107,6 +109,7 @@
 
 - (void)dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
 }
@@ -118,6 +121,29 @@
 	{
 		// Flush cached authentication secret when device is locked or the user switches to another app
 		[self flushCachedAuthenticationSecret];
+	}
+}
+
+- (void)_bookmarkChanged:(NSNotification *)notification
+{
+	// Flush cached authentication secret so it is re-read from the bookmark. Right now we flush all cached
+	// secrets for every change of every bookmark. This could be optimized in the future, but given how rare
+	// such an event occurs and that performance impact should be almost imperceptible, it's probably not worth
+	// to put any time and effort into this.
+	[self flushCachedAuthenticationSecret];
+}
+
+#pragma mark - Authentication Method Detection
++ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
+{
+	return(nil);
+}
+
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
+{
+	if (completionHandler!=nil)
+	{
+		completionHandler([self identifier], NO);
 	}
 }
 
@@ -200,6 +226,12 @@
 	{
 		_cachedAuthenticationSecret = nil;
 	}
+}
+
+#pragma mark - Wait for authentication
+- (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+{
+	return (YES);
 }
 
 @end

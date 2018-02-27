@@ -46,8 +46,7 @@
 	
 	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 	
-	request = [OCConnectionRequest new];
-	request.url = bookmark.url;
+	request = [OCConnectionRequest requestWithURL:bookmark.url];
 	
 	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 		[expectAnswer fulfill];
