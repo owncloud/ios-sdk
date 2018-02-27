@@ -30,6 +30,33 @@
 	return ([NSError errorWithDomain:OCErrorDomain code:errorCode userInfo:userInfo]);
 }
 
+- (BOOL)isOCError
+{
+	return ([self.domain isEqual:OCErrorDomain]);
+}
+
+- (BOOL)isOCErrorWithCode:(OCError)errorCode
+{
+	return ([self.domain isEqual:OCErrorDomain] && (self.code == errorCode));
+}
+
+- (NSDictionary *)ocErrorInfoDictionary
+{
+	NSDictionary *errorInfoDictionary;
+	
+	if ((errorInfoDictionary = self.userInfo[OCErrorInfoKey]) != nil)
+	{
+		if ([errorInfoDictionary isKindOfClass:[NSDictionary class]])
+		{
+			return(errorInfoDictionary);
+		}
+	}
+	
+	return (nil);
+}
+
 @end
 
 NSErrorDomain OCErrorDomain = @"OCError";
+
+NSString *OCErrorInfoKey = @"OCErrorInfo";

@@ -21,6 +21,7 @@
 #import "OCConnectionRequest.h"
 #import "OCConnectionQueue.h"
 #import "OCAuthenticationMethod.h"
+#import "NSError+OCError.h"
 
 @implementation OCConnection
 
@@ -113,8 +114,51 @@
 	return (_bookmark.url);
 }
 
+#pragma mark - Base URL Extract
+- (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL
+{
+	NSURL *bookmarkURL = [_bookmark.url absoluteURL];
+	NSURL *originalURL = [inOriginalURL absoluteURL];
+	NSURL *redirectionTargetURL = [inRedirectionTargetURL absoluteURL];
+
+	if ((bookmarkURL!=nil) && (originalURL!=nil))
+	{
+		if ((originalURL.path!=nil) && (bookmarkURL.path!=nil))
+		{
+			if ([originalURL.path hasPrefix:bookmarkURL.path])
+			{
+				NSString *endpointPath = [originalURL.path substringFromIndex:bookmarkURL.path.length];
+				
+				if (endpointPath.length > 1)
+				{
+					NSRange endpointPathRange = [redirectionTargetURL.absoluteString rangeOfString:endpointPath];
+					
+					if (endpointPathRange.location != NSNotFound)
+					{
+						return ([NSURL URLWithString:[redirectionTargetURL.absoluteString substringToIndex:endpointPathRange.location]]);
+					}
+				}
+			}
+		}
+	}
+	
+	return(nil);
+}
+
+- (BOOL)_isAlternativeBaseURLSafeUpgrade:(NSURL *)alternativeBaseURL
+{
+	if ((alternativeBaseURL!=nil) && (_bookmark.url!=nil))
+	{
+		return (([alternativeBaseURL.host isEqual:_bookmark.url.host]) &&
+			([alternativeBaseURL.path isEqual:_bookmark.url.path]) &&
+			([_bookmark.url.scheme isEqual:@"http"] && [alternativeBaseURL.scheme isEqual:@"https"]));
+	}
+	
+	return(NO);
+}
+
 #pragma mark - Authentication
-- (void)requestSupportedAuthenticationMethodsWithCompletionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportMethods))completionHandler
+- (void)requestSupportedAuthenticationMethodsWithOptions:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods))completionHandler
 {
 	NSArray <Class> *authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses];
 	NSMutableSet <NSURL *> *detectionURLs = [NSMutableSet set];
@@ -122,6 +166,29 @@
 	NSMutableDictionary <NSURL *, OCConnectionRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
 	
 	if (completionHandler==nil) { return; }
+	
+	// Add OCAuthenticationMethodAllowURLProtocolUpgrades support
+	completionHandler = ^(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods){
+		if ((error!=nil) && [error isOCErrorWithCode:OCErrorAuthorizationRedirect] &&
+		    (options!=nil) && (options[OCAuthenticationMethodAllowURLProtocolUpgradesKey]!=nil) && ((NSNumber *)options[OCAuthenticationMethodAllowURLProtocolUpgradesKey]).boolValue)
+		{
+			NSURL *redirectURLBase;
+
+			if ((redirectURLBase = [error ocErrorInfoDictionary][OCAuthorizationMethodAlternativeServerURLKey]) != nil)
+			{
+				if ([self _isAlternativeBaseURLSafeUpgrade:redirectURLBase])
+				{
+					_bookmark.url = redirectURLBase;
+					
+					[self requestSupportedAuthenticationMethodsWithOptions:options completionHandler:completionHandler];
+
+					return;
+				}
+			}
+		}
+		
+		completionHandler(error, supportedMethods);
+	};
 	
 	// Collect detection URLs for pre-loading
 	for (Class authenticationMethodClass in authenticationMethodClasses)
@@ -189,7 +256,7 @@
 				
 				dispatch_group_enter(detectionCompletionGroup);
 				
-				[authenticationMethodClass detectAuthenticationMethodSupportForConnection:self withServerResponses:resultsByURL completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
+				[authenticationMethodClass detectAuthenticationMethodSupportForConnection:self withServerResponses:resultsByURL options:options completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
 					if (supported)
 					{
 						[supportedAuthMethodIdentifiers addObject:identifier];
@@ -202,7 +269,28 @@
 		
 		// Schedule block for when all methods have completed detection
 		dispatch_group_notify(detectionCompletionGroup, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-			completionHandler(nil, supportedAuthMethodIdentifiers);
+			__block NSError *error = nil;
+			
+			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionURL.count > 0))
+			{
+				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCConnectionRequest *request, BOOL * _Nonnull stop) {
+					if (request.responseRedirectURL != nil)
+					{
+						NSURL *alternativeBaseURL;
+				
+						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.responseRedirectURL originalURL:request.url]) != nil)
+						{
+							error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
+						}
+						else
+						{
+							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.responseRedirectURL });
+						}
+					}
+				}];
+			}
+		
+			completionHandler(error, supportedAuthMethodIdentifiers);
 		});
 	});
 }
@@ -217,7 +305,34 @@
 
 		self.authenticationMethod = authenticationMethod;
 
-		[authenticationMethod generateBookmarkAuthenticationDataWithConnection:self options:options completionHandler:completionHandler];
+		[authenticationMethod generateBookmarkAuthenticationDataWithConnection:self options:options completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
+			if ((error != nil) && [error isOCErrorWithCode:OCErrorAuthorizationRedirect])
+			{
+				NSNumber *allowURLProtocolUpgrades = options[OCAuthenticationMethodAllowURLProtocolUpgradesKey];
+			
+				if ((allowURLProtocolUpgrades!=nil) && allowURLProtocolUpgrades.boolValue)
+				{
+					NSURL *redirectURLBase;
+					
+					if ((redirectURLBase = [error ocErrorInfoDictionary][OCAuthorizationMethodAlternativeServerURLKey]) != nil)
+					{
+						if ([self _isAlternativeBaseURLSafeUpgrade:redirectURLBase])
+						{
+							_bookmark.url = redirectURLBase;
+							
+							[self generateAuthenticationDataWithMethod:methodIdentifier options:options completionHandler:completionHandler];
+
+							return;
+						}
+					}
+				}
+			}
+		
+			if (completionHandler != nil)
+			{
+				completionHandler(error, authenticationMethodIdentifier, authenticationData);
+			}
+		}];
 	}
 }
 
@@ -232,6 +347,8 @@
 	@synchronized(pendingAuthenticationAvailabilityHandlers)
 	{
 		// Add availabilityHandler to pending
+		availabilityHandler = [availabilityHandler copy]; // Make a copy of the block. Otherwise ARC will create one for us later and pointers may differ, so that -removeObject: can't remove it because the copy has a different pointer. The result would be that the queue hangs forever for seemingly no reason.
+		
 		[pendingAuthenticationAvailabilityHandlers addObject:availabilityHandler];
 
 		if (pendingAuthenticationAvailabilityHandlers.count > 1)
@@ -241,24 +358,33 @@
 		}
 		else
 		{
-			canSend = [self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
-				// Share result with all pending Authentication Availability Handlers
-				@synchronized(pendingAuthenticationAvailabilityHandlers)
-				{
-					for (OCConnectionAuthenticationAvailabilityHandler handler in pendingAuthenticationAvailabilityHandlers)
+			OCAuthenticationMethod *authenticationMethod;
+			
+			if ((authenticationMethod = self.authenticationMethod) != nil)
+			{
+				canSend = [self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+					// Share result with all pending Authentication Availability Handlers
+					@synchronized(pendingAuthenticationAvailabilityHandlers)
 					{
-						handler(error, authenticationIsAvailable);
-					}
+						for (OCConnectionAuthenticationAvailabilityHandler handler in pendingAuthenticationAvailabilityHandlers)
+						{
+							handler(error, authenticationIsAvailable);
+						}
+						
+						[pendingAuthenticationAvailabilityHandlers removeAllObjects];
+					};
 					
-					[pendingAuthenticationAvailabilityHandlers removeAllObjects];
-				};
-				
-				//
-				if ((error != nil) && (weakSelf!=nil) && (delegate!=nil) && [delegate respondsToSelector:@selector(connection:handleError:)])
-				{
-					[delegate connection:weakSelf handleError:error];
-				}
-			}];
+					//
+					if ((error != nil) && (weakSelf!=nil) && (delegate!=nil) && [delegate respondsToSelector:@selector(connection:handleError:)])
+					{
+						[delegate connection:weakSelf handleError:error];
+					}
+				}];
+			}
+			else
+			{
+				canSend = YES;
+			}
 			
 			if (canSend)
 			{

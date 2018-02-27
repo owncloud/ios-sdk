@@ -139,7 +139,7 @@
 	return(nil);
 }
 
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	if (completionHandler!=nil)
 	{
@@ -239,5 +239,6 @@
 OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey = @"username";
 OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey = @"passphrase";
 OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"presentingViewController";
+OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
 
-
+NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";

@@ -257,6 +257,18 @@
 	return(nil);
 }
 
+- (NSURL *)responseRedirectURL
+{
+	NSString *locationURLString;
+	
+	if ((locationURLString = self.response.allHeaderFields[@"Location"]) != nil)
+	{
+		return ([NSURL URLWithString:locationURLString]);
+	}
+	
+	return (nil);
+}
+
 - (void)appendDataToResponseBody:(NSData *)appendResponseBodyData
 {
 	@synchronized(self)

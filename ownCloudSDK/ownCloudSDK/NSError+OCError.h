@@ -24,6 +24,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorInsufficientParameters, 	//!< Insufficient parameters
 
 	OCErrorAuthorizationFailed, 		//!< Authorization failed
+	OCErrorAuthorizationRedirect, 		//!< Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL. The userInfo of the error contains the alternative server URL as value for the key OCAuthorizationMethodAlternativeServerURLKey
 	OCErrorAuthorizationNoMethodData, 	//!< Authorization failed because no secret data was set for the authentication method
 	OCErrorAuthorizationMissingData, 	//!< Authorization failed because data was missing from the secret data for the authentication method
 	OCErrroAuthorizationCancelled,		//!< Authorization was cancelled by the user
@@ -40,11 +41,19 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 + (instancetype)errorWithOCError:(OCError)errorCode userInfo:(NSDictionary<NSErrorUserInfoKey,id> *)userInfo;
 
+- (BOOL)isOCError;
+
+- (BOOL)isOCErrorWithCode:(OCError)errorCode;
+
+- (NSDictionary *)ocErrorInfoDictionary;
+
 @end
 
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
 
-#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], @"OCErrorInfo" : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
+#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 
 extern NSErrorDomain OCErrorDomain;
+
+extern NSString *OCErrorInfoKey;
 

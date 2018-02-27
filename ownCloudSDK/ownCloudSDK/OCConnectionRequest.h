@@ -124,6 +124,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 #pragma mark - Response
 - (NSHTTPURLResponse *)response; //!< Convenience accessor for urlSessionTask.response
 
+- (NSURL *)responseRedirectURL; //!< URL contained in the response's Location header field
+
 - (void)appendDataToResponseBody:(NSData *)appendResponseBodyData;
 
 - (NSString *)responseBodyAsString; //!< Returns the response body as a string formatted using the text encoding provided by the server. If no text encoding is provided, ISO-8859-1 is used.

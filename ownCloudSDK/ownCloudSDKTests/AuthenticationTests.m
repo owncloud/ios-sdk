@@ -54,7 +54,7 @@
 	}
 }
 
-- (void)_performBasicAuthenticationTestWithURL:(NSURL *)url user:(NSString *)user password:(NSString *)password expectsSuccess:(BOOL)expectsSuccess
+- (void)_performBasicAuthenticationTestWithURL:(NSURL *)url user:(NSString *)user password:(NSString *)password allowUpgrades:(BOOL)allowUpgrades expectsSuccess:(BOOL)expectsSuccess
 {
 	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
 
@@ -69,6 +69,7 @@
 							 options:@{
 							 		OCAuthenticationMethodUsernameKey : user,
 							 		OCAuthenticationMethodPassphraseKey : password,
+							 		OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(allowUpgrades)
 								  }
 					       completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
 					       		if (expectsSuccess)
@@ -124,12 +125,17 @@
 
 - (void)testBasicAuthenticationSuccess
 {
-	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://owncloud-io.lan/"] user:@"admin" password:@"admin" expectsSuccess:YES];
+	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] user:@"demo" password:@"demo" allowUpgrades:YES expectsSuccess:YES];
+}
+
+- (void)testBasicAuthenticationRedirectFailure
+{
+	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] user:@"demo" password:@"demo" allowUpgrades:NO expectsSuccess:NO];
 }
 
 - (void)testBasicAuthenticationFailure
 {
-	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://owncloud-io.lan/"] user:@"nosuchuser" password:@"nosuchpass" expectsSuccess:NO];
+	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] user:@"nosuchuser" password:@"nosuchpass" allowUpgrades:YES expectsSuccess:NO];
 }
 
 - (void)testAuthenticationMethodDetection
@@ -139,11 +145,12 @@
 	OCBookmark *bookmark;
 	OCConnection *connection;
 
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
-		[connection requestSupportedAuthenticationMethodsWithCompletionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			NSLog(@"Supported methods: %@", supportMethods);
 			
 			[receivedReplyExpectation fulfill];
@@ -152,5 +159,106 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
+
+- (void)testAuthenticationMethodDetectionManualRedirectHandling
+{
+	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
+	XCTestExpectation *receivedRedirectExpectation = [self expectationWithDescription:@"Received redirect"];
+	XCTestExpectation *receivedMethodsExpectation = [self expectationWithDescription:@"Received methods"];
+
+	OCBookmark *bookmark;
+	OCConnection *connection;
+
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+			NSLog(@"1 - Error: %@ - Supported methods: %@", error, supportMethods);
+
+			if ([error isOCErrorWithCode:OCErrorAuthorizationRedirect])
+			{
+				NSURL *redirectURLBase;
+				
+				[receivedRedirectExpectation fulfill];
+			
+				if ((redirectURLBase = [error ocErrorInfoDictionary][OCAuthorizationMethodAlternativeServerURLKey]) != nil)
+				{
+					connection.bookmark.url = redirectURLBase;
+
+					[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+						NSLog(@"2 - Error: %@ - Supported methods: %@", error, supportMethods);
+			
+						[receivedReplyExpectation fulfill];
+						
+						if (supportMethods.count > 0)
+						{
+							[receivedMethodsExpectation fulfill];
+						}
+					}];
+				}
+			}
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testAuthenticationMethodDetectionAutomaticRedirectHandling
+{
+	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
+	XCTestExpectation *receivedAuthMethodsExpectation = [self expectationWithDescription:@"Retrieved auth methods"];
+
+	OCBookmark *bookmark;
+	OCConnection *connection;
+
+	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		[connection requestSupportedAuthenticationMethodsWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) } completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+			NSLog(@"Supported methods: %@", supportMethods);
+			
+			if (supportMethods.count > 0)
+			{
+				[receivedAuthMethodsExpectation fulfill];
+			}
+			
+			[receivedReplyExpectation fulfill];
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testAuthenticationMethodDetectionWithoutAutomaticRedirectHandling
+{
+	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
+	XCTestExpectation *receivedAuthMethodsExpectation = [self expectationWithDescription:@"Retrieved auth methods"];
+
+	OCBookmark *bookmark;
+	OCConnection *connection;
+
+	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+			NSLog(@"Supported methods: %@", supportMethods);
+			
+			if (supportMethods.count == 0)
+			{
+				[receivedAuthMethodsExpectation fulfill];
+			}
+			
+			[receivedReplyExpectation fulfill];
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 
 @end

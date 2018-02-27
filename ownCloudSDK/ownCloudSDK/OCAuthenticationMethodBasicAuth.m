@@ -69,7 +69,7 @@ OCAuthenticationMethodAutoRegister
 	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
 }
@@ -141,6 +141,7 @@ OCAuthenticationMethodAutoRegister
 					else
 					{
 						BOOL authorizationFailed = YES;
+						NSError *error = nil;
 					
 						if (request.response.statusCode == 200)
 						{
@@ -155,10 +156,58 @@ OCAuthenticationMethodAutoRegister
 								}
 							}
 						}
+						else if (request.response.statusCode == 302)
+						{
+							NSURL *responseRedirectURL;
+							
+							if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+							{
+								NSURL *alternativeBaseURL;
+								
+								if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+								{
+									error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
+								}
+								else
+								{
+									error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
+								}
+							
+								/*
+								NSString *redirectURLString = [responseRedirectURL absoluteString];
+								NSString *endpointPath = [connection pathForEndpoint:OCConnectionEndpointIDCapabilities];
+								
+								if ((redirectURLString!=nil) && (endpointPath!=nil))
+								{
+									NSRange endpointPathRange = [redirectURLString rangeOfString:endpointPath];
+									
+									if (endpointPathRange.location != NSNotFound)
+									{
+										NSString *redirectBaseURLString;
+										
+										if ((redirectBaseURLString = [redirectURLString substringWithRange:NSMakeRange(0, endpointPathRange.location)]) != nil)
+										{
+											NSURL *redirectBaseURL = [NSURL URLWithString:redirectBaseURLString];
+
+											error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : redirectBaseURL });
+											
+											NSLog(@"%@ vs %@", redirectBaseURL, [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]);
+
+										}
+									}
+								}
+								*/
+							}
+						}
 						
 						if (authorizationFailed)
 						{
-							completionHandler(OCError(OCErrorAuthorizationFailed), OCAuthenticationMethodBasicAuthIdentifier, nil);
+							if (error == nil)
+							{
+								error = OCError(OCErrorAuthorizationFailed);
+							}
+							
+							completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
 						}
 						else
 						{

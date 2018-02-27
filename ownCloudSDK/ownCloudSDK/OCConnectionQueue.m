@@ -429,4 +429,17 @@
 	}];
 }
 
+- (void)URLSession:(NSURLSession *)session
+        task:(NSURLSessionTask *)task
+        willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+        newRequest:(NSURLRequest *)request
+        completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
+{
+	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
+	if (completionHandler != nil)
+	{
+		completionHandler(NULL);
+	}
+}
+
 @end
