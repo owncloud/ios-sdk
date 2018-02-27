@@ -100,6 +100,9 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 
 @property(strong) NSError *error;
 
+#pragma mark - Init
++ (instancetype)requestWithURL:(NSURL *)url;
+
 #pragma mark - Queue scheduling support
 - (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue; //!< Called directly before scheduling of a request begins.
 - (NSMutableURLRequest *)generateURLRequestForQueue:(OCConnectionQueue *)queue; //!< Returns an NSURLRequest for this request.
@@ -111,8 +114,12 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 - (NSString *)valueForParameter:(NSString *)parameter;
 - (void)setValue:(NSString *)value forParameter:(NSString *)parameter;
 
+- (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters;
+
 - (NSString *)valueForHeaderField:(NSString *)headerField;
 - (void)setValue:(NSString *)value forHeaderField:(NSString *)headerField;
+
+- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields;
 
 #pragma mark - Response
 - (NSHTTPURLResponse *)response; //!< Convenience accessor for urlSessionTask.response
@@ -121,7 +128,7 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 
 - (NSString *)responseBodyAsString; //!< Returns the response body as a string formatted using the text encoding provided by the server. If no text encoding is provided, ISO-8859-1 is used.
 
-- (NSDictionary *)responseBodyConvertedFromJSONWithError:(NSError **)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
+- (NSDictionary *)responseBodyConvertedDictionaryFromJSONWithError:(NSError **)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
 - (NSArray *)responseBodyConvertedArrayFromJSONWithError:(NSError **)error; //!< Returns the response body as array as converted by the JSON deserializer
 
 @end

@@ -23,7 +23,7 @@
 
 @interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 {
-	__weak OCConnection *connection;
+	__weak OCConnection *_connection;
 
 	NSURLSession *_urlSession;
 	
@@ -35,7 +35,9 @@
 	NSMutableDictionary<NSNumber*, OCConnectionRequest *> *_runningRequestsByTaskIdentifier;
 	
 	NSUInteger _maxConcurrentRequests;
-	
+
+	BOOL _authenticatedRequestsCanBeScheduled;
+
 	dispatch_queue_t _actionQueue;
 }
 

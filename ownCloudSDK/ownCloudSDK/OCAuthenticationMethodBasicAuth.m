@@ -17,6 +17,7 @@
  */
 
 #import "OCAuthenticationMethodBasicAuth.h"
+#import "OCAuthenticationMethod+OCTools.h"
 #import "NSError+OCError.h"
 #import "OCConnectionRequest.h"
 
@@ -45,7 +46,6 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Passphrase-based Authentication Only
-
 + (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData
 {
 	NSString *userName = nil;
@@ -99,7 +99,7 @@ OCAuthenticationMethodAutoRegister
 		NSData *authenticationData;
 		
 		// Generate value for "Authentication" HTTP header
-		if ((authenticationHeaderValue = [NSString stringWithFormat:@"Basic %@", [[[NSString stringWithFormat:@"%@:%@", userName, passPhrase] dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0]]) != nil)
+		if ((authenticationHeaderValue = [OCAuthenticationMethod basicAuthorizationValueForUsername:userName passphrase:passPhrase]) != nil)
 		{
 			authenticationDict = @{
 				OCAuthenticationMethodUsernameKey   : userName,
@@ -113,9 +113,9 @@ OCAuthenticationMethodAutoRegister
 			if ((authenticationData = [NSPropertyListSerialization dataWithPropertyList:authenticationDict format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error]) != nil)
 			{
 				// Test credentials using connection before calling completionHandler; relay result of check
-				OCConnectionRequest *request = [OCConnectionRequest new];
-
-				request.url = [connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil];
+				OCConnectionRequest *request;
+				
+				request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 				[request setValue:@"json" forParameter:@"format"];
 
 				[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
@@ -136,7 +136,7 @@ OCAuthenticationMethodAutoRegister
 							NSError *error = nil;
 							NSDictionary *capabilitiesDict;
 							
-							if ((capabilitiesDict = [request responseBodyConvertedFromJSONWithError:&error]) != nil)
+							if ((capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
 							{
 								if ([capabilitiesDict valueForKeyPath:@"ocs.data"] != nil)
 								{

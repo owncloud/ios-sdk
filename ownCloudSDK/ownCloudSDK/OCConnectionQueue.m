@@ -40,6 +40,8 @@
 		_actionQueue = dispatch_queue_create("OCConnectionQueue", DISPATCH_QUEUE_SERIAL);
 		
 		_maxConcurrentRequests = 10;
+		
+		_authenticatedRequestsCanBeScheduled = YES;
 	}
 	
 	return (self);
@@ -84,9 +86,7 @@
 		[_queuedRequests addObject:request];
 	}
 	
-	[self _queueBlock:^{
-		[self _scheduleQueuedRequests];
-	}];
+	[self scheduleQueuedRequests];
 }
 
 - (void)cancelRequest:(OCConnectionRequest *)request
@@ -99,14 +99,47 @@
 	// Stub implementation
 }
 
+- (void)scheduleQueuedRequests
+{
+	[self _queueBlock:^{
+		[self _scheduleQueuedRequests];
+	}];
+}
+
 - (void)_scheduleQueuedRequests
 {
+	// PRE-SCHEDULING-HOOKS ? MAYBE 'MAY-SCHEDULE' CALLBACK TO CONNECTION, SO __ALL__ QUEUES CAN WAIT FOR AUTH REFRESH?
+
 	@synchronized(self)
 	{
 		if (((_maxConcurrentRequests==0) || (_runningRequests.count < _maxConcurrentRequests)) && // No limitation - or free slots?
 		    (_queuedRequests.count > 0)) // Something to schedule?
 		{
 			NSArray *queuedRequests = [NSArray arrayWithArray:_queuedRequests]; // Make a copy, because _queuedRequests will be modified during enumeration
+			
+			// Make sure the authentication method is ready to authorize the request, but try to avoid unnecessary calls (like when previous calls returned NO)
+			if (_authenticatedRequestsCanBeScheduled)
+			{
+				_authenticatedRequestsCanBeScheduled = [_connection canSendAuthenticatedRequestsForQueue:self availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+					// Set _authenticatedRequestsCanBeScheduled to YES regardless of authenticationIsAvailable's value in order to ensure -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] is called ever again (for requests queued in the future)
+					[self _queueBlock:^{
+						_authenticatedRequestsCanBeScheduled = YES;
+					}];
+
+					if (authenticationIsAvailable)
+					{
+						// Authentication is now available => schedule queued requests
+						[self scheduleQueuedRequests];
+					}
+					else
+					{
+						// Authentication is not available => end scheduled requests that need authentication with error
+						[self _finishQueuedRequestsWithError:error filter:^BOOL(OCConnectionRequest *request) {
+							return (!request.skipAuthorization);
+						}];
+					}
+				}];
+			}
 		
 			for (OCConnectionRequest *queuedRequest in queuedRequests)
 			{
@@ -119,6 +152,12 @@
 					{
 						// Make sure to only schedule this request if no other request from this group is running
 						scheduleRequest = ![_runningRequestsGroupIDs containsObject:queuedRequest.groupID];
+					}
+					
+					if (scheduleRequest && !queuedRequest.skipAuthorization)
+					{
+						// Make sure requests that need to be authenticated are not sent before the authentication method isn't ready to authorize it
+						scheduleRequest = _authenticatedRequestsCanBeScheduled;
 					}
 					
 					if (scheduleRequest)
@@ -150,12 +189,13 @@
 		// Prepare request
 		[self _prepareRequestForScheduling:request];
 
-		// Apply authentication
 		if (_connection!=nil)
 		{
+			// Apply authentication and other connection-level changes
 			request = [_connection prepareRequest:request forSchedulingInQueue:self];
 		}
 		
+		// Schedule request
 		if (request != nil)
 		{
 			NSURLRequest *urlRequest;
@@ -238,6 +278,37 @@
 	[request prepareForSchedulingInQueue:self];
 }
 
+- (void)_finishQueuedRequestsWithError:(NSError *)error filter:(BOOL(^)(OCConnectionRequest *request))requestFilter
+{
+	[self _queueBlock:^{
+		NSMutableArray <OCConnectionRequest *> *finishRequests = nil;
+	
+		@synchronized(self)
+		{
+			if ((finishRequests = [[NSMutableArray alloc] initWithArray:_queuedRequests]) != nil)
+			{
+				if (requestFilter!=nil)
+				{
+					for (OCConnectionRequest *request in _queuedRequests)
+					{
+						if (!requestFilter(request))
+						{
+							[finishRequests removeObject:request];
+						}
+					}
+				}
+				
+				[_queuedRequests removeObjectsInArray:finishRequests];
+			}
+		}
+		
+		for (OCConnectionRequest *request in finishRequests)
+		{
+			[self _handleFinishedRequest:request error:error scheduleQueuedRequests:NO];
+		}
+	}];
+}
+
 - (void)_queueBlock:(dispatch_block_t)block
 {
 	if (block != NULL)
@@ -248,6 +319,13 @@
 
 #pragma mark - Result handling
 - (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error
+{
+	[self _queueBlock:^{
+		[self _handleFinishedRequest:request error:error scheduleQueuedRequests:YES];
+	}];
+}
+
+- (void)_handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error scheduleQueuedRequests:(BOOL)scheduleQueuedRequests
 {
 	if (request==nil) { return; }
 	
@@ -271,8 +349,9 @@
 	}
 
 	// Update internal tracking collections
-	[self _queueBlock:^{
-		@synchronized(self)
+	@synchronized(self)
+	{
+		if ([_runningRequests indexOfObjectIdenticalTo:request] != NSNotFound)
 		{
 			if (request.groupID!=nil)
 			{
@@ -286,9 +365,12 @@
 				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
 			}
 		}
+	}
 
+	if (scheduleQueuedRequests)
+	{
 		[self _scheduleQueuedRequests];
-	}];
+	}
 }
 
 #pragma mark - Request retrieval

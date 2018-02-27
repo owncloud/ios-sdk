@@ -22,7 +22,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 {
 	OCErrorInternal, 		//!< Internal error
 	OCErrorInsufficientParameters, 	//!< Insufficient parameters
-	OCErrorAuthorizationFailed, 	//!< Authorization failed
+
+	OCErrorAuthorizationFailed, 		//!< Authorization failed
+	OCErrorAuthorizationNoMethodData, 	//!< Authorization failed because no secret data was set for the authentication method
+	OCErrorAuthorizationMissingData, 	//!< Authorization failed because data was missing from the secret data for the authentication method
 
 	OCErrorRequestURLSessionTaskConstructionFailed, //!< Construction of URL Session Task failed
 	OCErrorRequestCancelled, 			//!< Request was cancelled
@@ -39,6 +42,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 @end
 
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
+
+#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], @"OCErrorInfo" : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 
 extern NSErrorDomain OCErrorDomain;
 

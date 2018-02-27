@@ -21,4 +21,6 @@
 
 typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
 
+typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
+
 #endif /* OCTypes_h */
