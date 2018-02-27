@@ -63,6 +63,17 @@ OCAuthenticationMethodAutoRegister
 	return (userName);
 }
 
+#pragma mark - Authentication Method Detection
++ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
+{
+	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
+}
+
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
+{
+	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
+}
+
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection
 {

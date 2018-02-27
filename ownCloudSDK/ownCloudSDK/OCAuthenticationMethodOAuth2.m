@@ -95,6 +95,18 @@ OCAuthenticationMethodAutoRegister
 	return(request);
 }
 
+#pragma mark - Authentication Method Detection
++ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
+{
+	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]);
+}
+
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
+{
+	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
+}
+
+
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
@@ -125,7 +137,7 @@ OCAuthenticationMethodAutoRegister
 					// Obtain Authorization Code
 					if ((authorizationCode = [callbackURL queryParameters][@"code"]) != nil)
 					{
-						NSLog(@"Authorization Code: %@", authorizationCode);
+						// NSLog(@"Authorization Code: %@", authorizationCode);
 
 						// Send Access Token Request
 						[self 	_sendTokenRequestToConnection:connection
@@ -148,6 +160,12 @@ OCAuthenticationMethodAutoRegister
 				
 				if (error != nil)
 				{
+					if ((error!=nil) && [error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
+					{
+						// User cancelled authorization
+						error = OCError(OCErrroAuthorizationCancelled);
+					}
+
 					// Return errors
 					completionHandler(error, OCAuthenticationMethodOAuth2Identifier, nil);
 				}

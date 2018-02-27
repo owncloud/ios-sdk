@@ -132,4 +132,25 @@
 	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://owncloud-io.lan/"] user:@"nosuchuser" password:@"nosuchpass" expectsSuccess:NO];
 }
 
+- (void)testAuthenticationMethodDetection
+{
+	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
+
+	OCBookmark *bookmark;
+	OCConnection *connection;
+
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		[connection requestSupportedAuthenticationMethodsWithCompletionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
+			NSLog(@"Supported methods: %@", supportMethods);
+			
+			[receivedReplyExpectation fulfill];
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end

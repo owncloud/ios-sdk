@@ -26,6 +26,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorAuthorizationFailed, 		//!< Authorization failed
 	OCErrorAuthorizationNoMethodData, 	//!< Authorization failed because no secret data was set for the authentication method
 	OCErrorAuthorizationMissingData, 	//!< Authorization failed because data was missing from the secret data for the authentication method
+	OCErrroAuthorizationCancelled,		//!< Authorization was cancelled by the user
 
 	OCErrorRequestURLSessionTaskConstructionFailed, //!< Construction of URL Session Task failed
 	OCErrorRequestCancelled, 			//!< Request was cancelled

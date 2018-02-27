@@ -45,7 +45,7 @@
 	return (@{
 			
 		OCConnectionEndpointIDCapabilities  : @"ocs/v1.php/cloud/capabilities",
-		OCConnectionEndpointIDWebDAV 	    : @"remote.php/webdav",
+		OCConnectionEndpointIDWebDAV 	    : @"remote.php/dav/files",
 		OCConnectionInsertXRequestTracingID : @(YES)
 	});
 }
@@ -114,9 +114,97 @@
 }
 
 #pragma mark - Authentication
-- (void)requestSupportedAuthenticationMethodsWithCompletionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *))completionHandler
+- (void)requestSupportedAuthenticationMethodsWithCompletionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportMethods))completionHandler
 {
-	// Stub implementation
+	NSArray <Class> *authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses];
+	NSMutableSet <NSURL *> *detectionURLs = [NSMutableSet set];
+	NSMutableDictionary <NSString *, NSArray <NSURL *> *> *detectionURLsByMethod = [NSMutableDictionary dictionary];
+	NSMutableDictionary <NSURL *, OCConnectionRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
+	
+	if (completionHandler==nil) { return; }
+	
+	// Collect detection URLs for pre-loading
+	for (Class authenticationMethodClass in authenticationMethodClasses)
+	{
+		OCAuthenticationMethodIdentifier authMethodIdentifier;
+		
+		if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
+		{
+			NSArray <NSURL *> *authMethodDetectionURLs;
+			
+			if ((authMethodDetectionURLs = [authenticationMethodClass detectionURLsForConnection:self]) != nil)
+			{
+				[detectionURLs addObjectsFromArray:authMethodDetectionURLs];
+				
+				detectionURLsByMethod[authMethodIdentifier] = authMethodDetectionURLs;
+			}
+		}
+	}
+	
+	// Pre-load detection URLs
+	dispatch_group_t preloadCompletionGroup = dispatch_group_create();
+	
+	for (NSURL *detectionURL in detectionURLs)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:detectionURL];
+		
+		request.skipAuthorization = YES;
+		
+		dispatch_group_enter(preloadCompletionGroup);
+		
+		request.ephermalResultHandler = ^(OCConnectionRequest *request, NSError *error) {
+			dispatch_group_leave(preloadCompletionGroup);
+		};
+		
+		detectionRequestsByDetectionURL[detectionURL] = request;
+	
+		[self.commandQueue enqueueRequest:request];
+	}
+
+	// Schedule block for when all detection URL pre-loads have finished
+	dispatch_group_notify(preloadCompletionGroup, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		// Pass result to authentication methods
+		NSMutableArray<OCAuthenticationMethodIdentifier> *supportedAuthMethodIdentifiers = [NSMutableArray array];
+
+		dispatch_group_t detectionCompletionGroup = dispatch_group_create();
+
+		for (Class authenticationMethodClass in authenticationMethodClasses)
+		{
+			OCAuthenticationMethodIdentifier authMethodIdentifier;
+			
+			if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
+			{
+				NSMutableDictionary <NSURL *, OCConnectionRequest *> *resultsByURL = [NSMutableDictionary dictionary];
+				
+				// Compile pre-load results
+				for (NSURL *detectionURL in detectionURLsByMethod[authMethodIdentifier])
+				{
+					OCConnectionRequest *request;
+					
+					if ((request = [detectionRequestsByDetectionURL objectForKey:detectionURL]) != nil)
+					{
+						resultsByURL[detectionURL] = request;
+					}
+				}
+				
+				dispatch_group_enter(detectionCompletionGroup);
+				
+				[authenticationMethodClass detectAuthenticationMethodSupportForConnection:self withServerResponses:resultsByURL completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
+					if (supported)
+					{
+						[supportedAuthMethodIdentifiers addObject:identifier];
+					}
+
+					dispatch_group_leave(detectionCompletionGroup);
+				}];
+			}
+		}
+		
+		// Schedule block for when all methods have completed detection
+		dispatch_group_notify(detectionCompletionGroup, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			completionHandler(nil, supportedAuthMethodIdentifiers);
+		});
+	});
 }
 
 - (void)generateAuthenticationDataWithMethod:(OCAuthenticationMethodIdentifier)methodIdentifier options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler

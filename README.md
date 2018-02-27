@@ -57,7 +57,6 @@ Note: since `OCEventTarget` handles the resolution and actual delivery of the ev
 - nullability annotations
 - OCDatabase details
 - OCEvent properties
-- OCConnectionRequest and OCConnectionQueue details
 - Evaluate chances to consolidate existing OCItem properties, add missing ones
 - complete list of ToDos ;-)
 - implementation :-D
