@@ -21,6 +21,16 @@
 
 @class OCConnection;
 
+typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
+{
+	OCConnectionQueueTrustActionError,	//!< An error occured during evaluation. Don't proceed.
+	OCConnectionQueueTrustActionReject,
+
+	OCConnectionQueueTrustActionAskUser,
+
+	OCConnectionQueueTrustActionProceed
+};
+
 @interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 {
 	__weak OCConnection *_connection;

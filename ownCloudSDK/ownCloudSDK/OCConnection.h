@@ -23,6 +23,7 @@
 #import "OCEventTarget.h"
 #import "OCShare.h"
 #import "OCClassSettings.h"
+#import "OCCertificate.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -30,14 +31,27 @@
 @class OCConnectionQueue;
 @class OCConnectionRequest;
 @class OCConnection;
+@class OCCertificate;
 
 typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
+typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed);
+typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
+
+typedef NS_ENUM(NSUInteger,OCConnectionPrepareResult)
+{
+	OCConnectionPrepareResultSuccess, //!< Preparation was successful. The bookmark can be used as-is.
+	OCConnectionPrepareResultError, //!< Preparation failed. The bookmark can't be used as-is. See error for the reason.
+	OCConnectionPrepareResultURLChangedByUpgrading, //!< The URL of the bookmark needs to changed to suggestedURL to proceed. The suggestedURL is an upgraded version (http->https) of the previous URL and otherwise identical. The bookmark's URL needs to be updated with this URL to proceed.
+	OCConnectionPrepareResultURLChangedSignificantly //!< The URL of the bookmark needs to changed to suggestedURL to proceed. The suggestedURL presents a significant change from the bookmark's URL. Therefore the user should be prompted for confirmation. If the user accepts the new URL. the bookmark's URL need to be changed to the suggestedURL.
+};
 
 @protocol OCConnectionDelegate <NSObject>
 
 - (void)connection:(OCConnection *)connection handleError:(NSError *)error;
+
+- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 @end
 
@@ -75,8 +89,11 @@ typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 - (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <NSString *,id> *)options; //!< Returns the URL of an endpoint identified by its OCConnectionEndpointID, allowing additional options (reserved for future use)
 - (NSURL *)URLForEndpointPath:(OCPath)endpointPath; //!< Returns the URL of the endpoint at the supplied endpointPath
 
-#pragma mark - Base URL Extract
+#pragma mark - Base URL Extraction
 - (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)redirectionTargetURL originalURL:(NSURL *)originalURL;
+
+#pragma mark - Prepare for setup
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionPrepareResult result, NSError *error, NSURL *suggestedURL, OCCertificate *suggestedURLCertificate, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in the creation of a valid bookmark during setup. Also detects available authentication method(s) and the certificate for a new connection. Based on the bookmark's URL.
 
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithOptions:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods))completionHandler; //!< Requests a list of supported authentication methods and returns the result

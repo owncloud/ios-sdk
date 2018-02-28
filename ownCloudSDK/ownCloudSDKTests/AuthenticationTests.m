@@ -19,7 +19,7 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 
-@interface AuthenticationTests : XCTestCase
+@interface AuthenticationTests : XCTestCase <OCConnectionDelegate>
 @end
 
 @implementation AuthenticationTests
@@ -82,7 +82,6 @@
 								if (error!=nil)
 								{
 									NSLog(@"Failed as expected. Error: %@", error);
-									[receivedReplyExpectation fulfill];
 								}
 							}
 
@@ -100,7 +99,7 @@
 							       	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 									NSLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
 									
-									if (request.response.statusCode == 200)
+									if (request.responseHTTPStatus.isSuccess)
 									{
 										NSError *error = nil;
 										NSDictionary *capabilitiesDict;
@@ -116,6 +115,11 @@
 									[receivedReplyExpectation fulfill];
 							       	}];
 						       	}
+						       	else
+						       	{
+						       		// Operation failed here. No need to wait until 60 seconds run out
+								[receivedReplyExpectation fulfill];
+							}
 					       }
 		 ];
 	}
@@ -145,19 +149,27 @@
 	OCBookmark *bookmark;
 	OCConnection *connection;
 
-	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
+	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
+		connection.delegate = self;
+	
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-			NSLog(@"Supported methods: %@", supportMethods);
+			NSLog(@"Error: %@ Supported methods: %@", error, supportMethods);
 			
 			[receivedReplyExpectation fulfill];
 		}];
 	}
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+{
+	NSLog(@"Connection asked for user confirmation of certificate for %@", certificate.hostName);
+	proceedHandler(YES);
 }
 
 - (void)testAuthenticationMethodDetectionManualRedirectHandling

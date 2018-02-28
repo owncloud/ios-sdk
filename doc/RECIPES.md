@@ -11,6 +11,66 @@ OCBookmark *bookmark;
 bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 ```
 
+## Bookmark setup (WORK IN PROGRESS)
+```objc
+OCBookmark *bookmark; // Bookmark from previous recipe
+OCConnection *connection;
+
+if (connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+{
+	[connection prepareForSetupWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) }
+	                     completionHandler:^(OCConnectionPrepareResult result, NSError *error, NSData *certificateData, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+	{
+		/***** WORK IN PROGRESS ****/
+	
+		switch (result)
+		{
+			case OCConnectionPrepareResultSuccess:
+				NSLog(@"Preparation successful!");
+
+				bookmark.certificateData = certificateData;
+				bookmark.certificateModificationDate = [NSDate date];
+
+				// -> Proceed
+			break;
+
+			case OCConnectionPrepareResultError:
+				// Display error to user
+				NSLog(@"Preparation failed with error: %@", error);
+			break;
+
+			case OCConnectionPrepareResultURLChangedByUpgrading:
+				// The suggestedURL is an upgraded version (http->https) of the previous URL and otherwise identical.
+
+				connection.bookmark.url = suggestedURL;
+
+				bookmark.certificateData = certificateData;
+				bookmark.certificateModificationDate = [NSDate date];
+
+				// -> Proceed
+			break;
+			
+			case OCConnectionPrepareResultURLChangedSignificantly:
+				// The suggestedURL presents a significant change from the bookmark's URL.
+				// Prompt user for confirmation
+
+				if (resultOfPromptingUserForConfirmation)
+				{
+					connection.bookmark.url = suggestedURL;
+
+					bookmark.certificateData = certificateData;
+					bookmark.certificateModificationDate = [NSDate date];
+
+					// -> Proceed
+				}
+			break;
+		}
+	}];
+}
+
+```
+
+
 ## Get OAuth2 token for Bookmark and store it permanently
 ```objc
 OCBookmark *bookmark; // Bookmark from previous recipe
@@ -89,3 +149,4 @@ if (core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
     [core startQuery:rootQuery];
 }
 ```
+

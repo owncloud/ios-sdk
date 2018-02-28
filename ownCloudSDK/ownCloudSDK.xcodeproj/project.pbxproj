@@ -78,6 +78,12 @@
 		DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */; };
 		DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */; };
+		DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E72046BC2600189B9A /* OCHTTPStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2E82046BC2600189B9A /* OCHTTPStatus.m */; };
+		DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2EB2046E2B900189B9A /* OCCertificate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2EC2046E2B900189B9A /* OCCertificate.m */; };
+		DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2EF2047094500189B9A /* NSData+OCHash.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F02047094500189B9A /* NSData+OCHash.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -196,6 +202,12 @@
 		DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCURLQueryParameterExtensions.m"; sourceTree = "<group>"; };
 		DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+OCTools.h"; sourceTree = "<group>"; };
 		DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+OCTools.m"; sourceTree = "<group>"; };
+		DCEEB2E72046BC2600189B9A /* OCHTTPStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPStatus.h; sourceTree = "<group>"; };
+		DCEEB2E82046BC2600189B9A /* OCHTTPStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPStatus.m; sourceTree = "<group>"; };
+		DCEEB2EB2046E2B900189B9A /* OCCertificate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificate.h; sourceTree = "<group>"; };
+		DCEEB2EC2046E2B900189B9A /* OCCertificate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificate.m; sourceTree = "<group>"; };
+		DCEEB2EF2047094500189B9A /* NSData+OCHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSData+OCHash.h"; sourceTree = "<group>"; };
+		DCEEB2F02047094500189B9A /* NSData+OCHash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSData+OCHash.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -231,6 +243,8 @@
 			children = (
 				DC39DC4A2041A2FB00189B9A /* NSError+OCError.m */,
 				DC39DC492041A2FB00189B9A /* NSError+OCError.h */,
+				DCEEB2E82046BC2600189B9A /* OCHTTPStatus.m */,
+				DCEEB2E72046BC2600189B9A /* OCHTTPStatus.h */,
 			);
 			name = Errors;
 			sourceTree = "<group>";
@@ -456,6 +470,10 @@
 				DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */,
 				DC7E0A6E2036F28B006111FA /* OCKeychain.m */,
 				DC7E0A6D2036F28B006111FA /* OCKeychain.h */,
+				DCEEB2EC2046E2B900189B9A /* OCCertificate.m */,
+				DCEEB2EB2046E2B900189B9A /* OCCertificate.h */,
+				DCEEB2F02047094500189B9A /* NSData+OCHash.m */,
+				DCEEB2EF2047094500189B9A /* NSData+OCHash.h */,
 			);
 			name = "App Identity";
 			sourceTree = "<group>";
@@ -481,6 +499,7 @@
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DC39DC59204215A800189B9A /* NSProgress+OCActivity.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
+				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
@@ -504,6 +523,8 @@
 				DCC8F9EE2028558000EB6701 /* OCQuery.h in Headers */,
 				DCC8F9FB2028586900EB6701 /* OCAuthenticationMethod.h in Headers */,
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
+				DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */,
+				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
@@ -657,6 +678,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCActivity.m in Sources */,
@@ -664,6 +686,7 @@
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
+				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
 				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
@@ -672,6 +695,7 @@
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
+				DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,

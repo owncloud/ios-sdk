@@ -143,7 +143,7 @@ OCAuthenticationMethodAutoRegister
 						BOOL authorizationFailed = YES;
 						NSError *error = nil;
 					
-						if (request.response.statusCode == 200)
+						if (request.responseHTTPStatus.isSuccess)
 						{
 							NSError *error = nil;
 							NSDictionary *capabilitiesDict;
@@ -156,7 +156,7 @@ OCAuthenticationMethodAutoRegister
 								}
 							}
 						}
-						else if (request.response.statusCode == 302)
+						else if (request.responseHTTPStatus.isRedirection)
 						{
 							NSURL *responseRedirectURL;
 							

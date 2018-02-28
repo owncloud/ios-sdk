@@ -20,6 +20,8 @@
 #import "OCEventTarget.h"
 #import "OCBookmark.h"
 #import "OCConnection.h"
+#import "OCHTTPStatus.h"
+#import "OCCertificate.h"
 
 typedef NSString* OCConnectionRequestMethod NS_TYPED_ENUM;
 typedef NSMutableDictionary<NSString*,NSString*>* OCConnectionHeaderFields;
@@ -51,6 +53,7 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 
 	OCConnectionRequestResultHandlerAction _resultHandlerAction;
 	OCConnectionEphermalResultHandler _ephermalResultHandler;
+	OCConnectionEphermalRequestCertificateProceedHandler _ephermalRequestCertificateProceedHandler;
 	OCEventTarget *_resultTarget;
 
  	OCConnectionRequestPriority _priority;
@@ -60,9 +63,12 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	BOOL _downloadRequest;
 	NSURL *_downloadedFile;
 
+	OCHTTPStatus *_responseHTTPStatus;
 	NSMutableData *_responseBodyData;
+	OCCertificate *_responseCertificate;
 	
 	BOOL _cancelled;
+	
 	
 	NSError *_error;
 }
@@ -83,8 +89,9 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(strong) NSData *bodyData;			//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
 
-@property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;		//!< The selector to invoke on OCConnection when the request has concluded.
+@property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
+@property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
 
 @property(assign) OCConnectionRequestPriority priority;	//!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority)
@@ -95,6 +102,7 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(strong) NSURL *downloadedFile;		//!< If downloadRequest is YES, location of the downloaded file
 
 @property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
+@property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
 
 @property(readonly) BOOL cancelled;
 
@@ -122,6 +130,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 - (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields;
 
 #pragma mark - Response
+@property(strong,nonatomic) OCHTTPStatus *responseHTTPStatus; //!< HTTP Status delivered with response
+
 - (NSHTTPURLResponse *)response; //!< Convenience accessor for urlSessionTask.response
 
 - (NSURL *)responseRedirectURL; //!< URL contained in the response's Location header field

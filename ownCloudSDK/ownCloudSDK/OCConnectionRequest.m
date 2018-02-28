@@ -40,6 +40,7 @@
 
 @synthesize resultHandlerAction = _resultHandlerAction;
 @synthesize ephermalResultHandler = _ephermalResultHandler;
+@synthesize ephermalRequestCertificateProceedHandler = _ephermalRequestCertificateProceedHandler;
 @synthesize eventTarget = _eventTarget;
 
 @synthesize priority = _priority;
@@ -255,6 +256,21 @@
 	}
 
 	return(nil);
+}
+
+- (OCHTTPStatus *)responseHTTPStatus
+{
+	if (_responseHTTPStatus == nil)
+	{
+		NSHTTPURLResponse *httpResponse;
+
+		if ((httpResponse = self.response) != nil)
+		{
+			_responseHTTPStatus = [OCHTTPStatus HTTPStatusWithCode:httpResponse.statusCode];
+		}
+	}
+
+	return (_responseHTTPStatus);
 }
 
 - (NSURL *)responseRedirectURL

@@ -53,7 +53,7 @@
 
 		NSLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
 		
-		if ((request.response.statusCode == 200) && ([request.responseBodyAsString containsString:@"/mac/"]))
+		if ((request.responseHTTPStatus.isSuccess) && ([request.responseBodyAsString containsString:@"/mac/"]))
 		{
 			[expectContentMatch fulfill];
 		}

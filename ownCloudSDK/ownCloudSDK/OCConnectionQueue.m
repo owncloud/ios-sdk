@@ -19,6 +19,7 @@
 #import "OCConnectionQueue.h"
 #import "OCConnection+OCConnectionQueue.h"
 #import "NSError+OCError.h"
+#import "OCCertificate.h"
 
 @implementation OCConnectionQueue
 
@@ -108,8 +109,6 @@
 
 - (void)_scheduleQueuedRequests
 {
-	// PRE-SCHEDULING-HOOKS ? MAYBE 'MAY-SCHEDULE' CALLBACK TO CONNECTION, SO __ALL__ QUEUES CAN WAIT FOR AUTH REFRESH?
-
 	@synchronized(self)
 	{
 		if (((_maxConcurrentRequests==0) || (_runningRequests.count < _maxConcurrentRequests)) && // No limitation - or free slots?
@@ -439,6 +438,74 @@
 	if (completionHandler != nil)
 	{
 		completionHandler(NULL);
+	}
+}
+
+- (void)URLSession:(NSURLSession *)session
+        task:(NSURLSessionTask *)task
+        didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+        completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
+{
+	// NSLog(@"%@ => protection space: %@ method: %@", challenge, challenge.protectionSpace, challenge.protectionSpace.authenticationMethod);
+
+	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
+	{
+		SecTrustRef serverTrust;
+		
+		if ((serverTrust = challenge.protectionSpace.serverTrust) != NULL)
+		{
+			// Handle server trust challenges
+			OCCertificate *certificate = [OCCertificate certificateWithTrustRef:challenge.protectionSpace.serverTrust hostName:task.currentRequest.URL.host];
+
+			[certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *validationError) {
+				[self _queueBlock:^{
+					OCConnectionRequest *request;
+
+					if ((request = [self requestForTask:task]) != nil)
+					{
+						OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed) {
+							if (proceed)
+							{
+								completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:serverTrust]);
+							}
+							else
+							{
+								request.error = OCError(OCErrorRequestServerCertificateRejected);
+								completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+							}
+						};
+
+						request.responseCertificate = certificate;
+						
+						if ((validationResult == OCCertificateValidationResultUserAccepted) ||
+						    (validationResult == OCCertificateValidationResultPassed))
+						{
+							proceedHandler(YES);
+						}
+						else
+						{
+							if (request.ephermalRequestCertificateProceedHandler != nil)
+							{
+								request.ephermalRequestCertificateProceedHandler(request, certificate, validationResult, validationError, proceedHandler);
+							}
+							else
+							{
+								[_connection handleValidationOfRequest:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+							}
+						}
+					}
+				}];
+			}];
+		}
+		else
+		{
+			completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+		}
+	}
+	else
+	{
+		// All other challenges
+		completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 	}
 }
 

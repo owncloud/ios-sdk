@@ -32,6 +32,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestURLSessionTaskConstructionFailed, //!< Construction of URL Session Task failed
 	OCErrorRequestCancelled, 			//!< Request was cancelled
 	OCErrorRequestRemovedBeforeScheduling, 		//!< Request was removed before scheduling
+	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
 	OCErrorRequestCompletedWithError		//!< Request completed with error
 };
 
@@ -53,7 +54,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 #define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 
+#define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+
 extern NSErrorDomain OCErrorDomain;
 
 extern NSString *OCErrorInfoKey;
 
+#define OCFRelease(obj) NSLog(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
+#define OCFRetain(obj) NSLog(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);

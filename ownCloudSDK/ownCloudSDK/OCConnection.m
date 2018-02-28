@@ -287,6 +287,10 @@
 							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.responseRedirectURL });
 						}
 					}
+					else if (request.error != nil)
+					{
+						error = request.error;
+					}
 				}];
 			}
 		
@@ -446,6 +450,24 @@
 	}
 
 	return (request);
+}
+
+#pragma mark - Handle certificate challenges
+- (void)handleValidationOfRequest:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+{
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:request:certificate:validationResult:validationError:proceedHandler:)])
+	{
+		// Consult delegate
+		[_delegate connection:self request:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+	}
+	else
+	{
+		// Default to safe option: reject
+		if (proceedHandler != nil)
+		{
+			proceedHandler(NO);
+		}
+	}
 }
 
 #pragma mark - Metadata actions

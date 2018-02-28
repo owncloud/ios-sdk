@@ -62,7 +62,7 @@
 					[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\nTask: %@\n\nResponse: %@\n\nBody: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString]];
 						
-						if (request.response.statusCode == 200)
+						if (request.responseHTTPStatus.isSuccess)
 						{
 							NSError *error = nil;
 							NSDictionary *capabilitiesDict;
