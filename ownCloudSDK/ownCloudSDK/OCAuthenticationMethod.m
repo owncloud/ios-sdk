@@ -83,6 +83,16 @@
 	return (nil);
 }
 
++ (NSString *)name
+{
+	return(nil);
+}
+
+- (NSString *)name
+{
+	return ([[self class] name]);
+}
+
 #pragma mark - Passphrase-based Authentication Only
 + (BOOL)usesUserName
 {

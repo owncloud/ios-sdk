@@ -157,6 +157,26 @@
 	return(NO);
 }
 
+#pragma mark - Prepare for setup
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+{
+	/*
+		Setup preparation steps overview:
+
+		1) Query [url]/status.php.
+		   - Redirect? Create issue, follow redirect, restart at 1).
+		   - Error (no OC status.php content):
+		     - check if [url] last path component is "owncloud".
+		       - if NO: append owncloud to [url] and restart at 1) with the new URL (so [url]/owncloud/status.php is queried).
+		       - if YES: load [url] directly and check if there's a redirection:
+		         - if YES: create a redirect issue, use redirection URL as [url] and repeat step 1
+		         - if NO: create error issue
+		   - Success (OC status.php content): proceed to step 2
+
+		2) Send PROPFIND to [finalurl]/remote.php/dav/files to determine available authentication mechanisms (=> use -requestSupportedAuthenticationMethodsWithOptions:.. for this)
+	*/
+}
+
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithOptions:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods))completionHandler
 {

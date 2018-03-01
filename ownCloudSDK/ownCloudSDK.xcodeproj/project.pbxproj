@@ -84,6 +84,8 @@
 		DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2EC2046E2B900189B9A /* OCCertificate.m */; };
 		DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2EF2047094500189B9A /* NSData+OCHash.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F02047094500189B9A /* NSData+OCHash.m */; };
+		DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -208,6 +210,8 @@
 		DCEEB2EC2046E2B900189B9A /* OCCertificate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificate.m; sourceTree = "<group>"; };
 		DCEEB2EF2047094500189B9A /* NSData+OCHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSData+OCHash.h"; sourceTree = "<group>"; };
 		DCEEB2F02047094500189B9A /* NSData+OCHash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSData+OCHash.m"; sourceTree = "<group>"; };
+		DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionIssue.h; sourceTree = "<group>"; };
+		DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionIssue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -344,6 +348,8 @@
 			children = (
 				DCC8F9E52028556500EB6701 /* OCConnection.m */,
 				DCC8F9E42028556500EB6701 /* OCConnection.h */,
+				DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */,
+				DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */,
 				DCC8FA142029EB9400EB6701 /* OCConnectionRequest.m */,
 				DCC8FA132029EB9400EB6701 /* OCConnectionRequest.h */,
 				DCC8FA28202B37B800EB6701 /* OCConnectionQueue.m */,
@@ -502,6 +508,7 @@
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
+				DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
@@ -700,6 +707,7 @@
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
+				DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DCC8F9E72028556500EB6701 /* OCConnection.m in Sources */,

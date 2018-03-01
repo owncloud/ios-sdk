@@ -39,6 +39,11 @@ OCAuthenticationMethodAutoRegister
 	return (OCAuthenticationMethodBasicAuthIdentifier);
 }
 
++ (NSString *)name
+{
+	return (@"Basic Auth");
+}
+
 #pragma mark - Authentication Data Tools
 + (NSDictionary *)_decodedAuthenticationData:(NSData *)authenticationData
 {

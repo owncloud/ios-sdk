@@ -24,6 +24,7 @@
 #import "OCShare.h"
 #import "OCClassSettings.h"
 #import "OCCertificate.h"
+#import "OCConnectionIssue.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -49,6 +50,7 @@ typedef NS_ENUM(NSUInteger,OCConnectionPrepareResult)
 
 @protocol OCConnectionDelegate <NSObject>
 
+@optional
 - (void)connection:(OCConnection *)connection handleError:(NSError *)error;
 
 - (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
@@ -93,7 +95,9 @@ typedef NS_ENUM(NSUInteger,OCConnectionPrepareResult)
 - (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)redirectionTargetURL originalURL:(NSURL *)originalURL;
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionPrepareResult result, NSError *error, NSURL *suggestedURL, OCCertificate *suggestedURLCertificate, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in the creation of a valid bookmark during setup. Also detects available authentication method(s) and the certificate for a new connection. Based on the bookmark's URL.
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCConnectionIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+
+// OCConnectionPrepareResult result, NSError *error, NSURL *suggestedURL, OCCertificate *suggestedURLCertificate, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods, void(^applySuggestedChangesToBookmark)(void)))completionHandler; //!< Helps in the creation of a valid bookmark during setup. Also detects available authentication method(s) and the certificate for a new connection. Based on the bookmark's URL.
 
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithOptions:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods))completionHandler; //!< Requests a list of supported authentication methods and returns the result

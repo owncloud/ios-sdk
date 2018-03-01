@@ -51,6 +51,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type;
 + (OCAuthenticationMethodIdentifier)identifier;
++ (NSString *)name;
+- (NSString *)name;
 
 #pragma mark - Passphrase-based Authentication Only
 + (BOOL)usesUserName; //!< This authentication method uses a user name

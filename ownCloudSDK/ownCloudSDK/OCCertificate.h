@@ -23,6 +23,8 @@
 
 typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 {
+	OCCertificateValidationResultNone,
+
 	// Hard fail
 	OCCertificateValidationResultError,
 	OCCertificateValidationResultReject,

@@ -26,7 +26,9 @@ typedef NSUUID* OCBookmarkUUID;
 @property(readonly) OCBookmarkUUID uuid; //!< UUID uniquely identifying the bookmark
 
 @property(strong) NSString *name; //!< Name of the server
-@property(strong) NSURL *url; //!< URL of the server
+@property(strong) NSURL *url; //!< URL to use to connect to the server
+
+@property(strong) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
 
 @property(strong) NSData *certificateData; //!< Certificate last used by the server this bookmark refers to
 @property(strong) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.

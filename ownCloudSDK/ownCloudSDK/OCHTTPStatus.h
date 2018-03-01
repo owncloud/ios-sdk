@@ -34,6 +34,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeBAD_REQUEST = 400,
 	OCHTTPStatusCodeUNAUTHORIZED = 401,
 	OCHTTPStatusCodeFORBIDDEN = 403,
+	OCHTTPStatusCodeNOT_FOUND = 404,
 
 	// Server Error (5xx)
 	OCHTTPStatusCodeINTERNAL_SERVER_ERROR = 500,
@@ -56,7 +57,6 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 - (NSError *)error;
 - (NSError *)errorWithURL:(NSURL *)url;
 - (NSError *)errorWithResponse:(NSHTTPURLResponse *)response;
-
 
 @end
 

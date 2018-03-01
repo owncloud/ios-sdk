@@ -77,6 +77,11 @@ OCAuthenticationMethodAutoRegister
 	return (OCAuthenticationMethodOAuth2Identifier);
 }
 
++ (NSString *)name
+{
+	return (@"OAuth2");
+}
+
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection
 {
