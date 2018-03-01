@@ -272,5 +272,36 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testAuthenticationMethodSorting
+{
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier, @"other-method"];
+
+	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:nil preferredMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier]];
+	
+	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
+}
+
+- (void)testAuthenticationMethodFiltering
+{
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier];
+
+	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier] preferredMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier]];
+	
+	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
+}
+
+
+- (void)testAuthenticationMethodSortingAndFiltering
+{
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier];
+
+	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:expectedMethods preferredMethodIdentifiers:expectedMethods];
+	
+	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
+}
+
 
 @end

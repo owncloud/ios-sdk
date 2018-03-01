@@ -23,6 +23,7 @@
 
 typedef NS_ENUM(NSUInteger, OCConnectionIssueLevel)
 {
+	OCConnectionIssueLevelInformal, //!< Issue that is purely informal and requires no user action
 	OCConnectionIssueLevelWarning,	//!< Issue that can ultimately be resolved
 	OCConnectionIssueLevelError	//!< Issue that can't be resolved
 };
@@ -70,7 +71,7 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 @property(weak) OCConnectionIssue *parentIssue;
 
 @property(readonly) OCConnectionIssueType type;
-@property(readonly) OCConnectionIssueLevel level;
+@property(assign) OCConnectionIssueLevel level;
 
 @property(readonly,nonatomic) BOOL resolvable;
 
@@ -88,7 +89,7 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 
 @property(strong,readonly) NSArray <OCConnectionIssue *> *issues;
 
-+ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url issueHandler:(OCConnectionIssueHandler)issueHandler;
++ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCConnectionIssueLevel)level issueHandler:(OCConnectionIssueHandler)issueHandler;
 
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(OCConnectionIssueHandler)issueHandler;
 

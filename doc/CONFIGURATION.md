@@ -17,9 +17,18 @@ This document provides an overview over the available sections and variables.
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/webdav`
+	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
+		- type: string
+		- default: `status.php`
 	- `connection-insert-x-request-id`: Send a unique, random UUID in the `X-Request_ID` HTTP header with every request to enable server-side tracing ([Details](https://github.com/owncloud/ios-sdk/issues/1))
 		- type: boolean
 		- default: `true`
+	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most prefered first).
+		- type: array
+		- default: `["com.owncloud.oauth2", "com.owncloud.basicauth"]`
+	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
+		- type: array
+		- default: `nil`
 
 ## OAuth2
 

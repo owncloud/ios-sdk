@@ -33,7 +33,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestCancelled, 			//!< Request was cancelled
 	OCErrorRequestRemovedBeforeScheduling, 		//!< Request was removed before scheduling
 	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
-	OCErrorRequestCompletedWithError		//!< Request completed with error
+	OCErrorRequestCompletedWithError,		//!< Request completed with error
+	
+	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
+	OCErrorServerTooManyRedirects	//!< Server detection failed because of too many redirects
 };
 
 @interface NSError (OCError)

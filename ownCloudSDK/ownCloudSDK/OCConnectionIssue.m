@@ -42,9 +42,9 @@
 @synthesize issues = _issues;
 
 #pragma mark - Init
-+ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url issueHandler:(OCConnectionIssueHandler)issueHandler
++ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCConnectionIssueLevel)level issueHandler:(OCConnectionIssueHandler)issueHandler
 {
-	return ([[self alloc] initWithCertificate:certificate validationResult:validationResult url:url issueHandler:issueHandler]);
+	return ([[self alloc] initWithCertificate:certificate validationResult:validationResult url:url level:level issueHandler:issueHandler]);
 }
 
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(OCConnectionIssueHandler)issueHandler
@@ -62,12 +62,12 @@
 	return ([[self alloc] initWithError:error level:level issueHandler:issueHandler]);
 }
 
-- (instancetype)initWithCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url issueHandler:(OCConnectionIssueHandler)issueHandler
+- (instancetype)initWithCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCConnectionIssueLevel)level issueHandler:(OCConnectionIssueHandler)issueHandler
 {
 	if ((self = [super init]) != nil)
 	{
 		_type = OCConnectionIssueTypeCertificateNeedsReview;
-		_level = OCConnectionIssueLevelWarning;
+		_level = level;
 	
 		_certificate = certificate;
 		_certificateValidationResult = validationResult;
@@ -224,6 +224,35 @@
 - (void)reject
 {
 	[self _madeDecision:OCConnectionIssueDecisionReject];
+}
+
+- (NSString *)description
+{
+	NSMutableString *descriptionString = [NSMutableString stringWithFormat:@"<%@: 0x%p, type: ", NSStringFromClass([self class]), self];
+
+	switch (_type)
+	{
+		
+		case OCConnectionIssueTypeGroup:
+			[descriptionString appendFormat:@"Group [%@]", _issues];
+		break;
+
+		case OCConnectionIssueTypeURLRedirection:
+			[descriptionString appendFormat:@"Redirection [%@ -> %@]", _originalURL, _suggestedURL];
+		break;
+
+		case OCConnectionIssueTypeCertificateNeedsReview:
+			[descriptionString appendFormat:@"Certificate [%@]", _certificate.hostName];
+		break;
+
+		case OCConnectionIssueTypeError:
+			[descriptionString appendFormat:@"Error [%@]", _error];
+		break;
+	}
+
+	[descriptionString appendString:@">"];
+
+	return (descriptionString);
 }
 
 @end
