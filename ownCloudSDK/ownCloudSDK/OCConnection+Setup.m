@@ -91,6 +91,7 @@
 		
 		request = [OCConnectionRequest requestWithURL:url];
 		request.skipAuthorization = YES;
+		request.forceCertificateDecisionDelegation = YES;
 		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 			switch (validationResult)
 			{
@@ -122,12 +123,24 @@
 						if (decision == OCConnectionIssueDecisionApprove)
 						{
 							certificate.userAccepted = YES;
+
+							_bookmark.certificateData = [certificate certificateData];
+							_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]);
 				}
 
 				case OCCertificateValidationResultUserAccepted:
 				case OCCertificateValidationResultPassed:
+					// Record certificate to show it and to save it to the bookmark
+					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelInformal issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+						if (decision == OCConnectionIssueDecisionApprove)
+						{
+							_bookmark.certificateData = [certificate certificateData];
+							_bookmark.certificateModificationDate = [NSDate date];
+						}
+					}]);
+
 					// This is fine!
 					proceedHandler(YES);
 				break;

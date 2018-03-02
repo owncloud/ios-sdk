@@ -66,7 +66,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_type = OCConnectionIssueTypeCertificateNeedsReview;
+		_type = OCConnectionIssueTypeCertificate;
 		_level = level;
 	
 		_certificate = certificate;
@@ -232,7 +232,6 @@
 
 	switch (_type)
 	{
-		
 		case OCConnectionIssueTypeGroup:
 			[descriptionString appendFormat:@"Group [%@]", _issues];
 		break;
@@ -241,7 +240,7 @@
 			[descriptionString appendFormat:@"Redirection [%@ -> %@]", _originalURL, _suggestedURL];
 		break;
 
-		case OCConnectionIssueTypeCertificateNeedsReview:
+		case OCConnectionIssueTypeCertificate:
 			[descriptionString appendFormat:@"Certificate [%@]", _certificate.hostName];
 		break;
 
@@ -249,10 +248,31 @@
 			[descriptionString appendFormat:@"Error [%@]", _error];
 		break;
 	}
+	
+	switch (_level)
+	{
+		case OCConnectionIssueLevelInformal:
+			[descriptionString appendString:@" (Informal)"];
+		break;
+		
+		case OCConnectionIssueLevelWarning:
+			[descriptionString appendString:@" (Warning)"];
+		break;
+		
+		case OCConnectionIssueLevelError:
+			[descriptionString appendString:@" (Error)"];
+		break;
+	}
 
 	[descriptionString appendString:@">"];
 
 	return (descriptionString);
+}
+
+#pragma mark - Filtering
+- (NSArray <OCConnectionIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCConnectionIssueLevel)level
+{
+	return ([self.issues filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"level >= %@", @(level)]]);
 }
 
 @end

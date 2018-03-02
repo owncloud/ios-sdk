@@ -477,8 +477,9 @@
 
 						request.responseCertificate = certificate;
 						
-						if ((validationResult == OCCertificateValidationResultUserAccepted) ||
-						    (validationResult == OCCertificateValidationResultPassed))
+						if (((validationResult == OCCertificateValidationResultUserAccepted) ||
+						     (validationResult == OCCertificateValidationResultPassed)) &&
+						     !request.forceCertificateDecisionDelegation)
 						{
 							proceedHandler(YES);
 						}

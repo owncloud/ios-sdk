@@ -41,6 +41,8 @@
 @synthesize resultHandlerAction = _resultHandlerAction;
 @synthesize ephermalResultHandler = _ephermalResultHandler;
 @synthesize ephermalRequestCertificateProceedHandler = _ephermalRequestCertificateProceedHandler;
+@synthesize forceCertificateDecisionDelegation = _forceCertificateDecisionDelegation;
+
 @synthesize eventTarget = _eventTarget;
 
 @synthesize priority = _priority;

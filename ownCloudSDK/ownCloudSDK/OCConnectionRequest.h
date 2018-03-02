@@ -54,7 +54,9 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	OCConnectionRequestResultHandlerAction _resultHandlerAction;
 	OCConnectionEphermalResultHandler _ephermalResultHandler;
 	OCConnectionEphermalRequestCertificateProceedHandler _ephermalRequestCertificateProceedHandler;
-	OCEventTarget *_resultTarget;
+	BOOL _forceCertificateDecisionDelegation;
+
+	OCEventTarget *_eventTarget;
 
  	OCConnectionRequestPriority _priority;
 	OCConnectionRequestGroupID _groupID;
@@ -92,6 +94,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
+@property(assign) BOOL forceCertificateDecisionDelegation; //!< YES if certificateProceedHandler and the connection (delegate) should be consulted even if the certificate has no issues or was previously approved by the user. [not serialized]
+
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
 
 @property(assign) OCConnectionRequestPriority priority;	//!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority)

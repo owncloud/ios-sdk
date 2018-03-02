@@ -24,7 +24,7 @@
 typedef NS_ENUM(NSUInteger, OCConnectionIssueLevel)
 {
 	OCConnectionIssueLevelInformal, //!< Issue that is purely informal and requires no user action
-	OCConnectionIssueLevelWarning,	//!< Issue that can ultimately be resolved
+	OCConnectionIssueLevelWarning,	//!< Issue that can ultimately be resolved, but for which the user should be prompted
 	OCConnectionIssueLevelError	//!< Issue that can't be resolved
 };
 
@@ -33,7 +33,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionIssueType)
 	OCConnectionIssueTypeGroup,	//!< This issue represents several issues, which are accessible via the issues property.
 
 	OCConnectionIssueTypeURLRedirection,
-	OCConnectionIssueTypeCertificateNeedsReview,
+	OCConnectionIssueTypeCertificate,
 
 	OCConnectionIssueTypeError
 };
@@ -100,5 +100,8 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 #pragma mark - Decision management
 - (void)approve;
 - (void)reject;
+
+#pragma mark - Filtering
+- (NSArray <OCConnectionIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCConnectionIssueLevel)level;
 
 @end
