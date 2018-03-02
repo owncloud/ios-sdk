@@ -40,14 +40,6 @@ typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnection
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 
-typedef NS_ENUM(NSUInteger,OCConnectionPrepareResult)
-{
-	OCConnectionPrepareResultSuccess, //!< Preparation was successful. The bookmark can be used as-is.
-	OCConnectionPrepareResultError, //!< Preparation failed. The bookmark can't be used as-is. See error for the reason.
-	OCConnectionPrepareResultURLChangedByUpgrading, //!< The URL of the bookmark needs to changed to suggestedURL to proceed. The suggestedURL is an upgraded version (http->https) of the previous URL and otherwise identical. The bookmark's URL needs to be updated with this URL to proceed.
-	OCConnectionPrepareResultURLChangedSignificantly //!< The URL of the bookmark needs to changed to suggestedURL to proceed. The suggestedURL presents a significant change from the bookmark's URL. Therefore the user should be prompted for confirmation. If the user accepts the new URL. the bookmark's URL need to be changed to the suggestedURL.
-};
-
 @protocol OCConnectionDelegate <NSObject>
 
 @optional
@@ -147,6 +139,9 @@ typedef NS_ENUM(NSUInteger,OCConnectionPrepareResult)
 #pragma mark - Base URL Extract
 + (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL;
 - (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL;
+
+#pragma mark - Safe upgrades
++ (BOOL)isAlternativeBaseURL:(NSURL *)alternativeBaseURL safeUpgradeForPreviousBaseURL:(NSURL *)baseURL;
 
 @end
 

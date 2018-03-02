@@ -295,14 +295,7 @@
 
 - (BOOL)_isAlternativeBaseURLSafeUpgrade:(NSURL *)alternativeBaseURL
 {
-	if ((alternativeBaseURL!=nil) && (_bookmark.url!=nil))
-	{
-		return (([alternativeBaseURL.host isEqual:_bookmark.url.host]) &&
-			([alternativeBaseURL.path isEqual:_bookmark.url.path]) &&
-			([_bookmark.url.scheme isEqual:@"http"] && [alternativeBaseURL.scheme isEqual:@"https"]));
-	}
-	
-	return(NO);
+	return ([[self class] isAlternativeBaseURL:alternativeBaseURL safeUpgradeForPreviousBaseURL:_bookmark.url]);
 }
 
 + (NSArray <OCAuthenticationMethodIdentifier> *)filteredAndSortedMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)methodIdentifiers allowedMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)allowedMethodIdentifiers preferredMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)preferredMethodIdentifiers

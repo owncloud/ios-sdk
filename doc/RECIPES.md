@@ -2,7 +2,7 @@
 
 ## A collection of recipes for common tasks.
 
-# Authentication
+# Getting started
 
 ## Bookmark creation
 ```objc
@@ -11,65 +11,92 @@ OCBookmark *bookmark;
 bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 ```
 
-## Bookmark setup (WORK IN PROGRESS)
+## Bookmark setup and authentication
+This shows the complete process from a user entered URL to a complete bookmark with authentication data usable to connect to the server.
 ```objc
+NSString *userEnteredURLString; // URL string retrieved from a text field, as entered by the user.
+UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
 OCBookmark *bookmark; // Bookmark from previous recipe
+NSString *userName=nil, *password=nil; // Either provided as part of userEnteredURLString - or set independently
 OCConnection *connection;
 
-if (connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+// Create bookmark from normalized URL (and extract username and password if included)
+bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString]];
+
+if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 {
-	[connection prepareForSetupWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) }
-	                     completionHandler:^(OCConnectionPrepareResult result, NSError *error, NSData *certificateData, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
-	{
-		/***** WORK IN PROGRESS ****/
-	
-		switch (result)
-		{
-			case OCConnectionPrepareResultSuccess:
-				NSLog(@"Preparation successful!");
+    // Prepare for setup
+    [connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+     {
+         // Check for warnings and errors
+         NSArray <OCConnectionIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError];
+         NSArray <OCConnectionIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelWarning];
+         BOOL proceedWithAuthentication = YES;
 
-				bookmark.certificateData = certificateData;
-				bookmark.certificateModificationDate = [NSDate date];
+         if (errorIssues.count > 0)
+         {
+             // Tell user it can't be done and present the issues in warningAndErrorIssues to the user
+         }
+         else
+         {
+             if (warningAndErrorIssues.count > 0)
+             {
+                 // Present issues contained in warningAndErrorIssues to user, then call -approve or -reject on the group issue containing all
+                 if (userReviewedAndAgreedToProceedDespiteWarnings)
+                 {
+                     // Apply changes to bookmark
+                     [issue approve];
+                     proceedWithAuthentication = YES;
+                 }
+                 else
+                 {
+                     // Handle rejection as needed
+                     [issue reject];
+                 }
+             }
+             else
+             {
+                 // No or only informal issues. Apply changes to bookmark contained in the issues.
+                 [issue approve];
+                 proceedWithAuthentication = YES;
+             }
+         }
 
-				// -> Proceed
-			break;
+         // Proceed with authentication
+         if (proceedWithAuthentication)
+         {
+             // Generate authentication data for bookmark
+             [connection generateAuthenticationDataWithMethod:[preferredAuthenticationMethods firstObject] // Use most-preferred, allowed authentication method
+                         options:@{
+                                       OCAuthenticationMethodPresentingViewControllerKey : topViewController,
+                                       OCAuthenticationMethodUsernameKey : userName,
+                                       OCAuthenticationMethodPassphraseKey : password
+                                }
+                         completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
+                                if (error == nil)
+                                {
+                                    // Success! Save authentication data to bookmark.
+                                    bookmark.authenticationData = authenticationData;
+                                    bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
 
-			case OCConnectionPrepareResultError:
-				// Display error to user
-				NSLog(@"Preparation failed with error: %@", error);
-			break;
+                                    // -- At this point, we have a bookmark that can be used to log into an ownCloud server --
 
-			case OCConnectionPrepareResultURLChangedByUpgrading:
-				// The suggestedURL is an upgraded version (http->https) of the previous URL and otherwise identical.
-
-				connection.bookmark.url = suggestedURL;
-
-				bookmark.certificateData = certificateData;
-				bookmark.certificateModificationDate = [NSDate date];
-
-				// -> Proceed
-			break;
-			
-			case OCConnectionPrepareResultURLChangedSignificantly:
-				// The suggestedURL presents a significant change from the bookmark's URL.
-				// Prompt user for confirmation
-
-				if (resultOfPromptingUserForConfirmation)
-				{
-					connection.bookmark.url = suggestedURL;
-
-					bookmark.certificateData = certificateData;
-					bookmark.certificateModificationDate = [NSDate date];
-
-					// -> Proceed
-				}
-			break;
-		}
-	}];
+                                    // Serialize bookmark and write it to a file on disk
+                                    [[bookmark bookmarkData] writeToFile:.. atomically:YES];
+                                }
+                                else
+                                {
+                                    // Failure
+                                    NSLog(@"Could not get token (error: %@)", error);
+                                }
+                         }
+              ];
+         }
+     }];
 }
-
 ```
 
+# Authentication
 
 ## Get OAuth2 token for Bookmark and store it permanently
 ```objc
@@ -87,7 +114,7 @@ if (connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
                         // Success! Save authentication data to bookmark.
                         bookmark.authenticationData = authenticationData;
                         bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
-                        
+
                         // Serialize bookmark and write it to a file on disk
                         [[bookmark bookmarkData] writeToFile:.. atomically:YES];
                     }
@@ -109,7 +136,7 @@ OCCore *core;
 if (core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 {
     OCQuery *rootQuery;
-    
+
     // Create a query for the root directory
     rootQuery = [OCQuery queryForPath:@"/"];
 
@@ -124,7 +151,7 @@ if (core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
                 {
                     NSLog(@"%@", item.name);
                 }
-                
+
                 NSLog(@"Insertions since last update:");
                 for (OCItem *item in changeset.insertedItems)
                 {
@@ -149,4 +176,3 @@ if (core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
     [core startQuery:rootQuery];
 }
 ```
-

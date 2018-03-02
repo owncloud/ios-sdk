@@ -72,10 +72,13 @@
 		DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */; };
 		DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */; };
 		DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */; };
+		DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */; };
+		DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE3B2049F3D100189B9A /* MiscTests.m */; };
 		DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D42042312500189B9A /* ConnectionTests.m */; };
 		DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */; };
-		DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */; };
+		DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */; };
 		DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -203,6 +206,9 @@
 		DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Setup.m"; sourceTree = "<group>"; };
 		DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Tools.m"; sourceTree = "<group>"; };
 		DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Authentication.m"; sourceTree = "<group>"; };
+		DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCURLNormalization.h"; sourceTree = "<group>"; };
+		DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCURLNormalization.m"; sourceTree = "<group>"; };
+		DCDBEE3B2049F3D100189B9A /* MiscTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MiscTests.m; sourceTree = "<group>"; };
 		DCEEB2D42042312500189B9A /* ConnectionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionTests.m; sourceTree = "<group>"; };
 		DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+OCClassSettings.h"; sourceTree = "<group>"; };
 		DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OCClassSettings.m"; sourceTree = "<group>"; };
@@ -316,6 +322,7 @@
 				DCC8F9D22028549100EB6701 /* Item */,
 				DCC8F9D32028549600EB6701 /* Share */,
 				DC39DC482041A2DD00189B9A /* Errors */,
+				DCDBEE3A2049EF5E00189B9A /* Foundation Categories */,
 				DCC8F9CC2028544900EB6701 /* Resources */,
 			);
 			path = ownCloudSDK;
@@ -327,6 +334,7 @@
 				DC39DC4D2041B53000189B9A /* AuthenticationTests.m */,
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
+				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 			);
 			path = ownCloudSDKTests;
@@ -362,8 +370,6 @@
 				DCC8FA28202B37B800EB6701 /* OCConnectionQueue.m */,
 				DCC8FA27202B37B800EB6701 /* OCConnectionQueue.h */,
 				DC39DC4F2041CA9B00189B9A /* OCConnection+OCConnectionQueue.h */,
-				DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */,
-				DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */,
 			);
 			name = Connection;
 			sourceTree = "<group>";
@@ -512,6 +518,17 @@
 			name = "Connection Categories";
 			sourceTree = "<group>";
 		};
+		DCDBEE3A2049EF5E00189B9A /* Foundation Categories */ = {
+			isa = PBXGroup;
+			children = (
+				DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */,
+				DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */,
+				DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */,
+				DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */,
+			);
+			name = "Foundation Categories";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -549,6 +566,7 @@
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
 				DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
+				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
@@ -722,6 +740,7 @@
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
 				DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */,
+				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
@@ -744,6 +763,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
+				DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */,
 				DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
 			);

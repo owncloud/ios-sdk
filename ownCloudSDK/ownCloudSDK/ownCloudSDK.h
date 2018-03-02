@@ -60,3 +60,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCUser.h>
 
 #import <ownCloudSDK/OCSyncRecord.h>
+
+#import <ownCloudSDK/NSURL+OCURLNormalization.h>
+#import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>

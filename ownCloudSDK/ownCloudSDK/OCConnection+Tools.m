@@ -89,4 +89,17 @@
 	return(nil);
 }
 
+#pragma mark - Safe upgrades
++ (BOOL)isAlternativeBaseURL:(NSURL *)alternativeBaseURL safeUpgradeForPreviousBaseURL:(NSURL *)baseURL
+{
+	if ((alternativeBaseURL!=nil) && (baseURL!=nil))
+	{
+		return (([alternativeBaseURL.host isEqual:baseURL.host]) &&
+			([alternativeBaseURL.path isEqual:baseURL.path]) &&
+			([baseURL.scheme isEqual:@"http"] && [alternativeBaseURL.scheme isEqual:@"https"]));
+	}
+	
+	return(NO);
+}
+
 @end

@@ -72,7 +72,9 @@
 	};
 
 	void (^AddRedirectionIssue)(NSURL *fromURL, NSURL *toURL) = ^(NSURL *fromURL, NSURL *toURL){
-		AddIssue([OCConnectionIssue issueForRedirectionFromURL:fromURL toSuggestedURL:toURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+		OCConnectionIssue *issue;
+		
+		issue = [OCConnectionIssue issueForRedirectionFromURL:fromURL toSuggestedURL:toURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 			if (decision == OCConnectionIssueDecisionApprove)
 			{
 				if (_bookmark.originURL == nil)
@@ -82,7 +84,14 @@
 
 				_bookmark.url = toURL;
 			}
-		}]);
+		}];
+
+		if ([[self class] isAlternativeBaseURL:toURL safeUpgradeForPreviousBaseURL:fromURL])
+		{
+			issue.level = OCConnectionIssueLevelInformal;
+		}
+
+		AddIssue(issue);
 	};
 
 	NSError *(^MakeRequest)(NSURL *url, OCConnectionRequest **outRequest) = ^(NSURL *url, OCConnectionRequest **outRequest){
