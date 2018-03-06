@@ -36,8 +36,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestCompletedWithError,		//!< Request completed with error
 	
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
-	OCErrorServerTooManyRedirects	//!< Server detection failed because of too many redirects
+	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
+	OCErrorServerBadRedirection	//!< Server redirection to bad/invalid URL
 };
+
+@class OCConnectionIssue;
 
 @interface NSError (OCError)
 
@@ -51,6 +54,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 - (NSDictionary *)ocErrorInfoDictionary;
 
+#pragma mark - Embedding issues
+- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue;
+- (OCConnectionIssue *)embeddedIssue;
+
 @end
 
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
@@ -62,6 +69,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 extern NSErrorDomain OCErrorDomain;
 
 extern NSString *OCErrorInfoKey;
+extern NSString *OCErrorIssueKey;
 
 #define OCFRelease(obj) NSLog(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
 #define OCFRetain(obj) NSLog(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);

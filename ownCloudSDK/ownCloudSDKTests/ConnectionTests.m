@@ -270,5 +270,102 @@
 	}];
 }
 
+- (void)testConnect
+{
+	XCTestExpectation *expectAnswer = [self expectationWithDescription:@"Received reply"];
+
+	NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
+	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
+	OCBookmark *bookmark = nil; // Bookmark from previous recipe
+	NSString *userName=@"admin", *password=@"admin"; // Either provided as part of userEnteredURLString - or set independently
+	OCConnection *connection;
+	
+	// Create bookmark from normalized URL (and extract username and password if included)
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString]];
+	
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		// Prepare for setup
+		[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+		 {
+			 // Check for warnings and errors
+			 NSArray <OCConnectionIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError];
+			 NSArray <OCConnectionIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelWarning];
+			 BOOL proceedWithAuthentication = YES;
+			 
+			 if (errorIssues.count > 0)
+			 {
+				 // Tell user it can't be done and present the issues in warningAndErrorIssues to the user
+			 }
+			 else
+			 {
+				 if (warningAndErrorIssues.count > 0)
+				 {
+					 // Present issues contained in warningAndErrorIssues to user, then call -approve or -reject on the group issue containing all
+					 if (YES)
+					 {
+						 // Apply changes to bookmark
+						 [issue approve];
+						 proceedWithAuthentication = YES;
+					 }
+					 else
+					 {
+						 // Handle rejection as needed
+						 // [issue reject];
+					 }
+				 }
+				 else
+				 {
+					 // No or only informal issues. Apply changes to bookmark contained in the issues.
+					 [issue approve];
+					 proceedWithAuthentication = YES;
+				 }
+			 }
+			 
+			 // Proceed with authentication
+			 if (proceedWithAuthentication)
+			 {
+				 // Generate authentication data for bookmark
+				 [connection generateAuthenticationDataWithMethod:[preferredAuthenticationMethods firstObject] // Use most-preferred, allowed authentication method
+									  options:@{
+										    // OCAuthenticationMethodPresentingViewControllerKey : topViewController,
+										    OCAuthenticationMethodUsernameKey : userName,
+										    OCAuthenticationMethodPassphraseKey : password
+										    }
+								completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
+									if (error == nil)
+									{
+										// Success! Save authentication data to bookmark.
+										bookmark.authenticationData = authenticationData;
+										bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
+										
+										// -- At this point, we have a bookmark that can be used to log into an ownCloud server --
+
+										NSLog(@"Done getting bookmark..");
+
+										[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+										
+											NSLog(@"Done connecting: %@ %@", error, issue);
+											[expectAnswer fulfill];
+										}];
+										
+										// Serialize bookmark and write it to a file on disk
+									}
+									else
+									{
+										// Failure
+										NSLog(@"Could not get token (error: %@)", error);
+										[expectAnswer fulfill];
+									}
+									
+								}
+				  ];
+			 }
+		 }];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end
 

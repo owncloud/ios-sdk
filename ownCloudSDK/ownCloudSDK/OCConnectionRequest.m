@@ -85,7 +85,7 @@
 
 + (instancetype)requestWithURL:(NSURL *)url
 {
-	OCConnectionRequest *request = [OCConnectionRequest new];
+	OCConnectionRequest *request = [self new];
 	
 	request.url = url;
 	
@@ -214,9 +214,9 @@
 				urlRequest.HTTPBodyStream = _bodyURLInputStream;
 			}
 		}
-		else if (_bodyData != nil)
+		else if (self.bodyData != nil)
 		{
-			urlRequest.HTTPBody = _bodyData;
+			urlRequest.HTTPBody = self.bodyData;
 		}
 	}
 

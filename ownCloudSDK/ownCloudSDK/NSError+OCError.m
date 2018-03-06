@@ -40,6 +40,31 @@
 	return ([self.domain isEqual:OCErrorDomain] && (self.code == errorCode));
 }
 
+- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue
+{
+	NSMutableDictionary *userInfo = nil;
+	
+	if (issue==nil) { return(self); }
+	
+	if (self.userInfo != nil)
+	{
+		userInfo = [NSMutableDictionary dictionaryWithDictionary:self.userInfo];
+	}
+	else
+	{
+		userInfo = [NSMutableDictionary dictionary];
+	}
+	
+	userInfo[OCErrorIssueKey] = issue;
+	
+	return ([NSError errorWithDomain:self.domain code:self.code userInfo:userInfo]);
+}
+
+- (OCConnectionIssue *)embeddedIssue
+{
+	return (self.userInfo[OCErrorIssueKey]);
+}
+
 - (NSDictionary *)ocErrorInfoDictionary
 {
 	NSDictionary *errorInfoDictionary;
@@ -60,3 +85,4 @@
 NSErrorDomain OCErrorDomain = @"OCError";
 
 NSString *OCErrorInfoKey = @"OCErrorInfo";
+NSString *OCErrorIssueKey = @"OCErrorIssue";

@@ -143,6 +143,38 @@
 	return (_level != OCConnectionIssueLevelError);
 }
 
+#pragma mark - Adding issues
+- (void)addIssue:(OCConnectionIssue *)addIssue
+{
+	if (_type == OCConnectionIssueTypeGroup)
+	{
+		if (addIssue.type == OCConnectionIssueTypeGroup)
+		{
+			// Add all issues in group
+			for (OCConnectionIssue *issue in addIssue.issues)
+			{
+				[self addIssue:issue];
+			}
+		}
+		else
+		{
+			// Add issues
+			if (![_issues isKindOfClass:[NSMutableArray class]])
+			{
+				_issues = [NSMutableArray arrayWithArray:_issues];
+			}
+			
+			addIssue.parentIssue = self;
+			[(NSMutableArray *)_issues addObject:addIssue];
+			
+			if (addIssue.level > _level)
+			{
+				_level = addIssue.level;
+			}
+		}
+	}
+}
+
 #pragma mark - Decision management
 - (void)_childIssueMadeDecision:(OCConnectionIssue *)childIssue
 {

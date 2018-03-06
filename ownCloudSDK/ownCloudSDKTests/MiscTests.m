@@ -67,4 +67,52 @@
 	}
 }
 
+- (void)testXML
+{
+	// Just a playground right now.. proper tests coming.
+	
+	/*
+<?xml version="1.0" encoding="UTF-8"?>
+<D:propfind xmlns:D="DAV:">
+	<D:prop>
+		<D:resourcetype/>
+		<D:getlastmodified/>
+		<size xmlns="http://owncloud.org/ns"/>
+		<D:creationdate/>
+		<id xmlns="http://owncloud.org/ns"/>
+		<D:getcontentlength/>
+		<D:displayname/>
+		<D:quota-available-bytes/>
+		<D:getetag/>
+		<permissions xmlns="http://owncloud.org/ns"/>
+		<D:quota-used-bytes/>
+		<D:getcontenttype/>
+	</D:prop>
+</D:propfind>	*/
+	OCXMLNode *xmlDocument = [OCXMLNode documentWithRootElement:
+		[OCXMLNode elementWithName:@"D:propfind" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:@[
+			[OCXMLNode elementWithName:@"D:prop" children:@[
+				[OCXMLNode elementWithName:@"D:resourcetype"],
+				[OCXMLNode elementWithName:@"D:getlastmodified"],
+				[OCXMLNode elementWithName:@"D:creationdate"],
+				[OCXMLNode elementWithName:@"D:getcontentlength"],
+				[OCXMLNode elementWithName:@"D:displayname"],
+				[OCXMLNode elementWithName:@"D:getcontenttype"],
+				[OCXMLNode elementWithName:@"D:getetag"],
+				[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+				[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+				[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+				[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+				[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+				[OCXMLNode elementWithName:@"test" attributes:@[[OCXMLNode attributeWithName:@"escapeThese" stringValue:@"Attribute \"'&<>"]] stringValue:@"Value \"'&<>"]
+			]],
+		]]
+	];
+	
+	NSLog(@"%@", [xmlDocument XMLString]);
+
+	NSLog(@"%@", [xmlDocument nodesForXPath:@"D:propfind/D:prop/size"]);
+
+}
+
 @end

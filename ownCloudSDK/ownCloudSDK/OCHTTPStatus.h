@@ -25,6 +25,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeCREATED = 201,
 	OCHTTPStatusCodeNO_CONTENT = 204,
 	OCHTTPStatusCodePARTIAL_CONTENT = 206,
+	OCHTTPStatusCodeMULTI_STATUS = 207,
 
 	// Redirection (3xx)
 	OCHTTPStatusCodeMOVED_PERMANENTLY = 301,

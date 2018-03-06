@@ -97,6 +97,9 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 
 + (instancetype)issueForIssues:(NSArray <OCConnectionIssue *> *)issues completionHandler:(OCConnectionIssueHandler)completionHandler;
 
+#pragma mark - Adding issues
+- (void)addIssue:(OCConnectionIssue *)issue;
+
 #pragma mark - Decision management
 - (void)approve;
 - (void)reject;

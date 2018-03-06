@@ -20,6 +20,8 @@
 
 #import "OCAuthenticationMethod.h"
 #import "OCBookmark.h"
+#import "OCConnectionRequest.h"
+#import "NSError+OCError.h"
 
 @implementation OCAuthenticationMethod
 
@@ -163,7 +165,7 @@
 	// Implemented by subclasses
 	if (completionHandler != nil)
 	{
-		completionHandler(nil);
+		completionHandler(nil,nil);
 	}
 }
 
@@ -172,7 +174,7 @@
 	// Implemented by subclasses
 	if (completionHandler != nil)
 	{
-		completionHandler(nil);
+		completionHandler(nil,nil);
 	}
 }
 
@@ -242,6 +244,21 @@
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	return (YES);
+}
+
+#pragma mark - Handle responses before they are delivered to the request senders
+- (NSError *)handleResponse:(OCConnectionRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error
+{
+	// If a request returns with an UNAUTHORIZED status code, turn it into an actual error
+	if (request.responseHTTPStatus.code == OCHTTPStatusCodeUNAUTHORIZED)
+	{
+		if (error == nil)
+		{
+			error = OCError(OCErrorAuthorizationFailed);
+		}
+	}
+
+	return (error);
 }
 
 @end

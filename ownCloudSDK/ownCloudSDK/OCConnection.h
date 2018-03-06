@@ -40,6 +40,13 @@ typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnection
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 
+typedef NS_ENUM(NSUInteger, OCConnectionState)
+{
+	OCConnectionStateDisconnected,
+	OCConnectionStateConnecting,
+	OCConnectionStateConnected
+};
+
 @protocol OCConnectionDelegate <NSObject>
 
 @optional
@@ -59,6 +66,8 @@ typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 	OCConnectionQueue *_uploadQueue;
 	OCConnectionQueue *_downloadQueue;
 	
+	OCConnectionState _state;
+
 	__weak id <OCConnectionDelegate> _delegate;
 	
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
@@ -72,11 +81,17 @@ typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 @property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
 @property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
 
+@property(assign) OCConnectionState state;
+
 @property(weak) id <OCConnectionDelegate> delegate;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark;
+
+#pragma mark - Connect & Disconnect
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
+- (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path

@@ -22,13 +22,14 @@
 @class OCConnection;
 @class OCConnectionRequest;
 @class OCConnectionQueue;
+@class OCConnectionIssue;
 
 typedef NSString* OCAuthenticationMethodIdentifier; //!< NSString identifier for an authentication method, f.ex. "owncloud.oauth2" for OAuth2
 typedef NSString* OCAuthenticationMethodKey NS_TYPED_ENUM; //!< NSString key used in the options dictionary used to generate the authentication data for a bookmark.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions; //!< Dictionary with options used to generate the authentication data for a bookmark. F.ex. passwords or the view controller to attach own UI to.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodDetectionOptions; //!< Dictionary with options used to detect available authentication methods
 
-typedef void(^OCAuthenticationMethodAuthenticationCompletionHandler)(NSError *error);
+typedef void(^OCAuthenticationMethodAuthenticationCompletionHandler)(NSError *error, OCConnectionIssue *issue);
 
 typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 {
@@ -78,6 +79,9 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 #pragma mark - Wait for authentication
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called by the -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] to determine if the authentication method is currently in the position to authenticate requests for the given connection. If it is, YES should be returned and the availabilityHandler shouldn't be used. If it is not (if, f.ex. a token has expired and needs to be renewed first), this method should return NO, attempt the necessary changes (if this involves scheduling requests, make sure these have their skipAuthorization to YES) and then call the availabilityHandler with the outcome. If an error is returned, all queued requests fail with the provided error.
+
+#pragma mark - Handle responses before they are delivered to the request senders
+- (NSError *)handleResponse:(OCConnectionRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
 
 @end
 

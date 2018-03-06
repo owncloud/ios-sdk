@@ -26,4 +26,7 @@
 #pragma mark - Handle certificate challenges
 - (void)handleValidationOfRequest:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
+#pragma mark - Post process request after it finished
+- (NSError *)postProcessFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error;
+
 @end

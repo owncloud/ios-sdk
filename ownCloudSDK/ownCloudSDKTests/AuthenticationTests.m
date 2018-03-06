@@ -303,5 +303,4 @@
 	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
 }
 
-
 @end

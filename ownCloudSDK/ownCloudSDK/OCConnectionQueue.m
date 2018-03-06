@@ -328,6 +328,12 @@
 {
 	if (request==nil) { return; }
 	
+	// Give connection a chance to pass it off to authentication methods / interpret the error before delivery to the sender
+	if (_connection!=nil)
+	{
+		error = [_connection postProcessFinishedRequest:request error:error];
+	}
+	
 	// Deliver Finished Request
 	if ((_connection!=nil) && (request.resultHandlerAction != NULL))
 	{

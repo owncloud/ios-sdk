@@ -177,31 +177,6 @@ OCAuthenticationMethodAutoRegister
 								{
 									error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 								}
-							
-								/*
-								NSString *redirectURLString = [responseRedirectURL absoluteString];
-								NSString *endpointPath = [connection pathForEndpoint:OCConnectionEndpointIDCapabilities];
-								
-								if ((redirectURLString!=nil) && (endpointPath!=nil))
-								{
-									NSRange endpointPathRange = [redirectURLString rangeOfString:endpointPath];
-									
-									if (endpointPathRange.location != NSNotFound)
-									{
-										NSString *redirectBaseURLString;
-										
-										if ((redirectBaseURLString = [redirectURLString substringWithRange:NSMakeRange(0, endpointPathRange.location)]) != nil)
-										{
-											NSURL *redirectBaseURL = [NSURL URLWithString:redirectBaseURLString];
-
-											error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : redirectBaseURL });
-											
-											NSLog(@"%@ vs %@", redirectBaseURL, [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]);
-
-										}
-									}
-								}
-								*/
 							}
 						}
 						

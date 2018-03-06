@@ -22,6 +22,8 @@
 #import "OCConnectionQueue.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
+#import "OCConnectionDAVRequest.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -37,6 +39,8 @@
 
 @synthesize uploadQueue = _uploadQueue;
 @synthesize downloadQueue = _downloadQueue;
+
+@synthesize state = _state;
 
 @synthesize delegate = _delegate;
 
@@ -131,6 +135,201 @@
 		if (proceedHandler != nil)
 		{
 			proceedHandler(NO);
+		}
+	}
+}
+
+#pragma mark - Post process request after it finished
+- (NSError *)postProcessFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error
+{
+	if (!request.skipAuthorization)
+	{
+		OCAuthenticationMethod *authMethod;
+
+		if ((authMethod = self.authenticationMethod) != nil)
+		{
+			error = [authMethod handleResponse:request forConnection:self withError:error];
+		}
+	}
+
+	return (error);
+}
+
+#pragma mark - Connect & Disconnect
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler
+{
+	/*
+		Follow the https://github.com/owncloud/administration/tree/master/redirectServer playbook:
+	
+		1) Check status endpoint
+			- if redirection: create issue & complete
+			- if error: check bookmark's originURL for redirection, create issue & complete
+			- if neither, continue to step 2
+
+		2) (not in the playbook) Call -authenticateConnection:withCompletionHandler: on the authentication method
+			- if error / issue: create issue & complete
+			- if not, continue to step 3
+	 
+		3) Make authenticated WebDAV endpoint request
+			- if redirection or issue: create issue & complete
+			- if neither, complete with success
+	*/
+	
+	OCAuthenticationMethod *authMethod;
+	
+	if ((authMethod = self.authenticationMethod) != nil)
+	{
+		NSProgress *connectProgress = [NSProgress new];
+		OCConnectionRequest *statusRequest;
+
+		// Set up progress
+		connectProgress.totalUnitCount = connectProgress.completedUnitCount = 0; // Indeterminate
+		connectProgress.localizedDescription = OCLocalizedString(@"Connecting…", @"");
+
+		// Reusable Completion Handler
+		OCConnectionEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCConnectionEphermalResultHandler) = ^(OCConnectionEphermalResultHandler resultHandler)
+		{
+			return ^(OCConnectionRequest *request, NSError *error){
+				if (error != nil)
+				{
+					// An error occured
+					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
+					completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+					resultHandler(request, error);
+				}
+				else
+				{
+					if (request.responseHTTPStatus.isSuccess)
+					{
+						// Success
+						resultHandler(request, error);
+					}
+					else if (request.responseHTTPStatus.isRedirection)
+					{
+						// Redirection
+						NSURL *responseRedirectURL;
+						NSError *error = nil;
+						OCConnectionIssue *issue = nil;
+
+						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+						{
+							NSURL *alternativeBaseURL;
+							
+							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+							{
+								// Create an issue if the redirectURL replicates the path of our target URL
+								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+									if (decision == OCConnectionIssueDecisionApprove)
+									{
+										_bookmark.url = alternativeBaseURL;
+									}
+								}];
+							}
+							else
+							{
+								// Create an error if the redirectURL does not replicate the path of our target URL
+								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:nil];
+								issue.level = OCConnectionIssueLevelError;
+
+								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
+							}
+						}
+
+						connectProgress.localizedDescription = @"";
+						completionHandler(error, issue);
+						resultHandler(request, error);
+					}
+				}
+
+			};
+		};
+
+		// Check status
+		if ((statusRequest =  [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+		{
+			[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
+				if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+				{
+					NSError *jsonError = nil;
+					
+					if ([request responseBodyConvertedDictionaryFromJSONWithError:&jsonError] == nil)
+					{
+						// JSON decode error
+						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
+					}
+					else
+					{
+						// Got status successfully => now authenticate connection
+						connectProgress.localizedDescription = OCLocalizedString(@"Authenticating…", @"");
+
+						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+							if ((authConnError!=nil) || (authConnIssue!=nil))
+							{
+								// Error or issue
+								completionHandler(authConnError, authConnIssue);
+							}
+							else
+							{
+								// Connected authenticated. Now send an authenticated WebDAV request
+								OCConnectionDAVRequest *davRequest;
+								
+								davRequest = [OCConnectionDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+								
+								[davRequest.xmlRequestPropAttribute addChildren:@[
+									[OCXMLNode elementWithName:@"D:supported-method-set"],
+								]];
+								
+								NSLog(@"%@", davRequest.xmlRequest.XMLString);
+
+								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
+									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+									{
+										// DAV request executed successfully
+										connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+										
+										NSLog(@"%@ - %@", request.response, request.responseBodyAsString);
+
+										completionHandler(nil, nil);
+									}
+								})];
+							}
+						}];
+					}
+				}
+			})];
+		}
+		
+		return (connectProgress);
+	}
+	else
+	{
+		// Return error
+		NSError *error = OCError(OCErrorAuthorizationNoMethodData);
+		completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+	}
+
+	return (nil);
+}
+
+- (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler
+{
+	OCAuthenticationMethod *authMethod;
+	
+	if ((authMethod = self.authenticationMethod) != nil)
+	{
+		// Deauthenticate the connection
+		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+			if (completionHandler!=nil)
+			{
+				completionHandler();
+			}
+		}];
+	}
+	else
+	{
+		if (completionHandler!=nil)
+		{
+			completionHandler();
 		}
 	}
 }
