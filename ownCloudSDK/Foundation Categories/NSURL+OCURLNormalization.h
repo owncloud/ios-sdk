@@ -20,6 +20,6 @@
 
 @interface NSURL (OCURLNormalization)
 
-+ (NSURL *)URLWithUsername:(NSString **)userName password:(NSString **)password afterNormalizingURLString:(NSString *)urlString;
++ (NSURL *)URLWithUsername:(NSString **)outUserName password:(NSString **)outPassword afterNormalizingURLString:(NSString *)urlString protocolWasAppended:(BOOL *)outProtocolWasAppended;
 
 @end

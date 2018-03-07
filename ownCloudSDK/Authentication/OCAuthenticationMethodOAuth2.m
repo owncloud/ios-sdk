@@ -24,6 +24,7 @@
 #import "OCConnection.h"
 #import "NSError+OCError.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "OCLogger.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -175,8 +176,8 @@ OCAuthenticationMethodAutoRegister
 					completionHandler(error, OCAuthenticationMethodOAuth2Identifier, nil);
 				}
 			
-				NSLog(@"Callback URL: %@", callbackURL);
-				NSLog(@"Error: %@", error);
+				OCLog(@"Callback URL: %@", OCLogPrivate(callbackURL));
+				OCLog(@"Error: %@", error);
 				
 				// Release Authentication Session
 				authenticationSession = nil;

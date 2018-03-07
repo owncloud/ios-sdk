@@ -24,6 +24,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCConnectionDAVRequest.h"
+#import "OCLogger.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -279,7 +280,7 @@
 									[OCXMLNode elementWithName:@"D:supported-method-set"],
 								]];
 								
-								NSLog(@"%@", davRequest.xmlRequest.XMLString);
+								OCLog(@"%@", davRequest.xmlRequest.XMLString);
 
 								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
 									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
@@ -337,7 +338,39 @@
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	// Stub implementation
+	OCConnectionDAVRequest *davRequest;
+	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil];
+	
+	if (path != nil)
+	{
+		url = [url URLByAppendingPathComponent:path];
+	}
+	
+	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:1]) != nil)
+	{
+		[davRequest.xmlRequestPropAttribute addChildren:@[
+			[OCXMLNode elementWithName:@"D:resourcetype"],
+			[OCXMLNode elementWithName:@"D:getlastmodified"],
+			// [OCXMLNode elementWithName:@"D:creationdate"],
+			[OCXMLNode elementWithName:@"D:getcontentlength"],
+			// [OCXMLNode elementWithName:@"D:displayname"],
+			[OCXMLNode elementWithName:@"D:getcontenttype"],
+			[OCXMLNode elementWithName:@"D:getetag"],
+			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+		]];
+
+		OCLog(@"%@", davRequest.xmlRequest.XMLString);
+		
+		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			NSLog(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
+			[(OCConnectionDAVRequest *)davRequest responseItems];
+		}];
+	}
+
 	return(nil);
 }
 

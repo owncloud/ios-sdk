@@ -21,7 +21,7 @@ NSString *userName=nil, *password=nil; // Either provided as part of userEntered
 OCConnection *connection;
 
 // Create bookmark from normalized URL (and extract username and password if included)
-bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString]];
+bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasAppended:NULL]];
 
 if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 {

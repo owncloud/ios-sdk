@@ -39,7 +39,7 @@
 	for (NSString *inputString in expectedResultByInput)
 	{
 		NSString *expectedURLString = expectedResultByInput[inputString];
-		NSURL *computedURL = [NSURL URLWithUsername:NULL password:NULL afterNormalizingURLString:inputString];
+		NSURL *computedURL = [NSURL URLWithUsername:NULL password:NULL afterNormalizingURLString:inputString protocolWasAppended:NULL];
 
 		NSAssert([[computedURL absoluteString] isEqual:expectedURLString], @"Computed URL matches expectation: %@=%@", [computedURL absoluteString], expectedURLString);
 	}
@@ -50,7 +50,7 @@
 		NSURL *normalizedURL;
 		
 		// Test username + password
-		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr:pwd@demo.owncloud.org/"];
+		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr:pwd@demo.owncloud.org/" protocolWasAppended:NULL];
 		
 		NSAssert([[normalizedURL absoluteString] isEqual:@"https://demo.owncloud.org/"], @"Result URL has no username or password in it: %@", normalizedURL);
 
@@ -58,7 +58,7 @@
 		NSAssert([pass isEqual:@"pwd"], @"Password has been extracted successfully: %@", pass);
 
 		// Test username only
-		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr@demo.owncloud.org/"];
+		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr@demo.owncloud.org/" protocolWasAppended:NULL];
 		
 		NSAssert([[normalizedURL absoluteString] isEqual:@"https://demo.owncloud.org/"], @"Result URL has no username or password in it: %@", normalizedURL);
 
@@ -112,6 +112,16 @@
 	NSLog(@"%@", [xmlDocument XMLString]);
 
 	NSLog(@"%@", [xmlDocument nodesForXPath:@"D:propfind/D:prop/size"]);
+
+}
+
+- (void)testXMLDecoding
+{
+	NSString *xmlString = @"<?xml version=\"1.0\"?><d:multistatus xmlns:d=\"DAV:\" xmlns:s=\"http://sabredav.org/ns\" xmlns:cal=\"urn:ietf:params:xml:ns:caldav\" xmlns:cs=\"http://calendarserver.org/ns/\" xmlns:card=\"urn:ietf:params:xml:ns:carddav\" xmlns:oc=\"http://owncloud.org/ns\"><d:response><d:href>/remote.php/dav/files/admin/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype><d:getlastmodified>Tue, 06 Mar 2018 22:10:00 GMT</d:getlastmodified><d:getetag>&quot;5a9f11b8b440c&quot;</d:getetag><d:quota-available-bytes>-3</d:quota-available-bytes><d:quota-used-bytes>5809166</d:quota-used-bytes><oc:size>5809166</oc:size><oc:id>00000015ocnq90xhpk22</oc:id><oc:permissions>RDNVCK</oc:permissions></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat><d:propstat><d:prop><d:getcontentlength/><d:getcontenttype/></d:prop><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/admin/Documents/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype><d:getlastmodified>Tue, 06 Mar 2018 22:10:00 GMT</d:getlastmodified><d:getetag>&quot;5a9f11b8b440c&quot;</d:getetag><d:quota-available-bytes>-3</d:quota-available-bytes><d:quota-used-bytes>36227</d:quota-used-bytes><oc:size>36227</oc:size><oc:id>00000021ocnq90xhpk22</oc:id><oc:permissions>RDNVCK</oc:permissions></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat><d:propstat><d:prop><d:getcontentlength/><d:getcontenttype/></d:prop><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/admin/Photos/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype><d:getlastmodified>Tue, 06 Mar 2018 22:09:59 GMT</d:getlastmodified><d:getetag>&quot;5a9f11b7bbbc5&quot;</d:getetag><d:quota-available-bytes>-3</d:quota-available-bytes><d:quota-used-bytes>678556</d:quota-used-bytes><oc:size>678556</oc:size><oc:id>00000016ocnq90xhpk22</oc:id><oc:permissions>RDNVCK</oc:permissions></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat><d:propstat><d:prop><d:getcontentlength/><d:getcontenttype/></d:prop><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/admin/ownCloud%20Manual.pdf</d:href><d:propstat><d:prop><d:resourcetype/><d:getlastmodified>Tue, 06 Mar 2018 22:10:00 GMT</d:getlastmodified><d:getcontentlength>5094383</d:getcontentlength><d:getcontenttype>application/pdf</d:getcontenttype><d:getetag>&quot;c43d4f3af69fb2d8ad1e873dadf9d973&quot;</d:getetag><oc:size>5094383</oc:size><oc:id>00000020ocnq90xhpk22</oc:id><oc:permissions>RDNVW</oc:permissions></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat><d:propstat><d:prop><d:quota-available-bytes/><d:quota-used-bytes/></d:prop><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response></d:multistatus>";
+	
+	OCXMLParser *parser = [[OCXMLParser alloc] initWithParser:[[NSXMLParser alloc] initWithData:[xmlString dataUsingEncoding:NSUTF8StringEncoding]]];
+	
+	[parser parse];
 
 }
 

@@ -270,18 +270,16 @@
 	}];
 }
 
-- (void)testConnect
+- (void)_testConnectWithUserEnteredURLString:(NSString *)userEnteredURLString useAuthMethod:(OCAuthenticationMethodIdentifier)useAuthMethod connectAction:(void(^)(NSError *error, OCConnectionIssue *issue, OCConnection *connection))connectionAction
 {
-	XCTestExpectation *expectAnswer = [self expectationWithDescription:@"Received reply"];
-
-	NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
+	// NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
 	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
 	OCBookmark *bookmark = nil; // Bookmark from previous recipe
 	NSString *userName=@"admin", *password=@"admin"; // Either provided as part of userEnteredURLString - or set independently
 	OCConnection *connection;
 	
 	// Create bookmark from normalized URL (and extract username and password if included)
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString]];
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasAppended:NULL]];
 	
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
@@ -326,7 +324,7 @@
 			 if (proceedWithAuthentication)
 			 {
 				 // Generate authentication data for bookmark
-				 [connection generateAuthenticationDataWithMethod:[preferredAuthenticationMethods firstObject] // Use most-preferred, allowed authentication method
+				 [connection generateAuthenticationDataWithMethod:((useAuthMethod!=nil) ? useAuthMethod : [preferredAuthenticationMethods firstObject]) // Use most-preferred, allowed authentication method
 									  options:@{
 										    // OCAuthenticationMethodPresentingViewControllerKey : topViewController,
 										    OCAuthenticationMethodUsernameKey : userName,
@@ -346,7 +344,8 @@
 										[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 										
 											NSLog(@"Done connecting: %@ %@", error, issue);
-											[expectAnswer fulfill];
+											
+											connectionAction(error, issue, connection);
 										}];
 										
 										// Serialize bookmark and write it to a file on disk
@@ -355,7 +354,6 @@
 									{
 										// Failure
 										NSLog(@"Could not get token (error: %@)", error);
-										[expectAnswer fulfill];
 									}
 									
 								}
@@ -363,6 +361,32 @@
 			 }
 		 }];
 	}
+}
+
+- (void)testConnect
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		// Testing just the connect here
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testConnectAndGetRootList
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		[connection retrieveItemListAtPath:@"/admin/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[expectRootList fulfill];
+		}];
+
+		[expectConnect fulfill];
+	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
