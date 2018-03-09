@@ -8,7 +8,8 @@
 
 #import "OCXMLParser.h"
 #import "OCLogger.h"
-#import "OCXMLParserElement.h"
+#import "OCXMLParserNode.h"
+#import "OCItem.h"
 
 @implementation OCXMLParser
 
@@ -17,8 +18,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_elementParserClassByElementName = [NSMutableDictionary new];
 		_valueConverterByElementName = [NSMutableDictionary new];
+		_objectCreationClassByElementName = [NSMutableDictionary new];
 
 		_stack = [NSMutableArray new];
 		_elementPath = [NSMutableArray new];
@@ -27,6 +28,8 @@
 		_elementAttributes = [NSMutableArray new];
 		_elementContentsEmptyIndexes = [NSMutableIndexSet new];
 		_elementContentsLastIndex = -1;
+
+		_elementObjectifiedIndexes = [NSMutableIndexSet new];
 
 		_errors = [NSMutableArray new];
 		_parsedObjects = [NSMutableArray new];
@@ -73,24 +76,16 @@
 
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary<NSString *,NSString *> *)attributeDict
 {
-	if (_insideElement)
+	OCXMLParserNode *elementNode = nil;
+	NSError *error = nil;
+	
+	if ((elementNode = [[OCXMLParserNode alloc] initWithXMLParser:self elementName:elementName namespaceURI:namespaceURI attributes:attributeDict error:&error]) != nil)
 	{
-		OCXMLElementParser elementParser = nil;
-		NSError *error = nil;
-		
-		if ([[_stack lastObject] respondsToSelector:@selector(xmlParser:childForElementName:namespaceURI:attributes:error:)])
-		{
-			elementParser = [[_stack lastObject] xmlParser:self childForElementName:elementName namespaceURI:namespaceURI attributes:attributeDict error:&error];
-		}
-		else
-		{
-			elementParser = [self defaultChildForElementName:elementName namespaceURI:namespaceURI attributes:attributeDict error:&error];
-		}
-
-		if ((elementParser == nil) && (error != nil))
-		{
-			[_errors addObject:error];
-		}
+		[_stack addObject:elementNode];
+	}
+	else if (error != nil)
+	{
+		[_errors addObject:error];
 	}
 	
 	[_elementPath addObject:elementName];
@@ -100,37 +95,6 @@
 	[_elementContents addObject:[NSMutableString string]];
 	_elementContentsLastIndex++;
 	[_elementContentsEmptyIndexes addIndex:_elementContentsLastIndex];
-	
-	_insideElement = YES;
-}
-
-- (OCXMLElementParser)defaultChildForElementName:(NSString *)elementName namespaceURI:(NSString *)namespaceURI attributes:(NSDictionary <NSString*,NSString*> *)attributes error:(NSError **)outError
-{
-	Class elementParserClass;
-	OCXMLElementParser elementParser = nil;
-
-	elementParserClass = [_elementParserClassByElementName objectForKey:elementName];
-
-	if (elementParserClass == Nil)
-	{
-		elementParserClass = [OCXMLParserElement class];
-	}
-
-	if (elementParserClass != Nil)
-	{
-		NSError *error = nil;
-
-		if ((elementParser = [[elementParserClass alloc] initWithXMLParser:self elementName:elementName namespaceURI:namespaceURI attributes:attributes error:&error]) != nil)
-		{
-			[_stack addObject:elementParser];
-		}
-		else if (error != nil)
-		{
-			[_errors addObject:error];
-		}
-	}
-	
-	return (elementParser);
 }
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
@@ -141,21 +105,40 @@
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
 {
-	if (_insideElement)
+	id elementContents = nil;
+	OCXMLParserNode *lastParserElementOnStack = _stack.lastObject;
+
+	if (![_elementContentsEmptyIndexes containsIndex:_elementContentsLastIndex])
 	{
-		NSString *elementContents = nil;
+		elementContents = [_elementContents lastObject];
 	
-		if (![_elementContentsEmptyIndexes containsIndex:_elementContentsLastIndex])
+		if (_stack.count > 1)
 		{
-			elementContents = [_elementContents lastObject];
+			OCXMLParserElementValueConverter valueConverter;
+		
+			if ((valueConverter = _valueConverterByElementName[_elementPath.lastObject]) != nil)
+			{
+				id convertedValue = nil;
+				NSError *error;
+				
+				if ((error = valueConverter(elementName, elementContents, namespaceURI, _elementAttributes.lastObject, &convertedValue)) != nil)
+				{
+					[_errors addObject:error];
+				}
+				else
+				{
+					elementContents = convertedValue;
+				}
+			}
+		
+			[[_stack objectAtIndex:_stack.count-2] xmlParser:self parseKey:_elementPath.lastObject value:elementContents attributes:_elementAttributes.lastObject];
 		}
-	
-		[[_stack lastObject] xmlParser:self parseKey:_elementPath.lastObject value:elementContents attributes:_elementAttributes.lastObject];
 	}
 	else
 	{
+	
 		// Tell parser that its parsing has completed
-		[[_stack lastObject] xmlParser:self completedParsingForChild:nil];
+		[lastParserElementOnStack xmlParser:self completedParsingForChild:nil];
 		
 		// Tell parent that parsing of this child has completed
 		if (_stack.count > 1)
@@ -164,11 +147,12 @@
 		}
 		else
 		{
-			NSLog(@"%@", [_stack lastObject]);
+			NSLog(@"%@", lastParserElementOnStack);
+			NSLog(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
 		}
-		
-		[_stack removeLastObject];
 	}
+
+	[_stack removeLastObject];
 
 	[_elementPath removeLastObject];
 
@@ -178,8 +162,6 @@
 	[_elementContents removeLastObject];
 	[_elementContentsEmptyIndexes removeIndex:_elementContentsLastIndex];
 	_elementContentsLastIndex--;
-
-	_insideElement = NO;
 }
 
 @end
