@@ -34,12 +34,14 @@
 		DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */; };
 		DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EF204DEB9200189B9A /* OCXMLNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556F0204DEB9200189B9A /* OCXMLNode.m */; };
-		DC8556F6204F361100189B9A /* OCLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556F4204F361100189B9A /* OCLogger.h */; };
+		DC8556F6204F361100189B9A /* OCLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556F4204F361100189B9A /* OCLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8556F7204F361100189B9A /* OCLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556F5204F361100189B9A /* OCLogger.m */; };
 		DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556F9204F4F3000189B9A /* OCXMLParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556FA204F4F3000189B9A /* OCXMLParser.m */; };
-		DC8556FF204F597800189B9A /* OCXMLParserElement.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556FD204F597800189B9A /* OCXMLParserElement.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC855700204F597800189B9A /* OCXMLParserElement.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556FE204F597800189B9A /* OCXMLParserElement.m */; };
+		DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556FD204F597800189B9A /* OCXMLParserNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556FE204F597800189B9A /* OCXMLParserNode.m */; };
+		DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */; };
+		DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */; };
 		DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8F9CA202853B300EB6701 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DCC8F9C72028535B00EB6701 /* LICENSE */; };
@@ -179,9 +181,11 @@
 		DC8556F5204F361100189B9A /* OCLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogger.m; sourceTree = "<group>"; };
 		DC8556F9204F4F3000189B9A /* OCXMLParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCXMLParser.h; sourceTree = "<group>"; };
 		DC8556FA204F4F3000189B9A /* OCXMLParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCXMLParser.m; sourceTree = "<group>"; };
-		DC8556FD204F597800189B9A /* OCXMLParserElement.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCXMLParserElement.h; sourceTree = "<group>"; };
-		DC8556FE204F597800189B9A /* OCXMLParserElement.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCXMLParserElement.m; sourceTree = "<group>"; };
+		DC8556FD204F597800189B9A /* OCXMLParserNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCXMLParserNode.h; sourceTree = "<group>"; };
+		DC8556FE204F597800189B9A /* OCXMLParserNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCXMLParserNode.m; sourceTree = "<group>"; };
 		DC855719204FEC0A00189B9A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
+		DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCXMLObjectCreation.h"; sourceTree = "<group>"; };
+		DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCXMLObjectCreation.m"; sourceTree = "<group>"; };
 		DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudSDK.h; sourceTree = "<group>"; };
 		DCC8F9AF202852A200EB6701 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -484,12 +488,8 @@
 		DC855716204FEBAA00189B9A /* XML */ = {
 			isa = PBXGroup;
 			children = (
-				DC8556F0204DEB9200189B9A /* OCXMLNode.m */,
-				DC8556EF204DEB9200189B9A /* OCXMLNode.h */,
-				DC8556FA204F4F3000189B9A /* OCXMLParser.m */,
-				DC8556F9204F4F3000189B9A /* OCXMLParser.h */,
-				DC8556FE204F597800189B9A /* OCXMLParserElement.m */,
-				DC8556FD204F597800189B9A /* OCXMLParserElement.h */,
+				DC85572620509F9C00189B9A /* Composition */,
+				DC85572720509FA900189B9A /* Parsing */,
 			);
 			path = XML;
 			sourceTree = "<group>";
@@ -510,6 +510,28 @@
 				DC3F2B4F204AED1900189B9A /* Localizable.strings */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		DC85572620509F9C00189B9A /* Composition */ = {
+			isa = PBXGroup;
+			children = (
+				DC8556F0204DEB9200189B9A /* OCXMLNode.m */,
+				DC8556EF204DEB9200189B9A /* OCXMLNode.h */,
+			);
+			path = Composition;
+			sourceTree = "<group>";
+		};
+		DC85572720509FA900189B9A /* Parsing */ = {
+			isa = PBXGroup;
+			children = (
+				DC8556FA204F4F3000189B9A /* OCXMLParser.m */,
+				DC8556F9204F4F3000189B9A /* OCXMLParser.h */,
+				DC8556FE204F597800189B9A /* OCXMLParserNode.m */,
+				DC8556FD204F597800189B9A /* OCXMLParserNode.h */,
+				DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */,
+				DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */,
+			);
+			path = Parsing;
 			sourceTree = "<group>";
 		};
 		DCC8F9A1202852A200EB6701 = {
@@ -613,11 +635,12 @@
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
 				DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */,
 				DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */,
+				DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */,
 				DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */,
 				DCC8FA29202B37B800EB6701 /* OCConnectionQueue.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
 				DCC8F9EE2028558000EB6701 /* OCQuery.h in Headers */,
-				DC8556FF204F597800189B9A /* OCXMLParserElement.h in Headers */,
+				DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */,
 				DCC8F9FB2028586900EB6701 /* OCAuthenticationMethod.h in Headers */,
 				DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */,
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
@@ -788,7 +811,7 @@
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
-				DC855700204F597800189B9A /* OCXMLParserElement.m in Sources */,
+				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
 				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
@@ -806,6 +829,7 @@
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
+				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
 				DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,

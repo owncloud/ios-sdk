@@ -39,7 +39,7 @@
 	for (NSString *inputString in expectedResultByInput)
 	{
 		NSString *expectedURLString = expectedResultByInput[inputString];
-		NSURL *computedURL = [NSURL URLWithUsername:NULL password:NULL afterNormalizingURLString:inputString protocolWasAppended:NULL];
+		NSURL *computedURL = [NSURL URLWithUsername:NULL password:NULL afterNormalizingURLString:inputString protocolWasPrepended:NULL];
 
 		NSAssert([[computedURL absoluteString] isEqual:expectedURLString], @"Computed URL matches expectation: %@=%@", [computedURL absoluteString], expectedURLString);
 	}
@@ -50,7 +50,7 @@
 		NSURL *normalizedURL;
 		
 		// Test username + password
-		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr:pwd@demo.owncloud.org/" protocolWasAppended:NULL];
+		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr:pwd@demo.owncloud.org/" protocolWasPrepended:NULL];
 		
 		NSAssert([[normalizedURL absoluteString] isEqual:@"https://demo.owncloud.org/"], @"Result URL has no username or password in it: %@", normalizedURL);
 
@@ -58,7 +58,7 @@
 		NSAssert([pass isEqual:@"pwd"], @"Password has been extracted successfully: %@", pass);
 
 		// Test username only
-		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr@demo.owncloud.org/" protocolWasAppended:NULL];
+		normalizedURL = [NSURL URLWithUsername:&user password:&pass afterNormalizingURLString:@"https://usr@demo.owncloud.org/" protocolWasPrepended:NULL];
 		
 		NSAssert([[normalizedURL absoluteString] isEqual:@"https://demo.owncloud.org/"], @"Result URL has no username or password in it: %@", normalizedURL);
 

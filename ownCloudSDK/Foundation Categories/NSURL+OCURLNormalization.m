@@ -20,7 +20,7 @@
 
 @implementation NSURL (OCURLNormalization)
 
-+ (NSURL *)URLWithUsername:(NSString **)outUserName password:(NSString **)outPassword afterNormalizingURLString:(NSString *)urlString protocolWasAppended:(BOOL *)outProtocolWasAppended
++ (NSURL *)URLWithUsername:(NSString **)outUserName password:(NSString **)outPassword afterNormalizingURLString:(NSString *)urlString protocolWasPrepended:(BOOL *)outProtocolWasPrepended
 {
 	NSURL *url = nil;
 	NSString *lowerCaseURLString = nil;
@@ -45,12 +45,12 @@
 	// Check for and add missing scheme to URL, consider people entering HTTP://, Https://, ..
 	if ((lowerCaseURLString = [urlString lowercaseString]) != nil)
 	{
-		if (outProtocolWasAppended != NULL) { *outProtocolWasAppended = NO; }
+		if (outProtocolWasPrepended != NULL) { *outProtocolWasPrepended = NO; }
 
 		if (![lowerCaseURLString hasPrefix:@"http://"] && ![lowerCaseURLString hasPrefix:@"https://"])
 		{
 			// Default to HTTPS (as you do in 2018)
-			if (outProtocolWasAppended != NULL) { *outProtocolWasAppended = YES; }
+			if (outProtocolWasPrepended != NULL) { *outProtocolWasPrepended = YES; }
 			urlString = [@"https://" stringByAppendingString:urlString];
 		}
 	}

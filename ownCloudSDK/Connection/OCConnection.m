@@ -381,6 +381,11 @@
 	return(nil);
 }
 
+- (void)_handleCreateFolderResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	
+}
+
 - (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation

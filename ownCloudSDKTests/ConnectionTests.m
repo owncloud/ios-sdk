@@ -279,7 +279,7 @@
 	OCConnection *connection;
 	
 	// Create bookmark from normalized URL (and extract username and password if included)
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasAppended:NULL]];
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasPrepended:NULL]];
 	
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{

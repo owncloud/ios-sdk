@@ -79,7 +79,7 @@ An overview over which cases actions handle - and how they handle them. Please r
 - **Target directory does no longer exist**: Inform user, offer to (re-)create it.
 - **No space left on server**: Inform user, keep Sync Record.
 - **Other server error**: Inform user, keep Sync Record.
-- Note: this action - by its very nature - can only be triggered locally.
+- Note: this action - by its very nature - can only be triggered locally. Use If-Match to ensure the server only accepts a new version if the old version is still the one that the client has seen before (in case of error, the latest ETag is returned in the answer)
 
 ### Download / "Sync newer versions"
 - **Item changed on the server**:

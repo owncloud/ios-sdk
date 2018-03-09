@@ -26,6 +26,7 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 
 + (instancetype)sharedLogger;
 
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...;
 
 - (id)applyPrivacyMask:(id)object;
