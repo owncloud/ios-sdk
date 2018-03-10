@@ -27,6 +27,8 @@
 
 @property(strong) NSString *userName; //!< User name of the user (f.ex. "jappleseed")
 
+@property(strong) NSString *emailAddress; //!< Email address of the user (f.ex. "jappleseed@owncloud.org")
+
 @property(strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
 
 @property(readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived

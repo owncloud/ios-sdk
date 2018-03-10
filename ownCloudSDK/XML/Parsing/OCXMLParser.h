@@ -23,6 +23,7 @@
 
 @protocol OCXMLObjectCreation <NSObject>
 
++ (NSString *)xmlElementNameForObjectCreation;
 + (instancetype)instanceFromNode:(OCXMLParserNode *)node xmlParser:(OCXMLParser *)xmlParser;
 
 @end
@@ -46,15 +47,28 @@ typedef NSError *(^OCXMLParserElementValueConverter)(NSString *elementName, NSSt
 	NSMutableIndexSet *_elementObjectifiedIndexes;
 	NSInteger _elementContentsLastIndex;
 
+	NSInteger _objectCreationRetainDepth;
+	BOOL _forceRetain;
+
 	NSMutableArray<NSError *> *_errors;
 
 	NSMutableArray *_parsedObjects;
+
+	NSMutableDictionary <NSString *, id> *_options;
 }
 
-@property(readonly) NSMutableArray *parsedObjects;
+@property(readonly,strong) NSMutableArray<NSError *> *errors;
+@property(readonly,strong) NSMutableArray *parsedObjects;
+
+@property(assign) BOOL forceRetain;
+@property(strong) NSMutableDictionary <NSString *, id> *options;
 
 #pragma mark - Init & Dealloc
 - (instancetype)initWithParser:(NSXMLParser *)xmlParser;
+- (instancetype)initWithData:(NSData *)xmlData;
+
+#pragma mark - Specify classes
+- (void)addObjectCreationClasses:(NSArray <Class> *)classes;
 
 #pragma mark - Parse
 - (BOOL)parse;

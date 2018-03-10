@@ -381,7 +381,11 @@
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
 	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
-		[connection retrieveItemListAtPath:@"/admin/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		NSLog(@"User: %@", connection.loggedInUser.userName);
+
+		[connection retrieveItemListAtPath:@"/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			NSLog(@"Items at root: %@", items);
+
 			[expectRootList fulfill];
 		}];
 

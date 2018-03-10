@@ -9,6 +9,10 @@
 #import <Foundation/Foundation.h>
 
 @class OCXMLParser;
+@class OCXMLParserNode;
+
+typedef NSDictionary<NSString*,void(^)(id target, NSString *key, id value)>*    OCXMLParserNodeKeyValueEnumeratorDictionary;
+typedef NSDictionary<NSString*,void(^)(id target, OCXMLParserNode *childNode)>* OCXMLParserNodeChildNodesEnumeratorDictionary;
 
 @interface OCXMLParserNode : NSObject
 {
@@ -17,17 +21,22 @@
 
 	NSMutableDictionary <NSString *, id> *_keyValues;
 	NSMutableArray <OCXMLParserNode *> *_children;
-	
-	id _object;
+
+	BOOL _retainChildren;
 }
 
 @property(strong) NSString *name;
 @property(strong) NSDictionary <NSString*,NSString*> *attributes;
 @property(strong) NSMutableDictionary <NSString *, id> *keyValues;
 @property(strong) NSMutableArray <OCXMLParserNode *> *children;
-@property(strong) id object;
+@property(assign) BOOL retainChildren;
 
 - (NSArray <OCXMLParserNode *> *)nodesForXPath:(NSString *)xPath;
+
+- (void)enumerateChildNodesWithName:(NSString *)name usingBlock:(void(^)(OCXMLParserNode *childNode))handler;
+
+- (void)enumerateChildNodesForTarget:(id)target withBlockForElementNames:(OCXMLParserNodeChildNodesEnumeratorDictionary)blockForElementNamesDict;
+- (void)enumerateKeyValuesForTarget:(id)target withBlockForKeys:(OCXMLParserNodeKeyValueEnumeratorDictionary)blockForKeysDict;
 
 - (instancetype)initWithXMLParser:(OCXMLParser *)xmlParser elementName:(NSString *)elementName namespaceURI:(NSString *)namespaceURI attributes:(NSDictionary <NSString*,NSString*> *)attributes error:(NSError **)outError;
 

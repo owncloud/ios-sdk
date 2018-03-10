@@ -14,6 +14,9 @@ This document provides an overview over the available sections and variables.
 	- `endpoint-capabilities`: Endpoint to use for retrieving server capabilities
 		- type: string
 		- default: `ocs/v1.php/cloud/capabilities`
+	- `endpoint-user`: Endpoint to use for retrieving information on logged in user
+		- type: string
+		- default: `ocs/v1.php/cloud/user`
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/webdav`

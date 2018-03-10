@@ -10,8 +10,15 @@
 #import "OCLogger.h"
 #import "OCXMLParserNode.h"
 #import "OCItem.h"
+#import "OCHTTPStatus.h"
+#import "NSDate+OCDateParser.h"
 
 @implementation OCXMLParser
+
+@synthesize options = _options;
+@synthesize errors = _errors;
+@synthesize parsedObjects = _parsedObjects;
+@synthesize forceRetain = _forceRetain;
 
 #pragma mark - Init & Dealloc
 - (instancetype)init
@@ -33,6 +40,54 @@
 
 		_errors = [NSMutableArray new];
 		_parsedObjects = [NSMutableArray new];
+
+		// Convert <d:status> tags to OCHTTPStatus objects
+		[_valueConverterByElementName setObject:^(NSString *elementName, NSString *value, NSString *namespaceURI, NSDictionary <NSString*,NSString*> *attributes, id *convertedValue){
+			/*
+				Examples:
+				"HTTP/1.1 200 OK"
+				"HTTP/1.1 404 Not Found"
+			*/
+			if (convertedValue==NULL) { return((NSError*)nil); }
+
+			if ([value hasPrefix:@"HTTP/"])
+			{
+				NSRange firstSpaceRange = [value rangeOfString:@" "];
+
+				if ((firstSpaceRange.location != NSNotFound) && (value.length >= 12))
+				{
+					NSString *statusCodeString;
+
+					if ((statusCodeString = [value substringWithRange:NSMakeRange(9,3)]) != nil)
+					{
+						*convertedValue = [OCHTTPStatus HTTPStatusWithCode:statusCodeString.integerValue];
+					}
+				}
+			}
+
+			return((NSError*)nil);
+		} forKey:@"d:status"];
+
+		// Convert <d:getlastmodified> and <d:creationdate> to NSDate
+		OCXMLParserElementValueConverter dateConverter = ^(NSString *elementName, NSString *value, NSString *namespaceURI, NSDictionary <NSString*,NSString*> *attributes, id *convertedValue){
+			/*
+				Examples:
+				"Fri, 23 Feb 2018 11:52:05 GMT"
+			*/
+			NSDate *date = nil;
+
+			if (convertedValue!=NULL)
+			{
+				if ((date = [NSDate dateParsedFromString:value error:NULL]) != nil)
+				{
+					*convertedValue = date;
+				}
+			}
+
+			return((NSError*)nil);
+		};
+		[_valueConverterByElementName setObject:dateConverter forKey:@"d:getlastmodified"];
+		[_valueConverterByElementName setObject:dateConverter forKey:@"d:creationdate"];
 	}
 	
 	return(self);
@@ -49,9 +104,33 @@
 	return(self);
 }
 
+- (instancetype)initWithData:(NSData *)xmlData
+{
+	self = [self initWithParser:[[NSXMLParser alloc] initWithData:xmlData]];
+
+	return(self);
+}
+
 - (void)dealloc
 {
 	_xmlParser.delegate = nil;
+}
+
+#pragma mark - Specify classes
+- (void)addObjectCreationClasses:(NSArray <Class> *)classes
+{
+	if (classes != nil)
+	{
+		for (Class addClass in classes)
+		{
+			NSString *elementName;
+
+			if ((elementName = [addClass xmlElementNameForObjectCreation]) != nil)
+			{
+				[_objectCreationClassByElementName setObject:addClass forKey:elementName];
+			}
+		}
+	}
 }
 
 #pragma mark - Parse
@@ -78,7 +157,12 @@
 {
 	OCXMLParserNode *elementNode = nil;
 	NSError *error = nil;
-	
+
+	if ([_objectCreationClassByElementName valueForKey:elementName] != nil)
+	{
+		_objectCreationRetainDepth++;
+	}
+
 	if ((elementNode = [[OCXMLParserNode alloc] initWithXMLParser:self elementName:elementName namespaceURI:namespaceURI attributes:attributeDict error:&error]) != nil)
 	{
 		[_stack addObject:elementNode];
@@ -87,12 +171,14 @@
 	{
 		[_errors addObject:error];
 	}
+
+	elementNode.retainChildren = (_objectCreationRetainDepth > 0) || _forceRetain;
 	
 	[_elementPath addObject:elementName];
 
 	[_elementAttributes addObject:((attributeDict!=nil) ? attributeDict : @{})];
 	
-	[_elementContents addObject:[NSMutableString string]];
+	[_elementContents addObject:[NSMutableString new]];
 	_elementContentsLastIndex++;
 	[_elementContentsEmptyIndexes addIndex:_elementContentsLastIndex];
 }
@@ -143,13 +229,36 @@
 		// Tell parent that parsing of this child has completed
 		if (_stack.count > 1)
 		{
-			[_stack[_stack.count-2] xmlParser:self completedParsingForChild:[_stack lastObject]];
+			[_stack[_stack.count-2] xmlParser:self completedParsingForChild:lastParserElementOnStack];
 		}
 		else
 		{
-			NSLog(@"%@", lastParserElementOnStack);
-			NSLog(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
+			// OCLogDebug(@"%@", lastParserElementOnStack);
+			// NSLog(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
 		}
+	}
+
+	// Create object if applicable
+	Class objectCreationClass;
+
+	if ((objectCreationClass = [_objectCreationClassByElementName valueForKey:elementName]) != nil)
+	{
+		// Try object creation
+		id parsedObject;
+
+		if ((parsedObject = [objectCreationClass instanceFromNode:lastParserElementOnStack xmlParser:self]) != nil)
+		{
+			if ([parsedObject isKindOfClass:[NSError class]])
+			{
+				[_errors addObject:parsedObject];
+			}
+			else
+			{
+				[_parsedObjects addObject:parsedObject];
+			}
+		}
+
+		_objectCreationRetainDepth--;
 	}
 
 	[_stack removeLastObject];

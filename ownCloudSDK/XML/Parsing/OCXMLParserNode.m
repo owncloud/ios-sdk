@@ -16,6 +16,8 @@
 @synthesize keyValues = _keyValues;
 @synthesize children = _children;
 
+@synthesize retainChildren = _retainChildren;
+
 - (instancetype)initWithXMLParser:(OCXMLParser *)xmlParser elementName:(NSString *)elementName namespaceURI:(NSString *)namespaceURI attributes:(NSDictionary<NSString *,NSString *> *)attributes error:(NSError *__autoreleasing *)outError
 {
 	if ((self = [self init]) != nil)
@@ -43,12 +45,15 @@
 {
 	if (child != nil)
 	{
-		if (_children == nil)
+		if (_retainChildren)
 		{
-			_children = [NSMutableArray new];
+			if (_children == nil)
+			{
+				_children = [NSMutableArray new];
+			}
+
+			[_children addObject:child];
 		}
-		
-		[_children addObject:child];
 	}
 	
 	return (nil);
@@ -74,12 +79,10 @@
 				{
 					if (foundNodes == nil)
 					{
-						foundNodes = [NSMutableArray arrayWithObject:xmlNode];
+						foundNodes = [NSMutableArray new];
 					}
-					else
-					{
-						[foundNodes addObject:xmlNode];
-					}
+
+					[foundNodes addObject:xmlNode];
 				}
 				else
 				{
@@ -89,7 +92,7 @@
 					{
 						if (foundNodes == nil)
 						{
-							foundNodes = [NSMutableArray arrayWithArray:childFoundNodes];
+							foundNodes = [[NSMutableArray alloc] initWithArray:childFoundNodes];
 						}
 						else
 						{
@@ -114,9 +117,50 @@
 	return (nil);
 }
 
+- (void)enumerateChildNodesWithName:(NSString *)name usingBlock:(void(^)(OCXMLParserNode *childNode))block
+{
+	if (block==nil) { return; }
+
+	for (OCXMLParserNode *childNode in _children)
+	{
+		if ([childNode.name isEqualToString:name])
+		{
+			block(childNode);
+		}
+	}
+}
+
+- (void)enumerateChildNodesForTarget:(id)target withBlockForElementNames:(OCXMLParserNodeChildNodesEnumeratorDictionary)blockForElementNamesDict;
+{
+	for (OCXMLParserNode *childNode in _children)
+	{
+		if (childNode->name != nil)
+		{
+			void(^parseBlock)(id target, OCXMLParserNode *childNode);
+
+			if ((parseBlock = blockForElementNamesDict[childNode->name]) != nil)
+			{
+				parseBlock(target, childNode);
+			}
+		}
+	}
+}
+
+- (void)enumerateKeyValuesForTarget:(id)target withBlockForKeys:(OCXMLParserNodeKeyValueEnumeratorDictionary)blockForKeysDict
+{
+	[_keyValues enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id _Nonnull value, BOOL * _Nonnull stop) {
+		void(^parseBlock)(id target, NSString *key, id value);
+
+		if ((parseBlock = blockForKeysDict[key]) != nil)
+		{
+			parseBlock(target, key, value);
+		}
+	}];
+}
+
 - (NSString *)description
 {
-	NSMutableString *childrenString = [NSMutableString string];
+	NSMutableString *childrenString = [NSMutableString new];
 	
 	for (OCXMLParserNode *parserNode in _children)
 	{

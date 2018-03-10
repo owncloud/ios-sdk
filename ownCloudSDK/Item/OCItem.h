@@ -51,6 +51,8 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
 
+@property(strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
+
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
 @property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status
 
@@ -59,12 +61,12 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 @property(strong) NSURL *downloadURL; //!< Download URL for the item on the server
 @property(strong) NSURL *localURL; //!< URL for local copy of the item
 @property(strong) OCPath path; //!< Path of the item on the server relative to root
-@property(readonly) NSString *name; //!< Name of the item, derived from .path.
+@property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path.
 
 @property(strong) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
 @property(strong) NSString *eTag; //!< ETag of the item on the server (changes with every modification)
 
-@property(assign) NSUInteger size; //!< Size in bytes of the item
+@property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
 
 @property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item

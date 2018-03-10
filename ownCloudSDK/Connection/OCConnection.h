@@ -61,6 +61,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
+	OCUser *_loggedInUser;
+
 	OCConnectionQueue *_commandQueue;
 
 	OCConnectionQueue *_uploadQueue;
@@ -75,6 +77,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
+
+@property(strong) OCUser *loggedInUser;
 
 @property(strong) OCConnectionQueue *commandQueue; //!< Queue for requests that carry metadata commands (move, delete, retrieve list, ..)
 
@@ -143,6 +147,14 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+#pragma mark - USERS
+@interface OCConnection (Users)
+
+#pragma mark - User info
+- (NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler; //!< Retrieves information on the currently logged in user and returns it via the completion handler
+
+@end
+
 #pragma mark - TOOLS
 @interface OCConnection (Tools)
 
@@ -161,7 +173,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @end
 
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
+extern OCConnectionEndpointID OCConnectionEndpointIDUser;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
+extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 
 extern OCClassSettingsKey OCConnectionInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]

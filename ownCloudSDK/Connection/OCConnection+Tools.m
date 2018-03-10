@@ -25,7 +25,23 @@
 {
 	if (endpoint != nil)
 	{
-		return ([self classSettingForOCClassSettingsKey:endpoint]);
+		NSString *endpointPath = nil;
+
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAVRoot])
+		{
+			endpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDWebDAV];
+
+			if (_loggedInUser.userName != nil)
+			{
+				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
+			}
+		}
+		else
+		{
+			endpointPath = [self classSettingForOCClassSettingsKey:endpoint];
+		}
+
+		return (endpointPath);
 	}
 	
 	return (nil);

@@ -61,6 +61,11 @@
 	return ([NSError errorWithDomain:OCHTTPStatusErrorDomain code:_code userInfo:((response!=nil) ? @{ @"response" : response } : nil)]);
 }
 
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, code: %lu>", NSStringFromClass(self.class), self, (unsigned long)_code]);
+}
+
 @end
 
 NSErrorDomain OCHTTPStatusErrorDomain = @"OCHTTPStatusErrorDomain";

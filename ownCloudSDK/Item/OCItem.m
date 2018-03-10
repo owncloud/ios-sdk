@@ -41,4 +41,16 @@
 	return (self);
 }
 
+#pragma mark - Properties
+- (NSString *)name
+{
+	return ([self.path lastPathComponent]);
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified]);
+}
+
 @end

@@ -29,6 +29,6 @@
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 
-- (NSArray <OCItem *> *)responseItems;
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath;
 
 @end

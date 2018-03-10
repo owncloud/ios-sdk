@@ -8,6 +8,8 @@
 
 #import "OCConnectionDAVRequest.h"
 #import "OCItem.h"
+#import "OCXMLParser.h"
+#import "OCLogger.h"
 
 @implementation OCConnectionDAVRequest
 
@@ -44,62 +46,46 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItems
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath
 {
 	NSArray <OCItem *> *responseItems = nil;
-	
+
 	if (self.responseBodyData != nil)
 	{
-		NSXMLParser *xmlParser;
-		
-		if ((xmlParser = [[NSXMLParser alloc] initWithData:self.responseBodyData]) != nil)
+		@synchronized(self)
 		{
-			xmlParser.delegate = self;
-			
-			if ([xmlParser parse])
+			responseItems = _parseResultItems;
+		}
+
+		if (responseItems == nil)
+		{
+			OCXMLParser *parser;
+
+			if ((parser = [[OCXMLParser alloc] initWithData:self.responseBodyData]) != nil)
 			{
-				// Successful parse
-				responseItems = _parseResultItems;
-			}
-			else
-			{
-				// Error parsing
+				if (basePath != nil)
+				{
+					parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+						basePath, @"basePath",
+					nil];
+				}
+
+				[parser addObjectCreationClasses:@[ [OCItem class] ]];
+
+				if ([parser parse])
+				{
+					// OCLogDebug(@"Parsed objects: %@", parser.parsedObjects);
+
+					@synchronized(self)
+					{
+						responseItems = _parseResultItems = parser.parsedObjects;
+					}
+				}
 			}
 		}
 	}
 	
 	return (responseItems);
-}
-
-#pragma mark - XML parsing
-- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(nullable NSString *)namespaceURI qualifiedName:(nullable NSString *)qName attributes:(NSDictionary<NSString *, NSString *> *)attributeDict
-{
-	NSLog(@"Start %@ %@ %@ %@", elementName, namespaceURI, qName, attributeDict);
-	
-	if ([elementName isEqualToString:@"d:response"])
-	{
-		if (_parseResultItems==nil) { _parseResultItems = [NSMutableArray array]; }
-	
-		_parseItem = [OCItem new];
-	}
-	
-	_parseCurrentElement = elementName;
-}
-
-- (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(nullable NSString *)namespaceURI qualifiedName:(nullable NSString *)qName
-{
-	if ([elementName isEqualToString:@"d:response"])
-	{
-		[_parseResultItems addObject:_parseItem];
-		_parseItem = nil;
-	}
-
-	NSLog(@"End %@ %@ %@", elementName, namespaceURI, qName);
-}
-
-- (void)parserDidEndDocument:(NSXMLParser *)parser
-{
-	NSLog(@"End document");
 }
 
 @end

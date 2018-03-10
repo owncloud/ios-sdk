@@ -36,6 +36,8 @@
 
 @synthesize bookmark = _bookmark;
 
+@synthesize loggedInUser = _loggedInUser;
+
 @synthesize commandQueue = _commandQueue;
 
 @synthesize uploadQueue = _uploadQueue;
@@ -56,6 +58,7 @@
 	return (@{
 			
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",
+		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
@@ -229,7 +232,7 @@
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:nil];
+								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
 								issue.level = OCConnectionIssueLevelError;
 
 								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
@@ -271,7 +274,7 @@
 							}
 							else
 							{
-								// Connected authenticated. Now send an authenticated WebDAV request
+								// Connection authenticated. Now send an authenticated WebDAV request
 								OCConnectionDAVRequest *davRequest;
 								
 								davRequest = [OCConnectionDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
@@ -286,11 +289,26 @@
 									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
 									{
 										// DAV request executed successfully
-										connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-										
-										NSLog(@"%@ - %@", request.response, request.responseBodyAsString);
+										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 
-										completionHandler(nil, nil);
+										// Get user info
+										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+											self.loggedInUser = loggedInUser;
+
+											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+											if (error!=nil)
+											{
+												completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+											}
+											else
+											{
+												// DONE!
+												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+												completionHandler(nil, nil);
+											}
+										}];
 									}
 								})];
 							}
@@ -339,13 +357,14 @@
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
 	OCConnectionDAVRequest *davRequest;
-	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil];
-	
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSURL *url = endpointURL;
+
 	if (path != nil)
 	{
 		url = [url URLByAppendingPathComponent:path];
 	}
-	
+
 	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:1]) != nil)
 	{
 		[davRequest.xmlRequestPropAttribute addChildren:@[
@@ -363,11 +382,12 @@
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 		]];
 
-		OCLog(@"%@", davRequest.xmlRequest.XMLString);
+		// OCLog(@"%@", davRequest.xmlRequest.XMLString);
 		
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 			NSLog(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
-			[(OCConnectionDAVRequest *)davRequest responseItems];
+
+			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
 		}];
 	}
 
@@ -476,7 +496,9 @@
 @end
 
 OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilities";
+OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
+OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 
 OCClassSettingsKey OCConnectionInsertXRequestTracingID = @"connection-insert-x-request-id";
