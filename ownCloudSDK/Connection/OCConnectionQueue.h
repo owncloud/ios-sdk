@@ -43,6 +43,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 	NSMutableSet<OCConnectionRequestGroupID> *_runningRequestsGroupIDs;
 	
 	NSMutableDictionary<NSNumber*, OCConnectionRequest *> *_runningRequestsByTaskIdentifier;
+
+	NSMutableDictionary<NSString*, OCCertificate *> *_cachedCertificatesByHostnameAndPort;
 	
 	NSUInteger _maxConcurrentRequests;
 

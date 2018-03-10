@@ -24,6 +24,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCConnectionDAVRequest.h"
+#import "OCConnectionIssue.h"
 #import "OCLogger.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
@@ -62,7 +63,8 @@
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
-		OCConnectionInsertXRequestTracingID 		: @(YES)
+		OCConnectionInsertXRequestTracingID 		: @(YES),
+		OCConnectionStrictBookmarkCertificateEnforcement: @(YES)
 	});
 }
 
@@ -94,6 +96,27 @@
 	}
 	
 	return (self);
+}
+
+#pragma mark - State
+- (void)setState:(OCConnectionState)state
+{
+	_state = state;
+
+	switch(state)
+	{
+		case OCConnectionStateConnected:
+			OCLogDebug(@"## Connection State changed to CONNECTED");
+		break;
+
+		case OCConnectionStateConnecting:
+			OCLogDebug(@"## Connection State changed to CONNECTING");
+		break;
+
+		case OCConnectionStateDisconnected:
+			OCLogDebug(@"## Connection State changed to DISCONNECTED");
+		break;
+	}
 }
 
 #pragma mark - Prepare request
@@ -128,17 +151,61 @@
 #pragma mark - Handle certificate challenges
 - (void)handleValidationOfRequest:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:request:certificate:validationResult:validationError:proceedHandler:)])
+	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
+	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
+	BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
+
+	// Strictly enfore bookmark certificate
+	if (strictBookmarkCertificateEnforcement)
+	{
+		if (_bookmark.certificate != nil)
+		{
+			fulfillsBookmarkRequirements = NO;
+
+			if ([_bookmark.certificate isEqual:certificate])
+			{
+				fulfillsBookmarkRequirements = YES;
+			}
+		}
+	}
+
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:request:certificate:validationResult:validationError:defaultProceedValue:proceedHandler:)])
 	{
 		// Consult delegate
-		[_delegate connection:self request:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+		[_delegate connection:self request:request certificate:certificate validationResult:validationResult validationError:validationError defaultProceedValue:fulfillsBookmarkRequirements proceedHandler:proceedHandler];
 	}
 	else
 	{
-		// Default to safe option: reject
-		if (proceedHandler != nil)
+		if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
 		{
-			proceedHandler(NO);
+			// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
+			if (proceedHandler != nil)
+			{
+				NSError *errorIssue = nil;
+
+				if (!fulfillsBookmarkRequirements)
+				{
+					errorIssue = OCError(OCErrorRequestServerCertificateRejected);
+
+					// Embed issue
+					errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+						if (decision == OCConnectionIssueDecisionApprove)
+						{
+							_bookmark.certificate = request.responseCertificate;
+						}
+					}]];
+				}
+
+				proceedHandler(fulfillsBookmarkRequirements, errorIssue);
+			}
+		}
+		else
+		{
+			// Default to safe option: reject
+			if (proceedHandler != nil)
+			{
+				proceedHandler(NO, nil);
+			}
 		}
 	}
 }
@@ -180,7 +247,7 @@
 	*/
 	
 	OCAuthenticationMethod *authMethod;
-	
+
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		NSProgress *connectProgress = [NSProgress new];
@@ -189,6 +256,17 @@
 		// Set up progress
 		connectProgress.totalUnitCount = connectProgress.completedUnitCount = 0; // Indeterminate
 		connectProgress.localizedDescription = OCLocalizedString(@"Connecting…", @"");
+
+		self.state = OCConnectionStateConnecting;
+
+		completionHandler = ^(NSError *error, OCConnectionIssue *issue) {
+			if ((error != nil) && (issue != nil))
+			{
+				self.state = OCConnectionStateDisconnected;
+			}
+
+			completionHandler(error, issue);
+		};
 
 		// Reusable Completion Handler
 		OCConnectionEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCConnectionEphermalResultHandler) = ^(OCConnectionEphermalResultHandler resultHandler)
@@ -306,6 +384,8 @@
 												// DONE!
 												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
+												self.state = OCConnectionStateConnected;
+
 												completionHandler(nil, nil);
 											}
 										}];
@@ -338,6 +418,8 @@
 	{
 		// Deauthenticate the connection
 		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+			self.state = OCConnectionStateDisconnected;
+
 			if (completionHandler!=nil)
 			{
 				completionHandler();
@@ -346,6 +428,8 @@
 	}
 	else
 	{
+		self.state = OCConnectionStateDisconnected;
+
 		if (completionHandler!=nil)
 		{
 			completionHandler();
@@ -461,6 +545,18 @@
 {
 	request.ephermalResultHandler = ephermalResultHandler;
 	request.resultHandlerAction = @selector(_handleSendRequestResult:error:);
+
+	// Strictly enfore bookmark certificate ..
+	if (self.state != OCConnectionStateDisconnected) // .. for all requests if connecting or connected ..
+	{
+		BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
+
+		if (strictBookmarkCertificateEnforcement) // .. and the option is turned on
+		{
+
+			request.forceCertificateDecisionDelegation = YES;
+		}
+	}
 	
 	[queue enqueueRequest:request];
 	
@@ -504,4 +600,4 @@ OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCClassSettingsKey OCConnectionInsertXRequestTracingID = @"connection-insert-x-request-id";
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
-
+OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";

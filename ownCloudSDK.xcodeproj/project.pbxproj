@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
+		DC30947A2054945C00189B9A /* fake-demo_owncloud_org.pem in Resources */ = {isa = PBXBuildFile; fileRef = DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */; };
 		DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC492041A2FB00189B9A /* NSError+OCError.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -150,6 +151,7 @@
 
 /* Begin PBXFileReference section */
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
+		DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "fake-demo_owncloud_org.pem"; sourceTree = "<group>"; };
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
 		DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationMethodBasicAuth.m; sourceTree = "<group>"; };
 		DC39DC492041A2FB00189B9A /* NSError+OCError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCError.h"; sourceTree = "<group>"; };
@@ -599,6 +601,7 @@
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
+				DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 			);
 			path = ownCloudSDKTests;
@@ -792,6 +795,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC30947A2054945C00189B9A /* fake-demo_owncloud_org.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

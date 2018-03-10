@@ -35,7 +35,7 @@
 @class OCCertificate;
 
 typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
-typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed);
+typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *error);
 typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @optional
 - (void)connection:(OCConnection *)connection handleError:(NSError *)error;
 
-- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 @end
 
@@ -85,7 +85,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
 @property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
 
-@property(assign) OCConnectionState state;
+@property(assign,nonatomic) OCConnectionState state;
 
 @property(weak) id <OCConnectionDelegate> delegate;
 
@@ -181,7 +181,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 extern OCClassSettingsKey OCConnectionInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
-
+extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
 
 #import "OCClassSettings.h"
 

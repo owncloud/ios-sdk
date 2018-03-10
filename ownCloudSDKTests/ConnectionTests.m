@@ -20,6 +20,9 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 
 @interface ConnectionTests : XCTestCase
+{
+	 OCConnection *newConnection;
+}
 
 @end
 
@@ -270,13 +273,13 @@
 	}];
 }
 
-- (void)_testConnectWithUserEnteredURLString:(NSString *)userEnteredURLString useAuthMethod:(OCAuthenticationMethodIdentifier)useAuthMethod connectAction:(void(^)(NSError *error, OCConnectionIssue *issue, OCConnection *connection))connectionAction
+- (void)_testConnectWithUserEnteredURLString:(NSString *)userEnteredURLString useAuthMethod:(OCAuthenticationMethodIdentifier)useAuthMethod preConnectAction:(void(^)(OCConnection *connection))preConnectAction connectAction:(void(^)(NSError *error, OCConnectionIssue *issue, OCConnection *connection))connectionAction
 {
 	// NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
 	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
 	OCBookmark *bookmark = nil; // Bookmark from previous recipe
 	NSString *userName=@"admin", *password=@"admin"; // Either provided as part of userEnteredURLString - or set independently
-	OCConnection *connection;
+	__block OCConnection *connection;
 	
 	// Create bookmark from normalized URL (and extract username and password if included)
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasPrepended:NULL]];
@@ -341,14 +344,24 @@
 
 										NSLog(@"Done getting bookmark..");
 
-										[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
-										
-											NSLog(@"Done connecting: %@ %@", error, issue);
-											
-											connectionAction(error, issue, connection);
-										}];
-										
-										// Serialize bookmark and write it to a file on disk
+										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+											newConnection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+											if (preConnectAction != nil)
+											{
+												preConnectAction(newConnection);
+											}
+
+											// newConnection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
+
+											[newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+
+												NSLog(@"Done connecting: %@ %@", error, issue);
+
+												connectionAction(error, issue, newConnection);
+											}];
+										});
 									}
 									else
 									{
@@ -367,27 +380,72 @@
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
 		// Testing just the connect here
+
+		XCTAssert((error==nil), @"No error");
+		XCTAssert((issue==nil), @"No issue");
+		XCTAssert((connection!=nil), @"Connection!");
+
 		[expectConnect fulfill];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testConnectWithFakedCert
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:^(OCConnection *connection) {
+		// Load and inject fake certificate for demo.owncloud.org
+		NSURL *fakeCertURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"fake-demo_owncloud_org" withExtension:@"pem"];
+		NSData *fakeCertData = [NSData dataWithContentsOfURL:fakeCertURL];
+
+		connection.bookmark.certificate = [OCCertificate certificateWithCertificateData:fakeCertData hostName:@"demo.owncloud.org"];
+
+	} connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		// Testing just the connect here
+
+		XCTAssert((error!=nil), @"Error");
+		XCTAssert((issue!=nil), @"Issue");
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+
 - (void)testConnectAndGetRootList
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
 		NSLog(@"User: %@", connection.loggedInUser.userName);
 
-		[connection retrieveItemListAtPath:@"/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			NSLog(@"Items at root: %@", items);
+		XCTAssert((error==nil), @"No error");
+		XCTAssert((issue==nil), @"No issue");
+		XCTAssert((connection!=nil), @"Connection!");
 
+		if (error == nil)
+		{
+			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
+
+			[connection retrieveItemListAtPath:@"/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at root: %@", items);
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectRootList fulfill];
+			}];
+		}
+		else
+		{
 			[expectRootList fulfill];
-		}];
+		}
 
 		[expectConnect fulfill];
 	}];

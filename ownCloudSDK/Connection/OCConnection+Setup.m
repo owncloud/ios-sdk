@@ -115,7 +115,7 @@
 						AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelError issueHandler:nil]);
 					}
 
-					proceedHandler(NO);
+					proceedHandler(NO, nil);
 				break;
 
 				case OCCertificateValidationResultNone:
@@ -123,7 +123,7 @@
 					// User rejected this certificate previously, so do not proceed
 					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelError issueHandler:nil]);
 
-					proceedHandler(NO);
+					proceedHandler(NO, nil);
 				break;
 
 				case OCCertificateValidationResultPromptUser: {
@@ -133,7 +133,7 @@
 						{
 							certificate.userAccepted = YES;
 
-							_bookmark.certificateData = [certificate certificateData];
+							_bookmark.certificate = certificate;
 							_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]);
@@ -145,13 +145,13 @@
 					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelInformal issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 						if (decision == OCConnectionIssueDecisionApprove)
 						{
-							_bookmark.certificateData = [certificate certificateData];
+							_bookmark.certificate = certificate;
 							_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]);
 
 					// This is fine!
-					proceedHandler(YES);
+					proceedHandler(YES, nil);
 				break;
 			}
 		};

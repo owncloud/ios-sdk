@@ -166,10 +166,10 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
-- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError recommendsProceeding:(BOOL)recommendsProceeding proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
-	NSLog(@"Connection asked for user confirmation of certificate for %@", certificate.hostName);
-	proceedHandler(YES);
+	NSLog(@"Connection asked for user confirmation of certificate for %@, would recommend: %d", certificate.hostName, recommendsProceeding);
+	proceedHandler(YES, nil);
 }
 
 - (void)testAuthenticationMethodDetectionManualRedirectHandling

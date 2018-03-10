@@ -32,6 +32,9 @@ This document provides an overview over the available sections and variables.
 	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
 		- type: array
 		- default: `nil`
+	- `connection-strict-bookmark-certificate-enforcement`: If `true`:  require the certificate stored in the connection's bookmark if the connection's state is not disconnected. If `false`: accept all validating certificates and certificates approved by the user.
+		- type: boolean
+		- default: `true`
 
 ## OAuth2
 

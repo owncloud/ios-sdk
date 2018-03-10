@@ -26,7 +26,7 @@
 @synthesize name = _name;
 @synthesize url = _url;
 
-@synthesize certificateData = _certificateData;
+@synthesize certificate = _certificate;
 @synthesize certificateModificationDate = _certificateModificationDate;
 
 @synthesize authenticationMethodIdentifier = _authenticationMethodIdentifier;
@@ -143,7 +143,7 @@
 		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
 		_name = [decoder decodeObjectOfClass:[NSString class] forKey:@"name"];
 		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
-		_certificateData = [decoder decodeObjectOfClass:[NSData class] forKey:@"certificateData"];
+		_certificate = [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"certificate"];
 		_certificateModificationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"certificateModificationDate"];
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"authenticationMethodIdentifier"];
 		_requirePIN = [decoder decodeBoolForKey:@"requirePIN"];
@@ -159,7 +159,7 @@
 	[coder encodeObject:_uuid forKey:@"uuid"];
 	[coder encodeObject:_name forKey:@"name"];
 	[coder encodeObject:_url forKey:@"url"];
-	[coder encodeObject:_certificateData forKey:@"certificateData"];
+	[coder encodeObject:_certificate forKey:@"certificate"];
 	[coder encodeObject:_certificateModificationDate forKey:@"certificateModificationDate"];
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeBool:_requirePIN forKey:@"requirePIN"];
