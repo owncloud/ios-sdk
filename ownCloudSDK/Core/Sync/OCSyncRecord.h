@@ -17,7 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "NSProgress+OCActivity.h"
+#import "NSProgress+OCEvent.h"
 #import "OCItem.h"
 
 typedef NSString* OCSyncAction NS_TYPED_ENUM;

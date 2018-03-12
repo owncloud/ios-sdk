@@ -17,11 +17,14 @@
  */
 
 #import "OCEvent.h"
+#import "OCEventTarget.h"
 
 @implementation OCEvent
 
-@synthesize eventID = _eventID;
 @synthesize eventType = _eventType;
+
+@synthesize userInfo = _userInfo;
+@synthesize ephermalUserInfo = _ephermalUserInfo;
 
 @synthesize attributes = _attributes;
 
@@ -60,5 +63,26 @@
 	
 	return (nil);
 }
+
++ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes
+{
+	return ([[self alloc] initForEventTarget:eventTarget type:eventType attributes:attributes]);
+}
+
+- (instancetype)initForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes
+{
+	if ((self = [super init]) != nil)
+	{
+		_eventType = eventType;
+
+		_userInfo = eventTarget.userInfo;
+		_ephermalUserInfo = eventTarget.ephermalUserInfo;
+
+		_attributes = attributes;
+	}
+
+	return(self);
+}
+
 
 @end

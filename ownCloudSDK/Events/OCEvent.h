@@ -19,23 +19,30 @@
 #import <Foundation/Foundation.h>
 
 typedef NSString* OCEventHandlerIdentifier;
-typedef NSInteger OCEventID;
-#define OCEventIDUnknown ((OCEventID)-1)
 
 typedef NS_ENUM(NSUInteger, OCEventType)
 {
+	// Creation
 	OCEventTypeCreateFolder,
 	OCEventTypeCreateEmptyFile,
+	OCEventTypeCreateShare,
+
+	// Modification
 	OCEventTypeMove,
 	OCEventTypeCopy,
 	OCEventTypeDelete,
+
+	// File Transfers
 	OCEventTypeUpload,
 	OCEventTypeDownload,
+
+	// Metadata
 	OCEventTypeRetrieveThumbnail,
-	OCEventTypeCreateShare
+	OCEventTypeRetrieveItemList
 };
 
 @class OCEvent;
+@class OCEventTarget;
 
 @protocol OCEventHandler <NSObject>
 
@@ -45,18 +52,26 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 @interface OCEvent : NSObject
 {
-	OCEventID _eventID;
 	OCEventType _eventType;
+
+	NSDictionary *_userInfo;
+	NSDictionary *_ephermalUserInfo;
 
 	NSDictionary *_attributes;
 }
 
-@property(assign) OCEventID eventID; 	//!< For events created in reaction to a command, the eventID passed to the command. OCEventIDUnknown otherwise.
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
+
+@property(readonly) NSDictionary *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
+@property(readonly) NSDictionary *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
 @property(strong) NSDictionary *attributes;	//!< Attributes of the event, describing what happened. (Catch-all in first draft, will be supplemented with additional object properties before implementation)
 
+#pragma mark - Event handler registration / resolution
 + (void)registerEventHandler:(id <OCEventHandler>)eventHandler forIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Registers an event handler for a particular name. Remove with a nil value for eventHandler.
 + (id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Retrieves the event handler stored for a particular identifier.
+
+#pragma mark - Creating events
++ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
 
 @end

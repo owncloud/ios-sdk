@@ -42,14 +42,14 @@ The iOS SDK comes as a framework that is easy to integrate and encapsulates all 
 A hybrid solution is needed to fully leverage background transfers while making a rich, block-based API available. The `OCEvent` set of classes and types offers a solution for this.
 
 Here's how it works:
-- When `OCCore` receives a command, it generates a unique `OCEventID` and stores the completion handler passed to the command in a dictionary that maps `OCEventID`s to completion handlers.
-- `OCCore` then calls the `OCConnection` method corresponding to the command it received and passes it a `OCEventTarget` object (which encapsulates the generated `OCEventID` and a globally unique event handler identifier (`OCEventHandlerIdentifier`)).
-- When `OCConnection` has processed the command, it generates an `OCEvent` using the supplied `OCEventID` and sends it back to the `OCCore` using the core's unique event handler identifier (`OCEventHandlerIdentifier`)
+- When `OCCore` receives a command, it creates a new  `OCEventTarget` object that stores all contextual data needed to handle the response in the  `userInfo` property - and all other objects that can't be persisted (like completionHandler blocks) in  `ephermalUserInfo`.
+- `OCCore` subsequently calls the `OCConnection` method corresponding to the command it received and passes it the `OCEventTarget` object that encapsulates everything it needs to make sense of the reply as well as a globally unique event handler identifier (`OCEventHandlerIdentifier`) allowing `OCConnection` to reconnect to `OCCore` if the app was intermittently terminated.
+- When `OCConnection` has processed the command, it generates an `OCEvent` using the `OCEventTarget` and sends it back to the `OCCore` using the core's unique event handler identifier (`OCEventHandlerIdentifier`)
 - `OCCore` then has a chance to re-associate the event with the completion handler it stored earlier - and call it.
 
 For background transfers, where the app could be terminated while a background `NSURLSession` still processes requests:
 - `OCCore` can process the outcome of the requests (and update the database and files accordingly) independently from the existance of a completion handler.
-- `OCCore` also has a chance to store additonal information it needs to process the outcome of a request: by storing that data in the database and associate it with the `OCEventID`. As it receives the result of the request as an event, it can recover and use that data using the event's `OCEventID`.
+- `OCCore` also has a chance to store additonal information it needs to process the outcome of a request: by storing that data in the `userInfo` field of the `OCEventTarget`. As it receives the result of the request as an `OCEvent`, it also gets passed back the  `userInfo`.
 
 Note: since `OCEventTarget` handles the resolution and actual delivery of the event to the target, support for different mechanisms (f.ex. direct delivery to a block) can be added relatively easy through subclassing.
 

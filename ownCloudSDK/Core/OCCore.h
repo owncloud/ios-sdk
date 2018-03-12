@@ -21,7 +21,7 @@
 #import "OCVault.h"
 #import "OCQuery.h"
 #import "OCItem.h"
-#import "NSProgress+OCActivity.h"
+#import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
 #import "OCShare.h"
 

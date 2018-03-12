@@ -342,7 +342,7 @@
 	{
 		NSURL *requestURL = request.url;
 
-		if ([requestURL.scheme isEqualToString:@"https"])
+		if ([requestURL.scheme.lowercaseString isEqualToString:@"https"])
 		{
 			// .. but hasn't ..
 			if (request.responseCertificate == nil)
@@ -354,7 +354,7 @@
 				{
 					@synchronized(self)
 					{
-						// Attach certificate from cache (NSURLSession probably didn't do because the certificate is still cached in its internal TLS cache and we were asked before. Also see https://developer.apple.com/library/content/qa/qa1727/_index.html .)
+						// Attach certificate from cache (NSURLSession probably didn't do because the certificate is still cached in its internal TLS cache and we were asked before. Also see https://developer.apple.com/library/content/qa/qa1727/_index.html and https://github.com/AFNetworking/AFNetworking/issues/991 .)
 						if ((request.responseCertificate = _cachedCertificatesByHostnameAndPort[hostnameAndPort]) != nil)
 						{
 							OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed, NSError *proceedError) {

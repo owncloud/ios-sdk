@@ -20,21 +20,25 @@
 
 @implementation OCEventTarget
 
-@synthesize eventID = _eventID;
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
+@synthesize userInfo = _userInfo;
+@synthesize ephermalUserInfo = _ephermalUserInfo;
+
 #pragma mark - Init
-+ (instancetype)eventTargetWithEventID:(OCEventID)eventID eventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier
++ (instancetype)eventTargetWithEventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
 {
-	return ([[self alloc] initWithEventID:eventID eventHandlerIdentifier:eventHandlerIdentifier]);
+	return ([[self alloc] initWithEventHandlerIdentifier:eventHandlerIdentifier userInfo:userInfo ephermalUserInfo:ephermalUserInfo]);
 }
 
-- (instancetype)initWithEventID:(OCEventID)eventID eventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier
+- (instancetype)initWithEventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
 {
 	if ((self = [super init]) != nil)
 	{
-		_eventID = eventID;
 		_eventHandlerIdentifier = eventHandlerIdentifier;
+
+		_userInfo = userInfo;
+		_ephermalUserInfo = ephermalUserInfo;
 	}
 	
 	return (self);
@@ -56,8 +60,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_eventID = [[decoder decodeObjectOfClass:[NSNumber class] forKey:@"eventID"] unsignedIntegerValue];
 		_eventHandlerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"eventHandlerIdentifier"];
+		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
 	}
 
 	return (self);
@@ -65,8 +69,8 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeObject:@(_eventID) forKey:@"eventID"];
 	[coder encodeObject:_eventHandlerIdentifier forKey:@"eventHandlerIdentifier"];
+	[coder encodeObject:_userInfo forKey:@"userInfo"];
 }
 
 @end

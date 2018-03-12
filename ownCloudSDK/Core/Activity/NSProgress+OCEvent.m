@@ -1,5 +1,5 @@
 //
-//  NSProgress+OCActivity.m
+//  NSProgress+OCEvent.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 24.02.18.
@@ -16,18 +16,18 @@
  *
  */
 
-#import "NSProgress+OCActivity.h"
+#import "NSProgress+OCEvent.h"
 
-@implementation NSProgress (OCActivity)
+@implementation NSProgress (OCEvent)
 
-- (OCActivityType)activityType
+- (OCEventType)eventType
 {
-	return ([self.userInfo[@"_activityType"] unsignedIntegerValue]);
+	return ([self.userInfo[@"_eventType"] unsignedIntegerValue]);
 }
 
-- (void)setActivityType:(OCActivityType)activityType
+- (void)setEventType:(OCEventType)eventType
 {
-	[self setUserInfoObject:@(activityType) forKey:@"_activityType"];
+	[self setUserInfoObject:@(eventType) forKey:@"_eventType"];
 }
 
 @end

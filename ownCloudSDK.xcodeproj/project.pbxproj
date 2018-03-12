@@ -15,8 +15,8 @@
 		DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC4A2041A2FB00189B9A /* NSError+OCError.m */; };
 		DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC4D2041B53000189B9A /* AuthenticationTests.m */; };
 		DC39DC512041CA9B00189B9A /* OCConnection+OCConnectionQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC4F2041CA9B00189B9A /* OCConnection+OCConnectionQueue.h */; };
-		DC39DC59204215A800189B9A /* NSProgress+OCActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC57204215A800189B9A /* NSProgress+OCActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC39DC5A204215A800189B9A /* NSProgress+OCActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC58204215A800189B9A /* NSProgress+OCActivity.m */; };
+		DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC57204215A800189B9A /* NSProgress+OCEvent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */; };
 		DC3F2B4D204AED1900189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC3F2B4F204AED1900189B9A /* Localizable.strings */; };
 		DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3F2B50204AED8300189B9A /* OCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -158,8 +158,8 @@
 		DC39DC4A2041A2FB00189B9A /* NSError+OCError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCError.m"; sourceTree = "<group>"; };
 		DC39DC4D2041B53000189B9A /* AuthenticationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AuthenticationTests.m; sourceTree = "<group>"; };
 		DC39DC4F2041CA9B00189B9A /* OCConnection+OCConnectionQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCConnection+OCConnectionQueue.h"; sourceTree = "<group>"; };
-		DC39DC57204215A800189B9A /* NSProgress+OCActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProgress+OCActivity.h"; sourceTree = "<group>"; };
-		DC39DC58204215A800189B9A /* NSProgress+OCActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCActivity.m"; sourceTree = "<group>"; };
+		DC39DC57204215A800189B9A /* NSProgress+OCEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProgress+OCEvent.h"; sourceTree = "<group>"; };
+		DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCEvent.m"; sourceTree = "<group>"; };
 		DC3F2B4E204AED1900189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC3F2B50204AED8300189B9A /* OCMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMacros.h; sourceTree = "<group>"; };
 		DC545E78203F7DD0006111FA /* OCUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCUser.h; sourceTree = "<group>"; };
@@ -338,8 +338,8 @@
 		DC855704204FE9E900189B9A /* Activity */ = {
 			isa = PBXGroup;
 			children = (
-				DC39DC58204215A800189B9A /* NSProgress+OCActivity.m */,
-				DC39DC57204215A800189B9A /* NSProgress+OCActivity.h */,
+				DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */,
+				DC39DC57204215A800189B9A /* NSProgress+OCEvent.h */,
 			);
 			path = Activity;
 			sourceTree = "<group>";
@@ -623,7 +623,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
-				DC39DC59204215A800189B9A /* NSProgress+OCActivity.h in Headers */,
+				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
@@ -820,7 +820,7 @@
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
-				DC39DC5A204215A800189B9A /* NSProgress+OCActivity.m in Sources */,
+				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
 				DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
