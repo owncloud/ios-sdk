@@ -9,6 +9,6 @@
 #ifndef OCMacros_h
 #define OCMacros_h
 
-#define OCLocalizedString(key,comment) NSLocalizedStringFromTableInBundle(key, @"Localized", [NSBundle bundleForClass:[self class]], comment)
+#define OCLocalizedString(key,comment) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], comment)
 
 #endif /* OCMacros_h */

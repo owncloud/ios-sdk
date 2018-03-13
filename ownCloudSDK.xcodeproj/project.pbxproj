@@ -39,13 +39,14 @@
 		DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC66C6B320540DBD00189B9A /* NSDate+OCDateParser.m */; };
 		DC72568020405752006111FA /* OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72567E20405752006111FA /* OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC72568120405752006111FA /* OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72567F20405752006111FA /* OCClassSettings.m */; };
+		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
+		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
+		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
 		DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7E0A6D2036F28B006111FA /* OCKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A6E2036F28B006111FA /* OCKeychain.m */; };
 		DC7E0A7B203732B3006111FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A7A203732B3006111FA /* AppDelegate.m */; };
 		DC7E0A7E203732B3006111FA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A7D203732B3006111FA /* ViewController.m */; };
-		DC7E0A81203732B3006111FA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC7E0A7F203732B3006111FA /* Main.storyboard */; };
 		DC7E0A83203732B3006111FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DC7E0A82203732B3006111FA /* Assets.xcassets */; };
-		DC7E0A86203732B3006111FA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC7E0A84203732B3006111FA /* LaunchScreen.storyboard */; };
 		DC7E0A89203732B3006111FA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A88203732B3006111FA /* main.m */; };
 		DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A712036F60C006111FA /* BookmarkTests.m */; };
 		DC8556ED204DEA2900189B9A /* OCConnectionDAVRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -242,6 +243,9 @@
 		DC66C6B320540DBD00189B9A /* NSDate+OCDateParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+OCDateParser.m"; sourceTree = "<group>"; };
 		DC72567E20405752006111FA /* OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettings.h; sourceTree = "<group>"; };
 		DC72567F20405752006111FA /* OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettings.m; sourceTree = "<group>"; };
+		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		DC7E0A6D2036F28B006111FA /* OCKeychain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeychain.h; sourceTree = "<group>"; };
 		DC7E0A6E2036F28B006111FA /* OCKeychain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeychain.m; sourceTree = "<group>"; };
 		DC7E0A712036F60C006111FA /* BookmarkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkTests.m; sourceTree = "<group>"; };
@@ -250,9 +254,7 @@
 		DC7E0A7A203732B3006111FA /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		DC7E0A7C203732B3006111FA /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		DC7E0A7D203732B3006111FA /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		DC7E0A80203732B3006111FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		DC7E0A82203732B3006111FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		DC7E0A85203732B3006111FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC7E0A87203732B3006111FA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DC7E0A88203732B3006111FA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionDAVRequest.h; sourceTree = "<group>"; };
@@ -381,10 +383,8 @@
 			isa = PBXGroup;
 			children = (
 				DC3094862057358800189B9A /* ownCloudUI.h */,
-				DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */,
-				DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */,
-				DC30956120580D5F00189B9A /* OCCertificateViewController.m */,
-				DC30956020580D5F00189B9A /* OCCertificateViewController.h */,
+				DC79E1A3205871FA00189B9A /* Certificate Metadata */,
+				DC79E1A2205871B800189B9A /* Resources */,
 				DC30954320574BC900189B9A /* openssl.xcodeproj */,
 				DC3094872057358800189B9A /* Info.plist */,
 			);
@@ -399,6 +399,25 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		DC79E1A2205871B800189B9A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				DC79E1A62058725700189B9A /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		DC79E1A3205871FA00189B9A /* Certificate Metadata */ = {
+			isa = PBXGroup;
+			children = (
+				DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */,
+				DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */,
+				DC30956120580D5F00189B9A /* OCCertificateViewController.m */,
+				DC30956020580D5F00189B9A /* OCCertificateViewController.h */,
+			);
+			path = "Certificate Metadata";
+			sourceTree = "<group>";
+		};
 		DC7E0A78203732B3006111FA /* Ocean */ = {
 			isa = PBXGroup;
 			children = (
@@ -406,9 +425,9 @@
 				DC7E0A79203732B3006111FA /* AppDelegate.h */,
 				DC7E0A7D203732B3006111FA /* ViewController.m */,
 				DC7E0A7C203732B3006111FA /* ViewController.h */,
-				DC7E0A7F203732B3006111FA /* Main.storyboard */,
+				DC79E1A72058747000189B9A /* LaunchScreen.storyboard */,
+				DC79E1A82058747100189B9A /* Main.storyboard */,
 				DC7E0A82203732B3006111FA /* Assets.xcassets */,
-				DC7E0A84203732B3006111FA /* LaunchScreen.storyboard */,
 				DC7E0A87203732B3006111FA /* Info.plist */,
 				DC7E0A88203732B3006111FA /* main.m */,
 			);
@@ -907,7 +926,6 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 			);
 			mainGroup = DCC8F9A1202852A200EB6701;
 			productRefGroup = DCC8F9AC202852A200EB6701 /* Products */;
@@ -943,6 +961,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC79E1A42058725700189B9A /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -950,9 +969,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC7E0A86203732B3006111FA /* LaunchScreen.storyboard in Resources */,
+				DC79E1AA2058747100189B9A /* Main.storyboard in Resources */,
 				DC7E0A83203732B3006111FA /* Assets.xcassets in Resources */,
-				DC7E0A81203732B3006111FA /* Main.storyboard in Resources */,
+				DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1116,20 +1135,12 @@
 			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
-		DC7E0A7F203732B3006111FA /* Main.storyboard */ = {
+		DC79E1A62058725700189B9A /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				DC7E0A80203732B3006111FA /* Base */,
+				DC79E1A52058725700189B9A /* en */,
 			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		DC7E0A84203732B3006111FA /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				DC7E0A85203732B3006111FA /* Base */,
-			);
-			name = LaunchScreen.storyboard;
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

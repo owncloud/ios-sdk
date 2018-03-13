@@ -6,7 +6,18 @@
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2018, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import "OCCertificateViewController.h"
+#import <ownCloudSDK/OCMacros.h>
 
 #import <openssl/x509v3.h>
 
@@ -19,6 +30,8 @@
 @property(strong) NSString *value;
 
 @property(strong) NSMutableArray *children;
+
+@property(strong) UIColor *valueColor;
 
 @end
 
@@ -163,6 +176,7 @@
 
 	self.tableView.rowHeight = UITableViewAutomaticDimension;
 	self.tableView.estimatedRowHeight = 100;
+	self.tableView.sectionFooterHeight = 1;
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -173,6 +187,8 @@
 	{
 		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(_done:)];
 	}
+
+	self.navigationItem.title = OCLocalizedString(@"Certificate Details", @"");
 }
 
 - (void)_done:(id)sender
@@ -196,39 +212,6 @@
 
 		if ((metaData = [certificate metaDataWithError:&error]) != nil)
 		{
-			NSDictionary <OCCertificateMetadataKey, NSString *> *fieldsLocalization = @{
-				OCCertificateMetadataCommonNameKey : @"Common name",
-				OCCertificateMetadataCountryNameKey : @"Country",
-				OCCertificateMetadataLocalityNameKey: @"Locality",
-				OCCertificateMetadataStateOrProvinceNameKey : @"State or province",
-				OCCertificateMetadataOrganizationNameKey : @"Organization",
-				OCCertificateMetadataOrganizationUnitNameKey : @"Organization Unit",
-				OCCertificateMetadataJurisdictionCountryNameKey : @"Jurisdiction country",
-				OCCertificateMetadataJurisdictionLocalityNameKey : @"Jurisdiction locality",
-				OCCertificateMetadataJurisdictionStateOrProvinceNameKey : @"Jurisdiction state or province",
-				OCCertificateMetadataBusinessCategoryKey : @"Business category",
-
-				OCCertificateMetadataVersionKey : @"Version",
-				OCCertificateMetadataSerialNumberKey : @"Serial Number",
-				OCCertificateMetadataSignatureAlgorithmKey : @"Signature Algorithm",
-
-				OCCertificateMetadataValidFromKey : @"Valid from",
-				OCCertificateMetadataValidUntilKey : @"Valid until",
-
-				OCCertificateMetadataKeySizeInBitsKey : @"Key size (bits)",
-				OCCertificateMetadataKeyExponentKey : @"Key exponent",
-				OCCertificateMetadataKeyBytesKey : @"Key bytes",
-				OCCertificateMetadataKeyInformationKey : @"Information"
-			};
-
-			#define LocalizedNameForKey(key) ((fieldsLocalization[key]!=nil) ? fieldsLocalization[key] : key)
-
-			// Set title to common name
-			if (metaData[OCCertificateMetadataSubjectKey][OCCertificateMetadataCommonNameKey] != nil)
-			{
-				self.navigationItem.title = metaData[OCCertificateMetadataSubjectKey][OCCertificateMetadataCommonNameKey];
-			}
-
 			void (^AddSectionFromChildren)(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict) = ^(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict){
 				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:title value:nil];
 
@@ -238,7 +221,7 @@
 
 					if ((value = sectionValueDict[key]) != nil)
 					{
-						[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:LocalizedNameForKey(key) value:value certificateKey:key]];
+						[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:OCLocalizedString(key,@"") value:value certificateKey:key]];
 					}
 				}
 
@@ -247,6 +230,61 @@
 					[sections addObject:sectionNode];
 				}
 			};
+
+			// Sections: Certificate
+			{
+				OCCertificateViewNode *certificateStatusSectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:nil];
+
+				[certificateStatusSectionNode addNode:[OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Hostname",@"") value:_certificate.hostName]];
+
+				[_certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error) {
+					NSString *status = @"";
+					UIColor *backgroundColor = nil;
+
+					switch (validationResult)
+					{
+						case OCCertificateValidationResultError:
+							status = [NSString stringWithFormat:@"%@: %@", OCLocalizedString(@"Validation Error", @""), error.localizedDescription];
+							backgroundColor = [UIColor redColor];
+						break;
+
+						case OCCertificateValidationResultReject:
+							status = OCLocalizedString(@"User-rejected.", @"");
+							backgroundColor = [UIColor redColor];
+						break;
+
+						case OCCertificateValidationResultPromptUser:
+							status = OCLocalizedString(@"Certificate has issues.", @"");
+							backgroundColor = [UIColor orangeColor];
+						break;
+
+						case OCCertificateValidationResultUserAccepted:
+							status = OCLocalizedString(@"User-accepted.", @"");
+							backgroundColor = [UIColor blueColor];
+						break;
+
+						case OCCertificateValidationResultPassed:
+							status = OCLocalizedString(@"No issues found.", @"");
+							backgroundColor = [UIColor greenColor];
+						break;
+
+						case OCCertificateValidationResultNone:
+						break;
+					}
+
+					OCCertificateViewNode *node = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:status];
+
+					node.valueColor = backgroundColor;
+
+					[certificateStatusSectionNode addNode:node];
+
+					dispatch_async(dispatch_get_main_queue(), ^{
+						[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+					});
+				}];
+
+				[sections addObject:certificateStatusSectionNode];
+			}
 
 			// Sections: Subject & Issuer
 			NSArray <OCCertificateMetadataKey> *subjectIssuerFieldsOrder = @[
@@ -264,16 +302,16 @@
 
 			if (metaData[OCCertificateMetadataSubjectKey] != nil)
 			{
-				AddSectionFromChildren(@"Subject", subjectIssuerFieldsOrder, metaData[OCCertificateMetadataSubjectKey]);
+				AddSectionFromChildren(OCLocalizedString(@"Subject",@""), subjectIssuerFieldsOrder, metaData[OCCertificateMetadataSubjectKey]);
 			}
 
 			if (metaData[OCCertificateMetadataSubjectKey] != nil)
 			{
-				AddSectionFromChildren(@"Issuer", subjectIssuerFieldsOrder, metaData[OCCertificateMetadataIssuerKey]);
+				AddSectionFromChildren(OCLocalizedString(@"Issuer",@""), subjectIssuerFieldsOrder, metaData[OCCertificateMetadataIssuerKey]);
 			}
 
 			// Section: Certificate
-			AddSectionFromChildren( @"Certificate",
+			AddSectionFromChildren( nil,
 			  			@[OCCertificateMetadataValidFromKey,
 						  OCCertificateMetadataValidUntilKey,
 						  OCCertificateMetadataSignatureAlgorithmKey,
@@ -282,7 +320,7 @@
 					        metaData);
 
 			// Section: Public Key
-			AddSectionFromChildren( @"Public Key",
+			AddSectionFromChildren( OCLocalizedString(@"Public Key",@""),
 			  			@[OCCertificateMetadataSignatureAlgorithmKey,
 						  OCCertificateMetadataKeySizeInBitsKey,
 						  OCCertificateMetadataKeyExponentKey,
@@ -293,7 +331,7 @@
 			// Section: Extensions
 			if (((NSArray *)metaData[OCCertificateMetadataExtensionsKey]).count > 0)
 			{
-				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:@"Extensions" value:nil];
+				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Extensions",@"") value:nil];
 
 				for (NSDictionary *extensions in ((NSArray *)metaData[OCCertificateMetadataExtensionsKey]))
 				{
@@ -314,7 +352,7 @@
 
 			// Section: Fingerprints
 			{
-				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:@"Fingerprints" value:nil];
+				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Fingerprints",@"") value:nil];
 
 				NSString *fingerprint;
 
@@ -364,33 +402,40 @@
 	((OCCertificateTableCell *)cell).titleLabel.text = node.title.uppercaseString;
 	((OCCertificateTableCell *)cell).descriptionLabel.text = node.value;
 
+	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : nil;
+
+	// ((OCCertificateTableCell *)cell).backgroundColor = (node.backgroundColor != nil) ? node.backgroundColor : [UIColor whiteColor];
+
 	return cell;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
-	UILabel *sectionHeaderLabel;
-	UIView *headerView;
+	UILabel *sectionHeaderLabel = nil;
+	UIView *headerView = nil;
 
-	headerView = [UIView new];
-	[headerView setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
-	[headerView setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
+	if (_sectionNodes[section].title != nil)
+	{
+		headerView = [UIView new];
+		[headerView setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
+		[headerView setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
 
-	sectionHeaderLabel = [UILabel new];
-	sectionHeaderLabel.translatesAutoresizingMaskIntoConstraints = NO;
-	sectionHeaderLabel.textColor = [UIColor blackColor];
-	sectionHeaderLabel.font = [UIFont systemFontOfSize:[UIFont systemFontSize]*1.25 weight:UIFontWeightBold];
+		sectionHeaderLabel = [UILabel new];
+		sectionHeaderLabel.translatesAutoresizingMaskIntoConstraints = NO;
+		sectionHeaderLabel.textColor = [UIColor blackColor];
+		sectionHeaderLabel.font = [UIFont systemFontOfSize:[UIFont systemFontSize]*1.25 weight:UIFontWeightBold];
 
-	[headerView addSubview:sectionHeaderLabel];
+		[headerView addSubview:sectionHeaderLabel];
 
-	[sectionHeaderLabel.leftAnchor constraintEqualToAnchor:headerView.leftAnchor constant:18].active = YES;
-	[sectionHeaderLabel.rightAnchor constraintEqualToAnchor:headerView.rightAnchor constant:-10].active = YES;
-	[sectionHeaderLabel.topAnchor constraintEqualToAnchor:headerView.topAnchor constant:10].active = YES;
-	[sectionHeaderLabel.bottomAnchor constraintEqualToAnchor:headerView.bottomAnchor constant:-3].active = YES;
+		[sectionHeaderLabel.leftAnchor constraintEqualToAnchor:headerView.leftAnchor constant:18].active = YES;
+		[sectionHeaderLabel.rightAnchor constraintEqualToAnchor:headerView.rightAnchor constant:-10].active = YES;
+		[sectionHeaderLabel.topAnchor constraintEqualToAnchor:headerView.topAnchor constant:20].active = YES;
+		[sectionHeaderLabel.bottomAnchor constraintEqualToAnchor:headerView.bottomAnchor constant:-3].active = YES;
 
-	[sectionHeaderLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
+		[sectionHeaderLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
 
-	sectionHeaderLabel.text = _sectionNodes[section].title;
+		sectionHeaderLabel.text = _sectionNodes[section].title;
+	}
 
 	return (headerView);
 }
