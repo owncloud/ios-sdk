@@ -42,6 +42,8 @@
 		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
 		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
 		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
+		DC79E1AD205888F800189B9A /* OCCertificateDetailsViewNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC79E1AB205888F800189B9A /* OCCertificateDetailsViewNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC79E1AE205888F800189B9A /* OCCertificateDetailsViewNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DC79E1AC205888F800189B9A /* OCCertificateDetailsViewNode.m */; };
 		DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7E0A6D2036F28B006111FA /* OCKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A6E2036F28B006111FA /* OCKeychain.m */; };
 		DC7E0A7B203732B3006111FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A7A203732B3006111FA /* AppDelegate.m */; };
@@ -246,6 +248,8 @@
 		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		DC79E1AB205888F800189B9A /* OCCertificateDetailsViewNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateDetailsViewNode.h; sourceTree = "<group>"; };
+		DC79E1AC205888F800189B9A /* OCCertificateDetailsViewNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateDetailsViewNode.m; sourceTree = "<group>"; };
 		DC7E0A6D2036F28B006111FA /* OCKeychain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeychain.h; sourceTree = "<group>"; };
 		DC7E0A6E2036F28B006111FA /* OCKeychain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeychain.m; sourceTree = "<group>"; };
 		DC7E0A712036F60C006111FA /* BookmarkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkTests.m; sourceTree = "<group>"; };
@@ -414,6 +418,8 @@
 				DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */,
 				DC30956120580D5F00189B9A /* OCCertificateViewController.m */,
 				DC30956020580D5F00189B9A /* OCCertificateViewController.h */,
+				DC79E1AC205888F800189B9A /* OCCertificateDetailsViewNode.m */,
+				DC79E1AB205888F800189B9A /* OCCertificateDetailsViewNode.h */,
 			);
 			path = "Certificate Metadata";
 			sourceTree = "<group>";
@@ -753,6 +759,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC79E1AD205888F800189B9A /* OCCertificateDetailsViewNode.h in Headers */,
 				DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */,
 				DC3094882057358800189B9A /* ownCloudUI.h in Headers */,
 				DC30955220574C2C00189B9A /* OCCertificate+OpenSSL.h in Headers */,
@@ -1001,6 +1008,7 @@
 			files = (
 				DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */,
 				DC30955320574C2C00189B9A /* OCCertificate+OpenSSL.m in Sources */,
+				DC79E1AE205888F800189B9A /* OCCertificateDetailsViewNode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

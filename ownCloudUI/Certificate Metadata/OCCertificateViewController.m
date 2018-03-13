@@ -17,55 +17,10 @@
  */
 
 #import "OCCertificateViewController.h"
+#import "OCCertificateDetailsViewNode.h"
+#import "OCCertificate+OpenSSL.h"
+
 #import <ownCloudSDK/OCMacros.h>
-
-#import <openssl/x509v3.h>
-
-#pragma mark - Nodes
-@interface OCCertificateViewNode : NSObject
-
-@property(strong) NSString *certificateKey;
-
-@property(strong) NSString *title;
-@property(strong) NSString *value;
-
-@property(strong) NSMutableArray *children;
-
-@property(strong) UIColor *valueColor;
-
-@end
-
-@implementation OCCertificateViewNode
-
-+ (instancetype)nodeWithTitle:(NSString *)title value:(NSString *)value
-{
-	return ([self nodeWithTitle:title value:value certificateKey:nil]);
-}
-
-+ (instancetype)nodeWithTitle:(NSString *)title value:(NSString *)value certificateKey:(NSString *)certificateKey
-{
-	OCCertificateViewNode *node = [OCCertificateViewNode new];
-
-	if (![value isKindOfClass:[NSString class]])
-	{
-		value = [value description];
-	}
-
-	node.title = title;
-	node.value = value;
-	node.certificateKey = certificateKey;
-
-	return (node);
-}
-
-- (void)addNode:(OCCertificateViewNode *)node
-{
-	if (_children == nil) { _children = [NSMutableArray new]; }
-
-	[_children addObject:node];
-}
-
-@end
 
 #pragma mark - Table Cells
 @interface OCCertificateTableCell : UITableViewCell
@@ -133,8 +88,7 @@
 #pragma mark - Certificate view controller
 @interface OCCertificateViewController ()
 {
-	NSMutableArray <OCCertificateViewNode *> *_sectionNodes;
-	NSArray<OCCertificateMetadataKey> *_fixedWidthKeys;
+	NSArray <OCCertificateDetailsViewNode *> *_sectionNodes;
 }
 
 @end
@@ -156,20 +110,6 @@
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
-
-	_fixedWidthKeys = @[
-		// Fingerprints
-		@"_fingerprint",
-
-		// Extensions with hex data
-		@SN_subject_key_identifier,
-		@SN_authority_key_identifier,
-		@SN_ct_precert_scts,
-
-		// Metadata with hex data
-		OCCertificateMetadataSerialNumberKey,
-		OCCertificateMetadataKeyBytesKey,
-	];
 
 	[self.tableView registerClass:[OCCertificateTableCell class] forCellReuseIdentifier:@"certCell"];
 	[self.tableView registerClass:[OCCertificateTableCell class] forCellReuseIdentifier:@"certCellMono"];
@@ -201,185 +141,17 @@
 
 - (void)setCertificate:(OCCertificate *)certificate
 {
-	NSMutableArray <OCCertificateViewNode *> *sections = [NSMutableArray new];
-
 	_certificate = certificate;
 
 	if (_certificate != nil)
 	{
-		NSError *error = nil;
-		NSDictionary<OCCertificateMetadataKey, id> *metaData;
-
-		if ((metaData = [certificate metaDataWithError:&error]) != nil)
-		{
-			void (^AddSectionFromChildren)(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict) = ^(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict){
-				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:title value:nil];
-
-				for (OCCertificateMetadataKey key in fields)
-				{
-					NSString *value;
-
-					if ((value = sectionValueDict[key]) != nil)
-					{
-						[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:OCLocalizedString(key,@"") value:value certificateKey:key]];
-					}
-				}
-
-				if (sectionNode.children.count > 0)
-				{
-					[sections addObject:sectionNode];
-				}
-			};
-
-			// Sections: Certificate
-			{
-				OCCertificateViewNode *certificateStatusSectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:nil];
-
-				[certificateStatusSectionNode addNode:[OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Hostname",@"") value:_certificate.hostName]];
-
-				[_certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error) {
-					NSString *status = @"";
-					UIColor *backgroundColor = nil;
-
-					switch (validationResult)
-					{
-						case OCCertificateValidationResultError:
-							status = [NSString stringWithFormat:@"%@: %@", OCLocalizedString(@"Validation Error", @""), error.localizedDescription];
-							backgroundColor = [UIColor redColor];
-						break;
-
-						case OCCertificateValidationResultReject:
-							status = OCLocalizedString(@"User-rejected.", @"");
-							backgroundColor = [UIColor redColor];
-						break;
-
-						case OCCertificateValidationResultPromptUser:
-							status = OCLocalizedString(@"Certificate has issues.", @"");
-							backgroundColor = [UIColor orangeColor];
-						break;
-
-						case OCCertificateValidationResultUserAccepted:
-							status = OCLocalizedString(@"User-accepted.", @"");
-							backgroundColor = [UIColor blueColor];
-						break;
-
-						case OCCertificateValidationResultPassed:
-							status = OCLocalizedString(@"No issues found.", @"");
-							backgroundColor = [UIColor greenColor];
-						break;
-
-						case OCCertificateValidationResultNone:
-						break;
-					}
-
-					OCCertificateViewNode *node = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:status];
-
-					node.valueColor = backgroundColor;
-
-					[certificateStatusSectionNode addNode:node];
-
-					dispatch_async(dispatch_get_main_queue(), ^{
-						[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
-					});
-				}];
-
-				[sections addObject:certificateStatusSectionNode];
-			}
-
-			// Sections: Subject & Issuer
-			NSArray <OCCertificateMetadataKey> *subjectIssuerFieldsOrder = @[
-				OCCertificateMetadataCommonNameKey,
-				OCCertificateMetadataCountryNameKey,
-				OCCertificateMetadataLocalityNameKey,
-				OCCertificateMetadataStateOrProvinceNameKey,
-				OCCertificateMetadataOrganizationNameKey,
-				OCCertificateMetadataOrganizationUnitNameKey,
-				OCCertificateMetadataJurisdictionCountryNameKey,
-				OCCertificateMetadataJurisdictionLocalityNameKey,
-				OCCertificateMetadataJurisdictionStateOrProvinceNameKey,
-				OCCertificateMetadataBusinessCategoryKey
-			];
-
-			if (metaData[OCCertificateMetadataSubjectKey] != nil)
-			{
-				AddSectionFromChildren(OCLocalizedString(@"Subject",@""), subjectIssuerFieldsOrder, metaData[OCCertificateMetadataSubjectKey]);
-			}
-
-			if (metaData[OCCertificateMetadataSubjectKey] != nil)
-			{
-				AddSectionFromChildren(OCLocalizedString(@"Issuer",@""), subjectIssuerFieldsOrder, metaData[OCCertificateMetadataIssuerKey]);
-			}
-
-			// Section: Certificate
-			AddSectionFromChildren( nil,
-			  			@[OCCertificateMetadataValidFromKey,
-						  OCCertificateMetadataValidUntilKey,
-						  OCCertificateMetadataSignatureAlgorithmKey,
-						  OCCertificateMetadataSerialNumberKey,
-						  OCCertificateMetadataVersionKey],
-					        metaData);
-
-			// Section: Public Key
-			AddSectionFromChildren( OCLocalizedString(@"Public Key",@""),
-			  			@[OCCertificateMetadataSignatureAlgorithmKey,
-						  OCCertificateMetadataKeySizeInBitsKey,
-						  OCCertificateMetadataKeyExponentKey,
-						  OCCertificateMetadataKeyBytesKey,
-						  OCCertificateMetadataKeyInformationKey],
-					        metaData[OCCertificateMetadataPublicKeyKey]);
-
-			// Section: Extensions
-			if (((NSArray *)metaData[OCCertificateMetadataExtensionsKey]).count > 0)
-			{
-				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Extensions",@"") value:nil];
-
-				for (NSDictionary *extensions in ((NSArray *)metaData[OCCertificateMetadataExtensionsKey]))
-				{
-					NSString *extensionName = extensions[OCCertificateMetadataExtensionNameKey];
-					NSString *extensionValue = extensions[OCCertificateMetadataExtensionDescriptionKey];
-
-					if ((extensionName != nil) && (extensionValue != nil))
-					{
-						[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:extensionName value:extensionValue certificateKey:extensions[OCCertificateMetadataExtensionIdentifierKey]]];
-					}
-				}
-
-				if (sectionNode.children.count > 0)
-				{
-					[sections addObject:sectionNode];
-				}
-			}
-
-			// Section: Fingerprints
-			{
-				OCCertificateViewNode *sectionNode = [OCCertificateViewNode nodeWithTitle:OCLocalizedString(@"Fingerprints",@"") value:nil];
-
-				NSString *fingerprint;
-
-				if ((fingerprint = [[_certificate sha256Fingerprint] asHexStringWithSeparator:@" "]) != nil)
-				{
-					[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:@"SHA-256" value:fingerprint certificateKey:@"_fingerprint"]];
-				}
-
-				if ((fingerprint = [[_certificate sha1Fingerprint] asHexStringWithSeparator:@" "]) != nil)
-				{
-					[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:@"SHA-1" value:fingerprint certificateKey:@"_fingerprint"]];
-				}
-
-				if ((fingerprint = [[_certificate md5Fingerprint] asHexStringWithSeparator:@" "]) != nil)
-				{
-					[sectionNode addNode:[OCCertificateViewNode nodeWithTitle:@"MD5" value:fingerprint certificateKey:@"_fingerprint"]];
-				}
-
-				if (sectionNode.children.count > 0)
-				{
-					[sections addObject:sectionNode];
-				}
-			}
-		}
+		[_certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				_sectionNodes = detailsViewNodes;
+				[self.tableView reloadData];
+			});
+		}];
 	}
-
-	_sectionNodes = sections;
 }
 
 #pragma mark - Table view data source
@@ -395,16 +167,14 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	OCCertificateViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
+	OCCertificateDetailsViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
 
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:(((node.certificateKey!=nil) && [_fixedWidthKeys containsObject:node.certificateKey]) ? @"certCellMono" : @"certCell") forIndexPath:indexPath];
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:(node.useFixedWidthFont ? @"certCellMono" : @"certCell") forIndexPath:indexPath];
 
 	((OCCertificateTableCell *)cell).titleLabel.text = node.title.uppercaseString;
 	((OCCertificateTableCell *)cell).descriptionLabel.text = node.value;
 
 	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : nil;
-
-	// ((OCCertificateTableCell *)cell).backgroundColor = (node.backgroundColor != nil) ? node.backgroundColor : [UIColor whiteColor];
 
 	return cell;
 }

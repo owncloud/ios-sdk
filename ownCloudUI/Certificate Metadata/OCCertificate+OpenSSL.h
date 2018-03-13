@@ -20,11 +20,15 @@
 
 #import <ownCloudSDK/OCCertificate.h>
 
+#import "OCCertificateDetailsViewNode.h"
+
 typedef NSString* OCCertificateMetadataKey NS_TYPED_ENUM;
 
 @interface OCCertificate (OpenSSL)
 
 - (NSDictionary<OCCertificateMetadataKey, id> *)metaDataWithError:(NSError **)error;
+
+- (void)certificateDetailsViewNodesWithValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
 
 @end
 

@@ -103,4 +103,14 @@
 	return (queryParameters);
 }
 
+- (NSString *)hostAndPort
+{
+	if (self.port != nil)
+	{
+		return ([NSString stringWithFormat:@"%@:%@", self.host, self.port]);
+	}
+
+	return (self.host);
+}
+
 @end

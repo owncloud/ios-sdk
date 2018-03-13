@@ -26,4 +26,6 @@
 
 - (NSDictionary <NSString *,NSString *> *)queryParameters;
 
+- (NSString *)hostAndPort;
+
 @end

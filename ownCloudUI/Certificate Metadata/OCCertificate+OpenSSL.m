@@ -465,9 +465,11 @@
 	return (metaData);
 }
 
-- (NSAttributedString *)metaDataStringWithTitleFont:(UIFont *)titleFont valueFont:(UIFont *)valueFont fixedFont:(UIFont *)fixedFont
+- (void)certificateDetailsViewNodesWithValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
 {
-	return (nil);
+	[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:self withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+		validationCompletionHandler(detailsViewNodes);
+	}];
 }
 
 @end

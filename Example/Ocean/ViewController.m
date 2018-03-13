@@ -95,6 +95,13 @@
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
+
+				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+
+					[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+						_logTextView.attributedText = [OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes];
+					}];
+				}];
 			}];
 
 			proceedHandler(YES, nil);

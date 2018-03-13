@@ -17,7 +17,7 @@
  */
 
 #import <UIKit/UIKit.h>
-#import "OCCertificate+OpenSSL.h"
+#import <ownCloudSDK/OCCertificate.h>
 
 @interface OCCertificateViewController : UITableViewController
 {

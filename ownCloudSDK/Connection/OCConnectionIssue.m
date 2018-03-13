@@ -17,6 +17,8 @@
  */
 
 #import "OCConnectionIssue.h"
+#import "OCMacros.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
 
 @interface OCConnectionIssue ()
 {
@@ -77,6 +79,31 @@
 		_certificateURL = url;
 		
 		_issueHandler = [issueHandler copy];
+
+		_localizedTitle = OCLocalizedString(@"Certificate", @"");
+
+		switch (validationResult)
+		{
+			case OCCertificateValidationResultError:
+				_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"An error occured trying to validate the certificate for %@.", @""), certificate.hostName];
+			break;
+
+			case OCCertificateValidationResultReject:
+				_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The certificate for %@ has previously been rejected by the user.", @""), certificate.hostName];
+			break;
+
+			case OCCertificateValidationResultPromptUser:
+			case OCCertificateValidationResultUserAccepted:
+				_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Issues were found while validating the certificate for %@.", @""), certificate.hostName];
+			break;
+
+			case OCCertificateValidationResultPassed:
+				_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Certificate for %@ passed validation.", @""), certificate.hostName];
+			break;
+
+			case OCCertificateValidationResultNone:
+			break;
+		}
 	}
 	
 	return(self);
@@ -93,6 +120,9 @@
 		_suggestedURL = suggestedURL;
 
 		_issueHandler = [issueHandler copy];
+
+		_localizedTitle = OCLocalizedString(@"Redirection", @"");
+		_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The connection is redirected from %@ to %@.", @""), originalURL.hostAndPort, suggestedURL.hostAndPort];
 	}
 	
 	return(self);
@@ -108,6 +138,13 @@
 		_error = error;
 
 		_issueHandler = [issueHandler copy];
+
+		_localizedTitle = OCLocalizedString(@"Error", @"");
+		_localizedDescription = _error.localizedDescription;
+
+		if (_localizedDescription==nil) {
+			_localizedDescription = _error.description;
+		}
 	}
 	
 	return(self);
