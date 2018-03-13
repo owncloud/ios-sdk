@@ -8,7 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
-		DC30947A2054945C00189B9A /* fake-demo_owncloud_org.pem in Resources */ = {isa = PBXBuildFile; fileRef = DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */; };
+		DC3094882057358800189B9A /* ownCloudUI.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094862057358800189B9A /* ownCloudUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
+		DC30948C2057358800189B9A /* ownCloudUI.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DC309492205735C200189B9A /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
+		DC30954B20574BDC00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
+		DC30954E20574BEC00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
+		DC30954F20574BF400189B9A /* openssl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DC30955220574C2C00189B9A /* OCCertificate+OpenSSL.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC30955320574C2C00189B9A /* OCCertificate+OpenSSL.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */; };
+		DC30955A2057CF2B00189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
+		DC30955B2057CF2B00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
+		DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30955C2057CFC000189B9A /* CertificateTests.m */; };
+		DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */; };
+		DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30956020580D5F00189B9A /* OCCertificateViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30956120580D5F00189B9A /* OCCertificateViewController.m */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */; };
 		DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC492041A2FB00189B9A /* NSError+OCError.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -113,6 +127,55 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		DC3094892057358800189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC3094832057358800189B9A;
+			remoteInfo = ownCloudUI;
+		};
+		DC309490205735BD00189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DCC8F9AA202852A200EB6701;
+			remoteInfo = ownCloudSDK;
+		};
+		DC30954720574BC900189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC30949D205749EA00189B9A;
+			remoteInfo = openssl;
+		};
+		DC30954920574BD900189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = DC30949C205749EA00189B9A;
+			remoteInfo = openssl;
+		};
+		DC30954C20574BE900189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = DC30949C205749EA00189B9A;
+			remoteInfo = openssl;
+		};
+		DC3095562057CF2500189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC3094832057358800189B9A;
+			remoteInfo = ownCloudUI;
+		};
+		DC3095582057CF2500189B9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = DC30949C205749EA00189B9A;
+			remoteInfo = openssl;
+		};
 		DC7E0A8D203732D6006111FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
@@ -143,7 +206,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				DC30954F20574BF400189B9A /* openssl.framework in CopyFiles */,
 				DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */,
+				DC30948C2057358800189B9A /* ownCloudUI.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,7 +216,16 @@
 
 /* Begin PBXFileReference section */
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
-		DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "fake-demo_owncloud_org.pem"; sourceTree = "<group>"; };
+		DC3094842057358800189B9A /* ownCloudUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC3094862057358800189B9A /* ownCloudUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudUI.h; sourceTree = "<group>"; };
+		DC3094872057358800189B9A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DC30954320574BC900189B9A /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openssl.xcodeproj; path = openssl/framework/openssl.xcodeproj; sourceTree = "<group>"; };
+		DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCertificate+OpenSSL.h"; sourceTree = "<group>"; };
+		DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCertificate+OpenSSL.m"; sourceTree = "<group>"; };
+		DC30955C2057CFC000189B9A /* CertificateTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CertificateTests.m; sourceTree = "<group>"; };
+		DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fake-demo_owncloud_org.cer"; sourceTree = "<group>"; };
+		DC30956020580D5F00189B9A /* OCCertificateViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateViewController.h; sourceTree = "<group>"; };
+		DC30956120580D5F00189B9A /* OCCertificateViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateViewController.m; sourceTree = "<group>"; };
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
 		DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationMethodBasicAuth.m; sourceTree = "<group>"; };
 		DC39DC492041A2FB00189B9A /* NSError+OCError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCError.h"; sourceTree = "<group>"; };
@@ -263,11 +337,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DC3094802057358800189B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC30954B20574BDC00189B9A /* openssl.framework in Frameworks */,
+				DC309492205735C200189B9A /* ownCloudSDK.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC7E0A74203732B3006111FA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC30954E20574BEC00189B9A /* openssl.framework in Frameworks */,
 				DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */,
+				DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,6 +368,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC30955A2057CF2B00189B9A /* ownCloudUI.framework in Frameworks */,
+				DC30955B2057CF2B00189B9A /* openssl.framework in Frameworks */,
 				DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -290,6 +377,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DC3094852057358800189B9A /* ownCloudUI */ = {
+			isa = PBXGroup;
+			children = (
+				DC3094862057358800189B9A /* ownCloudUI.h */,
+				DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */,
+				DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */,
+				DC30956120580D5F00189B9A /* OCCertificateViewController.m */,
+				DC30956020580D5F00189B9A /* OCCertificateViewController.h */,
+				DC30954320574BC900189B9A /* openssl.xcodeproj */,
+				DC3094872057358800189B9A /* Info.plist */,
+			);
+			path = ownCloudUI;
+			sourceTree = "<group>";
+		};
+		DC30954420574BC900189B9A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC30954820574BC900189B9A /* openssl.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		DC7E0A78203732B3006111FA /* Ocean */ = {
 			isa = PBXGroup;
 			children = (
@@ -552,6 +661,7 @@
 				DCC8F9C62028533000EB6701 /* README.md */,
 				DC855719204FEC0A00189B9A /* doc */,
 				DCC8F9AD202852A200EB6701 /* ownCloudSDK */,
+				DC3094852057358800189B9A /* ownCloudUI */,
 				DCC8F9B8202852A200EB6701 /* ownCloudSDKTests */,
 				DC7E0A78203732B3006111FA /* Ocean */,
 				DCC8F9AC202852A200EB6701 /* Products */,
@@ -565,6 +675,7 @@
 				DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */,
 				DCC8F9B4202852A200EB6701 /* ownCloudSDKTests.xctest */,
 				DC7E0A77203732B3006111FA /* Ocean.app */,
+				DC3094842057358800189B9A /* ownCloudUI.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -599,9 +710,10 @@
 			children = (
 				DC39DC4D2041B53000189B9A /* AuthenticationTests.m */,
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
+				DC30955C2057CFC000189B9A /* CertificateTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
-				DC3094792054945C00189B9A /* fake-demo_owncloud_org.pem */,
+				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 			);
 			path = ownCloudSDKTests;
@@ -618,6 +730,16 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		DC3094812057358800189B9A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */,
+				DC3094882057358800189B9A /* ownCloudUI.h in Headers */,
+				DC30955220574C2C00189B9A /* OCCertificate+OpenSSL.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DCC8F9A8202852A200EB6701 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -671,6 +793,26 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		DC3094832057358800189B9A /* ownCloudUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC30948F2057358800189B9A /* Build configuration list for PBXNativeTarget "ownCloudUI" */;
+			buildPhases = (
+				DC30947F2057358800189B9A /* Sources */,
+				DC3094802057358800189B9A /* Frameworks */,
+				DC3094812057358800189B9A /* Headers */,
+				DC3094822057358800189B9A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DC30954A20574BD900189B9A /* PBXTargetDependency */,
+				DC309491205735BD00189B9A /* PBXTargetDependency */,
+			);
+			name = ownCloudUI;
+			productName = ownCloudUI;
+			productReference = DC3094842057358800189B9A /* ownCloudUI.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		DC7E0A76203732B3006111FA /* Ocean */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DC7E0A8A203732B3006111FA /* Build configuration list for PBXNativeTarget "Ocean" */;
@@ -683,7 +825,9 @@
 			buildRules = (
 			);
 			dependencies = (
+				DC30954D20574BE900189B9A /* PBXTargetDependency */,
 				DCEEB2DF2044064C00189B9A /* PBXTargetDependency */,
+				DC30948A2057358800189B9A /* PBXTargetDependency */,
 			);
 			name = Ocean;
 			productName = Ocean;
@@ -719,6 +863,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				DC3095572057CF2500189B9A /* PBXTargetDependency */,
+				DC3095592057CF2500189B9A /* PBXTargetDependency */,
 				DCC8F9B7202852A200EB6701 /* PBXTargetDependency */,
 				DC7E0A8E203732D6006111FA /* PBXTargetDependency */,
 			);
@@ -736,6 +882,10 @@
 				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "ownCloud GmbH";
 				TargetAttributes = {
+					DC3094832057358800189B9A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
 					DC7E0A76203732B3006111FA = {
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
@@ -762,16 +912,40 @@
 			mainGroup = DCC8F9A1202852A200EB6701;
 			productRefGroup = DCC8F9AC202852A200EB6701 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = DC30954420574BC900189B9A /* Products */;
+					ProjectRef = DC30954320574BC900189B9A /* openssl.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				DCC8F9AA202852A200EB6701 /* ownCloudSDK */,
 				DCC8F9B3202852A200EB6701 /* ownCloudSDKTests */,
+				DC3094832057358800189B9A /* ownCloudUI */,
 				DC7E0A76203732B3006111FA /* Ocean */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		DC30954820574BC900189B9A /* openssl.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = openssl.framework;
+			remoteRef = DC30954720574BC900189B9A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXResourcesBuildPhase section */
+		DC3094822057358800189B9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC7E0A75203732B3006111FA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -795,13 +969,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC30947A2054945C00189B9A /* fake-demo_owncloud_org.pem in Resources */,
+				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DC30947F2057358800189B9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */,
+				DC30955320574C2C00189B9A /* OCCertificate+OpenSSL.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC7E0A73203732B3006111FA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -868,6 +1051,7 @@
 			files = (
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
 				DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */,
+				DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */,
 				DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
 			);
@@ -876,6 +1060,36 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		DC30948A2057358800189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC3094832057358800189B9A /* ownCloudUI */;
+			targetProxy = DC3094892057358800189B9A /* PBXContainerItemProxy */;
+		};
+		DC309491205735BD00189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DCC8F9AA202852A200EB6701 /* ownCloudSDK */;
+			targetProxy = DC309490205735BD00189B9A /* PBXContainerItemProxy */;
+		};
+		DC30954A20574BD900189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = openssl;
+			targetProxy = DC30954920574BD900189B9A /* PBXContainerItemProxy */;
+		};
+		DC30954D20574BE900189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = openssl;
+			targetProxy = DC30954C20574BE900189B9A /* PBXContainerItemProxy */;
+		};
+		DC3095572057CF2500189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC3094832057358800189B9A /* ownCloudUI */;
+			targetProxy = DC3095562057CF2500189B9A /* PBXContainerItemProxy */;
+		};
+		DC3095592057CF2500189B9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = openssl;
+			targetProxy = DC3095582057CF2500189B9A /* PBXContainerItemProxy */;
+		};
 		DC7E0A8E203732D6006111FA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DC7E0A76203732B3006111FA /* Ocean */;
@@ -921,6 +1135,48 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		DC30948D2057358800189B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = UH96K9N25C;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = ownCloudUI/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DC30948E2057358800189B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = UH96K9N25C;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = ownCloudUI/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		DC7E0A8B203732B3006111FA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1131,6 +1387,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DC30948F2057358800189B9A /* Build configuration list for PBXNativeTarget "ownCloudUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC30948D2057358800189B9A /* Debug */,
+				DC30948E2057358800189B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DC7E0A8A203732B3006111FA /* Build configuration list for PBXNativeTarget "Ocean" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -24,6 +24,7 @@
 @property(strong) IBOutlet UITextView *logTextView;
 
 - (IBAction)connectAndGetInfo:(id)sender;
+- (IBAction)showCertificate:(id)sender;
 
 @end
 

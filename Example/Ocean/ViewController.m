@@ -18,6 +18,7 @@
 
 #import "ViewController.h"
 #import <ownCloudSDK/ownCloudSDK.h>
+#import <ownCloudUI/ownCloudUI.h>
 
 @interface ViewController ()
 {
@@ -76,6 +77,30 @@
 				}
 			}];
 		}
+	}
+}
+
+- (IBAction)showCertificate:(id)sender
+{
+	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
+	{
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark];
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
+
+		request.forceCertificateDecisionDelegation = YES;
+		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
+			NSError *parseError;
+
+			[self appendLog:[NSString stringWithFormat:@"Certificate metadata: %@ Error: %@", [certificate metaDataWithError:&parseError], parseError]];
+
+			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
+			}];
+
+			proceedHandler(YES, nil);
+		};
+
+		[connection sendSynchronousRequest:request toQueue:connection.commandQueue];
 	}
 }
 

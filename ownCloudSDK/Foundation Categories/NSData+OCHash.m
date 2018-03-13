@@ -48,14 +48,16 @@
 	[self enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
 		UInt8 *p_bytes = (UInt8 *)bytes;
 
-		if (byteRange.location != 0)
-		{
-			[hexString appendString:separator];
-		}
-		
 		for (NSUInteger idx=0;idx<byteRange.length;idx++)
 		{
-			[hexString appendFormat:@"%02X", p_bytes[idx]];
+			if ((byteRange.location+idx) != 0)
+			{
+				[hexString appendFormat:@"%@%02X", separator, p_bytes[idx]];
+			}
+			else
+			{
+				[hexString appendFormat:@"%02X", p_bytes[idx]];
+			}
 		}
 	}];
 	

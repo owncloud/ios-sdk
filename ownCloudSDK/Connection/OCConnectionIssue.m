@@ -29,6 +29,9 @@
 @synthesize type = _type;
 @synthesize level = _level;
 
+@synthesize localizedTitle = _localizedTitle;
+@synthesize localizedDescription = _localizedDescription;
+
 @synthesize certificate = _certificate;
 @synthesize certificateValidationResult = _certificateValidationResult;
 @synthesize certificateURL = _certificateURL;

@@ -1,0 +1,44 @@
+26c26
+< 	IOS_MIN_SDK_VERSION="8.0"
+---
+> 	IOS_MIN_SDK_VERSION="11.0"
+31c31
+< 	OSX_DEPLOYMENT_TARGET="10.11"
+---
+> 	OSX_DEPLOYMENT_TARGET="10.12"
+38c38
+< OPENSSL_VERSION="openssl-1.0.2d"
+---
+> OPENSSL_VERSION="openssl-1.0.2n"
+164a165,166
+> if false; then
+> 
+179c181,182
+< buildIOS "armv7"
+---
+> fi
+> 
+182c185,187
+< buildIOS "i386"
+---
+> 
+> echo "Copying headers"
+> cp /tmp/${OPENSSL_VERSION}-iOS-x86_64/include/openssl/* include/openssl/
+184a190,192
+> 
+> if false; then
+> 
+195a204,206
+> 
+> fi
+> 
+197d207
+< 		"lib/libcrypto_iOS.a" \
+203d212
+< 		"lib/libssl_iOS.a" \
+207a217,218
+> if false; then
+> 
+221a233,234
+> fi
+> 

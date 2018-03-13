@@ -39,7 +39,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
-	OCErrorServerBadRedirection	//!< Server redirection to bad/invalid URL
+	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
+
+	OCErrorCertificateInvalid	//!< The certificate is invalid or contains errors
 };
 
 @class OCConnectionIssue;

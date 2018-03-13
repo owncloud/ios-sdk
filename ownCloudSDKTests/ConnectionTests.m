@@ -399,7 +399,7 @@
 
 	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:^(OCConnection *connection) {
 		// Load and inject fake certificate for demo.owncloud.org
-		NSURL *fakeCertURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"fake-demo_owncloud_org" withExtension:@"pem"];
+		NSURL *fakeCertURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"fake-demo_owncloud_org" withExtension:@"cer"];
 		NSData *fakeCertData = [NSData dataWithContentsOfURL:fakeCertURL];
 
 		connection.bookmark.certificate = [OCCertificate certificateWithCertificateData:fakeCertData hostName:@"demo.owncloud.org"];

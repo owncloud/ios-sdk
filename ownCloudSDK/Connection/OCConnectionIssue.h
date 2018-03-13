@@ -51,7 +51,10 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 {
 	OCConnectionIssueType _type;
 	OCConnectionIssueLevel _level;
-	
+
+	NSString *_localizedTitle;
+	NSString *_localizedDescription;
+
 	OCCertificate *_certificate;
 	OCCertificateValidationResult _certificateValidationResult;
 	NSURL *_certificateURL;
@@ -74,6 +77,9 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 @property(assign) OCConnectionIssueLevel level;
 
 @property(readonly,nonatomic) BOOL resolvable;
+
+@property(strong) NSString *localizedTitle;
+@property(strong) NSString *localizedDescription;
 
 @property(strong,readonly) OCCertificate *certificate;
 @property(readonly) OCCertificateValidationResult certificateValidationResult;
