@@ -89,9 +89,6 @@
 
 		request.forceCertificateDecisionDelegation = YES;
 		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
-			NSError *parseError;
-
-			[self appendLog:[NSString stringWithFormat:@"Certificate metadata: %@ Error: %@", [certificate metaDataWithError:&parseError], parseError]];
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
@@ -99,7 +96,14 @@
 				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 
 					[[NSOperationQueue mainQueue] addOperationWithBlock:^{
-						_logTextView.attributedText = [OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes];
+						NSError *parseError;
+						NSMutableAttributedString *attributedString;
+
+						attributedString = [[NSMutableAttributedString alloc] initWithAttributedString:[OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes]];
+
+						[attributedString appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"\n\n------\nCertificate metadata:\n%@\nError: %@", [certificate metaDataWithError:&parseError], parseError]]];
+
+						_logTextView.attributedText = attributedString;
 					}];
 				}];
 			}];

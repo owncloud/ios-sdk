@@ -29,7 +29,7 @@
 @property(strong) UIColor *valueColor;
 
 @property(strong) NSMutableArray *children;
-
+ 
 @property(readonly,nonatomic) BOOL useFixedWidthFont;
 
 #pragma mark - Parsing for presentation
