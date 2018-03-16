@@ -17,7 +17,7 @@
  */
 
 #import <UIKit/UIKit.h>
-#import "OCCertificate.h"
+#import <ownCloudSDK/OCCertificate.h>
 
 @interface OCCertificateDetailsViewNode : NSObject
 
