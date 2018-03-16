@@ -294,8 +294,8 @@
 				DC3094F720574AA200189B9A /* x509v3.h */,
 			);
 			name = openssl;
-			path = ../../../../../../../source/apps/shared/openssl/include/openssl;
-			sourceTree = "<group>";
+			path = ../include/openssl;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
