@@ -71,6 +71,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 #pragma mark - Request retrieval
 - (OCConnectionRequest *)requestForTask:(NSURLSessionTask *)task; //!< Uses the tasks's taskIdentifier to find the running request it belongs to. If the request has been restored (i.e. from a background NSURLSession) and doesn't have a task, the task is re-attached to the request.
 
+#pragma mark - Certificate Evaluation
+- (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+
 @end
 
 #import "OCConnection.h"

@@ -1,8 +1,8 @@
 //
-//  OCDatabase.h
+//  OCClassSettingsFlatSourceManagedConfiguration.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.02.18.
+//  Created by Felix Schwarz on 22.03.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,10 +16,13 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "OCClassSettingsFlatSourceManagedConfiguration.h"
 
-@interface OCDatabase : NSObject
+@implementation OCClassSettingsFlatSourceManagedConfiguration
 
-// TODO: Interface for storing and retrieving file meta data ("cache"), sync records, thumbnail info, logs, .. using sqlite under the hood
+- (NSDictionary <NSString *, id> *)flatSettingsDictionary
+{
+	return ([[NSUserDefaults standardUserDefaults] dictionaryForKey:@"com.apple.configuration.managed"]);
+}
 
 @end

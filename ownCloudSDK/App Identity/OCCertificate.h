@@ -45,6 +45,9 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 	SecCertificateRef _certificateRef;
 	SecTrustRef _trustRef;
 
+	SecKeyRef _publicKey;
+	NSData *_publicKeyData;
+
 	NSDate *_userAcceptedDate;
 
 	NSData *_md5FingerPrint;
@@ -80,6 +83,10 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 
 #pragma mark - Evaluation
 - (void)evaluateWithCompletionHandler:(void(^)(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error))completionHandler;
+
+#pragma mark - Public Key
+- (SecKeyRef)publicKey;
+- (NSData *)publicKeyDataWithError:(NSError **)error; //!< Returns public key embedded in certificate in PKCS#1 format (RSA keys) or ANSI X9.63 format (04 || X || Y [ || K]) (for elliptic curve keys)
 
 #pragma mark - Fingerprints
 - (NSData *)md5Fingerprint;

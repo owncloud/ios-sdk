@@ -66,12 +66,12 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	NSURL *_downloadedFile;
 
 	OCHTTPStatus *_responseHTTPStatus;
+	NSHTTPURLResponse *_injectedResponse;
 	NSMutableData *_responseBodyData;
 	OCCertificate *_responseCertificate;
 	
 	BOOL _cancelled;
-	
-	
+
 	NSError *_error;
 }
 
@@ -98,7 +98,7 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
 
-@property(assign) OCConnectionRequestPriority priority;	//!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority)
+@property(assign,nonatomic) OCConnectionRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority)
 @property(strong) OCConnectionRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 @property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
 

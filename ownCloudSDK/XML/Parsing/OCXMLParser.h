@@ -18,16 +18,6 @@
 
 #import <Foundation/Foundation.h>
 
-
-/*
-	Ground to cover:
-	- list responses
-	- share responses
-	- exception responses
-	- error responses
-*/
-
-
 @class OCXMLParser;
 @class OCXMLParserNode;
 

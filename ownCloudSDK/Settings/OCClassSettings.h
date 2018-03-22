@@ -35,10 +35,16 @@
 typedef NSString* OCClassSettingsIdentifier;
 typedef NSString* OCClassSettingsKey;
 
-@protocol OCClassSettingsSupport
+@protocol OCClassSettingsSupport <NSObject>
 
 + (OCClassSettingsIdentifier)classSettingsIdentifier;
-+ (NSDictionary<NSString *, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
++ (NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
+
+@end
+
+@protocol OCClassSettingsSource <NSObject>
+
+- (NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
 @end
 
@@ -46,7 +52,9 @@ typedef NSString* OCClassSettingsKey;
 
 + (instancetype)sharedSettings;
 
-- (NSDictionary<NSString *, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
+- (void)addSource:(id <OCClassSettingsSource>)source;
+
+- (NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
 
 @end
 

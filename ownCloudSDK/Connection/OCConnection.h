@@ -56,6 +56,12 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+@protocol OCConnectionHostSimulator <NSObject>
+
+- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCConnectionRequest *)request completionHandler:(void(^)(NSError *error))completionHandler;
+
+@end
+
 @interface OCConnection : NSObject <OCClassSettingsSupport>
 {
 	OCBookmark *_bookmark;
@@ -71,7 +77,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCConnectionState _state;
 
 	__weak id <OCConnectionDelegate> _delegate;
-	
+
+	__weak id <OCConnectionHostSimulator> _hostSimulator;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -88,6 +96,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(assign,nonatomic) OCConnectionState state;
 
 @property(weak) id <OCConnectionDelegate> delegate;
+
+@property(weak) id <OCConnectionHostSimulator> hostSimulator;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

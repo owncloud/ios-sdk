@@ -48,6 +48,8 @@
 
 @synthesize delegate = _delegate;
 
+@synthesize hostSimulator = _hostSimulator;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {

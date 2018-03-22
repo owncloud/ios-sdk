@@ -168,6 +168,12 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 - (void)dealloc
 {
 	self.certificateRef = NULL;
+
+	if (_publicKey != NULL)
+	{
+		CFRelease(_publicKey);
+		_publicKey = NULL;
+	}
 }
 
 #pragma mark - Getters and Setters
@@ -492,6 +498,48 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 			completionHandler(self, OCCertificateValidationResultError, nil);
 		}
 	});
+}
+
+#pragma mark - Public Key
+- (SecKeyRef)publicKey
+{
+	if (_publicKey == NULL)
+	{
+		SecCertificateRef certificateRef;
+
+		if ((certificateRef = self.certificateRef) != NULL)
+		{
+			_publicKey = SecCertificateCopyPublicKey(self.certificateRef);
+		}
+	}
+
+	return (_publicKey);
+}
+
+- (NSData *)publicKeyDataWithError:(NSError **)error
+{
+	if (_publicKeyData == NULL)
+	{
+		SecKeyRef keyRef;
+
+		if ((keyRef = self.publicKey) != NULL)
+		{
+			CFErrorRef errorRef = NULL;
+			CFDataRef keyDataRef = NULL;
+
+			if ((keyDataRef = SecKeyCopyExternalRepresentation(keyRef, &errorRef)) != NULL)
+			{
+				_publicKeyData = CFBridgingRelease(keyDataRef);
+			}
+
+			if (errorRef != NULL)
+			{
+				*error = CFBridgingRelease(errorRef);
+			}
+		}
+	}
+
+	return (_publicKeyData);
 }
 
 #pragma mark - Digests

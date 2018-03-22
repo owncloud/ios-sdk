@@ -151,6 +151,16 @@
 	}
 }
 
+- (void)setPriority:(OCConnectionRequestPriority)priority
+{
+	_priority = priority;
+
+	if (_urlSessionTask != nil)
+	{
+		_urlSessionTask.priority = _priority;
+	}
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue
 {
@@ -248,6 +258,11 @@
 - (NSHTTPURLResponse *)response
 {
 	NSURLResponse *response;
+
+	if (_injectedResponse != nil)
+	{
+		return (_injectedResponse);
+	}
 	
 	if ((response = _urlSessionTask.response) != nil)
 	{
@@ -312,7 +327,7 @@
 		NSString *textEncodingName;
 		NSStringEncoding stringEncoding;
 
-		if ((textEncodingName = self.urlSessionTask.response.textEncodingName) != nil)
+		if ((textEncodingName = self.response.textEncodingName) != nil)
 		{
 			stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
 		}

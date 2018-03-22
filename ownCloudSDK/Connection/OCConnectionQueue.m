@@ -208,57 +208,74 @@
 		{
 			NSURLRequest *urlRequest;
 			NSURLSessionTask *task = nil;
+			BOOL createTask = YES;
 
-			// Generate NSURLRequest and create an NSURLSessionTask with it
-			if ((urlRequest = [request generateURLRequestForQueue:self]) != nil)
+			// Invoke host simulation (if any)
+			if (_connection.hostSimulator != nil)
 			{
-				// Construct NSURLSessionTask
-				if (request.downloadRequest)
+				createTask = [_connection.hostSimulator connection:_connection queue:self handleRequest:request completionHandler:^(NSError *error) {
+					[self _handleFinishedRequest:request error:error scheduleQueuedRequests:YES];
+				}];
+			}
+
+			if (createTask)
+			{
+				// Generate NSURLRequest and create an NSURLSessionTask with it
+				if ((urlRequest = [request generateURLRequestForQueue:self]) != nil)
 				{
-					// Request is a download request. Make it a download task.
-					task = [_urlSession downloadTaskWithRequest:urlRequest];
+					// Construct NSURLSessionTask
+					if (request.downloadRequest)
+					{
+						// Request is a download request. Make it a download task.
+						task = [_urlSession downloadTaskWithRequest:urlRequest];
+					}
+					else if (request.bodyURL != nil)
+					{
+						// Body comes from a file. Make it an upload task.
+						task = [_urlSession uploadTaskWithStreamedRequest:urlRequest];
+					}
+					else
+					{
+						// Create a regular data task
+						task = [_urlSession dataTaskWithRequest:urlRequest];
+					}
+
+					// Apply priority
+					task.priority = request.priority;
 				}
-				else if (request.bodyURL != nil)
+
+				if (task != nil)
 				{
-					// Body comes from a file. Make it an upload task.
-					task = [_urlSession uploadTaskWithStreamedRequest:urlRequest];
+					BOOL resumeTask = YES;
+
+					// Save task to request
+					request.urlSessionTask = task;
+					request.urlSessionTaskIdentifier = @(task.taskIdentifier);
+
+					// Connect task progress to request progress
+					[request.progress addChild:task.progress withPendingUnitCount:100];
+
+					// Update internal tracking collections
+					if (request.groupID!=nil)
+					{
+						[_runningRequestsGroupIDs addObject:request.groupID];
+					}
+
+					[_runningRequests addObject:request];
+
+					_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
+
+					// Start task
+					if (resumeTask)
+					{
+						[task resume];
+					}
 				}
 				else
 				{
-					// Create a regular data task
-					task = [_urlSession dataTaskWithRequest:urlRequest];
+					// Request failure
+					error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
 				}
-				
-				// Apply priority
-				task.priority = request.priority;
-			}
-			
-			if (task != nil)
-			{
-				// Save task to request
-				request.urlSessionTask = task;
-				request.urlSessionTaskIdentifier = @(task.taskIdentifier);
-				
-				// Connect task progress to request progress
-				[request.progress addChild:task.progress withPendingUnitCount:100];
-			
-				// Update internal tracking collections
-				if (request.groupID!=nil)
-				{
-					[_runningRequestsGroupIDs addObject:request.groupID];
-				}
-
-				[_runningRequests addObject:request];
-				
-				_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
-				
-				// Start task
-				[task resume];
-			}
-			else
-			{
-				// Request failure
-				error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
 			}
 		}
 		else
@@ -370,6 +387,10 @@
 							};
 
 							[self evaluateCertificate:request.responseCertificate forRequest:request proceedHandler:proceedHandler];
+						}
+						else
+						{
+							[self _handleFinishedRequest:request error:OCError(OCErrorCertificateMissing) scheduleQueuedRequests:scheduleQueuedRequests];
 						}
 						return;
 					}

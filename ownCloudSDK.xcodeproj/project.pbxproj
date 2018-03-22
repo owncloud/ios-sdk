@@ -39,6 +39,17 @@
 		DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC66C6B320540DBD00189B9A /* NSDate+OCDateParser.m */; };
 		DC72568020405752006111FA /* OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72567E20405752006111FA /* OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC72568120405752006111FA /* OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72567F20405752006111FA /* OCClassSettings.m */; };
+		DC72E41B2061665D00189B9A /* OCHostSimulator.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41A2061665D00189B9A /* OCHostSimulator.m */; };
+		DC72E41F206166C500189B9A /* OCHostSimulatorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */; };
+		DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4202063BE9400189B9A /* HostSimulatorTests.m */; };
+		DC72E4292063D61F00189B9A /* OCClassSettingsFlatSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E4272063D61F00189B9A /* OCClassSettingsFlatSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC72E42A2063D61F00189B9A /* OCClassSettingsFlatSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4282063D61F00189B9A /* OCClassSettingsFlatSource.m */; };
+		DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E42C2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E42D2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m */; };
+		DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E4302063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4312063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m */; };
+		DC72E4352063DF5C00189B9A /* SettingsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4342063DF5C00189B9A /* SettingsTests.m */; };
+		DC72E4372063DF7700189B9A /* customSettings.plist in Resources */ = {isa = PBXBuildFile; fileRef = DC72E4362063DF7700189B9A /* customSettings.plist */; };
 		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
 		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
 		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
@@ -104,6 +115,10 @@
 		DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC8FA2E202B405F00EB6701 /* OCEvent.m */; };
 		DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8FA31202B443D00EB6701 /* OCEventTarget.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC8FA32202B443D00EB6701 /* OCEventTarget.m */; };
+		DCD3439720592EC500189B9A /* OCDatabaseSQLite.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD3439520592EC500189B9A /* OCDatabaseSQLite.h */; };
+		DCD3439820592EC500189B9A /* OCDatabaseSQLite.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD3439620592EC500189B9A /* OCDatabaseSQLite.m */; };
+		DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD3439A2059319C00189B9A /* OCSQLiteDB.h */; };
+		DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD3439B2059319C00189B9A /* OCSQLiteDB.m */; };
 		DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */; };
 		DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */; };
 		DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */; };
@@ -245,6 +260,19 @@
 		DC66C6B320540DBD00189B9A /* NSDate+OCDateParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+OCDateParser.m"; sourceTree = "<group>"; };
 		DC72567E20405752006111FA /* OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettings.h; sourceTree = "<group>"; };
 		DC72567F20405752006111FA /* OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettings.m; sourceTree = "<group>"; };
+		DC72E4192061665D00189B9A /* OCHostSimulator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHostSimulator.h; sourceTree = "<group>"; };
+		DC72E41A2061665D00189B9A /* OCHostSimulator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHostSimulator.m; sourceTree = "<group>"; };
+		DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHostSimulatorResponse.h; sourceTree = "<group>"; };
+		DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHostSimulatorResponse.m; sourceTree = "<group>"; };
+		DC72E4202063BE9400189B9A /* HostSimulatorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HostSimulatorTests.m; sourceTree = "<group>"; };
+		DC72E4272063D61F00189B9A /* OCClassSettingsFlatSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsFlatSource.h; sourceTree = "<group>"; };
+		DC72E4282063D61F00189B9A /* OCClassSettingsFlatSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSource.m; sourceTree = "<group>"; };
+		DC72E42C2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsFlatSourceManagedConfiguration.h; sourceTree = "<group>"; };
+		DC72E42D2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSourceManagedConfiguration.m; sourceTree = "<group>"; };
+		DC72E4302063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsFlatSourcePropertyList.h; sourceTree = "<group>"; };
+		DC72E4312063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSourcePropertyList.m; sourceTree = "<group>"; };
+		DC72E4342063DF5C00189B9A /* SettingsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsTests.m; sourceTree = "<group>"; };
+		DC72E4362063DF7700189B9A /* customSettings.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = customSettings.plist; sourceTree = "<group>"; };
 		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
@@ -319,6 +347,10 @@
 		DCC8FA2E202B405F00EB6701 /* OCEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEvent.m; sourceTree = "<group>"; };
 		DCC8FA31202B443D00EB6701 /* OCEventTarget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventTarget.h; sourceTree = "<group>"; };
 		DCC8FA32202B443D00EB6701 /* OCEventTarget.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventTarget.m; sourceTree = "<group>"; };
+		DCD3439520592EC500189B9A /* OCDatabaseSQLite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDatabaseSQLite.h; sourceTree = "<group>"; };
+		DCD3439620592EC500189B9A /* OCDatabaseSQLite.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseSQLite.m; sourceTree = "<group>"; };
+		DCD3439A2059319C00189B9A /* OCSQLiteDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteDB.h; sourceTree = "<group>"; };
+		DCD3439B2059319C00189B9A /* OCSQLiteDB.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteDB.m; sourceTree = "<group>"; };
 		DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Setup.m"; sourceTree = "<group>"; };
 		DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Tools.m"; sourceTree = "<group>"; };
 		DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Authentication.m"; sourceTree = "<group>"; };
@@ -403,6 +435,42 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		DC72E41C2061666900189B9A /* Host Simulator */ = {
+			isa = PBXGroup;
+			children = (
+				DC72E41A2061665D00189B9A /* OCHostSimulator.m */,
+				DC72E4192061665D00189B9A /* OCHostSimulator.h */,
+				DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */,
+				DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */,
+			);
+			path = "Host Simulator";
+			sourceTree = "<group>";
+		};
+		DC72E4262063D54F00189B9A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				DC72567F20405752006111FA /* OCClassSettings.m */,
+				DC72567E20405752006111FA /* OCClassSettings.h */,
+				DC72E42B2063DBDD00189B9A /* Sources */,
+				DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */,
+				DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		DC72E42B2063DBDD00189B9A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				DC72E4282063D61F00189B9A /* OCClassSettingsFlatSource.m */,
+				DC72E4272063D61F00189B9A /* OCClassSettingsFlatSource.h */,
+				DC72E42D2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m */,
+				DC72E42C2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h */,
+				DC72E4312063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m */,
+				DC72E4302063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
 		DC79E1A2205871B800189B9A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -446,10 +514,6 @@
 			children = (
 				DCC8FA20202B218100EB6701 /* OCAppIdentity.m */,
 				DCC8FA1F202B218100EB6701 /* OCAppIdentity.h */,
-				DC72567F20405752006111FA /* OCClassSettings.m */,
-				DC72567E20405752006111FA /* OCClassSettings.h */,
-				DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */,
-				DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */,
 				DC7E0A6E2036F28B006111FA /* OCKeychain.m */,
 				DC7E0A6D2036F28B006111FA /* OCKeychain.h */,
 				DCEEB2EC2046E2B900189B9A /* OCCertificate.m */,
@@ -567,6 +631,7 @@
 			children = (
 				DCC8F9E92028557100EB6701 /* OCDatabase.m */,
 				DCC8F9E82028557100EB6701 /* OCDatabase.h */,
+				DCD3439920592EE100189B9A /* SQLite */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -713,6 +778,7 @@
 				DC3F2B50204AED8300189B9A /* OCMacros.h */,
 				DC855702204FE9CA00189B9A /* Core */,
 				DC855701204FE9AB00189B9A /* App Identity */,
+				DC72E4262063D54F00189B9A /* Settings */,
 				DC855706204FEA0A00189B9A /* Bookmark */,
 				DC855707204FEA1500189B9A /* Authentication */,
 				DC855708204FEA3400189B9A /* Connection */,
@@ -733,11 +799,15 @@
 		DCC8F9B8202852A200EB6701 /* ownCloudSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				DC72E41C2061666900189B9A /* Host Simulator */,
 				DC39DC4D2041B53000189B9A /* AuthenticationTests.m */,
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
 				DC30955C2057CFC000189B9A /* CertificateTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
+				DC72E4202063BE9400189B9A /* HostSimulatorTests.m */,
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
+				DC72E4342063DF5C00189B9A /* SettingsTests.m */,
+				DC72E4362063DF7700189B9A /* customSettings.plist */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 			);
@@ -750,6 +820,17 @@
 				DCC8FA072029BB1200EB6701 /* libsqlite3.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DCD3439920592EE100189B9A /* SQLite */ = {
+			isa = PBXGroup;
+			children = (
+				DCD3439620592EC500189B9A /* OCDatabaseSQLite.m */,
+				DCD3439520592EC500189B9A /* OCDatabaseSQLite.h */,
+				DCD3439B2059319C00189B9A /* OCSQLiteDB.m */,
+				DCD3439A2059319C00189B9A /* OCSQLiteDB.h */,
+			);
+			path = SQLite;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -774,7 +855,9 @@
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
+				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
+				DC72E4292063D61F00189B9A /* OCClassSettingsFlatSource.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DC8556ED204DEA2900189B9A /* OCConnectionDAVRequest.h in Headers */,
@@ -785,6 +868,7 @@
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
+				DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DCC8F9F6202855A200EB6701 /* OCShare.h in Headers */,
 				DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */,
@@ -808,9 +892,11 @@
 				DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
+				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
+				DCD3439720592EC500189B9A /* OCDatabaseSQLite.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DCC8F9F22028559600EB6701 /* OCItem.h in Headers */,
 			);
@@ -995,6 +1081,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1027,11 +1114,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */,
+				DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
 				DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */,
+				DCD3439820592EC500189B9A /* OCDatabaseSQLite.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
@@ -1045,11 +1134,13 @@
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
 				DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */,
+				DC72E42A2063D61F00189B9A /* OCClassSettingsFlatSource.m in Sources */,
 				DCC8FA2A202B37B800EB6701 /* OCConnectionQueue.m in Sources */,
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
 				DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */,
+				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
@@ -1066,6 +1157,7 @@
 				DC8556F7204F361100189B9A /* OCLogger.m in Sources */,
 				DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
+				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
 				DCC8FA162029EB9400EB6701 /* OCConnectionRequest.m in Sources */,
@@ -1076,10 +1168,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */,
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
+				DC72E4352063DF5C00189B9A /* SettingsTests.m in Sources */,
 				DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */,
 				DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */,
+				DC72E41F206166C500189B9A /* OCHostSimulatorResponse.m in Sources */,
 				DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */,
+				DC72E41B2061665D00189B9A /* OCHostSimulator.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

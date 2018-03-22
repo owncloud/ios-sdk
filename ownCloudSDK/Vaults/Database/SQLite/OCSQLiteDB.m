@@ -1,8 +1,8 @@
 //
-//  OCDatabase.h
+//  OCSQLiteDB.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.02.18.
+//  Created by Felix Schwarz on 14.03.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,10 +16,14 @@
  *
  */
 
-#import <Foundation/Foundation.h>
 
-@interface OCDatabase : NSObject
+#import "OCSQLiteDB.h"
 
-// TODO: Interface for storing and retrieving file meta data ("cache"), sync records, thumbnail info, logs, .. using sqlite under the hood
+@implementation OCSQLiteDB
+
+- (instancetype)initWithURL:(NSURL *)sqliteFileURL
+{
+	return ([super init]);
+}
 
 @end
