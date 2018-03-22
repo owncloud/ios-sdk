@@ -55,12 +55,6 @@
 		}
 	}
 	
-	// End URL with a slash
-	if (![urlString hasSuffix:@"/"])
-	{
-		urlString = [urlString stringByAppendingString:@"/"];
-	}
-	
 	// Check for and extract username and password
 	if ((urlComponents = [NSURLComponents componentsWithString:urlString]) != nil)
 	{

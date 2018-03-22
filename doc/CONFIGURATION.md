@@ -2,7 +2,10 @@
 
 ## Introduction
 
-The ownCloud iOS SDK provides a flexible mechanism for configuration. While it currently only returns the default values defined by the classes itself, MDM and branding support can be added in the future with relatively little effort.
+The ownCloud iOS SDK provides a flexible mechanism for configuration that allows
+
+- classes to provide default values
+- injection of settings from managed configuration (MDM)
 
 This document provides an overview over the available sections and variables.
 
@@ -19,7 +22,7 @@ This document provides an overview over the available sections and variables.
 		- default: `ocs/v1.php/cloud/user`
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
-		- default: `remote.php/webdav`
+		- default: `remote.php/dav/files`
 	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
 		- type: string
 		- default: `status.php`
@@ -56,3 +59,9 @@ This document provides an overview over the available sections and variables.
 	- `oa2-client-secret`: OAuth2 Client Secret
 		- type: string
 		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`
+
+# Managed configuration
+
+## Keys
+
+The key names in the managed configuration dictionary are built from the section ID and the variable name, i.e. a Section ID of `connection` and a variable name of `endpoint-user` results in the key name  `connection.endpoint-user` for use in managed configuration dictionaries.
