@@ -9,7 +9,7 @@
 38c38
 < OPENSSL_VERSION="openssl-1.0.2d"
 ---
-> OPENSSL_VERSION="openssl-1.0.2n"
+> OPENSSL_VERSION="openssl-1.0.2o"
 164a165,166
 > if false; then
 > 
