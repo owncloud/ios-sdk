@@ -86,6 +86,16 @@
 		DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556FE204F597800189B9A /* OCXMLParserNode.m */; };
 		DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */; };
 		DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */; };
+		DCADC03F2072774200DB8E83 /* OCQuery+OCCore.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC03D2072774200DB8E83 /* OCQuery+OCCore.h */; };
+		DCADC0402072774200DB8E83 /* OCQuery+OCCore.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC03E2072774200DB8E83 /* OCQuery+OCCore.m */; };
+		DCADC0442072CCC900DB8E83 /* OCCoreTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0422072CCC900DB8E83 /* OCCoreTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCADC0452072CCC900DB8E83 /* OCCoreTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0432072CCC900DB8E83 /* OCCoreTask.m */; };
+		DCADC0482072CDEA00DB8E83 /* OCCoreTaskSet.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0462072CDEA00DB8E83 /* OCCoreTaskSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCADC0492072CDEA00DB8E83 /* OCCoreTaskSet.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0472072CDEA00DB8E83 /* OCCoreTaskSet.m */; };
+		DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC04B2072D54200DB8E83 /* OCSQLiteTableSchema.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */; };
+		DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0502072DE6600DB8E83 /* OCSQLiteMigration.h */; };
+		DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */; };
 		DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8F9CA202853B300EB6701 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DCC8F9C72028535B00EB6701 /* LICENSE */; };
@@ -324,6 +334,16 @@
 		DC855719204FEC0A00189B9A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCXMLObjectCreation.h"; sourceTree = "<group>"; };
 		DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCXMLObjectCreation.m"; sourceTree = "<group>"; };
+		DCADC03D2072774200DB8E83 /* OCQuery+OCCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+OCCore.h"; sourceTree = "<group>"; };
+		DCADC03E2072774200DB8E83 /* OCQuery+OCCore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQuery+OCCore.m"; sourceTree = "<group>"; };
+		DCADC0422072CCC900DB8E83 /* OCCoreTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreTask.h; sourceTree = "<group>"; };
+		DCADC0432072CCC900DB8E83 /* OCCoreTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreTask.m; sourceTree = "<group>"; };
+		DCADC0462072CDEA00DB8E83 /* OCCoreTaskSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreTaskSet.h; sourceTree = "<group>"; };
+		DCADC0472072CDEA00DB8E83 /* OCCoreTaskSet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreTaskSet.m; sourceTree = "<group>"; };
+		DCADC04B2072D54200DB8E83 /* OCSQLiteTableSchema.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteTableSchema.h; sourceTree = "<group>"; };
+		DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteTableSchema.m; sourceTree = "<group>"; };
+		DCADC0502072DE6600DB8E83 /* OCSQLiteMigration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteMigration.h; sourceTree = "<group>"; };
+		DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteMigration.m; sourceTree = "<group>"; };
 		DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudSDK.h; sourceTree = "<group>"; };
 		DCC8F9AF202852A200EB6701 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -453,6 +473,17 @@
 				DC30954820574BC900189B9A /* openssl.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DC3AE597207378B600FE8896 /* Schema */ = {
+			isa = PBXGroup;
+			children = (
+				DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */,
+				DCADC04B2072D54200DB8E83 /* OCSQLiteTableSchema.h */,
+				DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */,
+				DCADC0502072DE6600DB8E83 /* OCSQLiteMigration.h */,
+			);
+			path = Schema;
 			sourceTree = "<group>";
 		};
 		DC446C81206B8D9400189B9A /* External */ = {
@@ -587,6 +618,9 @@
 			children = (
 				DCC8F9D8202854FB00EB6701 /* OCCore.m */,
 				DCC8F9D7202854FB00EB6701 /* OCCore.h */,
+				DCADC04A2072D0FB00DB8E83 /* Tasks */,
+				DCADC03E2072774200DB8E83 /* OCQuery+OCCore.m */,
+				DCADC03D2072774200DB8E83 /* OCQuery+OCCore.h */,
 				DC855704204FE9E900189B9A /* Activity */,
 				DC855705204FE9F100189B9A /* Sync */,
 			);
@@ -804,6 +838,17 @@
 			path = Parsing;
 			sourceTree = "<group>";
 		};
+		DCADC04A2072D0FB00DB8E83 /* Tasks */ = {
+			isa = PBXGroup;
+			children = (
+				DCADC0432072CCC900DB8E83 /* OCCoreTask.m */,
+				DCADC0422072CCC900DB8E83 /* OCCoreTask.h */,
+				DCADC0472072CDEA00DB8E83 /* OCCoreTaskSet.m */,
+				DCADC0462072CDEA00DB8E83 /* OCCoreTaskSet.h */,
+			);
+			path = Tasks;
+			sourceTree = "<group>";
+		};
 		DCC8F9A1202852A200EB6701 = {
 			isa = PBXGroup;
 			children = (
@@ -836,7 +881,6 @@
 				DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */,
 				DCC8FA112029D5EC00EB6701 /* OCTypes.h */,
 				DC3F2B50204AED8300189B9A /* OCMacros.h */,
-				DC855702204FE9CA00189B9A /* Core */,
 				DC855701204FE9AB00189B9A /* App Identity */,
 				DC72E4262063D54F00189B9A /* Settings */,
 				DC855706204FEA0A00189B9A /* Bookmark */,
@@ -844,6 +888,7 @@
 				DC855708204FEA3400189B9A /* Connection */,
 				DC85570D204FEAC500189B9A /* Events */,
 				DC85570E204FEAE900189B9A /* Vaults */,
+				DC855702204FE9CA00189B9A /* Core */,
 				DC855710204FEB1500189B9A /* Query */,
 				DC855711204FEB5200189B9A /* Item */,
 				DC855712204FEB6B00189B9A /* Share */,
@@ -889,6 +934,7 @@
 			children = (
 				DCD3439B2059319C00189B9A /* OCSQLiteDB.m */,
 				DCD3439A2059319C00189B9A /* OCSQLiteDB.h */,
+				DC3AE597207378B600FE8896 /* Schema */,
 				DC4AFABB206AEA8000189B9A /* Queries */,
 				DC4AFABA206AE94A00189B9A /* Internals */,
 			);
@@ -933,7 +979,9 @@
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
+				DCADC0442072CCC900DB8E83 /* OCCoreTask.h in Headers */,
 				DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */,
+				DCADC03F2072774200DB8E83 /* OCQuery+OCCore.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DCC8F9F6202855A200EB6701 /* OCShare.h in Headers */,
 				DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */,
@@ -942,6 +990,7 @@
 				DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */,
 				DCC8FA122029D5EC00EB6701 /* OCTypes.h in Headers */,
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
+				DCADC0482072CDEA00DB8E83 /* OCCoreTaskSet.h in Headers */,
 				DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */,
 				DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */,
 				DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */,
@@ -957,12 +1006,14 @@
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
 				DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */,
 				DC4AFAB0206A8C1D00189B9A /* OCSQLiteStatement.h in Headers */,
+				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
+				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DCC8F9F22028559600EB6701 /* OCItem.h in Headers */,
 			);
@@ -1057,7 +1108,7 @@
 		DCC8F9A2202852A200EB6701 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "ownCloud GmbH";
 				TargetAttributes = {
 					DC3094832057358800189B9A = {
@@ -1187,6 +1238,7 @@
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
+				DCADC0402072774200DB8E83 /* OCQuery+OCCore.m in Sources */,
 				DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */,
 				DC4AFAA7206A6E7100189B9A /* OCSQLiteResultSet.m in Sources */,
@@ -1210,14 +1262,17 @@
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
 				DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */,
 				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
+				DCADC0492072CDEA00DB8E83 /* OCCoreTaskSet.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
 				DC4AFAB1206A8C1D00189B9A /* OCSQLiteStatement.m in Sources */,
 				DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */,
+				DCADC0452072CCC900DB8E83 /* OCCoreTask.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
@@ -1227,6 +1282,7 @@
 				DC8556F7204F361100189B9A /* OCLogger.m in Sources */,
 				DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
+				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
@@ -1329,7 +1385,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = UH96K9N25C;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -1350,7 +1406,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = UH96K9N25C;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -1369,7 +1425,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = UH96K9N25C;
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
@@ -1383,7 +1439,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = UH96K9N25C;
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
@@ -1406,6 +1462,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -1464,6 +1521,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -1547,7 +1605,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = ownCloudSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDKTests;
@@ -1561,7 +1619,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = ownCloudSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDKTests;

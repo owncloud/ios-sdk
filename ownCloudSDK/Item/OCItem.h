@@ -22,19 +22,19 @@
 
 typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
 
-typedef NS_ENUM(NSUInteger, OCItemType)
+typedef NS_ENUM(NSInteger, OCItemType)
 {
 	OCItemTypeFile,		//!< This item is a file.
 	OCItemTypeCollection	//!< This item is a collection (usually a directory)
 };
 
-typedef NS_ENUM(NSUInteger, OCItemStatus)
+typedef NS_ENUM(NSInteger, OCItemStatus)
 {
 	OCItemStatusAtRest,	//!< This item exists / is at rest
 	OCItemStatusTransient	//!< This item is transient (i.e. the item is a placeholder while its actual content is still uploading to the server)
 };
 
-typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
+typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 {							//   Code	Resource	Description
 	OCItemPermissionShared		= (1<<0), 	//!< Code "S"	File or Folder	is shared
 	OCItemPermissionShareable	= (1<<1), 	//!< Code "R"	File or Folder	can share (includes re-share)
@@ -58,10 +58,9 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
-@property(strong) NSURL *downloadURL; //!< Download URL for the item on the server
 @property(strong) NSURL *localURL; //!< URL for local copy of the item
 @property(strong) OCPath path; //!< Path of the item on the server relative to root
-@property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path.
+@property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
 @property(strong) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
 @property(strong) NSString *eTag; //!< ETag of the item on the server (changes with every modification)
@@ -70,6 +69,12 @@ typedef NS_OPTIONS(NSUInteger, OCItemPermissions)
 @property(strong) NSDate *lastModified; //!< Date of last modification
 
 @property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
+
+@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database (ephermal!)
+
+#pragma mark - Serialization tools
++ (instancetype)itemFromSerializedData:(NSData *)serializedData;
+- (NSData *)serializedData;
 
 @end
 

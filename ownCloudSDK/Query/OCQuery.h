@@ -62,7 +62,10 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 	NSMutableArray <OCItem *> *_removedItemsSinceLastRequest; 	// Items removed since the time a changeset was last requested.
 	NSMutableArray <OCItem *> *_updatedItemsSinceLastRequest; 	// Items updated since the the time a changeset was last requested.
 
-	NSDictionary <OCQueryFilterIdentifier, id<OCQueryFilter>> *_filtersByIdentifier; // Filters to be applied on the query results, by identifier
+	NSMutableArray <id<OCQueryFilter>> *_filters;
+	NSMutableDictionary <OCQueryFilterIdentifier, id<OCQueryFilter>> *_filtersByIdentifier; // Filters to be applied on the query results, by identifier
+
+	NSComparator _sortComparator;
 }
 
 #pragma mark - Initializers
@@ -77,7 +80,7 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 @property(assign) OCQueryState state;		//!< Current state of the query
 
 #pragma mark - Sorting
-@property(copy) NSComparator sortComparator;	//!< Comparator used to sort the query results
+@property(copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
 
 #pragma mark - Filtering
 @property(strong) NSArray <id<OCQueryFilter>> *filters; //!< Filters to be applied on the query results
@@ -100,3 +103,4 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 
 extern NSNotificationName OCQueryDidChangeStateNotification; //!< Notification sent when a query's state has changed
 extern NSNotificationName OCQueryDidUpdateNotification; //!< Notification sent when a query has updated results
+extern NSNotificationName OCQueryNeedsRecomputationNotification; //!< Notification sent when a query was changed in a way that it needs to be recomputed by the OCCore it runs in

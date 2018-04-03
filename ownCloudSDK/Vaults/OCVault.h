@@ -23,15 +23,19 @@
 @interface OCVault : NSObject
 {
 	NSUUID *_uuid;
-	OCDatabase *_database;
+
 	NSURL *_rootURL;
+	NSURL *_databaseURL;
+
+	OCDatabase *_database;
 }
 
 @property(strong) NSUUID *uuid; //!< ID of the vault. Typically the same as the uuid of the OCBookmark it corresponds to.
 
-@property(strong) OCDatabase *database; //!< The vault's database.
+@property(readonly,nonatomic) OCDatabase *database; //!< The vault's database.
 
-@property(readonly) NSURL *rootURL; //!< The vault's root directory
+@property(readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
+@property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

@@ -17,6 +17,8 @@
  */
 
 #import "OCCore.h"
+#import "OCQuery+OCCore.h"
+#import "OCCoreTask.h"
 
 @implementation OCCore
 
@@ -43,6 +45,10 @@
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+		_queries = [NSMutableArray new];
+
+		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL);
 	}
 	
 	return(self);
@@ -55,12 +61,96 @@
 #pragma mark - Query
 - (void)startQuery:(OCQuery *)query
 {
-	// Stub implementation
+	if (query != nil) { return; }
+
+	[self queueBlock:^{
+		// Add query to list of queries
+		[_queries addObject:query];
+
+		// Update query state to "started"
+		query.state = OCQueryStateStarted;
+
+		// Start task
+		[self startItemListTaskForPath:query.queryPath];
+	}];
 }
 
 - (void)stopQuery:(OCQuery *)query
 {
-	// Stub implementation
+	if (query != nil) { return; }
+
+	[_queries removeObject:query];
+}
+
+#pragma mark - Tasks
+- (void)startItemListTaskForPath:(OCPath)path
+{
+	OCCoreTask *task;
+
+	if ((task = [[OCCoreTask alloc] initWithPath:path]) != nil)
+	{
+		// Query cache
+		task.cachedSet.state = OCCoreTaskSetStateStarted;
+
+		[self retrieveCachedItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[task.cachedSet updateWithError:error items:items];
+
+			[self handleUpdatedTask:task retrievedSet:NO];
+		}];
+
+		// Query server
+		task.retrievedSet.state = OCCoreTaskSetStateStarted;
+
+		[self retrieveServerItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[task.retrievedSet updateWithError:error items:items];
+
+			[self handleUpdatedTask:task retrievedSet:YES];
+		}];
+	}
+}
+
+- (void)handleUpdatedTask:(OCCoreTask *)task retrievedSet:(BOOL)retrievedSet
+{
+	for (OCQuery *query in _queries)
+	{
+		if ([query.queryPath isEqual:task.path])
+		{
+
+		}
+	}
+}
+
+#pragma mark - Internal Meta Data Requests
+- (NSProgress *)retrieveCachedItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+{
+	// To be implemented
+
+	[self queueBlock:^{
+		completionHandler(nil, nil);
+	}];
+
+	return (nil);
+}
+
+- (NSProgress *)retrieveServerItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+{
+	return ([_connection retrieveItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[self queueBlock:^{
+			if (error == nil)
+			{
+				[self processReceivedItems:items atPath:path];
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(error,items);
+			}
+		}];
+	}]);
+}
+
+- (void)processReceivedItems:(NSArray <OCItem *> *)items atPath:(OCPath)path
+{
 }
 
 #pragma mark - Commands
@@ -133,6 +223,15 @@
 - (void)handleEvent:(OCEvent *)event sender:(id)sender;
 {
 	// Stub implementation
+}
+
+#pragma mark - Queue
+- (void)queueBlock:(dispatch_block_t)block
+{
+	if (block != nil)
+	{
+		dispatch_async(_queue, block);
+	}
 }
 
 @end

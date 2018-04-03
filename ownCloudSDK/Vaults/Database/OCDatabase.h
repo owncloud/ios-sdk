@@ -17,9 +17,51 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCSQLiteDB.h"
+#import "OCTypes.h"
+#import "OCSQLiteTableSchema.h"
+
+@class OCDatabase;
+@class OCItem;
+
+typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
+typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCItem *> *items);
+
+typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 
 @interface OCDatabase : NSObject
+{
+	NSURL *_databaseURL;
 
-// TODO: Interface for storing and retrieving file meta data ("cache"), sync records, thumbnail info, logs, .. using sqlite under the hood
+	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
+
+	OCSQLiteDB *_sqlDB;
+}
+
+@property(strong) NSURL *databaseURL;
+
+@property(strong) OCSQLiteDB *sqlDB;
+
+#pragma mark - Initialization
+- (instancetype)initWithURL:(NSURL *)databaseURL;
+
+#pragma mark - Open / Close
+- (void)openWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)closeWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+#pragma mark - Meta data interface
+- (void)addCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+- (void)retrieveCacheItemsAtPath:(OCPath)path completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+
+#pragma mark - Sync interface
+
+#pragma mark - Log interface
+
+#pragma mark - Thumbnail interface
 
 @end
+
+extern OCDatabaseTableName OCDatabaseTableNameMetaData;

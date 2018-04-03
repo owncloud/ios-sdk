@@ -23,10 +23,6 @@
 
 @synthesize uuid;
 
-@synthesize database;
-
-@synthesize rootURL;
-
 #pragma mark - Init
 - (instancetype)init
 {
@@ -47,10 +43,30 @@
 {
 	if (_rootURL == nil)
 	{
-		_rootURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:[self.uuid UUIDString]];
+		_rootURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:self.uuid.UUIDString];
 	}
 	
 	return (_rootURL);
+}
+
+- (NSURL *)databaseURL
+{
+	if (_databaseURL == nil)
+	{
+		_databaseURL = [self.rootURL URLByAppendingPathComponent:[self.uuid.UUIDString stringByAppendingString:@".db"]];
+	}
+
+	return (_databaseURL);
+}
+
+- (OCDatabase *)database
+{
+	if (_database == nil)
+	{
+		_database = [[OCDatabase alloc] initWithURL:self.databaseURL];
+	}
+
+	return (_database);
 }
 
 @end

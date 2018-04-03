@@ -1,8 +1,8 @@
 //
-//  OCTypes.h
+//  OCQuery+OCCore.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 06.02.18.
+//  Created by Felix Schwarz on 02.04.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,13 +16,10 @@
  *
  */
 
-#ifndef OCTypes_h
-#define OCTypes_h
+#import "OCQuery.h"
 
-typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
+@interface OCQuery (OCCore)
 
-typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
+- (void)updateWithFullResults:(NSMutableArray <OCItem *> *)fullQueryResults;
 
-typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
-
-#endif /* OCTypes_h */
+@end

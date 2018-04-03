@@ -1,8 +1,8 @@
 //
-//  OCTypes.h
+//  OCCoreTaskSet.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 06.02.18.
+//  Created by Felix Schwarz on 02.04.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,13 +16,23 @@
  *
  */
 
-#ifndef OCTypes_h
-#define OCTypes_h
+#import "OCCoreTaskSet.h"
 
-typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
+@implementation OCCoreTaskSet
 
-typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
+- (void)updateWithError:(NSError *)error items:(NSArray <OCItem *> *)items
+{
+	self.error = error;
 
-typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
+	if (error != nil)
+	{
+		self.state = OCCoreTaskSetStateFailed;
+	}
+	else
+	{
+		self.state = OCCoreTaskSetStateSuccess;
+		self.items = items;
+	}
+}
 
-#endif /* OCTypes_h */
+@end

@@ -26,6 +26,7 @@
 @class OCSQLiteDB;
 @class OCSQLiteTransaction;
 @class OCSQLiteQuery;
+@class OCSQLiteTableSchema;
 
 typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
 {
@@ -43,6 +44,7 @@ typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 
 typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError *error);
 typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet);
+typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumber *rowID);
 
 @interface OCSQLiteDB : NSObject
 {
@@ -51,6 +53,11 @@ typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError *error, OCSQLiteT
 
 	NSTimeInterval _maxBusyRetryTimeInterval;
 	NSTimeInterval _firstBusyRetryTime;
+
+	NSInteger _transactionNestingLevel;
+	NSUInteger _savepointCounter;
+
+	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
 
 	sqlite3 *_db;
 }
@@ -70,12 +77,20 @@ typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError *error, OCSQLiteT
 - (void)openWithFlags:(OCSQLiteOpenFlags)flags completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
 - (void)closeWithCompletionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
 
+#pragma mark - Table Schemas
+- (void)addTableSchema:(OCSQLiteTableSchema *)schema; //!< Adds a table schema to the database. All schemas must be added prior to calling -applyTableSchemasWithCompletionHandler: the database.
+- (void)applyTableSchemasWithCompletionHandler:(OCSQLiteDBCompletionHandler)completionHandler; //!< Applies the table schemas: creates tables that don't yet exist, applies all available upgrades for existing tables
+
 #pragma mark - Execute
-- (void)executeQuery:(OCSQLiteQuery *)query;
-- (void)executeTransaction:(OCSQLiteTransaction *)query;
+- (void)executeQuery:(OCSQLiteQuery *)query; //!< Executes a query. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
+- (void)executeTransaction:(OCSQLiteTransaction *)query; //!< Executes a transaction. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
+- (void)executeOperation:(NSError *(^)(OCSQLiteDB *db))operationBlock completionHandler:(OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
 
 #pragma mark - Error handling
 - (NSError *)lastError;
+
+#pragma mark - Insertion Row ID
+- (NSNumber *)lastInsertRowID; //!< Returns the last insert row ID. May only be used within query and transaction completionHandlers. Will return nil otherwise.
 
 @end
 

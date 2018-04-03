@@ -20,6 +20,8 @@
 #import "OCLogger.h"
 #import "OCSQLiteStatement.h"
 #import "OCSQLiteTransaction.h"
+#import "OCSQLiteMigration.h"
+#import "OCSQLiteTableSchema.h"
 
 #define IsSQLiteError(error) [error.domain isEqualToString:OCSQLiteErrorDomain]
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
@@ -215,19 +217,135 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	return (nil);
 }
 
+#pragma mark - Table Schemas
+- (void)addTableSchema:(OCSQLiteTableSchema *)schema
+{
+	if (schema==nil) { return; }
+
+	if (_tableSchemas == nil) { _tableSchemas = [NSMutableArray new]; }
+
+	[_tableSchemas addObject:schema];
+}
+
+- (void)applyTableSchemasWithCompletionHandler:(OCSQLiteDBCompletionHandler)completionHandler
+{
+	// Set up schema table
+	[self executeQuery:[OCSQLiteQuery query:@"CREATE TABLE IF NOT EXISTS tableSchemas (schemaID integer PRIMARY KEY, tableName text NOT NULL UNIQUE, version integer)" withNamedParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (error != nil)
+		{
+			OCLogDebug(@"Create table error: %@", error);
+			if (completionHandler!=nil) { completionHandler(self, error); }
+		}
+		else
+		{
+			// Retrieve current versions
+			[db executeQuery:[OCSQLiteQuery query:@"SELECT * FROM tableSchemas" withParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+				if (error != nil)
+				{
+					OCLogDebug(@"Retrieve current versions error: %@", error);
+					if (completionHandler!=nil) { completionHandler(self, error); }
+				}
+				else
+				{
+					OCSQLiteMigration *migration = [OCSQLiteMigration new];
+
+					NSError *iterationError = nil;
+
+					[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+						NSString *rowTableName = (NSString *)rowDictionary[@"tableName"];
+						NSNumber *rowVersion = (NSNumber *)rowDictionary[@"version"];
+
+						if ((rowTableName!=nil) && (rowVersion!=nil))
+						{
+							migration.versionsByTableName[rowTableName] = rowVersion;
+						}
+					} error:&iterationError];
+
+					if (iterationError != nil)
+					{
+						OCLogDebug(@"Error iterating tableSchemas: %@", error);
+						if (completionHandler!=nil) { completionHandler(self, error); }
+					}
+					else
+					{
+						// Sort schemas by table and version
+						[_tableSchemas sortUsingDescriptors:@[
+							[NSSortDescriptor sortDescriptorWithKey:@"tableName" ascending:YES],
+							[NSSortDescriptor sortDescriptorWithKey:@"version"   ascending:YES],
+						]];
+
+						// Determine schemas
+						for (OCSQLiteTableSchema *tableSchema in _tableSchemas)
+						{
+							NSNumber *currentVersion = nil;
+
+							if ((currentVersion = migration.versionsByTableName[tableSchema.tableName]) != nil)
+							{
+								// Apply all versions of a table schema that are newer than the current version
+								if (tableSchema.version > currentVersion.unsignedIntegerValue)
+								{
+									[migration.applicableSchemas addObject:tableSchema];
+								}
+							}
+							else
+							{
+								// For new table schemas, use the latest version right away
+								OCSQLiteTableSchema *latestTableSchema = nil;
+
+								for (OCSQLiteTableSchema *tableSchemaCandidate in _tableSchemas)
+								{
+									if ([tableSchemaCandidate.tableName isEqualToString:tableSchema.tableName])
+									{
+										if ((latestTableSchema==nil) || (tableSchemaCandidate.version > latestTableSchema.version))
+										{
+											latestTableSchema = tableSchemaCandidate;
+										}
+									}
+								}
+
+								if (latestTableSchema != nil)
+								{
+									[migration.applicableSchemas addObject:latestTableSchema];
+								}
+							}
+						}
+
+						[migration applySchemasToDatabase:self completionHandler:completionHandler];
+					}
+				}
+			}]];
+		}
+	}]];
+}
+
+
 #pragma mark - Queries (public)
 - (void)executeQuery:(OCSQLiteQuery *)query
 {
-	[self queueBlock:^{
+	if ([self isOnSQLiteThread])
+	{
 		[self _executeQuery:query inTransaction:nil];
-	}];
+	}
+	else
+	{
+		[self queueBlock:^{
+			[self _executeQuery:query inTransaction:nil];
+		}];
+	}
 }
 
 - (void)executeTransaction:(OCSQLiteTransaction *)transaction
 {
-	[self queueBlock:^{
+	if ([self isOnSQLiteThread])
+	{
 		[self _executeTransaction:transaction];
-	}];
+	}
+	else
+	{
+		[self queueBlock:^{
+			[self _executeTransaction:transaction];
+		}];
+	}
 }
 
 #pragma mark - Queries (internal)
@@ -300,6 +418,18 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	return (error);
 }
 
+- (void)executeOperation:(NSError *(^)(OCSQLiteDB *db))operationBlock completionHandler:(OCSQLiteDBCompletionHandler)completionHandler
+{
+	[self queueBlock:^{
+		NSError *error = operationBlock(self);
+
+		if (completionHandler!=nil)
+		{
+			completionHandler(self,error);
+		}
+	}];
+}
+
 - (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
 {
 	// This is a hook for caching statements in the future
@@ -309,21 +439,37 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 - (void)_executeTransaction:(OCSQLiteTransaction *)transaction
 {
 	NSError *error = nil;
+	NSString *savePointName = nil;
+
+	// Increase transaction nesting level
+	_transactionNestingLevel++;
 
 	// Begin transaction
-	switch (transaction.type)
+	if (_transactionNestingLevel == 1)
 	{
-		case OCSQLiteTransactionTypeDeferred:
-			error = [self _executeSimpleSQLQuery:@"BEGIN DEFERRED TRANSACTION"];
-		break;
+		// Transaction at root level
+		switch (transaction.type)
+		{
+			case OCSQLiteTransactionTypeDeferred:
+				error = [self _executeSimpleSQLQuery:@"BEGIN DEFERRED TRANSACTION"];
+			break;
 
-		case OCSQLiteTransactionTypeExclusive:
-			error = [self _executeSimpleSQLQuery:@"BEGIN EXCLUSIVE TRANSACTION"];
-		break;
+			case OCSQLiteTransactionTypeExclusive:
+				error = [self _executeSimpleSQLQuery:@"BEGIN EXCLUSIVE TRANSACTION"];
+			break;
 
-		case OCSQLiteTransactionTypeImmediate:
-			error = [self _executeSimpleSQLQuery:@"BEGIN IMMEDIATE TRANSACTION"];
-		break;
+			case OCSQLiteTransactionTypeImmediate:
+				error = [self _executeSimpleSQLQuery:@"BEGIN IMMEDIATE TRANSACTION"];
+			break;
+		}
+	}
+	else
+	{
+		// Nested transaction, use save points instead
+		savePointName = [NSString stringWithFormat:@"sp%lu", _savepointCounter];
+		_savepointCounter++;
+
+		error = [self _executeSimpleSQLQuery:[@"SAVEPOINT " stringByAppendingString:savePointName]];
 	}
 
 	if (error == nil)
@@ -374,7 +520,16 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 			retry = NO;
 
-			commitError = [self _executeSimpleSQLQuery:@"COMMIT TRANSACTION"];
+			if (savePointName == nil)
+			{
+				// Transaction at root level
+				commitError = [self _executeSimpleSQLQuery:@"COMMIT TRANSACTION"];
+			}
+			else
+			{
+				// Nested transaction, use save points instead
+				commitError = [self _executeSimpleSQLQuery:[@"RELEASE " stringByAppendingString:savePointName]];
+			}
 
 			if (IsSQLiteErrorCode(commitError, SQLITE_BUSY))
 			{
@@ -392,13 +547,25 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	{
 		NSError *rollbackError;
 
-		rollbackError = [self _executeSimpleSQLQuery:@"ROLLBACK TRANSACTION"];
+		if (savePointName == nil)
+		{
+			// Transaction at root level
+			rollbackError = [self _executeSimpleSQLQuery:@"ROLLBACK TRANSACTION"];
+		}
+		else
+		{
+			// Nested transaction, use save points instead
+			rollbackError = [self _executeSimpleSQLQuery:[@"ROLLBACK TO " stringByAppendingString:savePointName]];
+		}
 
 		if (error == nil)
 		{
 			error = rollbackError;
 		}
 	}
+
+	// Decrease transaction nesting level
+	_transactionNestingLevel--;
 
 	if (transaction.completionHandler != nil)
 	{
@@ -415,6 +582,29 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 - (NSError *)lastError
 {
 	return (OCSQLiteLastDBError(_db));
+}
+
+#pragma mark - Insertion Row ID
+- (NSNumber *)lastInsertRowID
+{
+	if ([self isOnSQLiteThread])
+	{
+		// May only be used within query and transaction completionHandlers.
+		if (_db != NULL)
+		{
+			sqlite_int64 lastInsertRowID;
+
+			lastInsertRowID = sqlite3_last_insert_rowid(_db);
+
+			if (lastInsertRowID > 0)
+			{
+				return (@(lastInsertRowID));
+			}
+		}
+	}
+
+	// Will return nil otherwise.
+	return (nil);
 }
 
 @end

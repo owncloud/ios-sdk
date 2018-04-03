@@ -54,7 +54,7 @@
 			urlString = [@"https://" stringByAppendingString:urlString];
 		}
 	}
-	
+
 	// Check for and extract username and password
 	if ((urlComponents = [NSURLComponents componentsWithString:urlString]) != nil)
 	{
@@ -71,6 +71,12 @@
 		urlComponents.user = nil;
 		urlComponents.password = nil;
 		urlComponents.scheme = [urlComponents.scheme lowercaseString];
+
+		// Add trailing slash to root directory URLs
+		if ((urlComponents.path == nil) || ([urlComponents.path isEqual:@""]))
+		{
+			urlComponents.path = @"/";
+		}
 
 		url = [urlComponents URL];
 	}

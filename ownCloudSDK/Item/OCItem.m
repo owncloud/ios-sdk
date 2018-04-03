@@ -20,6 +20,17 @@
 
 @implementation OCItem
 
+#pragma mark - Serialization tools
++ (instancetype)itemFromSerializedData:(NSData *)serializedData;
+{
+	return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+}
+
+- (NSData *)serializedData
+{
+	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
@@ -28,14 +39,48 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	// Stub implementation
+	[coder encodeInteger:_type    		forKey:@"type"];
+
+	[coder encodeObject:_mimeType 		forKey:@"mimeType"];
+
+	[coder encodeInteger:_status  		forKey:@"status"];
+
+	[coder encodeInteger:_permissions  	forKey:@"permissions"];
+
+	[coder encodeObject:_localURL 		forKey:@"localURL"];
+	[coder encodeObject:_path 		forKey:@"path"];
+
+	[coder encodeObject:_fileID 		forKey:@"fileID"];
+	[coder encodeObject:_eTag 		forKey:@"eTag"];
+
+	[coder encodeInteger:_size  		forKey:@"size"];
+	[coder encodeObject:_lastModified	forKey:@"lastModified"];
+
+	[coder encodeObject:_shares		forKey:@"shares"];
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
 	if ((self = [super init]) != nil)
 	{
-		// Stub implementation
+		_type = [decoder decodeIntegerForKey:@"type"];
+
+		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+
+		_status = [decoder decodeIntegerForKey:@"status"];
+
+		_permissions = [decoder decodeIntegerForKey:@"permissions"];
+
+		_localURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localURL"];
+		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+
+		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
+		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
+
+		_size = [decoder decodeIntegerForKey:@"size"];
+		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
+
+		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 	}
 
 	return (self);

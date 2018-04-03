@@ -24,6 +24,7 @@
 #import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
 #import "OCShare.h"
+#import "OCCoreTask.h"
 
 @class OCCore;
 @class OCItem;
@@ -44,7 +45,11 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	OCVault *_vault;
 	OCConnection *_connection;
-	
+
+	NSMutableArray <OCQuery *> *_queries;
+
+	dispatch_queue_t _queue;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 
