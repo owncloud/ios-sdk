@@ -49,6 +49,9 @@ typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 - (void)openWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)closeWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
+#pragma mark - Transactions
+- (void)performBatchUpdates:(NSError *(^)(OCDatabase *database))updates completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Perform several operations in batch. All operations are wrapped in a transaction, so that all operations requested inside the updates block are executed synchronously. If the block returns an error, the entire transaction is rolled back.
+
 #pragma mark - Meta data interface
 - (void)addCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler;

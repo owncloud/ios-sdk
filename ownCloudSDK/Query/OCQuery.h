@@ -58,23 +58,24 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 	NSMutableArray <OCItem *> *_processedQueryResults; 		// Like full query results, but after applying sorting and filtering.
 
 	NSArray <OCItem *> *_lastQueryResults;				// processedQueryResults at the time a changeset was last requested.
-	NSMutableArray <OCItem *> *_addedItemsSinceLastRequest; 	// Items added since the time a changeset was last requested.
-	NSMutableArray <OCItem *> *_removedItemsSinceLastRequest; 	// Items removed since the time a changeset was last requested.
-	NSMutableArray <OCItem *> *_updatedItemsSinceLastRequest; 	// Items updated since the the time a changeset was last requested.
 
 	NSMutableArray <id<OCQueryFilter>> *_filters;
 	NSMutableDictionary <OCQueryFilterIdentifier, id<OCQueryFilter>> *_filtersByIdentifier; // Filters to be applied on the query results, by identifier
 
 	NSComparator _sortComparator;
+
+	dispatch_queue_t _queue;
+
+	BOOL _needsRecomputation;
 }
 
 #pragma mark - Initializers
-+ (instancetype)queryForPath:(OCPath)queryPath;
-+ (instancetype)queryWithRootItem:(OCItem *)rootItem;
++ (instancetype)queryForPath:(OCPath)queryPath;	//!< Query for directory
++ (instancetype)queryWithItem:(OCItem *)item;   //!< Query for single file item
 
 #pragma mark - Location
-@property(strong) OCPath queryPath;			//!< Path targeted by the query, relative to the server's root directory.
-@property(strong) OCItem *queryRootItem;		//!< For queries targeting directories, the item representing the directory being targeted by the query
+@property(strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
+@property(strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query
@@ -90,17 +91,16 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 - (void)removeFilter:(id<OCQueryFilter>)filter; //!< Remove a filter
 
 #pragma mark - Query results
-@property(strong) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
+@property(strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
 
 #pragma mark - Change Sets
-@property(assign) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval
+@property(assign,nonatomic) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval
 @property(weak) id <OCQueryDelegate> delegate;	//!< Query Delegate that's informed about the availability of changes (optional)
 @property(copy) OCQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler; //!< Block that's called whenever changes are available (optional)
 
-- (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flag completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler; //!< Requests a changeset containing all changes since the last request. Pass in OCQueryChangeSetRequestFlagOnlyResults as flag of you're only interested in the queryResults array and don't need a detailed record of changes.
+- (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flags completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler; //!< Requests a changeset containing all changes since the last request. Pass in OCQueryChangeSetRequestFlagOnlyResults as flag of you're only interested in the queryResults array and don't need a detailed record of changes.
 
 @end
 
 extern NSNotificationName OCQueryDidChangeStateNotification; //!< Notification sent when a query's state has changed
-extern NSNotificationName OCQueryDidUpdateNotification; //!< Notification sent when a query has updated results
-extern NSNotificationName OCQueryNeedsRecomputationNotification; //!< Notification sent when a query was changed in a way that it needs to be recomputed by the OCCore it runs in
+extern NSNotificationName OCQueryHasChangesAvailableNotification; //!< Notification sent when a query has changes available

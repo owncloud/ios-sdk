@@ -17,8 +17,16 @@
  */
 
 #import "OCCore.h"
-#import "OCQuery+OCCore.h"
-#import "OCCoreTask.h"
+#import "OCQuery+Internal.h"
+#import "OCCoreItemListTask.h"
+#import "OCLogger.h"
+
+@interface OCCore ()
+{
+	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
+}
+
+@end
 
 @implementation OCCore
 
@@ -26,6 +34,8 @@
 
 @synthesize vault = _vault;
 @synthesize connection = _connection;
+
+@synthesize state = _state;
 
 @synthesize delegate = _delegate;
 
@@ -48,7 +58,9 @@
 
 		_queries = [NSMutableArray new];
 
-		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL);
+		_itemListTasksByPath = [NSMutableDictionary new];
+
+		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 	}
 	
 	return(self);
@@ -58,99 +70,433 @@
 {
 }
 
-#pragma mark - Query
-- (void)startQuery:(OCQuery *)query
+#pragma mark - Start / Stop
+- (void)startWithCompletionHandler:(OCCoreStartCompletionHandler)completionHandler
 {
-	if (query != nil) { return; }
-
 	[self queueBlock:^{
-		// Add query to list of queries
-		[_queries addObject:query];
+		if (_state == OCCoreStateStopped)
+		{
+			__block NSError *startError = nil;
+			__block OCConnectionIssue *startIssue = nil;
+			dispatch_group_t startGroup = nil;
 
+			[self willChangeValueForKey:@"state"];
+			_state = OCCoreStateStarting;
+			[self didChangeValueForKey:@"state"];
+
+			startGroup = dispatch_group_create();
+
+			// Open vault (incl. database)
+			dispatch_group_enter(startGroup);
+
+			[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
+				startError = error;
+				dispatch_group_leave(startGroup);
+			}];
+
+			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+
+			// Open connection
+			if (startError == nil)
+			{
+				dispatch_group_enter(startGroup);
+
+				[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+					startError = error;
+					startIssue = issue;
+					dispatch_group_leave(startGroup);
+				}];
+
+				dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+			}
+
+			// Change state
+			[self willChangeValueForKey:@"state"];
+			if (startError == nil)
+			{
+				_state = OCCoreStateRunning;
+			}
+			else
+			{
+				_state = OCCoreStateStopped;
+			}
+			[self didChangeValueForKey:@"state"];
+
+			if (completionHandler != nil)
+			{
+				completionHandler(startError, startIssue);
+			}
+		}
+	}];
+}
+
+- (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
+	[self queueBlock:^{
+		if (_state == OCCoreStateRunning)
+		{
+			__block NSError *stopError = nil;
+			dispatch_group_t stopGroup = nil;
+
+			[self willChangeValueForKey:@"state"];
+			_state = OCCoreStateStopping;
+			[self didChangeValueForKey:@"state"];
+
+			// Close connection
+			stopGroup = dispatch_group_create();
+
+			dispatch_group_enter(stopGroup);
+
+			[self.connection disconnectWithCompletionHandler:^{
+				dispatch_group_leave(stopGroup);
+			}];
+
+			dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+
+			// Close vault (incl. database)
+			dispatch_group_enter(stopGroup);
+
+			[self.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+				stopError = error;
+				dispatch_group_leave(stopGroup);
+			}];
+
+			dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+
+			[self willChangeValueForKey:@"state"];
+			_state = OCCoreStateStopped;
+			[self didChangeValueForKey:@"state"];
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, stopError);
+			}
+		}
+	}];
+}
+
+#pragma mark - Query
+- (void)_startItemListTaskForQuery:(OCQuery *)query
+{
+	[self queueBlock:^{
 		// Update query state to "started"
 		query.state = OCQueryStateStarted;
 
 		// Start task
-		[self startItemListTaskForPath:query.queryPath];
+		if (query.queryPath != nil)
+		{
+			// Start item list task for queried directory
+			[self startItemListTaskForPath:query.queryPath];
+		}
+		else
+		{
+			if (query.queryItem.path != nil)
+			{
+				// Start item list task for parent directory of queried item
+				[self startItemListTaskForPath:[query.queryItem.path stringByDeletingLastPathComponent]];
+			}
+		}
 	}];
+}
+
+- (void)startQuery:(OCQuery *)query
+{
+	if (query == nil) { return; }
+
+	// Add query to list of queries
+	[self queueBlock:^{
+		[_queries addObject:query];
+	}];
+
+	[self _startItemListTaskForQuery:query];
+}
+
+- (void)reloadQuery:(OCQuery *)query
+{
+	if (query == nil) { return; }
+
+	[self _startItemListTaskForQuery:query];
 }
 
 - (void)stopQuery:(OCQuery *)query
 {
-	if (query != nil) { return; }
+	if (query == nil) { return; }
 
-	[_queries removeObject:query];
+	[self queueBlock:^{
+		[_queries removeObject:query];
+		query.state = OCQueryStateStopped;
+	}];
 }
 
-#pragma mark - Tasks
+#pragma mark - Convenience
+- (OCDatabase *)database
+{
+	return (_vault.database);
+}
+
+#pragma mark - Item List Tasks
 - (void)startItemListTaskForPath:(OCPath)path
 {
-	OCCoreTask *task;
+	if (path==nil) { return; }
 
-	if ((task = [[OCCoreTask alloc] initWithPath:path]) != nil)
+	if (_itemListTasksByPath[path] == nil) // Don't start a new item list task if one is already running for the path
 	{
-		// Query cache
-		task.cachedSet.state = OCCoreTaskSetStateStarted;
+		OCCoreItemListTask *task;
 
-		[self retrieveCachedItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			[task.cachedSet updateWithError:error items:items];
-
-			[self handleUpdatedTask:task retrievedSet:NO];
-		}];
-
-		// Query server
-		task.retrievedSet.state = OCCoreTaskSetStateStarted;
-
-		[self retrieveServerItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			[task.retrievedSet updateWithError:error items:items];
-
-			[self handleUpdatedTask:task retrievedSet:YES];
-		}];
-	}
-}
-
-- (void)handleUpdatedTask:(OCCoreTask *)task retrievedSet:(BOOL)retrievedSet
-{
-	for (OCQuery *query in _queries)
-	{
-		if ([query.queryPath isEqual:task.path])
+		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
 		{
+			_itemListTasksByPath[path] = task;
 
+			[task update];
 		}
 	}
 }
 
-#pragma mark - Internal Meta Data Requests
-- (NSProgress *)retrieveCachedItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (void)handleUpdatedTask:(OCCoreItemListTask *)task
 {
-	// To be implemented
+	OCQueryState queryState = OCQueryStateStarted;
+	BOOL performMerge = NO;
+	BOOL removeTask = NO;
+	NSMutableArray <OCItem *> *queryResults = nil;
 
-	[self queueBlock:^{
-		completionHandler(nil, nil);
-	}];
+	NSLog(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, task.cachedSet.items);
+	NSLog(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, task.retrievedSet.items);
 
-	return (nil);
-}
-
-- (NSProgress *)retrieveServerItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
-{
-	return ([_connection retrieveItemListAtPath:path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-		[self queueBlock:^{
-			if (error == nil)
+	switch (task.cachedSet.state)
+	{
+		case OCCoreItemListStateSuccess:
+			if (task.retrievedSet.state == OCCoreItemListStateSuccess)
 			{
-				[self processReceivedItems:items atPath:path];
+				// Merge item sets to final result and update cache
+				queryState = OCQueryStateIdle;
+				performMerge = YES;
+				removeTask = YES;
 			}
-
-			if (completionHandler != nil)
+			else
 			{
-				completionHandler(error,items);
+				// Use items from cache
+				if (task.retrievedSet.state == OCCoreItemListStateStarted)
+				{
+					queryState = OCQueryStateWaitingForServerReply;
+				}
+				else
+				{
+					queryState = OCQueryStateContentsFromCache;
+
+					if (task.retrievedSet.state == OCCoreItemListStateFailed)
+					{
+						removeTask = YES;
+					}
+				}
+			}
+		break;
+
+		case OCCoreItemListStateFailed:
+			// Error retrieving items from cache. This should never happen.
+			OCLogError(@"Error retrieving items from cache for %@: %@", OCLogPrivate(task.path), OCLogPrivate(task.cachedSet.error));
+			performMerge = YES;
+			removeTask = YES;
+		break;
+
+		default:
+		break;
+	}
+
+	if (performMerge)
+	{
+		// Perform merge
+		OCCoreItemList *cacheSet = task.cachedSet;
+		OCCoreItemList *retrievedSet = task.retrievedSet;
+		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
+		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
+
+		NSMutableArray <OCItem *> *changedCacheItems = [NSMutableArray new];
+		NSMutableArray <OCItem *> *deletedCacheItems = [NSMutableArray new];
+		NSMutableArray <OCItem *> *newItems = [NSMutableArray new];
+
+		__block NSError *cacheUpdateError = nil;
+
+		queryResults = [NSMutableArray new];
+
+		// Iterate retrieved set
+		[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
+			OCItem *cacheItem;
+
+			// Item for this path already in the cache?
+			if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
+			{
+				// Existing local item?
+				if (cacheItem.locallyModified || (cacheItem.localRelativePath!=nil))
+				{
+					// Preserve local item, but merge in info on latest server version
+					cacheItem.remoteItem = retrievedItem;
+
+					// Return updated cached version
+					[queryResults addObject:cacheItem];
+
+					// Update cache
+					[changedCacheItems addObject:cacheItem];
+				}
+				else
+				{
+					// Attach databaseID of cached items to the retrieved items
+					retrievedItem.databaseID = cacheItem.databaseID;
+
+					// Return server version
+					[queryResults addObject:retrievedItem];
+				}
+			}
+			else
+			{
+				// New item!
+				[queryResults addObject:retrievedItem];
+				[newItems addObject:retrievedItem];
 			}
 		}];
-	}]);
-}
 
-- (void)processReceivedItems:(NSArray <OCItem *> *)items atPath:(OCPath)path
-{
+		// Iterate cache set
+		[cacheSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull cachePath, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
+			OCItem *retrievedItem;
+
+			// Item for this cached path still on the server?
+			if ((retrievedItem = retrievedItemsByPath[cachePath]) == nil)
+			{
+				// Cache item no longer on the server
+				if (cacheItem.locallyModified)
+				{
+					// Preserve locally modified items
+					[queryResults addObject:cacheItem];
+				}
+				else
+				{
+					// Remove item
+					[deletedCacheItems addObject:cacheItem];
+				}
+			}
+		}];
+
+		// Commit changes to the cache
+		dispatch_group_t cacheUpdateGroup = dispatch_group_create();
+
+		dispatch_group_enter(cacheUpdateGroup);
+
+		[self.database performBatchUpdates:^(OCDatabase *database){
+			__block NSError *returnError = nil;
+
+			if ((deletedCacheItems.count > 0) && (returnError==nil))
+			{
+				[self.database removeCacheItems:deletedCacheItems completionHandler:^(OCDatabase *db, NSError *error) {
+					returnError = error;
+				}];
+			}
+
+			if ((changedCacheItems.count > 0) && (returnError==nil))
+			{
+				[self.database updateCacheItems:changedCacheItems completionHandler:^(OCDatabase *db, NSError *error) {
+					returnError = error;
+				}];
+			}
+
+			if ((newItems.count > 0) && (returnError==nil))
+			{
+				[self.database addCacheItems:newItems completionHandler:^(OCDatabase *db, NSError *error) {
+					returnError = error;
+				}];
+			}
+
+			return (returnError);
+		} completionHandler:^(OCDatabase *db, NSError *error) {
+			cacheUpdateError = error;
+			dispatch_group_leave(cacheUpdateGroup);
+		}];
+
+		dispatch_group_wait(cacheUpdateGroup, DISPATCH_TIME_FOREVER);
+
+		if (cacheUpdateError != nil)
+		{
+			// An error occured updating the cache, so don't update queries either, log the error and return here
+			OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
+			return;
+		}
+	}
+	else
+	{
+		if (task.cachedSet.state == OCCoreItemListStateSuccess)
+		{
+			// Use cache
+			queryResults = (task.cachedSet.items != nil) ? [[NSMutableArray alloc] initWithArray:task.cachedSet.items] : [NSMutableArray new];
+		}
+		else
+		{
+			// No result (yet)
+		}
+	}
+
+	// Remove task
+	if (removeTask)
+	{
+		if (task.path != nil)
+		{
+			[_itemListTasksByPath removeObjectForKey:task.path];
+		}
+	}
+
+	// Update queries
+	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
+
+	for (OCQuery *query in _queries)
+	{
+		NSMutableArray <OCItem *> *useQueryResults = nil;
+
+		// Queries targeting the path
+		if ([query.queryPath isEqual:task.path])
+		{
+			if ( (query.state != OCQueryStateIdle) ||	// Keep updating queries that have not gone through its complete, initial content update
+			    ((query.state == OCQueryStateIdle) && (queryState == OCQueryStateIdle))) // Don't update queries that have previously gotten a complete, initial content update with content from the cache (as that cache content is prone to be identical with what we already have in it). Instead, update these queries only if we have an idle ("finished") queryResult again.
+			{
+				useQueryResults = queryResults;
+			}
+		}
+		else
+		{
+			OCPath queryItemPath;
+
+			// Queries targeting a particular item
+			if ((queryItemPath = query.queryItem.path) != nil)
+			{
+				OCItem *itemAtPath;
+
+				if (queryResultItemsByPath == nil)
+				{
+					OCCoreItemList *queryResultSet = [OCCoreItemList new];
+					[queryResultSet updateWithError:nil items:queryResults];
+
+					queryResultItemsByPath = queryResultSet.itemsByPath;
+				}
+
+				if ((itemAtPath = queryResultItemsByPath[queryItemPath]) != nil)
+				{
+					// Item contained in queried directory, new info may be available
+					useQueryResults = [[NSMutableArray alloc] initWithObjects:itemAtPath, nil];
+				}
+				else
+				{
+					if ([[queryItemPath stringByDeletingLastPathComponent] isEqual:task.path])
+					{
+						// Item was contained in queried directory, but is no longer there
+						useQueryResults = [NSMutableArray new];
+						queryState = OCQueryStateTargetRemoved;
+					}
+				}
+			}
+		}
+
+		if (useQueryResults != nil)
+		{
+			query.state = queryState;
+			[query updateWithFullResults:useQueryResults];
+		}
+	}
 }
 
 #pragma mark - Commands

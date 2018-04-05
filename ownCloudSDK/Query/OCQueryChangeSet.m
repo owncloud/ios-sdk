@@ -20,9 +20,48 @@
 
 @implementation OCQueryChangeSet
 
+#pragma mark - Init & Dealloc
+- (instancetype)initWithQueryResult:(NSArray <OCItem *> *)queryResult relativeTo:(NSArray <OCItem *> *)previousQueryResult
+{
+	if ((self = [super init]) != nil)
+	{
+		// Minimum implementation
+		self.queryResult = queryResult;
+
+		self.containsChanges = YES;
+		self.contentSwap = YES;
+	}
+
+	return(self);
+}
+
+#pragma mark - Change set enumeration
 - (void)enumerateChangesUsingBlock:(OCQueryChangeSetEnumerator)enumerator
 {
-	// Stub implementation
+	if (_containsChanges)
+	{
+		if (_contentSwap)
+		{
+			enumerator(self, OCQueryChangeSetOperationContentSwap, self.queryResult, nil);
+		}
+		else
+		{
+			if (_updatedItems.count > 0)
+			{
+				enumerator(self, OCQueryChangeSetOperationUpdate, self.updatedItems, self.updatedItemsIndexSet);
+			}
+
+			if (_removedItems.count > 0)
+			{
+				enumerator(self, OCQueryChangeSetOperationRemove, self.removedItems, self.removedItemsIndexSet);
+			}
+
+			if (_insertedItems.count > 0)
+			{
+				enumerator(self, OCQueryChangeSetOperationInsert, self.insertedItems, self.insertedItemsIndexSet);
+			}
+		}
+	}
 }
 
 @end

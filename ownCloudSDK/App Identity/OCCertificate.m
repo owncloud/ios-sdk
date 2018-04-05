@@ -280,12 +280,11 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 		
 			if ((certificateRef = self.certificateRef) != NULL)
 			{
-				OSStatus status;
 				SecPolicyRef policyRef;
 				
 				if ((policyRef = SecPolicyCreateSSL(true, (__bridge CFStringRef)_hostName)) != NULL)
 				{
-					status = SecTrustCreateWithCertificates((CFArrayRef)@[ (__bridge id)certificateRef ], policyRef, &_trustRef);
+					SecTrustCreateWithCertificates((CFArrayRef)@[ (__bridge id)certificateRef ], policyRef, &_trustRef);
 					
 					CFRelease(policyRef);
 				}
@@ -532,7 +531,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 				_publicKeyData = CFBridgingRelease(keyDataRef);
 			}
 
-			if (errorRef != NULL)
+			if ((errorRef != NULL) && (error!=NULL))
 			{
 				*error = CFBridgingRelease(errorRef);
 			}

@@ -34,7 +34,7 @@
 	{
 		self.databaseURL = databaseURL;
 
-		self.sqlDB = [[OCSQLiteDB alloc] init]; // WithURL:databaseURL];
+		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
 	}
 
@@ -52,13 +52,16 @@
 		version:1
 		creationQueries:@[
 			/*
-				mdID : INTEGER	 - unique ID used to uniquely identify and efficiently update a row
-				type : INTEGER   - OCItemType value to indicate if this is a file or a collection/folder
-				parentPath: TEXT - parent path of the item. (e.g. "/example" for an item at "/example/file.txt")
-				name: TEXT 	 - name of the item (e.g. "file.txt" for an item at "/example/file.txt")
-				itemData: BLOB	 - data of the serialized OCItem
+				mdID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
+				type : INTEGER    	- OCItemType value to indicate if this is a file or a collection/folder
+				locallyModified: INTEGER- value indicating if this is a file that's been created or modified locally
+				localRelativePath: TEXT	- path of the local copy of the item, relative to the rootURL of the vault that stores it
+				path : TEXT	  	- full path of the item (e.g. "/example/file.txt")
+				parentPath : TEXT 	- parent path of the item. (e.g. "/example" for an item at "/example/file.txt")
+				name : TEXT 	  	- name of the item (e.g. "file.txt" for an item at "/example/file.txt")
+				itemData : BLOB	  	- data of the serialized OCItem
 			*/
-			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY, type INTEGER NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, itemData BLOB NOT NULL)"
+			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY, type INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, itemData BLOB NOT NULL)"
 		]
 		upgradeMigrator:nil]
 	];
@@ -97,6 +100,24 @@
 	}];
 }
 
+#pragma mark - Transactions
+- (void)performBatchUpdates:(NSError *(^)(OCDatabase *database))updates completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+		if (updates != nil)
+		{
+			return(updates(self));
+		}
+
+		return (nil);
+	} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
+	}]];
+}
+
 #pragma mark - Meta data interface
 - (void)addCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
@@ -105,10 +126,13 @@
 	for (OCItem *item in items)
 	{
 		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
-			@"type" 	: @(item.type),
-			@"parentPath" 	: [item.path stringByDeletingLastPathComponent],
-			@"name"		: [item.path lastPathComponent],
-			@"itemData"	: [item serializedData]
+			@"type" 		: @(item.type),
+			@"locallyModified" 	: @(item.locallyModified),
+			@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
+			@"path" 		: item.path,
+			@"parentPath" 		: [item.path stringByDeletingLastPathComponent],
+			@"name"			: [item.path lastPathComponent],
+			@"itemData"		: [item serializedData]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
 		}]];
@@ -128,10 +152,13 @@
 		if (item.databaseID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
-				@"type" 	: @(item.type),
-				@"parentPath" 	: [item.path stringByDeletingLastPathComponent],
-				@"name"		: [item.path lastPathComponent],
-				@"itemData"	: [item serializedData]
+				@"type" 		: @(item.type),
+				@"locallyModified" 	: @(item.locallyModified),
+				@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
+				@"path" 		: item.path,
+				@"parentPath" 		: [item.path stringByDeletingLastPathComponent],
+				@"name"			: [item.path lastPathComponent],
+				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
 		}
 		else

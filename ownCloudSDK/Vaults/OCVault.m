@@ -18,10 +18,14 @@
 
 #import "OCVault.h"
 #import "OCAppIdentity.h"
+#import "NSError+OCError.h"
+
+@interface OCVault () <NSFileManagerDelegate>
+@end
 
 @implementation OCVault
 
-@synthesize uuid;
+@synthesize uuid = _uuid;
 
 #pragma mark - Init
 - (instancetype)init
@@ -43,7 +47,7 @@
 {
 	if (_rootURL == nil)
 	{
-		_rootURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:self.uuid.UUIDString];
+		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@"Vaults"] URLByAppendingPathComponent:self.uuid.UUIDString];
 	}
 	
 	return (_rootURL);
@@ -67,6 +71,61 @@
 	}
 
 	return (_database);
+}
+
+#pragma mark - Operations
+- (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
+	NSError *error = nil;
+
+	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:nil error:&error])
+	{
+		[self.database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+			completionHandler(db, error);
+		}];
+	}
+	else
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
+	}
+}
+
+- (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
+	[self.database closeWithCompletionHandler:completionHandler];
+}
+
+- (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
+	NSError *error = nil;
+
+	NSFileManager *fileManager = [NSFileManager new];
+
+	fileManager.delegate = self;
+
+	if (self.rootURL != nil)
+	{
+		if (![fileManager removeItemAtURL:self.rootURL error:&error])
+		{
+			if (error == nil)
+			{
+				error = OCError(OCErrorInternal);
+			}
+		}
+	}
+
+	if (completionHandler != nil)
+	{
+		completionHandler(self, error);
+	}
+}
+
+- (BOOL)fileManager:(NSFileManager *)fileManager shouldRemoveItemAtURL:(NSURL *)URL
+{
+	return (YES);
 }
 
 @end

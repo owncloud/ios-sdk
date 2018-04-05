@@ -348,25 +348,28 @@
 					}
 				}
 
-				// Validity from
-				if ((asn1Time = X509_get_notBefore(x509Cert)) != NULL)
+				if ((x509Cert->cert_info!=NULL) && (x509Cert->cert_info->validity!=NULL))
 				{
-					NSString *iso8601DateString;
-
-					if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+					// Validity from
+					if ((asn1Time = X509_get_notBefore(x509Cert)) != NULL)
 					{
-						metaData[OCCertificateMetadataValidFromKey] = iso8601DateString;
+						NSString *iso8601DateString;
+
+						if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+						{
+							metaData[OCCertificateMetadataValidFromKey] = iso8601DateString;
+						}
 					}
-				}
 
-				// Validity until
-				if ((asn1Time = X509_get_notAfter(x509Cert)) != NULL)
-				{
-					NSString *iso8601DateString;
-
-					if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+					// Validity until
+					if ((asn1Time = X509_get_notAfter(x509Cert)) != NULL)
 					{
-						metaData[OCCertificateMetadataValidUntilKey] = iso8601DateString;
+						NSString *iso8601DateString;
+
+						if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+						{
+							metaData[OCCertificateMetadataValidUntilKey] = iso8601DateString;
+						}
 					}
 				}
 

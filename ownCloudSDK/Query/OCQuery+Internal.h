@@ -1,5 +1,5 @@
 //
-//  OCCoreTaskSet.m
+//  OCQuery+Internal.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 02.04.18.
@@ -16,23 +16,20 @@
  *
  */
 
-#import "OCCoreTaskSet.h"
+#import "OCQuery.h"
 
-@implementation OCCoreTaskSet
+@interface OCQuery (Internal)
 
-- (void)updateWithError:(NSError *)error items:(NSArray <OCItem *> *)items
-{
-	self.error = error;
+#pragma mark - Update full results
+- (void)updateWithFullResults:(NSMutableArray <OCItem *> *)fullQueryResults;
 
-	if (error != nil)
-	{
-		self.state = OCCoreTaskSetStateFailed;
-	}
-	else
-	{
-		self.state = OCCoreTaskSetStateSuccess;
-		self.items = items;
-	}
-}
+#pragma mark - Update processed results
+- (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;
+
+#pragma mark - Needs recomputation
+- (void)setNeedsRecomputation;
+
+#pragma mark - Queue
+- (void)queueBlock:(dispatch_block_t)block;
 
 @end

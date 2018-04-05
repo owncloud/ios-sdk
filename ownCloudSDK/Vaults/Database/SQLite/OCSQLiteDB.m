@@ -167,6 +167,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			{
 				// Success
 				self.maxBusyRetryTimeInterval = _maxBusyRetryTimeInterval;
+				_opened = YES;
 			}
 			else
 			{
@@ -202,16 +203,24 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 - (NSError *)_close
 {
-	int sqErr;
-
-	do
+	if (_db != NULL)
 	{
-		sqErr = sqlite3_close(_db);
-	}while((sqErr == SQLITE_BUSY) || (sqErr == SQLITE_LOCKED));
+		int sqErr = SQLITE_OK;
 
-	if (sqErr != SQLITE_OK)
-	{
-		return (OCSQLiteError(sqErr));
+		do
+		{
+			sqErr = sqlite3_close(_db);
+		}while((sqErr == SQLITE_BUSY) || (sqErr == SQLITE_LOCKED));
+
+		if (sqErr != SQLITE_OK)
+		{
+			return (OCSQLiteError(sqErr));
+		}
+		else
+		{
+			_db = NULL;
+			_opened = NO;
+		}
 	}
 
 	return (nil);

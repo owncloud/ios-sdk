@@ -50,6 +50,45 @@ OCAuthenticationMethodAutoRegister
 	return ([NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]);
 }
 
++ (NSData *)authenticationDataForUsername:(NSString *)userName passphrase:(NSString *)passPhrase authenticationHeaderValue:(NSString **)outAuthenticationHeaderValue error:(NSError **)outError
+{
+	NSError *error = nil;
+	NSString *authenticationHeaderValue;
+	NSDictionary *authenticationDict;
+	NSData *authenticationData = nil;
+
+	// Generate value for "Authentication" HTTP header
+	if ((authenticationHeaderValue = [OCAuthenticationMethod basicAuthorizationValueForUsername:userName passphrase:passPhrase]) != nil)
+	{
+		authenticationDict = @{
+			OCAuthenticationMethodUsernameKey   : userName,
+			OCAuthenticationMethodPassphraseKey : passPhrase,
+
+			// Store
+			OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey : authenticationHeaderValue
+		};
+
+		// Generate authentication data (== bplist representation of authenticationDict)
+		authenticationData = [NSPropertyListSerialization dataWithPropertyList:authenticationDict format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error];
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	if (outAuthenticationHeaderValue != NULL)
+	{
+		*outAuthenticationHeaderValue = authenticationHeaderValue;
+	}
+
+	if (outError != NULL)
+	{
+		*outError = error;
+	}
+
+	return (authenticationData);
+}
+
 #pragma mark - Passphrase-based Authentication Only
 + (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData
 {
@@ -110,100 +149,83 @@ OCAuthenticationMethodAutoRegister
 	if (((userName = options[OCAuthenticationMethodUsernameKey]) != nil) && ((passPhrase = options[OCAuthenticationMethodPassphraseKey]) != nil) && (connection!=nil))
 	{
 		NSError *error = nil;
-		NSString *authenticationHeaderValue;
-		NSDictionary *authenticationDict;
+		NSString *authenticationHeaderValue=nil;
 		NSData *authenticationData;
-		
-		// Generate value for "Authentication" HTTP header
-		if ((authenticationHeaderValue = [OCAuthenticationMethod basicAuthorizationValueForUsername:userName passphrase:passPhrase]) != nil)
+
+		// Generate authentication data (== bplist representation of authenticationDict)
+		if ((authenticationData = [[self class] authenticationDataForUsername:userName passphrase:passPhrase authenticationHeaderValue:&authenticationHeaderValue error:&error]) != nil)
 		{
-			authenticationDict = @{
-				OCAuthenticationMethodUsernameKey   : userName,
-				OCAuthenticationMethodPassphraseKey : passPhrase,
+			// Test credentials using connection before calling completionHandler; relay result of check
+			OCConnectionRequest *request;
 
-				// Store
-				OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey : authenticationHeaderValue
-			};
-			
-			// Generate authentication data (== bplist representation of authenticationDict)
-			if ((authenticationData = [NSPropertyListSerialization dataWithPropertyList:authenticationDict format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error]) != nil)
-			{
-				// Test credentials using connection before calling completionHandler; relay result of check
-				OCConnectionRequest *request;
-				
-				request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
-				[request setValue:@"json" forParameter:@"format"];
+			request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
+			[request setValue:@"json" forParameter:@"format"];
 
-				[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
+			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
 
-				request.skipAuthorization = YES;
+			request.skipAuthorization = YES;
 
-				[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-					if (error != nil)
+			[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+				if (error != nil)
+				{
+					completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
+				}
+				else
+				{
+					BOOL authorizationFailed = YES;
+					NSError *error = nil;
+
+					if (request.responseHTTPStatus.isSuccess)
 					{
+						NSError *error = nil;
+						NSDictionary *capabilitiesDict;
+
+						if ((capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+						{
+							if ([capabilitiesDict valueForKeyPath:@"ocs.data"] != nil)
+							{
+								authorizationFailed = NO;
+							}
+						}
+					}
+					else if (request.responseHTTPStatus.isRedirection)
+					{
+						NSURL *responseRedirectURL;
+
+						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+						{
+							NSURL *alternativeBaseURL;
+
+							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+							{
+								error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
+							}
+							else
+							{
+								error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
+							}
+						}
+					}
+
+					if (authorizationFailed)
+					{
+						if (error == nil)
+						{
+							error = OCError(OCErrorAuthorizationFailed);
+						}
+
 						completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
 					}
 					else
 					{
-						BOOL authorizationFailed = YES;
-						NSError *error = nil;
-					
-						if (request.responseHTTPStatus.isSuccess)
-						{
-							NSError *error = nil;
-							NSDictionary *capabilitiesDict;
-							
-							if ((capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
-							{
-								if ([capabilitiesDict valueForKeyPath:@"ocs.data"] != nil)
-								{
-									authorizationFailed = NO;
-								}
-							}
-						}
-						else if (request.responseHTTPStatus.isRedirection)
-						{
-							NSURL *responseRedirectURL;
-							
-							if ((responseRedirectURL = [request responseRedirectURL]) != nil)
-							{
-								NSURL *alternativeBaseURL;
-								
-								if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
-								{
-									error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
-								}
-								else
-								{
-									error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
-								}
-							}
-						}
-						
-						if (authorizationFailed)
-						{
-							if (error == nil)
-							{
-								error = OCError(OCErrorAuthorizationFailed);
-							}
-							
-							completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
-						}
-						else
-						{
-							completionHandler(nil, OCAuthenticationMethodBasicAuthIdentifier, authenticationData);
-						}
+						completionHandler(nil, OCAuthenticationMethodBasicAuthIdentifier, authenticationData);
 					}
-				}];
-			}
-			else
-			{
-				completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
-			}
+				}
+			}];
 		}
 		else
 		{
-			completionHandler(OCError(OCErrorInternal), OCAuthenticationMethodBasicAuthIdentifier, nil);
+			completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
 		}
 	}
 	else

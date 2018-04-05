@@ -1,5 +1,5 @@
 //
-//  OCCoreTaskSet.h
+//  OCCoreItemListTask.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 02.04.18.
@@ -17,22 +17,30 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCTypes.h"
 #import "OCItem.h"
+#import "OCCoreItemList.h"
 
-typedef NS_ENUM(NSUInteger, OCCoreTaskSetState)
+@class OCCore;
+
+typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 {
-	OCCoreTaskSetStateNew,
-	OCCoreTaskSetStateStarted,
-	OCCoreTaskSetStateSuccess,
-	OCCoreTaskSetStateFailed
+	OCCoreTaskMergeStatusWaiting,
+	OCCoreTaskMergeStatusMerged
 };
 
-@interface OCCoreTaskSet : NSObject
+@interface OCCoreItemListTask : NSObject
 
-@property(assign) OCCoreTaskSetState state;
-@property(strong) NSArray <OCItem *> *items;
-@property(strong) NSError *error;
+@property(weak) OCCore *core;
+@property(strong) OCPath path;
 
-- (void)updateWithError:(NSError *)error items:(NSArray <OCItem *> *)items;
+@property(strong) OCCoreItemList *cachedSet;
+@property(strong) OCCoreItemList *retrievedSet;
+
+@property(assign) OCCoreTaskMergeStatus mergeStatus;
+
+- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path;
+
+- (void)update;
 
 @end

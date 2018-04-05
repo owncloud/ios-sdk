@@ -16,14 +16,16 @@
  *
  */
 
-#import "OCQuery.h"
 #import <objc/runtime.h>
+
+#import "OCQuery.h"
+#import "OCQuery+Internal.h"
 
 @implementation OCQuery
 
 #pragma mark - Location
 @synthesize queryPath = _queryPath;
-@synthesize queryRootItem = _queryRootItem;
+@synthesize queryItem = _queryItem;
 
 #pragma mark - State
 @synthesize state = _state;
@@ -42,7 +44,6 @@
 @synthesize delegate = _delegate;
 @synthesize changesAvailableNotificationHandler = _changesAvailableNotificationHandler;
 
-
 #pragma mark - Initializers
 + (instancetype)queryForPath:(OCPath)queryPath
 {
@@ -53,11 +54,11 @@
 	return (query);
 }
 
-+ (instancetype)queryWithRootItem:(OCItem *)rootItem
++ (instancetype)queryWithItem:(OCItem *)rootItem
 {
 	OCQuery *query = [self new];
 	
-	query.queryRootItem = rootItem;
+	query.queryItem = rootItem;
 	query.queryPath = rootItem.path;
 
 	return (query);
@@ -67,6 +68,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		_queue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 	}
 
 	return (self);
@@ -131,21 +133,83 @@
 	[self setNeedsRecomputation];
 }
 
+#pragma mark - Query results
+- (NSArray<OCItem *> *)queryResults
+{
+	NSArray<OCItem *> *queryResults = nil;
+
+	@synchronized(self)
+	{
+		[self updateProcessedResultsIfNeeded:YES];
+
+		queryResults = _processedQueryResults;
+	}
+
+	return (queryResults);
+}
+
 #pragma mark - Change Sets
-- (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flag completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler
+- (void)setHasChangesAvailable:(BOOL)hasChangesAvailable
 {
-	// Stub implementation
+	@synchronized(self)
+	{
+		_hasChangesAvailable = YES;
+	}
+
+	if (_hasChangesAvailable)
+	{
+		if ((_delegate != nil) && ([_delegate respondsToSelector:@selector(queryHasChangesAvailable:)]))
+		{
+			[_delegate queryHasChangesAvailable:self];
+		}
+
+		if (_changesAvailableNotificationHandler != nil)
+		{
+			_changesAvailableNotificationHandler(self);
+		}
+	}
 }
 
-#pragma mark - Needs recomputation
-- (void)setNeedsRecomputation
+- (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flags completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:OCQueryNeedsRecomputationNotification object:self];
-}
+	NSArray <OCItem *> *processedResults=nil, *lastResults=nil;
+	BOOL changesAvailable = NO;
 
+	@synchronized(self)
+	{
+		[self updateProcessedResultsIfNeeded:YES];
+
+		processedResults = _processedQueryResults;
+		lastResults = _lastQueryResults;
+
+		changesAvailable = _hasChangesAvailable;
+
+		_lastQueryResults = _processedQueryResults;
+		_hasChangesAvailable = NO;
+
+		// Process on serial queue in the background to ensure completionHandlers are called/change sets are returned in order of requests and to return from this method immediately
+		[self queueBlock:^{
+			OCQueryChangeSet *changeSet=nil;
+
+			if (changesAvailable)
+			{
+				changeSet = [[OCQueryChangeSet alloc] initWithQueryResult:processedResults relativeTo:(((flags & OCQueryChangeSetRequestFlagOnlyResults)!=0)?lastResults:nil)];
+			}
+			else
+			{
+				changeSet = [[OCQueryChangeSet alloc] initWithQueryResult:processedResults relativeTo:nil];
+				changeSet.containsChanges = NO;
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, changeSet);
+			}
+		}];
+	}
+}
 
 @end
 
 NSNotificationName OCQueryDidChangeStateNotification = @"OCQueryDidChangeState";
-NSNotificationName OCQueryDidUpdateNotification = @"OCQueryDidUpdate";
-NSNotificationName OCQueryNeedsRecomputationNotification = @"OCQueryNeedsRecomputation";
+NSNotificationName OCQueryHasChangesAvailableNotification = @"OCQueryHasChangesAvailable";

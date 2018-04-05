@@ -40,14 +40,18 @@ typedef void(^OCQueryChangeSetEnumerator)(OCQueryChangeSet *changeSet, OCQueryCh
 @property(strong) NSArray <OCItem *> *queryResult;	//!< Returns an array of OCItems representing the query's latest results after sorting and filtering - at the time the change set was requested.
 
 @property(strong) NSIndexSet *insertedItemsIndexSet; 	//!< Indexes at which items were inserted
-@property(strong) NSArray <OCItem *> *insertedItems; 	//!< Inserted items in the order of their insertion indexes
+@property(strong) NSArray <OCItem *> *insertedItems; 	//!< Inserted items ordered by index
 
 @property(strong) NSIndexSet *removedItemsIndexSet;  	//!< Indexes at which items were removed
-@property(strong) NSArray <OCItem *> *removedItems;  	//!< Removed items in the order of their insertion indexes
+@property(strong) NSArray <OCItem *> *removedItems;  	//!< Removed items ordered by index
 
 @property(strong) NSIndexSet *updatedItemsIndexSet;  	//!< Indexes at which items were updated
-@property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items ordered by their index
+@property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items ordered by index
 
+#pragma mark - Init & Dealloc
+- (instancetype)initWithQueryResult:(NSArray <OCItem *> *)queryResult relativeTo:(NSArray <OCItem *> *)previousQueryResult;
+
+#pragma mark - Change set enumeration
 - (void)enumerateChangesUsingBlock:(OCQueryChangeSetEnumerator)enumerator; //!< Can be used to enumerate
 
 @end

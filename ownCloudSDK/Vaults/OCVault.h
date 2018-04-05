@@ -41,4 +41,10 @@
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
+#pragma mark - Operations
+- (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Opens the vault and its components
+- (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Closes the vault and its components
+
+- (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
+
 @end

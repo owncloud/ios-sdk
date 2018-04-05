@@ -47,7 +47,11 @@
 
 	[coder encodeInteger:_permissions  	forKey:@"permissions"];
 
-	[coder encodeObject:_localURL 		forKey:@"localURL"];
+	[coder encodeObject:_localRelativePath	forKey:@"localRelativePath"];
+	[coder encodeBool:_locallyModified      forKey:@"locallyModified"];
+
+	[coder encodeObject:_remoteItem		forKey:@"remoteItem"];
+
 	[coder encodeObject:_path 		forKey:@"path"];
 
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
@@ -71,7 +75,11 @@
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
-		_localURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localURL"];
+		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
+		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
+
+		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
+
 		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
 
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];

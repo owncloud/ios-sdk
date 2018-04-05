@@ -23,6 +23,8 @@ typedef NSString* OCPath; //!< NSString representing the path relative to the se
 
 typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
 
+typedef void(^OCCompletionHandler)(id sender, NSError *error);
+
 typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
 
 #endif /* OCTypes_h */

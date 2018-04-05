@@ -1,8 +1,8 @@
 //
-//  OCQuery+OCCore.h
+//  OCCore+Internal.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 02.04.18.
+//  Created by Felix Schwarz on 04.04.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,10 +16,15 @@
  *
  */
 
-#import "OCQuery.h"
+#import "OCCore.h"
 
-@interface OCQuery (OCCore)
+@interface OCCore (Internal)
 
-- (void)updateWithFullResults:(NSMutableArray <OCItem *> *)fullQueryResults;
+#pragma mark - Item List Tasks
+- (void)startItemListTaskForPath:(OCPath)path;
+- (void)handleUpdatedTask:(OCCoreItemListTask *)task;
+
+#pragma mark - Queue
+- (void)queueBlock:(dispatch_block_t)block;
 
 @end

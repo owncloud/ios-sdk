@@ -24,14 +24,24 @@
 #import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
 #import "OCShare.h"
-#import "OCCoreTask.h"
 
 @class OCCore;
 @class OCItem;
 
+typedef NS_ENUM(NSUInteger, OCCoreState)
+{
+	OCCoreStateStopped,
+	OCCoreStateStopping,
+
+	OCCoreStateStarting,
+	OCCoreStateRunning
+};
+
 typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item);
 typedef void(^OCCoreActionShareHandler)(NSError *error, OCCore *core, OCItem *item, OCShare *share);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
+
+typedef void(^OCCoreStartCompletionHandler)(NSError *error, OCConnectionIssue *issue);
 
 @protocol OCCoreDelegate <NSObject>
 
@@ -50,6 +60,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	dispatch_queue_t _queue;
 
+	OCCoreState _state;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 
@@ -58,15 +70,22 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(readonly) OCVault *vault; //!< Vault managing storage and database access for this core.
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
 
+@property(readonly,nonatomic) OCCoreState state;
+
 @property(weak) id <OCCoreDelegate> delegate;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
+#pragma mark - Start / Stop Core
+- (void)startWithCompletionHandler:(OCCoreStartCompletionHandler)completionHandler;
+- (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler;
+
 #pragma mark - Query
-- (void)startQuery:(OCQuery *)query;
-- (void)stopQuery:(OCQuery *)query;
+- (void)startQuery:(OCQuery *)query;	//!< Starts a query
+- (void)reloadQuery:(OCQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
+- (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
 - (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;

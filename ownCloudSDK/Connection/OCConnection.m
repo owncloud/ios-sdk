@@ -363,7 +363,7 @@
 									[OCXMLNode elementWithName:@"D:supported-method-set"],
 								]];
 								
-								OCLog(@"%@", davRequest.xmlRequest.XMLString);
+								// OCLogDebug(@"%@", davRequest.xmlRequest.XMLString);
 
 								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
 									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
