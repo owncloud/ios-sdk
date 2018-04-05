@@ -80,4 +80,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCXMLParser.h>
 #import <ownCloudSDK/OCXMLParserNode.h>
 
+#import <ownCloudSDK/OCReachabilityMonitor.h>
+
 #import <ownCloudSDK/OCLogger.h>

@@ -44,7 +44,7 @@
 	core = [[OCCore alloc] initWithBookmark:bookmark];
 
 	// Start core
-	[core startWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		NSURL *vaultRootURL = core.vault.rootURL;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
@@ -91,7 +91,7 @@
 	core = [[OCCore alloc] initWithBookmark:bookmark];
 
 	// Start core
-	[core startWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);

@@ -56,6 +56,10 @@
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
+		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
+		_reachabilityMonitor.enabled = YES;
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+
 		_queries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
@@ -68,16 +72,21 @@
 
 - (void)dealloc
 {
+	if (_reachabilityMonitor != nil)
+	{
+		[[NSNotificationCenter defaultCenter] removeObserver:self name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+		_reachabilityMonitor.enabled = NO;
+		_reachabilityMonitor = nil;
+	}
 }
 
 #pragma mark - Start / Stop
-- (void)startWithCompletionHandler:(OCCoreStartCompletionHandler)completionHandler
+- (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
 		if (_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
-			__block OCConnectionIssue *startIssue = nil;
 			dispatch_group_t startGroup = nil;
 
 			[self willChangeValueForKey:@"state"];
@@ -96,35 +105,24 @@
 
 			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
 
-			// Open connection
+			// Proceed with connecting - or stop
 			if (startError == nil)
 			{
-				dispatch_group_enter(startGroup);
-
-				[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
-					startError = error;
-					startIssue = issue;
-					dispatch_group_leave(startGroup);
-				}];
-
-				dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
-			}
-
-			// Change state
-			[self willChangeValueForKey:@"state"];
-			if (startError == nil)
-			{
-				_state = OCCoreStateRunning;
+				_attemptConnect = YES;
+				[self _attemptConnect];
 			}
 			else
 			{
+				_attemptConnect = NO;
+
+				[self willChangeValueForKey:@"state"];
 				_state = OCCoreStateStopped;
+				[self didChangeValueForKey:@"state"];
 			}
-			[self didChangeValueForKey:@"state"];
 
 			if (completionHandler != nil)
 			{
-				completionHandler(startError, startIssue);
+				completionHandler(self, startError);
 			}
 		}
 	}];
@@ -133,7 +131,7 @@
 - (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
-		if (_state == OCCoreStateRunning)
+		if ((_state == OCCoreStateRunning) || (_state == OCCoreStateStarting))
 		{
 			__block NSError *stopError = nil;
 			dispatch_group_t stopGroup = nil;
@@ -142,8 +140,10 @@
 			_state = OCCoreStateStopping;
 			[self didChangeValueForKey:@"state"];
 
-			// Close connection
 			stopGroup = dispatch_group_create();
+
+			// Close connection
+			_attemptConnect = NO;
 
 			dispatch_group_enter(stopGroup);
 
@@ -173,6 +173,78 @@
 			}
 		}
 	}];
+}
+
+#pragma mark - Attempt Connect
+- (void)attemptConnect:(BOOL)doAttempt
+{
+	[self queueBlock:^{
+		_attemptConnect = doAttempt;
+
+		[self _attemptConnect];
+	}];
+}
+
+- (void)_attemptConnect
+{
+	if ((_state == OCCoreStateStarting) && _attemptConnect)
+	{
+		__block NSError *connectError = nil;
+		__block OCConnectionIssue *connectIssue = nil;
+		dispatch_group_t connectGroup = nil;
+
+		connectGroup = dispatch_group_create();
+
+		// Open connection
+		dispatch_group_enter(connectGroup);
+
+		[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+			connectError = error;
+			connectIssue = issue;
+			dispatch_group_leave(connectGroup);
+		}];
+
+		dispatch_group_wait(connectGroup, DISPATCH_TIME_FOREVER);
+
+		// Change state
+		if (connectError == nil)
+		{
+			[self willChangeValueForKey:@"state"];
+			_state = OCCoreStateRunning;
+			[self didChangeValueForKey:@"state"];
+		}
+
+		// Relay error and issues to delegate
+		if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+		{
+			[_delegate core:self handleError:connectError issue:connectIssue];
+		}
+	}
+}
+
+#pragma mark - Reachability
+- (void)_reachabilityChanged:(NSNotification *)notification
+{
+	if (_reachabilityMonitor.available)
+	{
+		[self queueBlock:^{
+			if (_state == OCCoreStateStarting)
+			{
+				[self _attemptConnect];
+			}
+
+			if (_state == OCCoreStateRunning)
+			{
+				for (OCQuery *query in _queries)
+				{
+					if (query.state == OCQueryStateContentsFromCache)
+					{
+						[self reloadQuery:query];
+					}
+				}
+			}
+		}];
+	}
 }
 
 #pragma mark - Query
@@ -259,8 +331,8 @@
 	BOOL removeTask = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 
-	NSLog(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, task.cachedSet.items);
-	NSLog(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, task.retrievedSet.items);
+	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
+	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
 
 	switch (task.cachedSet.state)
 	{

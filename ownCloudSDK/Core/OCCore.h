@@ -24,6 +24,7 @@
 #import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
 #import "OCShare.h"
+#import "OCReachabilityMonitor.h"
 
 @class OCCore;
 @class OCItem;
@@ -41,11 +42,9 @@ typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *i
 typedef void(^OCCoreActionShareHandler)(NSError *error, OCCore *core, OCItem *item, OCShare *share);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 
-typedef void(^OCCoreStartCompletionHandler)(NSError *error, OCConnectionIssue *issue);
-
 @protocol OCCoreDelegate <NSObject>
 
-- (void)core:(OCCore *)core handleError:(NSError *)error;
+- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue;
 
 @end
 
@@ -55,6 +54,8 @@ typedef void(^OCCoreStartCompletionHandler)(NSError *error, OCConnectionIssue *i
 
 	OCVault *_vault;
 	OCConnection *_connection;
+	OCReachabilityMonitor *_reachabilityMonitor;
+	BOOL _attemptConnect;
 
 	NSMutableArray <OCQuery *> *_queries;
 
@@ -69,6 +70,7 @@ typedef void(^OCCoreStartCompletionHandler)(NSError *error, OCConnectionIssue *i
 
 @property(readonly) OCVault *vault; //!< Vault managing storage and database access for this core.
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
+@property(readonly) OCReachabilityMonitor *reachabilityMonitor; //!< ReachabilityMonitor observing the reachability of the bookmark.url.host.
 
 @property(readonly,nonatomic) OCCoreState state;
 
@@ -79,7 +81,7 @@ typedef void(^OCCoreStartCompletionHandler)(NSError *error, OCConnectionIssue *i
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
 #pragma mark - Start / Stop Core
-- (void)startWithCompletionHandler:(OCCoreStartCompletionHandler)completionHandler;
+- (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler;
 - (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler;
 
 #pragma mark - Query
