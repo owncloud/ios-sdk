@@ -105,42 +105,91 @@
 				if (changeset != nil)
 				{
 					NSLog(@"============================================");
-					NSLog(@"QUERY STATE: %lu", (unsigned long)query.state);
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-					NSLog(@"Latest contents of root directory:");
-					for (OCItem *item in changeset.queryResult)
-					{
-						NSLog(@"%@", item.name);
-					}
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
-					NSLog(@"Insertions since last update:");
-					for (OCItem *item in changeset.insertedItems)
-					{
-						NSLog(@"%@", item.name);
-					}
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
 
-					NSLog(@"Removed since last update:");
-					for (OCItem *item in changeset.removedItems)
-					{
-						NSLog(@"%@", item.name);
-					}
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
 
-					NSLog(@"Updated since last update:");
-					for (OCItem *item in changeset.updatedItems)
-					{
-						NSLog(@"%@", item.name);
-					}
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
 				}
 
 				if (query.state == OCQueryStateIdle)
 				{
-					// Stop core
-					[core stopWithCompletionHandler:^(id sender, NSError *error) {
-						XCTAssert((error==nil), @"Stopped with error: %@", error);
+					OCQuery *subfolderQuery;
+					OCPath subfolderPath = nil;
 
-						[coreStoppedExpectation fulfill];
+					for (OCItem *item in query.queryResults)
+					{
+						if (item.type == OCItemTypeCollection)
+						{
+							subfolderPath = item.path;
+						}
+					}
 
-					}];
+					subfolderQuery = [OCQuery queryForPath:subfolderPath];
+					subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+						[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+							if (changeset != nil)
+							{
+								NSLog(@"============================================");
+								NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+								NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+								[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+									switch(operation)
+									{
+										case OCQueryChangeSetOperationInsert:
+											NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+										break;
+
+										case OCQueryChangeSetOperationRemove:
+											NSLog(@"[%@] Removals: %@", query.queryPath, items);
+										break;
+
+										case OCQueryChangeSetOperationUpdate:
+											NSLog(@"[%@] Updates: %@", query.queryPath, items);
+										break;
+
+										case OCQueryChangeSetOperationContentSwap:
+											NSLog(@"[%@] Content Swap", query.queryPath);
+										break;
+									}
+								}];
+							}
+
+							if (query.state == OCQueryStateIdle)
+							{
+								// Stop core
+								[core stopWithCompletionHandler:^(id sender, NSError *error) {
+									XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+									[coreStoppedExpectation fulfill];
+
+								}];
+							}
+						}];
+					};
+
+					[core startQuery:subfolderQuery];
 				}
 			}];
 		};

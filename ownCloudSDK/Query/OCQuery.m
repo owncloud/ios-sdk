@@ -38,6 +38,8 @@
 
 #pragma mark - Query results
 @synthesize queryResults = _queryResults;
+@synthesize rootItem = _rootItem;
+@synthesize includeRootItem = _includeRootItem;
 
 #pragma mark - Change Sets
 @synthesize hasChangesAvailable = _hasChangesAvailable;
@@ -50,6 +52,7 @@
 	OCQuery *query = [self new];
 	
 	query.queryPath = queryPath;
+	query.includeRootItem = NO;
 	
 	return (query);
 }
@@ -59,7 +62,7 @@
 	OCQuery *query = [self new];
 	
 	query.queryItem = rootItem;
-	query.queryPath = rootItem.path;
+	query.includeRootItem = YES;
 
 	return (query);
 }

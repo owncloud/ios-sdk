@@ -21,7 +21,8 @@
 @interface OCQuery (Internal)
 
 #pragma mark - Update full results
-- (void)updateWithFullResults:(NSMutableArray <OCItem *> *)fullQueryResults;
+- (void)setFullQueryResults:(NSMutableArray <OCItem *> *)fullQueryResults;
+- (NSMutableArray <OCItem *> *)fullQueryResults;
 
 #pragma mark - Update processed results
 - (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;

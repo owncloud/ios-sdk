@@ -197,9 +197,14 @@
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"mdID", @"itemData" ] fromTable:OCDatabaseTableNameMetaData where:@{
-		@"parentPath" : path
-	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	NSString *parentPath = path;
+
+	if ([parentPath hasSuffix:@"/"] && ![parentPath isEqual:@"/"])
+	{
+		parentPath = [parentPath substringWithRange:NSMakeRange(0, parentPath.length-1)];
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, itemData FROM metaData WHERE parentPath=? OR path=?" withParameters:@[parentPath,path] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil);

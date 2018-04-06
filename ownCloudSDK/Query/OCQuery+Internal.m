@@ -21,7 +21,7 @@
 @implementation OCQuery (Internal)
 
 #pragma mark - Update full results
-- (void)updateWithFullResults:(NSMutableArray <OCItem *> *)fullQueryResults
+- (void)setFullQueryResults:(NSMutableArray <OCItem *> *)fullQueryResults
 {
 	@synchronized(self)
 	{
@@ -29,6 +29,18 @@
 
 		[self setNeedsRecomputation];
 	}
+}
+
+- (NSMutableArray <OCItem *> *)fullQueryResults
+{
+	NSMutableArray <OCItem *> *fullQueryResults = nil;
+
+	@synchronized(self)
+	{
+		fullQueryResults = _fullQueryResults;
+	}
+
+	return (fullQueryResults);
 }
 
 #pragma mark - Update processed results

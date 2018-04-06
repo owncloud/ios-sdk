@@ -330,6 +330,8 @@
 	BOOL performMerge = NO;
 	BOOL removeTask = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
+	OCItem *taskRootItem = nil;
+	NSString *taskPath = task.path;
 
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
@@ -382,6 +384,8 @@
 		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
 		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
 
+		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
+
 		NSMutableArray <OCItem *> *changedCacheItems = [NSMutableArray new];
 		NSMutableArray <OCItem *> *deletedCacheItems = [NSMutableArray new];
 		NSMutableArray <OCItem *> *newItems = [NSMutableArray new];
@@ -389,6 +393,12 @@
 		__block NSError *cacheUpdateError = nil;
 
 		queryResults = [NSMutableArray new];
+
+		if (taskPath != nil)
+		{
+			retrievedRootItem = retrievedSet.itemsByPath[taskPath];
+			cacheRootItem = cacheSet.itemsByPath[taskPath];
+		}
 
 		// Iterate retrieved set
 		[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
@@ -446,6 +456,17 @@
 				}
 			}
 		}];
+
+		// Determine root item
+		if ((taskRootItem==nil) && (cacheRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:cacheRootItem]!=NSNotFound))
+		{
+			taskRootItem = cacheRootItem;
+		}
+
+		if ((taskRootItem==nil) && (retrievedRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:retrievedRootItem]!=NSNotFound))
+		{
+			taskRootItem = retrievedRootItem;
+		}
 
 		// Commit changes to the cache
 		dispatch_group_t cacheUpdateGroup = dispatch_group_create();
@@ -516,39 +537,88 @@
 	// Update queries
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
 	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
+	NSString *parentTaskPath = [taskPath stringByDeletingLastPathComponent];
 
 	for (OCQuery *query in _queries)
 	{
 		NSMutableArray <OCItem *> *useQueryResults = nil;
+		OCItem *queryRootItem = nil;
 
 		// Queries targeting the path
-		if ([query.queryPath isEqual:task.path])
+		if ([query.queryPath isEqual:taskPath])
 		{
 			if ( (query.state != OCQueryStateIdle) ||	// Keep updating queries that have not gone through its complete, initial content update
 			    ((query.state == OCQueryStateIdle) && (queryState == OCQueryStateIdle))) // Don't update queries that have previously gotten a complete, initial content update with content from the cache (as that cache content is prone to be identical with what we already have in it). Instead, update these queries only if we have an idle ("finished") queryResult again.
 			{
-				if (queryResultWithoutRootItem == nil)
+				if (query.includeRootItem || (taskRootItem==nil))
 				{
-					OCPath taskPath = task.path;
-
-					queryResultWithoutRootItem = [[NSMutableArray alloc] initWithArray:queryResults];
-
-					for (OCItem *item in queryResults)
+					useQueryResults = queryResults;
+				}
+				else
+				{
+					if (queryResultWithoutRootItem == nil)
 					{
-						if ([item.path isEqual:taskPath])
+						queryResultWithoutRootItem = [[NSMutableArray alloc] initWithArray:queryResults];
+
+						if (taskRootItem != nil)
 						{
-							[queryResultWithoutRootItem removeObject:item];
-							break;
+							[queryResultWithoutRootItem removeObjectIdenticalTo:taskRootItem];
 						}
 					}
+
+					useQueryResults = queryResultWithoutRootItem;
 				}
 
-				useQueryResults = queryResultWithoutRootItem;
+				queryRootItem = taskRootItem;
 			}
 		}
 		else
 		{
 			OCPath queryItemPath;
+
+			// Queries targeting the parent directory of taskPath
+			if ([query.queryPath isEqual:parentTaskPath])
+			{
+				// Should contain taskRootItem
+				if (taskRootItem != nil)
+				{
+					@synchronized(query) // Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
+					{
+						NSMutableArray <OCItem *> *fullQueryResults;
+
+						if ((fullQueryResults = query.fullQueryResults) != nil)
+						{
+							OCPath taskRootItemPath;
+
+							if ((taskRootItemPath = taskRootItem.path) != nil)
+							{
+								NSUInteger itemIndex = 0, replaceAtIndex = NSNotFound;
+
+								// Find root item
+								for (OCItem *item in fullQueryResults)
+								{
+									if ([item.path isEqual:taskRootItemPath])
+									{
+										replaceAtIndex = itemIndex;
+										break;
+									}
+
+									itemIndex++;
+								}
+
+								// Replace if found
+								if (replaceAtIndex != NSNotFound)
+								{
+									[fullQueryResults removeObjectAtIndex:replaceAtIndex];
+									[fullQueryResults insertObject:taskRootItem atIndex:replaceAtIndex];
+
+									[query setNeedsRecomputation];
+								}
+							}
+						}
+					}
+				}
+			}
 
 			// Queries targeting a particular item
 			if ((queryItemPath = query.queryItem.path) != nil)
@@ -583,7 +653,8 @@
 		if (useQueryResults != nil)
 		{
 			query.state = queryState;
-			[query updateWithFullResults:useQueryResults];
+			query.rootItem = queryRootItem;
+			query.fullQueryResults = useQueryResults;
 		}
 	}
 }
