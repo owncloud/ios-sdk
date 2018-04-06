@@ -42,7 +42,7 @@
 	}
 	else
 	{
-		self.responseBodyData = [self.bodyData mutableCopy];
+		self.responseBodyData = [response.bodyData mutableCopy];
 	}
 }
 

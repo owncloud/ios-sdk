@@ -384,7 +384,6 @@
 		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
 		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
 
-		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
 
 		NSMutableArray <OCItem *> *changedCacheItems = [NSMutableArray new];
 		NSMutableArray <OCItem *> *deletedCacheItems = [NSMutableArray new];
@@ -393,12 +392,6 @@
 		__block NSError *cacheUpdateError = nil;
 
 		queryResults = [NSMutableArray new];
-
-		if (taskPath != nil)
-		{
-			retrievedRootItem = retrievedSet.itemsByPath[taskPath];
-			cacheRootItem = cacheSet.itemsByPath[taskPath];
-		}
 
 		// Iterate retrieved set
 		[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
@@ -457,17 +450,6 @@
 			}
 		}];
 
-		// Determine root item
-		if ((taskRootItem==nil) && (cacheRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:cacheRootItem]!=NSNotFound))
-		{
-			taskRootItem = cacheRootItem;
-		}
-
-		if ((taskRootItem==nil) && (retrievedRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:retrievedRootItem]!=NSNotFound))
-		{
-			taskRootItem = retrievedRootItem;
-		}
-
 		// Commit changes to the cache
 		dispatch_group_t cacheUpdateGroup = dispatch_group_create();
 
@@ -525,6 +507,25 @@
 		}
 	}
 
+	// Determine root item
+	if (taskPath != nil)
+	{
+		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
+
+		retrievedRootItem = task.retrievedSet.itemsByPath[taskPath];
+		cacheRootItem = task.cachedSet.itemsByPath[taskPath];
+
+		if ((taskRootItem==nil) && (cacheRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:cacheRootItem]!=NSNotFound))
+		{
+			taskRootItem = cacheRootItem;
+		}
+
+		if ((taskRootItem==nil) && (retrievedRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:retrievedRootItem]!=NSNotFound))
+		{
+			taskRootItem = retrievedRootItem;
+		}
+	}
+
 	// Remove task
 	if (removeTask)
 	{
@@ -550,6 +551,8 @@
 			if ( (query.state != OCQueryStateIdle) ||	// Keep updating queries that have not gone through its complete, initial content update
 			    ((query.state == OCQueryStateIdle) && (queryState == OCQueryStateIdle))) // Don't update queries that have previously gotten a complete, initial content update with content from the cache (as that cache content is prone to be identical with what we already have in it). Instead, update these queries only if we have an idle ("finished") queryResult again.
 			{
+				NSLog(@"Task root item: %@, include root item: %d", taskRootItem, query.includeRootItem);
+
 				if (query.includeRootItem || (taskRootItem==nil))
 				{
 					useQueryResults = queryResults;

@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
+#import "OCHostSimulator.h"
 
 @interface CoreTests : XCTestCase
 
@@ -78,6 +79,7 @@
 {
 	OCBookmark *bookmark = nil;
 	OCCore *core;
+	__block OCQuery *subfolderQuery = nil;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 
@@ -133,63 +135,240 @@
 
 				if (query.state == OCQueryStateIdle)
 				{
-					OCQuery *subfolderQuery;
-					OCPath subfolderPath = nil;
-
-					for (OCItem *item in query.queryResults)
+					if (subfolderQuery==nil)
 					{
-						if (item.type == OCItemTypeCollection)
+						OCPath subfolderPath = nil;
+
+						for (OCItem *item in query.queryResults)
 						{
-							subfolderPath = item.path;
+							if (item.type == OCItemTypeCollection)
+							{
+								subfolderPath = item.path;
+							}
 						}
+
+						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+								if (changeset != nil)
+								{
+									NSLog(@"============================================");
+									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+										switch(operation)
+										{
+											case OCQueryChangeSetOperationInsert:
+												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationRemove:
+												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationUpdate:
+												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationContentSwap:
+												NSLog(@"[%@] Content Swap", query.queryPath);
+											break;
+										}
+									}];
+								}
+
+								if (query.state == OCQueryStateIdle)
+								{
+									// Stop core
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+
+									}];
+								}
+							}];
+						};
+
+						[core startQuery:subfolderQuery];
 					}
+				}
+			}];
+		};
 
-					subfolderQuery = [OCQuery queryForPath:subfolderPath];
-					subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
-						[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
-							if (changeset != nil)
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testOfflineCaching
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	OCHostSimulator *hostSimulator = [[OCHostSimulator alloc] init];
+	__block BOOL connectionCut = NO;
+	__block OCQuery *subfolderQuery = nil;
+	__block NSMutableSet <OCPath> *idlePaths = [NSMutableSet new];
+	__block NSMutableSet <OCPath> *fromCachePaths = [NSMutableSet new];
+
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (subfolderQuery == nil)
+					{
+						OCPath subfolderPath = nil;
+
+						for (OCItem *item in query.queryResults)
+						{
+							if (item.type == OCItemTypeCollection)
 							{
-								NSLog(@"============================================");
-								NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+								subfolderPath = item.path;
+							}
+						}
 
-								NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+								if (changeset != nil)
+								{
+									NSLog(@"============================================");
+									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-								[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
-									switch(operation)
+									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+										switch(operation)
+										{
+											case OCQueryChangeSetOperationInsert:
+												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationRemove:
+												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationUpdate:
+												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationContentSwap:
+												NSLog(@"[%@] Content Swap", query.queryPath);
+											break;
+										}
+									}];
+								}
+
+								if (query.state == OCQueryStateIdle)
+								{
+									if (!connectionCut)
 									{
-										case OCQueryChangeSetOperationInsert:
-											NSLog(@"[%@] Insertions: %@", query.queryPath, items);
-										break;
+										connectionCut = YES;
 
-										case OCQueryChangeSetOperationRemove:
-											NSLog(@"[%@] Removals: %@", query.queryPath, items);
-										break;
+										for (OCItem *item in changeset.queryResult)
+										{
+											[idlePaths addObject:item.path];
 
-										case OCQueryChangeSetOperationUpdate:
-											NSLog(@"[%@] Updates: %@", query.queryPath, items);
-										break;
+											XCTAssert(![item.path isEqualToString:query.queryPath], @"root item not contained in live results: %@", item);
+										}
 
-										case OCQueryChangeSetOperationContentSwap:
-											NSLog(@"[%@] Content Swap", query.queryPath);
-										break;
+										dispatch_async(dispatch_get_main_queue(), ^{
+											[core stopQuery:query];
+
+											NSLog(@"================ ###### CUTTING OFF NETWORK ###### ================");
+											core.connection.hostSimulator = hostSimulator; // the connection will now get a 404 for every request
+
+											[core startQuery:query];
+										});
 									}
-								}];
-							}
+								}
 
-							if (query.state == OCQueryStateIdle)
-							{
-								// Stop core
-								[core stopWithCompletionHandler:^(id sender, NSError *error) {
-									XCTAssert((error==nil), @"Stopped with error: %@", error);
+								if (query.state == OCQueryStateContentsFromCache)
+								{
+									for (OCItem *item in changeset.queryResult)
+									{
+										[fromCachePaths addObject:item.path];
 
-									[coreStoppedExpectation fulfill];
+										XCTAssert(![item.path isEqualToString:query.queryPath], @"root item not contained in cached results: %@", item);
+									}
 
-								}];
-							}
-						}];
-					};
+									XCTAssert((fromCachePaths.count==idlePaths.count), @"Same number of cached and idle paths");
 
-					[core startQuery:subfolderQuery];
+									[fromCachePaths minusSet:idlePaths];
+
+									XCTAssert((fromCachePaths.count==0), @"Same paths in cached and idle paths");
+
+									// Stop core
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+									}];
+								}
+							}];
+						};
+
+						[core startQuery:subfolderQuery];
+					}
 				}
 			}];
 		};

@@ -471,6 +471,11 @@
 		// OCLog(@"%@", davRequest.xmlRequest.XMLString);
 		
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			{
+				error = request.responseHTTPStatus.error;
+			}
+
 			NSLog(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
 
 			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
