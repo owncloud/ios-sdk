@@ -515,6 +515,7 @@
 
 	// Update queries
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
+	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
 
 	for (OCQuery *query in _queries)
 	{
@@ -526,7 +527,23 @@
 			if ( (query.state != OCQueryStateIdle) ||	// Keep updating queries that have not gone through its complete, initial content update
 			    ((query.state == OCQueryStateIdle) && (queryState == OCQueryStateIdle))) // Don't update queries that have previously gotten a complete, initial content update with content from the cache (as that cache content is prone to be identical with what we already have in it). Instead, update these queries only if we have an idle ("finished") queryResult again.
 			{
-				useQueryResults = queryResults;
+				if (queryResultWithoutRootItem == nil)
+				{
+					OCPath taskPath = task.path;
+
+					queryResultWithoutRootItem = [[NSMutableArray alloc] initWithArray:queryResults];
+
+					for (OCItem *item in queryResults)
+					{
+						if ([item.path isEqual:taskPath])
+						{
+							[queryResultWithoutRootItem removeObject:item];
+							break;
+						}
+					}
+				}
+
+				useQueryResults = queryResultWithoutRootItem;
 			}
 		}
 		else
