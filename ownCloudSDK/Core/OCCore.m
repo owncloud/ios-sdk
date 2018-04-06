@@ -125,15 +125,23 @@
 				completionHandler(self, startError);
 			}
 		}
+		else
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler(self, nil);
+			}
+		}
 	}];
 }
 
 - (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
+		__block NSError *stopError = nil;
+
 		if ((_state == OCCoreStateRunning) || (_state == OCCoreStateStarting))
 		{
-			__block NSError *stopError = nil;
 			dispatch_group_t stopGroup = nil;
 
 			[self willChangeValueForKey:@"state"];
@@ -166,11 +174,11 @@
 			[self willChangeValueForKey:@"state"];
 			_state = OCCoreStateStopped;
 			[self didChangeValueForKey:@"state"];
+		}
 
-			if (completionHandler != nil)
-			{
-				completionHandler(self, stopError);
-			}
+		if (completionHandler != nil)
+		{
+			completionHandler(self, stopError);
 		}
 	}];
 }
