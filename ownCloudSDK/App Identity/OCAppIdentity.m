@@ -94,7 +94,7 @@
 {
 	if (_keychain == nil)
 	{
-		_keychain = [[OCKeychain alloc] initWithAccessGroupIdentifier:self.keychainAccessGroupIdentifier];
+		_keychain = [[OCKeychain alloc] initWithAccessGroupIdentifier:((self.keychainAccessGroupIdentifier!=nil) ? ((self.appIdentifierPrefix!=nil) ? [self.appIdentifierPrefix stringByAppendingString:self.keychainAccessGroupIdentifier] : self.keychainAccessGroupIdentifier) : nil)];
 	}
 	
 	return (_keychain);
