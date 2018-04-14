@@ -100,26 +100,31 @@
 
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
-	NSError *error = nil;
-
-	NSFileManager *fileManager = [NSFileManager new];
-
-	fileManager.delegate = self;
-
 	if (self.rootURL != nil)
 	{
-		if (![fileManager removeItemAtURL:self.rootURL error:&error])
-		{
-			if (error == nil)
-			{
-				error = OCError(OCErrorInternal);
-			}
-		}
-	}
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+			NSError *error = nil;
 
-	if (completionHandler != nil)
-	{
-		completionHandler(self, error);
+			NSFileManager *fileManager = [NSFileManager new];
+
+			fileManager.delegate = self;
+
+			if ([fileManager fileExistsAtPath:self.rootURL.path])
+			{
+				if (![fileManager removeItemAtURL:self.rootURL error:&error])
+				{
+					if (error == nil)
+					{
+						error = OCError(OCErrorInternal);
+					}
+				}
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		});
 	}
 }
 
