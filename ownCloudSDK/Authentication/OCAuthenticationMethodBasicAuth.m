@@ -90,21 +90,31 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Passphrase-based Authentication Only
-+ (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData
++ (id)_objectForKey:(NSString *)key inAuthenticationData:(NSData *)authenticationData
 {
-	NSString *userName = nil;
+	id authObject = nil;
 
 	if (authenticationData != nil)
 	{
 		NSDictionary *authDataDict;
-		
+
 		if ((authDataDict = [OCAuthenticationMethodBasicAuth _decodedAuthenticationData:authenticationData]) != nil)
 		{
-			return (authDataDict[OCAuthenticationMethodUsernameKey]);
+			return (authDataDict[key]);
 		}
 	}
-	
-	return (userName);
+
+	return (authObject);
+}
+
++ (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData
+{
+	return ([self _objectForKey:OCAuthenticationMethodUsernameKey inAuthenticationData:authenticationData]);
+}
+
++ (NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData
+{
+	return ([self _objectForKey:OCAuthenticationMethodPassphraseKey inAuthenticationData:authenticationData]);
 }
 
 #pragma mark - Authentication Method Detection

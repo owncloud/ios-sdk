@@ -107,6 +107,12 @@
 	return (nil);
 }
 
++ (NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData
+{
+	// Implemented by subclasses
+	return (nil);
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
