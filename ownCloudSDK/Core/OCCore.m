@@ -236,16 +236,20 @@
 				[self _attemptConnect];
 			}
 
-			if (_state == OCCoreStateRunning)
-			{
-				for (OCQuery *query in _queries)
-				{
-					if (query.state == OCQueryStateContentsFromCache)
+			[self queueConnectivityBlock:^{	// Wait for _attemptConnect to finish
+				[self queueBlock:^{ // See if we can proceed
+					if (_state == OCCoreStateRunning)
 					{
-						[self reloadQuery:query];
+						for (OCQuery *query in _queries)
+						{
+							if (query.state == OCQueryStateContentsFromCache)
+							{
+								[self reloadQuery:query];
+							}
+						}
 					}
-				}
-			}
+				}];
+			}];
 		}];
 	}
 }
