@@ -65,6 +65,7 @@
 		_itemListTasksByPath = [NSMutableDictionary new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
+		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 	}
 	
 	return(self);
@@ -195,39 +196,33 @@
 
 - (void)_attemptConnect
 {
-	if ((_state == OCCoreStateStarting) && _attemptConnect)
-	{
-		__block NSError *connectError = nil;
-		__block OCConnectionIssue *connectIssue = nil;
-		dispatch_group_t connectGroup = nil;
-
-		connectGroup = dispatch_group_create();
-
-		// Open connection
-		dispatch_group_enter(connectGroup);
-
-		[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
-			connectError = error;
-			connectIssue = issue;
-			dispatch_group_leave(connectGroup);
-		}];
-
-		dispatch_group_wait(connectGroup, DISPATCH_TIME_FOREVER);
-
-		// Change state
-		if (connectError == nil)
+	[self queueConnectivityBlock:^{
+		if ((_state == OCCoreStateStarting) && _attemptConnect)
 		{
-			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateRunning;
-			[self didChangeValueForKey:@"state"];
-		}
+			// Open connection
+			dispatch_suspend(_connectivityQueue);
 
-		// Relay error and issues to delegate
-		if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
-		{
-			[_delegate core:self handleError:connectError issue:connectIssue];
+			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+				[self queueBlock:^{
+					// Change state
+					if (error == nil)
+					{
+						[self willChangeValueForKey:@"state"];
+						_state = OCCoreStateRunning;
+						[self didChangeValueForKey:@"state"];
+					}
+
+					// Relay error and issues to delegate
+					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					{
+						[_delegate core:self handleError:error issue:issue];
+					}
+
+					dispatch_resume(_connectivityQueue);
+				}];
+			}];
 		}
-	}
+	}];
 }
 
 #pragma mark - Reachability
@@ -742,12 +737,20 @@
 	// Stub implementation
 }
 
-#pragma mark - Queue
+#pragma mark - Queues
 - (void)queueBlock:(dispatch_block_t)block
 {
 	if (block != nil)
 	{
 		dispatch_async(_queue, block);
+	}
+}
+
+- (void)queueConnectivityBlock:(dispatch_block_t)block
+{
+	if (block != nil)
+	{
+		dispatch_async(_connectivityQueue, block);
 	}
 }
 

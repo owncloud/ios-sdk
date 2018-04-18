@@ -81,14 +81,16 @@
 		{
 			_retrievedSet.state = OCCoreItemListStateStarted;
 
-			[_core.connection retrieveItemListAtPath:self.path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-					[_retrievedSet updateWithError:error items:items];
+			[_core queueConnectivityBlock:^{
+				[_core.connection retrieveItemListAtPath:self.path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+						[_retrievedSet updateWithError:error items:items];
 
-					if ((_retrievedSet.state == OCCoreItemListStateSuccess) || (_retrievedSet.state == OCCoreItemListStateFailed))
-					{
-						[_core handleUpdatedTask:self];
-					}
+						if ((_retrievedSet.state == OCCoreItemListStateSuccess) || (_retrievedSet.state == OCCoreItemListStateFailed))
+						{
+							[_core handleUpdatedTask:self];
+						}
+					}];
 				}];
 			}];
 		}

@@ -26,5 +26,6 @@
 
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block;
+- (void)queueConnectivityBlock:(dispatch_block_t)block;
 
 @end
