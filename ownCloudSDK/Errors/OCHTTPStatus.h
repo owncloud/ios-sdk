@@ -62,3 +62,5 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 @end
 
 extern NSErrorDomain OCHTTPStatusErrorDomain;
+
+#define IsHTTPErrorWithStatus(error,status) ([error.domain isEqual:OCHTTPStatusErrorDomain] && (error.code==status))

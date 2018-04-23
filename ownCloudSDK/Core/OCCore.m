@@ -336,6 +336,7 @@
 	OCQueryState queryState = OCQueryStateStarted;
 	BOOL performMerge = NO;
 	BOOL removeTask = NO;
+	BOOL targetRemoved = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
@@ -366,6 +367,17 @@
 
 					if (task.retrievedSet.state == OCCoreItemListStateFailed)
 					{
+						if (task.retrievedSet.error != nil)
+						{
+							// Not Found => removed
+							if (IsHTTPErrorWithStatus(task.retrievedSet.error, OCHTTPStatusCodeNOT_FOUND))
+							{
+								queryState = OCQueryStateTargetRemoved;
+								targetRemoved = YES;
+								performMerge = YES;
+							}
+						}
+
 						removeTask = YES;
 					}
 				}
@@ -515,7 +527,7 @@
 	}
 
 	// Determine root item
-	if (taskPath != nil)
+	if ((taskPath != nil) && !targetRemoved)
 	{
 		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
 
@@ -626,6 +638,43 @@
 								}
 							}
 						}
+					}
+				}
+				else
+				{
+					if (targetRemoved)
+					{
+						// Task's root item was removed
+						@synchronized(query) // Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
+						{
+							NSMutableArray <OCItem *> *fullQueryResults;
+
+							if ((fullQueryResults = query.fullQueryResults) != nil)
+							{
+								NSUInteger itemIndex = 0, removeAtIndex = NSNotFound;
+
+								// Find root item
+								for (OCItem *item in fullQueryResults)
+								{
+									if ([item.path isEqual:taskPath])
+									{
+										removeAtIndex = itemIndex;
+										break;
+									}
+
+									itemIndex++;
+								}
+
+								// Remove if found
+								if (removeAtIndex != NSNotFound)
+								{
+									[fullQueryResults removeObjectAtIndex:removeAtIndex];
+
+									[query setNeedsRecomputation];
+								}
+							}
+						}
+
 					}
 				}
 			}
