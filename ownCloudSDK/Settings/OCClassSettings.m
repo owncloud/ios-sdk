@@ -57,6 +57,18 @@
 	[_overrideValuesByKeyByIdentifier removeAllObjects];
 }
 
+- (void)removeSource:(id <OCClassSettingsSource>)source
+{
+	if (source == nil) { return; }
+
+	if (_sources != nil)
+	{
+		[_sources removeObjectIdenticalTo:source];
+
+		[_overrideValuesByKeyByIdentifier removeAllObjects];
+	}
+}
+
 - (NSDictionary<OCClassSettingsKey,id> *)_overrideDictionaryForSettingsIdentifier:(OCClassSettingsIdentifier)settingsIdentifier
 {
 	NSMutableDictionary<OCClassSettingsKey,id> *overrideDict = nil;
@@ -65,6 +77,11 @@
 	{
 		if ((overrideDict = _overrideValuesByKeyByIdentifier[settingsIdentifier]) == nil)
 		{
+			if (_overrideValuesByKeyByIdentifier == nil)
+			{
+				_overrideValuesByKeyByIdentifier = [NSMutableDictionary new];
+			}
+
 			for (id <OCClassSettingsSource> source in _sources)
 			{
 				NSDictionary<OCClassSettingsKey,id> *sourceOverrideDict;
@@ -110,7 +127,7 @@
 
 				mergedClassSettings = [[NSMutableDictionary alloc] initWithDictionary:classSettings];
 
-				[mergedClassSettings setDictionary:overrideSettings];
+				[mergedClassSettings addEntriesFromDictionary:overrideSettings];
 
 				classSettings = mergedClassSettings;
 			}

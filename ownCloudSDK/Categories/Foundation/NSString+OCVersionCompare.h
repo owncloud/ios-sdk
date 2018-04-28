@@ -1,8 +1,8 @@
 //
-//  OCCore+Internal.h
+//  NSString+OCVersionCompare.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 04.04.18.
+//  Created by Felix Schwarz on 26.04.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,17 +16,10 @@
  *
  */
 
-#import "OCCore.h"
-#import "OCCoreItemListTask.h"
+#import <Foundation/Foundation.h>
 
-@interface OCCore (Internal)
+@interface NSString (OCVersionCompare)
 
-#pragma mark - Item List Tasks
-- (void)startItemListTaskForPath:(OCPath)path;
-- (void)handleUpdatedTask:(OCCoreItemListTask *)task;
-
-#pragma mark - Queue
-- (void)queueBlock:(dispatch_block_t)block;
-- (void)queueConnectivityBlock:(dispatch_block_t)block;
+- (NSComparisonResult)compareVersionWith:(NSString *)otherVersion;
 
 @end

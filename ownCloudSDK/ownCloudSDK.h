@@ -67,6 +67,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCQueryChangeSet.h>
 
 #import <ownCloudSDK/OCItem.h>
+#import <ownCloudSDK/OCItemVersionIdentifier.h>
 
 #import <ownCloudSDK/OCShare.h>
 #import <ownCloudSDK/OCUser.h>
@@ -75,11 +76,17 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/NSURL+OCURLNormalization.h>
 #import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>
+#import <ownCloudSDK/NSString+OCVersionCompare.h>
+#import <ownCloudSDK/NSProgress+OCExtensions.h>
+
+#import <ownCloudSDK/UIImage+OCTools.h>
 
 #import <ownCloudSDK/OCXMLNode.h>
 #import <ownCloudSDK/OCXMLParser.h>
 #import <ownCloudSDK/OCXMLParserNode.h>
 
 #import <ownCloudSDK/OCReachabilityMonitor.h>
+
+#import <ownCloudSDK/OCCache.h>
 
 #import <ownCloudSDK/OCLogger.h>

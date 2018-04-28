@@ -19,8 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCShare.h"
-
-typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+#import "OCItemThumbnail.h"
+#import "OCItemVersionIdentifier.h"
 
 typedef NS_ENUM(NSInteger, OCItemType)
 {
@@ -47,7 +47,21 @@ typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 	OCItemPermissionMove		= (1<<8)	//!< Code "V"	File or Folder	can move file or folder
 };
 
+typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
+{
+	OCItemThumbnailAvailabilityUnknown,	//!< It's not yet known if a thumbnail is available for this item
+	OCItemThumbnailAvailabilityAvailable,	//!< A thumbnail is available for this item
+	OCItemThumbnailAvailabilityNone,	//!< No thumbnail is available for this item
+
+	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
+};
+
 @interface OCItem : NSObject <NSSecureCoding>
+{
+	OCItemVersionIdentifier *_versionIdentifier;
+
+	OCItemThumbnailAvailability _thumbnailAvailability;
+}
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
 
@@ -66,11 +80,15 @@ typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 @property(strong) OCPath path; //!< Path of the item on the server relative to root
 @property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
-@property(strong) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
-@property(strong) NSString *eTag; //!< ETag of the item on the server (changes with every modification)
+@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+@property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
+@property(readonly,nonatomic) OCItemVersionIdentifier *versionIdentifier; // (dynamic/ephermal)
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
+
+@property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
+@property(strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
 @property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
 

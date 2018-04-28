@@ -18,8 +18,9 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
+#import <ownCloudSDK/NSString+OCVersionCompare.h>
 
-@interface ConnectionTests : XCTestCase
+@interface ConnectionTests : XCTestCase <OCEventHandler, OCClassSettingsSource>
 {
 	 OCConnection *newConnection;
 }
@@ -393,6 +394,52 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	if ([identifier isEqual:[OCConnection classSettingsIdentifier]])
+	{
+		return (@{
+			OCConnectionMinimumVersionRequired : @"100.0.0.0"
+		});
+	}
+
+	return (nil);
+}
+
+- (void)testConnectMinimumServerVersion
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+
+	// General version compare tests
+	XCTAssert([@"10.0"  compareVersionWith:@"10.0"]==NSOrderedSame, @"Same digit count 1");
+	XCTAssert([@"10.0"  compareVersionWith:@"9.0"]==NSOrderedDescending, @"Same digit count 2");
+	XCTAssert([@"9.0"   compareVersionWith:@"10.0"]==NSOrderedAscending, @"Same digit count 3");
+	XCTAssert([@"9.0.0" compareVersionWith:@"9.0"]==NSOrderedSame, @"Overlength equality 1");
+	XCTAssert([@"9.0"   compareVersionWith:@"9.0.0"]==NSOrderedSame, @"Overlength equality 2");
+	XCTAssert([@"9.0.1" compareVersionWith:@"9.0"]==NSOrderedDescending, @"Overlength inequality 1");
+	XCTAssert([@"9.0.0" compareVersionWith:@"9.0.0.1"]==NSOrderedAscending, @"Overlength inequality 2");
+
+	// Connection version compare tests
+	[[OCClassSettings sharedSettings] addSource:self];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		// Testing just the connect here
+
+		XCTAssert((error!=nil), @"Error: %@", error);
+		XCTAssert((issue!=nil), @"Issue: %@", issue);
+		XCTAssert((connection!=nil), @"Connection");
+
+		NSLog(@"Error: %@ Issue: %@", error, issue);
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	[[OCClassSettings sharedSettings] removeSource:self];
+}
+
+
 - (void)testConnectWithFakedCert
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
@@ -451,6 +498,101 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)handleEvent:(OCEvent *)event sender:(id)sender
+{
+	void (^block)(OCEvent *e, id sender) = event.ephermalUserInfo[@"completionHandler"];
+
+	block(event, sender);
+}
+
+- (void)testConnectAndGetThumbnails
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	__block XCTestExpectation *expectErrorForCollection = [self expectationWithDescription:@"Received error for collection"];
+	__block NSUInteger receivedThumbnails = 0;
+	XCTestExpectation *expectThumbnailsForAllFiles = [self expectationWithDescription:@"Received thumbnails for all files"];
+	__block NSUInteger thumbnailByteCount = 0;
+
+	[OCEvent registerEventHandler:self forIdentifier:@"test"];
+
+	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@owncloud-io.lan" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		NSLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
+
+		XCTAssert((error==nil), @"No error: %@", error);
+		XCTAssert((issue==nil), @"No issue: %@", issue);
+		XCTAssert((connection!=nil), @"Connection!");
+
+		if (error == nil)
+		{
+			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
+
+			[connection retrieveItemListAtPath:@"/Photos" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at /Photos: %@", items);
+
+				for (OCItem *item in items)
+				{
+					CGSize maxSize = CGSizeMake(384, 384);
+
+					[connection retrieveThumbnailFor:item
+						    to:nil
+						    maximumSize:maxSize
+						    resultTarget:[OCEventTarget eventTargetWithEventHandlerIdentifier:@"test"
+						    				userInfo:nil
+						    				ephermalUserInfo:@{
+						    					@"completionHandler" : ^(OCEvent *event, id sender){
+						    						NSLog(@"Event: %@ Error: %@ Thumbnail Size: %@ Bytes: %lu Sender: %@", event, event.error, NSStringFromCGSize(((OCItemThumbnail *)event.result).image.size), ((OCItemThumbnail *)event.result).data.length, sender);
+
+						    						thumbnailByteCount += ((OCItemThumbnail *)event.result).data.length;
+
+						    						if (item.type == OCItemTypeCollection)
+						    						{
+						    							if (event.error != nil)
+						    							{
+														[expectErrorForCollection fulfill];
+														expectErrorForCollection = nil;
+													}
+												}
+
+												if (item.type == OCItemTypeFile)
+												{
+													OCItemThumbnail *thumbnail = (OCItemThumbnail *)event.result;
+
+													if ((thumbnail!=nil) && ((thumbnail.image.size.width==maxSize.width) || (thumbnail.image.size.height==maxSize.height)))
+													{
+														receivedThumbnails++;
+
+														if (receivedThumbnails == (items.count-1)) // -1 for the root directory
+														{
+															[expectThumbnailsForAllFiles fulfill];
+														}
+													}
+												}
+											}
+									        }
+								 ]
+					];
+				}
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectFileList fulfill];
+			}];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	NSLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
 }
 
 @end

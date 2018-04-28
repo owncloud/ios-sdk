@@ -44,13 +44,14 @@
 @synthesize forceCertificateDecisionDelegation = _forceCertificateDecisionDelegation;
 
 @synthesize eventTarget = _eventTarget;
+@synthesize userInfo = _userInfo;
 
 @synthesize priority = _priority;
 @synthesize groupID = _groupID;
 @synthesize skipAuthorization = _skipAuthorization;
 
 @synthesize downloadRequest = _downloadRequest;
-@synthesize downloadedFile = _downloadedFile;
+@synthesize downloadedFileURL = _downloadedFileURL;
 
 @synthesize responseBodyData = _responseBodyData;
 
@@ -397,13 +398,15 @@
 		self.parameters 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"parameters"];
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
+
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
-		
+		self.userInfo	 	= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
 
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
-		self.downloadedFile	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFile"];
+		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
@@ -425,13 +428,15 @@
 	[coder encodeObject:_parameters 	forKey:@"parameters"];
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
+
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
+	[coder encodeObject:_userInfo 		forKey:@"userInfo"];
 
 	[coder encodeFloat:_priority 		forKey:@"priority"];
 	[coder encodeObject:_groupID 		forKey:@"groupID"];
 
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
-	[coder encodeObject:_downloadedFile 	forKey:@"downloadedFile"];
+	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }

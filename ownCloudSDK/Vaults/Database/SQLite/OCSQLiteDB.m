@@ -314,7 +314,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 								if (latestTableSchema != nil)
 								{
-									[migration.applicableSchemas addObject:latestTableSchema];
+									if ([migration.applicableSchemas indexOfObjectIdenticalTo:latestTableSchema] == NSNotFound)
+									{
+										[migration.applicableSchemas addObject:latestTableSchema];
+									}
 								}
 							}
 						}

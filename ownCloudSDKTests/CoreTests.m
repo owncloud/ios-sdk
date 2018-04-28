@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
+#import "OCCore+Internal.h"
 
 @interface CoreTests : XCTestCase
 
@@ -220,7 +221,14 @@
 	__block NSMutableSet <OCPath> *fromCachePaths = [NSMutableSet new];
 
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
-	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+
+	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		// Return host not found errors by default
+		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
+
+		return (YES);
+	};
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
@@ -335,7 +343,7 @@
 											[core stopQuery:query];
 
 											NSLog(@"================ ###### CUTTING OFF NETWORK ###### ================");
-											core.connection.hostSimulator = hostSimulator; // the connection will now get a 404 for every request
+											core.connection.hostSimulator = hostSimulator; // the connection will now get host not found for every request
 
 											[core startQuery:query];
 										});
@@ -362,6 +370,7 @@
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 										[coreStoppedExpectation fulfill];
+										coreStoppedExpectation = nil;
 									}];
 								}
 							}];
@@ -371,6 +380,163 @@
 					}
 				}
 			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testThumbnailRetrieval
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block OCItemThumbnail *thumbnail1 = nil, *thumbnail2 = nil;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block XCTestExpectation *requestOfLargerSizeExpectation = [self expectationWithDescription:@"Larger size expectation"];
+	OCHostSimulator *hostSimulator = [[OCHostSimulator alloc] init];
+
+	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		// Return host not found errors by default
+		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
+
+		XCTFail(@"Request for %@ when no request should have been made.", request.url);
+
+		return (YES);
+	};
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/Photos/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+
+			NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+			if (query.state == OCQueryStateIdle)
+			{
+				[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+					if (changeset != nil)
+					{
+						NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+						for (OCItem *item in changeset.queryResult)
+						{
+							if (item.thumbnailAvailability != OCItemThumbnailAvailabilityNone)
+							{
+								// Test that requests for thumbnails are queued, so that thumbnails aren't loaded several times from the server
+
+								// 1) Keep core busy with other stuff for a bit
+								[core queueBlock:^{
+									sleep(2);
+								}];
+
+								// 2) Send first request
+								[core retrieveThumbnailFor:item maximumSize:CGSizeMake(100, 100) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+									if (!isOngoing)
+									{
+										thumbnail1 = thumbnail;
+									}
+								}];
+
+								// 3) Send second request
+								[core retrieveThumbnailFor:item maximumSize:CGSizeMake(100, 100) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+									if (!isOngoing)
+									{
+										thumbnail2 = thumbnail;
+
+										// 4) Verify result
+										XCTAssert((thumbnail1 != nil), @"Thumbnail 1 should have been set first.");
+										XCTAssert((thumbnail2 != nil), @"Thumbnail 2 should not be nil either.");
+										XCTAssert((thumbnail1 == thumbnail2), @"Thumbnail 1 is identical to Thumbnail 2");
+
+										thumbnail1 = nil;
+										thumbnail2 = nil;
+
+										// Install host simulator that makes the test fail if any connection attempt is made from hereon.
+										core.connection.hostSimulator = hostSimulator;
+
+										// Send third request, which should now be served from cache
+										[core retrieveThumbnailFor:item maximumSize:CGSizeMake(100, 100) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+											if (!isOngoing)
+											{
+												thumbnail1 = thumbnail;
+											}
+										}];
+
+										// Send forth request for smaller version, which should use the same thumbnail
+										[core retrieveThumbnailFor:item maximumSize:CGSizeMake(50, 50) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+											if (!isOngoing)
+											{
+												thumbnail2 = thumbnail;
+
+												XCTAssert((thumbnail1 != nil), @"Thumbnail 1 should have been set first.");
+												XCTAssert((thumbnail2 != nil), @"Thumbnail 2 should not be nil either.");
+												XCTAssert((thumbnail1 == thumbnail2), @"Thumbnail 1 is identical to Thumbnail 2");
+
+												// Verify thumbnail size
+												[thumbnail requestImageForSize:CGSizeMake(100,100) scale:1.0 withCompletionHandler:^(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image) {
+													XCTAssert ((image.size.width == 100.0), @"Thumbnail width is 100: %f", image.size.width);
+													XCTAssert ((image.size.height <= 100.0), @"Thumbnail height is <= 100: %f", image.size.height);
+													XCTAssert ((image.scale == 1.0), @"Thumbnail scale is 1");
+
+													// Verify that the next call will actually lead to a new request
+													hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+														[requestOfLargerSizeExpectation fulfill];
+														requestOfLargerSizeExpectation = nil;
+
+														return (NO);
+													};
+
+													// Request larger size, so a new request will be sent
+													[core retrieveThumbnailFor:item maximumSize:CGSizeMake(200, 200) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+														if (!isOngoing)
+														{
+															// Remove host simulator
+															core.connection.hostSimulator = nil;
+
+															// Stop core
+															[core stopWithCompletionHandler:^(id sender, NSError *error) {
+																XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+																[coreStoppedExpectation fulfill];
+															}];
+														}
+													}];
+												}];
+											}
+										}];
+									}
+								}];
+
+								break;
+							}
+						}
+					}
+				}];
+			}
 		};
 
 		[core startQuery:query];

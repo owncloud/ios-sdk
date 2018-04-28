@@ -38,6 +38,18 @@ This document provides an overview over the available sections and variables.
 	- `connection-strict-bookmark-certificate-enforcement`: If `true`:  require the certificate stored in the connection's bookmark if the connection's state is not disconnected. If `false`: accept all validating certificates and certificates approved by the user.
 		- type: boolean
 		- default: `true`
+	- `connection-minimum-server-version`:  The minimum server version required.
+		- type: string
+		- default: `9.0`
+
+## Core
+
+- **Section ID**: `core`
+
+- **Variables**:
+	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array.
+		- type: array
+		- default: `["image/"]`
 
 ## OAuth2
 

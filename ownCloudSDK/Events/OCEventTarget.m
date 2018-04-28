@@ -50,6 +50,16 @@
 	[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
 }
 
+#pragma mark - Convenience
+- (void)handleError:(NSError *)error type:(OCEventType)type sender:(id)sender
+{
+	OCEvent *event = [OCEvent eventForEventTarget:self type:type attributes:nil];
+
+	event.error = error;
+
+	[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {

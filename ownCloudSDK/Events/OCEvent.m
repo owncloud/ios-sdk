@@ -28,6 +28,11 @@
 
 @synthesize attributes = _attributes;
 
+@synthesize mimeType = _mimeType;
+@synthesize data = _data;
+@synthesize error = _error;
+@synthesize result = _result;
+
 + (NSMutableDictionary <OCEventHandlerIdentifier, id <OCEventHandler>> *)_eventHandlerDictionary
 {
 	static dispatch_once_t onceToken;
@@ -52,6 +57,11 @@
 			[[self _eventHandlerDictionary] removeObjectForKey:eventHandlerIdentifier];
 		}
 	}
+}
+
++ (void)unregisterEventHandlerForIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier
+{
+	[self registerEventHandler:nil forIdentifier:eventHandlerIdentifier];
 }
 
 + (id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier

@@ -20,6 +20,7 @@
 #import "OCConnection+OCConnectionQueue.h"
 #import "NSError+OCError.h"
 #import "OCCertificate.h"
+#import "OCLogger.h"
 
 @implementation OCConnectionQueue
 
@@ -449,6 +450,13 @@
 		}
 	}
 
+	// Remove temporarily downloaded files
+	if (request.downloadRequest && request.downloadedFileIsTemporary && (request.downloadedFileURL!=nil))
+	{
+		[[NSFileManager defaultManager] removeItemAtURL:request.downloadedFileURL error:nil];
+	}
+
+	// Continue with scheduling
 	if (scheduleQueuedRequests)
 	{
 		[self _scheduleQueuedRequests];
@@ -495,10 +503,9 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
 	// NSLog(@"DID COMPLETE: task=%@ error=%@", task, error);
+	OCLogDebug(@"%@: didCompleteWithError=%@", task.currentRequest.URL, error);
 
-	[self _queueBlock:^{
-		[self handleFinishedRequest:[self requestForTask:task] error:error];
-	}];
+	[self handleFinishedRequest:[self requestForTask:task] error:error];
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
@@ -519,11 +526,43 @@
         newRequest:(NSURLRequest *)request
         completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
 {
+	OCLogDebug(@"%@: wants to perform redirection from %@ to %@ via %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
+
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
 	{
 		completionHandler(NULL);
 	}
+}
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
+{
+	OCConnectionRequest *request;
+
+	if ((request = [self requestForTask:downloadTask]) != nil)
+	{
+		if (request.downloadedFileURL == nil)
+		{
+			NSURL *temporaryDirectoryURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
+			NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
+
+			request.downloadedFileURL = temporaryFileURL;
+			request.downloadedFileIsTemporary = YES;
+		}
+		else
+		{
+			request.downloadedFileIsTemporary = NO;
+		}
+
+		if (request.downloadedFileURL != nil)
+		{
+			NSError *error = nil;
+			[[NSFileManager defaultManager] moveItemAtURL:location toURL:request.downloadedFileURL error:&error];
+		}
+	}
+
+	OCLogDebug(@"%@: downloadTask:didFinishDownloadingToURL: %@", downloadTask.currentRequest.URL, location);
+	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
 - (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
@@ -561,7 +600,7 @@
         didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
         completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
-	NSLog(@"%@: %@ => protection space: %@ method: %@", task.currentRequest.URL, challenge, challenge.protectionSpace, challenge.protectionSpace.authenticationMethod);
+	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
 
 	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
 	{

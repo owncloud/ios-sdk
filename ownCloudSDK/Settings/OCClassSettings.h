@@ -53,6 +53,7 @@ typedef NSString* OCClassSettingsKey;
 + (instancetype)sharedSettings;
 
 - (void)addSource:(id <OCClassSettingsSource>)source;
+- (void)removeSource:(id <OCClassSettingsSource>)source;
 
 - (NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
 

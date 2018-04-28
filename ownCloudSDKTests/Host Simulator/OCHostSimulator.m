@@ -38,7 +38,7 @@
 
 	if (self.downloadRequest)
 	{
-		self.downloadedFile = self.bodyURL;
+		self.downloadedFileURL = self.bodyURL;
 	}
 	else
 	{

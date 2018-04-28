@@ -57,13 +57,15 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	BOOL _forceCertificateDecisionDelegation;
 
 	OCEventTarget *_eventTarget;
+	NSDictionary *_userInfo;
 
  	OCConnectionRequestPriority _priority;
 	OCConnectionRequestGroupID _groupID;
 	BOOL _skipAuthorization;
 
 	BOOL _downloadRequest;
-	NSURL *_downloadedFile;
+	NSURL *_downloadedFileURL;
+	BOOL _downloadedFileIsTemporary;
 
 	OCHTTPStatus *_responseHTTPStatus;
 	NSHTTPURLResponse *_injectedResponse;
@@ -97,13 +99,15 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(assign) BOOL forceCertificateDecisionDelegation; //!< YES if certificateProceedHandler and the connection (delegate) should be consulted even if the certificate has no issues or was previously approved by the user. [not serialized]
 
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
+@property(strong) NSDictionary *userInfo;		//!< User-info for free use. All contents should be serializable.
 
 @property(assign,nonatomic) OCConnectionRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority)
 @property(strong) OCConnectionRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 @property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
 
 @property(assign) BOOL downloadRequest;			//!< If the request is for the download of a file and the response body should be written to a file.
-@property(strong) NSURL *downloadedFile;		//!< If downloadRequest is YES, location of the downloaded file
+@property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.
+@property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (mostly if downloadedFileURL was set before starting the download).
 
 @property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
 @property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served

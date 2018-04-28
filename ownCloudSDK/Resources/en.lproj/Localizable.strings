@@ -12,3 +12,5 @@
 "Error" = "Error";
 "Fetching user information…" = "Fetching user information…";
 "Connected" = "Connected";
+
+"Retrieving thumbnail…" = "Retrieving thumbnail…";

@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 	OCConnectionQueueTrustActionProceed
 };
 
-@interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
+@interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate>
 {
 	__weak OCConnection *_connection;
 

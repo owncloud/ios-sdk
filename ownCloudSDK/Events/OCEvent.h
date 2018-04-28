@@ -58,6 +58,11 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	NSDictionary *_ephermalUserInfo;
 
 	NSDictionary *_attributes;
+
+	NSString *_mimeType;
+	NSData *_data;
+	NSError *_error;
+	id _result;
 }
 
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
@@ -67,8 +72,14 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 @property(strong) NSDictionary *attributes;	//!< Attributes of the event, describing what happened. (Catch-all in first draft, will be supplemented with additional object properties before implementation)
 
+@property(strong) NSString *mimeType;
+@property(strong) NSData *data;
+@property(strong) NSError *error;
+@property(strong) id result;
+
 #pragma mark - Event handler registration / resolution
 + (void)registerEventHandler:(id <OCEventHandler>)eventHandler forIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Registers an event handler for a particular name. Remove with a nil value for eventHandler.
++ (void)unregisterEventHandlerForIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Unregister an event handler.
 + (id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Retrieves the event handler stored for a particular identifier.
 
 #pragma mark - Creating events

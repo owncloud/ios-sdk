@@ -80,6 +80,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 	__weak id <OCConnectionHostSimulator> _hostSimulator;
 
+	NSDictionary<NSString *, id> *_serverStatus;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -122,7 +124,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
 - (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)retrieveThumbnailFor:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
@@ -182,16 +184,36 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+#pragma mark - COMPATIBILITY
+@interface OCConnection (Compatibility)
+
+#pragma mark - Version
+- (NSString *)serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
+- (NSString *)serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
+- (BOOL)runsServerVersionOrHigher:(NSString *)version; //!< Returns YES if the server runs at least [version].
+
+- (NSString *)serverProductName; //!< After connecting, the product name of the server ("productname"), f.ex. "ownCloud".
+- (NSString *)serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
+
+- (NSString *)serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
+
+#pragma mark - API Switches
+- (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+
+@end
+
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
+extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 
 extern OCClassSettingsKey OCConnectionInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
+extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 
 #import "OCClassSettings.h"
 

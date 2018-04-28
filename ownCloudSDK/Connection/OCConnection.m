@@ -26,6 +26,8 @@
 #import "OCConnectionDAVRequest.h"
 #import "OCConnectionIssue.h"
 #import "OCLogger.h"
+#import "OCItem.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -64,9 +66,11 @@
 		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
+		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
 		OCConnectionInsertXRequestTracingID 		: @(YES),
-		OCConnectionStrictBookmarkCertificateEnforcement: @(YES)
+		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
+		OCConnectionMinimumVersionRequired		: @"9.0"
 	});
 }
 
@@ -336,14 +340,35 @@
 				{
 					NSError *jsonError = nil;
 					
-					if ([request responseBodyConvertedDictionaryFromJSONWithError:&jsonError] == nil)
+					if ((_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
 					{
 						// JSON decode error
 						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
 					}
 					else
 					{
-						// Got status successfully => now authenticate connection
+						// Got status successfully => now check minimum version + authenticate connection
+
+						// Check minimum version
+						{
+							NSString *minimumVersion;
+
+							if ((minimumVersion = [self classSettingForOCClassSettingsKey:OCConnectionMinimumVersionRequired]) != nil)
+							{
+								if (![self runsServerVersionOrHigher:minimumVersion])
+								{
+									NSError *minimumVersionError = [NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
+										NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"This server runs an unsupported version (%@). Version %@ or later is required by this app.", @""), self.serverLongProductVersionString, minimumVersion]
+									}];
+
+									completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
+
+									return;
+								}
+							}
+						}
+
+						// Authenticate connection
 						connectProgress.localizedDescription = OCLocalizedString(@"Authenticating…", @"");
 
 						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
@@ -422,6 +447,8 @@
 		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
 			self.state = OCConnectionStateDisconnected;
 
+			_serverStatus = nil;
+
 			if (completionHandler!=nil)
 			{
 				completionHandler();
@@ -431,6 +458,8 @@
 	else
 	{
 		self.state = OCConnectionStateDisconnected;
+
+		_serverStatus = nil;
 
 		if (completionHandler!=nil)
 		{
@@ -533,14 +562,154 @@
 	return(nil);
 }
 
-
-- (NSProgress *)retrieveThumbnailFor:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget
+#pragma mark - Action: Retrieve Thumbnail
+- (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSURL *url = nil;
+	OCConnectionRequest *request = nil;
+	NSError *error = nil;
+	NSProgress *progress = nil;
+
+	if (item.type != OCItemTypeCollection)
+	{
+		if (self.supportsPreviewAPI)
+		{
+			// Preview API (OC 10.0.9+)
+			url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+			// Add path
+			if (item.path != nil)
+			{
+				url = [url URLByAppendingPathComponent:item.path];
+			}
+
+			// Compose request
+			request = [OCConnectionRequest requestWithURL:url];
+
+			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+				@(size.width).stringValue, 	@"x",
+				@(size.height).stringValue,	@"y",
+				item.eTag, 			@"c",
+				@"1",				@"a", // Request resize respecting aspect ratio 
+				@"1", 				@"preview",
+			nil];
+		}
+		else
+		{
+			// Thumbnail API (OC < 10.0.9)
+			url = [self URLForEndpoint:OCConnectionEndpointIDThumbnail options:nil];
+
+			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
+
+			// Compose request
+			request = [OCConnectionRequest requestWithURL:url];
+			/*
+
+			// Not supported for OC < 10.0.9
+			error = [NSError errorWithOCError:OCErrorFeatureNotSupportedByServer];
+			*/
+		}
+	}
+	else
+	{
+		error = [NSError errorWithOCError:OCErrorFeatureNotSupportedForItem];
+	}
+
+	if (request != nil)
+	{
+		request.eventTarget = eventTarget;
+		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+			item.versionIdentifier,	  	@"itemVersionIdentifier",
+			[NSValue valueWithCGSize:size],	@"maximumSize",
+		nil];
+		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
+
+		if (localThumbnailURL != nil)
+		{
+			request.downloadRequest = YES;
+			request.downloadedFileURL = localThumbnailURL;
+		}
+
+		// Enqueue request
+		if (request.downloadRequest)
+		{
+			[self.downloadQueue enqueueRequest:request];
+		}
+		else
+		{
+			[self.commandQueue enqueueRequest:request];
+		}
+
+		progress = request.progress;
+	}
+	else
+	{
+		
+	}
+
+	if (error != nil)
+	{
+		[eventTarget handleError:error type:OCEventTypeRetrieveThumbnail sender:self];
+	}
+
+	return(progress);
 }
 
+- (void)_handleRetrieveThumbnailResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
 
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveThumbnail attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
+				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[@"itemVersionIdentifier"];
+				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
+
+				thumbnail.mimeType = request.response.allHeaderFields[@"Content-Type"];
+
+				if (request.responseBodyData != nil)
+				{
+					thumbnail.data = request.responseBodyData;
+				}
+				else
+				{
+					if (request.downloadedFileURL)
+					{
+						if (request.downloadedFileIsTemporary)
+						{
+							thumbnail.data = [NSData dataWithContentsOfURL:request.downloadedFileURL];
+						}
+						else
+						{
+							thumbnail.url = request.downloadedFileURL;
+						}
+					}
+				}
+
+				thumbnail.versionIdentifier = itemVersionIdentifier;
+				thumbnail.maximumSizeInPixels = maximumSize;
+
+				event.result = thumbnail;
+			}
+			else
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+		}
+	}
+
+	[request.eventTarget handleEvent:event sender:self];
+}
+
+#pragma mark - Actions
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
@@ -602,9 +771,11 @@ OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilit
 OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
+OCConnectionEndpointID OCConnectionEndpointIDThumbnail = @"endpoint-thumbnail";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 
 OCClassSettingsKey OCConnectionInsertXRequestTracingID = @"connection-insert-x-request-id";
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
+OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";

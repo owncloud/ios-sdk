@@ -17,13 +17,19 @@
  */
 
 #import "OCItem.h"
+#import "OCCore.h"
 
 @implementation OCItem
 
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
 {
-	return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+	if (serializedData != nil)
+	{
+		return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+	}
+
+	return (nil);
 }
 
 - (NSData *)serializedData
@@ -63,10 +69,23 @@
 	[coder encodeObject:_shares		forKey:@"shares"];
 }
 
+#pragma mark - Init & Dealloc
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
+	}
+
+	return (self);
+}
+
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
 	if ((self = [super init]) != nil)
 	{
+		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
+
 		_type = [decoder decodeIntegerForKey:@"type"];
 
 		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
@@ -98,6 +117,63 @@
 - (NSString *)name
 {
 	return ([self.path lastPathComponent]);
+}
+
+- (void)setETag:(OCFileETag)eTag
+{
+	_eTag = eTag;
+	_versionIdentifier = nil;
+}
+
+- (void)setFileID:(OCFileID)fileID
+{
+	_fileID = fileID;
+	_versionIdentifier = nil;
+}
+
+- (OCItemVersionIdentifier *)versionIdentifier
+{
+	if (_versionIdentifier == nil)
+	{
+		_versionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:_fileID eTag:_eTag];
+	}
+
+	return (_versionIdentifier);
+}
+
+- (OCItemThumbnailAvailability)thumbnailAvailability
+{
+	if (_thumbnailAvailability == OCItemThumbnailAvailabilityInternal)
+	{
+		if (_type == OCItemTypeCollection)
+		{
+			_thumbnailAvailability = OCItemThumbnailAvailabilityNone;
+		}
+		else
+		{
+			_thumbnailAvailability = OCItemThumbnailAvailabilityUnknown;
+
+			if (_mimeType != nil)
+			{
+				if (![OCCore thumbnailSupportedForMIMEType:_mimeType])
+				{
+					_thumbnailAvailability = OCItemThumbnailAvailabilityNone;
+				}
+			}
+		}
+	}
+
+	return (_thumbnailAvailability);
+}
+
+- (void)setThumbnail:(OCItemThumbnail *)thumbnail
+{
+	_thumbnail = thumbnail;
+
+	if (thumbnail != nil)
+	{
+		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
+	}
 }
 
 #pragma mark - Description

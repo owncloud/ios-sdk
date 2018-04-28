@@ -25,6 +25,7 @@
 #import "OCConnection.h"
 #import "OCShare.h"
 #import "OCReachabilityMonitor.h"
+#import "OCCache.h"
 
 @class OCCore;
 @class OCItem;
@@ -39,6 +40,8 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 };
 
 typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item);
+typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, id retrievedObject, BOOL isOngoing, NSProgress *progress);
+typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCoreActionShareHandler)(NSError *error, OCCore *core, OCItem *item, OCShare *share);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 
@@ -48,7 +51,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @end
 
-@interface OCCore : NSObject <OCEventHandler>
+@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport>
 {
 	OCBookmark *_bookmark;
 
@@ -62,7 +65,12 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
 
+	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
+	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
+
 	OCCoreState _state;
+
+	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -75,11 +83,15 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @property(readonly,nonatomic) OCCoreState state;
 
+@property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
+
 @property(weak) id <OCCoreDelegate> delegate;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
+
+- (void)unregisterEventHandler; //!< Unregisters the core as an event handler. Should only be called after the core has been stopped and called the completionHandler. This call is needed to clear the last reference to the core and remove it from memory.
 
 #pragma mark - Start / Stop Core
 - (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler;
@@ -103,7 +115,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 - (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 
-- (NSProgress *)retrieveThumbnailFor:(OCItem *)item resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
++ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionShareHandler)resultHandler;
 
@@ -113,3 +126,5 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)synchronizeWithServer;
 
 @end
+
+extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;

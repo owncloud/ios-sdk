@@ -21,6 +21,9 @@
 
 typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
 
+typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+typedef NSString* OCFileETag; //!< Identifier unique to a specific combination of contents and metadata. Can be used to detect changes. (files and folders)
+
 typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
 
 typedef void(^OCCompletionHandler)(id sender, NSError *error);

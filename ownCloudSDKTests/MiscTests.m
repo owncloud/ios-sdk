@@ -113,6 +113,8 @@
 
 	NSLog(@"%@", [xmlDocument nodesForXPath:@"D:propfind/D:prop/size"]);
 
+	XCTAssert([[xmlDocument XMLString] isEqualToString:[NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<D:propfind xmlns:D=\"DAV:\">\n<D:prop>\n<D:resourcetype/>\n<D:getlastmodified/>\n<D:creationdate/>\n<D:getcontentlength/>\n<D:displayname/>\n<D:getcontenttype/>\n<D:getetag/>\n<D:quota-available-bytes/>\n<D:quota-used-bytes/>\n<size xmlns=\"http://owncloud.org/ns\"/>\n<id xmlns=\"http://owncloud.org/ns\"/>\n<permissions xmlns=\"http://owncloud.org/ns\"/>\n<test escapeThese=\"Attribute &quot;&apos;&amp;&lt;&gt;\">Value &quot;&apos;&amp;&lt;&gt;</test>\n</D:prop>\n</D:propfind>\n"]], @"Produced XML as expected.");
+
 }
 
 - (void)testXMLDecoding
@@ -131,6 +133,105 @@
 	[parser parse];
 
 	NSLog(@"Parsed objects: %@", parser.parsedObjects);
+
+	NSArray <OCItem *> *items = parser.parsedObjects;
+
+	XCTAssert(items.count == 4, @"4 items");
+	XCTAssert([items[0].name isEqual:@"/"], @"Name match: %@", items[0].name);
+	XCTAssert([items[1].name isEqual:@"Documents"], @"Name match: %@", items[1].name);
+	XCTAssert([items[2].name isEqual:@"Photos"], @"Name match: %@", items[2].name);
+	XCTAssert([items[3].name isEqual:@"ownCloud Manual.pdf"], @"Name match: %@", items[3].name);
+
+	XCTAssert(items[0].mimeType == nil, @"Type match: %@", items[0].mimeType);
+	XCTAssert(items[1].mimeType == nil, @"Type match: %@", items[1].mimeType);
+	XCTAssert(items[2].mimeType == nil, @"Type match: %@", items[2].mimeType);
+	XCTAssert([items[3].mimeType isEqual:@"application/pdf"], @"Type match: %@", items[3].mimeType);
+
+	XCTAssert((items[0].type == OCItemTypeCollection), @"Type match: %ld", (long)items[0].type);
+	XCTAssert((items[1].type == OCItemTypeCollection), @"Type match: %ld", (long)items[1].type);
+	XCTAssert((items[2].type == OCItemTypeCollection), @"Type match: %ld", (long)items[2].type);
+	XCTAssert((items[3].type == OCItemTypeFile), 	   @"Type match: %ld", (long)items[3].type);
+}
+
+- (void)testCacheCountLimit
+{
+	OCCache *cache = [OCCache new];
+
+	cache.countLimit = 2;
+
+	[cache setObject:@"1" forKey:@"1"];
+	XCTAssert([[cache objectForKey:@"1"] isEqual:@"1"], @"Value saved");
+
+	[cache setObject:@"2" forKey:@"2"];
+	XCTAssert([[cache objectForKey:@"2"] isEqual:@"2"], @"Value saved");
+
+	[cache setObject:@"3" forKey:@"3"];
+	XCTAssert([[cache objectForKey:@"3"] isEqual:@"3"], @"Value saved");
+
+	// Value 1 should have been discarded at this point
+	XCTAssert([cache objectForKey:@"1"] == nil, @"Value 1 auto-removed from cache");
+}
+
+- (void)testCacheCostLimit
+{
+	OCCache *cache = [OCCache new];
+
+	cache.totalCostLimit = 200;
+
+	[cache setObject:@"1" forKey:@"1" cost:100];
+	XCTAssert([[cache objectForKey:@"1"] isEqual:@"1"], @"Value saved");
+
+	[cache setObject:@"2" forKey:@"2" cost:50];
+	XCTAssert([[cache objectForKey:@"2"] isEqual:@"2"], @"Value saved");
+
+	[cache setObject:@"3" forKey:@"3" cost:50];
+	XCTAssert([[cache objectForKey:@"3"] isEqual:@"3"], @"Value saved");
+
+	XCTAssert([cache objectForKey:@"1"] != nil, @"Value 1 still in cache");
+	XCTAssert([cache objectForKey:@"2"] != nil, @"Value 2 still in cache");
+	XCTAssert([cache objectForKey:@"3"] != nil, @"Value 3 still in cache");
+
+	[cache setObject:@"4" forKey:@"4" cost:1];
+	XCTAssert([[cache objectForKey:@"4"] isEqual:@"4"], @"Value saved");
+
+	// Value 1 should have been discarded at this point
+	XCTAssert([cache objectForKey:@"1"] == nil, @"Value 1 auto-removed from cache");
+	XCTAssert([cache objectForKey:@"2"] != nil, @"Value 2 still in cache");
+	XCTAssert([cache objectForKey:@"3"] != nil, @"Value 3 still in cache");
+	XCTAssert([cache objectForKey:@"4"] != nil, @"Value 4 still in cache");
+}
+
+- (void)testCacheUnlimited
+{
+	OCCache *cache = [OCCache new];
+
+	[cache setObject:@"1" forKey:@"1"];
+	XCTAssert([[cache objectForKey:@"1"] isEqual:@"1"], @"Value saved");
+
+	[cache setObject:@"2" forKey:@"2"];
+	XCTAssert([[cache objectForKey:@"2"] isEqual:@"2"], @"Value saved");
+
+	[cache setObject:@"3" forKey:@"3"];
+	XCTAssert([[cache objectForKey:@"3"] isEqual:@"3"], @"Value saved");
+
+	XCTAssert([cache objectForKey:@"1"] != nil, @"Value 1 still in cache");
+	XCTAssert([cache objectForKey:@"2"] != nil, @"Value 2 still in cache");
+	XCTAssert([cache objectForKey:@"3"] != nil, @"Value 3 still in cache");
+}
+
+- (void)testHashes
+{
+	NSData *data = [@"Hello" dataUsingEncoding:NSUTF8StringEncoding];
+
+	NSLog(@"%@", [[data md5Hash] asHexStringWithSeparator:@" "]);
+	XCTAssert([[[data md5Hash] asHexStringWithSeparator:@" "] isEqual:@"8B 1A 99 53 C4 61 12 96 A8 27 AB F8 C4 78 04 D7"]);
+
+	NSLog(@"%@", [[data sha1Hash] asHexStringWithSeparator:@" "]);
+	XCTAssert([[[data sha1Hash] asHexStringWithSeparator:@" "] isEqual:@"F7 FF 9E 8B 7B B2 E0 9B 70 93 5A 5D 78 5E 0C C5 D9 D0 AB F0"]);
+
+	NSLog(@"%@", [[data sha256Hash] asHexStringWithSeparator:@" "]);
+	XCTAssert([[[data sha256Hash] asHexStringWithSeparator:@" "] isEqual:@"18 5F 8D B3 22 71 FE 25 F5 61 A6 FC 93 8B 2E 26 43 06 EC 30 4E DA 51 80 07 D1 76 48 26 38 19 69"]);
+
 }
 
 @end

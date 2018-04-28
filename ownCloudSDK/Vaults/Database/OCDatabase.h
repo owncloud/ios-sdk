@@ -17,15 +17,19 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+
 #import "OCSQLiteDB.h"
 #import "OCTypes.h"
 #import "OCSQLiteTableSchema.h"
 
 @class OCDatabase;
 @class OCItem;
+@class OCItemVersionIdentifier;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCItem *> *items);
+typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
 
 typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 
@@ -59,12 +63,15 @@ typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
+#pragma mark - Thumbnail interface
+- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType forItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
+
 #pragma mark - Sync interface
 
 #pragma mark - Log interface
 
-#pragma mark - Thumbnail interface
-
 @end
 
 extern OCDatabaseTableName OCDatabaseTableNameMetaData;
+extern OCDatabaseTableName OCDatabaseTableNameThumbnails;
