@@ -53,7 +53,7 @@
 {
 	return (@{
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
-			@"image/"
+			@"*"
 		]
 	});
 }
@@ -62,10 +62,26 @@
 {
 	static dispatch_once_t onceToken;
 	static NSArray <NSString *> *supportedPrefixes;
+	static BOOL loadThumbnailsForAll=NO, loadThumbnailsForNone=NO;
 
 	dispatch_once(&onceToken, ^{
 		supportedPrefixes = [[[OCClassSettings sharedSettings] settingsForClass:[OCCore class]] objectForKey:OCCoreThumbnailAvailableForMIMETypePrefixes];
+
+		if (supportedPrefixes.count == 0)
+		{
+			loadThumbnailsForNone = YES;
+		}
+		else
+		{
+			if ([supportedPrefixes containsObject:@"*"])
+			{
+				loadThumbnailsForAll = YES;
+			}
+		}
 	});
+
+	if (loadThumbnailsForAll)  { return(YES); }
+	if (loadThumbnailsForNone) { return(NO);  }
 
 	for (NSString *prefix in supportedPrefixes)
 	{

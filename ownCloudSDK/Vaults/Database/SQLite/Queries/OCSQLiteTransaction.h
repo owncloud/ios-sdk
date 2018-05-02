@@ -40,6 +40,8 @@ typedef NS_ENUM(NSUInteger, OCSQLiteTransactionType) //!< See https://www.sqlite
 
 @property(copy) OCSQLiteTransactionCompletionHandler completionHandler; //!< Called after commit or rollback of transaction.
 
+@property(strong) id userInfo; //!< User info. Can be used to store any kind of object.
+
 + (instancetype)transactionWithQueries:(NSArray <OCSQLiteQuery *> *)queries type:(OCSQLiteTransactionType)type completionHandler:(OCSQLiteTransactionCompletionHandler)completionHandler;
 + (instancetype)transactionWithBlock:(OCSQLiteTransactionBlock)block type:(OCSQLiteTransactionType)type completionHandler:(OCSQLiteTransactionCompletionHandler)completionHandler;
 

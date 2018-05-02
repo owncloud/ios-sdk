@@ -595,6 +595,9 @@
 			// Compose request
 			request = [OCConnectionRequest requestWithURL:url];
 
+			request.groupID = item.path.stringByDeletingLastPathComponent;
+			request.priority = NSURLSessionTaskPriorityLow;
+
 			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 				@(size.width).stringValue, 	@"x",
 				@(size.height).stringValue,	@"y",

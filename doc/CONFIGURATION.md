@@ -47,9 +47,9 @@ This document provides an overview over the available sections and variables.
 - **Section ID**: `core`
 
 - **Variables**:
-	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array.
+	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `["*"]` turns on thumbnail loading for all items.
 		- type: array
-		- default: `["image/"]`
+		- default: `["*"]`
 
 ## OAuth2
 

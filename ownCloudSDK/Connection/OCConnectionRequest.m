@@ -75,6 +75,8 @@
 		self.progress.cancellationHandler = ^{
 			[weakSelf cancel];
 		};
+
+		self.priority = NSURLSessionTaskPriorityDefault;
 	}
 	
 	return(self);

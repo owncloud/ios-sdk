@@ -30,8 +30,10 @@
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCItem *> *items);
 typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
+typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
 typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
+typedef NSString* OCDatabaseCounterIdentifier;
 
 @interface OCDatabase : NSObject
 {
@@ -71,7 +73,10 @@ typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 
 #pragma mark - Log interface
 
+#pragma mark - Integrity / Synchronization primitives
+- (void)retrieveValueForCounter:(OCDatabaseCounterIdentifier)counterIdentifier completionHandler:(void(^)(NSError *error, NSNumber *counterValue))completionHandler;
+- (void)increaseValueForCounter:(OCDatabaseCounterIdentifier)counterIdentifier withProtectedBlock:(NSError *(^)(NSNumber *previousCounterValue, NSNumber *newCounterValue))protectedBlock completionHandler:(OCDatabaseProtectedBlockCompletionHandler)completionHandler;
+
 @end
 
-extern OCDatabaseTableName OCDatabaseTableNameMetaData;
-extern OCDatabaseTableName OCDatabaseTableNameThumbnails;
+#import "OCDatabase+Schemas.h"
