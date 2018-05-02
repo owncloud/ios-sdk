@@ -33,7 +33,9 @@
 
 			if (_loggedInUser.userName != nil)
 			{
-				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
+				NSString *percentEscapedUserName = [_loggedInUser.userName stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
+
+				endpointPath = [endpointPath stringByAppendingPathComponent:percentEscapedUserName];
 			}
 		}
 		else

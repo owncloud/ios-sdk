@@ -278,19 +278,14 @@
 		OCConnectionEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCConnectionEphermalResultHandler) = ^(OCConnectionEphermalResultHandler resultHandler)
 		{
 			return ^(OCConnectionRequest *request, NSError *error){
-				if (error != nil)
-				{
-					// An error occured
-					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
-					completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
-					resultHandler(request, error);
-				}
-				else
+				if (error == nil)
 				{
 					if (request.responseHTTPStatus.isSuccess)
 					{
 						// Success
 						resultHandler(request, error);
+
+						return;
 					}
 					else if (request.responseHTTPStatus.isRedirection)
 					{
@@ -326,9 +321,23 @@
 						connectProgress.localizedDescription = @"";
 						completionHandler(error, issue);
 						resultHandler(request, error);
+
+						return;
+					}
+					else
+					{
+						// Unknown / Unexpected HTTP status => return an error
+						error = [request.responseHTTPStatus error];
 					}
 				}
 
+				if (error != nil)
+				{
+					// An error occured
+					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
+					completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+					resultHandler(request, error);
+				}
 			};
 		};
 

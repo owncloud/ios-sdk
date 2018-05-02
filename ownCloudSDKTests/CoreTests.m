@@ -11,7 +11,10 @@
 #import "OCHostSimulator.h"
 #import "OCCore+Internal.h"
 
-@interface CoreTests : XCTestCase
+@interface CoreTests : XCTestCase <OCCoreDelegate>
+{
+	void (^coreErrorHandler)(OCCore *core, NSError *error, OCConnectionIssue *issue);
+}
 
 @end
 
@@ -540,6 +543,72 @@
 		};
 
 		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue
+{
+	NSLog(@"Core: %@ Error: %@ Issue: %@", core, error, issue);
+	if (coreErrorHandler != nil)
+	{
+		coreErrorHandler(core, error, issue);
+	}
+}
+
+- (void)testInvalidLoginData
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreErrorExpectation = [self expectationWithDescription:@"Core reported error"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	OCHostSimulator *hostSimulator = [[OCHostSimulator alloc] init];
+
+	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		// Return host not found errors by default
+		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
+
+		XCTFail(@"Request for %@ when no request should have been made.", request.url);
+
+		return (YES);
+	};
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"invalid" passphrase:@"wrong" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.delegate = self;
+
+	__weak CoreTests *weakSelf = self;
+
+	coreErrorHandler = ^(OCCore *core, NSError *error, OCConnectionIssue *issue) {
+		_XCTPrimitiveAssertTrue(weakSelf, (error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain]), @"(error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain])"); // Expected error received
+		[coreErrorExpectation fulfill];
+	};
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		NSLog(@"Core: %@ Error: %@", core, error);
+
+		[coreStartedExpectation fulfill];
+
+		// Stop core
+		[core stopWithCompletionHandler:^(id sender, NSError *error) {
+			XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+			[coreStoppedExpectation fulfill];
+		}];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
