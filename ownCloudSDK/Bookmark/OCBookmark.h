@@ -22,7 +22,13 @@
 
 typedef NSUUID* OCBookmarkUUID;
 
-@interface OCBookmark : NSObject <NSSecureCoding>
+typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
+{
+	OCBookmarkAuthenticationDataStorageKeychain, 	//!< Store authenticationData in the keychain. Default.
+	OCBookmarkAuthenticationDataStorageMemory	//!< Store authenticationData in memory. Should only be used temporarily, for f.ex. editing contexts, where temporarily decoupling the data from the keychain can be desirable.
+};
+
+@interface OCBookmark : NSObject <NSSecureCoding, NSCopying>
 
 @property(readonly) OCBookmarkUUID uuid; //!< UUID uniquely identifying the bookmark
 
@@ -35,17 +41,19 @@ typedef NSUUID* OCBookmarkUUID;
 @property(strong) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
 
 @property(strong) OCAuthenticationMethodIdentifier authenticationMethodIdentifier; //!< Identifies the authentication method to use
-@property(strong,nonatomic) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain.
+@property(strong,nonatomic) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.
+@property(assign,nonatomic) OCBookmarkAuthenticationDataStorage authenticationDataStorage; //! Determines where to store authenticationData. Keychain by default. Changing the storage copies the data from the old to the new storage.
 
-@property(assign) BOOL requirePIN; //!< YES if the user needs to enter a PIN before using this bookmark.
-@property(strong,nonatomic) NSString *pin; //!< The PIN the user needs to enter. Backed by keychain.
-
+#pragma mark - Creation
 + (instancetype)bookmarkForURL:(NSURL *)url; //!< Creates a bookmark for the ownCloud server with the specified URL.
 
+#pragma mark - Persist / Restore
 + (instancetype)bookmarkFromBookmarkData:(NSData *)bookmarkData; //!< Creates a bookmark from BookmarkData
-
 - (NSData *)bookmarkData; //!< Returns the BookmarkData for the bookmark, suitable for saving to disk.
+
+#pragma mark - Data replacement
+- (void)setValuesFrom:(OCBookmark *)sourceBookmark; //!< Replaces all values in the receiving bookmark with those in the source bookmark.
 
 @end
 
-extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark#s authenticationData is changed. The object of the notification is the bookmark.
+extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.

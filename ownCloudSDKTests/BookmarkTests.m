@@ -91,14 +91,12 @@
 {
 	// Test if PINs or authentication data is stored in the serialized bookmark (which it shouldn't be)
 	NSData *serializedData;
-	NSData *secretStringData = [@"SECRETPIN" dataUsingEncoding:NSUTF8StringEncoding];
 	OCBookmark *bookmark;
 	
 	[OCAppIdentity sharedAppIdentity].keychain = [OCKeychain new]; // Use app-default keychain (accessing an keychain access group inside a test may be difficult due to code signing requirements)
 	
 	// Put data into bookmark that should be findable in the serialized version
 	bookmark = [[OCBookmark alloc] init];
-	bookmark.pin = @"SECRETPIN";
 	bookmark.authenticationData = [@"SECRETDATA" dataUsingEncoding:NSUTF8StringEncoding];;
 
 	// Create serialized data
@@ -107,21 +105,17 @@
 	// Check if the generated data could be bogus because something went wrong
 	XCTAssert((bookmark!=nil), @"bookmark is not nil");
 	XCTAssert((serializedData!=nil), @"serializedData is not nil");
-	XCTAssert((secretStringData!=nil), @"secretStringData is not nil");
 
 	// Test serialized data
-	XCTAssert(([serializedData rangeOfData:secretStringData options:0 range:NSMakeRange(0, serializedData.length)].location == NSNotFound), @"OCBookmark.pin must not be findable inside the serialized data");
 	XCTAssert(([serializedData rangeOfData:bookmark.authenticationData options:0 range:NSMakeRange(0, serializedData.length)].location == NSNotFound), @"OCBookmark.authenticationData must be findable inside the serialized data");
 	
 	// Remove data from keychain
-	bookmark.pin = nil;
 	bookmark.authenticationData = nil;
 }
 
 - (void)testStoreRetrieveAndDeletionOfSecrets
 {
 	NSData *serializedData;
-	NSString *secretPIN = @"SECRETPIN";
 	NSData *secretAuthData = [@"SECRETDATA" dataUsingEncoding:NSUTF8StringEncoding];
 	OCBookmark *bookmark;
 	OCBookmark *restoredBookmark;
@@ -130,7 +124,6 @@
 
 	// Store data
 	bookmark = [[OCBookmark alloc] init];
-	bookmark.pin = secretPIN;
 	bookmark.authenticationData = secretAuthData;
 	
 	serializedData = [bookmark bookmarkData];
@@ -143,11 +136,9 @@
 	XCTAssert((restoredBookmark!=nil), @"restoredBookmark is not nil");
 	
 	// Check if restoredBookmark's pin and authenticationData match that of bookmark
-	XCTAssert(([bookmark.pin isEqual:restoredBookmark.pin]), @"bookmark.pin == restoredBookmark.pin");
 	XCTAssert(([bookmark.authenticationData isEqual:restoredBookmark.authenticationData]), @"bookmark.authenticationData == restoredBookmark.authenticationData");
 
 	// Check if deletion of secrets also deletes them from restored bookmarks
-	bookmark.pin = nil;
 	bookmark.authenticationData = nil;
 
 	restoredBookmark = [OCBookmark bookmarkFromBookmarkData:serializedData];
@@ -156,7 +147,6 @@
 	XCTAssert((serializedData!=nil), @"serializedData is not nil");
 	XCTAssert((restoredBookmark!=nil), @"restoredBookmark is not nil");
 
-	XCTAssert((restoredBookmark.pin == nil), @"restoredBookmark.pin == nil");
 	XCTAssert((restoredBookmark.authenticationData == nil), @"restoredBookmark.authenticationData == nil");
 }
 
