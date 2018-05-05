@@ -198,6 +198,7 @@
 						if (decision == OCConnectionIssueDecisionApprove)
 						{
 							_bookmark.certificate = request.responseCertificate;
+							_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]];
 				}

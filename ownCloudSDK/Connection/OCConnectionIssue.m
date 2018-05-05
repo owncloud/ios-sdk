@@ -154,7 +154,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		OCConnectionIssueLevel highestLevel = OCConnectionIssueLevelWarning;
+		OCConnectionIssueLevel highestLevel = OCConnectionIssueLevelInformal;
 	
 		_type = OCConnectionIssueTypeGroup;
 
