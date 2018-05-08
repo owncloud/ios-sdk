@@ -32,8 +32,8 @@
 	- OCClassSettings thereby provides a central, flexible mechanism to modify the behaviour and default values of classes in the SDK (ready for customization and MDM)
 */
 
-typedef NSString* OCClassSettingsIdentifier;
-typedef NSString* OCClassSettingsKey;
+typedef NSString* OCClassSettingsIdentifier NS_TYPED_EXTENSIBLE_ENUM;
+typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
 @protocol OCClassSettingsSupport <NSObject>
 
