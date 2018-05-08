@@ -110,6 +110,7 @@
 	if (_authenticationDataStorage != authenticationDataStorage)
 	{
 		[self setAuthenticationData:self.authenticationData saveToKeychain:(authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
+		_authenticationDataStorage = authenticationDataStorage;
 	}
 }
 
