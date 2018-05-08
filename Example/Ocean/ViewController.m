@@ -49,6 +49,8 @@
 		{
 			[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodOAuth2Identifier options:@{ OCAuthenticationMethodPresentingViewControllerKey : self } completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
 				[self appendLog:[NSString stringWithFormat:@"## generateAuthenticationDataWithMethod response:\nError: %@\nMethod: %@\nData: %@", error, authenticationMethodIdentifier, authenticationData]];
+
+				[self appendLog:[NSString stringWithFormat:@"## User: %@", [[OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:authenticationMethodIdentifier] userNameFromAuthenticationData:authenticationData]]];
 				
 				if (error == nil)
 				{

@@ -112,6 +112,23 @@ OCAuthenticationMethodAutoRegister
 	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
 }
 
+#pragma mark - Authentication Data Access
++ (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData
+{
+	NSString *userName = nil;
+
+	if (authenticationData != nil)
+	{
+		NSDictionary <NSString *, id> *authDataDict;
+
+		if ((authDataDict = [NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]) != nil)
+		{
+			return (authDataDict[@"tokenResponse"][@"user_id"]);
+		}
+	}
+
+	return (userName);
+}
 
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
@@ -176,8 +193,8 @@ OCAuthenticationMethodAutoRegister
 					completionHandler(error, OCAuthenticationMethodOAuth2Identifier, nil);
 				}
 			
-				OCLog(@"Callback URL: %@", OCLogPrivate(callbackURL));
-				OCLog(@"Error: %@", error);
+				OCLogDebug(@"Callback URL: %@", OCLogPrivate(callbackURL));
+				OCLogDebug(@"Error: %@", OCLogPrivate(error));
 				
 				// Release Authentication Session
 				authenticationSession = nil;

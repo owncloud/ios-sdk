@@ -89,7 +89,7 @@ OCAuthenticationMethodAutoRegister
 	return (authenticationData);
 }
 
-#pragma mark - Passphrase-based Authentication Only
+#pragma mark - Authentication Data Access
 + (id)_objectForKey:(NSString *)key inAuthenticationData:(NSData *)authenticationData
 {
 	id authObject = nil;

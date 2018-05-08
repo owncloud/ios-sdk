@@ -55,10 +55,10 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 + (NSString *)name;
 - (NSString *)name;
 
-#pragma mark - Passphrase-based Authentication Only
-+ (BOOL)usesUserName; //!< This authentication method uses a user name
+#pragma mark - Authentication Data Access
++ (BOOL)usesUserName; //!< This authentication method uses a user name (passphrase-based only)
 + (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData; //!< Returns the user name stored inside authenticationData
-+ (NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData; //!< Returns the passphrase stored inside authenticationData
++ (NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData; //!< Returns the passphrase stored inside authenticationData (passphrase-based only)
 
 #pragma mark - Authentication Method Detection
 + (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported

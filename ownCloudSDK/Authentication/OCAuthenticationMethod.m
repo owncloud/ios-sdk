@@ -95,7 +95,7 @@
 	return ([[self class] name]);
 }
 
-#pragma mark - Passphrase-based Authentication Only
+#pragma mark - Authentication Data Access
 + (BOOL)usesUserName
 {
 	return ([self type] == OCAuthenticationMethodTypePassphrase);
@@ -113,6 +113,7 @@
 	return (nil);
 }
 
+#pragma mark - Init & Dealloc
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
