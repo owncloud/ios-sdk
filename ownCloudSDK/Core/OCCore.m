@@ -22,6 +22,7 @@
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
+#import "NSError+OCError.h"
 
 @interface OCCore ()
 {
@@ -130,7 +131,7 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 	}
-	
+
 	return(self);
 }
 
@@ -958,6 +959,7 @@
 								if (sendRequest)
 								{
 									OCEventTarget *target;
+									NSProgress *retrieveProgress;
 
 									// Define result event target
 									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
@@ -970,34 +972,33 @@
 									}];
 
 									// Request thumbnail from connection
-									[self.connection retrieveThumbnailFor:item to:nil maximumSize:requestedMaximumSizeInPixels resultTarget:target];
+									retrieveProgress = [self.connection retrieveThumbnailFor:item to:nil maximumSize:requestedMaximumSizeInPixels resultTarget:target];
+
+									if (retrieveProgress != nil) {
+										[progress addChild:retrieveProgress withPendingUnitCount:0];
+									}
 								}
 							}];
 						}
+						else
+						{
+							if (retrieveHandler != nil)
+							{
+								retrieveHandler(OCError(OCErrorRequestCancelled), self, item, nil, NO, progress);
+							}
+						}
 					}];
+				}
+				else
+				{
+					if (retrieveHandler != nil)
+					{
+						retrieveHandler(OCError(OCErrorRequestCancelled), self, item, nil, NO, progress);
+					}
 				}
 			}
 		}];
 	}
-
-		/*
-		Idea:
-		- on call
-			- check if objectForKey is still current eTag
-
-			- if yes:
-				- check size
-					- if smaller
-						- return thumb (willRefresh: YES)
-						- request bigger one
-					- if bigger
-						- compute smaller one (willRefresh: NO)
-
-			- if no:
-				- remove old one from cache
-				- request new one
-					- return thumb (willRefresh: NO)
-		*/
 
 	return(progress);
 }
