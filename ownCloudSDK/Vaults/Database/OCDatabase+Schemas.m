@@ -133,6 +133,74 @@
 		}]
 	];
 
+    // Version 3
+    [self.sqlDB addTableSchema:[OCSQLiteTableSchema
+            schemaWithTableName:OCDatabaseTableNameMetaData
+            version:3
+            creationQueries:@[
+                  /*
+                   mdID : INTEGER          - unique ID used to uniquely identify and efficiently update a row
+                   type : INTEGER        - OCItemType value to indicate if this is a file or a collection/folder
+                   locallyModified: INTEGER- value indicating if this is a file that's been created or modified locally
+                   localRelativePath: TEXT    - path of the local copy of the item, relative to the rootURL of the vault that stores it
+                   path : TEXT          - full path of the item (e.g. "/example/file.txt")
+                   parentPath : TEXT     - parent path of the item. (e.g. "/example" for an item at "/example/file.txt")
+                   name : TEXT           - name of the item (e.g. "file.txt" for an item at "/example/file.txt")
+                   fileID : TEXT        - OCFileID identifying the item
+                   itemData : BLOB          - data of the serialized OCItem
+                   favorite: INTEGER        - value indicating if this item has been selected as favorite in the server.
+                   */
+                  @"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY, type INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, fileID TEXT NOT NULL, itemData BLOB NOT NULL, favorite INTEGER NOT NULL)",
+                  ]
+            upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+                // Migrate to version 3
+                [db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+                    __block NSError *transactionError = nil;
+                    OCSQLiteDBResultHandler resultHandler = ^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+                        if (error != nil)
+                        {
+                        transactionError = error;
+                        }
+                    };
+
+                    // Add favorite column
+                    [db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE metaData ADD COLUMN favorite INTEGER" resultHandler:resultHandler]];
+                    if (transactionError != nil) {
+                        return(transactionError);
+                    }
+
+                    // Populate favorite column
+                    [db executeQuery:[OCSQLiteQuery querySelectingColumns:@[@"favorite"] fromTable:OCDatabaseTableNameMetaData where:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+                        [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *, id> *rowDictionary, BOOL *stop) {
+                            OCItem *item;
+
+                                if ((item = [OCItem itemFromSerializedData:rowDictionary[@"favorite"]]) != nil)
+                                {
+                                    [db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:rowDictionary[@"favorite"]
+                                                    inTable:OCDatabaseTableNameMetaData
+                                                    withRowValues:@{
+                                                        @"favorite" : @(item.favorite),
+                                                    }
+                                                    completionHandler:^(OCSQLiteDB *db, NSError *error) {
+                                                        if (error != nil)
+                                                        {
+                                                            transactionError = error;
+                                                        }
+                                                    }]
+                                     ];
+                                }
+                        } error:&transactionError];
+                    }]];
+                    if (transactionError != nil) { return(transactionError); }
+
+                    return (transactionError);
+
+                    } type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+                            completionHandler(error);
+                }]];
+            }]
+     ];
+
 	/*** Thumbnails ***/
 
 	// Version 1

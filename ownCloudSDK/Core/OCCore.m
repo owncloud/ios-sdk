@@ -589,7 +589,7 @@
 		if (cacheUpdateError != nil)
 		{
 			// An error occured updating the cache, so don't update queries either, log the error and return here
-			OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
+            OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
 			return;
 		}
 	}

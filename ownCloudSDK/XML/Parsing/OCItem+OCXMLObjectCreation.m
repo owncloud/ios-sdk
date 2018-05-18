@@ -71,6 +71,17 @@
 				}
 			} copy],
 
+            @"oc:favorite" : [^(OCItem *item, NSString *key, id value) {
+                if ([value isKindOfClass:[NSString class]])
+                {
+                    if (((NSString *)value).integerValue == 1) {
+                        item.favorite = YES;
+                    } else {
+                        item.favorite = NO;
+                    }
+                }
+            } copy],
+
 			@"oc:permissions" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{

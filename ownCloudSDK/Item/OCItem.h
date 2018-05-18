@@ -94,6 +94,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database (ephermal!)
 
+@property(assign) BOOL favorite; //!< If the Item has been selected favorite in the server.
+
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
 - (NSData *)serializedData;
