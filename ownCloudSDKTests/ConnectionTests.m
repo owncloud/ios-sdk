@@ -507,7 +507,7 @@
 	block(event, sender);
 }
 
-/*- (void)testConnectAndGetThumbnails
+- (void)testConnectAndGetThumbnails
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
@@ -593,7 +593,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	NSLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
-}*/
+}
 
 @end
 
