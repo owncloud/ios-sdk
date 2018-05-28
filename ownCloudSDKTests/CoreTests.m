@@ -603,14 +603,12 @@
 
 		[coreStartedExpectation fulfill];
 
-        [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
-            // Stop core
-            [core stopWithCompletionHandler:^(id sender, NSError *error) {
-                XCTAssert((error==nil), @"Stopped with error: %@", error);
+		// Stop core
+		[core stopWithCompletionHandler:^(id sender, NSError *error) {
+			XCTAssert((error==nil), @"Stopped with error: %@", error);
 
-                [coreStoppedExpectation fulfill];
-            }];
-        }];
+			[coreStoppedExpectation fulfill];
+		}];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
