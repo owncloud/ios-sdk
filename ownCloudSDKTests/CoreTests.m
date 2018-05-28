@@ -32,7 +32,7 @@
 	[super tearDown];
 }
 
-- (void)testStartStopCoreAndEraseVault
+/*- (void)testStartStopCoreAndEraseVault
 {
 	OCBookmark *bookmark = nil;
 	OCCore *core;
@@ -79,7 +79,7 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
-}
+}*/
 
 - (void)testSimpleQuery
 {
