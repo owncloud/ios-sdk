@@ -61,6 +61,7 @@
 
 		// Stop core
 		[core stopWithCompletionHandler:^(id sender, NSError *error) {
+            NSLog(@"Core stopped");
 			XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 			[coreStoppedExpectation fulfill];
@@ -189,6 +190,7 @@
 								{
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+                                        NSLog(@"Core stopped");
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 										[coreStoppedExpectation fulfill];
@@ -373,6 +375,7 @@
 
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+                                        NSLog(@"Core stopped");
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 										[coreStoppedExpectation fulfill];
@@ -526,6 +529,7 @@
 
 															// Stop core
 															[core stopWithCompletionHandler:^(id sender, NSError *error) {
+                                                                NSLog(@"Core stopped");
 																XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 																[coreStoppedExpectation fulfill];
@@ -610,6 +614,7 @@
 
 		// Stop core
 		[core stopWithCompletionHandler:^(id sender, NSError *error) {
+            NSLog(@"Core stopped");
 			XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 			[coreStoppedExpectation fulfill];
