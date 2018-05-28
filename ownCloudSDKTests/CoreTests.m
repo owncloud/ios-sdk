@@ -32,7 +32,7 @@
 	[super tearDown];
 }
 
-/*- (void)testStartStopCoreAndEraseVault
+- (void)testStartStopCoreAndEraseVault
 {
 	OCBookmark *bookmark = nil;
 	OCCore *core;
@@ -50,7 +50,6 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-        NSLog(@"Core started");
 		NSURL *vaultRootURL = core.vault.rootURL;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
@@ -61,7 +60,6 @@
 
 		// Stop core
 		[core stopWithCompletionHandler:^(id sender, NSError *error) {
-            NSLog(@"Core stopped");
 			XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 			[coreStoppedExpectation fulfill];
@@ -79,7 +77,7 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
-}*/
+}
 
 - (void)testSimpleQuery
 {
@@ -100,7 +98,6 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-        NSLog(@"Core started");
 		OCQuery *query;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
@@ -190,7 +187,6 @@
 								{
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
-                                        NSLog(@"Core stopped");
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 										[coreStoppedExpectation fulfill];
@@ -248,7 +244,6 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-        NSLog(@"Core started");
 		OCQuery *query;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
@@ -375,7 +370,6 @@
 
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
-                                        NSLog(@"Core stopped");
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 										[coreStoppedExpectation fulfill];
@@ -432,7 +426,6 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-        NSLog(@"Core started");
 		OCQuery *query;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
@@ -529,7 +522,6 @@
 
 															// Stop core
 															[core stopWithCompletionHandler:^(id sender, NSError *error) {
-                                                                NSLog(@"Core stopped");
 																XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 																[coreStoppedExpectation fulfill];
@@ -570,7 +562,6 @@
 	}
 }
 
-/*
 - (void)testInvalidLoginData
 {
 	OCBookmark *bookmark = nil;
@@ -608,14 +599,12 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-        NSLog(@"Core started");
 		NSLog(@"Core: %@ Error: %@", core, error);
 
 		[coreStartedExpectation fulfill];
 
 		// Stop core
 		[core stopWithCompletionHandler:^(id sender, NSError *error) {
-            NSLog(@"Core stopped");
 			XCTAssert((error==nil), @"Stopped with error: %@", error);
 
 			[coreStoppedExpectation fulfill];
@@ -628,6 +617,6 @@
 	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
-}*/
+}
 
 @end
