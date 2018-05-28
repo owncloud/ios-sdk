@@ -570,6 +570,7 @@
 	}
 }
 
+/*
 - (void)testInvalidLoginData
 {
 	OCBookmark *bookmark = nil;
@@ -627,6 +628,6 @@
 	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
-}
+}*/
 
 @end
