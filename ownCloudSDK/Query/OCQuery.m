@@ -117,6 +117,19 @@
 	}
 }
 
+- (void)updateFilter:(id<OCQueryFilter>)filter applyChanges:(void(^)(id<OCQueryFilter> filter))applyChangesBlock
+{
+	if (filter == nil) { return; }
+	if (applyChangesBlock == nil) { return; }
+
+	@synchronized(self)
+	{
+		applyChangesBlock(filter);
+	}
+
+	[self setNeedsRecomputation];
+}
+
 - (void)removeFilter:(id<OCQueryFilter>)filter
 {
 	if (filter == nil) { return; }

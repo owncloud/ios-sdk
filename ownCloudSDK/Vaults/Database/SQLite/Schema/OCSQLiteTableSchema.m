@@ -20,7 +20,7 @@
 
 @implementation OCSQLiteTableSchema
 
-+ (instancetype)schemaWithTableName:(NSString *)tableName version:(NSUInteger)version creationQueries:(NSArray<NSString *> *)creationQueries upgradeMigrator:(OCSQLiteTableSchemaMigrator)migrator
++ (instancetype)schemaWithTableName:(NSString *)tableName version:(NSUInteger)version creationQueries:(NSArray<NSString *> *)creationQueries openStatements:(NSArray<NSString *> *)openStatements upgradeMigrator:(OCSQLiteTableSchemaMigrator)migrator;
 {
 	OCSQLiteTableSchema *schema = [self new];
 

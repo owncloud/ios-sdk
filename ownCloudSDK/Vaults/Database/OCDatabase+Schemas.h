@@ -26,5 +26,6 @@
 @end
 
 extern OCDatabaseTableName OCDatabaseTableNameMetaData;
-extern OCDatabaseTableName OCDatabaseTableNameCounters;
+extern OCDatabaseTableName OCDatabaseTableNameSyncJournal;
 extern OCDatabaseTableName OCDatabaseTableNameThumbnails;
+extern OCDatabaseTableName OCDatabaseTableNameCounters;

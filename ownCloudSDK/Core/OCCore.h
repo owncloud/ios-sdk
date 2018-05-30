@@ -39,10 +39,9 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 	OCCoreStateRunning
 };
 
-typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item);
+typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
 typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, id retrievedObject, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
-typedef void(^OCCoreActionShareHandler)(NSError *error, OCCore *core, OCItem *item, OCShare *share);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @protocol OCCoreDelegate <NSObject>
@@ -118,7 +117,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionShareHandler)resultHandler;
+- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 - (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 - (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
@@ -128,3 +127,5 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @end
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
+
+extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;

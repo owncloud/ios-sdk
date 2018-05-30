@@ -3,7 +3,7 @@
 
 An overview of sync strategies for use by the ownCloud iOS SDK.
 
-This document only covers what happends at sync time. Other UI interactions are outside the scope of this document.
+This document only covers what happens at sync time. Other UI interactions are outside the scope of this document.
 
 # Guiding principles
 1. Avoid loss of any data changed by the user - locally or remotely.

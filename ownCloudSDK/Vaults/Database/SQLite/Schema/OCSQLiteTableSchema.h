@@ -30,8 +30,10 @@ typedef void(^OCSQLiteTableSchemaMigrator)(OCSQLiteDB *db, OCSQLiteTableSchema *
 
 @property(strong) NSArray<NSString *> *creationQueries; //!< SQL queries to create table and set it up (f.ex. adding indexes)
 
+@property(strong) NSArray<NSString *> *openStatements; //!< SQL queries to be run on every open of the database (f.ex. temporary triggers)
+
 @property(strong) OCSQLiteTableSchemaMigrator upgradeMigrator; //!< Migrator block used to migrate table from preceding version
 
-+ (instancetype)schemaWithTableName:(NSString *)tableName version:(NSUInteger)version creationQueries:(NSArray<NSString *> *)creationQueries upgradeMigrator:(OCSQLiteTableSchemaMigrator)migrator;
++ (instancetype)schemaWithTableName:(NSString *)tableName version:(NSUInteger)version creationQueries:(NSArray<NSString *> *)creationQueries openStatements:(NSArray<NSString *> *)openStatements upgradeMigrator:(OCSQLiteTableSchemaMigrator)migrator;
 
 @end

@@ -57,6 +57,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCVault.h>
 #import <ownCloudSDK/OCDatabase.h>
+#import <ownCloudSDK/OCDatabaseConsistentOperation.h>
 #import <ownCloudSDK/OCSQLiteDB.h>
 #import <ownCloudSDK/OCSQLiteQuery.h>
 #import <ownCloudSDK/OCSQLiteTransaction.h>

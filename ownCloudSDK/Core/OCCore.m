@@ -23,6 +23,9 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
 #import "NSError+OCError.h"
+#import "OCDatabase.h"
+#import "OCDatabaseConsistentOperation.h"
+#import "OCCore+SyncEngine.h"
 
 @interface OCCore ()
 {
@@ -395,7 +398,16 @@
 		{
 			_itemListTasksByPath[path] = task;
 
-			[task update];
+			task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
+				[core handleUpdatedTask:task];
+			};
+
+			// Retrieve and store current sync anchor value
+			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
+				task.syncAnchorAtStart = syncAnchor;
+
+				[task update];
+			}];
 		}
 	}
 }
@@ -480,116 +492,146 @@
 
 		queryResults = [NSMutableArray new];
 
-		// Iterate retrieved set
-		[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
-			OCItem *cacheItem;
-
-			// Item for this path already in the cache?
-			if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
-			{
-				// Existing local item?
-				if (cacheItem.locallyModified || (cacheItem.localRelativePath!=nil))
-				{
-					// Preserve local item, but merge in info on latest server version
-					cacheItem.remoteItem = retrievedItem;
-
-					// Return updated cached version
-					[queryResults addObject:cacheItem];
-
-					// Update cache
-					[changedCacheItems addObject:cacheItem];
-				}
-				else
-				{
-					// Attach databaseID of cached items to the retrieved items
-					retrievedItem.databaseID = cacheItem.databaseID;
-
-					// Return server version
-					[queryResults addObject:retrievedItem];
-				}
-			}
-			else
-			{
-				// New item!
-				[queryResults addObject:retrievedItem];
-				[newItems addObject:retrievedItem];
-			}
-		}];
-
-		// Iterate cache set
-		[cacheSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull cachePath, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
-			OCItem *retrievedItem;
-
-			// Item for this cached path still on the server?
-			if ((retrievedItem = retrievedItemsByPath[cachePath]) == nil)
-			{
-				// Cache item no longer on the server
-				if (cacheItem.locallyModified)
-				{
-					// Preserve locally modified items
-					[queryResults addObject:cacheItem];
-				}
-				else
-				{
-					// Remove item
-					[deletedCacheItems addObject:cacheItem];
-				}
-			}
-		}];
-
-		// Commit changes to the cache
 		dispatch_group_t cacheUpdateGroup = dispatch_group_create();
 
 		dispatch_group_enter(cacheUpdateGroup);
 
-		[self.database performBatchUpdates:^(OCDatabase *database){
-			__block NSError *returnError = nil;
-
-			if ((deletedCacheItems.count > 0) && (returnError==nil))
+		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			if (![previousSyncAnchor isEqualToNumber:task.syncAnchorAtStart])
 			{
-				[self.database removeCacheItems:deletedCacheItems completionHandler:^(OCDatabase *db, NSError *error) {
-					returnError = error;
-				}];
+				// Out of sync - trigger catching the latest from the cache again, rinse and repeat
+				OCLogDebug(@"Sync anchor changed before task finished: %@ != %@", previousSyncAnchor, task.syncAnchorAtStart);
+
+				task.syncAnchorAtStart = newSyncAnchor; // Update sync anchor before triggering the reload from cache
+
+				cacheUpdateError = OCError(OCErrorOutdatedCache);
+				dispatch_group_leave(cacheUpdateGroup);
+
+				return(nil);
 			}
 
-			if ((changedCacheItems.count > 0) && (returnError==nil))
-			{
-				[self.database updateCacheItems:changedCacheItems completionHandler:^(OCDatabase *db, NSError *error) {
-					returnError = error;
-				}];
-			}
+			// Iterate retrieved set
+			[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
+				OCItem *cacheItem;
 
-			if ((newItems.count > 0) && (returnError==nil))
-			{
-				[self.database addCacheItems:newItems completionHandler:^(OCDatabase *db, NSError *error) {
-					returnError = error;
-				}];
-			}
+				// Item for this path already in the cache?
+				if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
+				{
+					// Existing local item?
+					if (cacheItem.locallyModified || (cacheItem.localRelativePath!=nil))
+					{
+						// Preserve local item, but merge in info on latest server version
+						cacheItem.remoteItem = retrievedItem;
 
-			return (returnError);
-		} completionHandler:^(OCDatabase *db, NSError *error) {
-			cacheUpdateError = error;
-			dispatch_group_leave(cacheUpdateGroup);
+						// Return updated cached version
+						[queryResults addObject:cacheItem];
+
+						// Update cache
+						[changedCacheItems addObject:cacheItem];
+					}
+					else
+					{
+						// Attach databaseID of cached items to the retrieved items
+						retrievedItem.databaseID = cacheItem.databaseID;
+
+						// Return server version
+						[queryResults addObject:retrievedItem];
+					}
+				}
+				else
+				{
+					// New item!
+					[queryResults addObject:retrievedItem];
+					[newItems addObject:retrievedItem];
+				}
+			}];
+
+			// Iterate cache set
+			[cacheSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull cachePath, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
+				OCItem *retrievedItem;
+
+				// Item for this cached path still on the server?
+				if ((retrievedItem = retrievedItemsByPath[cachePath]) == nil)
+				{
+					// Cache item no longer on the server
+					if (cacheItem.locallyModified)
+					{
+						// Preserve locally modified items
+						[queryResults addObject:cacheItem];
+					}
+					else
+					{
+						// Remove item
+						[deletedCacheItems addObject:cacheItem];
+					}
+				}
+			}];
+
+			// Commit changes to the cache
+			[self.database performBatchUpdates:^(OCDatabase *database){
+				__block NSError *returnError = nil;
+
+				if ((deletedCacheItems.count > 0) && (returnError==nil))
+				{
+					[self.database removeCacheItems:deletedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						returnError = error;
+					}];
+				}
+
+				if ((changedCacheItems.count > 0) && (returnError==nil))
+				{
+					[self.database updateCacheItems:changedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						returnError = error;
+					}];
+				}
+
+				if ((newItems.count > 0) && (returnError==nil))
+				{
+					[self.database addCacheItems:newItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						returnError = error;
+					}];
+				}
+
+				return (returnError);
+			} completionHandler:^(OCDatabase *db, NSError *error) {
+				cacheUpdateError = error;
+				dispatch_group_leave(cacheUpdateGroup);
+			}];
+
+			// In parallel: remove thumbnails from in-memory cache
+			dispatch_group_enter(cacheUpdateGroup);
+
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+				for (OCItem *deleteItem in deletedCacheItems)
+				{
+					[_thumbnailCache removeObjectForKey:deleteItem.fileID];
+				}
+
+				dispatch_group_leave(cacheUpdateGroup);
+			});
+
+			return (nil);
+		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			NSLog(@"Sync anchor increase result: %@ for %@ => %@", error, previousSyncAnchor, newSyncAnchor);
 		}];
-
-		// In parallel: remove thumbnails from in-memory cache
-		dispatch_group_enter(cacheUpdateGroup);
-
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
-			for (OCItem *deleteItem in deletedCacheItems)
-			{
-				[_thumbnailCache removeObjectForKey:deleteItem.fileID];
-			}
-
-			dispatch_group_leave(cacheUpdateGroup);
-		});
 
 		dispatch_group_wait(cacheUpdateGroup, DISPATCH_TIME_FOREVER);
 
 		if (cacheUpdateError != nil)
 		{
 			// An error occured updating the cache, so don't update queries either, log the error and return here
-			OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
+			if ([cacheUpdateError isOCErrorWithCode:OCErrorOutdatedCache])
+			{
+				// Sync anchor value increased while fetching data from the server
+				OCLogDebug(@"Sync anchor changed, refreshing from cache before merge..");
+				[task forceUpdateCacheSet];
+			}
+			else
+			{
+				// Actual error
+				OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
+			}
+
 			return;
 		}
 	}
@@ -796,6 +838,21 @@
 			query.fullQueryResults = useQueryResults;
 		}
 	}
+}
+
+#pragma mark - Tools
+- (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
+{
+	if (item.type == OCItemTypeCollection)
+	{
+		// This method only supports files
+		completionHandler(OCError(OCErrorFeatureNotSupportedForItem), item, nil);
+		return;
+	}
+
+	[self.vault.database retrieveCacheItemsAtPath:item.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
+		completionHandler(error, item, items.firstObject);
+	}];
 }
 
 #pragma mark - ## Commands
@@ -1044,7 +1101,7 @@
 	}];
 }
 
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionShareHandler)resultHandler
+- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
 }
@@ -1093,3 +1150,5 @@
 @end
 
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
+
+OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";

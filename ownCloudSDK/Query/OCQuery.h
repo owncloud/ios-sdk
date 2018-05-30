@@ -91,6 +91,7 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 
 - (void)addFilter:(id<OCQueryFilter>)filter withIdentifier:(OCQueryFilterIdentifier)identifier;  //!< Adds a filter to the query.
 - (id<OCQueryFilter>)filterWithIdentifier:(OCQueryFilterIdentifier)identifier; //!< Retrieve a filter by its identifier.
+- (void)updateFilter:(id<OCQueryFilter>)filter applyChanges:(void(^)(id<OCQueryFilter> filter))applyChangesBlock; //!< Apply changes to a filter
 - (void)removeFilter:(id<OCQueryFilter>)filter; //!< Remove a filter
 
 #pragma mark - Query results
