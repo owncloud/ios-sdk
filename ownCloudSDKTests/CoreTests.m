@@ -89,7 +89,7 @@
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE1"] forKeyPath:@"uuid"];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
@@ -235,7 +235,7 @@
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE2"] forKeyPath:@"uuid"];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
@@ -582,7 +582,7 @@
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE4"] forKeyPath:@"uuid"];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"invalid" passphrase:@"wrong" authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
