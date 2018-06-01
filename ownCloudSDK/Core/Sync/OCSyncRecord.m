@@ -20,12 +20,33 @@
 
 @implementation OCSyncRecord
 
+@synthesize recordID = _recordID;
+
 @synthesize action = _action;
 @synthesize timestamp = _timestamp;
 
 @synthesize archivedServerItem = _archivedServerItem;
 
 @synthesize parameters = _parameters;
+
+@synthesize resultHandler = _resultHandler;
+
+#pragma mark - Init & Dealloc
+- (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
+{
+	if ((self = [self init]) != nil)
+	{
+		_action = action;
+		_timestamp = [NSDate date];
+
+		_archivedServerItem = archivedServerItem;
+		_parameters = parameters;
+
+		_resultHandler = resultHandler;
+	}
+
+	return (self);
+}
 
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
@@ -43,13 +64,24 @@
 	return (_archivedServerItemData);
 }
 
+- (OCItem *)archivedServerItem
+{
+	if ((_archivedServerItem == nil) && (_archivedServerItemData != nil))
+	{
+		_archivedServerItem = [NSKeyedUnarchiver unarchiveObjectWithData:_archivedServerItemData];
+	}
+
+	return (_archivedServerItem);
+}
+
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
 	if ((self = [self init]) != nil)
 	{
+		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
 		_action = [decoder decodeObjectOfClass:[NSString class] forKey:@"action"];
 		_timestamp = [decoder decodeObjectOfClass:[NSDate class] forKey:@"timestamp"];
-		_archivedServerItemData = [decoder decodeObjectOfClass:[NSDate class] forKey:@"archivedServerItemData"];
+		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
 	}
 	
@@ -58,6 +90,7 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeObject:_recordID forKey:@"recordID"];
 	[coder encodeObject:_action forKey:@"action"];
 	[coder encodeObject:_timestamp forKey:@"timestamp"];
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];

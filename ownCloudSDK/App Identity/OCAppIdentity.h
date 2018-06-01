@@ -43,6 +43,7 @@
 	NSString *_appName;
 	
 	OCKeychain *_keychain;
+	NSUserDefaults *_userDefaults;
 }
 
 #pragma mark - App Identifiers
@@ -59,6 +60,7 @@
 
 #pragma mark - App Resources
 @property(strong,nonatomic) OCKeychain *keychain;
+@property(strong,nonatomic) NSUserDefaults *userDefaults;
 
 #pragma mark - Singleton
 + (instancetype)sharedAppIdentity;

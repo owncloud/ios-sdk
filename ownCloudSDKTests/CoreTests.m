@@ -207,11 +207,164 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
+	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
+
 	// Erase vault
 	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
+
+- (void)testSimpleQueryWithSimulatedCacheUpdate
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block OCQuery *subfolderQuery = nil;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block BOOL didDisruptOnce = NO;
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	[bookmark setValue:[[NSUUID alloc] initWithUUIDString:@"31D22AF2-6592-4445-821B-FA9E0D195CE3"] forKeyPath:@"uuid"];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if ((query.state == OCQueryStateWaitingForServerReply) && !didDisruptOnce)
+				{
+					didDisruptOnce = YES;
+					
+					[core.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+						NSLog(@"Increasing the counter while fetching is in progress from %@ => %@", previousCounterValue, newCounterValue);
+
+						return (nil);
+					} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+
+					}];
+				}
+
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (subfolderQuery==nil)
+					{
+						OCPath subfolderPath = nil;
+
+						for (OCItem *item in query.queryResults)
+						{
+							if (item.type == OCItemTypeCollection)
+							{
+								subfolderPath = item.path;
+							}
+						}
+
+						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+								if (changeset != nil)
+								{
+									NSLog(@"============================================");
+									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+
+									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+										switch(operation)
+										{
+											case OCQueryChangeSetOperationInsert:
+												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationRemove:
+												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationUpdate:
+												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+											break;
+
+											case OCQueryChangeSetOperationContentSwap:
+												NSLog(@"[%@] Content Swap", query.queryPath);
+											break;
+										}
+									}];
+								}
+
+								if (query.state == OCQueryStateIdle)
+								{
+									// Stop core
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+
+									}];
+								}
+							}];
+						};
+
+						[core startQuery:subfolderQuery];
+					}
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
+
+	// Erase vault
+	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
 
 - (void)testOfflineCaching
 {

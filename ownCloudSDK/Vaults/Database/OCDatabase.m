@@ -46,6 +46,8 @@
 - (void)openWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	[self.sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
+		self.sqlDB.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs wide changes
+
 		if (error == nil)
 		{
 			NSString *thumbnailsDBPath = [[[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"] path];
@@ -117,7 +119,7 @@
 }
 
 #pragma mark - Meta data interface
-- (void)addCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)addCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 
@@ -125,6 +127,7 @@
 	{
 		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
 			@"type" 		: @(item.type),
+			@"syncAnchor"		: syncAnchor,
 			@"locallyModified" 	: @(item.locallyModified),
 			@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
 			@"path" 		: item.path,
@@ -142,7 +145,7 @@
 	}]];
 }
 
-- (void)updateCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 
@@ -152,6 +155,7 @@
 		{
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
 				@"type" 		: @(item.type),
+				@"syncAnchor"		: syncAnchor,
 				@"locallyModified" 	: @(item.locallyModified),
 				@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
 				@"path" 		: item.path,
@@ -172,9 +176,11 @@
 	}]];
 }
 
-- (void)removeCacheItems:(NSArray <OCItem *> *)items completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
+
+	// TODO: Update parent directories with new sync anchor value
 
 	for (OCItem *item in items)
 	{
@@ -248,6 +254,11 @@
 			}
 		}
 	}]];
+}
+
+- (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+{
+	// Stub implementation
 }
 
 #pragma mark - Thumbnail interface

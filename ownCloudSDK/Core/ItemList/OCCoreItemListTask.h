@@ -22,12 +22,15 @@
 #import "OCCoreItemList.h"
 
 @class OCCore;
+@class OCCoreItemListTask;
 
 typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 {
 	OCCoreTaskMergeStatusWaiting,
 	OCCoreTaskMergeStatusMerged
 };
+
+typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask *task);
 
 @interface OCCoreItemListTask : NSObject
 
@@ -39,8 +42,15 @@ typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 
 @property(assign) OCCoreTaskMergeStatus mergeStatus;
 
+@property(strong) NSNumber *syncAnchorAtStart;
+
+@property(copy) OCCoreItemListTaskChangeHandler changeHandler;
+
 - (instancetype)initWithCore:(OCCore *)core path:(OCPath)path;
 
 - (void)update;
+
+- (void)forceUpdateCacheSet;
+- (void)forceUpdateRetrievedSet;
 
 @end

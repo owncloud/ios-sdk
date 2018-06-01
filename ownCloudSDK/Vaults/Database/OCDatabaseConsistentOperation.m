@@ -58,6 +58,11 @@
 				self.preparation(self, OCDatabaseConsistentOperationActionInitial, nil, ^(NSError *error, id prepResult){
 					self.preparationError = error;
 					self.preparationResult = prepResult;
+
+					if (completionHandler != nil)
+					{
+						completionHandler();
+					}
 				});
 			}
 		}
@@ -99,6 +104,10 @@
 				{
 					error = operation(self, self.preparationResult, newCounterValue);
 				}
+			}
+			else
+			{
+				error = operation(self, self.preparationResult, newCounterValue);
 			}
 		}
 

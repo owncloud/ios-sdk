@@ -50,23 +50,32 @@
 	{
 		if (!ifNeeded || (_needsRecomputation && ifNeeded))
 		{
-			NSMutableIndexSet *removeIndexes = nil;
 			NSMutableArray *newProcessedResults = [[NSMutableArray alloc] initWithArray:_fullQueryResults];
 
 			// Apply filter(s)
 			if (_filters.count > 0)
 			{
+				__block NSMutableIndexSet *removeIndexes = nil;
+
 				for (id<OCQueryFilter> filter in _filters)
 				{
 					[_fullQueryResults enumerateObjectsUsingBlock:^(OCItem *item, NSUInteger idx, BOOL *stop) {
 						if (![filter query:self shouldIncludeItem:item])
 						{
+							if (removeIndexes == nil)
+							{
+								removeIndexes = [NSMutableIndexSet new];
+							}
+
 							[removeIndexes addIndex:idx];
 						}
 					}];
 				}
 
-				[newProcessedResults removeObjectsAtIndexes:removeIndexes];
+				if (removeIndexes != nil)
+				{
+					[newProcessedResults removeObjectsAtIndexes:removeIndexes];
+				}
 			}
 
 			// Apply comparator

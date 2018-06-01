@@ -26,6 +26,8 @@ typedef NSString* OCFileETag; //!< Identifier unique to a specific combination o
 
 typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
 
+typedef NSNumber* OCSyncAnchor; //!< Sync Anchor (running number, increasing in value with every change made)
+
 typedef void(^OCCompletionHandler)(id sender, NSError *error);
 
 typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);

@@ -555,7 +555,7 @@
 	if ((sqlDB = [OCSQLiteDB new]) != nil)
 	{
 		// Version 1
-		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:1 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL)"] upgradeMigrator:nil]];
+		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:1 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL)"] openStatements:nil upgradeMigrator:nil]];
 
 		[sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
 			[sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
@@ -563,7 +563,7 @@
 				[expectSchemaCallback1 fulfill];
 
 				// Version 2
-				[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:2 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL, version TEXT)"] upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+				[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:2 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL, version TEXT)"] openStatements:nil upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
 					[expectMigrationCallback fulfill];
 
 					// Migrate to version 2
@@ -605,10 +605,10 @@
 	if ((sqlDB = [OCSQLiteDB new]) != nil)
 	{
 		// Version 1
-		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:1 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL)"] upgradeMigrator:nil]];
+		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:1 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL)"] openStatements:nil upgradeMigrator:nil]];
 
 		// Version 2
-		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:2 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL, version TEXT)"] upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+		[sqlDB addTableSchema:[OCSQLiteTableSchema schemaWithTableName:@"products" version:2 creationQueries:@[@"CREATE TABLE IF NOT EXISTS products (productID integer PRIMARY KEY, name TEXT NOT NULL, version TEXT)"] openStatements:nil upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
 			XCTFail(@"Migration shouldn't be called. Instead, the table should be created using the creation queries right away");
 
 			// Migrate to version 2

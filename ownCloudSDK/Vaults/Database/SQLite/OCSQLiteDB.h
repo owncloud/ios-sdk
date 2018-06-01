@@ -62,6 +62,8 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumb
 	sqlite3 *_db;
 }
 
+@property(class,nonatomic) BOOL allowConcurrentFileAccess; //!< Makes every OCSQLiteDB use a different OCRunLoopThread, so concurrent file access can occur. NO by default. Use this only for implementing concurrency tests.
+
 @property(strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
 
 @property(assign,nonatomic) NSTimeInterval maxBusyRetryTimeInterval; //!< Amount of time SQLite retries accessing a database before it returns a SQLITE_BUSY error

@@ -52,48 +52,74 @@
 	}];
 }
 
+- (void)forceUpdateCacheSet
+{
+	[_core queueBlock:^{
+		[self _updateCacheSet];
+	}];
+}
+
+- (void)_updateCacheSet
+{
+	// Retrieve items from cache
+	if (_core != nil)
+	{
+		_cachedSet.state = OCCoreItemListStateStarted;
+
+		[_core.vault.database retrieveCacheItemsAtPath:self.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
+			[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+				[_cachedSet updateWithError:error items:items];
+
+				if ((_cachedSet.state == OCCoreItemListStateSuccess) || (_cachedSet.state == OCCoreItemListStateFailed))
+				{
+					self.changeHandler(_core, self);
+				}
+			}];
+		}];
+	}
+}
+
+- (void)forceUpdateRetrievedSet
+{
+	[_core queueBlock:^{
+		[self _updateRetrievedSet];
+	}];
+}
+
+- (void)_updateRetrievedSet
+{
+	// Request item list from server
+	if (_core != nil)
+	{
+		_retrievedSet.state = OCCoreItemListStateStarted;
+
+		[_core queueConnectivityBlock:^{
+			[_core.connection retrieveItemListAtPath:self.path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+					[_retrievedSet updateWithError:error items:items];
+
+					if ((_retrievedSet.state == OCCoreItemListStateSuccess) || (_retrievedSet.state == OCCoreItemListStateFailed))
+					{
+						self.changeHandler(_core, self);
+					}
+				}];
+			}];
+		}];
+	}
+}
+
 - (void)_update
 {
 	if (_cachedSet.state != OCCoreItemListStateStarted)
 	{
 		// Retrieve items from cache
-		if (_core != nil)
-		{
-			_cachedSet.state = OCCoreItemListStateStarted;
-
-			[_core.vault.database retrieveCacheItemsAtPath:self.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
-				[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-					[_cachedSet updateWithError:error items:items];
-
-					if ((_cachedSet.state == OCCoreItemListStateSuccess) || (_cachedSet.state == OCCoreItemListStateFailed))
-					{
-						[_core handleUpdatedTask:self];
-					}
-				}];
-			}];
-		}
+		[self _updateCacheSet];
 	}
 
 	if (_retrievedSet.state != OCCoreItemListStateStarted)
 	{
 		// Request item list from server
-		if (_core != nil)
-		{
-			_retrievedSet.state = OCCoreItemListStateStarted;
-
-			[_core queueConnectivityBlock:^{
-				[_core.connection retrieveItemListAtPath:self.path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-						[_retrievedSet updateWithError:error items:items];
-
-						if ((_retrievedSet.state == OCCoreItemListStateSuccess) || (_retrievedSet.state == OCCoreItemListStateFailed))
-						{
-							[_core handleUpdatedTask:self];
-						}
-					}];
-				}];
-			}];
-		}
+		[self _updateRetrievedSet];
 	}
 }
 

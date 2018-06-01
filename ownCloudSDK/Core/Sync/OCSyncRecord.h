@@ -19,12 +19,16 @@
 #import <Foundation/Foundation.h>
 #import "NSProgress+OCEvent.h"
 #import "OCItem.h"
+#import "OCCore.h"
 
 typedef NSString* OCSyncAction NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
+typedef NSNumber* OCSyncRecordID;
 
 @interface OCSyncRecord : NSObject <NSSecureCoding>
 {
+	OCSyncRecordID _recordID;
+
 	OCSyncAction _action;
 	NSDate *_timestamp;
 
@@ -32,14 +36,22 @@ typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
 	OCItem *_archivedServerItem;
 
 	NSDictionary<OCSyncActionParameter, id> *_parameters;
+
+	OCCoreActionResultHandler _resultHandler;
 }
+
+@property(strong) OCSyncRecordID recordID;
 
 @property(readonly) OCSyncAction action; //!< The action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
 
-@property(readonly) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the record was committed.
+@property(readonly,nonatomic) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the record was committed.
 
 @property(readonly) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
+
+@property(readonly) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed.
+
+- (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 @end
 

@@ -26,10 +26,22 @@
 #define IsSQLiteError(error) [error.domain isEqualToString:OCSQLiteErrorDomain]
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
 
+static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
+
 @implementation OCSQLiteDB
 
 @synthesize databaseURL = _databaseURL;
 @synthesize maxBusyRetryTimeInterval = _maxBusyRetryTimeInterval;
+
++ (BOOL)allowConcurrentFileAccess
+{
+	return (sOCSQLiteDBAllowConcurrentFileAccess);
+}
+
++ (void)setAllowConcurrentFileAccess:(BOOL)allowConcurrentFileAccess
+{
+	sOCSQLiteDBAllowConcurrentFileAccess = allowConcurrentFileAccess;
+}
 
 - (instancetype)init
 {
@@ -73,7 +85,7 @@
 		{
 			NSString *threadName;
 
-			if (_databaseURL.path != nil)
+			if ((_databaseURL.path != nil) && !OCSQLiteDB.allowConcurrentFileAccess)
 			{
 				threadName = [@"OCSQLiteDB-" stringByAppendingString:_databaseURL.path];
 			}
@@ -103,6 +115,7 @@
 static int OCSQLiteDBBusyHandler(void *refCon, int count)
 {
 	OCSQLiteDB *dbObj = (__bridge OCSQLiteDB *)refCon;
+	NSTimeInterval elapsedTime = ([NSDate timeIntervalSinceReferenceDate] - dbObj->_firstBusyRetryTime);
 
 	if (count == 0)
 	{
@@ -113,8 +126,6 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	}
 	else
 	{
-		NSTimeInterval elapsedTime = ([NSDate timeIntervalSinceReferenceDate] - dbObj->_firstBusyRetryTime);
-
 		if (elapsedTime < dbObj->_maxBusyRetryTimeInterval)
 		{
 			// We're still below the timeout threshold, so sleep a random time between 50 and 100 microseconds
@@ -257,6 +268,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				else
 				{
 					OCSQLiteMigration *migration = [OCSQLiteMigration new];
+					NSMutableArray <NSString *> *allOpenStatements = [NSMutableArray new];
+					NSMutableSet <NSString *> *allOpenStatementsTableNames = [NSMutableSet new];
 
 					NSError *iterationError = nil;
 
@@ -287,6 +300,42 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 						for (OCSQLiteTableSchema *tableSchema in _tableSchemas)
 						{
 							NSNumber *currentVersion = nil;
+							__block OCSQLiteTableSchema *_latestTableSchema = nil;
+
+							OCSQLiteTableSchema *(^GetLatestTableSchemaForCurrent)(void) = ^{
+								if (_latestTableSchema == nil)
+								{
+									for (OCSQLiteTableSchema *tableSchemaCandidate in _tableSchemas)
+									{
+										if ([tableSchemaCandidate.tableName isEqualToString:tableSchema.tableName])
+										{
+											if ((_latestTableSchema==nil) || (tableSchemaCandidate.version > _latestTableSchema.version))
+											{
+												_latestTableSchema = tableSchemaCandidate;
+											}
+										}
+									}
+								}
+
+								return (_latestTableSchema);
+							};
+
+							// Collect all open statements from the latest table schemas
+							if ((tableSchema.tableName!=nil) && ![allOpenStatementsTableNames containsObject:tableSchema.tableName])
+							{
+								NSArray <NSString *> *openStatements;
+								OCSQLiteTableSchema *latestTableSchema;
+
+								if ((latestTableSchema = GetLatestTableSchemaForCurrent()) != nil)
+								{
+									if (((openStatements = latestTableSchema.openStatements) != nil) && (openStatements.count > 0))
+									{
+										[allOpenStatements addObjectsFromArray:openStatements];
+									}
+								}
+
+								[allOpenStatementsTableNames addObject:tableSchema.tableName];
+							}
 
 							if ((currentVersion = migration.versionsByTableName[tableSchema.tableName]) != nil)
 							{
@@ -299,20 +348,9 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 							else
 							{
 								// For new table schemas, use the latest version right away
-								OCSQLiteTableSchema *latestTableSchema = nil;
+								OCSQLiteTableSchema *latestTableSchema;
 
-								for (OCSQLiteTableSchema *tableSchemaCandidate in _tableSchemas)
-								{
-									if ([tableSchemaCandidate.tableName isEqualToString:tableSchema.tableName])
-									{
-										if ((latestTableSchema==nil) || (tableSchemaCandidate.version > latestTableSchema.version))
-										{
-											latestTableSchema = tableSchemaCandidate;
-										}
-									}
-								}
-
-								if (latestTableSchema != nil)
+								if ((latestTableSchema = GetLatestTableSchemaForCurrent()) != nil)
 								{
 									if ([migration.applicableSchemas indexOfObjectIdenticalTo:latestTableSchema] == NSNotFound)
 									{

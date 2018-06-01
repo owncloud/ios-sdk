@@ -30,6 +30,7 @@
 @synthesize appName = _appName;
 
 @synthesize keychain = _keychain;
+@synthesize userDefaults = _userDefaults;
 
 + (instancetype)sharedAppIdentity
 {
@@ -98,6 +99,24 @@
 	}
 	
 	return (_keychain);
+}
+
+- (NSUserDefaults *)userDefaults
+{
+	if (_userDefaults == nil)
+	{
+		if (self.appGroupIdentifier != nil)
+		{
+			_userDefaults = [[NSUserDefaults alloc] initWithSuiteName:self.appGroupIdentifier];
+		}
+
+		if (_userDefaults == nil)
+		{
+			_userDefaults = [NSUserDefaults standardUserDefaults];
+		}
+	}
+
+	return (_userDefaults);
 }
 
 @end
