@@ -64,6 +64,8 @@
 	// Retrieve items from cache
 	if (_core != nil)
 	{
+		[_core beginActivity:@"update cache set"];
+
 		_cachedSet.state = OCCoreItemListStateStarted;
 
 		[_core.vault.database retrieveCacheItemsAtPath:self.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
@@ -74,6 +76,8 @@
 				{
 					self.changeHandler(_core, self);
 				}
+
+				[_core endActivity:@"update cache set"];
 			}];
 		}];
 	}
@@ -91,6 +95,8 @@
 	// Request item list from server
 	if (_core != nil)
 	{
+		[_core beginActivity:@"update retrieved set"];
+
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
 		[_core queueConnectivityBlock:^{
@@ -102,6 +108,8 @@
 					{
 						self.changeHandler(_core, self);
 					}
+
+					[_core endActivity:@"update retrieved set"];
 				}];
 			}];
 		}];
@@ -110,6 +118,8 @@
 
 - (void)_update
 {
+	[_core beginActivity:@"update unstarted sets"];
+
 	if (_cachedSet.state != OCCoreItemListStateStarted)
 	{
 		// Retrieve items from cache
@@ -121,6 +131,8 @@
 		// Request item list from server
 		[self _updateRetrievedSet];
 	}
+
+	[_core endActivity:@"update unstarted sets"];
 }
 
 @end

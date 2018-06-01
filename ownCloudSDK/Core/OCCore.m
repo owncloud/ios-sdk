@@ -132,6 +132,8 @@
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
+		_runningActivitiesGroup = dispatch_group_create();
+
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 	}
 
@@ -221,6 +223,10 @@
 			_state = OCCoreStateStopping;
 			[self didChangeValueForKey:@"state"];
 
+			// Wait for running operations to finish
+			dispatch_group_wait(_runningActivitiesGroup, DISPATCH_TIME_FOREVER);
+
+			// Stop..
 			stopGroup = dispatch_group_create();
 
 			// Close connection
@@ -424,6 +430,8 @@
 
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
+
+	[self beginActivity:@"item list task"];
 
 	switch (task.cachedSet.state)
 	{
@@ -632,6 +640,8 @@
 				OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
 			}
 
+			[self endActivity:@"item list task"];
+
 			return;
 		}
 	}
@@ -672,7 +682,10 @@
 	{
 		if (task.path != nil)
 		{
-			[_itemListTasksByPath removeObjectForKey:task.path];
+			if (_itemListTasksByPath[task.path] != nil)
+			{
+				[_itemListTasksByPath removeObjectForKey:task.path];
+			}
 		}
 	}
 
@@ -838,6 +851,8 @@
 			query.fullQueryResults = useQueryResults;
 		}
 	}
+
+	[self endActivity:@"item list task"];
 }
 
 #pragma mark - Tools
@@ -1128,6 +1143,20 @@
 	{
 		[self _handleRetrieveThumbnailEvent:event sender:sender];
 	}
+}
+
+
+#pragma mark - Busy count
+- (void)beginActivity:(NSString *)description
+{
+	OCLogDebug(@"Beginning activity '%@' ..", description);
+	dispatch_group_enter(_runningActivitiesGroup);
+}
+
+- (void)endActivity:(NSString *)description
+{
+	OCLogDebug(@"Ended activity '%@' ..", description);
+	dispatch_group_leave(_runningActivitiesGroup);
 }
 
 #pragma mark - Queues

@@ -29,4 +29,8 @@
 - (void)queueBlock:(dispatch_block_t)block;
 - (void)queueConnectivityBlock:(dispatch_block_t)block;
 
+#pragma mark - Busy count
+- (void)beginActivity:(NSString *)description; //!< Indicates an activity has been started that needs to finish before the core can be stopped (description only for debugging purposes, should match the one in -endActivity:)
+- (void)endActivity:(NSString *)description; //!< Indicates an activity has stopped that needed to be finished before the core could be stopped (description only for debugging purposes, should match the one in -beginActivity:)
+
 @end

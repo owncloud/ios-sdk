@@ -64,6 +64,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
 
+	dispatch_group_t _runningActivitiesGroup;
+
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
