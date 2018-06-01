@@ -76,7 +76,7 @@ An overview over which cases actions handle - and how they handle them. Please r
   - If the exact copy has been there at the time the Sync Record was committed (server item matches ArchCopy data), overwrite it.
   - If there was no copy around at the time the Sync Record was committed (no ArchCopy data), ask for confirmation.
 - **Item can't be uploaded to server**: Inform user, keep Sync Record.
-- **Target directory does no longer exist**: Inform user, offer to (re-)create it.
+- **Target directory does no longer exist**: Inform user, offer to (re-)create it or pick a different directory.
 - **No space left on server**: Inform user, keep Sync Record.
 - **Other server error**: Inform user, keep Sync Record.
 - Note: this action - by its very nature - can only be triggered locally. Use If-Match to ensure the server only accepts a new version if the old version is still the one that the client has seen before (in case of error, the latest ETag is returned in the answer)

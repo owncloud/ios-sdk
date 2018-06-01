@@ -19,6 +19,7 @@ DerivedData
 *.xccheckout
 *.pyc
 xcshareddata/
+!ownCloudSDK.xcodeproj/xcshareddata
 
 #CocoaPods
 Pods
