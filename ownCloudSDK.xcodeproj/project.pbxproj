@@ -34,6 +34,7 @@
 		DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */; };
 		DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30956020580D5F00189B9A /* OCCertificateViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30956120580D5F00189B9A /* OCCertificateViewController.m */; };
+		DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */; };
 		DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC492041A2FB00189B9A /* NSError+OCError.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -301,6 +302,7 @@
 		DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fake-demo_owncloud_org.cer"; sourceTree = "<group>"; };
 		DC30956020580D5F00189B9A /* OCCertificateViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateViewController.h; sourceTree = "<group>"; };
 		DC30956120580D5F00189B9A /* OCCertificateViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateViewController.m; sourceTree = "<group>"; };
+		DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreSyncTests.m; sourceTree = "<group>"; };
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
 		DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationMethodBasicAuth.m; sourceTree = "<group>"; };
 		DC39DC492041A2FB00189B9A /* NSError+OCError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCError.h"; sourceTree = "<group>"; };
@@ -1010,6 +1012,7 @@
 				DC30955C2057CFC000189B9A /* CertificateTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
 				DC5A20302074E8890083DB7D /* CoreTests.m */,
+				DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */,
 				DC03650520AAEFBD00F62732 /* DatabaseTests.m */,
 				DC72E4202063BE9400189B9A /* HostSimulatorTests.m */,
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
@@ -1444,6 +1447,7 @@
 				DC5A20312074E8890083DB7D /* CoreTests.m in Sources */,
 				DC4AFAAD206A7FDB00189B9A /* SQLTests.m in Sources */,
 				DC72E4352063DF5C00189B9A /* SettingsTests.m in Sources */,
+				DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */,
 				DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */,
 				DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */,
 				DC72E41F206166C500189B9A /* OCHostSimulatorResponse.m in Sources */,

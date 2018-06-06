@@ -24,6 +24,10 @@
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError *error, OCSyncAnchor latestSyncAnchor))completionHandler
 {
 	[self.vault.database retrieveValueForCounter:OCCoreSyncAnchorCounter completionHandler:^(NSError *error, NSNumber *counterValue) {
+		[self willChangeValueForKey:@"latestSyncAnchor"];
+		_latestSyncAnchor = counterValue;
+		[self didChangeValueForKey:@"latestSyncAnchor"];
+
 		if (completionHandler != nil)
 		{
 			completionHandler(error, counterValue);
@@ -41,6 +45,10 @@
 
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+		[self willChangeValueForKey:@"latestSyncAnchor"];
+		_latestSyncAnchor = newCounterValue;
+		[self didChangeValueForKey:@"latestSyncAnchor"];
+
 		if (completionHandler != nil)
 		{
 			completionHandler(error, previousCounterValue, newCounterValue);

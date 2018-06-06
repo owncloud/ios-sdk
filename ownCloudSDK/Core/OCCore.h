@@ -73,6 +73,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
+	OCSyncAnchor _latestSyncAnchor;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 
@@ -87,6 +89,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
 @property(weak) id <OCCoreDelegate> delegate;
+
+@property(readonly, strong) OCSyncAnchor latestSyncAnchor;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

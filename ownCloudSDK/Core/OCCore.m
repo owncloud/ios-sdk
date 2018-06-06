@@ -45,6 +45,8 @@
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
+@synthesize latestSyncAnchor = _latestSyncAnchor;
+
 @synthesize delegate = _delegate;
 
 #pragma mark - Class settings
@@ -175,6 +177,15 @@
 
 			[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
 				startError = error;
+				dispatch_group_leave(startGroup);
+			}];
+
+			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+
+			// Get latest sync anchor
+			dispatch_group_enter(startGroup);
+
+			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
 				dispatch_group_leave(startGroup);
 			}];
 
@@ -541,6 +552,12 @@
 					{
 						// Attach databaseID of cached items to the retrieved items
 						retrievedItem.databaseID = cacheItem.databaseID;
+
+						if (![retrievedItem.versionIdentifier isEqual:cacheItem.versionIdentifier])
+						{
+							// Update item in the cache if the server has a different version
+							[changedCacheItems addObject:retrievedItem];
+						}
 
 						// Return server version
 						[queryResults addObject:retrievedItem];
