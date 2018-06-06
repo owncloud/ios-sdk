@@ -1,0 +1,16 @@
+/* 
+  Localizable.strings
+  ownCloudSDK
+
+  Created by Felix Schwarz on 03.03.18.
+  Copyright © 2018 ownCloud GmbH. All rights reserved.
+*/
+
+/* Connection Progress */
+"Connecting…" = "Connecting…";
+"Authenticating…" = "Authenticating…";
+"Error" = "Error";
+"Fetching user information…" = "Fetching user information…";
+"Connected" = "Connected";
+
+"Retrieving thumbnail…" = "Retrieving thumbnail…";
