@@ -10,6 +10,7 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
 #import "OCCore+Internal.h"
+#import "TestTools.h"
 
 @interface CoreTests : XCTestCase <OCCoreDelegate>
 {
@@ -209,7 +210,7 @@
 	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -358,7 +359,7 @@
 	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -541,7 +542,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -697,7 +698,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -762,7 +763,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }

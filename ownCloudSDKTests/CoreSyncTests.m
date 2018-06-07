@@ -10,6 +10,7 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
 #import "OCCore+Internal.h"
+#import "TestTools.h"
 
 @interface CoreSyncTests : XCTestCase
 
@@ -54,6 +55,8 @@
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 
+	__block OCItem *firstRootItemReturnedBySyncAnchorQuery = nil, *secondRootItemReturnedBySyncAnchorQuery = nil;
+
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
@@ -65,11 +68,36 @@
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
+		OCQuery *syncAnchorQuery;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
 		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		syncAnchorQuery = [OCQuery queryForChangesSinceSyncAnchor:@(0)];
+		syncAnchorQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"#### ============================================");
+					NSLog(@"#### [> %@] SYNC ANCHOR %@ QUERY STATE: %lu", query.querySinceSyncAnchor, changeset.syncAnchor, (unsigned long)query.state);
+
+					NSLog(@"#### [> %@] Changes since: %@", query.querySinceSyncAnchor, changeset.queryResult);
+
+					if (firstRootItemReturnedBySyncAnchorQuery == nil)
+					{
+						firstRootItemReturnedBySyncAnchorQuery = changeset.queryResult.firstObject;
+					}
+					else
+					{
+						secondRootItemReturnedBySyncAnchorQuery = changeset.queryResult.firstObject;
+					}
+ 				}
+			}];
+		};
+
+		[core startQuery:syncAnchorQuery];
 
 		query = [OCQuery queryForPath:@"/"];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
@@ -80,7 +108,6 @@
 					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
 					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
-
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
@@ -113,17 +140,22 @@
 							XCTAssert([rowDictionary[@"syncAnchor"] isEqual:@(1)]);
 						} completionHandler:^{
 							// Modify eTag in database to make the next retrieved update look like a change and prompt a syncAnchor increase
-							[core.vault.database retrieveCacheItemsAtPath:@"/" completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
-								for (OCItem *item in items)
+							[core.vault.database retrieveCacheItemsAtPath:@"/" itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+								OCItem *item;
+
+								XCTAssert(items.count == 1); // Check if itemOnly==YES works
+
+								if ((item = items.firstObject) != nil)
 								{
 									if ([item.path isEqual:@"/"])
 									{
 										item.eTag = [item.eTag substringToIndex:2];
 
 										[core.vault.database updateCacheItems:@[ item ] syncAnchor:core.latestSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+											sleep(1);
+
 											[core reloadQuery:query];
 										}];
-										break;
 									}
 								}
 							}];
@@ -161,9 +193,13 @@
 	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
+
+	XCTAssert([firstRootItemReturnedBySyncAnchorQuery.path isEqual:@"/"]);
+	XCTAssert([secondRootItemReturnedBySyncAnchorQuery.path isEqual:@"/"]);
+	XCTAssert(firstRootItemReturnedBySyncAnchorQuery != secondRootItemReturnedBySyncAnchorQuery);
 }
 
 @end

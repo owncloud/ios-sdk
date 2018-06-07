@@ -367,6 +367,27 @@
 	}];
 }
 
+- (void)_startSyncAnchorDatabaseRequestForQuery:(OCQuery *)query
+{
+	[self queueBlock:^{
+		// Update query state to "started"
+		query.state = OCQueryStateStarted;
+
+		// Retrieve known changes from the cache
+		[self.vault.database retrieveCacheItemsUpdatedSinceSyncAnchor:query.querySinceSyncAnchor foldersOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			[self queueBlock:^{
+				if ((error == nil) && (items != nil))
+				{
+					[query mergeItemsToFullQueryResults:items syncAnchor:syncAnchor];
+					query.state = OCQueryStateContentsFromCache;
+				}
+
+				query.state = OCQueryStateIdle;
+			}];
+		}];
+	}];
+}
+
 - (void)startQuery:(OCQuery *)query
 {
 	if (query == nil) { return; }
@@ -376,14 +397,24 @@
 		[_queries addObject:query];
 	}];
 
-	[self _startItemListTaskForQuery:query];
+	if (query.querySinceSyncAnchor == nil)
+	{
+		[self _startItemListTaskForQuery:query];
+	}
+	else
+	{
+		[self _startSyncAnchorDatabaseRequestForQuery:query];
+	}
 }
 
 - (void)reloadQuery:(OCQuery *)query
 {
 	if (query == nil) { return; }
 
-	[self _startItemListTaskForQuery:query];
+	if (query.querySinceSyncAnchor == nil)
+	{
+		[self _startItemListTaskForQuery:query];
+	}
 }
 
 - (void)stopQuery:(OCQuery *)query
@@ -435,9 +466,11 @@
 	BOOL performMerge = NO;
 	BOOL removeTask = NO;
 	BOOL targetRemoved = NO;
+	__block BOOL directoryHasChanged = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
+	__block OCSyncAnchor querySyncAnchor = nil;
 
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
@@ -601,6 +634,8 @@
 					[self.database removeCacheItems:deletedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
+
+					directoryHasChanged = YES;
 				}
 
 				if ((changedCacheItems.count > 0) && (returnError==nil))
@@ -608,6 +643,8 @@
 					[self.database updateCacheItems:changedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
+
+					directoryHasChanged = YES;
 				}
 
 				if ((newItems.count > 0) && (returnError==nil))
@@ -615,6 +652,8 @@
 					[self.database addCacheItems:newItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
+
+					directoryHasChanged = YES;
 				}
 
 				return (returnError);
@@ -634,6 +673,8 @@
 
 				dispatch_group_leave(cacheUpdateGroup);
 			});
+
+			querySyncAnchor = newSyncAnchor;
 
 			return (nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
@@ -748,7 +789,8 @@
 		}
 		else
 		{
-			OCPath queryItemPath;
+			OCPath queryItemPath = nil;
+			OCSyncAnchor syncAnchor = nil;
 
 			// Queries targeting the parent directory of taskPath
 			if ([query.queryPath isEqual:parentTaskPath])
@@ -859,6 +901,16 @@
 					}
 				}
 			}
+
+			// Queries targeting a sync anchor
+			if (directoryHasChanged && ((syncAnchor = query.querySinceSyncAnchor) != nil) && (querySyncAnchor!=nil) && (taskRootItem!=nil))
+			{
+				query.state = OCQueryStateWaitingForServerReply;
+
+				[query mergeItemsToFullQueryResults:@[ taskRootItem ] syncAnchor:querySyncAnchor];
+
+				query.state = OCQueryStateIdle;
+			}
 		}
 
 		if (useQueryResults != nil)
@@ -875,14 +927,7 @@
 #pragma mark - Tools
 - (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
 {
-	if (item.type == OCItemTypeCollection)
-	{
-		// This method only supports files
-		completionHandler(OCError(OCErrorFeatureNotSupportedForItem), item, nil);
-		return;
-	}
-
-	[self.vault.database retrieveCacheItemsAtPath:item.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
+	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
 }
@@ -924,6 +969,26 @@
 }
 
 - (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
+{
+	return(nil); // Stub implementation
+}
+
+- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
+{
+	return(nil); // Stub implementation
+}
+
+- (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
+{
+	return(nil); // Stub implementation
+}
+
+- (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
+{
+	return(nil); // Stub implementation
+}
+
+- (NSProgress *)synchronizeWithServer
 {
 	return(nil); // Stub implementation
 }
@@ -1131,26 +1196,6 @@
 			});
 		}
 	}];
-}
-
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)synchronizeWithServer
-{
-	return(nil); // Stub implementation
 }
 
 #pragma mark - OCEventHandler methods

@@ -67,6 +67,15 @@
 	return (query);
 }
 
++ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor
+{
+	OCQuery *query = [self new];
+
+	query.querySinceSyncAnchor = syncAnchor;
+
+	return (query);
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -189,6 +198,7 @@
 - (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flags completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler
 {
 	NSArray <OCItem *> *processedResults=nil, *lastResults=nil;
+	OCSyncAnchor syncAnchor = nil;
 	BOOL changesAvailable = NO;
 
 	@synchronized(self)
@@ -203,6 +213,16 @@
 		_lastQueryResults = _processedQueryResults;
 		_hasChangesAvailable = NO;
 
+		// Special handling for queries targeting a sync anchor: drop all entries when a change set is requested
+		if (self.querySinceSyncAnchor != nil)
+		{
+			_fullQueryResults = [NSMutableArray new];
+			_processedQueryResults = [NSMutableArray new];
+			_lastQueryResults = [NSMutableArray new];
+
+			syncAnchor = _lastMergeSyncAnchor;
+		}
+
 		// Process on serial queue in the background to ensure completionHandlers are called/change sets are returned in order of requests and to return from this method immediately
 		[self queueBlock:^{
 			OCQueryChangeSet *changeSet=nil;
@@ -216,6 +236,8 @@
 				changeSet = [[OCQueryChangeSet alloc] initWithQueryResult:processedResults relativeTo:nil];
 				changeSet.containsChanges = NO;
 			}
+
+			changeSet.syncAnchor = syncAnchor;
 
 			if (completionHandler != nil)
 			{

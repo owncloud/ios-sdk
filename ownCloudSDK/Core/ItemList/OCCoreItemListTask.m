@@ -68,7 +68,7 @@
 
 		_cachedSet.state = OCCoreItemListStateStarted;
 
-		[_core.vault.database retrieveCacheItemsAtPath:self.path completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCItem *> *items) {
+		[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 				[_cachedSet updateWithError:error items:items];
 

@@ -201,64 +201,115 @@
 	}]];
 }
 
-- (void)retrieveCacheItemsAtPath:(OCPath)path completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)_completeRetrievalWithResultSet:(OCSQLiteResultSet *)resultSet completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+{
+	NSMutableArray <NSDictionary<NSString *, id<NSObject>> *> *resultDicts = [NSMutableArray new];
+	NSError *returnError = nil;
+
+	[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+		[resultDicts addObject:rowDictionary];
+	} error:&returnError];
+
+	if (returnError != nil)
+	{
+		completionHandler(self, returnError, nil, nil);
+	}
+	else
+	{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+			NSMutableArray <OCItem *> *items = [NSMutableArray new];
+			OCSyncAnchor syncAnchor = nil;
+
+			for (NSDictionary<NSString *, id<NSObject>> *resultDict in resultDicts)
+			{
+				NSData *itemData;
+				OCSyncAnchor itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"];
+
+				if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
+				{
+					OCItem *item;
+
+					if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
+					{
+						[items addObject:item];
+						item.databaseID = resultDict[@"mdID"];
+					}
+				}
+
+				if (itemSyncAnchor != nil)
+				{
+					if (syncAnchor != nil)
+					{
+						if (syncAnchor.integerValue < itemSyncAnchor.integerValue)
+						{
+							syncAnchor = itemSyncAnchor;
+						}
+					}
+					else
+					{
+						syncAnchor = itemSyncAnchor;
+					}
+				}
+			}
+
+			completionHandler(self, nil, syncAnchor, items);
+		});
+	}
+}
+
+- (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSString *parentPath = path;
+	NSString *sqlQueryString = nil;
+	NSArray *parameters = nil;
 
 	if ([parentPath hasSuffix:@"/"] && ![parentPath isEqual:@"/"])
 	{
 		parentPath = [parentPath substringWithRange:NSMakeRange(0, parentPath.length-1)];
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, itemData FROM metaData WHERE parentPath=? OR path=?" withParameters:@[parentPath,path] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	if (itemOnly)
+	{
+		sqlQueryString = @"SELECT mdID, itemData FROM metaData WHERE path=?";
+		parameters = @[path];
+	}
+	else
+	{
+		sqlQueryString = @"SELECT mdID, itemData FROM metaData WHERE parentPath=? OR path=?";
+		parameters = @[parentPath,path];
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
-			completionHandler(self, error, nil);
+			completionHandler(self, error, nil, nil);
 		}
 		else
 		{
-			NSMutableArray <NSDictionary<NSString *, id<NSObject>> *> *resultDicts = [NSMutableArray new];
-			NSError *returnError = nil;
-
-			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-				[resultDicts addObject:rowDictionary];
-			} error:&returnError];
-
-			if (returnError != nil)
-			{
-				completionHandler(self, returnError, nil);
-			}
-			else
-			{
-				dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-					NSMutableArray <OCItem *> *items = [NSMutableArray new];
-
-					for (NSDictionary<NSString *, id<NSObject>> *resultDict in resultDicts)
-					{
-						NSData *itemData;
-
-						if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
-						{
-							OCItem *item;
-
-							if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
-							{
-								[items addObject:item];
-								item.databaseID = resultDict[@"mdID"];
-							}
-						}
-					}
-
-					completionHandler(self, nil, items);
-				});
-			}
+			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
 		}
 	}]];
 }
 
-- (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	// Stub implementation
+	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE syncAnchor > ?";
+
+	if (foldersOnly)
+	{
+		sqlQueryString = [sqlQueryString stringByAppendingFormat:@" AND type == %ld", (long)OCItemTypeCollection];
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:@[synchAnchor] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (error != nil)
+		{
+			completionHandler(self, error, nil, nil);
+		}
+		else
+		{
+			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
+		}
+	}]];
 }
 
 #pragma mark - Thumbnail interface

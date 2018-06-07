@@ -119,6 +119,7 @@
 		DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */; };
+		DCC6563D20C979FB00110A97 /* TestTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6563C20C979FB00110A97 /* TestTools.m */; };
 		DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8F9CA202853B300EB6701 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DCC8F9C72028535B00EB6701 /* LICENSE */; };
@@ -395,6 +396,8 @@
 		DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteMigration.m; sourceTree = "<group>"; };
 		DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Schemas.h"; sourceTree = "<group>"; };
 		DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Schemas.m"; sourceTree = "<group>"; };
+		DCC6563B20C979FB00110A97 /* TestTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTools.h; sourceTree = "<group>"; };
+		DCC6563C20C979FB00110A97 /* TestTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestTools.m; sourceTree = "<group>"; };
 		DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudSDK.h; sourceTree = "<group>"; };
 		DCC8F9AF202852A200EB6701 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1021,6 +1024,8 @@
 				DC72E4362063DF7700189B9A /* customSettings.plist */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
+				DCC6563C20C979FB00110A97 /* TestTools.m */,
+				DCC6563B20C979FB00110A97 /* TestTools.h */,
 			);
 			path = ownCloudSDKTests;
 			sourceTree = "<group>";
@@ -1443,6 +1448,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */,
+				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
 				DC5A20312074E8890083DB7D /* CoreTests.m in Sources */,
 				DC4AFAAD206A7FDB00189B9A /* SQLTests.m in Sources */,

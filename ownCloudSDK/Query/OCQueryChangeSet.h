@@ -48,6 +48,8 @@ typedef void(^OCQueryChangeSetEnumerator)(OCQueryChangeSet *changeSet, OCQueryCh
 @property(strong) NSIndexSet *updatedItemsIndexSet;  	//!< Indexes at which items were updated
 @property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items ordered by index
 
+@property(strong) OCSyncAnchor syncAnchor;		//!< For sync anchor queries, the sync anchor at the time of the changeset
+
 #pragma mark - Init & Dealloc
 - (instancetype)initWithQueryResult:(NSArray <OCItem *> *)queryResult relativeTo:(NSArray <OCItem *> *)previousQueryResult;
 
