@@ -80,7 +80,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) OCPath path; //!< Path of the item on the server relative to root
 @property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
-@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+@property(strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
+@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
 @property(readonly,nonatomic) OCItemVersionIdentifier *versionIdentifier; // (dynamic/ephermal)
 

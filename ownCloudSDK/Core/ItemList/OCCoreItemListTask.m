@@ -100,18 +100,74 @@
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
 		[_core queueConnectivityBlock:^{
-			[_core.connection retrieveItemListAtPath:self.path completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-					[_retrievedSet updateWithError:error items:items];
+			void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
+				[_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+						[_retrievedSet updateWithError:error items:items];
 
-					if ((_retrievedSet.state == OCCoreItemListStateSuccess) || (_retrievedSet.state == OCCoreItemListStateFailed))
-					{
-						self.changeHandler(_core, self);
-					}
+						if (_retrievedSet.state == OCCoreItemListStateSuccess)
+						{
+							// Update all items with root item
+							if (self.path != nil)
+							{
+								OCItem *rootItem;
 
-					[_core endActivity:@"update retrieved set"];
+								if ((rootItem = _retrievedSet.itemsByPath[self.path]) != nil)
+								{
+									if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
+									{
+										for (OCItem *item in items)
+										{
+											if (item != rootItem)
+											{
+												item.parentFileID = rootItem.fileID;
+											}
+										}
+									}
+
+									if (rootItem.parentFileID == nil)
+									{
+										rootItem.parentFileID = parentDirectoryItem.fileID;
+									}
+								}
+							}
+
+							self.changeHandler(_core, self);
+						}
+
+						if (_retrievedSet.state == OCCoreItemListStateFailed)
+						{
+							self.changeHandler(_core, self);
+						}
+
+						[_core endActivity:@"update retrieved set"];
+					}];
 				}];
-			}];
+			};
+
+			if ([self.path isEqual:@"/"])
+			{
+				RetrieveItems(nil);
+			}
+			else
+			{
+				[_core.connection retrieveItemListAtPath:[self.path stringByDeletingLastPathComponent] depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					if (error != nil)
+					{
+						[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+							[_retrievedSet updateWithError:error items:nil];
+						}];
+					}
+					else
+					{
+						OCItem *parentItem = items.firstObject;
+
+						[_core queueConnectivityBlock:^{
+							RetrieveItems(parentItem);
+						}];
+					}
+				}];
+			}
 		}];
 	}
 }

@@ -480,7 +480,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				NSLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
@@ -529,7 +529,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/Photos" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				NSLog(@"Items at /Photos: %@", items);
 
 				for (OCItem *item in items)

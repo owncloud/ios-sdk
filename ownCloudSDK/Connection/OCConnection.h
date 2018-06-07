@@ -110,7 +110,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
 
 #pragma mark - Actions
 - (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;

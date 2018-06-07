@@ -60,6 +60,7 @@
 
 	[coder encodeObject:_path 		forKey:@"path"];
 
+	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
 
@@ -101,6 +102,7 @@
 
 		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
 
+		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
 
@@ -179,7 +181,7 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, parentID: %@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.parentFileID]);
 }
 
 @end

@@ -135,6 +135,21 @@
 							break;
 						}
 					}];
+
+					if (query.state == OCQueryStateIdle)
+					{
+						// Verify parentFileID
+						XCTAssert(query.rootItem!=nil); // Root item exists
+						XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
+						XCTAssert(query.rootItem.parentFileID==nil); // Root item has no parentFileID
+
+						for (OCItem *item in changeset.queryResult)
+						{
+							XCTAssert(item.fileID!=nil); // all items in the result have a file ID
+							XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
+							XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+						}
+					}
 				}
 
 				if (query.state == OCQueryStateIdle)
@@ -142,6 +157,7 @@
 					if (subfolderQuery==nil)
 					{
 						OCPath subfolderPath = nil;
+						OCItem *firstQueryRootItem = query.rootItem;
 
 						for (OCItem *item in query.queryResults)
 						{
@@ -181,6 +197,22 @@
 											break;
 										}
 									}];
+								}
+
+								if (query.state == OCQueryStateIdle)
+								{
+									// Verify parentFileID
+									XCTAssert(query.rootItem!=nil); // Root item exists
+									XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
+									XCTAssert(query.rootItem.parentFileID!=nil); // Root item has no parentFileID
+									XCTAssert([query.rootItem.parentFileID isEqual:firstQueryRootItem.fileID]); // all items in result have the parentFileID of their parent dir
+
+									for (OCItem *item in changeset.queryResult)
+									{
+										XCTAssert(item.fileID!=nil); // all items in the result have a file ID
+										XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
+										XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+									}
 								}
 
 								if (query.state == OCQueryStateIdle)

@@ -479,7 +479,7 @@
 }
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
 	OCConnectionDAVRequest *davRequest;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
@@ -490,7 +490,7 @@
 		url = [url URLByAppendingPathComponent:path];
 	}
 
-	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:1]) != nil)
+	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		[davRequest.xmlRequestPropAttribute addChildren:@[
 			[OCXMLNode elementWithName:@"D:resourcetype"],
