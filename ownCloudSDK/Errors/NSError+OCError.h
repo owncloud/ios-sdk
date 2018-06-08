@@ -48,7 +48,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorFeatureNotSupportedByServer, //!< This feature is not supported for this server (version).
 	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
 
-	OCErrorOutdatedCache //!< An operation failed due to outdated cache information
+	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information
+
+	OCErrorRunningOperation //!< A running operation prevents execution
 };
 
 @class OCConnectionIssue;

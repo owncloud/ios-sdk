@@ -90,4 +90,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCCache.h>
 
+#import <ownCloudSDK/OCCoreManager.h>
+#import <ownCloudSDK/OCBookmarkManager.h>
+
 #import <ownCloudSDK/OCLogger.h>
