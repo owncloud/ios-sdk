@@ -50,7 +50,7 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
 @interface OCClassSettings : NSObject
 
-+ (instancetype)sharedSettings;
+@property(class, readonly, strong, nonatomic) OCClassSettings *sharedSettings;
 
 - (void)addSource:(id <OCClassSettingsSource>)source;
 - (void)removeSource:(id <OCClassSettingsSource>)source;

@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
 
-+ (instancetype)sharedLogger;
+@property(class, readonly, strong, nonatomic) OCLogger *sharedLogger;
 
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...;
