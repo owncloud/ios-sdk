@@ -22,7 +22,7 @@
 
 @implementation OCBookmarkManager
 
-@synthesize bookmarks;
+@synthesize bookmarks = _bookmarks;
 
 #pragma mark - Init
 + (instancetype)sharedBookmarkManager
