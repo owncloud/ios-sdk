@@ -31,7 +31,7 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 }
 
 #pragma mark - Shared instance
-+ (instancetype)sharedCoreManager;
+@property(class, readonly, strong, nonatomic) OCCoreManager *sharedCoreManager;
 
 #pragma mark - Requesting and returning cores
 - (OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.

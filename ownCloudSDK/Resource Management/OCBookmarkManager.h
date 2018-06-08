@@ -28,7 +28,7 @@
 @property(readonly,nonatomic) NSURL *bookmarkStoreURL;
 
 #pragma mark - Shared instance
-+ (instancetype)sharedBookmarkManager;
+@property(class, readonly, strong, nonatomic) OCBookmarkManager *sharedBookmarkManager;
 
 #pragma mark - Bookmark storage
 - (void)loadBookmarks;
