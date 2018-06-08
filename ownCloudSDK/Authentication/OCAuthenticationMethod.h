@@ -86,6 +86,12 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 @end
 
+@protocol OCAuthenticationMethodUIAppExtension
+
+- (BOOL)cacheSecrets; //!< Determines if -cachedAuthenticationSecretForConnection: actually caches the authentication secret. If not implemented in OCAuthenticationMethod, the default is NO.
+
+@end
+
 extern OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey; //!< For passphrase-based authentication methods: the user name (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey; //!< For passphrase-based authentication methods: the passphrase (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey; //!< The UIViewController to use when presenting a view controller (for f.ex. token-based authentication mechanisms like OAuth2) (value type: UIViewController*)

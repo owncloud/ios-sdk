@@ -18,6 +18,8 @@
 		DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD0209475C20018DF7F /* UIImage+OCTools.m */; };
 		DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */; };
+		DC27A19720CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */; };
+		DC27A19820CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */; };
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
 		DC3094882057358800189B9A /* ownCloudUI.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094862057358800189B9A /* ownCloudUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
@@ -296,6 +298,8 @@
 		DC179CD0209475C20018DF7F /* UIImage+OCTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImage+OCTools.m"; sourceTree = "<group>"; };
 		DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProgress+OCExtensions.h"; sourceTree = "<group>"; };
 		DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCExtensions.m"; sourceTree = "<group>"; };
+		DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+UIAppExtension.h"; sourceTree = "<group>"; };
+		DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+UIAppExtension.m"; sourceTree = "<group>"; };
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
 		DC3094842057358800189B9A /* ownCloudUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC3094862057358800189B9A /* ownCloudUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudUI.h; sourceTree = "<group>"; };
@@ -560,10 +564,20 @@
 			path = Foundation;
 			sourceTree = "<group>";
 		};
+		DC27A19420CAA370008ACB6C /* UIApp extensions */ = {
+			isa = PBXGroup;
+			children = (
+				DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */,
+				DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */,
+			);
+			path = "UIApp extensions";
+			sourceTree = "<group>";
+		};
 		DC3094852057358800189B9A /* ownCloudUI */ = {
 			isa = PBXGroup;
 			children = (
 				DC3094862057358800189B9A /* ownCloudUI.h */,
+				DC27A19420CAA370008ACB6C /* UIApp extensions */,
 				DC79E1A3205871FA00189B9A /* Certificate Metadata */,
 				DC79E1A2205871B800189B9A /* Resources */,
 				DC30954320574BC900189B9A /* openssl.xcodeproj */,
@@ -1091,6 +1105,7 @@
 				DC79E1AD205888F800189B9A /* OCCertificateDetailsViewNode.h in Headers */,
 				DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */,
 				DC3094882057358800189B9A /* ownCloudUI.h in Headers */,
+				DC27A19720CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h in Headers */,
 				DC30955220574C2C00189B9A /* OCCertificate+OpenSSL.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1373,6 +1388,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC27A19820CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m in Sources */,
 				DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */,
 				DC30955320574C2C00189B9A /* OCCertificate+OpenSSL.m in Sources */,
 				DC79E1AE205888F800189B9A /* OCCertificateDetailsViewNode.m in Sources */,
@@ -1745,6 +1761,7 @@
 		DCC8F9C0202852A200EB6701 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -1766,6 +1783,7 @@
 		DCC8F9C1202852A200EB6701 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;

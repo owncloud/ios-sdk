@@ -211,19 +211,21 @@
 		{
 			cachedAuthenticationSecret = [self loadCachedAuthenticationSecretForConnection:connection];
 			
-			// Only cache secret if the app is running in the foreground and receiving events
-			dispatch_async(dispatch_get_main_queue(), ^{
-				if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive)
-				{
-					@synchronized(self)
+			if ([self respondsToSelector:@selector(cacheSecrets)])
+			{
+				dispatch_async(dispatch_get_main_queue(), ^{
+					if (((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
 					{
-						if (_cachedAuthenticationSecret == nil)
+						@synchronized(self)
 						{
-							_cachedAuthenticationSecret = cachedAuthenticationSecret;
+							if (_cachedAuthenticationSecret == nil)
+							{
+								_cachedAuthenticationSecret = cachedAuthenticationSecret;
+							}
 						}
 					}
-				}
-			});
+				});
+			}
 		}
 		else
 		{
