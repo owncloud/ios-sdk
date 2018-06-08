@@ -99,8 +99,8 @@
 
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
-		[_core queueConnectivityBlock:^{
-			void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
+		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
+			[_core queueConnectivityBlock:^{
 				[_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 						[_retrievedSet updateWithError:error items:items];
@@ -143,32 +143,73 @@
 						[_core endActivity:@"update retrieved set"];
 					}];
 				}];
-			};
+			}];
+		};
 
-			if ([self.path isEqual:@"/"])
-			{
-				RetrieveItems(nil);
-			}
-			else
-			{
-				[_core.connection retrieveItemListAtPath:[self.path stringByDeletingLastPathComponent] depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					if (error != nil)
+		if ([self.path isEqual:@"/"])
+		{
+			RetrieveItems(nil);
+		}
+		else
+		{
+			[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+				__block OCItem *parentItem = nil;
+				__block NSError *dbError = nil;
+
+				dispatch_group_t databaseWaitGroup = dispatch_group_create();
+
+				dispatch_group_enter(databaseWaitGroup);
+
+				// Retrieve parent item from cache.
+				[_core.vault.database retrieveCacheItemsAtPath:[self.path stringByDeletingLastPathComponent] itemOnly:1 completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+					dbError = error;
+
+					if (error == nil)
 					{
-						[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-							[_retrievedSet updateWithError:error items:nil];
-						}];
+						parentItem = items.firstObject;
+					}
+
+					dispatch_group_leave(databaseWaitGroup);
+				}];
+
+				dispatch_group_wait(databaseWaitGroup, DISPATCH_TIME_FOREVER);
+
+				if (dbError != nil)
+				{
+					[_retrievedSet updateWithError:dbError items:nil];
+				}
+				else
+				{
+					if (parentItem == nil)
+					{
+						// No parent item found - and not the root folder. If the SDK is used to discover directories and request their
+						// contents after discovery, this should never happen. However, for direct requests to directories, this may happen.
+						// In that case, the parent directory(s) need to be requested first, so that their parent item(s) are known and in
+						// the database.
+						OCQuery *parentDirectoryQuery = [OCQuery queryForPath:[self.path stringByDeletingLastPathComponent]];
+
+						parentDirectoryQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
+							// Remove query once the response from the server arrived
+							if (query.state == OCQueryStateIdle)
+							{
+								// Use root item as parent item
+								RetrieveItems(query.rootItem);
+
+								// Remove query from core
+								[_core stopQuery:query];
+							}
+						};
+
+						[_core startQuery:parentDirectoryQuery];
 					}
 					else
 					{
-						OCItem *parentItem = items.firstObject;
-
-						[_core queueConnectivityBlock:^{
-							RetrieveItems(parentItem);
-						}];
+						// Parent item found in the database
+						RetrieveItems(parentItem);
 					}
-				}];
-			}
-		}];
+				}
+			}];
+		}
 	}
 }
 
