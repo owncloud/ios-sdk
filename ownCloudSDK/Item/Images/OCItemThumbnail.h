@@ -26,12 +26,12 @@
 
 	NSMutableDictionary <NSValue *, UIImage *> *_imageByRequestedMaximumSize;
 
-	OCItemVersionIdentifier *_versionIdentifier;
+	OCItemVersionIdentifier *_itemVersionIdentifier;
 }
 
 @property(assign) CGSize maximumSizeInPixels;
 
-@property(strong) OCItemVersionIdentifier *versionIdentifier;
+@property(strong) OCItemVersionIdentifier *itemVersionIdentifier;
 
 - (BOOL)requestImageForSize:(CGSize)maximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
 

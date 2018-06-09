@@ -707,7 +707,7 @@
 					}
 				}
 
-				thumbnail.versionIdentifier = itemVersionIdentifier;
+				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
 				thumbnail.maximumSizeInPixels = maximumSize;
 
 				event.result = thumbnail;

@@ -65,6 +65,7 @@
 			NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
 
 			requestCount = @(requestCount.integerValue + 1);
+			_requestCountByUUID[bookmark.uuid] = requestCount;
 
 			if (requestCount.integerValue == 1)
 			{

@@ -1024,7 +1024,7 @@
 			if ((thumbnail = [_thumbnailCache objectForKey:item.fileID]) != nil)
 			{
 				// Yes! But is it the version we want?
-				if ([thumbnail.versionIdentifier isEqual:item.itemVersionIdentifier])
+				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier])
 				{
 					// Yes it is!
 					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
@@ -1066,7 +1066,7 @@
 							cachedThumbnail.maximumSizeInPixels = maxSize;
 							cachedThumbnail.mimeType = mimeType;
 							cachedThumbnail.data = thumbnailData;
-							cachedThumbnail.versionIdentifier = versionIdentifier;
+							cachedThumbnail.itemVersionIdentifier = versionIdentifier;
 
 							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
 							{

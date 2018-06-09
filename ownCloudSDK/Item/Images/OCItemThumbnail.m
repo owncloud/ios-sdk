@@ -21,7 +21,7 @@
 
 @implementation OCItemThumbnail
 
-@synthesize versionIdentifier = _versionIdentifier;
+@synthesize itemVersionIdentifier = _itemVersionIdentifier;
 
 #pragma mark - Init & Dealloc
 - (instancetype)init
