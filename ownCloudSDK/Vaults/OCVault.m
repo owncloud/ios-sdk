@@ -154,7 +154,7 @@
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
-	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID] URLByAppendingPathComponent:item.name]);
+	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID isDirectory:YES] URLByAppendingPathComponent:item.name isDirectory:NO]);
 }
 
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid
@@ -170,6 +170,11 @@
 + (NSString *)filesRootPathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
 {
 	return (OCVaultPathFiles);
+}
+
++ (NSString *)filesRootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid
+{
+	return ([[self rootPathRelativeToGroupContainerForVaultUUID:uuid] stringByAppendingPathComponent:[self filesRootPathRelativeToRootPathForVaultUUID:uuid]]);
 }
 
 @end

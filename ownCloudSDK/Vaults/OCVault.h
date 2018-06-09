@@ -51,9 +51,13 @@
 
 #pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
+
 + (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
+
 + (NSString *)filesRootPathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
++ (NSString *)filesRootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
 
 @end
 
