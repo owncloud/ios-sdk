@@ -54,7 +54,7 @@
 {
 	if (_rootURL == nil)
 	{
-		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@"Vaults"] URLByAppendingPathComponent:self.uuid.UUIDString];
+		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathVaults] URLByAppendingPathComponent:[OCVault rootPathRelativeToGroupContainerForVaultUUID:_uuid]];
 	}
 	
 	return (_rootURL);
@@ -64,7 +64,7 @@
 {
 	if (_databaseURL == nil)
 	{
-		_databaseURL = [self.rootURL URLByAppendingPathComponent:[self.uuid.UUIDString stringByAppendingString:@".db"]];
+		_databaseURL = [self.rootURL URLByAppendingPathComponent:[OCVault databaseFilePathRelativeToRootPathForVaultUUID:_uuid]];
 	}
 
 	return (_databaseURL);
@@ -74,7 +74,7 @@
 {
 	if (_filesRootURL == nil)
 	{
-		_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
+		_filesRootURL = [self.rootURL URLByAppendingPathComponent:[OCVault filesRootPathRelativeToRootPathForVaultUUID:_uuid]];
 	}
 
 	return (_filesRootURL);
@@ -150,11 +150,30 @@
 	return (YES);
 }
 
-#pragma mark - URL builders
+#pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
 	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID] URLByAppendingPathComponent:item.name]);
 }
 
++ (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid
+{
+	return (uuid.UUIDString);
+}
+
++ (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
+{
+	return ([uuid.UUIDString stringByAppendingString:@".db"]);
+}
+
++ (NSString *)filesRootPathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
+{
+	return (OCVaultPathFiles);
+}
+
 @end
+
+NSString *OCVaultPathVaults = @"Vaults";
+NSString *OCVaultPathFiles = @"Files";
+
