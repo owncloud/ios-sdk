@@ -632,7 +632,7 @@
 	{
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item.versionIdentifier,	  	@"itemVersionIdentifier",
+			item.itemVersionIdentifier,	  	@"itemVersionIdentifier",
 			[NSValue valueWithCGSize:size],	@"maximumSize",
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);

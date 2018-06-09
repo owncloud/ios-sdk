@@ -133,7 +133,7 @@
 	_versionIdentifier = nil;
 }
 
-- (OCItemVersionIdentifier *)versionIdentifier
+- (OCItemVersionIdentifier *)itemVersionIdentifier
 {
 	if (_versionIdentifier == nil)
 	{

@@ -587,7 +587,7 @@
 						// Attach databaseID of cached items to the retrieved items
 						retrievedItem.databaseID = cacheItem.databaseID;
 
-						if (![retrievedItem.versionIdentifier isEqual:cacheItem.versionIdentifier])
+						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier])
 						{
 							// Update item in the cache if the server has a different version
 							[changedCacheItems addObject:retrievedItem];
@@ -999,7 +999,7 @@
 {
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
-	OCItemVersionIdentifier *versionIdentifier = item.versionIdentifier;
+	OCItemVersionIdentifier *versionIdentifier = item.itemVersionIdentifier;
 	CGSize requestedMaximumSizeInPixels;
 
 	retrieveHandler = [retrieveHandler copy];
@@ -1024,7 +1024,7 @@
 			if ((thumbnail = [_thumbnailCache objectForKey:item.fileID]) != nil)
 			{
 				// Yes! But is it the version we want?
-				if ([thumbnail.versionIdentifier isEqual:item.versionIdentifier])
+				if ([thumbnail.versionIdentifier isEqual:item.itemVersionIdentifier])
 				{
 					// Yes it is!
 					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
@@ -1120,7 +1120,7 @@
 									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
 										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
 										@"scale" : @(scale),
-										@"itemVersionIdentifier" : item.versionIdentifier,
+										@"itemVersionIdentifier" : item.itemVersionIdentifier,
 										@"item" : item,
 									} ephermalUserInfo:@{
 										@"requestID" : requestID

@@ -83,7 +83,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
-@property(readonly,nonatomic) OCItemVersionIdentifier *versionIdentifier; // (dynamic/ephermal)
+@property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
