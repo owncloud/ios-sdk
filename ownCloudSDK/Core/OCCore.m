@@ -447,6 +447,7 @@
 			_itemListTasksByPath[path] = task;
 
 			task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
+				// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
 				[core handleUpdatedTask:task];
 			};
 

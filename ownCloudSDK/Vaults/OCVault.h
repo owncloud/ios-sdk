@@ -26,6 +26,7 @@
 
 	NSURL *_rootURL;
 	NSURL *_databaseURL;
+	NSURL *_filesRootURL;
 
 	OCDatabase *_database;
 }
@@ -36,6 +37,7 @@
 
 @property(readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
 @property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
+@property(readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -46,5 +48,8 @@
 - (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
+
+#pragma mark - URL builders
+- (NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
 
 @end

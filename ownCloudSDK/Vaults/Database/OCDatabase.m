@@ -257,6 +257,22 @@
 	}
 }
 
+- (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=?" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (error != nil)
+		{
+			completionHandler(self, error, nil, nil);
+		}
+		else
+		{
+			[self _completeRetrievalWithResultSet:resultSet completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				completionHandler(db, error, syncAnchor, items.firstObject);
+			}];
+		}
+	}]];
+}
+
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSString *parentPath = path;
@@ -270,12 +286,12 @@
 
 	if (itemOnly)
 	{
-		sqlQueryString = @"SELECT mdID, itemData FROM metaData WHERE path=?";
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE path=?";
 		parameters = @[path];
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, itemData FROM metaData WHERE parentPath=? OR path=?";
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE parentPath=? OR path=?";
 		parameters = @[parentPath,path];
 	}
 

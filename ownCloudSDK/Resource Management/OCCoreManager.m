@@ -84,6 +84,13 @@
 						}
 					}];
 				}
+				else
+				{
+					if (completionHandler != nil)
+					{
+						completionHandler(nil, OCError(OCErrorInternal));
+					}
+				}
 			}
 			else
 			{

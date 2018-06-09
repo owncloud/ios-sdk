@@ -19,6 +19,7 @@
 #import "OCVault.h"
 #import "OCAppIdentity.h"
 #import "NSError+OCError.h"
+#import "OCItem.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end
@@ -26,6 +27,12 @@
 @implementation OCVault
 
 @synthesize uuid = _uuid;
+
+@synthesize rootURL = _rootURL;
+@synthesize databaseURL = _databaseURL;
+@synthesize filesRootURL = _filesRootURL;
+
+@synthesize database = _database;
 
 #pragma mark - Init
 - (instancetype)init
@@ -61,6 +68,16 @@
 	}
 
 	return (_databaseURL);
+}
+
+- (NSURL *)filesRootURL
+{
+	if (_filesRootURL == nil)
+	{
+		_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
+	}
+
+	return (_filesRootURL);
 }
 
 - (OCDatabase *)database
@@ -131,6 +148,13 @@
 - (BOOL)fileManager:(NSFileManager *)fileManager shouldRemoveItemAtURL:(NSURL *)URL
 {
 	return (YES);
+}
+
+#pragma mark - URL builders
+- (NSURL *)localURLForItem:(OCItem *)item
+{
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
+	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID] URLByAppendingPathComponent:item.name]);
 }
 
 @end

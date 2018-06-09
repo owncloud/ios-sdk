@@ -39,6 +39,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCClassSettingsFlatSourcePropertyList.h>
 
 #import <ownCloudSDK/OCCore.h>
+#import <ownCloudSDK/OCCore+FileProvider.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
 #import <ownCloudSDK/OCBookmark.h>

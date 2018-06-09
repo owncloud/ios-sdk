@@ -20,6 +20,8 @@
 		DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */; };
 		DC27A19720CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */; };
 		DC27A19820CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */; };
+		DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */; };
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
 		DC3094882057358800189B9A /* ownCloudUI.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094862057358800189B9A /* ownCloudUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
@@ -300,6 +302,8 @@
 		DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCExtensions.m"; sourceTree = "<group>"; };
 		DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+UIAppExtension.h"; sourceTree = "<group>"; };
 		DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+UIAppExtension.m"; sourceTree = "<group>"; };
+		DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+FileProvider.h"; sourceTree = "<group>"; };
+		DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+FileProvider.m"; sourceTree = "<group>"; };
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
 		DC3094842057358800189B9A /* ownCloudUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC3094862057358800189B9A /* ownCloudUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudUI.h; sourceTree = "<group>"; };
@@ -738,6 +742,8 @@
 			children = (
 				DCC8F9D8202854FB00EB6701 /* OCCore.m */,
 				DCC8F9D7202854FB00EB6701 /* OCCore.h */,
+				DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */,
+				DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */,
 				DC0364FA20AAD75700F62732 /* OCCore+SyncEngine.m */,
 				DC0364F920AAD75700F62732 /* OCCore+SyncEngine.h */,
 				DC5A203320750BEE0083DB7D /* OCCore+Internal.h */,
@@ -1118,6 +1124,7 @@
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
+				DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */,
 				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DCC6567820CA696A00110A97 /* OCBookmarkManager.h in Headers */,
@@ -1458,6 +1465,7 @@
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
 				DCEA7D982093556600F25223 /* OCCache.m in Sources */,
 				DC02835C209098D7005B6334 /* OCImage.m in Sources */,
+				DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */,
 				DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */,
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
