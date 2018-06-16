@@ -424,7 +424,14 @@
 			// Fetch updated parent directory contents
 			if (syncRecord.itemPath != nil)
 			{
-				[self startItemListTaskForPath:syncRecord.itemPath.stringByDeletingLastPathComponent];
+				OCPath parentDirectory = syncRecord.itemPath.stringByDeletingLastPathComponent;
+
+				if (![parentDirectory hasSuffix:@"/"])
+				{
+					parentDirectory = [parentDirectory stringByAppendingString:@"/"];
+				}
+
+				[self startItemListTaskForPath:parentDirectory];
 			}
 		}
 
