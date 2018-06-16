@@ -126,6 +126,12 @@
 			break;
 		}
 	}
+	else if (event.error != nil)
+	{
+		// Reschedule for all other errors
+		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
+	}
+
 
 	return (canDeleteSyncRecord);
 }

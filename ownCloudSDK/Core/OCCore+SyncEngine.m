@@ -222,15 +222,18 @@
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords;
 
-		@synchronized(self)
+		if (self.reachabilityMonitor.available)
 		{
-			needsToProcessSyncRecords = _needsToProcessSyncRecords;
-			_needsToProcessSyncRecords = NO;
-		}
+			@synchronized(self)
+			{
+				needsToProcessSyncRecords = _needsToProcessSyncRecords;
+				_needsToProcessSyncRecords = NO;
+			}
 
-		if (needsToProcessSyncRecords)
-		{
-			[self _processSyncRecords];
+			if (needsToProcessSyncRecords)
+			{
+				[self _processSyncRecords];
+			}
 		}
 	}];
 }
