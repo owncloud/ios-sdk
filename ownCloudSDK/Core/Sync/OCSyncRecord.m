@@ -25,6 +25,12 @@
 @synthesize action = _action;
 @synthesize timestamp = _timestamp;
 
+@synthesize inProgressSince = _inProgressSince;
+@synthesize state = _state;
+@synthesize blockedByBundleIdentifier = _blockedByBundleIdentifier;
+@synthesize blockedByPID = _blockedByPID;
+@synthesize allowsRescheduling = _allowsRescheduling;
+
 @synthesize archivedServerItem = _archivedServerItem;
 
 @synthesize parameters = _parameters;
@@ -38,6 +44,8 @@
 	{
 		_action = action;
 		_timestamp = [NSDate date];
+
+		_state = OCSyncRecordStatePending;
 
 		_archivedServerItem = archivedServerItem;
 		_parameters = parameters;
@@ -90,6 +98,36 @@
 	return (_itemPath);
 }
 
+- (void)setState:(OCSyncRecordState)state
+{
+	_state = state;
+
+	if (state == OCSyncRecordStateAwaitingUserInteraction)
+	{
+		self.blockedByBundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+		self.blockedByPID = @(getpid());
+	}
+	else
+	{
+		self.blockedByBundleIdentifier = nil;
+		self.blockedByPID = nil;
+	}
+}
+
+- (BOOL)blockedByDifferentCopyOfThisProcess
+{
+	if (_state == OCSyncRecordStateAwaitingUserInteraction)
+	{
+		if (([self.blockedByBundleIdentifier isEqual:[[NSBundle mainBundle] bundleIdentifier]] &&
+		    (![self.blockedByPID isEqual:@(getpid())])))
+		{
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
 #pragma mark - Serialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData
 {
@@ -113,9 +151,18 @@
 	if ((self = [self init]) != nil)
 	{
 		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
+
 		_action = [decoder decodeObjectOfClass:[NSString class] forKey:@"action"];
 		_timestamp = [decoder decodeObjectOfClass:[NSDate class] forKey:@"timestamp"];
+
+		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
+		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
+		_blockedByBundleIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"blockedByBundleIdentifier"];
+		_blockedByPID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"blockedByPID"];
+		_allowsRescheduling = [decoder decodeBoolForKey:@"allowsRescheduling"];
+
 		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
+
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
 	}
 	
@@ -125,9 +172,18 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_recordID forKey:@"recordID"];
+
 	[coder encodeObject:_action forKey:@"action"];
 	[coder encodeObject:_timestamp forKey:@"timestamp"];
+
+	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
+	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
+	[coder encodeObject:_blockedByBundleIdentifier forKey:@"blockedByBundleIdentifier"];
+	[coder encodeObject:_blockedByPID forKey:@"blockedByPID"];
+	[coder encodeBool:_allowsRescheduling forKey:@"allowsRescheduling"];
+
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
+
 	[coder encodeObject:_parameters forKey:@"parameters"];
 }
 

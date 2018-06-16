@@ -22,12 +22,26 @@
 #import "OCTypes.h"
 #import "OCCore.h"
 
+typedef NS_ENUM(NSUInteger, OCSyncRecordState)
+{
+	OCSyncRecordStatePending,   //!< Sync record pending processing by the sync engine
+	OCSyncRecordStateScheduled, //!< Sync record's action has been scheduled and awaits the result and processing
+//	OCSyncRecordStateProcessResult, //!< Sync record's action is processing the result
+	OCSyncRecordStateAwaitingUserInteraction //!< Sync record's action waits for user interaction
+};
+
 @interface OCSyncRecord : NSObject <NSSecureCoding>
 {
 	OCSyncRecordID _recordID;
 
 	OCSyncAction _action;
 	NSDate *_timestamp;
+
+	OCSyncRecordState _state;
+	NSDate *_inProgressSince;
+	NSString *_blockedByBundleIdentifier;
+	NSNumber *_blockedByPID;
+	BOOL _allowsRescheduling;
 
 	NSData *_archivedServerItemData;
 	OCItem *_archivedServerItem;
@@ -44,7 +58,12 @@
 @property(readonly) OCSyncAction action; //!< The action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
 
-@property(strong) NSDate *inProgressSince; //!< Time since which the action is being executed (ephermal)
+@property(assign,nonatomic) OCSyncRecordState state; //!< Current processing state
+@property(strong) NSDate *inProgressSince; //!< Time since which the action is being executed
+@property(strong) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
+@property(strong) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.
+@property(readonly,nonatomic) BOOL blockedByDifferentCopyOfThisProcess; //!< If state==OCSyncRecordStateAwaitingUserInteraction, checks if blockedByBundleIdentifier and blockedByPID match the calling process.
+@property(assign) BOOL allowsRescheduling; //!< If YES, the record may be rescheduled if state==OCSyncRecordStateAwaitingUserInteraction.
 
 @property(readonly,nonatomic) OCPath itemPath; //!< the path of the item, drawn from OCSyncActionParameterPath, OCSyncActionParameterItem and OCSyncActionParameterSourcePath (in that order)
 @property(readonly,nonatomic) OCItem *item; //!< OCSyncActionParameterItem

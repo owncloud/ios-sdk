@@ -570,7 +570,6 @@
 
 	if ((syncRecord = [OCSyncRecord syncRecordFromSerializedData:(NSData *)rowDictionary[@"recordData"]]) != nil)
 	{
-		NSDate *inProgressSince;
 		OCSyncRecordID recordID;
 
 		if ((recordID = (OCSyncRecordID)rowDictionary[@"recordID"]) != nil)
@@ -582,11 +581,6 @@
 				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
 			}
-		}
-
-		if (((inProgressSince = (NSDate *)rowDictionary[@"inProgressSinceDate"]) != nil) && [inProgressSince isKindOfClass:[NSDate class]])
-		{
-			syncRecord.inProgressSince = (NSDate *)inProgressSince;
 		}
 	}
 
@@ -605,7 +599,7 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData", @"inProgressSinceDate" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
 		@"recordID" : recordID,
 	} orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		__block OCSyncRecord *syncRecord = nil;
@@ -628,7 +622,7 @@
 
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
 {
-	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData", @"inProgressSinceDate" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
 		@"path" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path 		 apply:(path!=nil)],
 		@"action" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:action 	 apply:(action!=nil)],
 		@"inProgressSinceDate" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">=" value:inProgressSince apply:(inProgressSince!=nil)]

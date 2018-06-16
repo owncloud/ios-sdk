@@ -283,7 +283,6 @@
 		upgradeMigrator:nil]
 	];
 
-
 	// Version 2
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameSyncJournal
@@ -301,7 +300,7 @@
 		]
 		openStatements:nil
 		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
-			// Migrate to version 4
+			// Migrate to version 2
 			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
 				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
 

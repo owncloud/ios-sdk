@@ -156,28 +156,34 @@
 	}];
 }
 
+- (NSError *)_rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates
+{
+	__block NSError *error = nil;
+
+	if (applyUpdates != nil)
+	{
+		error = applyUpdates(syncRecord);
+	}
+
+	if (error == nil)
+	{
+		syncRecord.inProgressSince = nil;
+		syncRecord.state = OCSyncRecordStatePending;
+
+		[self.vault.database updateSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *updateError) {
+			error = updateError;
+		}];
+	}
+
+	return (error);
+}
+
 - (void)rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates
 {
 	if (syncRecord==nil) { return; }
 
 	[self performProtectedSyncBlock:^NSError *{
-		__block NSError *error = nil;
-
-		if (applyUpdates != nil)
-		{
-			error = applyUpdates(syncRecord);
-		}
-
-		if (error == nil)
-		{
-			syncRecord.inProgressSince = nil;
-
-			[self.vault.database updateSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *updateError) {
-				error = updateError;
-			}];
-		}
-
-		return (error);
+		return ([self _rescheduleSyncRecord:syncRecord withUpdates:applyUpdates]);
 	} completionHandler:^(NSError *error) {
 		if (error != nil)
 		{
@@ -302,7 +308,16 @@
 				// Skip sync records that are already in processing
 				if (syncRecord.inProgressSince != nil)
 				{
-					continue;
+					if (syncRecord.blockedByDifferentCopyOfThisProcess && syncRecord.allowsRescheduling)
+					{
+						// Unblock (and process hereafter) record hung in waiting for a user interaction in another copy of the same app (i.e. happens if this app crashed or was terminated)
+						[self _rescheduleSyncRecord:syncRecord withUpdates:nil];
+					}
+					else
+					{
+						// Skip
+						continue;
+					}
 				}
 
 				// Skip sync records without an ID
@@ -342,6 +357,7 @@
 				if (couldSchedule)
 				{
 					syncRecord.inProgressSince = [NSDate date];
+					syncRecord.state = OCSyncRecordStateScheduled;
 
 					[db updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *error) {
 						blockError = error;
@@ -390,11 +406,12 @@
 			}
 		}
 
-		// Dispatch to result handlers
+		// Handle sync record
 		if ((syncRecord != nil) && (syncRecord.action != nil))
 		{
 			OCCoreSyncRoute *syncRoute;
 
+			// Dispatch to result handlers
 			if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
 			{
 				OCCoreSyncParameterSet *syncParameterSet = [OCCoreSyncParameterSet resultHandlerSetWith:syncRecord event:event issues:issues];
@@ -408,40 +425,77 @@
 
 				error = syncParameterSet.error;
 			}
+
+			// Remove completed sync records
+			if (syncRecordActionCompleted && (error==nil))
+			{
+				syncRecord.progress.totalUnitCount = 1;
+				syncRecord.progress.completedUnitCount = 1;
+
+				[self.vault.database removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *deleteError) {
+					error = deleteError;
+				}];
+
+				// Fetch updated parent directory contents
+				if (syncRecord.itemPath != nil)
+				{
+					OCPath parentDirectory = syncRecord.itemPath.stringByDeletingLastPathComponent;
+
+					if (![parentDirectory hasSuffix:@"/"])
+					{
+						parentDirectory = [parentDirectory stringByAppendingString:@"/"];
+					}
+
+					[self startItemListTaskForPath:parentDirectory];
+				}
+			}
+			else
+			{
+				// In case of issues, mark the state as awaiting user interaction
+				if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
+				{
+					if (issues.count > 0)
+					{
+						syncRecord.state = OCSyncRecordStateAwaitingUserInteraction;
+
+						[self.vault.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *updateError) {
+							error = updateError;
+						}];
+					}
+
+					// Relay issues
+					for (OCConnectionIssue *issue in issues)
+					{
+						[self.delegate core:self handleError:error issue:issue];
+					}
+				}
+				else
+				{
+					// Delegate can't handle it, so check if we can reschedule it right away
+					if (syncRecord.allowsRescheduling)
+					{
+						// Reschedule
+						syncRecord.state = OCSyncRecordStatePending;
+						syncRecord.inProgressSince = nil;
+
+						[self.vault.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *updateError) {
+							error = updateError;
+						}];
+					}
+					else
+					{
+						// Cancel operation
+						for (OCConnectionIssue *issue in issues)
+						{
+							[issue cancel];
+						}
+					}
+				}
+			}
 		}
 		else
 		{
 			OCLogWarning(@"Unhandled sync event %@ from %@", OCLogPrivate(event), sender);
-		}
-
-		// Remove completed sync records
-		if (syncRecordActionCompleted && (error==nil))
-		{
-			syncRecord.progress.totalUnitCount = 1;
-			syncRecord.progress.completedUnitCount = 1;
-
-			[self.vault.database removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *deleteError) {
-				error = deleteError;
-			}];
-
-			// Fetch updated parent directory contents
-			if (syncRecord.itemPath != nil)
-			{
-				OCPath parentDirectory = syncRecord.itemPath.stringByDeletingLastPathComponent;
-
-				if (![parentDirectory hasSuffix:@"/"])
-				{
-					parentDirectory = [parentDirectory stringByAppendingString:@"/"];
-				}
-
-				[self startItemListTaskForPath:parentDirectory];
-			}
-		}
-
-		// Relay issues
-		for (OCConnectionIssue *issue in issues)
-		{
-			[self.delegate core:self handleError:error issue:issue];
 		}
 
 		// Trigger handling of any remaining sync events
