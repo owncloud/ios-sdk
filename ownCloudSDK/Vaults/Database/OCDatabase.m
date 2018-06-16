@@ -175,7 +175,7 @@
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
 				@"type" 		: @(item.type),
 				@"syncAnchor"		: syncAnchor,
-				@"removed"		: @(item.removed)
+				@"removed"		: @(item.removed),
 				@"locallyModified" 	: @(item.locallyModified),
 				@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
 				@"path" 		: item.path,
