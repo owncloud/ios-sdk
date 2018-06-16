@@ -25,7 +25,10 @@
 #import "NSError+OCError.h"
 #import "OCDatabase.h"
 #import "OCDatabaseConsistentOperation.h"
+#import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
+#import "OCCoreSyncRoute.h"
+#import "OCSyncRecord.h"
 
 @interface OCCore ()
 {
@@ -131,12 +134,16 @@
 
 		_thumbnailCache = [OCCache new];
 
+		_syncRoutesByAction = [NSMutableDictionary new];
+
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		_runningActivitiesGroup = dispatch_group_create();
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
+
+		[self registerSyncRoutes];
 	}
 
 	return(self);
@@ -336,6 +343,8 @@
 								[self reloadQuery:query];
 							}
 						}
+
+						[self setNeedsToProcessSyncRecords];
 					}
 				}];
 			}];
@@ -469,6 +478,7 @@
 	BOOL targetRemoved = NO;
 	__block BOOL directoryHasChanged = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
+	__block NSMutableArray <OCItem *> *queryResultsRemovedItems = nil;
 	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
 	__block OCSyncAnchor querySyncAnchor = nil;
@@ -636,7 +646,7 @@
 						returnError = error;
 					}];
 
-					directoryHasChanged = YES;
+					queryResultsRemovedItems = deletedCacheItems;
 				}
 
 				if ((changedCacheItems.count > 0) && (returnError==nil))
@@ -644,8 +654,6 @@
 					[self.database updateCacheItems:changedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
-
-					directoryHasChanged = YES;
 				}
 
 				if ((newItems.count > 0) && (returnError==nil))
@@ -653,8 +661,6 @@
 					[self.database addCacheItems:newItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
-
-					directoryHasChanged = YES;
 				}
 
 				return (returnError);
@@ -908,7 +914,15 @@
 			{
 				query.state = OCQueryStateWaitingForServerReply;
 
-				[query mergeItemsToFullQueryResults:@[ taskRootItem ] syncAnchor:querySyncAnchor];
+				if (queryResults.count > 0)
+				{
+					[query mergeItemsToFullQueryResults:queryResults syncAnchor:querySyncAnchor];
+				}
+
+				if (queryResultsRemovedItems.count > 0)
+				{
+					[query mergeItemsToFullQueryResults:queryResultsRemovedItems syncAnchor:querySyncAnchor];
+				}
 
 				query.state = OCQueryStateIdle;
 			}
@@ -959,11 +973,6 @@
 	return(nil); // Stub implementation
 }
 
-- (NSProgress *)deleteItem:(OCItem *)item resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
@@ -985,11 +994,6 @@
 }
 
 - (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)synchronizeWithServer
 {
 	return(nil); // Stub implementation
 }
@@ -1206,6 +1210,10 @@
 	{
 		[self _handleRetrieveThumbnailEvent:event sender:sender];
 	}
+	else
+	{
+		[self _handleSyncEvent:event sender:sender];
+	}
 }
 
 
@@ -1244,3 +1252,4 @@
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
+OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";

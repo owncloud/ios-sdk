@@ -42,25 +42,20 @@
 		_archivedServerItem = archivedServerItem;
 		_parameters = parameters;
 
-		_resultHandler = resultHandler;
+		_resultHandler = [resultHandler copy];
 	}
 
 	return (self);
 }
 
-#pragma mark - Secure Coding
-+ (BOOL)supportsSecureCoding
-{
-	return (YES);
-}
-
+#pragma mark - Properties
 - (NSData *)_archivedServerItemData
 {
 	if ((_archivedServerItemData == nil) && (_archivedServerItem != nil))
 	{
 		_archivedServerItemData = [NSKeyedArchiver archivedDataWithRootObject:_archivedServerItem];
 	}
-	
+
 	return (_archivedServerItemData);
 }
 
@@ -72,6 +67,45 @@
 	}
 
 	return (_archivedServerItem);
+}
+
+- (OCItem *)item
+{
+	return (self.parameters[OCSyncActionParameterItem]);
+}
+
+- (OCPath)itemPath
+{
+	if (_itemPath == nil)
+	{
+		if ((_itemPath = self.parameters[OCSyncActionParameterPath]) == nil)
+		{
+			if ((_itemPath = ((OCItem *)self.parameters[OCSyncActionParameterItem]).path) == nil)
+			{
+				_itemPath = self.parameters[OCSyncActionParameterSourcePath];
+			}
+		}
+	}
+
+	return (_itemPath);
+}
+
+#pragma mark - Serialization
++ (instancetype)syncRecordFromSerializedData:(NSData *)serializedData
+{
+	if (serializedData==nil) { return(nil); }
+	return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+}
+
+- (NSData *)serializedData
+{
+	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
+}
+
+#pragma mark - Secure Coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -111,4 +145,5 @@ OCSyncActionParameter OCSyncActionParameterItem = @"item";
 OCSyncActionParameter OCSyncActionParameterPath = @"path";
 OCSyncActionParameter OCSyncActionParameterSourcePath = @"sourcePath";
 OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
+OCSyncActionParameter OCSyncActionParameterRequireMatch = @"requireMatch";
 

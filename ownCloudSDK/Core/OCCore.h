@@ -26,9 +26,11 @@
 #import "OCShare.h"
 #import "OCReachabilityMonitor.h"
 #import "OCCache.h"
+#import "OCDatabase.h"
 
 @class OCCore;
 @class OCItem;
+@class OCCoreSyncRoute;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -73,6 +75,9 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
+	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
+	BOOL _needsToProcessSyncRecords;
+
 	OCSyncAnchor _latestSyncAnchor;
 
 	__weak id <OCCoreDelegate> _delegate;
@@ -115,8 +120,6 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 - (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
-- (NSProgress *)deleteItem:(OCItem *)item resultHandler:(OCCoreActionResultHandler)resultHandler;
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 - (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 
@@ -128,10 +131,13 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 - (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 
-- (NSProgress *)synchronizeWithServer;
+@end
 
+@interface OCCore (CommandDelete)
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler;
 @end
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
+extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;

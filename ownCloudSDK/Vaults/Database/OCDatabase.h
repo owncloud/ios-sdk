@@ -26,11 +26,14 @@
 @class OCDatabase;
 @class OCItem;
 @class OCItemVersionIdentifier;
+@class OCSyncRecord;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
 typedef void(^OCDatabaseRetrieveItemCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item);
 typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
+typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord);
+typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
 typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
@@ -42,10 +45,14 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
 
+	NSUInteger _removedItemRetentionLength;
+
 	OCSQLiteDB *_sqlDB;
 }
 
 @property(strong) NSURL *databaseURL;
+
+@property(assign) NSUInteger removedItemRetentionLength;
 
 @property(strong) OCSQLiteDB *sqlDB;
 
@@ -74,6 +81,12 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
 
 #pragma mark - Sync interface
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+- (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
+- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
 #pragma mark - Log interface
 

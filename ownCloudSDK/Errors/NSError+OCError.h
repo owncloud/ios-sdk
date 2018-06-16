@@ -40,13 +40,20 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
 	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
+	OCErrorServerVersionNotSupported,   //!< This server version is not supported.
 
 	OCErrorCertificateInvalid,	//!< The certificate is invalid or contains errors
 	OCErrorCertificateMissing,	//!< No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)
 
 	OCErrorFeatureNotSupportedForItem,  //!< This feature is not supported for this item.
 	OCErrorFeatureNotSupportedByServer, //!< This feature is not supported for this server (version).
-	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
+	OCErrorFeatureNotImplemented,	    //!< This feature is currently not implemented
+
+	OCErrorItemNotFound, //!< The targeted item has not been found.
+	OCErrorItemChanged, //!< The targeted item has changed.
+	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
+
+	OCErrorCancelled, //!< The operation was cancelled
 
 	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information
 

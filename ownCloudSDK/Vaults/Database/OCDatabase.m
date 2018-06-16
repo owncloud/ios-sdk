@@ -20,12 +20,25 @@
 #import "OCSQLiteMigration.h"
 #import "OCLogger.h"
 #import "OCSQLiteTransaction.h"
+#import "OCSQLiteQueryCondition.h"
 #import "OCItem.h"
 #import "OCItemVersionIdentifier.h"
+#import "OCSyncRecord.h"
+
+@interface OCDatabase ()
+{
+	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
+	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
+}
+
+@end
 
 @implementation OCDatabase
 
 @synthesize databaseURL = _databaseURL;
+
+@synthesize removedItemRetentionLength = _removedItemRetentionLength;
+
 @synthesize sqlDB = _sqlDB;
 
 #pragma mark - Initialization
@@ -34,6 +47,11 @@
 	if ((self = [self init]) != nil)
 	{
 		self.databaseURL = databaseURL;
+
+		self.removedItemRetentionLength = 100;
+
+		_progressBySyncRecordID = [NSMutableDictionary new];
+		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
@@ -128,6 +146,7 @@
 		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
 			@"type" 		: @(item.type),
 			@"syncAnchor"		: syncAnchor,
+			@"removed"		: @(0),
 			@"locallyModified" 	: @(item.locallyModified),
 			@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
 			@"path" 		: item.path,
@@ -161,7 +180,6 @@
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path stringByDeletingLastPathComponent],
 				@"name"			: [item.path lastPathComponent],
-				@"fileID"		: item.fileID,
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
 		}
@@ -178,27 +196,19 @@
 
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
-	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
-
-	// TODO: Update parent directories with new sync anchor value
+	// TODO: Update parent directories with new sync anchor value (not sure if necessary, as a change in eTag should also trigger an update of the parent directory sync anchor)
 
 	for (OCItem *item in items)
 	{
-		if (item.databaseID != nil)
-		{
-			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:item.databaseID fromTable:OCDatabaseTableNameMetaData completionHandler:^(OCSQLiteDB *db, NSError *error) {
-				item.databaseID = nil;
-			}]];
-		}
-		else
+		item.removed = YES;
+
+		if (item.databaseID == nil)
 		{
 			OCLogError(@"Item without databaseID can't be used for deletion: %@", item);
 		}
 	}
 
-	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
-	}]];
+	[self updateCacheItems:items syncAnchor:syncAnchor completionHandler:completionHandler];
 }
 
 - (void)_completeRetrievalWithResultSet:(OCSQLiteResultSet *)resultSet completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
@@ -259,7 +269,7 @@
 
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=?" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil, nil);
@@ -286,12 +296,12 @@
 
 	if (itemOnly)
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE path=?";
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE path=? AND removed=0";
 		parameters = @[path];
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE parentPath=? OR path=?";
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=?) AND removed=0";
 		parameters = @[parentPath,path];
 	}
 
@@ -442,6 +452,201 @@
 		if (!calledCompletionHandler)
 		{
 			completionHandler(self, returnError, CGSizeZero, nil, nil);
+		}
+	}]];
+}
+
+#pragma mark - Sync interface
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:syncRecords.count];
+
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+		if (syncRecord.itemPath != nil)
+		{
+			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
+				@"timestampDate" 	: syncRecord.timestamp,
+				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
+				@"action"		: syncRecord.action,
+				@"path"			: syncRecord.itemPath,
+				@"recordData"		: [syncRecord serializedData]
+			} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+				syncRecord.recordID = rowID;
+
+				@synchronized(db)
+				{
+					if (syncRecord.recordID != nil)
+					{
+						if (syncRecord.progress != nil)
+						{
+							_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+						}
+
+						if (syncRecord.resultHandler != nil)
+						{
+							_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+						}
+					}
+				}
+			}]];
+		}
+	}
+
+	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+		completionHandler(self, error);
+	}]];
+}
+
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:syncRecords.count];
+
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+		if (syncRecord.recordID != nil)
+		{
+			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
+				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
+				@"recordData"		: [syncRecord serializedData]
+			} completionHandler:nil]];
+
+			if (syncRecord.progress != nil)
+			{
+				_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+			}
+			else
+			{
+				[_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
+			}
+
+			if (syncRecord.resultHandler != nil)
+			{
+				_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+			}
+			else
+			{
+				[_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+			}
+		}
+		else
+		{
+			OCLogError(@"Sync record without recordID can't be used for updating: %@", syncRecord);
+		}
+	}
+
+	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+		completionHandler(self, error);
+	}]];
+}
+
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:syncRecords.count];
+
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+		if (syncRecord.recordID != nil)
+		{
+			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:syncRecord.recordID fromTable:OCDatabaseTableNameSyncJournal completionHandler:^(OCSQLiteDB *db, NSError *error) {
+				syncRecord.recordID = nil;
+			}]];
+		}
+		else
+		{
+			OCLogError(@"Sync record without recordID can't be used for deletion: %@", syncRecord);
+		}
+	}
+
+	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+		completionHandler(self, error);
+	}]];
+}
+
+- (OCSyncRecord *)_syncRecordFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary
+{
+	OCSyncRecord *syncRecord = nil;
+
+	if ((syncRecord = [OCSyncRecord syncRecordFromSerializedData:(NSData *)rowDictionary[@"recordData"]]) != nil)
+	{
+		NSDate *inProgressSince;
+		OCSyncRecordID recordID;
+
+		if ((recordID = (OCSyncRecordID)rowDictionary[@"recordID"]) != nil)
+		{
+			syncRecord.recordID = recordID;
+
+			@synchronized(self)
+			{
+				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
+				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
+			}
+		}
+
+		if (((inProgressSince = (NSDate *)rowDictionary[@"inProgressSinceDate"]) != nil) && [inProgressSince isKindOfClass:[NSDate class]])
+		{
+			syncRecord.inProgressSince = (NSDate *)inProgressSince;
+		}
+	}
+
+	return(syncRecord);
+}
+
+- (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler
+{
+	if (recordID == nil)
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil, nil);
+		}
+
+		return;
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData", @"inProgressSinceDate" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
+		@"recordID" : recordID,
+	} orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block OCSyncRecord *syncRecord = nil;
+		NSError *iterationError = error;
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				syncRecord = [self _syncRecordFromRowDictionary:rowDictionary];
+				*stop = YES;
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncRecord);
+		}
+	}]];
+}
+
+- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData", @"inProgressSinceDate" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
+		@"path" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path 		 apply:(path!=nil)],
+		@"action" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:action 	 apply:(action!=nil)],
+		@"inProgressSinceDate" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">=" value:inProgressSince apply:(inProgressSince!=nil)]
+	} orderBy:@"timestampDate ASC" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSMutableArray <OCSyncRecord *> *syncRecords = [NSMutableArray new];
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			OCSyncRecord *syncRecord;
+
+			if ((syncRecord = [self _syncRecordFromRowDictionary:rowDictionary]) != nil)
+			{
+				[syncRecords addObject:syncRecord];
+			}
+		} error:&iterationError];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncRecords);
 		}
 	}]];
 }

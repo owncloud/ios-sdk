@@ -68,6 +68,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
+@property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO)
 @property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item

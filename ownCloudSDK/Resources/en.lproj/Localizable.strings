@@ -14,3 +14,11 @@
 "Connected" = "Connected";
 
 "Retrieving thumbnail…" = "Retrieving thumbnail…";
+
+"Cancel" = "Cancel";
+"Proceed" = "Proceed";
+"OK" = "OK";
+
+"%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
+"%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";
+"Delete" = "Delete";

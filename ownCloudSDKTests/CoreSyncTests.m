@@ -202,4 +202,104 @@
 	XCTAssert(firstRootItemReturnedBySyncAnchorQuery != secondRootItemReturnedBySyncAnchorQuery);
 }
 
+- (void)testDelete
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block BOOL didDeleteFile = NO;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (!didDeleteFile)
+					{
+						for (OCItem *item in changeset.queryResult)
+						{
+							if (item.type == OCItemTypeFile)
+							{
+								// File found => DELETE
+								didDeleteFile = YES;
+
+								[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+									NSLog(@"------> Delete item result: error=%@ item=%@ parameter=%@", error, item, parameter);
+								}];
+
+								return;
+							}
+						}
+
+						// No file found => end / pass test (TODO: add code that uploads a file first, so this test can always run)
+					}
+
+					// Stop core
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+
 @end

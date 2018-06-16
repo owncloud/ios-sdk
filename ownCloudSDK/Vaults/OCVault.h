@@ -18,7 +18,9 @@
 
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
-#import "OCDatabase.h"
+
+@class OCDatabase;
+@class OCItem;
 
 @interface OCVault : NSObject
 {

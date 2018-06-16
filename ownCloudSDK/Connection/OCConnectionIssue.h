@@ -20,6 +20,7 @@
 #import "OCCertificate.h"
 
 @class OCConnectionIssue;
+@class OCConnectionIssueChoice;
 
 typedef NS_ENUM(NSUInteger, OCConnectionIssueLevel)
 {
@@ -31,6 +32,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionIssueLevel)
 typedef NS_ENUM(NSUInteger, OCConnectionIssueType)
 {
 	OCConnectionIssueTypeGroup,	//!< This issue represents several issues, which are accessible via the issues property.
+	OCConnectionIssueTypeMultipleChoice, //!< This issue provides the user with multiple choices to pick from.
 
 	OCConnectionIssueTypeURLRedirection,
 	OCConnectionIssueTypeCertificate,
@@ -69,6 +71,9 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 	OCConnectionIssueHandler _issueHandler;
 	
 	NSArray <OCConnectionIssue *> *_issues;
+
+	OCConnectionIssueChoice *_selectedChoice;
+	NSArray <OCConnectionIssueChoice *> *_choices;
 }
 
 @property(weak) OCConnectionIssue *parentIssue;
@@ -93,6 +98,9 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 @property(readonly) OCConnectionIssueDecision decision;
 @property(copy,readonly) OCConnectionIssueHandler issueHandler;
 
+@property(strong,readonly) OCConnectionIssueChoice *selectedChoice;
+@property(strong,readonly) NSArray <OCConnectionIssueChoice *> *choices;
+
 @property(strong,readonly) NSArray <OCConnectionIssue *> *issues;
 
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCConnectionIssueLevel)level issueHandler:(OCConnectionIssueHandler)issueHandler;
@@ -100,6 +108,8 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(OCConnectionIssueHandler)issueHandler;
 
 + (instancetype)issueForError:(NSError *)error level:(OCConnectionIssueLevel)level issueHandler:(OCConnectionIssueHandler)issueHandler;
+
++ (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCConnectionIssueChoice *> *)choices completionHandler:(OCConnectionIssueHandler)issueHandler;
 
 + (instancetype)issueForIssues:(NSArray <OCConnectionIssue *> *)issues completionHandler:(OCConnectionIssueHandler)completionHandler;
 
@@ -110,7 +120,13 @@ typedef void(^OCConnectionIssueHandler)(OCConnectionIssue *issue, OCConnectionIs
 - (void)approve;
 - (void)reject;
 
+#pragma mark - Multiple choice
+- (void)selectChoice:(OCConnectionIssueChoice *)choice; //!< Selects the choice, calling the choice's handler and then the issueHandler with decision=OCConnectionIssueDecisionNone.
+- (void)cancel; //!< Searches for a choice of type Cancel and selects it.
+
 #pragma mark - Filtering
 - (NSArray <OCConnectionIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCConnectionIssueLevel)level;
 
 @end
+
+#import "OCConnectionIssueChoice.h"

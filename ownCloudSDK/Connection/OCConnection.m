@@ -28,6 +28,7 @@
 #import "OCLogger.h"
 #import "OCItem.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "NSProgress+OCExtensions.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -554,22 +555,118 @@
 	return(nil);
 }
 
-- (NSProgress *)deleteItem:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
 }
 
-- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
+}
+
+#pragma mark - Action: Delete Item
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
+{
+	NSProgress *progress = nil;
+	NSURL *deleteItemURL;
+
+	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:deleteItemURL];
+
+		request.method = OCConnectionRequestMethodDELETE;
+
+		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
+		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+			item,	@"item",
+		nil];
+		request.eventTarget = eventTarget;
+
+		if (requireMatch && (item.eTag!=nil))
+		{
+			if (item.type != OCItemTypeCollection) // Right now, If-Match returns a 412 response when used with directories. This appears to be a bug. TODO: enforce this for directories as well when future versions address the issue
+			{
+				[request setValue:item.eTag forHeaderField:@"If-Match"];
+			}
+		}
+
+		// Enqueue request
+		[self.commandQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleDeleteItemResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDelete attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				event.result = request.responseHTTPStatus;
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					case OCHTTPStatusCodeNOT_FOUND:
+						/*
+							Status code: 404
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\NotFound</s:exception>
+							  <s:message>File with name specfile-9.xml could not be located</s:message>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemNotFound);
+					break;
+
+					case OCHTTPStatusCodePRECONDITION_FAILED:
+						/*
+							Status code: 412
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\PreconditionFailed</s:exception>
+							  <s:message>An If-Match header was specified, but none of the specified the ETags matched.</s:message>
+							  <s:header>If-Match</s:header>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemChanged);
+					break;
+
+					// TODO: Cover the case where the remote file can't be deleted (and return OCErrorItemInsufficientPermissions)
+					// (I can't currently set up a test scenario to test this, but if that's possible, this is what should be done)
+
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	[request.eventTarget handleEvent:event sender:self];
 }
 
 #pragma mark - Action: Retrieve Thumbnail
@@ -632,7 +729,7 @@
 	{
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item.itemVersionIdentifier,	  	@"itemVersionIdentifier",
+			item.itemVersionIdentifier,	@"itemVersionIdentifier",
 			[NSValue valueWithCGSize:size],	@"maximumSize",
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
@@ -654,10 +751,6 @@
 		}
 
 		progress = request.progress;
-	}
-	else
-	{
-		
 	}
 
 	if (error != nil)

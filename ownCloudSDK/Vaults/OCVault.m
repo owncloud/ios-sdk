@@ -20,6 +20,7 @@
 #import "OCAppIdentity.h"
 #import "NSError+OCError.h"
 #import "OCItem.h"
+#import "OCDatabase.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end

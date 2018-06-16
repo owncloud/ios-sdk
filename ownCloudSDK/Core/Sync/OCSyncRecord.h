@@ -19,11 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "NSProgress+OCEvent.h"
 #import "OCItem.h"
+#import "OCTypes.h"
 #import "OCCore.h"
-
-typedef NSString* OCSyncAction NS_TYPED_ENUM;
-typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
-typedef NSNumber* OCSyncRecordID;
 
 @interface OCSyncRecord : NSObject <NSSecureCoding>
 {
@@ -35,23 +32,36 @@ typedef NSNumber* OCSyncRecordID;
 	NSData *_archivedServerItemData;
 	OCItem *_archivedServerItem;
 
+	OCPath _itemPath;
+
 	NSDictionary<OCSyncActionParameter, id> *_parameters;
 
 	OCCoreActionResultHandler _resultHandler;
 }
 
-@property(strong) OCSyncRecordID recordID;
+@property(strong) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
 
 @property(readonly) OCSyncAction action; //!< The action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
 
+@property(strong) NSDate *inProgressSince; //!< Time since which the action is being executed (ephermal)
+
+@property(readonly,nonatomic) OCPath itemPath; //!< the path of the item, drawn from OCSyncActionParameterPath, OCSyncActionParameterItem and OCSyncActionParameterSourcePath (in that order)
+@property(readonly,nonatomic) OCItem *item; //!< OCSyncActionParameterItem
+
 @property(readonly,nonatomic) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the record was committed.
 
-@property(readonly) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
+@property(strong) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
 
-@property(readonly) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed.
+@property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
+
+@property(strong) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
 - (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
+
++ (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
+
+- (NSData *)serializedData;
 
 @end
 
@@ -67,3 +77,4 @@ extern OCSyncActionParameter OCSyncActionParameterItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterPath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterSourcePath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterTargetPath; // (OCPath)
+extern OCSyncActionParameter OCSyncActionParameterRequireMatch; // (NSNumber* (BOOL))
