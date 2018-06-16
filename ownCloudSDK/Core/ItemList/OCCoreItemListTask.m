@@ -161,7 +161,7 @@
 				dispatch_group_enter(databaseWaitGroup);
 
 				// Retrieve parent item from cache.
-				[_core.vault.database retrieveCacheItemsAtPath:[self.path stringByDeletingLastPathComponent] itemOnly:1 completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				[_core.vault.database retrieveCacheItemsAtPath:[self.path stringByDeletingLastPathComponent] itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					dbError = error;
 
 					if (error == nil)

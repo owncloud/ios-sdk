@@ -302,8 +302,8 @@
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=?) AND removed=0";
-		parameters = @[parentPath,path];
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=? OR path=?) AND removed=0";
+		parameters = @[parentPath,[parentPath stringByAppendingString:@"/"],path];
 	}
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
