@@ -121,6 +121,28 @@
 			}
 			break;
 
+			case OCErrorItemOperationForbidden:
+			{
+				// The item that was supposed to be deleted changed on the server => prompt user
+				OCConnectionIssue *issue;
+				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted.",nil), syncRecord.itemPath.lastPathComponent];
+				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), syncRecord.itemPath.lastPathComponent];
+
+				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+
+						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							// Drop sync record
+							[self descheduleSyncRecord:syncRecord];
+						}],
+
+					] completionHandler:nil];
+
+				[syncContext addIssue:issue];
+
+				canDeleteSyncRecord = YES;
+			}
+			break;
+
 			case OCErrorItemNotFound:
 				// The item that was supposed to be deleted could not be found => not a problem, really
 				canDeleteSyncRecord = YES;

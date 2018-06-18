@@ -22,3 +22,6 @@
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
 "%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";
 "Delete" = "Delete";
+
+"%@ couldn't be deleted." = "%@ couldn't be deleted.";
+"Please check if you have sufficient permissions to delete %@." = "Please check if you have sufficient permissions to delete %@.";

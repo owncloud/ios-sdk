@@ -695,19 +695,17 @@
 					}
 				}
 			}
-			else
-			{
-				// In case of issues, mark the state as awaiting user interaction
-				if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
-				{
-					if (issues.count > 0)
-					{
-						syncRecord.state = OCSyncRecordStateAwaitingUserInteraction;
 
-						[self.vault.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *updateError) {
-							error = updateError;
-						}];
-					}
+			// In case of issues, mark the state as awaiting user interaction
+			if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
+			{
+				if (issues.count > 0)
+				{
+					syncRecord.state = OCSyncRecordStateAwaitingUserInteraction;
+
+					[self.vault.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *updateError) {
+						error = updateError;
+					}];
 
 					// Relay issues
 					for (OCConnectionIssue *issue in issues)
@@ -715,7 +713,10 @@
 						[self.delegate core:self handleError:error issue:issue];
 					}
 				}
-				else
+			}
+			else
+			{
+				if (!syncRecordActionCompleted)
 				{
 					// Delegate can't handle it, so check if we can reschedule it right away
 					if (syncRecord.allowsRescheduling)
