@@ -190,8 +190,6 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
-
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
@@ -206,9 +204,15 @@
 {
 	OCBookmark *bookmark = nil;
 	OCCore *core;
-	__block BOOL didDeleteFile = NO;
+	__block BOOL didCreateFolder = NO;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *dirCreatedExpectation = [self expectationWithDescription:@"Directory created"];
+	XCTestExpectation *dirDeletedExpectation = [self expectationWithDescription:@"Directory deleted"];
+	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
+	XCTestExpectation *dirDeletionObservedExpectation = [self expectationWithDescription:@"Directory deletion observed"];
+	NSString *folderName = NSUUID.UUID.UUIDString;
+	__block BOOL _dirCreationObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
@@ -260,32 +264,176 @@
 
 				if (query.state == OCQueryStateIdle)
 				{
-					if (!didDeleteFile)
+					if (!didCreateFolder)
 					{
-						for (OCItem *item in changeset.queryResult)
+						didCreateFolder = YES;
+
+						[core createFolder:folderName inside:query.rootItem options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+							XCTAssert(error==nil);
+							XCTAssert(item!=nil);
+
+							[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+								NSLog(@"------> Delete item result: error=%@ item=%@ parameter=%@", error, item, parameter);
+
+								XCTAssert(error==nil);
+								XCTAssert(item!=nil);
+
+								[dirDeletedExpectation fulfill];
+							}];
+
+							[dirCreatedExpectation fulfill];
+						}];
+					}
+					else
+					{
+						if (!_dirCreationObserved)
 						{
-							if (item.type == OCItemTypeFile)
+							for (OCItem *item in changeset.queryResult)
 							{
-								// File found => DELETE
-								didDeleteFile = YES;
-
-								[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
-									NSLog(@"------> Delete item result: error=%@ item=%@ parameter=%@", error, item, parameter);
-								}];
-
-								return;
+								if ([item.name isEqualToString:folderName])
+								{
+									[dirCreationObservedExpectation fulfill];
+									_dirCreationObserved = YES;
+								}
 							}
 						}
+						else
+						{
+							BOOL foundDir = NO;
 
-						// No file found => end / pass test (TODO: add code that uploads a file first, so this test can always run)
+							for (OCItem *item in changeset.queryResult)
+							{
+								if ([item.name isEqualToString:folderName])
+								{
+									foundDir = YES;
+								}
+							}
+
+							if (!foundDir)
+							{
+								[dirDeletionObservedExpectation fulfill];
+
+								// Stop core
+								[core stopWithCompletionHandler:^(id sender, NSError *error) {
+									XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+									[coreStoppedExpectation fulfill];
+								}];
+							}
+						}
 					}
+				}
+			}];
+		};
 
-					// Stop core
-					[core stopWithCompletionHandler:^(id sender, NSError *error) {
-						XCTAssert((error==nil), @"Stopped with error: %@", error);
+		[core startQuery:query];
+	}];
 
-						[coreStoppedExpectation fulfill];
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testCreateFolder
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block BOOL didCreateFolder = NO;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *dirCreatedExpectation = [self expectationWithDescription:@"Directory created"];
+	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
+	NSString *folderName = NSUUID.UUID.UUIDString;
+	__block BOOL _dirCreationObserved = NO;
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
 					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (!didCreateFolder)
+					{
+						didCreateFolder = YES;
+
+						[core createFolder:folderName inside:query.rootItem options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+							XCTAssert(error==nil);
+							XCTAssert(item!=nil);
+
+							[dirCreatedExpectation fulfill];
+						}];
+					}
+					else
+					{
+						if (!_dirCreationObserved)
+						{
+							for (OCItem *item in changeset.queryResult)
+							{
+								if ([item.name isEqualToString:folderName])
+								{
+									[dirCreationObservedExpectation fulfill];
+									_dirCreationObserved = YES;
+								}
+							}
+
+							if (_dirCreationObserved)
+							{
+								// Stop core
+								[core stopWithCompletionHandler:^(id sender, NSError *error) {
+									XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+									[coreStoppedExpectation fulfill];
+								}];
+							}
+						}
+					}
 				}
 			}];
 		};

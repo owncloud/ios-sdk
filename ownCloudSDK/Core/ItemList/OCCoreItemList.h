@@ -35,16 +35,25 @@ typedef NS_ENUM(NSUInteger, OCCoreItemListState)
 	NSMutableDictionary <OCPath, OCItem *> *_itemsByPath;
 	NSSet <OCPath> *_itemPathsSet;
 
+	NSMutableDictionary <OCPath, NSMutableArray<OCItem *> *> *_itemsByParentPaths;
+	NSSet <OCPath> *_itemParentPaths;
+
 	NSError *_error;
 }
 
 @property(assign) OCCoreItemListState state;
 
 @property(strong,nonatomic) NSArray <OCItem *> *items;
+
 @property(readonly,strong,nonatomic) NSMutableDictionary <OCPath, OCItem *> *itemsByPath;
 @property(readonly,strong,nonatomic) NSSet <OCPath> *itemPathsSet;
 
+@property(readonly,strong,nonatomic) NSMutableDictionary <OCPath, NSMutableArray<OCItem *> *> *itemsByParentPaths;
+@property(readonly,strong,nonatomic) NSSet <OCPath> *itemParentPaths;
+
 @property(strong) NSError *error;
+
++ (instancetype)itemListWithItems:(NSArray <OCItem *> *)items;
 
 - (void)updateWithError:(NSError *)error items:(NSArray <OCItem *> *)items;
 

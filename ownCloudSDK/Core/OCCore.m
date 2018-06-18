@@ -29,6 +29,7 @@
 #import "OCCore+SyncEngine.h"
 #import "OCCoreSyncRoute.h"
 #import "OCSyncRecord.h"
+#import "NSString+OCParentPath.h"
 
 @interface OCCore ()
 {
@@ -370,7 +371,7 @@
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self startItemListTaskForPath:[query.queryItem.path stringByDeletingLastPathComponent]];
+				[self startItemListTaskForPath:[query.queryItem.path parentPath]];
 			}
 		}
 	}];
@@ -389,6 +390,8 @@
 				{
 					[query mergeItemsToFullQueryResults:items syncAnchor:syncAnchor];
 					query.state = OCQueryStateContentsFromCache;
+
+					[query setNeedsRecomputation];
 				}
 
 				query.state = OCQueryStateIdle;
@@ -758,7 +761,7 @@
 	// Update queries
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
 	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
-	NSString *parentTaskPath = [taskPath stringByDeletingLastPathComponent];
+	NSString *parentTaskPath = [taskPath parentPath];
 
 	for (OCQuery *query in _queries)
 	{
@@ -901,7 +904,7 @@
 				}
 				else
 				{
-					if ([[queryItemPath stringByDeletingLastPathComponent] isEqual:task.path])
+					if ([[queryItemPath parentPath] isEqual:task.path])
 					{
 						// Item was contained in queried directory, but is no longer there
 						useQueryResults = [NSMutableArray new];
@@ -913,19 +916,31 @@
 			// Queries targeting a sync anchor
 			if (directoryHasChanged && ((syncAnchor = query.querySinceSyncAnchor) != nil) && (querySyncAnchor!=nil) && (taskRootItem!=nil))
 			{
+				NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(queryResults.count + queryResultsRemovedItems.count)];
+
 				query.state = OCQueryStateWaitingForServerReply;
 
-				if (queryResults.count > 0)
+				if (queryResults!=nil)
 				{
-					[query mergeItemsToFullQueryResults:queryResults syncAnchor:querySyncAnchor];
+					[addedUpdatedRemovedItemList addObjectsFromArray:queryResults];
 				}
 
-				if (queryResultsRemovedItems.count > 0)
+				if (queryResultsRemovedItems!=nil)
 				{
-					[query mergeItemsToFullQueryResults:queryResultsRemovedItems syncAnchor:querySyncAnchor];
+					[addedUpdatedRemovedItemList addObjectsFromArray:queryResultsRemovedItems];
+				}
+
+				if (addedUpdatedRemovedItemList.count > 0)
+				{
+					[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:querySyncAnchor];
 				}
 
 				query.state = OCQueryStateIdle;
+
+				if (addedUpdatedRemovedItemList.count > 0)
+				{
+					[query setNeedsRecomputation];
+				}
 			}
 		}
 
@@ -949,11 +964,6 @@
 }
 
 #pragma mark - ## Commands
-- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation

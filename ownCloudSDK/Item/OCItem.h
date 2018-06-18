@@ -94,7 +94,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
 
-@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database (ephermal!)
+@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;

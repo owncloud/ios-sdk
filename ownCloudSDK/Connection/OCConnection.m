@@ -526,18 +526,7 @@
 }
 
 #pragma mark - Actions
-- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
-
-- (void)_handleCreateFolderResult:(OCConnectionRequest *)request error:(NSError *)error
-{
-	
-}
-
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
@@ -567,6 +556,104 @@
 	return(nil);
 }
 
+#pragma mark - Action: Create Directory
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+{
+	NSProgress *progress = nil;
+	NSURL *createFolderURL;
+	OCPath fullFolderPath = nil;
+
+	if ((parentItem==nil) || (folderName==nil))
+	{
+		return(nil);
+	}
+
+	fullFolderPath =  [parentItem.path stringByAppendingPathComponent:folderName];
+
+	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:fullFolderPath]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:createFolderURL];
+
+		request.method = OCConnectionRequestMethodMKCOL;
+
+		request.resultHandlerAction = @selector(_handleCreateFolderResult:error:);
+		request.userInfo = @{
+			@"parentItem" : parentItem,
+			@"folderName" : folderName,
+			@"fullFolderPath" : fullFolderPath
+		};
+		request.eventTarget = eventTarget;
+
+		// Enqueue request
+		[self.commandQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleCreateFolderResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	BOOL postEvent = YES;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateFolder attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			OCPath fullFolderPath = request.userInfo[@"fullFolderPath"];
+			OCItem *parentItem = request.userInfo[@"parentItem"];
+
+			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			{
+				postEvent = NO; // Wait until all info on the new item has been received
+
+				// Retrieve all details on the new folder (OC server returns an "Oc-Fileid" in the HTTP headers, but we really need the full set here)
+				[self retrieveItemListAtPath:fullFolderPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					OCItem *newFolderItem = items.firstObject;
+
+					newFolderItem.parentFileID = parentItem.fileID;
+
+					if (error == nil)
+					{
+						event.result = newFolderItem;
+					}
+					else
+					{
+						event.error = error;
+					}
+
+					// Post event
+					[request.eventTarget handleEvent:event sender:self];
+				}];
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
 #pragma mark - Action: Delete Item
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
 {
@@ -580,9 +667,6 @@
 		request.method = OCConnectionRequestMethodDELETE;
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
-		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item,	@"item",
-		nil];
 		request.eventTarget = eventTarget;
 
 		if (requireMatch && (item.eTag!=nil))
@@ -620,6 +704,8 @@
 		{
 			if (request.responseHTTPStatus.isSuccess)
 			{
+				// Success (at the time of writing (2018-06-18), OC core doesn't support a multi-status response for this
+				// command, so this scenario isn't handled here
 				event.result = request.responseHTTPStatus;
 			}
 			else

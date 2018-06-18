@@ -197,6 +197,7 @@ OCSyncAction OCSyncActionCreateFolder = @"createFolder";
 OCSyncAction OCSyncActionUpload = @"upload";
 OCSyncAction OCSyncActionDownload = @"download";
 
+OCSyncActionParameter OCSyncActionParameterParentItem = @"parentItem";
 OCSyncActionParameter OCSyncActionParameterItem = @"item";
 OCSyncActionParameter OCSyncActionParameterPath = @"path";
 OCSyncActionParameter OCSyncActionParameterSourcePath = @"sourcePath";

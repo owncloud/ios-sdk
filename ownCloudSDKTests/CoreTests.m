@@ -239,8 +239,6 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
-
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
@@ -387,8 +385,6 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
-
-	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {

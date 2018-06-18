@@ -92,6 +92,7 @@ extern OCSyncAction OCSyncActionCreateFolder;
 extern OCSyncAction OCSyncActionUpload;
 extern OCSyncAction OCSyncActionDownload;
 
+extern OCSyncActionParameter OCSyncActionParameterParentItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterPath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterSourcePath; // (OCPath)

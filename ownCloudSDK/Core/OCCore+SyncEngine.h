@@ -20,7 +20,7 @@
 #import "OCSyncRecord.h"
 #import "OCCoreSyncRoute.h"
 
-@class OCCoreSyncParameterSet;
+@class OCCoreSyncContext;
 
 @interface OCCore (SyncEngine)
 
@@ -47,7 +47,7 @@
 @interface OCCore (SyncPrivate)
 
 #pragma mark - Sync enqueue utilities
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo;

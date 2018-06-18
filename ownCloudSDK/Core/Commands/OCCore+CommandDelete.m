@@ -18,7 +18,7 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncParameterSet.h"
+#import "OCCoreSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 
@@ -27,7 +27,7 @@
 #pragma mark - Command
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO parameters:@{
 			OCSyncActionParameterItem : item,
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterRequireMatch : @(requireMatch),
@@ -38,25 +38,25 @@
 - (void)registerDeleteLocal
 {
 	// Delete Local
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncParameterSet *syncParameterSet) {
-		return ([core scheduleDeleteLocalForParameterSet:syncParameterSet]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncParameterSet *syncParameterSet) {
-		return ([core handleDeleteLocalForParameterSet:syncParameterSet]);
+	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core scheduleDeleteLocalWithSyncContext:syncContext]);
+	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core handleDeleteLocalWithSyncContext:syncContext]);
 	}] forAction:OCSyncActionDeleteLocal];
 }
 
 #pragma mark - Sync
-- (BOOL)scheduleDeleteLocalForParameterSet:(OCCoreSyncParameterSet *)syncParams
+- (BOOL)scheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
 
-	if ((item = syncParams.syncRecord.archivedServerItem) != nil)
+	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
 	{
 		NSProgress *progress;
 
-		if ((progress = [self.connection deleteItem:item requireMatch:((NSNumber *)syncParams.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self _eventTargetWithSyncRecord:syncParams.syncRecord]]) != nil)
+		if ((progress = [self.connection deleteItem:item requireMatch:((NSNumber *)syncContext.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
-			syncParams.syncRecord.progress = progress;
+			syncContext.syncRecord.progress = progress;
 
 			return (YES);
 		}
@@ -65,10 +65,10 @@
 	return (NO);
 }
 
-- (BOOL)handleDeleteLocalForParameterSet:(OCCoreSyncParameterSet *)syncParams
+- (BOOL)handleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
 {
-	OCEvent *event = syncParams.event;
-	OCSyncRecord *syncRecord = syncParams.syncRecord;
+	OCEvent *event = syncContext.event;
+	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
 
 	if (syncRecord.resultHandler != nil)
@@ -78,6 +78,8 @@
 
 	if ((event.error == nil) && (event.result != nil))
 	{
+		syncContext.removedItems = @[ syncRecord.item ];
+
 		canDeleteSyncRecord = YES;
 	}
 	else if (event.error.isOCError)
@@ -90,6 +92,8 @@
 				OCConnectionIssue *issue;
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), syncRecord.itemPath.lastPathComponent];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), syncRecord.itemPath.lastPathComponent];
+
+				syncRecord.allowsRescheduling = YES;
 
 				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 
@@ -113,7 +117,7 @@
 
 					] completionHandler:nil];
 
-				[syncParams addIssue:issue];
+				[syncContext addIssue:issue];
 			}
 			break;
 
@@ -136,7 +140,6 @@
 		*/
 		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
 	}
-
 
 	return (canDeleteSyncRecord);
 }

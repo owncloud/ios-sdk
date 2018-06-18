@@ -68,6 +68,8 @@
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
+
+	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 }
 
 #pragma mark - Init & Dealloc
@@ -110,6 +112,8 @@
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
+
+		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 	}
 
 	return (self);

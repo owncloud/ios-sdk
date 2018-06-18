@@ -1,8 +1,8 @@
 //
-//  NSProgress+OCExtensions.h
+//  NSString+OCParentPath.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 28.04.18.
+//  Created by Felix Schwarz on 17.06.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,9 +17,10 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCTypes.h"
 
-@interface NSProgress (OCExtensions)
+@interface NSString (OCParentPath)
 
-+ (instancetype)indeterminateProgress;
+- (OCPath)parentPath;
 
 @end

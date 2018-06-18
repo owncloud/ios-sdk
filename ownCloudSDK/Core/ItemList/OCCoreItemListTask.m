@@ -19,6 +19,7 @@
 #import "OCCoreItemListTask.h"
 #import "OCCore.h"
 #import "OCCore+Internal.h"
+#import "NSString+OCParentPath.h"
 
 @implementation OCCoreItemListTask
 
@@ -161,7 +162,7 @@
 				dispatch_group_enter(databaseWaitGroup);
 
 				// Retrieve parent item from cache.
-				[_core.vault.database retrieveCacheItemsAtPath:[self.path stringByDeletingLastPathComponent] itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				[_core.vault.database retrieveCacheItemsAtPath:[self.path parentPath] itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					dbError = error;
 
 					if (error == nil)
@@ -186,7 +187,7 @@
 						// contents after discovery, this should never happen. However, for direct requests to directories, this may happen.
 						// In that case, the parent directory(s) need to be requested first, so that their parent item(s) are known and in
 						// the database.
-						OCQuery *parentDirectoryQuery = [OCQuery queryForPath:[self.path stringByDeletingLastPathComponent]];
+						OCQuery *parentDirectoryQuery = [OCQuery queryForPath:[self.path parentPath]];
 
 						parentDirectoryQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
 							// Remove query once the response from the server arrived

@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncParameterSet.m
+//  OCCoreSyncContext.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 15.06.18.
@@ -16,13 +16,13 @@
  *
  */
 
-#import "OCCoreSyncParameterSet.h"
+#import "OCCoreSyncContext.h"
 
-@implementation OCCoreSyncParameterSet
+@implementation OCCoreSyncContext
 
 + (instancetype)schedulerSetWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncParameterSet *parameterSet = [OCCoreSyncParameterSet new];
+	OCCoreSyncContext *parameterSet = [OCCoreSyncContext new];
 
 	parameterSet.syncRecord = syncRecord;
 
@@ -31,7 +31,7 @@
 
 + (instancetype)resultHandlerSetWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues
 {
-	OCCoreSyncParameterSet *parameterSet = [OCCoreSyncParameterSet new];
+	OCCoreSyncContext *parameterSet = [OCCoreSyncContext new];
 
 	parameterSet.syncRecord = syncRecord;
 	parameterSet.event = event;

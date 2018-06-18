@@ -1,8 +1,8 @@
 //
-//  NSProgress+OCExtensions.h
+//  NSString+OCParentPath.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 28.04.18.
+//  Created by Felix Schwarz on 17.06.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,10 +16,20 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "NSString+OCParentPath.h"
 
-@interface NSProgress (OCExtensions)
+@implementation NSString (OCParentPath)
 
-+ (instancetype)indeterminateProgress;
+- (OCPath)parentPath
+{
+	NSString *parentPath = [self stringByDeletingLastPathComponent];
+
+	if (![parentPath hasSuffix:@"/"])
+	{
+		parentPath = [parentPath stringByAppendingString:@"/"];
+	}
+
+	return (parentPath);
+}
 
 @end

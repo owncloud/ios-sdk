@@ -84,8 +84,6 @@
 				}
 			}
 		}
-
-		[self setNeedsRecomputation];
 	}
 }
 
