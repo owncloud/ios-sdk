@@ -712,6 +712,20 @@
 			{
 				switch (request.responseHTTPStatus.code)
 				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						/*
+							Status code: 403
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\Forbidden</s:exception>
+							  <s:message/>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemOperationForbidden);
+					break;
+
 					case OCHTTPStatusCodeNOT_FOUND:
 						/*
 							Status code: 404

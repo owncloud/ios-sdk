@@ -52,6 +52,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemNotFound, //!< The targeted item has not been found.
 	OCErrorItemChanged, //!< The targeted item has changed.
 	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
+	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 
 	OCErrorCancelled, //!< The operation was cancelled
 
