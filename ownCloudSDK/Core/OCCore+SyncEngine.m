@@ -25,6 +25,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "NSString+OCParentPath.h"
 #import "OCQuery+Internal.h"
+#import "OCCoreSyncContext.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -247,6 +248,8 @@
 
 - (void)_processSyncRecords
 {
+	[self beginActivity:@"process sync records"];
+
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *blockError = nil;
 
@@ -373,12 +376,16 @@
 		}];
 
 		return (blockError);
-	} completionHandler:nil];
+	} completionHandler:^(NSError *error) {
+		[self endActivity:@"process sync records"];
+	}];
 }
 
 #pragma mark - Sync event handling
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
 {
+	[self beginActivity:@"handle sync event"];
+
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *error = nil;
 		__block OCSyncRecord *syncRecord = nil;
@@ -483,6 +490,8 @@
 					}];
 
 					// Update queries
+					[self beginActivity:@"handle sync event - update queries"];
+
 					[self queueBlock:^{
 						OCCoreItemList *addedItemList   = ((syncContext.addedItems.count>0)   ? [OCCoreItemList itemListWithItems:syncContext.addedItems]   : nil);
 						OCCoreItemList *removedItemList = ((syncContext.removedItems.count>0) ? [OCCoreItemList itemListWithItems:syncContext.removedItems] : nil);
@@ -676,6 +685,8 @@
 								[query setNeedsRecomputation];
 							}
 						}
+
+						[self endActivity:@"handle sync event - update queries"];
 					}];
 				}
 
@@ -754,7 +765,46 @@
 		{
 			OCLogError(@"Sync Engine: error processing event %@ from %@: %@", OCLogPrivate(event), sender, error);
 		}
+
+		[self endActivity:@"handle sync event"];
 	}];
+}
+
+#pragma mark - Sync issues utilities
+- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description
+{
+	OCConnectionIssue *issue;
+	OCSyncRecord *syncRecord = syncContext.syncRecord;
+
+	issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+
+			[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+				// Drop sync record
+				[self descheduleSyncRecord:syncRecord];
+			}],
+
+		] completionHandler:nil];
+
+	[syncContext addIssue:issue];
+
+	return (issue);
+}
+
+- (BOOL)_isConnectivityError:(NSError *)error;
+{
+	if ([error.domain isEqualToString:NSURLErrorDomain])
+	{
+		switch (error.code)
+		{
+			case NSURLErrorNotConnectedToInternet:
+			case NSURLErrorNetworkConnectionLost:
+			case NSURLErrorCannotConnectToHost:
+				return (YES);
+			break;
+		}
+	}
+
+	return (NO);
 }
 
 #pragma mark - Sync action utilities

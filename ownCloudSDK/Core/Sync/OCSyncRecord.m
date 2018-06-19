@@ -202,5 +202,8 @@ OCSyncActionParameter OCSyncActionParameterItem = @"item";
 OCSyncActionParameter OCSyncActionParameterPath = @"path";
 OCSyncActionParameter OCSyncActionParameterSourcePath = @"sourcePath";
 OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
+OCSyncActionParameter OCSyncActionParameterSourceItem = @"sourceItem";
+OCSyncActionParameter OCSyncActionParameterTargetItem = @"targetItem";
+OCSyncActionParameter OCSyncActionParameterTargetName = @"targetName";
 OCSyncActionParameter OCSyncActionParameterRequireMatch = @"requireMatch";
 

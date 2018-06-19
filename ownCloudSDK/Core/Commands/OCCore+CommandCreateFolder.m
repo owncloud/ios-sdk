@@ -39,7 +39,6 @@
 #pragma mark - Sync Action Registration
 - (void)registerCreateFolder
 {
-	// Delete Local
 	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core scheduleCreateFolderWithSyncContext:syncContext]);
 	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
@@ -88,8 +87,8 @@
 	}
 	else if (event.error != nil)
 	{
-		// Reschedule for all other errors
-		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
+		// Create issue for cancellation for any errors
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
 	}
 
 	return (canDeleteSyncRecord);

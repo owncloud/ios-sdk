@@ -114,6 +114,7 @@
 		DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556FE204F597800189B9A /* OCXMLParserNode.m */; };
 		DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */; };
 		DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */; };
+		DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */ = {isa = PBXBuildFile; fileRef = DC85980720D8F5BE00A433C6 /* OCCore+CommandCopyMove.m */; };
 		DC89136120910F0E00028999 /* OCConnection+Compatibility.m in Sources */ = {isa = PBXBuildFile; fileRef = DC89135F20910F0E00028999 /* OCConnection+Compatibility.m */; };
 		DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8913622092088600028999 /* NSString+OCVersionCompare.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8913632092088600028999 /* NSString+OCVersionCompare.m */; };
@@ -411,6 +412,7 @@
 		DC855719204FEC0A00189B9A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCXMLObjectCreation.h"; sourceTree = "<group>"; };
 		DC85571B2050196000189B9A /* OCItem+OCXMLObjectCreation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCXMLObjectCreation.m"; sourceTree = "<group>"; };
+		DC85980720D8F5BE00A433C6 /* OCCore+CommandCopyMove.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandCopyMove.m"; sourceTree = "<group>"; };
 		DC89135F20910F0E00028999 /* OCConnection+Compatibility.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Compatibility.m"; sourceTree = "<group>"; };
 		DC8913622092088600028999 /* NSString+OCVersionCompare.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCVersionCompare.h"; sourceTree = "<group>"; };
 		DC8913632092088600028999 /* NSString+OCVersionCompare.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCVersionCompare.m"; sourceTree = "<group>"; };
@@ -680,6 +682,7 @@
 		DC54396620D51138002BF291 /* Commands */ = {
 			isa = PBXGroup;
 			children = (
+				DC85980720D8F5BE00A433C6 /* OCCore+CommandCopyMove.m */,
 				DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */,
 				DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */,
 			);
@@ -1480,6 +1483,7 @@
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
+				DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */,
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,

@@ -236,45 +236,60 @@
 
 		if ((_state == OCCoreStateRunning) || (_state == OCCoreStateStarting))
 		{
-			dispatch_group_t stopGroup = nil;
+			__weak OCCore *weakSelf = self;
 
 			[self willChangeValueForKey:@"state"];
 			_state = OCCoreStateStopping;
 			[self didChangeValueForKey:@"state"];
 
 			// Wait for running operations to finish
-			dispatch_group_wait(_runningActivitiesGroup, DISPATCH_TIME_FOREVER);
+			_runningActivitiesCompleteBlock = ^{
+				dispatch_group_t stopGroup = nil;
 
-			// Stop..
-			stopGroup = dispatch_group_create();
+				// Stop..
+				stopGroup = dispatch_group_create();
 
-			// Close connection
-			_attemptConnect = NO;
+				// Close connection
+				_attemptConnect = NO;
 
-			dispatch_group_enter(stopGroup);
+				dispatch_group_enter(stopGroup);
 
-			[self.connection disconnectWithCompletionHandler:^{
-				dispatch_group_leave(stopGroup);
-			}];
+				[weakSelf.connection disconnectWithCompletionHandler:^{
+					dispatch_group_leave(stopGroup);
+				}];
 
-			dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
 
-			// Close vault (incl. database)
-			dispatch_group_enter(stopGroup);
+				// Close vault (incl. database)
+				dispatch_group_enter(stopGroup);
 
-			[self.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-				stopError = error;
-				dispatch_group_leave(stopGroup);
-			}];
+				[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+					stopError = error;
+					dispatch_group_leave(stopGroup);
+				}];
 
-			dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
 
-			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateStopped;
-			[self didChangeValueForKey:@"state"];
+				[weakSelf willChangeValueForKey:@"state"];
+				_state = OCCoreStateStopped;
+				[weakSelf didChangeValueForKey:@"state"];
+
+				if (completionHandler != nil)
+				{
+					completionHandler(weakSelf, stopError);
+				}
+			};
+
+			if (_runningActivities == 0)
+			{
+				if (_runningActivitiesCompleteBlock != nil)
+				{
+					_runningActivitiesCompleteBlock();
+					_runningActivitiesCompleteBlock = nil;
+				}
+			}
 		}
-
-		if (completionHandler != nil)
+		else if (completionHandler != nil)
 		{
 			completionHandler(self, stopError);
 		}
@@ -479,9 +494,8 @@
 	BOOL performMerge = NO;
 	BOOL removeTask = NO;
 	BOOL targetRemoved = NO;
-	__block BOOL directoryHasChanged = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
-	__block NSMutableArray <OCItem *> *queryResultsRemovedItems = nil;
+	__block NSMutableArray <OCItem *> *queryResultsChangedItems = nil;
 	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
 	__block OCSyncAnchor querySyncAnchor = nil;
@@ -650,7 +664,14 @@
 						returnError = error;
 					}];
 
-					queryResultsRemovedItems = deletedCacheItems;
+					if (queryResultsChangedItems == nil)
+					{
+						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:deletedCacheItems];
+					}
+					else
+					{
+						[queryResultsChangedItems addObjectsFromArray:deletedCacheItems];
+					}
 				}
 
 				if ((changedCacheItems.count > 0) && (returnError==nil))
@@ -658,6 +679,15 @@
 					[self.database updateCacheItems:changedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
+
+					if (queryResultsChangedItems == nil)
+					{
+						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:changedCacheItems];
+					}
+					else
+					{
+						[queryResultsChangedItems addObjectsFromArray:changedCacheItems];
+					}
 				}
 
 				if ((newItems.count > 0) && (returnError==nil))
@@ -665,6 +695,15 @@
 					[self.database addCacheItems:newItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 						returnError = error;
 					}];
+
+					if (queryResultsChangedItems == nil)
+					{
+						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:newItems];
+					}
+					else
+					{
+						[queryResultsChangedItems addObjectsFromArray:newItems];
+					}
 				}
 
 				return (returnError);
@@ -914,33 +953,19 @@
 			}
 
 			// Queries targeting a sync anchor
-			if (directoryHasChanged && ((syncAnchor = query.querySinceSyncAnchor) != nil) && (querySyncAnchor!=nil) && (taskRootItem!=nil))
+			if (((syncAnchor = query.querySinceSyncAnchor) != nil) &&
+			    (querySyncAnchor!=nil) &&
+			    (taskRootItem!=nil) &&
+			    (queryResultsChangedItems!=nil) &&
+			    (queryResultsChangedItems.count > 0))
 			{
-				NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(queryResults.count + queryResultsRemovedItems.count)];
-
 				query.state = OCQueryStateWaitingForServerReply;
 
-				if (queryResults!=nil)
-				{
-					[addedUpdatedRemovedItemList addObjectsFromArray:queryResults];
-				}
-
-				if (queryResultsRemovedItems!=nil)
-				{
-					[addedUpdatedRemovedItemList addObjectsFromArray:queryResultsRemovedItems];
-				}
-
-				if (addedUpdatedRemovedItemList.count > 0)
-				{
-					[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:querySyncAnchor];
-				}
+				[query mergeItemsToFullQueryResults:queryResultsChangedItems syncAnchor:querySyncAnchor];
 
 				query.state = OCQueryStateIdle;
 
-				if (addedUpdatedRemovedItemList.count > 0)
-				{
-					[query setNeedsRecomputation];
-				}
+				[query setNeedsRecomputation];
 			}
 		}
 
@@ -969,17 +994,7 @@
 	return(nil); // Stub implementation
 }
 
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName resultHandler:(OCCoreActionResultHandler)resultHandler;
 {
 	return(nil); // Stub implementation
 }
@@ -1232,13 +1247,33 @@
 - (void)beginActivity:(NSString *)description
 {
 	OCLogDebug(@"Beginning activity '%@' ..", description);
-	dispatch_group_enter(_runningActivitiesGroup);
+	[self queueBlock:^{
+		_runningActivities++;
+
+		if (_runningActivities == 1)
+		{
+			dispatch_group_enter(_runningActivitiesGroup);
+		}
+	}];
 }
 
 - (void)endActivity:(NSString *)description
 {
 	OCLogDebug(@"Ended activity '%@' ..", description);
-	dispatch_group_leave(_runningActivitiesGroup);
+	[self queueBlock:^{
+		_runningActivities--;
+		
+		if (_runningActivities == 0)
+		{
+			dispatch_group_leave(_runningActivitiesGroup);
+
+			if (_runningActivitiesCompleteBlock != nil)
+			{
+				_runningActivitiesCompleteBlock();
+				_runningActivitiesCompleteBlock = nil;
+			}
+		}
+	}];
 }
 
 #pragma mark - Queues

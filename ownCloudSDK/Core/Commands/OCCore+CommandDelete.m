@@ -37,7 +37,6 @@
 #pragma mark - Sync Action Registration
 - (void)registerDeleteLocal
 {
-	// Delete Local
 	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core scheduleDeleteLocalWithSyncContext:syncContext]);
 	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
@@ -125,7 +124,7 @@
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
 				OCConnectionIssue *issue;
-				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted.",nil), syncRecord.itemPath.lastPathComponent];
+				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), syncRecord.itemPath.lastPathComponent];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), syncRecord.itemPath.lastPathComponent];
 
 				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
@@ -154,6 +153,9 @@
 	}
 	else if (event.error != nil)
 	{
+		// Create issue for cancellation for all other errors
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+
 		// Reschedule for all other errors
 		/*
 			// TODO: Return issue for unknown errors (other than instead of blindly rescheduling

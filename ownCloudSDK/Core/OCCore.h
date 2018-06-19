@@ -67,6 +67,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _connectivityQueue;
 
 	dispatch_group_t _runningActivitiesGroup;
+	NSInteger _runningActivities;
+	dispatch_block_t _runningActivitiesCompleteBlock;
 
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
@@ -116,8 +118,6 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 - (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 - (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
@@ -138,6 +138,11 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @interface OCCore (CommandDelete)
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandCopyMove)
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 @end
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;

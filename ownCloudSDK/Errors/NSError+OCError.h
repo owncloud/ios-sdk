@@ -50,9 +50,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorFeatureNotImplemented,	    //!< This feature is currently not implemented
 
 	OCErrorItemNotFound, //!< The targeted item has not been found.
+	OCErrorItemDestinationNotFound, //!< The destination item has not been found.
 	OCErrorItemChanged, //!< The targeted item has changed.
 	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
+	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
 
 	OCErrorCancelled, //!< The operation was cancelled
 

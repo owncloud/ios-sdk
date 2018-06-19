@@ -46,6 +46,10 @@
 
 @interface OCCore (SyncPrivate)
 
+#pragma mark - Sync issues utilities
+- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description;
+- (BOOL)_isConnectivityError:(NSError *)error;
+
 #pragma mark - Sync enqueue utilities
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
 

@@ -532,18 +532,6 @@
 	return(nil);
 }
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
-
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
@@ -591,7 +579,7 @@
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder sender:self];
 	}
 
 	return(progress);
@@ -640,6 +628,143 @@
 			{
 				switch (request.responseHTTPStatus.code)
 				{
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
+#pragma mark - Action: Copy Item + Move Item
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	return ([self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+}
+
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	return ([self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+}
+
+- (NSProgress *)_copyMoveMethod:(OCConnectionRequestMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	NSProgress *progress = nil;
+	NSURL *sourceItemURL, *destinationURL;
+	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+	if ((sourceItemURL = [webDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
+	{
+		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
+		{
+			OCConnectionRequest *request = [OCConnectionRequest requestWithURL:sourceItemURL];
+
+			request.method = requestMethod;
+
+			request.resultHandlerAction = @selector(_handleCopyMoveItemResult:error:);
+			request.eventTarget = eventTarget;
+			request.userInfo = @{
+				@"item" : item,
+				@"parentItem" : parentItem,
+				@"newName" : newName,
+				@"eventType" : @(eventType)
+			};
+
+			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
+			[request setValue:@"infinity" forHeaderField:@"Depth"];
+			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
+
+			// Enqueue request
+			[self.commandQueue enqueueRequest:request];
+
+			progress = request.progress;
+		}
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:eventType sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleCopyMoveItemResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	BOOL postEvent = YES;
+	OCEventType eventType = (OCEventType) ((NSNumber *)request.userInfo[@"eventType"]).integerValue;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			OCItem *item = request.userInfo[@"item"];
+			OCItem *parentItem = request.userInfo[@"parentItem"];
+			NSString *newName = request.userInfo[@"newName"];
+			NSString *newFullPath = [parentItem.path stringByAppendingPathComponent:newName];
+
+			if ((item.type == OCItemTypeCollection) && (![newFullPath hasSuffix:@"/"]))
+			{
+				newFullPath = [newFullPath stringByAppendingString:@"/"];
+			}
+
+			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			{
+				postEvent = NO; // Wait until all info on the new item has been received
+
+				// Retrieve all details on the new item
+				[self retrieveItemListAtPath:newFullPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					OCItem *newFolderItem = items.firstObject;
+
+					newFolderItem.parentFileID = parentItem.fileID;
+
+					if (error == nil)
+					{
+						event.result = newFolderItem;
+					}
+					else
+					{
+						event.error = error;
+					}
+
+					// Post event
+					[request.eventTarget handleEvent:event sender:self];
+				}];
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						event.error = OCError(OCErrorItemOperationForbidden);
+					break;
+
+					case OCHTTPStatusCodeNOT_FOUND:
+						event.error = OCError(OCErrorItemNotFound);
+					break;
+
+					case OCHTTPStatusCodeCONFLICT:
+						event.error = OCError(OCErrorItemDestinationNotFound);
+					break;
+
+					case OCHTTPStatusCodePRECONDITION_FAILED:
+						event.error = OCError(OCErrorItemAlreadyExists);
+					break;
+
+					case OCHTTPStatusCodeBAD_GATEWAY:
+						event.error = OCError(OCErrorItemInsufficientPermissions);
+					break;
+
 					default:
 						event.error = request.responseHTTPStatus.error;
 					break;
@@ -754,9 +879,6 @@
 						*/
 						event.error = OCError(OCErrorItemChanged);
 					break;
-
-					// TODO: Cover the case where the remote file can't be deleted (and return OCErrorItemInsufficientPermissions)
-					// (I can't currently set up a test scenario to test this, but if that's possible, this is what should be done)
 
 					default:
 						event.error = request.responseHTTPStatus.error;
