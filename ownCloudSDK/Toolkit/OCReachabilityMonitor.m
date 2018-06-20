@@ -17,6 +17,7 @@
  */
 
 #import "OCReachabilityMonitor.h"
+#import "OCRunLoopThread.h"
 
 @implementation OCReachabilityMonitor
 
@@ -42,14 +43,9 @@
 
 - (void)setEnabled:(BOOL)enabled
 {
-	if ([NSThread isMainThread])
-	{
+	[[OCRunLoopThread runLoopThreadNamed:@"Reachability Monitor"] dispatchBlockToRunLoopAsync:^{
 		[self _setEnabled:enabled];
-	}
-	else
-	{
-		[self performSelectorOnMainThread:@selector(_setEnabled:) withObject:@(enabled) waitUntilDone:YES];
-	}
+	}];
 }
 
 static void OCReachabilityMonitorCallback(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info)
