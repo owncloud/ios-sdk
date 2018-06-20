@@ -182,6 +182,7 @@
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
+				@"fileID"		: item.fileID,
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
 		}
