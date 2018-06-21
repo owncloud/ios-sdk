@@ -1,8 +1,8 @@
 //
-//  NSData+OCHash.h
+//  OCChecksumAlgorithmSHA1.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 28.02.18.
+//  Created by Felix Schwarz on 21.06.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,10 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "OCChecksumAlgorithm.h"
 
-@interface NSData (OCHash)
-
-- (NSData *)md5Hash;
-- (NSData *)sha1Hash;
-- (NSData *)sha256Hash;
-
-- (NSString *)asHexStringWithSeparator:(NSString *)separator;
-- (NSString *)asHexStringWithSeparator:(NSString *)separator lowercase:(BOOL)lowercase;
-
-- (NSString *)asFingerPrintString;
+@interface OCChecksumAlgorithmSHA1 : OCChecksumAlgorithm
 
 @end
 
+extern OCChecksumAlgorithmIdentifier OCChecksumAlgorithmIdentifierSHA1;

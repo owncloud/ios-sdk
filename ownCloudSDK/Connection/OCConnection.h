@@ -121,8 +121,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCItem *)newParentDirectory resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 

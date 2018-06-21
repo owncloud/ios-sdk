@@ -14,6 +14,13 @@
 		DC0364FB20AAD75700F62732 /* OCCore+SyncEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0364F920AAD75700F62732 /* OCCore+SyncEngine.h */; };
 		DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0364FA20AAD75700F62732 /* OCCore+SyncEngine.m */; };
 		DC03650620AAEFBD00F62732 /* DatabaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03650520AAEFBD00F62732 /* DatabaseTests.m */; };
+		DC139CC820DBB8440090175A /* OCChecksum.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CC620DBB8440090175A /* OCChecksum.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC139CC920DBB8440090175A /* OCChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CC720DBB8440090175A /* OCChecksum.m */; };
+		DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CCB20DBBA8D0090175A /* OCChecksumAlgorithm.m */; };
+		DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CCF20DBC1690090175A /* OCChecksumAlgorithmSHA1.m */; };
+		DC139CD320DBCDCB0090175A /* ChecksumTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CD220DBCDCB0090175A /* ChecksumTests.m */; };
 		DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CCF209475C20018DF7F /* UIImage+OCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD0209475C20018DF7F /* UIImage+OCTools.m */; };
 		DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -309,6 +316,13 @@
 		DC0364F920AAD75700F62732 /* OCCore+SyncEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+SyncEngine.h"; sourceTree = "<group>"; };
 		DC0364FA20AAD75700F62732 /* OCCore+SyncEngine.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+SyncEngine.m"; sourceTree = "<group>"; };
 		DC03650520AAEFBD00F62732 /* DatabaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DatabaseTests.m; sourceTree = "<group>"; };
+		DC139CC620DBB8440090175A /* OCChecksum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCChecksum.h; sourceTree = "<group>"; };
+		DC139CC720DBB8440090175A /* OCChecksum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCChecksum.m; sourceTree = "<group>"; };
+		DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCChecksumAlgorithm.h; sourceTree = "<group>"; };
+		DC139CCB20DBBA8D0090175A /* OCChecksumAlgorithm.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCChecksumAlgorithm.m; sourceTree = "<group>"; };
+		DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCChecksumAlgorithmSHA1.h; sourceTree = "<group>"; };
+		DC139CCF20DBC1690090175A /* OCChecksumAlgorithmSHA1.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCChecksumAlgorithmSHA1.m; sourceTree = "<group>"; };
+		DC139CD220DBCDCB0090175A /* ChecksumTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChecksumTests.m; sourceTree = "<group>"; };
 		DC179CCF209475C20018DF7F /* UIImage+OCTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIImage+OCTools.h"; sourceTree = "<group>"; };
 		DC179CD0209475C20018DF7F /* UIImage+OCTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImage+OCTools.m"; sourceTree = "<group>"; };
 		DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProgress+OCExtensions.h"; sourceTree = "<group>"; };
@@ -564,6 +578,19 @@
 				DC0283612090A3E8005B6334 /* OCItemThumbnail.h */,
 			);
 			path = Images;
+			sourceTree = "<group>";
+		};
+		DC139CC220DBB7780090175A /* Checksums */ = {
+			isa = PBXGroup;
+			children = (
+				DC139CC720DBB8440090175A /* OCChecksum.m */,
+				DC139CC620DBB8440090175A /* OCChecksum.h */,
+				DC139CCB20DBBA8D0090175A /* OCChecksumAlgorithm.m */,
+				DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */,
+				DC139CCF20DBC1690090175A /* OCChecksumAlgorithmSHA1.m */,
+				DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */,
+			);
+			path = Checksums;
 			sourceTree = "<group>";
 		};
 		DC179CCD209475950018DF7F /* UIKit */ = {
@@ -1076,6 +1103,7 @@
 				DC855706204FEA0A00189B9A /* Bookmark */,
 				DC855707204FEA1500189B9A /* Authentication */,
 				DC855708204FEA3400189B9A /* Connection */,
+				DC139CC220DBB7780090175A /* Checksums */,
 				DC85570D204FEAC500189B9A /* Events */,
 				DC85570E204FEAE900189B9A /* Vaults */,
 				DC855702204FE9CA00189B9A /* Core */,
@@ -1099,6 +1127,7 @@
 				DC72E41C2061666900189B9A /* Host Simulator */,
 				DC39DC4D2041B53000189B9A /* AuthenticationTests.m */,
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
+				DC139CD220DBCDCB0090175A /* ChecksumTests.m */,
 				DC30955C2057CFC000189B9A /* CertificateTests.m */,
 				DCEEB2D42042312500189B9A /* ConnectionTests.m */,
 				DC5A20302074E8890083DB7D /* CoreTests.m */,
@@ -1231,12 +1260,15 @@
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
+				DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */,
 				DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
 				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
+				DC139CC820DBB8440090175A /* OCChecksum.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
+				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCCoreSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
@@ -1474,6 +1506,7 @@
 				DCFFF57F20D3A51C0096D2D3 /* OCCoreSyncContext.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
+				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
 				DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */,
@@ -1520,6 +1553,7 @@
 				DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */,
 				DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
+				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
 				DCEA7D982093556600F25223 /* OCCache.m in Sources */,
 				DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */,
 				DC02835C209098D7005B6334 /* OCImage.m in Sources */,
@@ -1527,6 +1561,7 @@
 				DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */,
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
+				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
@@ -1567,6 +1602,7 @@
 				DC72E41F206166C500189B9A /* OCHostSimulatorResponse.m in Sources */,
 				DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */,
 				DC72E41B2061665D00189B9A /* OCHostSimulator.m in Sources */,
+				DC139CD320DBCDCB0090175A /* ChecksumTests.m in Sources */,
 				DC03650620AAEFBD00F62732 /* DatabaseTests.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
 			);

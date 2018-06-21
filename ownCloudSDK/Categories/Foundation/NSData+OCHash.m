@@ -43,20 +43,42 @@
 
 - (NSString *)asHexStringWithSeparator:(NSString *)separator
 {
+	return ([self asHexStringWithSeparator:separator lowercase:NO]);
+}
+
+- (NSString *)asHexStringWithSeparator:(NSString *)separator lowercase:(BOOL)lowercase
+{
 	NSMutableString *hexString = [NSMutableString stringWithCapacity:(self.length * 3)];
 
 	[self enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
 		UInt8 *p_bytes = (UInt8 *)bytes;
 
-		for (NSUInteger idx=0;idx<byteRange.length;idx++)
+		if (lowercase)
 		{
-			if ((byteRange.location+idx) != 0)
+			for (NSUInteger idx=0;idx<byteRange.length;idx++)
 			{
-				[hexString appendFormat:@"%@%02X", separator, p_bytes[idx]];
+				if (((byteRange.location+idx) != 0) && (separator!=nil))
+				{
+					[hexString appendFormat:@"%@%02x", separator, p_bytes[idx]];
+				}
+				else
+				{
+					[hexString appendFormat:@"%02x", p_bytes[idx]];
+				}
 			}
-			else
+		}
+		else
+		{
+			for (NSUInteger idx=0;idx<byteRange.length;idx++)
 			{
-				[hexString appendFormat:@"%02X", p_bytes[idx]];
+				if (((byteRange.location+idx) != 0) && (separator!=nil))
+				{
+					[hexString appendFormat:@"%@%02X", separator, p_bytes[idx]];
+				}
+				else
+				{
+					[hexString appendFormat:@"%02X", p_bytes[idx]];
+				}
 			}
 		}
 	}];
