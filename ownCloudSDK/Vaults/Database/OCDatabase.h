@@ -27,6 +27,7 @@
 @class OCItem;
 @class OCItemVersionIdentifier;
 @class OCSyncRecord;
+@class OCFile;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
@@ -79,6 +80,11 @@ typedef NSString* OCDatabaseCounterIdentifier;
 #pragma mark - Thumbnail interface
 - (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType forItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
+
+#pragma mark - File interface
+//- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+//- (void)updateFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+//- (void)removeFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - Sync interface
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;

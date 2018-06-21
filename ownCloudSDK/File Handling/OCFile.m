@@ -20,9 +20,29 @@
 
 @implementation OCFile
 
+@synthesize fileID = _fileID;
+@synthesize eTag = _eTag;
+
+@synthesize retainers = _retainerCollection;
+
 @synthesize item = _item;
 @synthesize checksum = _checksum;
 @synthesize url = _url;
+
+@synthesize rowID = _rowID;
+
+- (OCRetainerCollection *)retainers
+{
+	@synchronized(self)
+	{
+		if (_retainers == nil)
+		{
+			_retainers = [OCRetainerCollection new];
+		}
+	}
+
+	return (_retainers);
+}
 
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
@@ -34,9 +54,16 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
+		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
+
 		_item = [decoder decodeObjectOfClass:[OCItem class] forKey:@"item"];
 		_checksum = [decoder decodeObjectOfClass:[OCChecksum class] forKey:@"checksum"];
 		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+
+		_retainers = [decoder decodeObjectOfClass:[OCRetainerCollection class] forKey:@"retainers"];
+
+		_rowID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"rowID"];
 	}
 
 	return (self);
@@ -44,9 +71,16 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeObject:_fileID forKey:@"fileID"];
+	[coder encodeObject:_eTag forKey:@"eTag"];
+
 	[coder encodeObject:_item forKey:@"item"];
 	[coder encodeObject:_checksum forKey:@"checksum"];
 	[coder encodeObject:_url forKey:@"url"];
+
+	[coder encodeObject:_retainers forKey:@"retainers"];
+
+	[coder encodeObject:_rowID forKey:@"rowID"];
 }
 
 @end

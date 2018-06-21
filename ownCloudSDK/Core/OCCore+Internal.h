@@ -38,4 +38,7 @@
 
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
 
+#pragma mark - File transfer
+- (void)_handleDownloadFileEvent:(OCEvent *)event sender:(id)sender;
+
 @end

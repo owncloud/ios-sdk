@@ -994,17 +994,7 @@
 	return(nil); // Stub implementation
 }
 
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName resultHandler:(OCCoreActionResultHandler)resultHandler;
-{
-	return(nil); // Stub implementation
-}
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
 }
@@ -1232,13 +1222,19 @@
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	if (event.eventType == OCEventTypeRetrieveThumbnail)
+	switch (event.eventType)
 	{
-		[self _handleRetrieveThumbnailEvent:event sender:sender];
-	}
-	else
-	{
-		[self _handleSyncEvent:event sender:sender];
+		case OCEventTypeRetrieveThumbnail:
+			[self _handleRetrieveThumbnailEvent:event sender:sender];
+		break;
+
+		case OCEventTypeDownload:
+			[self _handleDownloadFileEvent:event sender:sender];
+		break;
+
+		default:
+			[self _handleSyncEvent:event sender:sender];
+		break;
 	}
 }
 

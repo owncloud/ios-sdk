@@ -37,7 +37,7 @@
 		} resultHandler:resultHandler]);
 }
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
@@ -46,7 +46,29 @@
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterTargetName : name,
 			OCSyncActionParameterTargetItem : parentItem,
+			@"isRename" : ((options[@"isRename"]!=nil) ? options[@"isRename"] : @(NO))
 		} resultHandler:resultHandler]);
+}
+
+- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+{
+	__block OCItem *parentItem = nil;
+	dispatch_group_t retrieveItemWaitGroup = dispatch_group_create();
+
+	dispatch_group_enter(retrieveItemWaitGroup);
+
+	[self.vault.database retrieveCacheItemForFileID:item.parentFileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+		if (item != nil)
+		{
+			parentItem = item;
+		}
+
+		dispatch_group_leave(retrieveItemWaitGroup);
+	}];
+
+	dispatch_group_wait(retrieveItemWaitGroup, DISPATCH_TIME_FOREVER);
+
+	return([self moveItem:item to:parentItem withName:newFileName options:@{ @"isRename" : @(YES) } resultHandler:resultHandler]);
 }
 
 #pragma mark - Sync Action Registration
@@ -106,6 +128,7 @@
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
 	BOOL isCopy = [syncContext.syncRecord.action isEqual:OCSyncActionCopy];
+	BOOL isRename = ((NSNumber *)syncContext.syncRecord.parameters[@"isRename"]).boolValue;
 
 	if (syncRecord.resultHandler != nil)
 	{
@@ -146,7 +169,14 @@
 				}
 				else
 				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), item.path, targetPath];
+					if (isRename)
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), item.name, targetName];
+					}
+					else
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), item.path, targetPath];
+					}
 				}
 			break;
 
@@ -168,7 +198,14 @@
 				}
 				else
 				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't move %@ to %@, because an item called %@ already exists there.",nil), item.name, targetPath, targetName];
+					if (isRename)
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't rename %@ to %@, because another item with that name already exists.",nil), item.name, targetName];
+					}
+					else
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't move %@ to %@, because an item called %@ already exists there.",nil), item.name, targetPath, targetName];
+					}
 				}
 			break;
 
@@ -180,7 +217,14 @@
 				}
 				else
 				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), item.path, targetPath];
+					if (isRename)
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), item.name, targetName];
+					}
+					else
+					{
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), item.path, targetPath];
+					}
 				}
 			break;
 
@@ -191,7 +235,14 @@
 				}
 				else
 				{
-					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error moving %@",nil), item.path];
+					if (isRename)
+					{
+						issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error renaming %@",nil), item.name];
+					}
+					else
+					{
+						issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error moving %@",nil), item.path];
+					}
 				}
 				issueDescription = event.error.localizedDescription;
 			break;

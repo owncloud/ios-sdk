@@ -568,6 +568,9 @@
 		request.eventTarget = eventTarget;
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
+		request.downloadedFileIsTemporary = (targetURL == nil);
+
+		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
 		// Enqueue request
 		[self.downloadQueue enqueueRequest:request];
@@ -600,8 +603,13 @@
 				OCFile *file = [OCFile new];
 
 				file.item = request.userInfo[@"item"];
+
 				file.url = request.downloadedFileURL;
+
 				file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+
+				file.eTag = request.response.allHeaderFields[@"oc-etag"];
+				file.fileID = file.item.fileID;
 
 				event.file = file;
 			}
