@@ -595,5 +595,79 @@
 	NSLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
 }
 
+- (void)testConnectAndDownloadFile
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	XCTestExpectation *expectFileDownload = [self expectationWithDescription:@"File downloaded"];
+	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at /Photos: %@", items);
+				OCItem *downloadItem = nil;
+
+				for (OCItem *item in items)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						downloadItem = item;
+						break;
+					}
+				}
+
+				if (downloadItem != nil)
+				{
+					[connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						if (event.file != nil)
+						{
+							[expectFileDownload fulfill];
+
+							NSLog(@"File downloaded: %@ (%@)", event.file.url, event.file.checksum.headerString);
+
+							[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
+								NSLog(@"File checksum verified: error=%@, isValid=%d, actualChecksum=%@", error, isValid, actualChecksum);
+
+								XCTAssert(error==nil);
+								XCTAssert(isValid==YES);
+								XCTAssert([actualChecksum isEqual:event.file.checksum]);
+
+								[expectChecksumVerifies fulfill];
+							}];
+						}
+					} userInfo:nil ephermalUserInfo:nil]];
+				}
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectFileList fulfill];
+			}];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end
 

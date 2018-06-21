@@ -136,4 +136,33 @@
 	return (NO);
 }
 
+#pragma mark - Secure Coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_algorithmIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"algorithmIdentifier"];
+		_checksum = [decoder decodeObjectOfClass:[NSString class] forKey:@"checksum"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_algorithmIdentifier forKey:@"algorithmIdentifier"];
+	[coder encodeObject:_checksum forKey:@"checksum"];
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, algorithmIdentifier: %@, checksum: %@>", NSStringFromClass(self.class), self, _algorithmIdentifier, _checksum]);
+}
+
 @end

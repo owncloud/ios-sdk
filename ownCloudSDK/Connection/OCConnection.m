@@ -29,14 +29,19 @@
 #import "OCItem.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCFile.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethodBasicAuth.h"
 
+#import "OCChecksumAlgorithmSHA1.h"
+
 @implementation OCConnection
 
 @dynamic authenticationMethod;
+
+@synthesize preferredChecksumAlgorithmIdentifier = _preferredChecksumAlgorithmIdentifier;
 
 @synthesize bookmark = _bookmark;
 
@@ -100,6 +105,7 @@
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
 		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:_bookmark.uuid.UUIDString connection:self];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
+		_preferredChecksumAlgorithmIdentifier = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
 	return (self);
@@ -541,8 +547,80 @@
 #pragma mark - File transfer: download
 - (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSProgress *progress = nil;
+	NSURL *downloadURL;
+
+	if (item == nil)
+	{
+		return(nil);
+	}
+
+	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:downloadURL];
+
+		request.method = OCConnectionRequestMethodGET;
+
+		request.resultHandlerAction = @selector(_handleDownloadItemResult:error:);
+		request.userInfo = @{
+			@"item" : item
+		};
+		request.eventTarget = eventTarget;
+		request.downloadRequest = YES;
+		request.downloadedFileURL = targetURL;
+
+		// Enqueue request
+		[self.downloadQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleDownloadItemResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	BOOL postEvent = YES;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				OCFile *file = [OCFile new];
+
+				file.item = request.userInfo[@"item"];
+				file.url = request.downloadedFileURL;
+				file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+
+				event.file = file;
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Action: Create Directory

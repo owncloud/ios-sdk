@@ -25,6 +25,7 @@
 #import "OCClassSettings.h"
 #import "OCCertificate.h"
 #import "OCConnectionIssue.h"
+#import "OCChecksum.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -67,6 +68,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
+	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithmIdentifier;
+
 	OCUser *_loggedInUser;
 
 	OCConnectionQueue *_commandQueue;
@@ -87,6 +90,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
+
+@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithmIdentifier;
 
 @property(strong) OCUser *loggedInUser;
 

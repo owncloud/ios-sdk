@@ -100,4 +100,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCChecksumAlgorithm.h>
 #import <ownCloudSDK/OCChecksumAlgorithmSHA1.h>
 
+#import <ownCloudSDK/OCFile.h>
+
 #import <ownCloudSDK/OCLogger.h>

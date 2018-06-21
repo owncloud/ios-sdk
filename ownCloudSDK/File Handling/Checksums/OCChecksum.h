@@ -27,7 +27,7 @@ typedef NSString* OCChecksumString;
 typedef void(^OCChecksumComputationCompletionHandler)(NSError *error, OCChecksum *computedChecksum);
 typedef void(^OCChecksumVerificationCompletionHandler)(NSError *error, BOOL isValid, OCChecksum *actualChecksum);
 
-@interface OCChecksum : NSObject
+@interface OCChecksum : NSObject <NSSecureCoding>
 {
 	OCChecksumAlgorithmIdentifier _algorithmIdentifier;
 	OCChecksumString _checksum;
