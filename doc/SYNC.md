@@ -87,3 +87,4 @@ An overview over which cases actions handle - and how they handle them. Please r
   - if the **local copy is just a downloaded copy** of a previous version on the server: overwrite it without asking.
 - **Disk full**: Inform user, discard Sync Record (it'll be recreated either by user action or by sync as needed).
 - **Other server error**: Inform user, discard Sync Record (it'll be recreated either by user action or by sync as needed).
+
