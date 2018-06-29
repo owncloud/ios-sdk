@@ -144,6 +144,8 @@
 
 			case OCErrorItemNotFound:
 				// The item that was supposed to be deleted could not be found => not a problem, really
+				syncContext.removedItems = @[ syncRecord.item ];
+
 				canDeleteSyncRecord = YES;
 			break;
 
