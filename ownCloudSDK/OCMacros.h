@@ -20,6 +20,6 @@
 #define OCMacros_h
 
 #define OCLocalizedString(key,comment) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], comment)
-#define OCLocalized(key) OCLocalizedString(key,nil)
+#define OCLocalized(key) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], nil)
 
 #endif /* OCMacros_h */
