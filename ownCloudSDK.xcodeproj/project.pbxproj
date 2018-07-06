@@ -92,7 +92,6 @@
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
 		DC5A054F20EF9DAB00B085DA /* OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A054E20EF6A8800B085DA /* OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC5A055120EF9DE300B085DA /* OCMockingRemove.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A055020EF9DE200B085DA /* OCMockingRemove.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC5A20312074E8890083DB7D /* CoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A20302074E8890083DB7D /* CoreTests.m */; };
 		DC5A203420750BEE0083DB7D /* OCCore+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A203320750BEE0083DB7D /* OCCore+Internal.h */; };
 		DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */; };
@@ -1302,7 +1301,6 @@
 				DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */,
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
-				DC5A055120EF9DE300B085DA /* OCMockingRemove.h in Headers */,
 				DCEA7D972093556600F25223 /* OCCache.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
 				DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */,
