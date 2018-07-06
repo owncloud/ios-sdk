@@ -91,7 +91,7 @@
 		DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */; };
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
-		DC5A054F20EF9DAB00B085DA /* OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A054E20EF6A8800B085DA /* OCMocking.h */; };
+		DC5A054F20EF9DAB00B085DA /* OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A054E20EF6A8800B085DA /* OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC5A055120EF9DE300B085DA /* OCMockingRemove.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A055020EF9DE200B085DA /* OCMockingRemove.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC5A20312074E8890083DB7D /* CoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A20302074E8890083DB7D /* CoreTests.m */; };
 		DC5A203420750BEE0083DB7D /* OCCore+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A203320750BEE0083DB7D /* OCCore+Internal.h */; };

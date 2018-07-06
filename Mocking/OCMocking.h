@@ -19,8 +19,12 @@
 #ifndef OCMocking_h
 #define OCMocking_h
 
+#ifdef OCMOCK
+
 #define OCCore 	MOCCore
 #define OCQuery MOCQuery
 #define OCItem 	MOCItem
+
+#endif /* OCMOCK */
 
 #endif /* OCMocking_h */

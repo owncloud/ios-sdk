@@ -26,9 +26,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <ownCloudSDK/PublicHeader.h>
 
-#ifdef OCMOCK
+// Must be first include
 #import <ownCloudSDK/OCMocking.h>
-#endif /* OCMOCK */
 
 #import <ownCloudSDK/OCTypes.h>
 #import <ownCloudSDK/OCMacros.h>
@@ -112,6 +111,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCLogger.h>
 
-#ifdef OCMOCK
+// Must be last include
 #import <ownCloudSDK/OCMockingRemove.h>
-#endif /* OCMOCK */

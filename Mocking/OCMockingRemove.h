@@ -16,11 +16,15 @@
  *
  */
 
-#ifndef OCMocking_h
-#define OCMocking_h
+#ifndef OCMockingRemove_h
+#define OCMockingRemove_h
+
+#ifdef OCMOCK
 
 #undef OCCore
 #undef OCQuery
 #undef OCItem
 
-#endif /* OCMocking_h */
+#endif /* OCMOCK */
+
+#endif /* OCMockingRemove_h */
