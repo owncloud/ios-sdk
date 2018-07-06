@@ -66,7 +66,7 @@
 
 	bookmark = [OCBookmark bookmarkForURL:url];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodBasicAuthIdentifier
 							 options:@{
@@ -155,7 +155,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		connection.delegate = self;
 	
@@ -186,7 +186,7 @@
 
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			NSLog(@"1 - Error: %@ - Supported methods: %@", error, supportMethods);
@@ -230,7 +230,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) } completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			NSLog(@"Supported methods: %@", supportMethods);
@@ -258,7 +258,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			NSLog(@"Supported methods: %@", supportMethods);

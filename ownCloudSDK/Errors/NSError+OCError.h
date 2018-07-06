@@ -33,6 +33,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestCancelled, 			//!< Request was cancelled
 	OCErrorRequestRemovedBeforeScheduling, 		//!< Request was removed before scheduling
 	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
+	OCErrorRequestDroppedByURLSession,		//!< Request was dropped by the NSURLSession
 	OCErrorRequestCompletedWithError,		//!< Request completed with error
 
 	OCErrorResponseUnknownFormat,			//!< Response was in an unknown format

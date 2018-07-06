@@ -123,12 +123,6 @@
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
-		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
-
-		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
-		_reachabilityMonitor.enabled = YES;
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
-
 		_queries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
@@ -145,6 +139,12 @@
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
 		[self registerSyncRoutes];
+
+		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
+
+		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
+		_reachabilityMonitor.enabled = YES;
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
 	}
 
 	return(self);

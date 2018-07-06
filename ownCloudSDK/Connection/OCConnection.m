@@ -19,7 +19,7 @@
 #import "OCConnection.h"
 #import "OCConnection+OCConnectionQueue.h"
 #import "OCConnectionRequest.h"
-#import "OCConnectionQueue.h"
+#import "OCConnectionQueue+BackgroundSessionRecovery.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
@@ -86,11 +86,16 @@
 	return(nil);
 }
 
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL
 {
 	if ((self = [super init]) != nil)
 	{
+		OCKeyValueStore *persistentStore = nil;
+		NSString *backgroundSessionIdentifier = [OCConnectionQueue localBackgroundSessionIdentifierForUUID:bookmark.uuid];
+
 		self.bookmark = bookmark;
+
+		_persistentStoreBaseURL = persistentStoreBaseURL;
 		
 		if (self.bookmark.authenticationMethodIdentifier != nil)
 		{
@@ -101,9 +106,15 @@
 				_authenticationMethod = [authenticationMethodClass new];
 			}
 		}
+
+		if (_persistentStoreBaseURL != nil)
+		{
+			persistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:backgroundSessionIdentifier]];
+		}
 			
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:_bookmark.uuid.UUIDString connection:self];
+		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
 		_preferredChecksumAlgorithmIdentifier = OCChecksumAlgorithmIdentifierSHA1;
 	}
@@ -1178,6 +1189,40 @@
 	dispatch_group_wait(waitForCompletionGroup, DISPATCH_TIME_FOREVER);
 
 	return (retError);
+}
+
+#pragma mark - Resume background sessions
+- (void)resumeBackgroundSessions
+{
+	NSArray <NSString *> *otherBackgroundSessionIdentifiers = [OCConnectionQueue otherBackgroundSessionIdentifiersForUUID:self.bookmark.uuid];
+
+	for (NSString *otherBackgroundSessionIdentifier in otherBackgroundSessionIdentifiers)
+	{
+		OCKeyValueStore *otherPersistentStore = nil;
+
+		if (_persistentStoreBaseURL != nil)
+		{
+			otherPersistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:otherBackgroundSessionIdentifier]];
+		}
+
+		@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+		{
+			if (_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] == nil)
+			{
+				_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:otherBackgroundSessionIdentifier persistentStore:otherPersistentStore connection:self];
+			}
+		}
+	}
+}
+
+- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier
+{
+	if (backgroundSessionIdentifier == nil) { return; }
+
+	@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+	{
+		[_attachedExtensionQueuesBySessionIdentifier removeObjectForKey:backgroundSessionIdentifier];
+	}
 }
 
 @end

@@ -1,8 +1,8 @@
 //
-//  OCMacros.h
+//  OCMocking.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 03.03.18.
+//  Created by Felix Schwarz on 06.07.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,10 +16,11 @@
  *
  */
 
-#ifndef OCMacros_h
-#define OCMacros_h
+#ifndef OCMocking_h
+#define OCMocking_h
 
-#define OCLocalizedString(key,comment) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], comment)
-#define OCLocalized(key) OCLocalizedString(key,nil)
+#define OCCore 	MOCCore
+#define OCQuery MOCQuery
+#define OCItem 	MOCItem
 
-#endif /* OCMacros_h */
+#endif /* OCMocking_h */

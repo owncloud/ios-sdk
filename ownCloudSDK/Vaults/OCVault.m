@@ -81,6 +81,16 @@
 	return (_filesRootURL);
 }
 
+- (NSURL *)connectionDataRootURL
+{
+	if (_connectionDataRootURL == nil)
+	{
+		_connectionDataRootURL = [self.rootURL URLByAppendingPathComponent:OCVaultPathConnectionData];
+	}
+
+	return (_connectionDataRootURL);
+}
+
 - (OCDatabase *)database
 {
 	if (_database == nil)
@@ -182,4 +192,5 @@
 
 NSString *OCVaultPathVaults = @"Vaults";
 NSString *OCVaultPathFiles = @"Files";
+NSString *OCVaultPathConnectionData = @"ConnectionData";
 

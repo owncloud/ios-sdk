@@ -45,5 +45,8 @@
 "%@ can't be copied to %@." = "%@ can't be copied to %@.";
 "%@ can't be moved to %@." = "%@ can't be moved to %@.";
 
+"%@ not found on the server" = "%@ not found on the server";
+"%@ may have been renamed, moved or deleted remotely." = "%@ may have been renamed, moved or deleted remotely.";
+
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";

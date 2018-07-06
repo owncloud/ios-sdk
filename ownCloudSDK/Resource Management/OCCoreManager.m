@@ -18,9 +18,12 @@
 
 #import "OCCoreManager.h"
 #import "NSError+OCError.h"
+#import "OCBookmarkManager.h"
+#import "OCConnectionQueue+BackgroundSessionRecovery.h"
 
 @implementation OCCoreManager
 
+#pragma mark - Shared instance
 + (instancetype)sharedCoreManager
 {
 	static dispatch_once_t onceToken;
@@ -47,6 +50,7 @@
 	return(self);
 }
 
+#pragma mark - Requesting and returning cores
 - (OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
 	OCCore *returnCore = nil;
@@ -165,6 +169,49 @@
 	}
 }
 
+#pragma mark - Background session recovery
+- (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler
+{
+	@synchronized(self)
+	{
+		if ((identifier != nil) && (completionHandler != nil))
+		{
+			NSUUID *sessionBookmarkUUID;
+
+			if ((sessionBookmarkUUID = [OCConnectionQueue uuidForBackgroundSessionIdentifier:identifier]) != nil)
+			{
+				OCBookmark *bookmark;
+
+				if ((bookmark = [[OCBookmarkManager sharedBookmarkManager] bookmarkForUUID:sessionBookmarkUUID]) != nil)
+				{
+					// Save completion handler
+					[OCConnectionQueue setCompletionHandler:^{
+						// Return core
+						[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+							completionHandler();
+						}];
+					} forBackgroundSessionWithIdentifier:identifier];
+
+					// Request core, so it can pick up and handle this
+					[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore *core, NSError *error) {
+						if (core != nil)
+						{
+							// Resume pending background sessions
+							[core.connection resumeBackgroundSessions];
+						}
+					}];
+				}
+				else
+				{
+					// No bookmark
+					completionHandler();
+				}
+			}
+		}
+	}
+}
+
+#pragma mark - Scheduling offline operations on cores
 - (void)scheduleOfflineOperation:(OCCoreManagerOfflineOperation)offlineOperation forBookmark:(OCBookmark *)bookmark
 {
 	@synchronized(self)

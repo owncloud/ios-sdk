@@ -321,6 +321,34 @@
 	];
 }
 
+//- (void)addOrUpdateFilesSchema
+//{
+//	/*** Files ***/
+//
+//	// Version 1
+//	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+//		schemaWithTableName:OCDatabaseTableNameFiles
+//		version:1
+//		creationQueries:@[
+//			/*
+//				flID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
+//				fileID : TEXT		- OCFileID of the item to which this thumbnail belongs
+//				eTag : TEXT		- OCFileETag of the item to which this thumbnail belongs
+//				maxWidth : INTEGER	- maximum width of the item when retrieving the thumbnail from the server
+//				maxHeight : INTEGER	- maximum height of the item when retrieving the thumbnail from the server
+//				mimeType : TEXT		- MIME Type of imageData
+//				imageData : BLOB	- image data of the thumbnail
+//			*/
+//			@"CREATE TABLE thumb.thumbnails (tnID INTEGER PRIMARY KEY, fileID TEXT NOT NULL, eTag TEXT NOT NULL, maxWidth INTEGER NOT NULL, maxHeight INTEGER NOT NULL, mimeType TEXT NOT NULL, imageData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameThumbnails
+//
+//			// Create index over fileID
+//			@"CREATE INDEX thumb.idx_thumbnails_fileID ON thumbnails (fileID)" // relatedTo:OCDatabaseTableNameThumbnails
+//		]
+//		openStatements:nil
+//		upgradeMigrator:nil]
+//	];
+//}
+
 - (void)addOrUpdateThumbnailsSchema
 {
 	/*** Thumbnails ***/
@@ -377,3 +405,4 @@ OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";
+OCDatabaseTableName OCDatabaseTableNameFiles = @"files";

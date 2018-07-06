@@ -50,7 +50,7 @@
 
 	for (NSURL *urlToTest in urlsToTest)
 	{
-		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest]];
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest] persistentStoreBaseURL:nil];
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;

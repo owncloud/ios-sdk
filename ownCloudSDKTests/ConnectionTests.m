@@ -48,7 +48,7 @@
 	OCConnection *connection;
 	OCConnectionRequest *request;
 	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
 	request = [OCConnectionRequest requestWithURL:bookmark.url];
 	
@@ -74,7 +74,7 @@
 	
 	OCConnection *connection;
 	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		NSLog(@"Issues: %@", issue.issues);
@@ -285,7 +285,7 @@
 	// Create bookmark from normalized URL (and extract username and password if included)
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasPrepended:NULL]];
 	
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		// Prepare for setup
 		[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
@@ -347,7 +347,7 @@
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-											newConnection = [[OCConnection alloc] initWithBookmark:bookmark];
+											newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
 											if (preConnectAction != nil)
 											{
@@ -607,7 +607,7 @@
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
 	XCTAssert(connection!=nil);
 

@@ -72,10 +72,14 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 	OCUser *_loggedInUser;
 
+	NSURL *_persistentStoreBaseURL;
+
 	OCConnectionQueue *_commandQueue;
 
 	OCConnectionQueue *_uploadQueue;
 	OCConnectionQueue *_downloadQueue;
+
+	NSMutableDictionary <NSString *, OCConnectionQueue *> *_attachedExtensionQueuesBySessionIdentifier;
 	
 	OCConnectionState _state;
 
@@ -108,7 +112,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark;
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL;
 
 #pragma mark - Connect & Disconnect
 - (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
@@ -137,6 +141,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Sending requests synchronously
 - (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue;
+
+#pragma mark - Resume background sessions
+- (void)resumeBackgroundSessions;
+- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
 @end
 

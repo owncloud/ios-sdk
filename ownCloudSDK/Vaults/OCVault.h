@@ -29,6 +29,7 @@
 	NSURL *_rootURL;
 	NSURL *_databaseURL;
 	NSURL *_filesRootURL;
+	NSURL *_connectionDataRootURL;
 
 	OCDatabase *_database;
 }
@@ -40,6 +41,7 @@
 @property(readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
 @property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
 @property(readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
+@property(readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -65,3 +67,4 @@
 
 extern NSString *OCVaultPathVaults;
 extern NSString *OCVaultPathFiles;
+extern NSString *OCVaultPathConnectionData;

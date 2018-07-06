@@ -40,7 +40,7 @@
 
 	OCConnection *connection;
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	connection.hostSimulator = hostSimulator;
 
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {

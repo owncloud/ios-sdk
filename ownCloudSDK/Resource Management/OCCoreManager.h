@@ -38,6 +38,9 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler; //!< Return the core for this bookmark. If all users have returned the core, it is stopped.
 
+#pragma mark - Background session recovery
+- (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler; //!< Call this from -[UIApplicationDelegate application:handleEventsForBackgroundURLSession:completionHandler:].
+
 #pragma mark - Scheduling offline operations on cores
 - (void)scheduleOfflineOperation:(OCCoreManagerOfflineOperation)offlineOperation forBookmark:(OCBookmark *)bookmark; //!< Schedules an offline operation on a bookmark. Executed only when no core is using the bookmark.
 

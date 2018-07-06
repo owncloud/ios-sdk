@@ -21,6 +21,7 @@
 #import "OCCoreSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
+#import "NSString+OCParentPath.h"
 
 @implementation OCCore (CommandDelete)
 
@@ -143,8 +144,30 @@
 			break;
 
 			case OCErrorItemNotFound:
-				// The item that was supposed to be deleted could not be found => not a problem, really
+				// The item that was supposed to be deleted could not be found on the server
+
+				// => remove item
 				syncContext.removedItems = @[ syncRecord.item ];
+
+				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed
+				if (syncRecord.itemPath.parentPath != nil)
+				{
+					syncContext.refreshPaths = @[ syncRecord.itemPath.parentPath ];
+				}
+
+				// => inform the user
+				{
+					OCConnectionIssue *issue;
+
+					NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), syncRecord.itemPath.lastPathComponent];
+					NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), syncRecord.itemPath.lastPathComponent];
+
+					issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:nil],
+						] completionHandler:nil];
+
+					[syncContext addIssue:issue];
+				}
 
 				canDeleteSyncRecord = YES;
 			break;
