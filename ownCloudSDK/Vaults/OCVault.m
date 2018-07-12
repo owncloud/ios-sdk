@@ -75,7 +75,7 @@
 {
 	if (_filesRootURL == nil)
 	{
-		_filesRootURL = [self.rootURL URLByAppendingPathComponent:[OCVault filesRootPathRelativeToRootPathForVaultUUID:_uuid]];
+		_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
 	}
 
 	return (_filesRootURL);
@@ -148,6 +148,17 @@
 				}
 			}
 
+			if ([fileManager fileExistsAtPath:self.filesRootURL.path])
+			{
+				if (![fileManager removeItemAtURL:self.filesRootURL error:&error])
+				{
+					if (error == nil)
+					{
+						error = OCError(OCErrorInternal);
+					}
+				}
+			}
+
 			if (completionHandler != nil)
 			{
 				completionHandler(self, error);
@@ -176,16 +187,6 @@
 + (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
 {
 	return ([uuid.UUIDString stringByAppendingString:@".db"]);
-}
-
-+ (NSString *)filesRootPathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
-{
-	return (OCVaultPathFiles);
-}
-
-+ (NSString *)filesRootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid
-{
-	return ([[self rootPathRelativeToGroupContainerForVaultUUID:uuid] stringByAppendingPathComponent:[self filesRootPathRelativeToRootPathForVaultUUID:uuid]]);
 }
 
 @end

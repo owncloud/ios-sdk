@@ -60,11 +60,7 @@
 
 + (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
 
-+ (NSString *)filesRootPathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
-+ (NSString *)filesRootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
-
 @end
 
 extern NSString *OCVaultPathVaults;
-extern NSString *OCVaultPathFiles;
 extern NSString *OCVaultPathConnectionData;

@@ -22,6 +22,7 @@
 #import "OCCertificate.h"
 #import "OCLogger.h"
 #import "OCConnectionQueue+BackgroundSessionRecovery.h"
+#import "OCAppIdentity.h"
 
 @implementation OCConnectionQueue
 
@@ -56,13 +57,17 @@
 {
 	if ((self = [self init]) != nil)
 	{
+		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier];
+
+		sessionConfiguration.sharedContainerIdentifier = [OCAppIdentity sharedAppIdentity].appGroupIdentifier;
+
 		_connection = connection;
 
 		_persistentStore = persistentStore;
 
 		[self restoreState];
 
-		_urlSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier]
+		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
 					    delegate:self
 					    delegateQueue:nil];
 
