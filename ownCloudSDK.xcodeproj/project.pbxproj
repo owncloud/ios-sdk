@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */; };
 		DC02835B209098D7005B6334 /* OCImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC028359209098D7005B6334 /* OCImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC02835C209098D7005B6334 /* OCImage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC02835A209098D7005B6334 /* OCImage.m */; };
 		DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0283612090A3E8005B6334 /* OCItemThumbnail.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -365,6 +367,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodBasicAuth+OCMocking.h"; sourceTree = "<group>"; };
+		DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodBasicAuth+OCMocking.m"; sourceTree = "<group>"; };
 		DC028359209098D7005B6334 /* OCImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCImage.h; sourceTree = "<group>"; };
 		DC02835A209098D7005B6334 /* OCImage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCImage.m; sourceTree = "<group>"; };
 		DC0283612090A3E8005B6334 /* OCItemThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemThumbnail.h; sourceTree = "<group>"; };
@@ -1202,6 +1206,8 @@
 			children = (
 				DCA8921820F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.m */,
 				DCA8921720F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.h */,
+				DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */,
+				DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */,
 			);
 			path = "Mocking Targets";
 			sourceTree = "<group>";
@@ -1404,6 +1410,7 @@
 				DCA8924C20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.h in Headers */,
 				DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */,
 				DCA8924A20F5F1BF00AEFF98 /* OCMockManager.h in Headers */,
+				DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */,
 				DCA8924820F5F1BF00AEFF98 /* NSObject+OCSwizzle.h in Headers */,
 				DCA8925220F5F57D00AEFF98 /* NSObject+OCMockManager.h in Headers */,
 			);
@@ -1790,6 +1797,7 @@
 				DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */,
 				DCA8924720F5F1BF00AEFF98 /* NSObject+OCSwizzle.m in Sources */,
 				DCA8924920F5F1BF00AEFF98 /* OCMockManager.m in Sources */,
+				DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
