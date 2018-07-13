@@ -26,9 +26,12 @@
 #import "OCShare.h"
 #import "OCReachabilityMonitor.h"
 #import "OCCache.h"
+#import "OCDatabase.h"
+#import "OCRetainerCollection.h"
 
 @class OCCore;
 @class OCItem;
+@class OCCoreSyncRoute;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -40,6 +43,7 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 };
 
 typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
+typedef void(^OCCoreDownloadResultHandler)(NSError *error, OCCore *core, OCItem *item, OCFile *file);
 typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, id retrievedObject, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
@@ -65,6 +69,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _connectivityQueue;
 
 	dispatch_group_t _runningActivitiesGroup;
+	NSInteger _runningActivities;
+	dispatch_block_t _runningActivitiesCompleteBlock;
 
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
@@ -72,6 +78,11 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	OCCoreState _state;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
+
+	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
+	BOOL _needsToProcessSyncRecords;
+
+	OCSyncAnchor _latestSyncAnchor;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -87,6 +98,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
 @property(weak) id <OCCoreDelegate> delegate;
+
+@property(readonly, strong) OCSyncAnchor latestSyncAnchor;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -104,17 +117,9 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 - (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
-
-- (NSProgress *)deleteItem:(OCItem *)item resultHandler:(OCCoreActionResultHandler)resultHandler;
-
 - (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
@@ -124,10 +129,37 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 - (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 
-- (NSProgress *)synchronizeWithServer;
+@end
 
+@interface OCCore (Download)
+- (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler;
+@end
+
+@interface OCCore (FileManagement)
+- (void)performFile:(OCFile *)file retainerOperation:(void(^)(OCCore *core, OCFile *file, OCRetainerCollection *retainers))retainerOperation;
+//
+//- (BOOL)retainFile:(OCFile *)file with:(OCRetainer *)retainer;
+//- (BOOL)releaseFile:(OCFile *)file from:(OCRetainer *)retainer;
+//
+//- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
+//- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
+@end
+
+@interface OCCore (CommandCreateFolder)
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandDelete)
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandCopyMove)
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 @end
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
+extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;

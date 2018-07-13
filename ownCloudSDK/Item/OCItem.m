@@ -60,6 +60,7 @@
 
 	[coder encodeObject:_path 		forKey:@"path"];
 
+	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
 
@@ -67,6 +68,8 @@
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
+
+	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 }
 
 #pragma mark - Init & Dealloc
@@ -101,6 +104,7 @@
 
 		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
 
+		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
 
@@ -108,6 +112,8 @@
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
+
+		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 	}
 
 	return (self);
@@ -131,7 +137,7 @@
 	_versionIdentifier = nil;
 }
 
-- (OCItemVersionIdentifier *)versionIdentifier
+- (OCItemVersionIdentifier *)itemVersionIdentifier
 {
 	if (_versionIdentifier == nil)
 	{
@@ -179,7 +185,7 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, parentID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.parentFileID, (_removed ? @", removed" : @"")]);
 }
 
 @end

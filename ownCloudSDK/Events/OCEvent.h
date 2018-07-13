@@ -43,12 +43,15 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 @class OCEvent;
 @class OCEventTarget;
+@class OCFile;
 
 @protocol OCEventHandler <NSObject>
 
 - (void)handleEvent:(OCEvent *)event sender:(id)sender;
 
 @end
+
+typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 @interface OCEvent : NSObject
 {
@@ -74,6 +77,7 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 @property(strong) NSString *mimeType;
 @property(strong) NSData *data;
+@property(strong) OCFile *file;
 @property(strong) NSError *error;
 @property(strong) id result;
 

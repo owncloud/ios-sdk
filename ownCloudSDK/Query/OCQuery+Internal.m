@@ -17,6 +17,7 @@
  */
 
 #import "OCQuery+Internal.h"
+#import "OCCoreItemList.h"
 
 @implementation OCQuery (Internal)
 
@@ -41,6 +42,49 @@
 	}
 
 	return (fullQueryResults);
+}
+
+- (void)mergeItemsToFullQueryResults:(NSArray <OCItem *> *)mergeItems syncAnchor:(OCSyncAnchor)syncAnchor
+{
+	// Used only for queries targeting a sync anchor. Makes sure every changed item is only
+	// included once by replacing existing items for a path with new ones.
+
+	if (!((mergeItems!=nil) && (mergeItems.count > 0)))
+	{
+		return;
+	}
+
+	@synchronized(self)
+	{
+		OCCoreItemList *itemList = [OCCoreItemList new];
+		NSDictionary <OCPath, OCItem *> *itemsByPath;
+
+		if (_fullQueryResults == nil) { _fullQueryResults = [NSMutableArray new]; }
+
+		itemList.items = _fullQueryResults;
+
+		_lastMergeSyncAnchor = syncAnchor;
+
+		if ((itemsByPath = itemList.itemsByPath) != nil)
+		{
+			for (OCItem *mergeItem in mergeItems)
+			{
+				if (mergeItem.path != nil)
+				{
+					OCItem *removeItem;
+
+					if ((removeItem = itemsByPath[mergeItem.path]) != nil)
+					{
+						// Remove older items for the same path
+						[_fullQueryResults removeObjectIdenticalTo:removeItem];
+					}
+
+					// Add item to results
+					[_fullQueryResults addObject:mergeItem];
+				}
+			}
+		}
+	}
 }
 
 #pragma mark - Update processed results

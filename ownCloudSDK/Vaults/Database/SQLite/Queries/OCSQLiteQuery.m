@@ -17,6 +17,7 @@
  */
 
 #import "OCSQLiteQuery.h"
+#import "OCSQLiteQueryCondition.h"
 
 @implementation OCSQLiteQuery
 
@@ -54,7 +55,7 @@
 }
 
 #pragma mark - SELECT query builder
-+ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 {
 	OCSQLiteQuery *query = nil;
 	NSMutableArray *parameters=nil;
@@ -64,7 +65,7 @@
 	// Build WHERE-string
 	whereString = [self _buildWhereStringForMatchPairs:matchValues parameters:&parameters];
 
-	sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@", ((columnNames!=nil)?[columnNames componentsJoinedByString:@","]:@"*"), tableName, whereString];
+	sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@%@", ((columnNames!=nil)?[columnNames componentsJoinedByString:@","]:@"*"), tableName, whereString, ((orderBy!=nil) ? [@" ORDER BY " stringByAppendingString:orderBy] : @"")];
 
 	query = [self new];
 	query.sqlQuery = sqlQuery;
@@ -72,6 +73,11 @@
 	query.resultHandler = resultHandler;
 
 	return (query);
+}
+
++ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler
+{
+	return ([self querySelectingColumns:columnNames fromTable:tableName where:matchValues orderBy:nil resultHandler:resultHandler]);
 }
 
 #pragma mark - INSERT query builder
@@ -213,7 +219,7 @@
 
 	if (matchValuesCount > 0)
 	{
-		__block NSUInteger i=0;
+		__block NSUInteger addedConditions = 0;
 
 		if (inOutParameters != NULL)
 		{
@@ -227,22 +233,40 @@
 
 		whereString = [[NSMutableString alloc] initWithCapacity:20*matchValuesCount];
 
-		[whereString appendString:@" WHERE "];
-
 		[matchValues enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull columnName, id<NSObject>  _Nonnull obj, BOOL * _Nonnull stop) {
+			NSString *sqlOperator = @"=";
+
+			if ([obj isKindOfClass:[OCSQLiteQueryCondition class]])
+			{
+				OCSQLiteQueryCondition *condition = (OCSQLiteQueryCondition *)obj;
+
+				if (!condition.apply)
+				{
+					return;
+				}
+
+				sqlOperator = condition.sqlOperator;
+				obj = condition.value;
+			}
+
 			[parameters addObject:obj];
 
-			if (i == (matchValuesCount-1))
+			if (addedConditions > 0)
 			{
-				[whereString appendFormat:@"%@=?", columnName];
+				[whereString appendFormat:@" AND %@%@?", columnName, sqlOperator];
 			}
 			else
 			{
-				[whereString appendFormat:@"%@=? AND ", columnName];
+				[whereString appendFormat:@" WHERE %@%@?", columnName, sqlOperator];
 			}
 
-			i++;
+			addedConditions++;
 		}];
+
+		if (whereString.length == 0)
+		{
+			whereString = nil;
+		}
 	}
 
 	if (inOutParameters != NULL)

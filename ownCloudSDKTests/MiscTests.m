@@ -234,4 +234,32 @@
 
 }
 
+- (void)testKeyValueStore
+{
+	NSURL *temporaryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"kvStore"];
+	OCKeyValueStore *keyValueStore = [[OCKeyValueStore alloc] initWithRootURL:temporaryURL];
+	NSDate *testDate = [NSDate date], *retrievedDate = nil;
+
+	XCTAssert(keyValueStore!=nil);
+
+	keyValueStore[@"test"] = testDate;
+	XCTAssert(keyValueStore.allKeys.count == 1);
+
+	keyValueStore[@"test2"] = @"test";
+	XCTAssert(keyValueStore.allKeys.count == 2);
+
+	keyValueStore[@"test2"] = nil;
+	XCTAssert(keyValueStore.allKeys.count == 1);
+
+	retrievedDate = keyValueStore[@"test"];
+
+	XCTAssert(retrievedDate!=nil);
+	XCTAssert([retrievedDate isEqual:testDate]);
+	XCTAssert(retrievedDate!=testDate);
+
+	NSError *error = [keyValueStore eraseBackinngStore];
+	XCTAssert(error==nil);
+	XCTAssert(![[NSFileManager defaultManager] fileExistsAtPath:temporaryURL.path]);
+}
+
 @end

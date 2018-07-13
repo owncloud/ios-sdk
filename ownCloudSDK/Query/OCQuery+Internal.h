@@ -24,6 +24,8 @@
 - (void)setFullQueryResults:(NSMutableArray <OCItem *> *)fullQueryResults;
 - (NSMutableArray <OCItem *> *)fullQueryResults;
 
+- (void)mergeItemsToFullQueryResults:(NSArray <OCItem *> *)mergeItems syncAnchor:(OCSyncAnchor)syncAnchor;
+
 #pragma mark - Update processed results
 - (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;
 

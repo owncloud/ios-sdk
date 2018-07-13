@@ -19,6 +19,7 @@
 #import "OCConnectionIssue.h"
 #import "OCMacros.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "OCConnectionIssueChoice.h"
 
 @interface OCConnectionIssue ()
 {
@@ -44,6 +45,9 @@
 @synthesize decision = _decision;
 @synthesize issueHandler = _issueHandler;
 
+@synthesize selectedChoice = _selectedChoice;
+@synthesize choices = _choices;
+
 @synthesize issues = _issues;
 
 #pragma mark - Init
@@ -55,6 +59,11 @@
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(OCConnectionIssueHandler)issueHandler
 {
 	return ([[self alloc] initWithRedirectionFromURL:originalURL toSuggestedURL:suggestedURL issueHandler:issueHandler]);
+}
+
++ (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCConnectionIssueChoice *> *)choices completionHandler:(OCConnectionIssueHandler)issueHandler
+{
+	return ([[self alloc] initMultipleChoicesWithLocalizedTitle:localizedTitle localizedDescription:localizedDescription choices:choices completionHandler:issueHandler]);
 }
 
 + (instancetype)issueForIssues:(NSArray <OCConnectionIssue *> *)issues completionHandler:(OCConnectionIssueHandler)completionHandler
@@ -150,6 +159,22 @@
 	return(self);
 }
 
+- (instancetype)initMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCConnectionIssueChoice *> *)choices completionHandler:(OCConnectionIssueHandler)issueHandler
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = OCConnectionIssueTypeMultipleChoice;
+
+		_localizedTitle = localizedTitle;
+		_localizedDescription = localizedDescription;
+
+		_choices = choices;
+		_issueHandler = [issueHandler copy];
+	}
+
+	return(self);
+}
+
 - (instancetype)initWithIssues:(NSArray <OCConnectionIssue *> *)issues completionHandler:(OCConnectionIssueHandler)completionHandler
 {
 	if ((self = [super init]) != nil)
@@ -210,6 +235,39 @@
 			if (addIssue.level > _level)
 			{
 				_level = addIssue.level;
+			}
+		}
+	}
+}
+
+#pragma mark - Multiple choice
+- (void)selectChoice:(OCConnectionIssueChoice *)choice
+{
+	[self willChangeValueForKey:@"selectedChoice"];
+	_selectedChoice = choice;
+	[self didChangeValueForKey:@"selectedChoice"];
+
+	if (choice.choiceHandler != nil)
+	{
+		choice.choiceHandler(self, choice);
+	}
+
+	if (_issueHandler != nil)
+	{
+		_issueHandler(self, OCConnectionIssueDecisionNone);
+	}
+}
+
+- (void)cancel
+{
+	if (_selectedChoice == nil)
+	{
+		for (OCConnectionIssueChoice *choice in _choices)
+		{
+			if (choice.type == OCConnectionIssueChoiceTypeCancel)
+			{
+				[self selectChoice:choice];
+				return;
 			}
 		}
 	}
@@ -306,6 +364,10 @@
 	{
 		case OCConnectionIssueTypeGroup:
 			[descriptionString appendFormat:@"Group [%@]", _issues];
+		break;
+
+		case OCConnectionIssueTypeMultipleChoice:
+			[descriptionString appendFormat:@"Multiple Choice [%@]", _choices];
 		break;
 
 		case OCConnectionIssueTypeURLRedirection:

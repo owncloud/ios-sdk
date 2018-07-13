@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCConnectionRequest.h"
+#import "OCKeyValueStore.h"
 
 @class OCConnection;
 
@@ -34,6 +35,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 @interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate>
 {
 	__weak OCConnection *_connection;
+
+	OCKeyValueStore *_persistentStore;
 
 	NSURLSession *_urlSession;
 	
@@ -57,7 +60,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 @property(assign,nonatomic) NSUInteger maxConcurrentRequests; //!< Maximum number of concurrent requests this queue should schedule on the NSURLSession
 
 #pragma mark - Init
-- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier connection:(OCConnection *)connection;
+- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier persistentStore:(OCKeyValueStore *)persistentStore connection:(OCConnection *)connection;
 - (instancetype)initEphermalQueueWithConnection:(OCConnection *)connection;
 
 #pragma mark - Queue management

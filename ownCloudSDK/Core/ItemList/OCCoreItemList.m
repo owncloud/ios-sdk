@@ -17,6 +17,7 @@
  */
 
 #import "OCCoreItemList.h"
+#import "NSString+OCParentPath.h"
 
 @implementation OCCoreItemList
 
@@ -27,6 +28,16 @@
 @synthesize itemPathsSet = _itemPathsSet;
 
 @synthesize error = _error;
+
++ (instancetype)itemListWithItems:(NSArray <OCItem *> *)items
+{
+	OCCoreItemList *itemList;
+
+	itemList = [self new];
+	itemList.items = items;
+
+	return (itemList);
+}
 
 - (void)updateWithError:(NSError *)error items:(NSArray <OCItem *> *)items
 {
@@ -85,6 +96,52 @@
 	}
 
 	return (_itemPathsSet);
+}
+
+- (NSMutableDictionary<OCPath,NSMutableArray<OCItem *> *> *)itemsByParentPaths
+{
+	if (_itemsByParentPaths == nil)
+	{
+		_itemsByParentPaths = [NSMutableDictionary new];
+
+		for (OCItem *item in self.items)
+		{
+			OCPath parentPath;
+
+			if ((parentPath = [item.path parentPath]) != nil)
+			{
+				NSMutableArray <OCItem *> *items;
+
+				if ((items = _itemsByParentPaths[parentPath]) == nil)
+				{
+					_itemsByParentPaths[parentPath] = items = [NSMutableArray new];
+				}
+
+				[items addObject:item];
+			}
+		}
+	}
+
+	return (_itemsByParentPaths);
+}
+
+- (NSSet<OCPath> *)itemParentPaths
+{
+	if (_itemParentPaths == nil)
+	{
+		NSArray<OCPath> *itemParentPaths;
+
+		if ((itemParentPaths = [self.itemsByParentPaths allKeys]) != nil)
+		{
+			_itemParentPaths = [[NSSet alloc] initWithArray:itemParentPaths];
+		}
+		else
+		{
+			_itemParentPaths = [NSSet new];
+		}
+	}
+
+	return (_itemParentPaths);
 }
 
 @end

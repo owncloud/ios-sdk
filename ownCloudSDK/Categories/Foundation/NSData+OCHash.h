@@ -25,6 +25,7 @@
 - (NSData *)sha256Hash;
 
 - (NSString *)asHexStringWithSeparator:(NSString *)separator;
+- (NSString *)asHexStringWithSeparator:(NSString *)separator lowercase:(BOOL)lowercase;
 
 - (NSString *)asFingerPrintString;
 

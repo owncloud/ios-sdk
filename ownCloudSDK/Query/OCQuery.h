@@ -69,16 +69,20 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 
 	dispatch_queue_t _queue;
 
+	OCSyncAnchor _lastMergeSyncAnchor; // Sync anchor at the time of the last call to -mergeItemsToFullQueryResults:
+
 	BOOL _needsRecomputation;
 }
 
 #pragma mark - Initializers
 + (instancetype)queryForPath:(OCPath)queryPath;	//!< Query for directory
 + (instancetype)queryWithItem:(OCItem *)item;   //!< Query for single file item
++ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; //!< Query for changed folders since (but not including) a particular sync anchor
 
 #pragma mark - Location
 @property(strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
 @property(strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
+@property(strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query

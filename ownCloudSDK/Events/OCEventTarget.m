@@ -18,6 +18,13 @@
 
 #import "OCEventTarget.h"
 
+@interface OCEventTarget ()
+{
+	OCEventHandlerBlock _eventHandlerBlock;
+}
+
+@end
+
 @implementation OCEventTarget
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
@@ -44,10 +51,34 @@
 	return (self);
 }
 
++ (instancetype)eventTargetWithEphermalEventHandlerBlock:(OCEventHandlerBlock)eventHandlerBlock userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
+{
+	return ([[self alloc] initWithEphermalEventHandlerBlock:eventHandlerBlock userInfo:userInfo ephermalUserInfo:ephermalUserInfo]);
+}
+
+- (instancetype)initWithEphermalEventHandlerBlock:(OCEventHandlerBlock)eventHandlerBlock userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
+{
+	if ((self = [super init]) != nil)
+	{
+		_eventHandlerBlock = [eventHandlerBlock copy];
+		_userInfo = userInfo;
+		_ephermalUserInfo = ephermalUserInfo;
+	}
+
+	return (self);
+}
+
 #pragma mark - Event handler
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+	if (_eventHandlerBlock == nil)
+	{
+		[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+	}
+	else
+	{
+		_eventHandlerBlock(event, sender);
+	}
 }
 
 #pragma mark - Convenience

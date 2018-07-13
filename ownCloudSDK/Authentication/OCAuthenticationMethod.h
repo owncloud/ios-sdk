@@ -68,7 +68,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.
 - (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Deauthenticates the connection.
 
-- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection; //!< Applies all necessary modifications to a request so that it authorized against using this authentication method. This can be adding tokens, passwords, etc. to the headers. The request returned by this method is sent.
+- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection; //!< Applies all necessary modifications to a request so that it's authorized using this authentication method. This can be adding tokens, passwords, etc. to the headers. The request returned by this method is sent.
 
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler; //!< Generates the authenticationData for a connection's bookmark and returns the result via the completionHandler. It is not directly stored in the bookmark so that an app can decide on its own when to overwrite existing data - or save the result. The authentication method is obligated to return an error in the completionHandler if authentication is not possible (f.ex. rejected token request, wrong username/passphrase).
@@ -83,6 +83,12 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 #pragma mark - Handle responses before they are delivered to the request senders
 - (NSError *)handleResponse:(OCConnectionRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
+
+@end
+
+@protocol OCAuthenticationMethodUIAppExtension
+
+- (BOOL)cacheSecrets; //!< Determines if -cachedAuthenticationSecretForConnection: actually caches the authentication secret. If not implemented in OCAuthenticationMethod, the default is NO.
 
 @end
 

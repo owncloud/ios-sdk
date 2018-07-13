@@ -63,6 +63,6 @@
 @property(strong,nonatomic) NSUserDefaults *userDefaults;
 
 #pragma mark - Singleton
-+ (instancetype)sharedAppIdentity;
+@property(class, readonly, strong, nonatomic) OCAppIdentity *sharedAppIdentity;
 
 @end

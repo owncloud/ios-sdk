@@ -10,6 +10,7 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
 #import "OCCore+Internal.h"
+#import "TestTools.h"
 
 @interface CoreTests : XCTestCase <OCCoreDelegate>
 {
@@ -134,6 +135,21 @@
 							break;
 						}
 					}];
+
+					if (query.state == OCQueryStateIdle)
+					{
+						// Verify parentFileID
+						XCTAssert(query.rootItem!=nil); // Root item exists
+						XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
+						XCTAssert(query.rootItem.parentFileID==nil); // Root item has no parentFileID
+
+						for (OCItem *item in changeset.queryResult)
+						{
+							XCTAssert(item.fileID!=nil); // all items in the result have a file ID
+							XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
+							XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+						}
+					}
 				}
 
 				if (query.state == OCQueryStateIdle)
@@ -141,6 +157,7 @@
 					if (subfolderQuery==nil)
 					{
 						OCPath subfolderPath = nil;
+						OCItem *firstQueryRootItem = query.rootItem;
 
 						for (OCItem *item in query.queryResults)
 						{
@@ -184,6 +201,22 @@
 
 								if (query.state == OCQueryStateIdle)
 								{
+									// Verify parentFileID
+									XCTAssert(query.rootItem!=nil); // Root item exists
+									XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
+									XCTAssert(query.rootItem.parentFileID!=nil); // Root item has no parentFileID
+									XCTAssert([query.rootItem.parentFileID isEqual:firstQueryRootItem.fileID]); // all items in result have the parentFileID of their parent dir
+
+									for (OCItem *item in changeset.queryResult)
+									{
+										XCTAssert(item.fileID!=nil); // all items in the result have a file ID
+										XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
+										XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+									}
+								}
+
+								if (query.state == OCQueryStateIdle)
+								{
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
@@ -206,10 +239,8 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
-
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -355,10 +386,8 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	NSLog(@"%@", [core.vault.databaseURL.absoluteString stringByDeletingLastPathComponent]);
-
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -541,7 +570,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -697,7 +726,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
@@ -762,7 +791,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	// Erase vault
-	[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }

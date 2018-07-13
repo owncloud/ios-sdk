@@ -21,6 +21,8 @@
 #import "NSError+OCError.h"
 #import "OCCertificate.h"
 #import "OCLogger.h"
+#import "OCConnectionQueue+BackgroundSessionRecovery.h"
+#import "OCAppIdentity.h"
 
 @implementation OCConnectionQueue
 
@@ -51,15 +53,25 @@
 	return (self);
 }
 
-- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier connection:(OCConnection *)connection
+- (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier persistentStore:(OCKeyValueStore *)persistentStore connection:(OCConnection *)connection
 {
 	if ((self = [self init]) != nil)
 	{
+		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier];
+
+		sessionConfiguration.sharedContainerIdentifier = [OCAppIdentity sharedAppIdentity].appGroupIdentifier;
+
 		_connection = connection;
 
-		_urlSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier]
+		_persistentStore = persistentStore;
+
+		[self restoreState];
+
+		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
 					    delegate:self
 					    delegateQueue:nil];
+
+		[self updateStateWithURLSession];
 	}
 	
 	return (self);
@@ -297,6 +309,8 @@
 			[self handleFinishedRequest:request error:error];
 		}];
 	}
+
+	[self saveState];
 }
 
 - (void)_prepareRequestForScheduling:(OCConnectionRequest *)request
@@ -461,6 +475,9 @@
 	{
 		[self _scheduleQueuedRequests];
 	}
+
+	// Save state
+	[self saveState];
 }
 
 #pragma mark - Request retrieval
@@ -565,6 +582,20 @@
 	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
+{
+	dispatch_block_t completionHandler;
+
+	// Call completion handler
+	if ((completionHandler = [OCConnectionQueue completionHandlerForBackgroundSessionWithIdentifier:session.configuration.identifier remove:YES]) != nil)
+	{
+		completionHandler();
+	}
+
+	// Tell connection that handling this queue finished
+	[_connection finishedQueueForResumedBackgroundSessionWithIdentifier:session.configuration.identifier];
+}
+
 - (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
 	[certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *validationError) {
@@ -657,6 +688,194 @@
 		// All other challenges
 		completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 	}
+}
+
+@end
+
+@implementation OCConnectionQueue (BackgroundSessionRecovery)
+
+#pragma mark - Background URL session recovery
++ (NSMutableDictionary<NSString *, dispatch_block_t> *)_completionHandlersByBackgroundSessionIdentifiers
+{
+	static NSMutableDictionary <NSString *, dispatch_block_t> *_queuedSessionCompletionHandlersByIdentifiers = nil;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		_queuedSessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
+	});
+
+	return (_queuedSessionCompletionHandlersByIdentifiers);
+}
+
++ (dispatch_block_t)completionHandlerForBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier remove:(BOOL)remove
+{
+	NSMutableDictionary <NSString *, dispatch_block_t> *_queuedSessionCompletionHandlersByIdentifiers = [self _completionHandlersByBackgroundSessionIdentifiers];
+	dispatch_block_t completionHandler = nil;
+
+	if (backgroundSessionIdentifier != nil)
+	{
+		@synchronized(_queuedSessionCompletionHandlersByIdentifiers)
+		{
+			completionHandler = _queuedSessionCompletionHandlersByIdentifiers[backgroundSessionIdentifier];
+
+			if (remove)
+			{
+				[_queuedSessionCompletionHandlersByIdentifiers removeObjectForKey:backgroundSessionIdentifier];
+			}
+		}
+	}
+
+	return (completionHandler);
+}
+
++ (void)setCompletionHandler:(dispatch_block_t)completionHandler forBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier
+{
+	NSMutableDictionary <NSString *, dispatch_block_t> *_queuedSessionCompletionHandlersByIdentifiers = [self _completionHandlersByBackgroundSessionIdentifiers];
+
+	if (backgroundSessionIdentifier == nil) { return; }
+
+	@synchronized(_queuedSessionCompletionHandlersByIdentifiers)
+	{
+		if (completionHandler != nil)
+		{
+			_queuedSessionCompletionHandlersByIdentifiers[backgroundSessionIdentifier] = completionHandler;
+		}
+		else
+		{
+			[_queuedSessionCompletionHandlersByIdentifiers removeObjectForKey:backgroundSessionIdentifier];
+		}
+	}
+}
+
++ (NSUUID *)uuidForBackgroundSessionIdentifier:(NSString *)backgroundSessionIdentifier
+{
+	NSString *uuidString;
+
+	if ((uuidString = [[backgroundSessionIdentifier componentsSeparatedByString:@";"] firstObject]) != nil)
+	{
+		return ([[NSUUID alloc] initWithUUIDString:uuidString]);
+	}
+
+	return (nil);
+}
+
++ (NSString *)localBackgroundSessionIdentifierForUUID:(NSUUID *)uuid
+{
+	return ([NSString stringWithFormat:@"%@;%@", uuid.UUIDString, NSBundle.mainBundle.bundleIdentifier]);
+}
+
++ (BOOL)backgroundSessionOriginatesLocallyForIdentifier:(NSString *)backgroundSessionIdentifier
+{
+	NSString *originatingBundleIdentifier;
+
+	if ((originatingBundleIdentifier = [[backgroundSessionIdentifier componentsSeparatedByString:@";"] lastObject]) != nil)
+	{
+		return ([originatingBundleIdentifier isEqual:NSBundle.mainBundle.bundleIdentifier]);
+	}
+
+	return (NO);
+}
+
++ (NSArray <NSString *> *)otherBackgroundSessionIdentifiersForUUID:(NSUUID *)uuid
+{
+	NSMutableDictionary <NSString *, dispatch_block_t> *_queuedSessionCompletionHandlersByIdentifiers = [self _completionHandlersByBackgroundSessionIdentifiers];
+	NSMutableArray <NSString *> *otherBackgroundSessionIdentifiers = nil;
+
+	@synchronized(_queuedSessionCompletionHandlersByIdentifiers)
+	{
+		for (NSString *backgroundSessionIdentifier in _queuedSessionCompletionHandlersByIdentifiers)
+		{
+			if ([[self uuidForBackgroundSessionIdentifier:backgroundSessionIdentifier] isEqual:uuid])
+			{
+				if ([self backgroundSessionOriginatesLocallyForIdentifier:backgroundSessionIdentifier])
+				{
+					if (otherBackgroundSessionIdentifiers == nil) { otherBackgroundSessionIdentifiers = [NSMutableArray new]; }
+
+					[otherBackgroundSessionIdentifiers addObject:backgroundSessionIdentifier];
+				}
+			}
+		}
+	}
+
+	return (otherBackgroundSessionIdentifiers);
+}
+
+#pragma mark - State management
+- (void)saveState
+{
+	if (_persistentStore != nil)
+	{
+		@synchronized(self)
+		{
+			NSDictionary *state = @{
+				@"queuedRequests" : _queuedRequests,
+
+				@"runningRequests" : _runningRequests,
+				@"runningRequestsGroupIDs" : _runningRequestsGroupIDs,
+				@"runningRequestsByTaskIdentifier" : _runningRequestsByTaskIdentifier,
+
+				@"cachedCertificatesByHostnameAndPort" : _cachedCertificatesByHostnameAndPort,
+			};
+
+			_persistentStore[@"state"] = state;
+		}
+	}
+}
+
+- (void)restoreState
+{
+	if (_persistentStore != nil)
+	{
+		@synchronized(self)
+		{
+			NSDictionary *state;
+
+			if ((state = _persistentStore[@"state"]) != nil)
+			{
+				_queuedRequests = state[@"queuedRequests"];
+
+				_runningRequests = state[@"runningRequests"];
+				_runningRequestsGroupIDs = state[@"runningRequestsGroupIDs"];
+				_runningRequestsByTaskIdentifier = state[@"runningRequestsByTaskIdentifier"];
+
+				_cachedCertificatesByHostnameAndPort = state[@"cachedCertificatesByHostnameAndPort"];
+			}
+		}
+	}
+}
+
+- (void)updateStateWithURLSession
+{
+	[_urlSession getAllTasksWithCompletionHandler:^(NSArray<NSURLSessionTask *> *tasks) {
+		[self _queueBlock:^{
+			@synchronized(self)
+			{
+				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:_runningRequests];
+
+				// Compare tasks against list of runningRequests
+				for (NSURLSessionTask *task in tasks)
+				{
+					OCConnectionRequest *runningRequest;
+
+					if ((runningRequest = [self requestForTask:task]) != nil)
+					{
+						// Remove requests that are still running on the NSURLSessionTask
+						[droppedRequests removeObjectIdenticalTo:runningRequest];
+					}
+				}
+
+				// Handle "running" requests dropped by the NSURLSession
+				for (OCConnectionRequest *droppedRequest in droppedRequests)
+				{
+					// End with OCErrorRequestDroppedByURLSession
+					[self _handleFinishedRequest:droppedRequest error:OCError(OCErrorRequestDroppedByURLSession) scheduleQueuedRequests:NO];
+				}
+			}
+
+			// Schedule queued requests
+			[self scheduleQueuedRequests];
+		}];
+	}];
 }
 
 @end

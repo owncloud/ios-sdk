@@ -68,6 +68,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
+@property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO)
 @property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
@@ -80,9 +81,10 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) OCPath path; //!< Path of the item on the server relative to root
 @property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
-@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+@property(strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
+@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
-@property(readonly,nonatomic) OCItemVersionIdentifier *versionIdentifier; // (dynamic/ephermal)
+@property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
@@ -92,7 +94,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
 
-@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database (ephermal!)
+@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;

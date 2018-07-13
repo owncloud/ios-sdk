@@ -48,7 +48,7 @@
 	OCConnection *connection;
 	OCConnectionRequest *request;
 	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
 	request = [OCConnectionRequest requestWithURL:bookmark.url];
 	
@@ -74,7 +74,7 @@
 	
 	OCConnection *connection;
 	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		NSLog(@"Issues: %@", issue.issues);
@@ -285,7 +285,7 @@
 	// Create bookmark from normalized URL (and extract username and password if included)
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasPrepended:NULL]];
 	
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		// Prepare for setup
 		[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
@@ -347,7 +347,7 @@
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-											newConnection = [[OCConnection alloc] initWithBookmark:bookmark];
+											newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
 											if (preConnectAction != nil)
 											{
@@ -480,7 +480,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				NSLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
@@ -529,7 +529,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/Photos" completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				NSLog(@"Items at /Photos: %@", items);
 
 				for (OCItem *item in items)
@@ -593,6 +593,80 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
 	NSLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
+}
+
+- (void)testConnectAndDownloadFile
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	XCTestExpectation *expectFileDownload = [self expectationWithDescription:@"File downloaded"];
+	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at /Photos: %@", items);
+				OCItem *downloadItem = nil;
+
+				for (OCItem *item in items)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						downloadItem = item;
+						break;
+					}
+				}
+
+				if (downloadItem != nil)
+				{
+					[connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						if (event.file != nil)
+						{
+							[expectFileDownload fulfill];
+
+							NSLog(@"File downloaded: %@ (%@)", event.file.url, event.file.checksum.headerString);
+
+							[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
+								NSLog(@"File checksum verified: error=%@, isValid=%d, actualChecksum=%@", error, isValid, actualChecksum);
+
+								XCTAssert(error==nil);
+								XCTAssert(isValid==YES);
+								XCTAssert([actualChecksum isEqual:event.file.checksum]);
+
+								[expectChecksumVerifies fulfill];
+							}];
+						}
+					} userInfo:nil ephermalUserInfo:nil]];
+				}
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectFileList fulfill];
+			}];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
 @end

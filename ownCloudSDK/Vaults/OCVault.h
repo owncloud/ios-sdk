@@ -18,7 +18,9 @@
 
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
-#import "OCDatabase.h"
+
+@class OCDatabase;
+@class OCItem;
 
 @interface OCVault : NSObject
 {
@@ -26,6 +28,8 @@
 
 	NSURL *_rootURL;
 	NSURL *_databaseURL;
+	NSURL *_filesRootURL;
+	NSURL *_connectionDataRootURL;
 
 	OCDatabase *_database;
 }
@@ -36,6 +40,8 @@
 
 @property(readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
 @property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
+@property(readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
+@property(readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -47,4 +53,14 @@
 
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
+#pragma mark - URL and path builders
+- (NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+
++ (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
+
++ (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
+
 @end
+
+extern NSString *OCVaultPathVaults;
+extern NSString *OCVaultPathConnectionData;

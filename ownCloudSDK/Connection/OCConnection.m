@@ -19,7 +19,7 @@
 #import "OCConnection.h"
 #import "OCConnection+OCConnectionQueue.h"
 #import "OCConnectionRequest.h"
-#import "OCConnectionQueue.h"
+#import "OCConnectionQueue+BackgroundSessionRecovery.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
@@ -28,14 +28,20 @@
 #import "OCLogger.h"
 #import "OCItem.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "NSProgress+OCExtensions.h"
+#import "OCFile.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethodBasicAuth.h"
 
+#import "OCChecksumAlgorithmSHA1.h"
+
 @implementation OCConnection
 
 @dynamic authenticationMethod;
+
+@synthesize preferredChecksumAlgorithmIdentifier = _preferredChecksumAlgorithmIdentifier;
 
 @synthesize bookmark = _bookmark;
 
@@ -80,11 +86,16 @@
 	return(nil);
 }
 
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL
 {
 	if ((self = [super init]) != nil)
 	{
+		OCKeyValueStore *persistentStore = nil;
+		NSString *backgroundSessionIdentifier = [OCConnectionQueue localBackgroundSessionIdentifierForUUID:bookmark.uuid];
+
 		self.bookmark = bookmark;
+
+		_persistentStoreBaseURL = persistentStoreBaseURL;
 		
 		if (self.bookmark.authenticationMethodIdentifier != nil)
 		{
@@ -95,10 +106,17 @@
 				_authenticationMethod = [authenticationMethodClass new];
 			}
 		}
+
+		if (_persistentStoreBaseURL != nil)
+		{
+			persistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:backgroundSessionIdentifier]];
+		}
 			
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:_bookmark.uuid.UUIDString connection:self];
+		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
+		_preferredChecksumAlgorithmIdentifier = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
 	return (self);
@@ -479,7 +497,7 @@
 }
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
 	OCConnectionDAVRequest *davRequest;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
@@ -490,7 +508,7 @@
 		url = [url URLByAppendingPathComponent:path];
 	}
 
-	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:1]) != nil)
+	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		[davRequest.xmlRequestPropAttribute addChildren:@[
 			[OCXMLNode elementWithName:@"D:resourcetype"],
@@ -525,51 +543,450 @@
 }
 
 #pragma mark - Actions
-- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
+}
+
+- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	// Stub implementation
+	return(nil);
+}
+
+#pragma mark - File transfer: download
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	NSProgress *progress = nil;
+	NSURL *downloadURL;
+
+	if (item == nil)
+	{
+		return(nil);
+	}
+
+	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:downloadURL];
+
+		request.method = OCConnectionRequestMethodGET;
+
+		request.resultHandlerAction = @selector(_handleDownloadItemResult:error:);
+		request.userInfo = @{
+			@"item" : item
+		};
+		request.eventTarget = eventTarget;
+		request.downloadRequest = YES;
+		request.downloadedFileURL = targetURL;
+		request.downloadedFileIsTemporary = (targetURL == nil);
+
+		[request setValue:item.eTag forHeaderField:@"If-Match"];
+
+		// Enqueue request
+		[self.downloadQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleDownloadItemResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	BOOL postEvent = YES;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				OCFile *file = [OCFile new];
+
+				file.item = request.userInfo[@"item"];
+
+				file.url = request.downloadedFileURL;
+
+				file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+
+				file.eTag = request.response.allHeaderFields[@"oc-etag"];
+				file.fileID = file.item.fileID;
+
+				event.file = file;
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
+#pragma mark - Action: Create Directory
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+{
+	NSProgress *progress = nil;
+	NSURL *createFolderURL;
+	OCPath fullFolderPath = nil;
+
+	if ((parentItem==nil) || (folderName==nil))
+	{
+		return(nil);
+	}
+
+	fullFolderPath =  [parentItem.path stringByAppendingPathComponent:folderName];
+
+	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:fullFolderPath]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:createFolderURL];
+
+		request.method = OCConnectionRequestMethodMKCOL;
+
+		request.resultHandlerAction = @selector(_handleCreateFolderResult:error:);
+		request.userInfo = @{
+			@"parentItem" : parentItem,
+			@"folderName" : folderName,
+			@"fullFolderPath" : fullFolderPath
+		};
+		request.eventTarget = eventTarget;
+
+		// Enqueue request
+		[self.commandQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder sender:self];
+	}
+
+	return(progress);
 }
 
 - (void)_handleCreateFolderResult:(OCConnectionRequest *)request error:(NSError *)error
 {
-	
+	OCEvent *event;
+	BOOL postEvent = YES;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateFolder attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			OCPath fullFolderPath = request.userInfo[@"fullFolderPath"];
+			OCItem *parentItem = request.userInfo[@"parentItem"];
+
+			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			{
+				postEvent = NO; // Wait until all info on the new item has been received
+
+				// Retrieve all details on the new folder (OC server returns an "Oc-Fileid" in the HTTP headers, but we really need the full set here)
+				[self retrieveItemListAtPath:fullFolderPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					OCItem *newFolderItem = items.firstObject;
+
+					newFolderItem.parentFileID = parentItem.fileID;
+
+					if (error == nil)
+					{
+						event.result = newFolderItem;
+					}
+					else
+					{
+						event.error = error;
+					}
+
+					// Post event
+					[request.eventTarget handleEvent:event sender:self];
+				}];
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+#pragma mark - Action: Copy Item + Move Item
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	return ([self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
 }
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	return ([self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
 }
 
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)_copyMoveMethod:(OCConnectionRequestMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSProgress *progress = nil;
+	NSURL *sourceItemURL, *destinationURL;
+	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+	if ((sourceItemURL = [webDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
+	{
+		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
+		{
+			OCConnectionRequest *request = [OCConnectionRequest requestWithURL:sourceItemURL];
+
+			request.method = requestMethod;
+
+			request.resultHandlerAction = @selector(_handleCopyMoveItemResult:error:);
+			request.eventTarget = eventTarget;
+			request.userInfo = @{
+				@"item" : item,
+				@"parentItem" : parentItem,
+				@"newName" : newName,
+				@"eventType" : @(eventType)
+			};
+
+			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
+			[request setValue:@"infinity" forHeaderField:@"Depth"];
+			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
+
+			// Enqueue request
+			[self.commandQueue enqueueRequest:request];
+
+			progress = request.progress;
+		}
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:eventType sender:self];
+	}
+
+	return(progress);
 }
 
-- (NSProgress *)deleteItem:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget
+- (void)_handleCopyMoveItemResult:(OCConnectionRequest *)request error:(NSError *)error
 {
-	// Stub implementation
-	return(nil);
+	OCEvent *event;
+	BOOL postEvent = YES;
+	OCEventType eventType = (OCEventType) ((NSNumber *)request.userInfo[@"eventType"]).integerValue;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			OCItem *item = request.userInfo[@"item"];
+			OCItem *parentItem = request.userInfo[@"parentItem"];
+			NSString *newName = request.userInfo[@"newName"];
+			NSString *newFullPath = [parentItem.path stringByAppendingPathComponent:newName];
+
+			if ((item.type == OCItemTypeCollection) && (![newFullPath hasSuffix:@"/"]))
+			{
+				newFullPath = [newFullPath stringByAppendingString:@"/"];
+			}
+
+			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			{
+				postEvent = NO; // Wait until all info on the new item has been received
+
+				// Retrieve all details on the new item
+				[self retrieveItemListAtPath:newFullPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					OCItem *newFolderItem = items.firstObject;
+
+					newFolderItem.parentFileID = parentItem.fileID;
+
+					if (error == nil)
+					{
+						event.result = newFolderItem;
+					}
+					else
+					{
+						event.error = error;
+					}
+
+					// Post event
+					[request.eventTarget handleEvent:event sender:self];
+				}];
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						event.error = OCError(OCErrorItemOperationForbidden);
+					break;
+
+					case OCHTTPStatusCodeNOT_FOUND:
+						event.error = OCError(OCErrorItemNotFound);
+					break;
+
+					case OCHTTPStatusCodeCONFLICT:
+						event.error = OCError(OCErrorItemDestinationNotFound);
+					break;
+
+					case OCHTTPStatusCodePRECONDITION_FAILED:
+						event.error = OCError(OCErrorItemAlreadyExists);
+					break;
+
+					case OCHTTPStatusCodeBAD_GATEWAY:
+						event.error = OCError(OCErrorItemInsufficientPermissions);
+					break;
+
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	if (postEvent)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
+#pragma mark - Action: Delete Item
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSProgress *progress = nil;
+	NSURL *deleteItemURL;
+
+	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:deleteItemURL];
+
+		request.method = OCConnectionRequestMethodDELETE;
+
+		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
+		request.eventTarget = eventTarget;
+
+		if (requireMatch && (item.eTag!=nil))
+		{
+			if (item.type != OCItemTypeCollection) // Right now, If-Match returns a 412 response when used with directories. This appears to be a bug. TODO: enforce this for directories as well when future versions address the issue
+			{
+				[request setValue:item.eTag forHeaderField:@"If-Match"];
+			}
+		}
+
+		// Enqueue request
+		[self.commandQueue enqueueRequest:request];
+
+		progress = request.progress;
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
+	}
+
+	return(progress);
 }
 
-- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget
+- (void)_handleDeleteItemResult:(OCConnectionRequest *)request error:(NSError *)error
 {
-	// Stub implementation
-	return(nil);
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDelete attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				// Success (at the time of writing (2018-06-18), OC core doesn't support a multi-status response for this
+				// command, so this scenario isn't handled here
+				event.result = request.responseHTTPStatus;
+			}
+			else
+			{
+				switch (request.responseHTTPStatus.code)
+				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						/*
+							Status code: 403
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\Forbidden</s:exception>
+							  <s:message/>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemOperationForbidden);
+					break;
+
+					case OCHTTPStatusCodeNOT_FOUND:
+						/*
+							Status code: 404
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\NotFound</s:exception>
+							  <s:message>File with name specfile-9.xml could not be located</s:message>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemNotFound);
+					break;
+
+					case OCHTTPStatusCodePRECONDITION_FAILED:
+						/*
+							Status code: 412
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>Sabre\DAV\Exception\PreconditionFailed</s:exception>
+							  <s:message>An If-Match header was specified, but none of the specified the ETags matched.</s:message>
+							  <s:header>If-Match</s:header>
+							</d:error>
+						*/
+						event.error = OCError(OCErrorItemChanged);
+					break;
+
+					default:
+						event.error = request.responseHTTPStatus.error;
+					break;
+				}
+			}
+		}
+	}
+
+	[request.eventTarget handleEvent:event sender:self];
 }
 
 #pragma mark - Action: Retrieve Thumbnail
@@ -632,7 +1049,7 @@
 	{
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item.versionIdentifier,	  	@"itemVersionIdentifier",
+			item.itemVersionIdentifier,	@"itemVersionIdentifier",
 			[NSValue valueWithCGSize:size],	@"maximumSize",
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
@@ -654,10 +1071,6 @@
 		}
 
 		progress = request.progress;
-	}
-	else
-	{
-		
 	}
 
 	if (error != nil)
@@ -707,7 +1120,7 @@
 					}
 				}
 
-				thumbnail.versionIdentifier = itemVersionIdentifier;
+				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
 				thumbnail.maximumSizeInPixels = maximumSize;
 
 				event.result = thumbnail;
@@ -776,6 +1189,40 @@
 	dispatch_group_wait(waitForCompletionGroup, DISPATCH_TIME_FOREVER);
 
 	return (retError);
+}
+
+#pragma mark - Resume background sessions
+- (void)resumeBackgroundSessions
+{
+	NSArray <NSString *> *otherBackgroundSessionIdentifiers = [OCConnectionQueue otherBackgroundSessionIdentifiersForUUID:self.bookmark.uuid];
+
+	for (NSString *otherBackgroundSessionIdentifier in otherBackgroundSessionIdentifiers)
+	{
+		OCKeyValueStore *otherPersistentStore = nil;
+
+		if (_persistentStoreBaseURL != nil)
+		{
+			otherPersistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:otherBackgroundSessionIdentifier]];
+		}
+
+		@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+		{
+			if (_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] == nil)
+			{
+				_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:otherBackgroundSessionIdentifier persistentStore:otherPersistentStore connection:self];
+			}
+		}
+	}
+}
+
+- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier
+{
+	if (backgroundSessionIdentifier == nil) { return; }
+
+	@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+	{
+		[_attachedExtensionQueuesBySessionIdentifier removeObjectForKey:backgroundSessionIdentifier];
+	}
 }
 
 @end

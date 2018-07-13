@@ -14,3 +14,39 @@
 "Connected" = "Connected";
 
 "Retrieving thumbnail…" = "Retrieving thumbnail…";
+
+"Cancel" = "Cancel";
+"Proceed" = "Proceed";
+"OK" = "OK";
+
+/* Delete */
+"%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
+"%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";
+"Delete" = "Delete";
+
+"%@ couldn't be deleted" = "%@ couldn't be deleted";
+"Please check if you have sufficient permissions to delete %@." = "Please check if you have sufficient permissions to delete %@.";
+
+/* Copy / Move */
+"Operation forbidden" = "Operation forbidden";
+"%@ can't be copied to %@." = "%@ can't be copied to %@.";
+"%@ can't be moved to %@." = "%@ can't be moved to %@.";
+
+"%@ not found" = "%@ not found";
+"%@ wasn't found at %@." = "%@ wasn't found at %@.";
+
+"The target directory %@ doesn't seem to exist." = "The target directory %@ doesn't seem to exist.";
+
+"%@ already exists" = "%@ already exists";
+"Couldn't copy %@ to %@, because an item called %@ already exists there." = "Couldn't copy %@ to %@, because an item called %@ already exists there.";
+"Couldn't move %@ to %@, because an item called %@ already exists there." = "Couldn't move %@ to %@, because an item called %@ already exists there.";
+
+"Insufficient permissions" = "Insufficient permissions";
+"%@ can't be copied to %@." = "%@ can't be copied to %@.";
+"%@ can't be moved to %@." = "%@ can't be moved to %@.";
+
+"%@ not found on the server" = "%@ not found on the server";
+"%@ may have been renamed, moved or deleted remotely." = "%@ may have been renamed, moved or deleted remotely.";
+
+"Error copying %@" = "Error copying %@";
+"Error moving %@" = "Error moving %@";

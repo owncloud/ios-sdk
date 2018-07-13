@@ -33,6 +33,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestCancelled, 			//!< Request was cancelled
 	OCErrorRequestRemovedBeforeScheduling, 		//!< Request was removed before scheduling
 	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
+	OCErrorRequestDroppedByURLSession,		//!< Request was dropped by the NSURLSession
 	OCErrorRequestCompletedWithError,		//!< Request completed with error
 
 	OCErrorResponseUnknownFormat,			//!< Response was in an unknown format
@@ -40,15 +41,27 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
 	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
+	OCErrorServerVersionNotSupported,   //!< This server version is not supported.
 
 	OCErrorCertificateInvalid,	//!< The certificate is invalid or contains errors
 	OCErrorCertificateMissing,	//!< No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)
 
 	OCErrorFeatureNotSupportedForItem,  //!< This feature is not supported for this item.
 	OCErrorFeatureNotSupportedByServer, //!< This feature is not supported for this server (version).
-	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
+	OCErrorFeatureNotImplemented,	    //!< This feature is currently not implemented
 
-	OCErrorOutdatedCache //!< An operation failed due to outdated cache information
+	OCErrorItemNotFound, //!< The targeted item has not been found.
+	OCErrorItemDestinationNotFound, //!< The destination item has not been found.
+	OCErrorItemChanged, //!< The targeted item has changed.
+	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
+	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
+	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
+
+	OCErrorCancelled, //!< The operation was cancelled
+
+	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information
+
+	OCErrorRunningOperation //!< A running operation prevents execution
 };
 
 @class OCConnectionIssue;

@@ -19,6 +19,8 @@
 #import "OCVault.h"
 #import "OCAppIdentity.h"
 #import "NSError+OCError.h"
+#import "OCItem.h"
+#import "OCDatabase.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end
@@ -26,6 +28,12 @@
 @implementation OCVault
 
 @synthesize uuid = _uuid;
+
+@synthesize rootURL = _rootURL;
+@synthesize databaseURL = _databaseURL;
+@synthesize filesRootURL = _filesRootURL;
+
+@synthesize database = _database;
 
 #pragma mark - Init
 - (instancetype)init
@@ -47,7 +55,7 @@
 {
 	if (_rootURL == nil)
 	{
-		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@"Vaults"] URLByAppendingPathComponent:self.uuid.UUIDString];
+		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathVaults] URLByAppendingPathComponent:[OCVault rootPathRelativeToGroupContainerForVaultUUID:_uuid]];
 	}
 	
 	return (_rootURL);
@@ -57,10 +65,30 @@
 {
 	if (_databaseURL == nil)
 	{
-		_databaseURL = [self.rootURL URLByAppendingPathComponent:[self.uuid.UUIDString stringByAppendingString:@".db"]];
+		_databaseURL = [self.rootURL URLByAppendingPathComponent:[OCVault databaseFilePathRelativeToRootPathForVaultUUID:_uuid]];
 	}
 
 	return (_databaseURL);
+}
+
+- (NSURL *)filesRootURL
+{
+	if (_filesRootURL == nil)
+	{
+		_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+	}
+
+	return (_filesRootURL);
+}
+
+- (NSURL *)connectionDataRootURL
+{
+	if (_connectionDataRootURL == nil)
+	{
+		_connectionDataRootURL = [self.rootURL URLByAppendingPathComponent:OCVaultPathConnectionData];
+	}
+
+	return (_connectionDataRootURL);
 }
 
 - (OCDatabase *)database
@@ -120,6 +148,17 @@
 				}
 			}
 
+			if ([fileManager fileExistsAtPath:self.filesRootURL.path])
+			{
+				if (![fileManager removeItemAtURL:self.filesRootURL error:&error])
+				{
+					if (error == nil)
+					{
+						error = OCError(OCErrorInternal);
+					}
+				}
+			}
+
 			if (completionHandler != nil)
 			{
 				completionHandler(self, error);
@@ -133,4 +172,26 @@
 	return (YES);
 }
 
+#pragma mark - URL and path builders
+- (NSURL *)localURLForItem:(OCItem *)item
+{
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
+	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID isDirectory:YES] URLByAppendingPathComponent:item.name isDirectory:NO]);
+}
+
++ (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid
+{
+	return (uuid.UUIDString);
+}
+
++ (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
+{
+	return ([uuid.UUIDString stringByAppendingString:@".db"]);
+}
+
 @end
+
+NSString *OCVaultPathVaults = @"Vaults";
+NSString *OCVaultPathFiles = @"Files";
+NSString *OCVaultPathConnectionData = @"ConnectionData";
+

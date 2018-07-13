@@ -39,6 +39,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCClassSettingsFlatSourcePropertyList.h>
 
 #import <ownCloudSDK/OCCore.h>
+#import <ownCloudSDK/OCCore+FileProvider.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
 #import <ownCloudSDK/OCBookmark.h>
@@ -60,6 +61,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCDatabaseConsistentOperation.h>
 #import <ownCloudSDK/OCSQLiteDB.h>
 #import <ownCloudSDK/OCSQLiteQuery.h>
+#import <ownCloudSDK/OCSQLiteQueryCondition.h>
 #import <ownCloudSDK/OCSQLiteTransaction.h>
 #import <ownCloudSDK/OCSQLiteResultSet.h>
 
@@ -78,6 +80,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSURL+OCURLNormalization.h>
 #import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>
 #import <ownCloudSDK/NSString+OCVersionCompare.h>
+#import <ownCloudSDK/NSString+OCParentPath.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
@@ -89,5 +92,18 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCReachabilityMonitor.h>
 
 #import <ownCloudSDK/OCCache.h>
+
+#import <ownCloudSDK/OCCoreManager.h>
+#import <ownCloudSDK/OCBookmarkManager.h>
+
+#import <ownCloudSDK/OCChecksum.h>
+#import <ownCloudSDK/OCChecksumAlgorithm.h>
+#import <ownCloudSDK/OCChecksumAlgorithmSHA1.h>
+
+#import <ownCloudSDK/OCFile.h>
+#import <ownCloudSDK/OCRetainer.h>
+#import <ownCloudSDK/OCRetainerCollection.h>
+
+#import <ownCloudSDK/OCKeyValueStore.h>
 
 #import <ownCloudSDK/OCLogger.h>

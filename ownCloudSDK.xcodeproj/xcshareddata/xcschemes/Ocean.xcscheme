@@ -39,6 +39,16 @@
                ReferencedContainer = "container:ownCloudSDK.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DCA8922E20F5F13F00AEFF98"
+               BuildableName = "ownCloudMockingTests.xctest"
+               BlueprintName = "ownCloudMockingTests"
+               ReferencedContainer = "container:ownCloudSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference

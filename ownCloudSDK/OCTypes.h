@@ -24,12 +24,16 @@ typedef NSString* OCPath; //!< NSString representing the path relative to the se
 typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
 typedef NSString* OCFileETag; //!< Identifier unique to a specific combination of contents and metadata. Can be used to detect changes. (files and folders)
 
-typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific).
+typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific, OCItem's NSSecureCoding support assumes NSValue or NSValue subclass).
 
 typedef NSNumber* OCSyncAnchor; //!< Sync Anchor (running number, increasing in value with every change made)
 
 typedef void(^OCCompletionHandler)(id sender, NSError *error);
 
 typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
+
+typedef NSString* OCSyncAction NS_TYPED_ENUM;
+typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
+typedef NSNumber* OCSyncRecordID;
 
 #endif /* OCTypes_h */

@@ -25,6 +25,7 @@
 #import "OCClassSettings.h"
 #import "OCCertificate.h"
 #import "OCConnectionIssue.h"
+#import "OCChecksum.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -67,12 +68,18 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
+	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithmIdentifier;
+
 	OCUser *_loggedInUser;
+
+	NSURL *_persistentStoreBaseURL;
 
 	OCConnectionQueue *_commandQueue;
 
 	OCConnectionQueue *_uploadQueue;
 	OCConnectionQueue *_downloadQueue;
+
+	NSMutableDictionary <NSString *, OCConnectionQueue *> *_attachedExtensionQueuesBySessionIdentifier;
 	
 	OCConnectionState _state;
 
@@ -87,6 +94,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
+
+@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithmIdentifier;
 
 @property(strong) OCUser *loggedInUser;
 
@@ -103,26 +112,26 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark;
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL;
 
 #pragma mark - Connect & Disconnect
 - (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
 
 #pragma mark - Actions
-- (NSProgress *)createFolderNamed:(NSString *)newFolderName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)copyItem:(OCItem *)item to:(OCPath)newParentDirectoryPath options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)deleteItem:(OCItem *)item resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)downloadItem:(OCItem *)item to:(OCPath)newParentDirectoryPath resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
@@ -132,6 +141,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Sending requests synchronously
 - (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue;
+
+#pragma mark - Resume background sessions
+- (void)resumeBackgroundSessions;
+- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
 @end
 

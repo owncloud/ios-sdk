@@ -45,7 +45,7 @@
 {
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
 	{
-		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 		{
 			[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodOAuth2Identifier options:@{ OCAuthenticationMethodPresentingViewControllerKey : self } completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
 				[self appendLog:[NSString stringWithFormat:@"## generateAuthenticationDataWithMethod response:\nError: %@\nMethod: %@\nData: %@", error, authenticationMethodIdentifier, authenticationData]];
@@ -86,7 +86,7 @@
 {
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
 	{
-		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark];
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;
