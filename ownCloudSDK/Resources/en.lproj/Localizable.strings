@@ -50,3 +50,6 @@
 
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";
+
+/* Download */
+"Downloading %@…" = "Downloading %@…";

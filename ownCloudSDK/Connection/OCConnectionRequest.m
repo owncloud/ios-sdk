@@ -50,6 +50,8 @@
 @synthesize groupID = _groupID;
 @synthesize skipAuthorization = _skipAuthorization;
 
+@synthesize requestObserver = _requestObserver;
+
 @synthesize downloadRequest = _downloadRequest;
 @synthesize downloadedFileURL = _downloadedFileURL;
 

@@ -51,6 +51,8 @@
 
 @synthesize latestSyncAnchor = _latestSyncAnchor;
 
+@synthesize postFileProviderNotifications = _postFileProviderNotifications;
+
 @synthesize delegate = _delegate;
 
 #pragma mark - Class settings

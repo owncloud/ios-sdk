@@ -603,6 +603,7 @@
 	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
 	OCConnection *connection = nil;
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	__block NSProgress *downloadProgress = nil;
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
@@ -632,7 +633,7 @@
 
 				if (downloadItem != nil)
 				{
-					[connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+					downloadProgress = [connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 						if (event.file != nil)
 						{
 							[expectFileDownload fulfill];
@@ -650,6 +651,8 @@
 							}];
 						}
 					} userInfo:nil ephermalUserInfo:nil]];
+
+					[downloadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
 				}
 
 				XCTAssert((error==nil), @"No error");
@@ -667,6 +670,16 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	[downloadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+	if ([keyPath isEqualToString:@"fractionCompleted"])
+	{
+		NSLog(@"Fraction of %@: %f", object, ((NSProgress *)object).fractionCompleted);
+	}
 }
 
 @end

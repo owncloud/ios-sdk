@@ -82,6 +82,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
 	BOOL _needsToProcessSyncRecords;
 
+	BOOL _postFileProviderNotifications;
+
 	OCSyncAnchor _latestSyncAnchor;
 
 	__weak id <OCCoreDelegate> _delegate;
@@ -98,6 +100,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
 @property(weak) id <OCCoreDelegate> delegate;
+
+@property(assign) BOOL postFileProviderNotifications; //!< YES if the core should post file provider notifications and integrate with file provider APIs.
 
 @property(readonly, strong) OCSyncAnchor latestSyncAnchor;
 

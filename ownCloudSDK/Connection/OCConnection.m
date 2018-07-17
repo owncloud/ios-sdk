@@ -543,20 +543,20 @@
 }
 
 #pragma mark - Actions
-- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
 }
 
-- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
 }
 
 #pragma mark - File transfer: download
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	NSProgress *progress = nil;
 	NSURL *downloadURL;
@@ -583,10 +583,17 @@
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
 		// Enqueue request
 		[self.downloadQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 	}
 	else
 	{
@@ -1239,3 +1246,5 @@ OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-p
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
+
+OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";

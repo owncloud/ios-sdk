@@ -266,7 +266,8 @@
 					request.urlSessionTaskIdentifier = @(task.taskIdentifier);
 
 					// Connect task progress to request progress
-					[request.progress addChild:task.progress withPendingUnitCount:100];
+					request.progress.totalUnitCount += 200;
+					[request.progress addChild:task.progress withPendingUnitCount:200];
 
 					// Update internal tracking collections
 					if (request.groupID!=nil)
@@ -279,6 +280,15 @@
 					_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
 
 					// Start task
+					if (resumeTask)
+					{
+						// Notify request observer
+						if (request.requestObserver != nil)
+						{
+							resumeTask = !request.requestObserver(request, OCConnectionRequestObserverEventTaskResume);
+						}
+					}
+
 					if (resumeTask)
 					{
 						[task resume];

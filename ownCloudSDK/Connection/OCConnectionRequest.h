@@ -32,6 +32,13 @@ typedef NSString* OCConnectionRequestGroupID;
 
 typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the format -handleResultForRequest:(OCConnectionRequest *)request error:(NSError *)error;
 
+typedef NS_ENUM(NSUInteger, OCConnectionRequestObserverEvent)
+{
+	OCConnectionRequestObserverEventTaskResume	//!< Return YES if the observer takes care of resuming the URL session task, NO if the observer doesn't.
+};
+
+typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConnectionRequestObserverEvent event);
+
 @interface OCConnectionRequest : NSObject <NSSecureCoding>
 {
 	NSURLSessionTask *_urlSessionTask;
@@ -62,6 +69,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
  	OCConnectionRequestPriority _priority;
 	OCConnectionRequestGroupID _groupID;
 	BOOL _skipAuthorization;
+
+	OCConnectionRequestObserver _requestObserver;
 
 	BOOL _downloadRequest;
 	NSURL *_downloadedFileURL;
@@ -104,6 +113,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(assign,nonatomic) OCConnectionRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
 @property(strong) OCConnectionRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 @property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
+
+@property(copy) OCConnectionRequestObserver requestObserver; //!< OCConnectionRequestObserver block called as the request encounters various events
 
 @property(assign) BOOL downloadRequest;			//!< If the request is for the download of a file and the response body should be written to a file.
 @property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.

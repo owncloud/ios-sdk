@@ -23,6 +23,8 @@
 
 @implementation OCCoreManager
 
+@synthesize postFileProviderNotifications = _postFileProviderNotifications;
+
 #pragma mark - Shared instance
 + (instancetype)sharedCoreManager
 {
@@ -79,6 +81,8 @@
 				if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 				{
 					returnCore = core;
+
+					core.postFileProviderNotifications = self.postFileProviderNotifications;
 
 					_coresByUUID[bookmark.uuid] = core;
 

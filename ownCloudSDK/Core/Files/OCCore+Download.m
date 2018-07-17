@@ -17,6 +17,7 @@
  */
 
 #import "OCCore.h"
+#import "OCLogger.h"
 
 @implementation OCCore (Download)
 
@@ -27,6 +28,43 @@
 	OCEventTarget *eventTarget;
 
 	[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+
+	if (self.postFileProviderNotifications && (item.fileID != nil) && (_vault.fileProviderDomain!=nil))
+	{
+		NSFileProviderDomain *fileProviderDomain = _vault.fileProviderDomain;
+
+		OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
+			if (event == OCConnectionRequestObserverEventTaskResume)
+			{
+				[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
+					if (error != nil)
+					{
+						OCLogError(@"Error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
+					}
+
+					// File provider detail: the task may not be started until after this completionHandler was called
+					[request.urlSessionTask resume];
+				}];
+
+				return (YES);
+			}
+
+			return (NO);
+		} copy];
+
+		if (options == nil)
+		{
+			options = @{ OCConnectionOptionRequestObserverKey : observer };
+		}
+		else
+		{
+			NSMutableDictionary *mutableOptions = [options mutableCopy];
+
+			mutableOptions[OCConnectionOptionRequestObserverKey] = observer;
+
+			options = mutableOptions;
+		}
+	}
 
 	eventTarget = 	[OCEventTarget 	eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier
 					userInfo:@{ @"item" : item }

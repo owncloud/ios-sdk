@@ -81,6 +81,32 @@
 	return (_filesRootURL);
 }
 
+- (NSFileProviderDomain *)fileProviderDomain
+{
+	if (_fileProviderDomain == nil)
+	{
+		dispatch_group_t waitForResultGroup = dispatch_group_create();
+
+		dispatch_group_enter(waitForResultGroup);
+
+		[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
+			dispatch_group_leave(waitForResultGroup);
+
+			for (NSFileProviderDomain *domain in domains)
+			{
+				if ([domain.identifier isEqual:self.uuid.UUIDString])
+				{
+					_fileProviderDomain = domain;
+				}
+			}
+		}];
+
+		dispatch_group_wait(waitForResultGroup, DISPATCH_TIME_FOREVER);
+	}
+
+	return (_fileProviderDomain);
+}
+
 - (NSURL *)connectionDataRootURL
 {
 	if (_connectionDataRootURL == nil)
