@@ -18,6 +18,8 @@
 
 #import "OCCore+FileProvider.h"
 #import "OCCore+Internal.h"
+#import "NSString+OCParentPath.h"
+#import "OCLogger.h"
 
 @implementation OCCore (FileProvider)
 
@@ -42,6 +44,84 @@
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	return ([self.vault localURLForItem:item]);
+}
+
+#pragma mark - Singal changes for items
+- (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems
+{
+	if (self.postFileProviderNotifications)
+	{
+		NSMutableSet <OCFileID> *changedDirectoriesFileIDs = [NSMutableSet new];
+		OCFileID rootDirectoryFileID = nil;
+		BOOL addRoot = NO;
+
+		// Coalesce IDs
+		for (OCItem *item in changedItems)
+		{
+			switch (item.type)
+			{
+				case OCItemTypeFile:
+					[changedDirectoriesFileIDs addObject:item.parentFileID];
+				break;
+
+				case OCItemTypeCollection:
+					if ([item.path isEqual:@"/"])
+					{
+						rootDirectoryFileID = item.fileID;
+						addRoot = YES;
+					}
+					else
+					{
+						if (item.parentFileID != nil)
+						{
+							[changedDirectoriesFileIDs addObject:item.parentFileID];
+						}
+
+						if (item.fileID != nil)
+						{
+							[changedDirectoriesFileIDs addObject:item.fileID];
+						}
+					}
+
+				break;
+			}
+
+			if ((rootDirectoryFileID==nil) && [item.path.parentPath isEqual:@"/"] && (item.parentFileID!=nil))
+			{
+				rootDirectoryFileID = item.parentFileID;
+			}
+		}
+
+		// Remove root directory fileID
+		if (rootDirectoryFileID != nil)
+		{
+			if ([changedDirectoriesFileIDs containsObject:rootDirectoryFileID])
+			{
+				[changedDirectoriesFileIDs removeObject:rootDirectoryFileID];
+				addRoot = YES;
+			}
+		}
+
+		// Add root directory fileID
+		if (addRoot)
+		{
+			[changedDirectoriesFileIDs addObject:NSFileProviderRootContainerItemIdentifier];
+		}
+
+		// Signal NSFileProviderManager
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:_vault.fileProviderDomain];
+
+			for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
+			{
+				OCLogDebug(@"Signalling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+
+				[fileProviderManager signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
+					OCLogDebug(@"Signaled changed to file provider manager %@ for item file ID %@ with error %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID), error);
+				}];
+			}
+		});
+	}
 }
 
 @end

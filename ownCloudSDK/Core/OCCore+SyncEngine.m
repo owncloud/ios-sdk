@@ -26,6 +26,7 @@
 #import "NSString+OCParentPath.h"
 #import "OCQuery+Internal.h"
 #import "OCCoreSyncContext.h"
+#import "OCCore+FileProvider.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -496,6 +497,7 @@
 						OCCoreItemList *addedItemList   = ((syncContext.addedItems.count>0)   ? [OCCoreItemList itemListWithItems:syncContext.addedItems]   : nil);
 						OCCoreItemList *removedItemList = ((syncContext.removedItems.count>0) ? [OCCoreItemList itemListWithItems:syncContext.removedItems] : nil);
 						OCCoreItemList *updatedItemList = ((syncContext.updatedItems.count>0) ? [OCCoreItemList itemListWithItems:syncContext.updatedItems] : nil);
+						NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
 
 						for (OCQuery *query in _queries)
 						{
@@ -659,24 +661,27 @@
 							// Queries targeting sync anchors
 							if ((query.querySinceSyncAnchor != nil) && (syncAnchor!=nil))
 							{
-								NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
+								if (addedUpdatedRemovedItemList==nil)
+								{
+									addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
+
+									if (addedItemList!=nil)
+									{
+										[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
+									}
+
+									if (updatedItemList!=nil)
+									{
+										[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
+									}
+
+									if (removedItemList!=nil)
+									{
+										[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
+									}
+								}
 
 								query.state = OCQueryStateWaitingForServerReply;
-
-								if (addedItemList!=nil)
-								{
-									[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
-								}
-
-								if (updatedItemList!=nil)
-								{
-									[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
-								}
-
-								if (removedItemList!=nil)
-								{
-									[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
-								}
 
 								[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
 
@@ -684,6 +689,29 @@
 
 								[query setNeedsRecomputation];
 							}
+						}
+
+						// Signal file provider
+						if (self.postFileProviderNotifications)
+						{
+							NSMutableArray <OCItem *> *changedItems = [NSMutableArray new];
+
+							if (addedItemList.items != nil)
+							{
+								[changedItems addObjectsFromArray:addedItemList.items];
+							}
+
+							if (updatedItemList.items != nil)
+							{
+								[changedItems addObjectsFromArray:updatedItemList.items];
+							}
+
+							if (removedItemList.items != nil)
+							{
+								[changedItems addObjectsFromArray:removedItemList.items];
+							}
+
+							[self signalChangesForItems:changedItems];
 						}
 
 						[self endActivity:@"handle sync event - update queries"];

@@ -83,6 +83,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 	
 	BOOL _cancelled;
 
+	id _systemActivity;
+
 	NSError *_error;
 }
 
@@ -124,6 +126,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 @property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
 
 @property(readonly) BOOL cancelled;
+
+@property(strong) id systemActivity;
 
 @property(strong) NSError *error;
 

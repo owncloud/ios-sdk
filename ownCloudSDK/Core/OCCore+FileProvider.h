@@ -24,4 +24,7 @@
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler;
 - (NSURL *)localURLForItem:(OCItem *)item;
 
+#pragma mark - Singal changes for items
+- (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
+
 @end

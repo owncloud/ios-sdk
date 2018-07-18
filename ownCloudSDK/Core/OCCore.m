@@ -30,6 +30,7 @@
 #import "OCCoreSyncRoute.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
+#import "OCCore+FileProvider.h"
 
 @interface OCCore ()
 {
@@ -977,6 +978,12 @@
 			query.rootItem = queryRootItem;
 			query.fullQueryResults = useQueryResults;
 		}
+	}
+
+	// File provider signaling
+	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0))
+	{
+		[self signalChangesForItems:@[ taskRootItem ]];
 	}
 
 	[self endActivity:@"item list task"];

@@ -87,6 +87,8 @@
 
 		_connection = connection;
 
+		_encloseRunningRequestsInSystemActivities = YES;
+
 		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
 					    delegate:self
 					    delegateQueue:nil];
@@ -282,6 +284,19 @@
 					// Start task
 					if (resumeTask)
 					{
+						// Prevent suspension for as long as this runs
+						if (_encloseRunningRequestsInSystemActivities)
+						{
+							NSString *absoluteURLString = request.url.absoluteString;
+
+							if (absoluteURLString==nil)
+							{
+								absoluteURLString = @"";
+							}
+
+							request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
+						}
+
 						// Notify request observer
 						if (request.requestObserver != nil)
 						{
@@ -416,6 +431,12 @@
 						else
 						{
 							[self _handleFinishedRequest:request error:OCError(OCErrorCertificateMissing) scheduleQueuedRequests:scheduleQueuedRequests];
+
+							if (request.systemActivity != nil)
+							{
+								[[NSProcessInfo processInfo] endActivity:request.systemActivity];
+								request.systemActivity = nil;
+							}
 						}
 						return;
 					}
@@ -488,6 +509,13 @@
 
 	// Save state
 	[self saveState];
+
+	// End system activity
+	if (request.systemActivity != nil)
+	{
+		[[NSProcessInfo processInfo] endActivity:request.systemActivity];
+		request.systemActivity = nil;
+	}
 }
 
 #pragma mark - Request retrieval

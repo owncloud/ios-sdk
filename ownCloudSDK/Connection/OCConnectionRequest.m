@@ -59,6 +59,8 @@
 
 @synthesize cancelled = _cancelled;
 
+@synthesize systemActivity = _systemActivity;
+
 @synthesize error = _error;
 
 #pragma mark - Init & Dealloc

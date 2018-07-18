@@ -53,6 +53,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 
 	BOOL _authenticatedRequestsCanBeScheduled;
 
+	BOOL _encloseRunningRequestsInSystemActivities;
+
 	dispatch_queue_t _actionQueue;
 }
 
