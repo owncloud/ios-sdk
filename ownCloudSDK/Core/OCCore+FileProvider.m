@@ -46,6 +46,25 @@
 	return ([self.vault localURLForItem:item]);
 }
 
+#pragma mark - File provider manager
+- (NSFileProviderManager *)fileProviderManager
+{
+	// return ([NSFileProviderManager managerForDomain:_vault.fileProviderDomain]);
+
+	if (_fileProviderManager == nil)
+	{
+		@synchronized(self)
+		{
+			if (_fileProviderManager == nil)
+			{
+				_fileProviderManager = [NSFileProviderManager managerForDomain:_vault.fileProviderDomain];
+			}
+		}
+	}
+
+	return (_fileProviderManager);
+}
+
 #pragma mark - Singal changes for items
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems
 {
@@ -114,14 +133,82 @@
 
 			for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
 			{
-				OCLogDebug(@"Signalling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+				OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
 
-				[fileProviderManager signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
-					OCLogDebug(@"Signaled changed to file provider manager %@ for item file ID %@ with error %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID), error);
-				}];
+				[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
 			}
 		});
 	}
+}
+
+- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
+{
+	@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
+	{
+		NSNumber *currentSignalCount = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID];
+
+		if (currentSignalCount == nil)
+		{
+			// The only/first signal for this right now => schedule right away
+
+			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(1);
+
+			[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+		}
+		else
+		{
+			// Another signal hasn't completed yet, so increase the counter and wait for the scheduled signal to complete
+			// (at which point, another signal will be triggered)
+			OCLogDebug(@"Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
+
+			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue + 1);
+		}
+	}
+}
+
+- (void)_scheduleSignalForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSFileProviderManager *fileProviderManager;
+
+		if ((fileProviderManager = [self fileProviderManager]) != nil)
+		{
+			@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
+			{
+				NSInteger signalCountAtStart = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+
+				OCLogDebug(@"Signaling %@ for changes..", changedDirectoryFileID);
+
+				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
+					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
+
+					@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
+					{
+						NSInteger signalCountAtEnd = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+						NSInteger remainingSignalCount = signalCountAtEnd - signalCountAtStart;
+
+						if (remainingSignalCount > 0)
+						{
+							// There were signals after initiating the last signal => schedule another signal
+							_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
+
+							[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+						}
+						else
+						{
+							// The last signal was sent after the last signal was requested => remove from dict
+							[_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
+						}
+					}
+				}];
+			}
+		}
+		else
+		{
+			OCLogDebug(@"Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
+		}
+
+	});
 }
 
 @end

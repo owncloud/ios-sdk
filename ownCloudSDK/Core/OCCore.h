@@ -82,6 +82,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
 	BOOL _needsToProcessSyncRecords;
 
+	id _fileProviderManager;
+	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	BOOL _postFileProviderNotifications;
 
 	OCSyncAnchor _latestSyncAnchor;

@@ -24,7 +24,11 @@
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler;
 - (NSURL *)localURLForItem:(OCItem *)item;
 
-#pragma mark - Singal changes for items
+#pragma mark - File provider manager
+- (NSFileProviderManager *)fileProviderManager;
+
+#pragma mark - Signal changes for items
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
+- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID;
 
 @end

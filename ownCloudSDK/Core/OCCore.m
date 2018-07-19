@@ -124,6 +124,8 @@
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
 
+		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
+
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
