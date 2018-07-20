@@ -84,6 +84,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	id _fileProviderManager;
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
+	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
 
 	OCSyncAnchor _latestSyncAnchor;

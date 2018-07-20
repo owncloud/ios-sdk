@@ -143,7 +143,7 @@
 
 - (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
 {
-	@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
+	@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
 	{
 		NSNumber *currentSignalCount = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID];
 
@@ -173,7 +173,7 @@
 
 		if ((fileProviderManager = [self fileProviderManager]) != nil)
 		{
-			@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
+			@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
 			{
 				NSInteger signalCountAtStart = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 
@@ -182,24 +182,26 @@
 				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
 					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
 
-					@synchronized(_fileProviderSignalCountByContainerItemIdentifiers)
-					{
-						NSInteger signalCountAtEnd = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
-						NSInteger remainingSignalCount = signalCountAtEnd - signalCountAtStart;
-
-						if (remainingSignalCount > 0)
+					dispatch_async(dispatch_get_main_queue(), ^{
+						@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
 						{
-							// There were signals after initiating the last signal => schedule another signal
-							_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
+							NSInteger signalCountAtEnd = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+							NSInteger remainingSignalCount = signalCountAtEnd - signalCountAtStart;
 
-							[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+							if (remainingSignalCount > 0)
+							{
+								// There were signals after initiating the last signal => schedule another signal
+								_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
+
+								[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+							}
+							else
+							{
+								// The last signal was sent after the last signal was requested => remove from dict
+								[_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
+							}
 						}
-						else
-						{
-							// The last signal was sent after the last signal was requested => remove from dict
-							[_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
-						}
-					}
+					});
 				}];
 			}
 		}

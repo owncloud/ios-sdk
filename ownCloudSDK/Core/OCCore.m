@@ -125,6 +125,7 @@
 		_pendingThumbnailRequests = [NSMutableDictionary new];
 
 		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
+		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
