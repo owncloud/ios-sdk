@@ -38,7 +38,18 @@
 
 - (void)dealloc
 {
-	self.enabled = NO;
+	SCNetworkReachabilityRef reachabilityRef = _reachabilityRef;
+
+	if (reachabilityRef != NULL)
+	{
+		SCNetworkReachabilitySetCallback(reachabilityRef, NULL, NULL);
+
+		[[OCRunLoopThread runLoopThreadNamed:@"Reachability Monitor"] dispatchBlockToRunLoopAsync:^{
+			[OCReachabilityMonitor releaseReachabilityRef:reachabilityRef];
+		}];
+	}
+
+	_reachabilityRef = NULL;
 }
 
 - (void)setEnabled:(BOOL)enabled
@@ -70,6 +81,17 @@ static void OCReachabilityMonitorCallback(SCNetworkReachabilityRef target, SCNet
 	}
 }
 
++ (void)releaseReachabilityRef:(SCNetworkReachabilityRef)reachabilityRef
+{
+	if (reachabilityRef != NULL)
+	{
+		SCNetworkReachabilitySetCallback(reachabilityRef, NULL, NULL);
+		SCNetworkReachabilityUnscheduleFromRunLoop(reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+
+		CFRelease(reachabilityRef);
+	}
+}
+
 - (void)_setEnabled:(BOOL)enabled
 {
 	if (_enabled != enabled)
@@ -78,10 +100,7 @@ static void OCReachabilityMonitorCallback(SCNetworkReachabilityRef target, SCNet
 
 		if (_reachabilityRef != NULL)
 		{
-			SCNetworkReachabilitySetCallback(_reachabilityRef, NULL, NULL);
-			SCNetworkReachabilityUnscheduleFromRunLoop(_reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-
-			CFRelease(_reachabilityRef);
+			[OCReachabilityMonitor releaseReachabilityRef:_reachabilityRef];
 			_reachabilityRef = NULL;
 		}
 
