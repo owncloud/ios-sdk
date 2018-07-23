@@ -23,7 +23,7 @@
 		DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CCF20DBC1690090175A /* OCChecksumAlgorithmSHA1.m */; };
 		DC139CD320DBCDCB0090175A /* ChecksumTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CD220DBCDCB0090175A /* ChecksumTests.m */; };
-		DC14CC4A21067320006DDA69 /* OCCore+ItemList.h in Headers */ = {isa = PBXBuildFile; fileRef = DC14CC4821067320006DDA69 /* OCCore+ItemList.h */; };
+		DC14CC4A21067320006DDA69 /* OCCore+ItemList.h in Headers */ = {isa = PBXBuildFile; fileRef = DC14CC4821067320006DDA69 /* OCCore+ItemList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */ = {isa = PBXBuildFile; fileRef = DC14CC4921067320006DDA69 /* OCCore+ItemList.m */; };
 		DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CCF209475C20018DF7F /* UIImage+OCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD0209475C20018DF7F /* UIImage+OCTools.m */; };

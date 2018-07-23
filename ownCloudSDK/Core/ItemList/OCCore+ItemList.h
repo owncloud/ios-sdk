@@ -25,4 +25,9 @@
 - (BOOL)startItemListTask:(OCCoreItemListTask *)task;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
+#pragma mark - Check for updates
+- (void)startCheckingForUpdates; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.
+
+- (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
+
 @end

@@ -156,24 +156,10 @@
 			[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 				__block OCItem *parentItem = nil;
 				__block NSError *dbError = nil;
-
-				dispatch_group_t databaseWaitGroup = dispatch_group_create();
-
-				dispatch_group_enter(databaseWaitGroup);
+				NSArray <OCItem *> *items = nil;
 
 				// Retrieve parent item from cache.
-				[_core.vault.database retrieveCacheItemsAtPath:[self.path parentPath] itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
-					dbError = error;
-
-					if (error == nil)
-					{
-						parentItem = items.firstObject;
-					}
-
-					dispatch_group_leave(databaseWaitGroup);
-				}];
-
-				dispatch_group_wait(databaseWaitGroup, DISPATCH_TIME_FOREVER);
+				items = [_core.vault.database retrieveCacheItemsSyncAtPath:[self.path parentPath] itemOnly:YES error:&dbError syncAnchor:NULL];
 
 				if (dbError != nil)
 				{
@@ -181,6 +167,8 @@
 				}
 				else
 				{
+					parentItem = items.firstObject;
+
 					if (parentItem == nil)
 					{
 						// No parent item found - and not the root folder. If the SDK is used to discover directories and request their

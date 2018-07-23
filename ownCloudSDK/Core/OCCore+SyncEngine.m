@@ -46,6 +46,29 @@
 	}];
 }
 
+- (OCSyncAnchor)retrieveLatestSyncAnchorWithError:(NSError * __autoreleasing *)outError
+{
+	dispatch_group_t waitGroup = dispatch_group_create();
+	__block OCSyncAnchor syncAnchor = nil;
+
+	dispatch_group_enter(waitGroup);
+
+	[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+
+		syncAnchor = latestSyncAnchor;
+
+		dispatch_group_leave(waitGroup);
+	}];
+
+	dispatch_group_wait(waitGroup, DISPATCH_TIME_FOREVER);
+
+	return (syncAnchor);
+}
+
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler
 {
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {

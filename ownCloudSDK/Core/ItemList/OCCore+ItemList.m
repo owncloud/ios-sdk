@@ -577,4 +577,123 @@
 	[self endActivity:@"item list task"];
 }
 
+#pragma mark - Check for updates
+- (void)startCheckingForUpdates
+{
+	[self queueBlock:^{
+		[self _checkForUpdatesNotBefore:nil];
+	}];
+}
+
+- (void)_checkForUpdatesNotBefore:(NSDate *)notBefore
+{
+	OCEventTarget *eventTarget;
+
+	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:nil resultTarget:eventTarget];
+}
+
+- (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
+{
+	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%d, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
+
+	// Handle result
+	if (event.error == nil)
+	{
+		if (event.result != nil)
+		{
+			NSArray <OCItem *> *items = (NSArray <OCItem *> *)event.result;
+
+			// Root item change observation
+			if (event.depth == 0)
+			{
+				NSError *error = nil;
+				OCItem *cacheItem;
+				OCItem *remoteItem = items.firstObject;
+
+				if ((cacheItem = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL].firstObject) != nil)
+				{
+					if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
+					{
+						// Folder's etag or fileID differ -> fetch full update for this folder
+						OCEventTarget *eventTarget;
+
+						eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+						[self.connection retrieveItemListAtPath:event.path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
+					}
+					else
+					{
+						// No changes. We're done.
+					}
+				}
+			}
+
+			// File list traversal
+			if (event.depth == 1)
+			{
+				NSError *error = nil;
+				NSArray <OCItem *> *cacheItems;
+
+				NSMutableArray <OCPath> *pathsNeedingUpdates = [NSMutableArray new];
+
+				OCCoreItemListTask *itemListTask = [[OCCoreItemListTask alloc] initWithCore:self path:event.path];
+
+				itemListTask.syncAnchorAtStart = [self retrieveLatestSyncAnchorWithError:NULL];
+				cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:NO error:&error syncAnchor:NULL];
+
+				[itemListTask.cachedSet updateWithError:error items:cacheItems];
+				[itemListTask.retrievedSet updateWithError:event.error items:event.result];
+
+				// Find new folders and folders with changes
+				for (OCItem *item in items)
+				{
+					if ((item.type == OCItemTypeCollection) && (item.path != nil))
+					{
+						OCItem *cacheItem = itemListTask.cachedSet.itemsByPath[item.path];
+
+						if (cacheItem != nil)
+						{
+							if (![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier])
+							{
+								// Folder version differs -> fetch full list for that folder
+								[pathsNeedingUpdates addObject:item.path];
+							}
+						}
+						else
+						{
+							// New folder -> fetch full list for that folder
+							[pathsNeedingUpdates addObject:item.path];
+						}
+					}
+				}
+
+				// Update cache with new results
+				[self handleUpdatedTask:itemListTask];
+
+				// Trigger fetching file lists for updated/new folders
+				for (OCPath path in pathsNeedingUpdates)
+				{
+					OCEventTarget *eventTarget;
+
+					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+					[self.connection retrieveItemListAtPath:path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
+				}
+			}
+		}
+	}
+
+	// Schedule next
+	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
+	{
+		// Check again in 10 seconds (TOOD: add configurable timing and option to enable/disable)
+		if (self.state == OCCoreStateRunning)
+		{
+			[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:10]];
+		}
+	}
+}
+
 @end

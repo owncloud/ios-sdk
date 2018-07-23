@@ -58,7 +58,7 @@
 
 @synthesize delegate = _delegate;
 
-@synthesize lastCheckForUpdates = _lastCheckForUpdates;
+@synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -124,6 +124,8 @@
 	if ((self = [super init]) != nil)
 	{
 		_bookmark = bookmark;
+
+		_automaticItemListUpdatesEnabled = YES;
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
@@ -332,6 +334,11 @@
 						[self willChangeValueForKey:@"state"];
 						_state = OCCoreStateRunning;
 						[self didChangeValueForKey:@"state"];
+
+						if (self.automaticItemListUpdatesEnabled)
+						{
+							[self startCheckingForUpdates];
+						}
 					}
 
 					// Relay error and issues to delegate
@@ -468,11 +475,6 @@
 - (OCDatabase *)database
 {
 	return (_vault.database);
-}
-
-#pragma mark - Check for updates
-- (void)checkForUpdatesWithCompletionHandler:(OCCompletionHandler)completionHandler
-{
 }
 
 #pragma mark - Tools
@@ -725,6 +727,10 @@
 
 		case OCEventTypeDownload:
 			[self _handleDownloadFileEvent:event sender:sender];
+		break;
+
+		case OCEventTypeRetrieveItemList:
+			[self _handleRetrieveItemListEvent:event sender:sender];
 		break;
 
 		default:
