@@ -27,6 +27,7 @@
 #import "OCQuery+Internal.h"
 #import "OCCoreSyncContext.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemList.h"
 
 @implementation OCCore (SyncEngine)
 

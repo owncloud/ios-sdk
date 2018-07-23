@@ -682,5 +682,49 @@
 	}
 }
 
+- (void)testConnectAndBackgroundItemListRetrieval
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[expectConnect fulfill];
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+				NSLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+				XCTAssert(event.result!=nil);
+				XCTAssert([event.result isKindOfClass:[NSArray class]]);
+				XCTAssert(((NSArray *)event.result).count > 0);
+				XCTAssert(event.error==nil);
+				XCTAssert([event.path isEqual:@"/Photos"]);
+				XCTAssert(event.depth==1);
+
+				[expectFileList fulfill];
+			} userInfo:nil ephermalUserInfo:nil]];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end
 

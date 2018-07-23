@@ -32,6 +32,7 @@
 @class OCCore;
 @class OCItem;
 @class OCCoreSyncRoute;
+@class OCCoreItemListTask;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -68,13 +69,6 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
 
-	dispatch_group_t _runningActivitiesGroup;
-	NSInteger _runningActivities;
-	dispatch_block_t _runningActivitiesCompleteBlock;
-
-	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
-	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
-
 	OCCoreState _state;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
@@ -82,12 +76,17 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
 	BOOL _needsToProcessSyncRecords;
 
+	OCSyncAnchor _latestSyncAnchor;
+
+	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
+
+	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
+	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
+
 	id _fileProviderManager;
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
-
-	OCSyncAnchor _latestSyncAnchor;
 
 	NSDate *_lastCheckForUpdates;
 

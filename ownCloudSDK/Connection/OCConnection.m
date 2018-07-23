@@ -630,7 +630,7 @@
 				event.error = request.responseHTTPStatus.error;
 			}
 
-			NSLog(@"Error: %@ - Response: %@", error, ((request.downloadRequest && (request.downloadedFileURL != nil)) ? [NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL] : nil));
+			OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
 			event.path = request.userInfo[@"path"];
 			event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
