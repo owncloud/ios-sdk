@@ -6,6 +6,16 @@
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2018, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import "OCConnectionDAVRequest.h"
 #import "OCItem.h"
 #import "OCXMLParser.h"
@@ -49,8 +59,18 @@
 - (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath
 {
 	NSArray <OCItem *> *responseItems = nil;
+	NSData *responseData = nil;
 
-	if (self.responseBodyData != nil)
+	if (self.downloadRequest)
+	{
+		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
+	}
+	else
+	{
+		responseData = self.responseBodyData;
+	}
+
+	if (responseData != nil)
 	{
 		@synchronized(self)
 		{
@@ -61,7 +81,7 @@
 		{
 			OCXMLParser *parser;
 
-			if ((parser = [[OCXMLParser alloc] initWithData:self.responseBodyData]) != nil)
+			if ((parser = [[OCXMLParser alloc] initWithData:responseData]) != nil)
 			{
 				if (basePath != nil)
 				{

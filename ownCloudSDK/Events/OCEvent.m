@@ -28,6 +28,9 @@
 
 @synthesize attributes = _attributes;
 
+@synthesize path = _path;
+@synthesize depth = _depth;
+
 @synthesize mimeType = _mimeType;
 @synthesize data = _data;
 @synthesize error = _error;

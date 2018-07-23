@@ -58,6 +58,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 	NSURL *_bodyURL;
 	NSInputStream *_bodyURLInputStream;
 
+	NSDate *_earliestBeginDate;
+
 	OCConnectionRequestResultHandlerAction _resultHandlerAction;
 	OCConnectionEphermalResultHandler _ephermalResultHandler;
 	OCConnectionEphermalRequestCertificateProceedHandler _ephermalRequestCertificateProceedHandler;
@@ -103,6 +105,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 @property(strong) OCConnectionHeaderFields headerFields;//!< The HTTP headerfields to send alongside the request
 @property(strong,nonatomic) NSData *bodyData;			//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
+
+@property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
 @property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].

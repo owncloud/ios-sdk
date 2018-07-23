@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCTypes.h"
 
 typedef NSString* OCEventHandlerIdentifier;
 
@@ -62,6 +63,9 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 	NSDictionary *_attributes;
 
+	OCPath _path;
+	NSUInteger _depth;
+
 	NSString *_mimeType;
 	NSData *_data;
 	NSError *_error;
@@ -74,6 +78,9 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 @property(readonly) NSDictionary *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
 @property(strong) NSDictionary *attributes;	//!< Attributes of the event, describing what happened. (Catch-all in first draft, will be supplemented with additional object properties before implementation)
+
+@property(strong) OCPath path;		//!< Used by OCEventTypeRetrieveItemList.
+@property(assign) NSUInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
 
 @property(strong) NSString *mimeType;
 @property(strong) NSData *data;

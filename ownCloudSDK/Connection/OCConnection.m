@@ -76,8 +76,14 @@
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
 		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
-		OCConnectionMinimumVersionRequired		: @"9.0"
+		OCConnectionMinimumVersionRequired		: @"9.0",
+		OCConnectionAllowBackgroundURLSessions		: @(YES)
 	});
+}
+
++ (BOOL)backgroundURLSessionsAllowed
+{
+	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowBackgroundURLSessions] boolValue]);
 }
 
 #pragma mark - Init
@@ -497,11 +503,15 @@
 }
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (OCConnectionDAVRequest *)_davRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
 	OCConnectionDAVRequest *davRequest;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 	NSURL *url = endpointURL;
+
+	if (endpointURL == nil)
+	{
+		return (nil);
+	}
 
 	if (path != nil)
 	{
@@ -524,9 +534,19 @@
 			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 		]];
+	}
 
-		// OCLog(@"%@", davRequest.xmlRequest.XMLString);
-		
+	return (davRequest);
+}
+
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+{
+	OCConnectionDAVRequest *davRequest;
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSProgress *progress = nil;
+
+	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	{
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
 			{
@@ -537,9 +557,92 @@
 
 			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
 		}];
+
+		progress = davRequest.progress;
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
+	}
+	else
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(OCError(OCErrorInternal), nil);
+		}
 	}
 
-	return(nil);
+	return(progress);
+}
+
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	OCConnectionDAVRequest *davRequest;
+	NSProgress *progress = nil;
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	{
+		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
+		davRequest.userInfo = @{
+			@"path" : path,
+			@"depth" : @(depth),
+			@"endpointURL" : endpointURL
+		};
+		davRequest.eventTarget = eventTarget;
+		davRequest.downloadRequest = YES;
+		davRequest.earliestBeginDate = notBeforeDate;
+		davRequest.downloadedFileIsTemporary = YES;
+
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		// Enqueue request
+		[self.downloadQueue enqueueRequest:davRequest];
+
+		progress = davRequest.progress;
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleRetrieveItemListAtPathResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	BOOL postEvent = YES;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveItemList attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			NSURL *endpointURL = request.userInfo[@"endpointURL"];
+
+			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+
+			NSLog(@"Error: %@ - Response: %@", error, ((request.downloadRequest && (request.downloadedFileURL != nil)) ? [NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL] : nil));
+
+			event.path = request.userInfo[@"path"];
+			event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
+
+			event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path];
+		}
+
+		if (postEvent)
+		{
+			[request.eventTarget handleEvent:event sender:self];
+		}
+	}
 }
 
 #pragma mark - Actions
@@ -641,11 +744,11 @@
 				}
 			}
 		}
-	}
 
-	if (postEvent)
-	{
-		[request.eventTarget handleEvent:event sender:self];
+		if (postEvent)
+		{
+			[request.eventTarget handleEvent:event sender:self];
+		}
 	}
 }
 
@@ -1246,5 +1349,6 @@ OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-p
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
+OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";

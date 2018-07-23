@@ -89,6 +89,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	OCSyncAnchor _latestSyncAnchor;
 
+	NSDate *_lastCheckForUpdates;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 
@@ -108,6 +110,8 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @property(readonly, strong) OCSyncAnchor latestSyncAnchor;
 
+@property(strong) NSDate *lastCheckForUpdates; //!< Time of the last check for updates.
+
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
@@ -122,6 +126,9 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (void)startQuery:(OCQuery *)query;	//!< Starts a query
 - (void)reloadQuery:(OCQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
+
+#pragma mark - Check for updates
+- (void)checkForUpdatesWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.
 
 #pragma mark - Commands
 - (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;

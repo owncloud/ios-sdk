@@ -56,6 +56,8 @@
 
 @synthesize delegate = _delegate;
 
+@synthesize lastCheckForUpdates = _lastCheckForUpdates;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
@@ -990,6 +992,11 @@
 	}
 
 	[self endActivity:@"item list task"];
+}
+
+#pragma mark - Check for updates
+- (void)checkForUpdatesWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
 }
 
 #pragma mark - Tools

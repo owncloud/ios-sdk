@@ -38,6 +38,8 @@
 @synthesize bodyData = _bodyData;
 @synthesize bodyURL = _bodyURL;
 
+@synthesize earliestBeginDate = _earliestBeginDate;
+
 @synthesize resultHandlerAction = _resultHandlerAction;
 @synthesize ephermalResultHandler = _ephermalResultHandler;
 @synthesize ephermalRequestCertificateProceedHandler = _ephermalRequestCertificateProceedHandler;
@@ -405,6 +407,8 @@
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
+		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
+
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
 		self.userInfo	 	= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
 
@@ -434,6 +438,8 @@
 	[coder encodeObject:_parameters 	forKey:@"parameters"];
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
+
+	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];

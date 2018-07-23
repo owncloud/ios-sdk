@@ -257,6 +257,12 @@
 
 					// Apply priority
 					task.priority = request.priority;
+
+					// Apply earliest date
+					if (request.earliestBeginDate != nil)
+					{
+						task.earliestBeginDate = request.earliestBeginDate;
+					}
 				}
 
 				if (task != nil)
