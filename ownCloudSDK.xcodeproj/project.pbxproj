@@ -124,6 +124,7 @@
 		DC7E0A83203732B3006111FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DC7E0A82203732B3006111FA /* Assets.xcassets */; };
 		DC7E0A89203732B3006111FA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A88203732B3006111FA /* main.m */; };
 		DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A712036F60C006111FA /* BookmarkTests.m */; };
+		DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = DC812557210B548F00A9C037 /* OCTestTarget.m */; };
 		DC8556ED204DEA2900189B9A /* OCConnectionDAVRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */; };
 		DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EF204DEB9200189B9A /* OCXMLNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -490,6 +491,8 @@
 		DC7E0A82203732B3006111FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DC7E0A87203732B3006111FA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DC7E0A88203732B3006111FA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		DC812556210B548F00A9C037 /* OCTestTarget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCTestTarget.h; sourceTree = "<group>"; };
+		DC812557210B548F00A9C037 /* OCTestTarget.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCTestTarget.m; sourceTree = "<group>"; };
 		DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionDAVRequest.h; sourceTree = "<group>"; };
 		DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionDAVRequest.m; sourceTree = "<group>"; };
 		DC8556EF204DEB9200189B9A /* OCXMLNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCXMLNode.h; sourceTree = "<group>"; };
@@ -1340,6 +1343,8 @@
 		DCC8F9B8202852A200EB6701 /* ownCloudSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				DC812557210B548F00A9C037 /* OCTestTarget.m */,
+				DC812556210B548F00A9C037 /* OCTestTarget.h */,
 				DC72E41C2061666900189B9A /* Host Simulator */,
 				DC39DC4D2041B53000189B9A /* AuthenticationTests.m */,
 				DC7E0A712036F60C006111FA /* BookmarkTests.m */,
@@ -1924,6 +1929,7 @@
 			files = (
 				DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */,
 				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,
+				DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */,
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
 				DC5A20312074E8890083DB7D /* CoreTests.m in Sources */,
 				DC4AFAAD206A7FDB00189B9A /* SQLTests.m in Sources */,

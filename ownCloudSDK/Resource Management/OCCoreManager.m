@@ -20,6 +20,7 @@
 #import "NSError+OCError.h"
 #import "OCBookmarkManager.h"
 #import "OCConnectionQueue+BackgroundSessionRecovery.h"
+#import "OCLogger.h"
 
 @implementation OCCoreManager
 
@@ -176,6 +177,8 @@
 #pragma mark - Background session recovery
 - (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"=> Handle events for background URL session: %@", identifier);
+
 	@synchronized(self)
 	{
 		if ((identifier != nil) && (completionHandler != nil))

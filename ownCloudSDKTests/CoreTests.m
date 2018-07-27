@@ -12,6 +12,8 @@
 #import "OCCore+Internal.h"
 #import "TestTools.h"
 
+#import "OCTestTarget.h"
+
 @interface CoreTests : XCTestCase <OCCoreDelegate>
 {
 	void (^coreErrorHandler)(OCCore *core, NSError *error, OCConnectionIssue *issue);
@@ -42,8 +44,8 @@
 	XCTestExpectation *vaultErasedExpectation = [self expectationWithDescription:@"Vault erased"];
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -89,8 +91,8 @@
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -255,8 +257,8 @@
 	__block BOOL didDisruptOnce = NO;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -414,8 +416,8 @@
 	};
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -595,8 +597,8 @@
 	};
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -759,7 +761,7 @@
 	};
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"invalid" passphrase:@"wrong" authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 

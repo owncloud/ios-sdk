@@ -630,10 +630,15 @@
 {
 	dispatch_block_t completionHandler;
 
+	OCLogDebug(@"URLSessionDidFinishEventsForBackgroundSession: %@", session);
+
 	// Call completion handler
 	if ((completionHandler = [OCConnectionQueue completionHandlerForBackgroundSessionWithIdentifier:session.configuration.identifier remove:YES]) != nil)
 	{
-		completionHandler();
+		// Apple docs: "Because the provided completion handler is part of UIKit, you must call it on your main thread."
+		dispatch_async(dispatch_get_main_queue(), ^{
+			completionHandler();
+		});
 	}
 
 	// Tell connection that handling this queue finished

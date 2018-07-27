@@ -20,6 +20,8 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import <ownCloudSDK/NSString+OCVersionCompare.h>
 
+#import "OCTestTarget.h"
+
 @interface ConnectionTests : XCTestCase <OCEventHandler, OCClassSettingsSource>
 {
 	 OCConnection *newConnection;
@@ -216,7 +218,7 @@
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
 		[issue approve];
-		
+
 		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
 	}];
 }
@@ -256,7 +258,7 @@
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
 		[issue approve];
-		
+
 		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
 	}];
 }
@@ -279,7 +281,7 @@
 	// NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
 	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
 	OCBookmark *bookmark = nil; // Bookmark from previous recipe
-	NSString *userName=@"admin", *password=@"admin"; // Either provided as part of userEnteredURLString - or set independently
+	NSString *userName=OCTestTarget.userLogin, *password=OCTestTarget.userPassword; // Either provided as part of userEnteredURLString - or set independently
 	__block OCConnection *connection;
 	
 	// Create bookmark from normalized URL (and extract username and password if included)
@@ -602,11 +604,11 @@
 	XCTestExpectation *expectFileDownload = [self expectationWithDescription:@"File downloaded"];
 	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
 	OCConnection *connection = nil;
-	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	__block NSProgress *downloadProgress = nil;
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
@@ -687,10 +689,10 @@
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
 	OCConnection *connection = nil;
-	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
