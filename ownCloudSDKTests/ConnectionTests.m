@@ -728,5 +728,126 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+
+- (void)_testPropFindZeroStresstest
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	__block XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	__block XCTestExpectation *expectFolderCreateList = [self expectationWithDescription:@"Create folder"];
+	__block XCTestExpectation *expectFolderDeleteList = [self expectationWithDescription:@"Deleted folder"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	__block NSUInteger scheduleCount = 100, remaining = scheduleCount, remainingFolder = scheduleCount, deleteCount = scheduleCount;
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[expectConnect fulfill];
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+				OCItem *rootFolder = ((NSArray <OCItem *> *)event.result).firstObject;
+
+				for (NSUInteger i=0; i < scheduleCount; i++)
+				{
+					[connection createFolder:[NSString stringWithFormat:@"test-%lu-%f", (unsigned long)i, NSDate.timeIntervalSinceReferenceDate] inside:rootFolder options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"Create folder: error=%@, result=%@", event.error, event.result);
+
+						@synchronized(self)
+						{
+							remainingFolder--;
+							if (remainingFolder == 0)
+							{
+								[expectFolderCreateList fulfill];
+								expectFolderCreateList = nil;
+							}
+						}
+
+						[connection deleteItem:(OCItem *)event.result requireMatch:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							NSLog(@"Delete folder: error=%@, result=%@", event.error, event.result);
+
+							@synchronized(self)
+							{
+								deleteCount--;
+								if (deleteCount == 0)
+								{
+									[expectFolderDeleteList fulfill];
+									expectFolderDeleteList = nil;
+								}
+							}
+
+							[connection retrieveItemListAtPath:@"/" depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+								NSLog(@"Items at /: %@, Error: %@", items, error);
+
+								XCTAssert(items.count > 0);
+								XCTAssert(items.firstObject.eTag != nil);
+							}];
+
+							[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+								NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+								XCTAssert(event.result!=nil);
+								XCTAssert([event.result isKindOfClass:[NSArray class]]);
+								XCTAssert(((NSArray *)event.result).count > 0);
+								XCTAssert(((NSArray <OCItem *> *)event.result).firstObject.eTag != nil);
+								XCTAssert(event.error==nil);
+								XCTAssert([event.path isEqual:@"/"]);
+								XCTAssert(event.depth==0);
+							} userInfo:nil ephermalUserInfo:nil]];
+						} userInfo:nil ephermalUserInfo:nil]];
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+						XCTAssert(event.result!=nil);
+						XCTAssert([event.result isKindOfClass:[NSArray class]]);
+						XCTAssert(((NSArray *)event.result).count > 0);
+						XCTAssert(((NSArray <OCItem *> *)event.result).firstObject.eTag != nil);
+						XCTAssert(event.error==nil);
+						XCTAssert([event.path isEqual:@"/"]);
+						XCTAssert(event.depth==0);
+
+						@synchronized(self)
+						{
+							remaining--;
+							if (remaining == 0)
+							{
+								[expectFileList fulfill];
+								expectFileList = nil;
+							}
+						}
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+						NSLog(@"Items at /: %@, Error: %@", items, error);
+
+						XCTAssert(items.count > 0);
+						XCTAssert(items.firstObject.eTag != nil);
+					}];
+
+					usleep(20000);
+				}
+			} userInfo:nil ephermalUserInfo:nil]];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+
 @end
 
