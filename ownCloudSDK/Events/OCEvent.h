@@ -85,6 +85,7 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 @property(strong) NSString *mimeType;
 @property(strong) NSData *data;
 @property(strong) OCFile *file;
+
 @property(strong) NSError *error;
 @property(strong) id result;
 

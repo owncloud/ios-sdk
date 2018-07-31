@@ -16,6 +16,8 @@
  *
  */
 
+#import <MobileCoreServices/MobileCoreServices.h>
+
 #import "OCConnection.h"
 #import "OCConnection+OCConnectionQueue.h"
 #import "OCConnectionRequest.h"
@@ -584,7 +586,8 @@
 		davRequest.userInfo = @{
 			@"path" : path,
 			@"depth" : @(depth),
-			@"endpointURL" : endpointURL
+			@"endpointURL" : endpointURL,
+			@"options" : ((options != nil) ? options : [NSNull null])
 		};
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
@@ -613,9 +616,15 @@
 - (void)_handleRetrieveItemListAtPathResult:(OCConnectionRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
-	BOOL postEvent = YES;
+	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
+	OCEventType eventType = OCEventTypeRetrieveItemList;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveItemList attributes:nil]) != nil)
+	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
+	{
+		eventType = (OCEventType)[options[@"alternativeEventType"] integerValue];
+	}
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -632,16 +641,22 @@
 
 			OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			event.path = request.userInfo[@"path"];
-			event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
+			switch (eventType)
+			{
+				case OCEventTypeUpload:
+					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path].firstObject;
+				break;
 
-			event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path];
+				default:
+					event.path = request.userInfo[@"path"];
+					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
+
+					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path];
+				break;
+			}
 		}
 
-		if (postEvent)
-		{
-			[request.eventTarget handleEvent:event sender:self];
-		}
+		[request.eventTarget handleEvent:event sender:self];
 	}
 }
 
@@ -652,10 +667,153 @@
 	return(nil);
 }
 
-- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+#pragma mark - File transfer: upload
+- (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSProgress *progress = nil;
+	NSURL *uploadURL;
+
+	if ((sourceURL == nil) || (newParentDirectory == nil))
+	{
+		return(nil);
+	}
+
+	if (fileName == nil)
+	{
+		if (replacedItem != nil)
+		{
+			fileName = replacedItem.name;
+		}
+		else
+		{
+			fileName = sourceURL.lastPathComponent;
+		}
+	}
+
+	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:uploadURL];
+
+		request.method = OCConnectionRequestMethodPUT;
+
+		// Set Content-Type
+		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
+
+		// Set conditions
+		if (replacedItem != nil)
+		{
+			// Ensure the upload fails if there's a different version at the target already
+			[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
+		}
+		else
+		{
+			// Ensure the upload fails if there's any file at the target already
+			[request setValue:@"*" forHeaderField:@"If-None-Match"];
+		}
+
+		// Set Content-Length
+		NSNumber *fileSize = nil;
+		if ([sourceURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
+			[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
+		}
+
+		// Set modification date
+		NSDate *modDate = nil;
+		if ([sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+		{
+			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-Mtime"];
+		}
+
+		// Set meta data for handling
+		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
+		request.userInfo = @{
+			@"sourceURL" : sourceURL,
+			@"fileName" : fileName,
+			@"parentItem" : newParentDirectory,
+			@"modDate" : modDate,
+			@"fileSize" : fileSize
+		};
+		request.eventTarget = eventTarget;
+		request.bodyURL = sourceURL;
+
+		// Enqueue request
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		[self.uploadQueue enqueueRequest:request];
+
+		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleUploadFileResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	if (request.responseHTTPStatus.isSuccess)
+	{
+		NSString *fileName = request.userInfo[@"fileName"];
+		OCItem *parentItem = request.userInfo[@"parentItem"];
+
+		/*
+			Almost there! Only lacking permissions and mime type and we'd not have to do this PROPFIND 0.
+
+			{
+			    "Cache-Control" = "no-store, no-cache, must-revalidate";
+			    "Content-Length" = 0;
+			    "Content-Type" = "text/html; charset=UTF-8";
+			    Date = "Tue, 31 Jul 2018 09:35:22 GMT";
+			    Etag = "\"b4e54628946633eba3a601228e638f21\"";
+			    Expires = "Thu, 19 Nov 1981 08:52:00 GMT";
+			    Pragma = "no-cache";
+			    Server = Apache;
+			    "Strict-Transport-Security" = "max-age=15768000; preload";
+			    "content-security-policy" = "default-src 'none';";
+			    "oc-etag" = "\"b4e54628946633eba3a601228e638f21\"";
+			    "oc-fileid" = 00000066ocxll7pjzvku;
+			    "x-content-type-options" = nosniff;
+			    "x-download-options" = noopen;
+			    "x-frame-options" = SAMEORIGIN;
+			    "x-permitted-cross-domain-policies" = none;
+			    "x-robots-tag" = none;
+			    "x-xss-protection" = "1; mode=block";
+			}
+		*/
+
+		// Retrieve item information and continue in _handleUploadFileItemResult:error:
+		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 notBefore:nil options:@{
+			@"alternativeEventType"  : @(OCEventTypeUpload),
+			@"_originalUserInfo"	: request.userInfo
+		} resultTarget:request.eventTarget];
+	}
+	else
+	{
+		OCEvent *event = nil;
+
+		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload attributes:nil]) != nil)
+		{
+			if (request.error != nil)
+			{
+				event.error = request.error;
+			}
+			else
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+
+			[request.eventTarget handleEvent:event sender:self];
+		}
+	}
 }
 
 #pragma mark - File transfer: download

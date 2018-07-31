@@ -247,7 +247,7 @@
 					else if (request.bodyURL != nil)
 					{
 						// Body comes from a file. Make it an upload task.
-						task = [_urlSession uploadTaskWithStreamedRequest:urlRequest];
+						task = [_urlSession uploadTaskWithRequest:urlRequest fromFile:request.bodyURL];
 					}
 					else
 					{

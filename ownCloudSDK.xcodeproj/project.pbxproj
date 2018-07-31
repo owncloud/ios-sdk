@@ -229,6 +229,7 @@
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCEA7D972093556600F25223 /* OCCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEA7D952093556600F25223 /* OCCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEA7D982093556600F25223 /* OCCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEA7D962093556600F25223 /* OCCache.m */; };
+		DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */ = {isa = PBXBuildFile; fileRef = DCEB94DA21105FDE004EF8D7 /* rainbow.png */; };
 		DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D42042312500189B9A /* ConnectionTests.m */; };
 		DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */; };
@@ -606,6 +607,7 @@
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
 		DCEA7D952093556600F25223 /* OCCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCache.h; sourceTree = "<group>"; };
 		DCEA7D962093556600F25223 /* OCCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCache.m; sourceTree = "<group>"; };
+		DCEB94DA21105FDE004EF8D7 /* rainbow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rainbow.png; sourceTree = "<group>"; };
 		DCEEB2D42042312500189B9A /* ConnectionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionTests.m; sourceTree = "<group>"; };
 		DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+OCClassSettings.h"; sourceTree = "<group>"; };
 		DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OCClassSettings.m"; sourceTree = "<group>"; };
@@ -1359,6 +1361,7 @@
 				DC72E4342063DF5C00189B9A /* SettingsTests.m */,
 				DC4AFAAC206A7FDB00189B9A /* SQLTests.m */,
 				DC72E4362063DF7700189B9A /* customSettings.plist */,
+				DCEB94DA21105FDE004EF8D7 /* rainbow.png */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 				DCC6563C20C979FB00110A97 /* TestTools.m */,
@@ -1776,6 +1779,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
+				DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

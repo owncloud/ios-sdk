@@ -728,6 +728,81 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testConnectAndUploadFile
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	XCTestExpectation *expectFileUpload = [self expectationWithDescription:@"File uploaded"];
+	XCTestExpectation *expectFileDeleted = [self expectationWithDescription:@"File deleted"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	__block NSProgress *uploadProgress = nil;
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at /: %@", items);
+				OCItem *rootItem = nil;
+
+				for (OCItem *item in items)
+				{
+					if ([item.path isEqual:@"/"])
+					{
+						rootItem = item;
+						break;
+					}
+				}
+
+				if (rootItem != nil)
+				{
+					NSURL *uploadFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow" withExtension:@"png"];
+					NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
+
+					uploadProgress = [connection uploadFileFromURL:uploadFileURL withName:uploadName to:rootItem replacingItem:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"File uploaded: %@ error = %@", event.result, event.error);
+
+						XCTAssert(event.result!=nil);
+						XCTAssert(event.error==nil);
+
+						[expectFileUpload fulfill];
+
+						[connection deleteItem:event.result requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							NSLog(@"File deleted with error = %@", event.error);
+
+							XCTAssert(event.error==nil);
+
+							[expectFileDeleted fulfill];
+						} userInfo:nil ephermalUserInfo:nil]];
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[uploadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
+				}
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectFileList fulfill];
+			}];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	[uploadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
+}
 
 - (void)_testPropFindZeroStresstest
 {
@@ -845,7 +920,7 @@
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:60 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 
