@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncRecord.h"
+#import "NSProgress+OCExtensions.h"
 
 @implementation OCSyncRecord
 
@@ -34,6 +35,8 @@
 @synthesize archivedServerItem = _archivedServerItem;
 
 @synthesize parameters = _parameters;
+
+@synthesize actionState = _actionState;
 
 @synthesize resultHandler = _resultHandler;
 
@@ -128,6 +131,19 @@
 	return (NO);
 }
 
+- (NSMutableDictionary *)actionState
+{
+	@synchronized(self)
+	{
+		if (_actionState == nil)
+		{
+			_actionState = [NSMutableDictionary new];
+		}
+
+		return (_actionState);
+	}
+}
+
 #pragma mark - Serialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData
 {
@@ -138,6 +154,25 @@
 - (NSData *)serializedData
 {
 	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
+}
+
+- (void)addProgress:(NSProgress *)progress
+{
+	if (progress != nil)
+	{
+		if (_progress == nil)
+		{
+			self.progress = progress;
+		}
+		else
+		{
+			_progress.localizedDescription = progress.localizedDescription;
+			_progress.localizedAdditionalDescription = progress.localizedAdditionalDescription;
+
+			_progress.totalUnitCount += 200;
+			[_progress addChild:progress withPendingUnitCount:200];
+		}
+	}
 }
 
 #pragma mark - Secure Coding
@@ -164,6 +199,7 @@
 		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
+		_actionState = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"actionState"];
 	}
 	
 	return (self);
@@ -185,6 +221,7 @@
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
 
 	[coder encodeObject:_parameters forKey:@"parameters"];
+	[coder encodeObject:_actionState forKey:@"actionState"];
 }
 
 @end
@@ -200,6 +237,7 @@ OCSyncAction OCSyncActionDownload = @"download";
 OCSyncActionParameter OCSyncActionParameterParentItem = @"parentItem";
 OCSyncActionParameter OCSyncActionParameterItem = @"item";
 OCSyncActionParameter OCSyncActionParameterPath = @"path";
+OCSyncActionParameter OCSyncActionParameterOptions = @"options";
 OCSyncActionParameter OCSyncActionParameterSourcePath = @"sourcePath";
 OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
 OCSyncActionParameter OCSyncActionParameterSourceItem = @"sourceItem";

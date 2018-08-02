@@ -49,6 +49,7 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 	OCPath _itemPath;
 
 	NSDictionary<OCSyncActionParameter, id> *_parameters;
+	NSMutableDictionary *_actionState;
 
 	OCCoreActionResultHandler _resultHandler;
 }
@@ -71,6 +72,7 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 @property(readonly,nonatomic) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the record was committed.
 
 @property(strong) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
+@property(strong,nonatomic) NSMutableDictionary *actionState; //!< Action-specific dictionary: provides storage for actions to track their state and progress
 
 @property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 
@@ -79,6 +81,8 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 - (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
+
+- (void)addProgress:(NSProgress *)progress;
 
 - (NSData *)serializedData;
 
@@ -95,6 +99,7 @@ extern OCSyncAction OCSyncActionDownload;
 extern OCSyncActionParameter OCSyncActionParameterParentItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterPath; // (OCPath)
+extern OCSyncActionParameter OCSyncActionParameterOptions; // (NSDictionary *)
 extern OCSyncActionParameter OCSyncActionParameterSourcePath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterTargetPath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterSourceItem; // (OCItem *)

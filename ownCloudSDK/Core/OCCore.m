@@ -486,16 +486,6 @@
 }
 
 #pragma mark - ## Commands
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
@@ -723,10 +713,6 @@
 	{
 		case OCEventTypeRetrieveThumbnail:
 			[self _handleRetrieveThumbnailEvent:event sender:sender];
-		break;
-
-		case OCEventTypeDownload:
-			[self _handleDownloadFileEvent:event sender:sender];
 		break;
 
 		case OCEventTypeRetrieveItemList:

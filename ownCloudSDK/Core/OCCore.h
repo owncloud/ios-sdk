@@ -127,10 +127,6 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
-
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler;
-
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 
@@ -141,8 +137,16 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @end
 
-@interface OCCore (Download)
+@interface OCCore (CommandDownload)
 - (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandLocalCreation)
+- (NSProgress *)createFileNamed:(NSString *)newFileName at:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options completionHandler:(OCCoreCompletionHandler)completionHandler;
+@end
+
+@interface OCCore (CommandLocalModification)
+- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options completionHandler:(OCCoreCompletionHandler)completionHandler;
 @end
 
 @interface OCCore (FileManagement)
