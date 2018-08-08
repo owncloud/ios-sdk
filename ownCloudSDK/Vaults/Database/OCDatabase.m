@@ -25,6 +25,7 @@
 #import "OCItemVersionIdentifier.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
+#import "NSError+OCError.h"
 
 @interface OCDatabase ()
 {
@@ -358,11 +359,17 @@
 }
 
 #pragma mark - Thumbnail interface
-- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType specID:(NSString *)specID forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	if ((itemVersion.fileID == nil) || (itemVersion.eTag == nil))
 	{
 		OCLogError(@"Error storing thumbnail for itemVersion %@ because it lacks fileID or eTag.", OCLogPrivate(itemVersion));
+		return;
+	}
+
+	if (specID == nil)
+	{
+		OCLogError(@"Error storing thumbnail for itemVersion %@ because it lacks a specID.", OCLogPrivate(itemVersion));
 		return;
 	}
 
@@ -374,10 +381,11 @@
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:@[
 		// Remove outdated versions and smaller thumbnail sizes
-		[OCSQLiteQuery  query:@"DELETE FROM thumb.thumbnails WHERE fileID = :fileID AND ((eTag != :eTag) OR (maxWidth < :maxWidth AND maxHeight < :maxHeight))" // relatedTo:OCDatabaseTableNameThumbnails
+		[OCSQLiteQuery  query:@"DELETE FROM thumb.thumbnails WHERE fileID = :fileID AND ((eTag != :eTag) OR (maxWidth < :maxWidth AND maxHeight < :maxHeight) OR (specID != :specID))" // relatedTo:OCDatabaseTableNameThumbnails
 			        withNamedParameters:@{
 					@"fileID" : itemVersion.fileID,
 					@"eTag" : itemVersion.eTag,
+					@"specID" : specID,
 					@"maxWidth" : @(maximumSizeInPixels.width),
 					@"maxHeight" : @(maximumSizeInPixels.height),
 			        } resultHandler:nil],
@@ -387,6 +395,7 @@
 				rowValues:@{
 					@"fileID" : itemVersion.fileID,
 					@"eTag" : itemVersion.eTag,
+					@"specID" : specID,
 					@"maxWidth" : @(maximumSizeInPixels.width),
 					@"maxHeight" : @(maximumSizeInPixels.height),
 					@"mimeType" : mimeType,
@@ -400,7 +409,7 @@
 	}]];
 }
 
-- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler
+- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler
 {
 	/*
 		// This is a bit more complex SQL statement. Here's how it was tested and what it is meant to achieve:
@@ -441,9 +450,19 @@
 		this way will be tiny and shouldn't have any measurable performance impact.
 	*/
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT maxWidth, maxHeight, mimeType, imageData FROM thumbnails WHERE fileID = :fileID AND eTag = :eTag ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1" withNamedParameters:@{
+	if ((itemVersion.fileID==nil) || (itemVersion.eTag==nil) || (specID == nil))
+	{
+		if (completionHandler!=nil)
+		{
+			completionHandler(self, OCError(OCErrorInsufficientParameters), CGSizeZero, nil, nil);
+		}
+		return;
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT maxWidth, maxHeight, mimeType, imageData FROM thumbnails WHERE fileID = :fileID AND eTag = :eTag AND specID = :specID ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1" withNamedParameters:@{
 		@"fileID"	: itemVersion.fileID,
 		@"eTag"		: itemVersion.eTag,
+		@"specID"	: specID,
 		@"maxWidth"  	: @(maximumSizeInPixels.width),
 		@"maxHeight" 	: @(maximumSizeInPixels.height),
 	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {

@@ -31,6 +31,7 @@
 #import "NSString+OCParentPath.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
+#import "OCItem+OCThumbnail.h"
 
 @interface OCCore ()
 {
@@ -507,6 +508,7 @@
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
 	OCItemVersionIdentifier *versionIdentifier = item.itemVersionIdentifier;
+	NSString *specID = item.thumbnailSpecID;
 	CGSize requestedMaximumSizeInPixels;
 
 	retrieveHandler = [retrieveHandler copy];
@@ -531,7 +533,7 @@
 			if ((thumbnail = [_thumbnailCache objectForKey:item.fileID]) != nil)
 			{
 				// Yes! But is it the version we want?
-				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier])
+				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier] && [thumbnail.specID isEqual:item.thumbnailSpecID])
 				{
 					// Yes it is!
 					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
@@ -562,17 +564,18 @@
 				if (!progress.cancelled)
 				{
 					// Thumbnail
-					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
+					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier specID:specID maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
 						OCItemThumbnail *cachedThumbnail = nil;
 
 						if (thumbnailData != nil)
 						{
-							// Create OCItemThumbnail from data returned from data base
+							// Create OCItemThumbnail from data returned from database
 							OCItemThumbnail *cachedThumbnail = [OCItemThumbnail new];
 
 							cachedThumbnail.maximumSizeInPixels = maxSize;
 							cachedThumbnail.mimeType = mimeType;
 							cachedThumbnail.data = thumbnailData;
+							cachedThumbnail.specID = specID;
 							cachedThumbnail.itemVersionIdentifier = versionIdentifier;
 
 							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
@@ -595,7 +598,7 @@
 						// Request a thumbnail from the server if the operation hasn't been cancelled yet.
 						if (!progress.cancelled)
 						{
-							NSString *requestID = [NSString stringWithFormat:@"%@:%@-%fx%f", versionIdentifier.fileID, versionIdentifier.eTag, requestedMaximumSizeInPixels.width, requestedMaximumSizeInPixels.height];
+							NSString *requestID = [NSString stringWithFormat:@"%@:%@-%@-%fx%f", versionIdentifier.fileID, versionIdentifier.eTag, specID, requestedMaximumSizeInPixels.width, requestedMaximumSizeInPixels.height];
 
 							[self queueBlock:^{
 								BOOL sendRequest = YES;
@@ -628,6 +631,7 @@
 										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
 										@"scale" : @(scale),
 										@"itemVersionIdentifier" : item.itemVersionIdentifier,
+										@"specID" : item.thumbnailSpecID,
 										@"item" : item,
 									} ephermalUserInfo:@{
 										@"requestID" : requestID
@@ -673,6 +677,7 @@
 		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
 		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[@"itemVersionIdentifier"];
 		OCItem *item = event.userInfo[@"item"];
+		NSString *specID = event.userInfo[@"specID"];
 		NSString *requestID = event.ephermalUserInfo[@"requestID"];
 
 		if ((event.error == nil) && (event.result != nil))
@@ -681,7 +686,7 @@
 			[_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
 
 			// Store in database
-			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
+			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
 		}
 
 		// Call all retrieveHandlers

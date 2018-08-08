@@ -23,6 +23,8 @@
 
 @synthesize itemVersionIdentifier = _itemVersionIdentifier;
 
+@synthesize specID = _specID;
+
 #pragma mark - Init & Dealloc
 - (instancetype)init
 {
