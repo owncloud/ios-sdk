@@ -113,7 +113,7 @@
 
 		if (progress != nil)
 		{
-			syncContext.syncRecord.progress = progress;
+			[syncContext.syncRecord addProgress:progress];
 
 			return (YES);
 		}

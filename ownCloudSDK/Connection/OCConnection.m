@@ -942,6 +942,8 @@
 		[self.commandQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
 	}
 	else
 	{
@@ -1011,12 +1013,33 @@
 #pragma mark - Action: Copy Item + Move Item
 - (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	return ([self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+	NSProgress *progress;
+
+	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	{
+		if ([item.parentFileID isEqualToString:parentItem.fileID])
+		{
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
+		}
+		else
+		{
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, parentItem.name];
+		}
+	}
+
+	return (progress);
 }
 
 - (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	return ([self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+	NSProgress *progress;
+
+	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	{
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
+	}
+
+	return (progress);
 }
 
 - (NSProgress *)_copyMoveMethod:(OCConnectionRequestMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
@@ -1172,6 +1195,8 @@
 		[self.commandQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
 	}
 	else
 	{

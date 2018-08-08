@@ -56,7 +56,7 @@
 
 		if ((progress = [self.connection deleteItem:item requireMatch:((NSNumber *)syncContext.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
-			syncContext.syncRecord.progress = progress;
+			[syncContext.syncRecord addProgress:progress];
 
 			return (YES);
 		}

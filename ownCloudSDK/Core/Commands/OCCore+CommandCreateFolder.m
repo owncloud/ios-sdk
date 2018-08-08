@@ -59,7 +59,7 @@
 
 		if ((progress = [self.connection createFolder:folderName inside:parentItem options:nil resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
-			syncContext.syncRecord.progress = progress;
+			[syncContext.syncRecord addProgress:progress];
 
 			return (YES);
 		}
