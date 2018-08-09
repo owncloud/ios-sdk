@@ -86,6 +86,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
 @property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 
+@property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
+
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
 

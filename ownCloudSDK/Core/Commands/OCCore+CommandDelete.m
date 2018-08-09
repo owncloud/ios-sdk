@@ -38,14 +38,31 @@
 #pragma mark - Sync Action Registration
 - (void)registerDeleteLocal
 {
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+	[self registerSyncRoute:[OCCoreSyncRoute routeWithPreflight:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core preflightDeleteLocalWithSyncContext:syncContext]);
+	} scheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core scheduleDeleteLocalWithSyncContext:syncContext]);
+	} descheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core descheduleDeleteLocalWithSyncContext:syncContext]);
 	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core handleDeleteLocalWithSyncContext:syncContext]);
 	}] forAction:OCSyncActionDeleteLocal];
 }
 
 #pragma mark - Sync
+- (BOOL)preflightDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+{
+	OCItem *itemToDelete;
+
+	if ((itemToDelete = syncContext.syncRecord.item) != nil)
+	{
+		itemToDelete.status = OCItemStatusTransient;
+		syncContext.removedItems = @[ itemToDelete ];
+	}
+
+	return (YES);
+}
+
 - (BOOL)scheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
@@ -65,6 +82,21 @@
 	return (NO);
 }
 
+- (BOOL)descheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+{
+	OCItem *itemToRestore;
+
+	if ((itemToRestore = syncContext.syncRecord.item) != nil)
+	{
+		itemToRestore.status = OCItemStatusAtRest;
+		itemToRestore.removed = NO;
+
+		syncContext.updatedItems = @[ itemToRestore ];
+	}
+
+	return (YES);
+}
+
 - (BOOL)handleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
@@ -78,6 +110,7 @@
 
 	if ((event.error == nil) && (event.result != nil))
 	{
+		syncRecord.item.status = OCItemStatusAtRest;
 		syncContext.removedItems = @[ syncRecord.item ];
 
 		canDeleteSyncRecord = YES;
@@ -147,6 +180,7 @@
 				// The item that was supposed to be deleted could not be found on the server
 
 				// => remove item
+				syncRecord.item.status = OCItemStatusAtRest;
 				syncContext.removedItems = @[ syncRecord.item ];
 
 				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed

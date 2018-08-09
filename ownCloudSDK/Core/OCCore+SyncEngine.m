@@ -177,6 +177,47 @@
 			blockError = error;
 		}];
 
+		// Pre-flight
+		if (blockError == nil)
+		{
+			if (record.action != nil)
+			{
+				OCCoreSyncRoute *syncRoute;
+
+				if ((syncRoute = _syncRoutesByAction[record.action]) != nil)
+				{
+					if (syncRoute.preflight != nil)
+					{
+						OCCoreSyncContext *syncContext;
+
+						if ((syncContext = [OCCoreSyncContext preflightContextWithSyncRecord:record]) != nil)
+						{
+							// Retrieve existing records for same action/path combination
+							if (record.itemPath != nil)
+							{
+								[self.vault.database retrieveSyncRecordsForPath:record.itemPath action:record.action inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+									syncContext.existingRecords = syncRecords;
+								}];
+							}
+
+							// Run pre-flight
+							syncRoute.preflight(self, syncContext);
+
+							// Perform any preflight-triggered updates
+							[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+
+							if (syncContext.removeRecords != nil)
+							{
+								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+							}
+
+							blockError = syncContext.error;
+						}
+					}
+				}
+			}
+		}
+
 		return (blockError);
 	} completionHandler:^(NSError *error) {
 		[self setNeedsToProcessSyncRecords];
@@ -229,6 +270,30 @@
 		[self.vault.database removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
 			error = removeError;
 		}];
+
+		if (syncRecord.action != nil)
+		{
+			OCCoreSyncRoute *syncRoute;
+
+			if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
+			{
+				if (syncRoute.descheduler != nil)
+				{
+					OCCoreSyncContext *syncContext;
+
+					if ((syncContext = [OCCoreSyncContext descheduleContextWithSyncRecord:syncRecord]) != nil)
+					{
+						// Run descheduler
+						syncRoute.descheduler(self, syncContext);
+
+						// Perform any descheduler-triggered updates
+						[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+
+						error = syncContext.error;
+					}
+				}
+			}
+		}
 
 		return (error);
 	} completionHandler:^(NSError *error) {
@@ -364,7 +429,7 @@
 					if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
 					{
 						// Schedule the record using the route for its sync action
-						OCCoreSyncContext *parameterSet = [OCCoreSyncContext schedulerSetWithSyncRecord:syncRecord];
+						OCCoreSyncContext *parameterSet = [OCCoreSyncContext schedulerContextWithSyncRecord:syncRecord];
 
 						couldSchedule = syncRoute.scheduler(self, parameterSet);
 
@@ -448,7 +513,7 @@
 			// Dispatch to result handlers
 			if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
 			{
-				syncContext = [OCCoreSyncContext resultHandlerSetWith:syncRecord event:event issues:issues];
+				syncContext = [OCCoreSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
 
 				syncRecordActionCompleted = syncRoute.resultHandler(self, syncContext);
 
@@ -474,289 +539,8 @@
 					error = deleteError;
 				}];
 
-				// - Update metaData table and queries
-				if ((syncContext.addedItems.count > 0) || (syncContext.removedItems.count > 0) || (syncContext.updatedItems.count > 0))
-				{
-					__block OCSyncAnchor syncAnchor = nil;
-
-					// Update metaData table with changes from the parameter set
-					[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-						__block NSError *updateError = nil;
-
-						if (syncContext.addedItems.count > 0)
-						{
-							[self.vault.database addCacheItems:syncContext.addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-								if (error != nil) { updateError = error; }
-							}];
-						}
-
-						if (syncContext.removedItems.count > 0)
-						{
-							[self.vault.database removeCacheItems:syncContext.removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-								if (error != nil) { updateError = error; }
-							}];
-						}
-
-						if (syncContext.updatedItems.count > 0)
-						{
-							[self.vault.database updateCacheItems:syncContext.updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-								if (error != nil) { updateError = error; }
-							}];
-						}
-
-						syncAnchor = newSyncAnchor;
-
-						return (updateError);
-					} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-						if (error != nil)
-						{
-							OCLogError(@"Error updating metaData database after sync engine result handler pass: %@", error);
-						}
-					}];
-
-					// Update queries
-					[self beginActivity:@"handle sync event - update queries"];
-
-					[self queueBlock:^{
-						OCCoreItemList *addedItemList   = ((syncContext.addedItems.count>0)   ? [OCCoreItemList itemListWithItems:syncContext.addedItems]   : nil);
-						OCCoreItemList *removedItemList = ((syncContext.removedItems.count>0) ? [OCCoreItemList itemListWithItems:syncContext.removedItems] : nil);
-						OCCoreItemList *updatedItemList = ((syncContext.updatedItems.count>0) ? [OCCoreItemList itemListWithItems:syncContext.updatedItems] : nil);
-						NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
-
-						for (OCQuery *query in _queries)
-						{
-							// Queries targeting directories
-							if (query.queryPath != nil)
-							{
-								// Only update queries that have already gone through their complete, initial content update
-								if (query.state == OCQueryStateIdle)
-								{
-									__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
-									__block OCCoreItemList *updatedFullQueryResultsItemList = nil;
-
-									void (^GetUpdatedFullResultsReady)(void) = ^{
-										if (updatedFullQueryResults == nil)
-										{
-											NSMutableArray <OCItem *> *fullQueryResults;
-
-											if ((fullQueryResults = query.fullQueryResults) != nil)
-											{
-												updatedFullQueryResults = [fullQueryResults mutableCopy];
-											}
-											else
-											{
-												updatedFullQueryResults = [NSMutableArray new];
-											}
-										}
-
-										if (updatedFullQueryResultsItemList == nil)
-										{
-											updatedFullQueryResultsItemList = [OCCoreItemList itemListWithItems:updatedFullQueryResults];
-										}
-									};
-
-									if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[query.queryPath].count > 0))
-									{
-										// Items were added in the target path of this query
-										GetUpdatedFullResultsReady();
-
-										for (OCItem *item in addedItemList.itemsByParentPaths[query.queryPath])
-										{
-											[updatedFullQueryResults addObject:item];
-										}
-									}
-
-									if (removedItemList != nil)
-									{
-										if (removedItemList.itemsByParentPaths[query.queryPath].count > 0)
-										{
-											// Items were removed in the target path of this query
-											GetUpdatedFullResultsReady();
-
-											for (OCItem *item in removedItemList.itemsByParentPaths[query.queryPath])
-											{
-												if (item.path != nil)
-												{
-													OCItem *removeItem;
-
-													if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
-													{
-														[updatedFullQueryResults removeObject:removeItem];
-													}
-												}
-											}
-										}
-
-										if (removedItemList.itemsByPath[query.queryPath] != nil)
-										{
-											// The target of this query was removed
-											updatedFullQueryResults = [NSMutableArray new];
-											query.state = OCQueryStateTargetRemoved;
-										}
-									}
-
-									if ((updatedItemList != nil) && (query.state != OCQueryStateTargetRemoved))
-									{
-										OCItem *updatedRootItem = nil;
-
-										if (updatedItemList.itemsByParentPaths[query.queryPath].count > 0)
-										{
-											// Items were updated
-											GetUpdatedFullResultsReady();
-
-											for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
-											{
-												if (item.path != nil)
-												{
-													OCItem *removeItem;
-
-													if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
-													{
-														[updatedFullQueryResults removeObject:removeItem];
-													}
-
-													[updatedFullQueryResults addObject:item];
-												}
-											}
-										}
-
-										if ((updatedRootItem = updatedItemList.itemsByPath[query.queryPath]) != nil)
-										{
-											// Root item of query was updated
-											query.rootItem = updatedRootItem;
-
-											if (query.includeRootItem)
-											{
-												OCItem *removeItem;
-
-												if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[query.queryPath]) != nil)
-												{
-													[updatedFullQueryResults removeObject:removeItem];
-												}
-
-												[updatedFullQueryResults addObject:updatedRootItem];
-											}
-										}
-									}
-
-									if (updatedFullQueryResults != nil)
-									{
-										query.fullQueryResults = updatedFullQueryResults;
-									}
-								}
-							}
-
-							// Queries targeting items
-							if (query.queryItem != nil)
-							{
-								// Only update queries that have already gone through their complete, initial content update
-								if (query.state == OCQueryStateIdle)
-								{
-									OCPath queryItemPath = query.queryItem.path;
-									OCItem *newQueryItem = nil;
-
-									if (addedItemList!=nil)
-									{
-										if ((newQueryItem = addedItemList.itemsByPath[queryItemPath]) != nil)
-										{
-											query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
-										}
-									}
-
-									if (updatedItemList!=nil)
-									{
-										if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
-										{
-											query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
-										}
-									}
-
-									if (removedItemList!=nil)
-									{
-										if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
-										{
-											query.fullQueryResults = [NSMutableArray new];
-											query.state = OCQueryStateTargetRemoved;
-										}
-									}
-								}
-							}
-
-							// Queries targeting sync anchors
-							if ((query.querySinceSyncAnchor != nil) && (syncAnchor!=nil))
-							{
-								if (addedUpdatedRemovedItemList==nil)
-								{
-									addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
-
-									if (addedItemList!=nil)
-									{
-										[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
-									}
-
-									if (updatedItemList!=nil)
-									{
-										[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
-									}
-
-									if (removedItemList!=nil)
-									{
-										[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
-									}
-								}
-
-								query.state = OCQueryStateWaitingForServerReply;
-
-								[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
-
-								query.state = OCQueryStateIdle;
-
-								[query setNeedsRecomputation];
-							}
-						}
-
-						// Signal file provider
-						if (self.postFileProviderNotifications)
-						{
-							NSMutableArray <OCItem *> *changedItems = [NSMutableArray new];
-
-							if (addedItemList.items != nil)
-							{
-								[changedItems addObjectsFromArray:addedItemList.items];
-							}
-
-							if (updatedItemList.items != nil)
-							{
-								[changedItems addObjectsFromArray:updatedItemList.items];
-							}
-
-							if (removedItemList.items != nil)
-							{
-								[changedItems addObjectsFromArray:removedItemList.items];
-							}
-
-							[self signalChangesForItems:changedItems];
-						}
-
-						[self endActivity:@"handle sync event - update queries"];
-					}];
-				}
-
-				// - Fetch updated directory contents as needed
-				if (syncContext.refreshPaths.count > 0)
-				{
-					for (OCPath path in syncContext.refreshPaths)
-					{
-						OCPath refreshPath = path;
-
-						if (![refreshPath hasSuffix:@"/"])
-						{
-							refreshPath = [refreshPath stringByAppendingString:@"/"];
-						}
-
-						[self startItemListTaskForPath:refreshPath];
-					}
-				}
+				// - Perform updates for added/changed/removed items and refresh paths
+				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
 			}
 
 			// In case of issues, mark the state as awaiting user interaction
@@ -820,6 +604,293 @@
 
 		[self endActivity:@"handle sync event"];
 	}];
+}
+
+- (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths
+{
+	// - Update metaData table and queries
+	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0))
+	{
+		__block OCSyncAnchor syncAnchor = nil;
+
+		// Update metaData table with changes from the parameter set
+		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			__block NSError *updateError = nil;
+
+			if (addedItems.count > 0)
+			{
+				[self.vault.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil) { updateError = error; }
+				}];
+			}
+
+			if (removedItems.count > 0)
+			{
+				[self.vault.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil) { updateError = error; }
+				}];
+			}
+
+			if (updatedItems.count > 0)
+			{
+				[self.vault.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil) { updateError = error; }
+				}];
+			}
+
+			syncAnchor = newSyncAnchor;
+
+			return (updateError);
+		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			if (error != nil)
+			{
+				OCLogError(@"Error updating metaData database after sync engine result handler pass: %@", error);
+			}
+		}];
+
+		// Update queries
+		[self beginActivity:@"handle sync event - update queries"];
+
+		[self queueBlock:^{
+			OCCoreItemList *addedItemList   = ((addedItems.count>0)   ? [OCCoreItemList itemListWithItems:addedItems]   : nil);
+			OCCoreItemList *removedItemList = ((removedItems.count>0) ? [OCCoreItemList itemListWithItems:removedItems] : nil);
+			OCCoreItemList *updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
+			NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
+
+			for (OCQuery *query in _queries)
+			{
+				// Queries targeting directories
+				if (query.queryPath != nil)
+				{
+					// Only update queries that have already gone through their complete, initial content update
+					if (query.state == OCQueryStateIdle)
+					{
+						__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
+						__block OCCoreItemList *updatedFullQueryResultsItemList = nil;
+
+						void (^GetUpdatedFullResultsReady)(void) = ^{
+							if (updatedFullQueryResults == nil)
+							{
+								NSMutableArray <OCItem *> *fullQueryResults;
+
+								if ((fullQueryResults = query.fullQueryResults) != nil)
+								{
+									updatedFullQueryResults = [fullQueryResults mutableCopy];
+								}
+								else
+								{
+									updatedFullQueryResults = [NSMutableArray new];
+								}
+							}
+
+							if (updatedFullQueryResultsItemList == nil)
+							{
+								updatedFullQueryResultsItemList = [OCCoreItemList itemListWithItems:updatedFullQueryResults];
+							}
+						};
+
+						if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[query.queryPath].count > 0))
+						{
+							// Items were added in the target path of this query
+							GetUpdatedFullResultsReady();
+
+							for (OCItem *item in addedItemList.itemsByParentPaths[query.queryPath])
+							{
+								[updatedFullQueryResults addObject:item];
+							}
+						}
+
+						if (removedItemList != nil)
+						{
+							if (removedItemList.itemsByParentPaths[query.queryPath].count > 0)
+							{
+								// Items were removed in the target path of this query
+								GetUpdatedFullResultsReady();
+
+								for (OCItem *item in removedItemList.itemsByParentPaths[query.queryPath])
+								{
+									if (item.path != nil)
+									{
+										OCItem *removeItem;
+
+										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
+										{
+											[updatedFullQueryResults removeObject:removeItem];
+										}
+									}
+								}
+							}
+
+							if (removedItemList.itemsByPath[query.queryPath] != nil)
+							{
+								// The target of this query was removed
+								updatedFullQueryResults = [NSMutableArray new];
+								query.state = OCQueryStateTargetRemoved;
+							}
+						}
+
+						if ((updatedItemList != nil) && (query.state != OCQueryStateTargetRemoved))
+						{
+							OCItem *updatedRootItem = nil;
+
+							if (updatedItemList.itemsByParentPaths[query.queryPath].count > 0)
+							{
+								// Items were updated
+								GetUpdatedFullResultsReady();
+
+								for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
+								{
+									if (item.path != nil)
+									{
+										OCItem *removeItem;
+
+										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
+										{
+											[updatedFullQueryResults removeObject:removeItem];
+										}
+
+										[updatedFullQueryResults addObject:item];
+									}
+								}
+							}
+
+							if ((updatedRootItem = updatedItemList.itemsByPath[query.queryPath]) != nil)
+							{
+								// Root item of query was updated
+								query.rootItem = updatedRootItem;
+
+								if (query.includeRootItem)
+								{
+									OCItem *removeItem;
+
+									if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[query.queryPath]) != nil)
+									{
+										[updatedFullQueryResults removeObject:removeItem];
+									}
+
+									[updatedFullQueryResults addObject:updatedRootItem];
+								}
+							}
+						}
+
+						if (updatedFullQueryResults != nil)
+						{
+							query.fullQueryResults = updatedFullQueryResults;
+						}
+					}
+				}
+
+				// Queries targeting items
+				if (query.queryItem != nil)
+				{
+					// Only update queries that have already gone through their complete, initial content update
+					if (query.state == OCQueryStateIdle)
+					{
+						OCPath queryItemPath = query.queryItem.path;
+						OCItem *newQueryItem = nil;
+
+						if (addedItemList!=nil)
+						{
+							if ((newQueryItem = addedItemList.itemsByPath[queryItemPath]) != nil)
+							{
+								query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+							}
+						}
+
+						if (updatedItemList!=nil)
+						{
+							if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+							{
+								query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+							}
+						}
+
+						if (removedItemList!=nil)
+						{
+							if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+							{
+								query.fullQueryResults = [NSMutableArray new];
+								query.state = OCQueryStateTargetRemoved;
+							}
+						}
+					}
+				}
+
+				// Queries targeting sync anchors
+				if ((query.querySinceSyncAnchor != nil) && (syncAnchor!=nil))
+				{
+					if (addedUpdatedRemovedItemList==nil)
+					{
+						addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
+
+						if (addedItemList!=nil)
+						{
+							[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
+						}
+
+						if (updatedItemList!=nil)
+						{
+							[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
+						}
+
+						if (removedItemList!=nil)
+						{
+							[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
+						}
+					}
+
+					query.state = OCQueryStateWaitingForServerReply;
+
+					[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
+
+					query.state = OCQueryStateIdle;
+
+					[query setNeedsRecomputation];
+				}
+			}
+
+			// Signal file provider
+			if (self.postFileProviderNotifications)
+			{
+				NSMutableArray <OCItem *> *changedItems = [NSMutableArray new];
+
+				if (addedItemList.items != nil)
+				{
+					[changedItems addObjectsFromArray:addedItemList.items];
+				}
+
+				if (updatedItemList.items != nil)
+				{
+					[changedItems addObjectsFromArray:updatedItemList.items];
+				}
+
+				if (removedItemList.items != nil)
+				{
+					[changedItems addObjectsFromArray:removedItemList.items];
+				}
+
+				[self signalChangesForItems:changedItems];
+			}
+
+			[self endActivity:@"handle sync event - update queries"];
+		}];
+	}
+
+	// - Fetch updated directory contents as needed
+	if (refreshPaths.count > 0)
+	{
+		for (OCPath path in refreshPaths)
+		{
+			OCPath refreshPath = path;
+
+			if (![refreshPath hasSuffix:@"/"])
+			{
+				refreshPath = [refreshPath stringByAppendingString:@"/"];
+			}
+
+			[self startItemListTaskForPath:refreshPath];
+		}
+	}
 }
 
 #pragma mark - Sync issues utilities

@@ -20,24 +20,42 @@
 
 @implementation OCCoreSyncContext
 
-+ (instancetype)schedulerSetWithSyncRecord:(OCSyncRecord *)syncRecord
++ (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncContext *parameterSet = [OCCoreSyncContext new];
+	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
 
-	parameterSet.syncRecord = syncRecord;
+	syncContext.syncRecord = syncRecord;
 
-	return (parameterSet);
+	return (syncContext);
 }
 
-+ (instancetype)resultHandlerSetWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues
++ (instancetype)schedulerContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncContext *parameterSet = [OCCoreSyncContext new];
+	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
 
-	parameterSet.syncRecord = syncRecord;
-	parameterSet.event = event;
-	parameterSet.issues = issues;
+	syncContext.syncRecord = syncRecord;
 
-	return (parameterSet);
+	return (syncContext);
+}
+
++ (instancetype)descheduleContextWithSyncRecord:(OCSyncRecord *)syncRecord
+{
+	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+
+	syncContext.syncRecord = syncRecord;
+
+	return (syncContext);
+}
+
++ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues
+{
+	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+
+	syncContext.syncRecord = syncRecord;
+	syncContext.event = event;
+	syncContext.issues = issues;
+
+	return (syncContext);
 }
 
 - (void)addIssue:(OCConnectionIssue *)issue

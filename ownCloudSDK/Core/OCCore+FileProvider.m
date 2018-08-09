@@ -80,7 +80,14 @@
 			switch (item.type)
 			{
 				case OCItemTypeFile:
-					[changedDirectoriesFileIDs addObject:item.parentFileID];
+					if (item.parentFileID != nil)
+					{
+						[changedDirectoriesFileIDs addObject:item.parentFileID];
+					}
+					else if ([item.path.parentPath isEqual:@"/"])
+					{
+						addRoot = YES;
+					}
 				break;
 
 				case OCItemTypeCollection:

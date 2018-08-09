@@ -20,14 +20,21 @@
 
 @implementation OCCoreSyncRoute
 
-+ (instancetype)routeWithScheduler:(OCCoreSyncRouteAction)scheduler resultHandler:(OCCoreSyncRouteAction)resultHandler
++ (instancetype)routeWithPreflight:(OCCoreSyncRouteAction)preflight scheduler:(OCCoreSyncRouteAction)scheduler descheduler:(OCCoreSyncRouteAction)descheduler resultHandler:(OCCoreSyncRouteAction)resultHandler
 {
 	OCCoreSyncRoute *route = [OCCoreSyncRoute new];
 
+	route.preflight = preflight;
 	route.scheduler = scheduler;
+	route.descheduler = descheduler;
 	route.resultHandler = resultHandler;
 
 	return (route);
+}
+
++ (instancetype)routeWithScheduler:(OCCoreSyncRouteAction)scheduler resultHandler:(OCCoreSyncRouteAction)resultHandler
+{
+	return ([self routeWithPreflight:nil scheduler:scheduler descheduler:nil resultHandler:resultHandler]);
 }
 
 @end

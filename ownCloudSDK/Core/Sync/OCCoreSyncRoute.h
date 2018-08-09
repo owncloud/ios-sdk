@@ -24,9 +24,12 @@ typedef BOOL(^OCCoreSyncRouteAction)(OCCore *core, OCCoreSyncContext *syncContex
 
 @interface OCCoreSyncRoute : NSObject
 
+@property(copy) OCCoreSyncRouteAction preflight;	//!< Used to preflight an action (i.e. marking an item scheduled for deletion as deleted). Returns YES if pre-flight succeeded, NO (+ an error in OCCoreSyncContext.error) if not.
 @property(copy) OCCoreSyncRouteAction scheduler;	//!< Used to schedule network request(s) for an action. Return YES if scheduling worked. Return NO and possibly an error in OCCoreSyncContext.error if not.
 @property(copy) OCCoreSyncRouteAction resultHandler;	//!< Used to handle the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCConnectionIssue(s) to OCCoreSyncContext.issues where appropriate.
+@property(copy) OCCoreSyncRouteAction descheduler;	//!< Used to perform cleanup at the time a sync record is being descheduled.
 
 + (instancetype)routeWithScheduler:(OCCoreSyncRouteAction)scheduler resultHandler:(OCCoreSyncRouteAction)resultHandler;
++ (instancetype)routeWithPreflight:(OCCoreSyncRouteAction)preflight scheduler:(OCCoreSyncRouteAction)scheduler descheduler:(OCCoreSyncRouteAction)descheduler resultHandler:(OCCoreSyncRouteAction)resultHandler;
 
 @end
