@@ -34,6 +34,14 @@ typedef NS_ENUM(NSInteger, OCItemStatus)
 	OCItemStatusTransient	//!< This item is transient (i.e. the item is a placeholder while its actual content is still uploading to the server)
 };
 
+typedef NS_ENUM(NSInteger, OCItemSyncActivity)
+{
+	OCItemSyncActivityNone,
+	OCItemSyncActivityDeleting 	= (1<<0),	//!< This item is being deleted, or scheduled to be deleted
+	OCItemSyncActivityUploading 	= (1<<1),	//!< This item is being uploaded, or scheduled to be uploaded
+	OCItemSyncActivityDownloading 	= (1<<2)	//!< This item is being downloaded, or scheduled to be downloaded
+};
+
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 {							//   Code	Resource	Description
 	OCItemPermissionShared		= (1<<0), 	//!< Code "S"	File or Folder	is shared
@@ -68,12 +76,13 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
-@property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO)
-@property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status
+
+@property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
+@property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
-@property(strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the rootURL of the vault that stores it
+@property(strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
 @property(assign) BOOL locallyModified; //!< YES if the file at .localURL was created or modified locally. NO if the file at .localURL was downloaded from the server and not modified since.
 
 @property(strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
@@ -87,6 +96,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 
 @property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
+@property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *lastModified; //!< Date of last modification
@@ -98,9 +108,12 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
+#pragma mark - Sync record tools
+- (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
+- (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
+
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
 - (NSData *)serializedData;
 
 @end
-

@@ -43,6 +43,11 @@
 
 - (NSURL *)localURLForItem:(OCItem *)item
 {
+	if (item.localRelativePath != nil)
+	{
+		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+	}
+
 	return ([self.vault localURLForItem:item]);
 }
 

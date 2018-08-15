@@ -64,6 +64,9 @@
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
 
+	[coder encodeObject:_activeSyncRecordIDs forKey:@"activeSyncRecordIDs"];
+	[coder encodeInteger:_syncActivity 	forKey:@"syncActivity"];
+
 	[coder encodeInteger:_size  		forKey:@"size"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
@@ -107,6 +110,9 @@
 		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
+
+		_activeSyncRecordIDs = [decoder decodeObjectOfClass:[NSArray class] forKey:@"activeSyncRecordIDs"];
+		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
 
 		_size = [decoder decodeIntegerForKey:@"size"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
@@ -180,6 +186,64 @@
 	{
 		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
 	}
+}
+
+#pragma mark - Sync record tools
+- (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
+{
+	if (activity != OCItemSyncActivityNone)
+	{
+		self.syncActivity |= activity;
+	}
+
+	if (syncRecordID == nil) { return; }
+
+	[self willChangeValueForKey:@"activeSyncRecordIDs"];
+
+	if (_activeSyncRecordIDs != nil)
+	{
+		if (![_activeSyncRecordIDs isKindOfClass:[NSMutableArray class]])
+		{
+			_activeSyncRecordIDs = [_activeSyncRecordIDs mutableCopy];
+		}
+
+		[(NSMutableArray *)_activeSyncRecordIDs addObject:syncRecordID];
+	}
+	else
+	{
+		_activeSyncRecordIDs = [NSMutableArray arrayWithObject:syncRecordID];
+	}
+
+	[self didChangeValueForKey:@"activeSyncRecordIDs"];
+}
+
+- (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
+{
+	if (activity != OCItemSyncActivityNone)
+	{
+		self.syncActivity &= ~activity;
+	}
+
+	if (syncRecordID == nil) { return; }
+
+	[self willChangeValueForKey:@"activeSyncRecordIDs"];
+
+	if (_activeSyncRecordIDs != nil)
+	{
+		if (![_activeSyncRecordIDs isKindOfClass:[NSMutableArray class]])
+		{
+			_activeSyncRecordIDs = [_activeSyncRecordIDs mutableCopy];
+		}
+
+		[(NSMutableArray *)_activeSyncRecordIDs removeObject:syncRecordID];
+	}
+
+	if (_activeSyncRecordIDs.count == 0)
+	{
+		_activeSyncRecordIDs = nil;
+	}
+
+	[self didChangeValueForKey:@"activeSyncRecordIDs"];
 }
 
 #pragma mark - Description

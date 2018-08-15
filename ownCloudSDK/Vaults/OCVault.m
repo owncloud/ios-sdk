@@ -202,7 +202,13 @@
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
-	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID isDirectory:YES] URLByAppendingPathComponent:item.name isDirectory:NO]);
+	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
+}
+
+- (NSString *)relativePathForItem:(OCItem *)item
+{
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
+	return ([item.fileID stringByAppendingPathComponent:item.name]);
 }
 
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid

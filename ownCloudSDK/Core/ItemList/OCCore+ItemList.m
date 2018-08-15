@@ -188,8 +188,10 @@
 				// Item for this path already in the cache?
 				if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
 				{
-					// Existing local item?
-					if (cacheItem.locallyModified || (cacheItem.localRelativePath!=nil))
+					// Overriding local item?
+					if ((cacheItem.locallyModified && (cacheItem.localRelativePath!=nil)) || // Reason 1: existing local version that's been modified
+  				            (cacheItem.activeSyncRecordIDs.count > 0)				 // Reason 2: item has active sync records
+					   )
 					{
 						// Preserve local item, but merge in info on latest server version
 						cacheItem.remoteItem = retrievedItem;
@@ -569,7 +571,7 @@
 	}
 
 	// File provider signaling
-	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0))
+	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0) && (taskRootItem!=nil))
 	{
 		[self signalChangesForItems:@[ taskRootItem ]];
 	}

@@ -56,7 +56,8 @@
 
 	if ((itemToDelete = syncContext.syncRecord.item) != nil)
 	{
-		itemToDelete.status = OCItemStatusTransient;
+		[itemToDelete addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
 		syncContext.removedItems = @[ itemToDelete ];
 	}
 
@@ -88,7 +89,8 @@
 
 	if ((itemToRestore = syncContext.syncRecord.item) != nil)
 	{
-		itemToRestore.status = OCItemStatusAtRest;
+		[itemToRestore removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
 		itemToRestore.removed = NO;
 
 		syncContext.updatedItems = @[ itemToRestore ];
@@ -110,7 +112,7 @@
 
 	if ((event.error == nil) && (event.result != nil))
 	{
-		syncRecord.item.status = OCItemStatusAtRest;
+		[syncRecord.item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 		syncContext.removedItems = @[ syncRecord.item ];
 
 		canDeleteSyncRecord = YES;
@@ -180,7 +182,7 @@
 				// The item that was supposed to be deleted could not be found on the server
 
 				// => remove item
-				syncRecord.item.status = OCItemStatusAtRest;
+				[syncRecord.item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 				syncContext.removedItems = @[ syncRecord.item ];
 
 				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed

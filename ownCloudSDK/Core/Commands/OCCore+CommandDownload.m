@@ -23,6 +23,8 @@
 #import "OCMacros.h"
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
+#import "OCCore+FileProvider.h"
+#import "OCFile.h"
 
 @implementation OCCore (CommandDownload)
 
@@ -39,14 +41,46 @@
 #pragma mark - Sync Action Registration
 - (void)registerDownload
 {
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+	[self registerSyncRoute:[OCCoreSyncRoute routeWithPreflight:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core preflightDownloadWithSyncContext:syncContext]);
+	} scheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core scheduleDownloadWithSyncContext:syncContext]);
+	} descheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
+		return ([core descheduleDownloadWithSyncContext:syncContext]);
 	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
 		return ([core handleDownloadWithSyncContext:syncContext]);
 	}] forAction:OCSyncActionDownload];
 }
 
 #pragma mark - Sync
+- (BOOL)preflightDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+{
+	OCItem *item;
+
+	if ((item = syncContext.syncRecord.item) != nil)
+	{
+		[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+
+		syncContext.updatedItems = @[ item ];
+	}
+
+	return (YES);
+}
+
+- (BOOL)descheduleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+{
+	OCItem *item;
+
+	if ((item = syncContext.syncRecord.item) != nil)
+	{
+		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+
+		syncContext.updatedItems = @[ item ];
+	}
+
+	return (YES);
+}
+
 - (BOOL)scheduleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
@@ -112,30 +146,56 @@
 - (BOOL)handleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
+	OCFile *downloadedFile = event.file;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
 	OCItem *item = syncRecord.parameters[OCSyncActionParameterItem];
+	NSError *downloadError = event.error;
 
 	// TODO: Check for newer local version (=> throw away downloaded file or ask user)
 	// TODO: Validate checksum of downloaded file
 	// TODO: In case of errors, offer a retry option
 	// TODO: If everything's GO => update item metadata with info on local copy of file, add 1 minute retainer, so other parts of the app have a chance to add their retainers as well to keep the file around
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self, item, event.file);
-	}
-
 	if ((event.error == nil) && (event.file != nil) && (item != nil))
 	{
-		syncContext.updatedItems = @[ item ];
+		NSError *error = nil;
+		NSURL *vaultItemURL = [self.vault localURLForItem:item];
+
+		[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemURL.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:NULL];
+
+		if ([[NSFileManager defaultManager] fileExistsAtPath:vaultItemURL.path])
+		{
+			[[NSFileManager defaultManager] removeItemAtURL:vaultItemURL error:&error];
+		}
+		if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
+		{
+			item.localRelativePath = [self.vault relativePathForItem:item];
+			downloadedFile.url = vaultItemURL;
+		}
+
+		if (error != nil)
+		{
+			downloadError = error;
+		}
+		else
+		{
+			[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+			syncContext.updatedItems = @[ item ];
+		}
 
 		canDeleteSyncRecord = YES;
 	}
-	else if (event.error != nil)
+
+	if (downloadError != nil)
 	{
 		// Create cancellation issue for any errors (TODO: extend options to include "Retry")
 		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+	}
+
+	if (syncRecord.resultHandler != nil)
+	{
+		syncRecord.resultHandler(downloadError, self, item, downloadedFile);
 	}
 
 	return (canDeleteSyncRecord);
