@@ -20,6 +20,18 @@
 
 @implementation OCExtensionManager
 
++ (OCExtensionManager *)sharedExtensionManager
+{
+	static dispatch_once_t onceToken;
+	static OCExtensionManager *sharedExtensionManager;
+
+	dispatch_once(&onceToken, ^{
+		sharedExtensionManager = [OCExtensionManager new];
+	});
+
+	return (sharedExtensionManager);
+}
+
 - (void)addExtension:(OCExtension *)extension
 {
 }
@@ -28,7 +40,7 @@
 {
 }
 
-- (void)provideExtensionsForRequest:(OCExtensionContext *)request completionHandler:(void(^)(NSError *error, NSArray <OCExtension *> *))completionHandler
+- (void)provideExtensionsForContext:(OCExtensionContext *)context maximumCount:(NSUInteger)maximumCount completionHandler:(void(^)(NSError *error, NSArray <OCExtension *> *))completionHandler
 {
 }
 

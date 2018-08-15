@@ -23,11 +23,13 @@
 
 @interface OCExtensionManager : NSObject
 
+@property(strong,readonly,class,nonatomic) OCExtensionManager *sharedExtensionManager;
+
 @property(strong,readonly) NSArray <OCExtension *> *extensions;
 
 - (void)addExtension:(OCExtension *)extension;
 - (void)removeExtension:(OCExtension *)extension;
 
-- (void)provideExtensionsForRequest:(OCExtensionContext *)request maximumCount:(NSUInteger)maximumCount completionHandler:(void(^)(NSError *error, NSArray <OCExtension *> *))completionHandler;
+- (void)provideExtensionsForContext:(OCExtensionContext *)context maximumCount:(NSUInteger)maximumCount completionHandler:(void(^)(NSError *error, NSArray <OCExtension *> *))completionHandler;
 
 @end
