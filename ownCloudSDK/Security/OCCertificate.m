@@ -48,7 +48,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 			userAcceptedCertificates = [NSKeyedUnarchiver unarchiveObjectWithData:storedUserAcceptedCertificatesData];
 		}
 		
-		// Alternatively, create an empty array
+		// Alternatively, create an empty set
 		if (userAcceptedCertificates == nil)
 		{
 			userAcceptedCertificates = [NSMutableSet new];

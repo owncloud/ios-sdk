@@ -710,6 +710,8 @@
 				}
 			}
 
+			request = [self requestForTask:task];
+
 			OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed, NSError *error) {
 				if (proceed)
 				{
@@ -722,7 +724,7 @@
 				}
 			};
 
-			if ((request = [self requestForTask:task]) != nil)
+			if (request != nil)
 			{
 				[self evaluateCertificate:certificate forRequest:request proceedHandler:proceedHandler];
 			}
@@ -836,7 +838,7 @@
 		{
 			if ([[self uuidForBackgroundSessionIdentifier:backgroundSessionIdentifier] isEqual:uuid])
 			{
-				if ([self backgroundSessionOriginatesLocallyForIdentifier:backgroundSessionIdentifier])
+				if (![self backgroundSessionOriginatesLocallyForIdentifier:backgroundSessionIdentifier])
 				{
 					if (otherBackgroundSessionIdentifiers == nil) { otherBackgroundSessionIdentifiers = [NSMutableArray new]; }
 

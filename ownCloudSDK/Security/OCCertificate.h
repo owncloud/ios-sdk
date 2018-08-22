@@ -63,7 +63,7 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 @property(strong,readonly) NSDate *userAcceptedDate; //!< The date the user accepted the OCCertificate.
 
 #pragma mark - User accepted certificates
-+ (NSArray <OCCertificate *> *)userAcceptedCertificates; //!< Collection of all certificates accepted by users.
+@property(strong,readonly,class,nonatomic) NSArray <OCCertificate *> *userAcceptedCertificates; //!< Collection of all certificates accepted by users.
 
 #pragma mark - Initializers
 + (instancetype)certificateWithCertificateRef:(SecCertificateRef)certificateRef hostName:(NSString *)hostName;

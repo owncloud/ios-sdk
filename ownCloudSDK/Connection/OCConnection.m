@@ -192,12 +192,7 @@
 	{
 		if (_bookmark.certificate != nil)
 		{
-			fulfillsBookmarkRequirements = NO;
-
-			if ([_bookmark.certificate isEqual:certificate])
-			{
-				fulfillsBookmarkRequirements = YES;
-			}
+			fulfillsBookmarkRequirements = [_bookmark.certificate isEqual:certificate];
 		}
 	}
 
@@ -208,37 +203,43 @@
 	}
 	else
 	{
-		if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
+		if (proceedHandler != nil)
 		{
-			// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
-			if (proceedHandler != nil)
+			NSError *errorIssue = nil;
+			BOOL doProceed = NO, changeUserAccepted = NO;
+
+			if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
 			{
-				NSError *errorIssue = nil;
+				// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
+				doProceed = fulfillsBookmarkRequirements;
+			}
+			else
+			{
+				// Default to safe option: reject
+				changeUserAccepted = (validationResult == OCCertificateValidationResultPromptUser);
+				doProceed = NO;
+			}
 
-				if (!fulfillsBookmarkRequirements)
-				{
-					errorIssue = OCError(OCErrorRequestServerCertificateRejected);
+			if (!doProceed)
+			{
+				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
-					// Embed issue
-					errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-						if (decision == OCConnectionIssueDecisionApprove)
+				// Embed issue
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+					if (decision == OCConnectionIssueDecisionApprove)
+					{
+						if (changeUserAccepted)
 						{
-							_bookmark.certificate = request.responseCertificate;
-							_bookmark.certificateModificationDate = [NSDate date];
+							certificate.userAccepted = YES;
 						}
-					}]];
-				}
 
-				proceedHandler(fulfillsBookmarkRequirements, errorIssue);
+						_bookmark.certificate = request.responseCertificate;
+						_bookmark.certificateModificationDate = [NSDate date];
+					}
+				}]];
 			}
-		}
-		else
-		{
-			// Default to safe option: reject
-			if (proceedHandler != nil)
-			{
-				proceedHandler(NO, nil);
-			}
+
+			proceedHandler(doProceed, errorIssue);
 		}
 	}
 }
@@ -361,8 +362,15 @@
 				if (error != nil)
 				{
 					// An error occured
+					OCConnectionIssue *issue = error.embeddedIssue;
+
+					if (issue == nil)
+					{
+						issue = [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil];
+					}
+
 					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
-					completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+					completionHandler(error, issue);
 					resultHandler(request, error);
 				}
 			};
