@@ -23,6 +23,8 @@
 #import "OCSQLiteMigration.h"
 #import "OCSQLiteTableSchema.h"
 
+#import "OCExtension+License.h"
+
 #define IsSQLiteError(error) [error.domain isEqualToString:OCSQLiteErrorDomain]
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
 
@@ -32,6 +34,11 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 
 @synthesize databaseURL = _databaseURL;
 @synthesize maxBusyRetryTimeInterval = _maxBusyRetryTimeInterval;
+
++ (void)load
+{
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.ISRunLoopThread" bundleOfClass:[OCRunLoopThread class] title:@"ISRunLoopThread" resourceName:@"ISRunLoopThread" fileExtension:@"LICENSE"]];
+}
 
 + (BOOL)allowConcurrentFileAccess
 {

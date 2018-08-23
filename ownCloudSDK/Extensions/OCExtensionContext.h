@@ -23,6 +23,12 @@
 
 @property(strong) OCExtensionLocation *location; //!< The type and location of the extension(s) that suit this context.
 
-@property(strong) OCExtensionRequirements requirements; //!< Optional requirements that extension(s) must meet to suit the context.
+@property(strong) OCExtensionRequirements requirements; //!< If specified: requirements that extension(s) must meet to suit the context.
+
+@property(strong) OCExtensionRequirements preferences; //!< If specified: "soft" version of .requirements. If met, increases the priority of the match. Extensions not meeting preferences will still be included, just rank lower.
+
+@property(strong) NSError *error; //!< Any error occuring in an extension while trying to provide the object
+
++ (instancetype)contextWithLocation:(OCExtensionLocation *)location requirements:(OCExtensionRequirements)requirements preferences:(OCExtensionRequirements)preferences;
 
 @end

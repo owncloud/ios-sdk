@@ -1,8 +1,8 @@
 //
-//  OCExtensionLocation.m
+//  OCExtensionMatch.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 15.08.18.
+//  Created by Felix Schwarz on 23.08.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,19 @@
  *
  */
 
-#import "OCExtensionLocation.h"
+#import "OCExtensionMatch.h"
 
-@implementation OCExtensionLocation
+@implementation OCExtensionMatch
 
-+ (instancetype)locationOfType:(OCExtensionType)type identifier:(OCExtensionLocationIdentifier)identifier
+- (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority
 {
-	OCExtensionLocation *location = [self new];
+	if ((self = [super init]) != nil)
+	{
+		_extension = extension;
+		_priority = priority;
+	}
 
-	location.type = type;
-	location.identifier = identifier;
-
-	return (location);
+	return(self);
 }
 
 @end

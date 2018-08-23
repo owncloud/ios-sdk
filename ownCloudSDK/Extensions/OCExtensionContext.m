@@ -20,4 +20,15 @@
 
 @implementation OCExtensionContext
 
++ (instancetype)contextWithLocation:(OCExtensionLocation *)location requirements:(OCExtensionRequirements)requirements preferences:(OCExtensionRequirements)preferences
+{
+	OCExtensionContext *context = [OCExtensionContext new];
+
+	context.location = location;
+	context.requirements = requirements;
+	context.preferences = preferences;
+
+	return (context);
+}
+
 @end

@@ -1,8 +1,8 @@
 //
-//  OCExtensionLocation.h
+//  OCExtensionMatch.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 15.08.18.
+//  Created by Felix Schwarz on 23.08.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,14 +17,13 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCExtensionTypes.h"
+#import "OCExtension.h"
 
-@interface OCExtensionLocation : NSObject
+@interface OCExtensionMatch : NSObject
 
-@property(strong) OCExtensionType type; //!< The type of extension.
+@property(strong,readonly) OCExtension *extension; //!< A matching extension
+@property(assign,readonly) OCExtensionPriority priority; //!< The priority with which the extension matched
 
-@property(strong) OCExtensionLocationIdentifier identifier; //!< Identifier uniquely identifying a particular location in the app / SDK.
-
-+ (instancetype)locationOfType:(OCExtensionType)type identifier:(OCExtensionLocationIdentifier)identifier;
+- (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority;
 
 @end

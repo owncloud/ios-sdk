@@ -21,6 +21,10 @@
 #import "OCExtensionLocation.h"
 #import "OCExtensionContext.h"
 
+@class OCExtension;
+
+typedef id(^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContext *context, NSError **outError);
+
 @interface OCExtension : NSObject
 
 @property(strong) OCExtensionType type;	//!< The type of extension.
@@ -28,12 +32,16 @@
 @property(strong) NSArray<OCExtensionLocation *> *locations; //!< (optional) array of locations this extension is limited to
 
 @property(strong) OCExtensionIdentifier identifier; //!< Identifier uniquely identifying the extension.
-@property(strong) OCExtensionPriority priority; //!< Priority of the extension in comparison to others. Smaller values rank higher. Value is used by default by -matchesContext:
+@property(assign) OCExtensionPriority priority; //!< Priority of the extension in comparison to others. Larger values rank higher. Value is used by default by -matchesContext:
 
-@property(strong) OCExtensionRequirements satisfiedRequirements; //!< Requirements this extension satisfies
+@property(strong) OCExtensionRequirements features; //!< Requirements this extension satisfies
+
+@property(copy) OCExtensionObjectProvider objectProvider; //!< Block to provide the object to return for calls to -provideObjectForContext:error:.
+
++ (instancetype)extensionWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
 
 - (OCExtensionPriority)matchesContext:(OCExtensionContext *)context; //!< Returns the priority with which the extension meets the context's criteria. Returns nil if it does not meet the criteria.
 
-- (id)provideObjectForContext:(OCExtensionContext *)context error:(NSError **)outError; //!< Provides the object (usually a new instance of whatever the extension implements) for the provided context. Returns any errors in outError.
+- (id)provideObjectForContext:(OCExtensionContext *)context; //!< Provides the object (usually a new instance of whatever the extension implements) for the provided context. Returns any errors in outError.
 
 @end

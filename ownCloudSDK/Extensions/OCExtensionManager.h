@@ -20,16 +20,22 @@
 #import "OCExtensionTypes.h"
 #import "OCExtension.h"
 #import "OCExtensionContext.h"
+#import "OCExtensionMatch.h"
 
 @interface OCExtensionManager : NSObject
+{
+	NSMutableArray <OCExtension *> *_extensions;
+	NSArray <OCExtension *> *_cachedExtensions;
+}
 
 @property(strong,readonly,class,nonatomic) OCExtensionManager *sharedExtensionManager;
 
-@property(strong,readonly) NSArray <OCExtension *> *extensions;
+@property(strong,readonly,nonatomic) NSArray <OCExtension *> *extensions;
 
 - (void)addExtension:(OCExtension *)extension;
 - (void)removeExtension:(OCExtension *)extension;
 
-- (void)provideExtensionsForContext:(OCExtensionContext *)context maximumCount:(NSUInteger)maximumCount completionHandler:(void(^)(NSError *error, NSArray <OCExtension *> *))completionHandler;
+- (NSArray <OCExtensionMatch *> *)provideExtensionsForContext:(OCExtensionContext *)context error:(NSError **)outError; //!< Matches extensions against a given context. Extensions with higher priority rank first.
+- (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError *error, OCExtensionContext *context, NSArray <OCExtensionMatch *> *))completionHandler; //!< Async matching of extensions against a given context. Expect the completionHandler to be called on a different thread. Prefer this API over -provideExtensionsForContext:error: whenever feasible.
 
 @end
