@@ -94,3 +94,5 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 - (NSData *)sha256Fingerprint;
 
 @end
+
+extern NSNotificationName OCCertificateUserAcceptanceDidChangeNotification;

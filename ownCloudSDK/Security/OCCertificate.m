@@ -387,6 +387,8 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 			}
 		}];
 	}
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCCertificateUserAcceptanceDidChangeNotification object:self];
 }
 
 - (NSDate *)userAcceptedDate
@@ -638,3 +640,5 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 }
 
 @end
+
+NSNotificationName OCCertificateUserAcceptanceDidChangeNotification = @"OCCertificateUserAcceptanceDidChangeNotification";
