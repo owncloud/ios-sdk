@@ -296,19 +296,22 @@
 										INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
 
 										// Add syncAnchor column
-										[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE metaData ADD COLUMN privateLink TEXT NOT NULL" resultHandler:resultHandler]];
-										if (transactionError != nil) { return(transactionError); }
+										[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE metaData ADD COLUMN privateLink TEXT" resultHandler:resultHandler]];
+										if (transactionError != nil) {
+											return(transactionError);
+											
+										}
 
 										// Populate fileID column
-										[db executeQuery:[OCSQLiteQuery querySelectingColumns:@[@"itemData", @"privateLink"] fromTable:OCDatabaseTableNameMetaData where:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+										[db executeQuery:[OCSQLiteQuery querySelectingColumns:@[@"mdID", @"itemData"] fromTable:OCDatabaseTableNameMetaData where:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 											[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *, id> *rowDictionary, BOOL *stop) {
 												OCItem *item;
 
 												if ((item = [OCItem itemFromSerializedData:rowDictionary[@"itemData"]]) != nil)
 												{
-													if (rowDictionary[@"privateLink"] != nil)
+													if (rowDictionary[@"mID"] != nil)
 													{
-														[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:rowDictionary[@"privateLink"]
+														[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:rowDictionary[@"mID"]
 																									   inTable:OCDatabaseTableNameMetaData
 																								 withRowValues:@{
 																												 @"privateLink" : item.privateLink
