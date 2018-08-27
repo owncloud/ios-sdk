@@ -70,6 +70,8 @@
 	[coder encodeObject:_shares		forKey:@"shares"];
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
+
+	[coder encodeObject:_privateLink forKey:@"privateLink"];
 }
 
 #pragma mark - Init & Dealloc
@@ -114,6 +116,8 @@
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
+
+		_privateLink = [decoder decodeObjectOfClass:[NSString class] forKey:@"privateLink"];
 	}
 
 	return (self);

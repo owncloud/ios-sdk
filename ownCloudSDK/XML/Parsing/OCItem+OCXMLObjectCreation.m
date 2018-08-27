@@ -126,7 +126,14 @@
 
 					item.permissions = permissions;
 				}
-			} copy]
+			} copy],
+
+			@"oc:privatelink" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.privateLink = [NSURL URLWithString:value];
+				}
+			} copy],
 		};
 	});
 

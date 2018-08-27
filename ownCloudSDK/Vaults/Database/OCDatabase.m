@@ -154,7 +154,8 @@
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
 			@"fileID"		: item.fileID,
-			@"itemData"		: [item serializedData]
+			@"itemData"		: [item serializedData],
+			@"privateLink"	: [item.privateLink absoluteString]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
 		}]];
@@ -183,7 +184,8 @@
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
 				@"fileID"		: item.fileID,
-				@"itemData"		: [item serializedData]
+				@"itemData"		: [item serializedData],
+				@"privateLink"	: [item.privateLink absoluteString]
 			} completionHandler:nil]];
 		}
 		else

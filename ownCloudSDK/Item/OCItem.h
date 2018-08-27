@@ -96,6 +96,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
+@property(strong) NSURL *privateLink; //!< Private link of the item
+
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
 - (NSData *)serializedData;
