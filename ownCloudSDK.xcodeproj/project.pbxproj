@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		23870BEE21351CD700777DF8 /* ItemTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 23870BED21351CD700777DF8 /* ItemTests.m */; };
+		23870BF02135434D00777DF8 /* privateLinkFilesResponse.xml in Resources */ = {isa = PBXBuildFile; fileRef = 23870BEF2135434D00777DF8 /* privateLinkFilesResponse.xml */; };
 		DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */; };
 		DC02835B209098D7005B6334 /* OCImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC028359209098D7005B6334 /* OCImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -367,10 +369,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodBasicAuth+OCMocking.h"; sourceTree = "<group>"; };
-		DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodBasicAuth+OCMocking.m"; sourceTree = "<group>"; };
+		23870BED21351CD700777DF8 /* ItemTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ItemTests.m; sourceTree = "<group>"; };
+		23870BEF2135434D00777DF8 /* privateLinkFilesResponse.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = privateLinkFilesResponse.xml; sourceTree = "<group>"; };
 		590CCF3D20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		590CCF3E20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodBasicAuth+OCMocking.h"; sourceTree = "<group>"; };
+		DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodBasicAuth+OCMocking.m"; sourceTree = "<group>"; };
 		DC028359209098D7005B6334 /* OCImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCImage.h; sourceTree = "<group>"; };
 		DC02835A209098D7005B6334 /* OCImage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCImage.m; sourceTree = "<group>"; };
 		DC0283612090A3E8005B6334 /* OCItemThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemThumbnail.h; sourceTree = "<group>"; };
@@ -1347,11 +1351,13 @@
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
 				DC72E4342063DF5C00189B9A /* SettingsTests.m */,
 				DC4AFAAC206A7FDB00189B9A /* SQLTests.m */,
+				23870BED21351CD700777DF8 /* ItemTests.m */,
 				DC72E4362063DF7700189B9A /* customSettings.plist */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 				DCC6563C20C979FB00110A97 /* TestTools.m */,
 				DCC6563B20C979FB00110A97 /* TestTools.h */,
+				23870BEF2135434D00777DF8 /* privateLinkFilesResponse.xml */,
 			);
 			path = ownCloudSDKTests;
 			sourceTree = "<group>";
@@ -1765,6 +1771,7 @@
 			files = (
 				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
+				23870BF02135434D00777DF8 /* privateLinkFilesResponse.xml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1922,6 +1929,7 @@
 				DC72E4352063DF5C00189B9A /* SettingsTests.m in Sources */,
 				DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */,
 				DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */,
+				23870BEE21351CD700777DF8 /* ItemTests.m in Sources */,
 				DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */,
 				DC72E41F206166C500189B9A /* OCHostSimulatorResponse.m in Sources */,
 				DC39DC4E2041B53000189B9A /* AuthenticationTests.m in Sources */,
