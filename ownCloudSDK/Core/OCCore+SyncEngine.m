@@ -20,7 +20,7 @@
 #import "OCCore+Internal.h"
 #import "NSError+OCError.h"
 #import "OCLogger.h"
-#import "OCCoreSyncRoute.h"
+#import "OCCoreSyncAction.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
 #import "NSString+OCParentPath.h"
@@ -28,6 +28,11 @@
 #import "OCCoreSyncContext.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
+
+#import "OCCoreSyncActionCopyMove.h"
+#import "OCCoreSyncActionCreateFolder.h"
+#import "OCCoreSyncActionDelete.h"
+#import "OCCoreSyncActionDownload.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -113,18 +118,28 @@
 	return(nil); // Stub implementation
 }
 
-#pragma mark - Sync Engine Routes
-- (void)registerSyncRoutes
+#pragma mark - Sync Engine Actions
+- (void)registerSyncActions
 {
 	NSArray<OCSyncAction> *syncActions = @[
-		OCSyncActionDeleteLocal,
+		// OCSyncActionDeleteLocal,
 		OCSyncActionDeleteRemote,
-		OCSyncActionMove,
-		OCSyncActionCopy,
-		OCSyncActionCreateFolder,
+		// OCSyncActionMove,
+		// OCSyncActionCopy,
+		// OCSyncActionCreateFolder,
 		OCSyncActionUpload,
-		OCSyncActionDownload
+		// OCSyncActionDownload
 	];
+
+	OCCoreSyncAction *copyMoveSyncAction = [OCCoreSyncActionCopyMove new];
+
+	[self registerSyncAction:copyMoveSyncAction forAction:OCSyncActionCopy];
+	[self registerSyncAction:copyMoveSyncAction forAction:OCSyncActionMove];
+
+	[self registerSyncAction:[OCCoreSyncActionCreateFolder new] forAction:OCSyncActionCreateFolder];
+
+	[self registerSyncAction:[OCCoreSyncActionDelete new] forAction:OCSyncActionDeleteLocal];
+	[self registerSyncAction:[OCCoreSyncActionDownload new] forAction:OCSyncActionDownload];
 
 	for (OCSyncAction syncAction in syncActions)
 	{
@@ -144,9 +159,11 @@
 	}
 }
 
-- (void)registerSyncRoute:(OCCoreSyncRoute *)syncRoute forAction:(OCSyncAction)syncAction
+- (void)registerSyncAction:(OCCoreSyncAction *)coreSyncAction forAction:(OCSyncAction)syncAction
 {
-	_syncRoutesByAction[syncAction] = syncRoute;
+	coreSyncAction.core = self;
+
+	_syncActionsByAction[syncAction] = coreSyncAction;
 }
 
 #pragma mark - Sync Record Scheduling
@@ -182,26 +199,18 @@
 		{
 			if (record.action != nil)
 			{
-				OCCoreSyncRoute *syncRoute;
+				OCCoreSyncAction *syncAction;
 
-				if ((syncRoute = _syncRoutesByAction[record.action]) != nil)
+				if ((syncAction = _syncActionsByAction[record.action]) != nil)
 				{
-					if (syncRoute.preflight != nil)
+					if ([syncAction implements:@selector(preflightWithContext:)])
 					{
 						OCCoreSyncContext *syncContext;
 
 						if ((syncContext = [OCCoreSyncContext preflightContextWithSyncRecord:record]) != nil)
 						{
-							// Retrieve existing records for same action/path combination
-							if (record.itemPath != nil)
-							{
-								[self.vault.database retrieveSyncRecordsForPath:record.itemPath action:record.action inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-									syncContext.existingRecords = syncRecords;
-								}];
-							}
-
 							// Run pre-flight
-							syncRoute.preflight(self, syncContext);
+							[syncAction preflightWithContext:syncContext];
 
 							// Perform any preflight-triggered updates
 							[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
@@ -209,6 +218,11 @@
 							if (syncContext.removeRecords != nil)
 							{
 								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+							}
+
+							if (syncContext.updateStoredSyncRecordAfterItemUpdates)
+							{
+								[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
 							}
 
 							blockError = syncContext.error;
@@ -220,6 +234,23 @@
 
 		return (blockError);
 	} completionHandler:^(NSError *error) {
+		if (error != nil)
+		{
+			// Error during pre-flight
+			if (record.recordID != nil)
+			{
+				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
+				[self.vault.database removeSyncRecords:@[ record ] completionHandler:nil];
+			}
+
+			if (record.resultHandler != nil)
+			{
+				// Call result handler
+				record.resultHandler(error, self, record.item, record);
+				record.resultHandler = nil;
+			}
+		}
+
 		[self setNeedsToProcessSyncRecords];
 	}];
 }
@@ -273,18 +304,18 @@
 
 		if (syncRecord.action != nil)
 		{
-			OCCoreSyncRoute *syncRoute;
+			OCCoreSyncAction *syncAction;
 
-			if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
+			if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
 			{
-				if (syncRoute.descheduler != nil)
+				if ([syncAction implements:@selector(descheduleWithContext:)])
 				{
 					OCCoreSyncContext *syncContext;
 
 					if ((syncContext = [OCCoreSyncContext descheduleContextWithSyncRecord:syncRecord]) != nil)
 					{
 						// Run descheduler
-						syncRoute.descheduler(self, syncContext);
+						[syncAction descheduleWithContext:syncContext];
 
 						// Perform any descheduler-triggered updates
 						[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
@@ -344,8 +375,6 @@
 		__block NSError *blockError = nil;
 
 		[self.vault.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-			NSMutableSet <OCPath> *busyPaths = [NSMutableSet new];
-
 			if (error != nil)
 			{
 				blockError = error;
@@ -356,7 +385,6 @@
 			{
 				BOOL couldSchedule = NO;
 				NSError *scheduleError = nil;
-				OCPath itemPath;
 
 				// Remove cancelled sync records
 				if (syncRecord.progress.cancelled)
@@ -375,31 +403,7 @@
 					continue;
 				}
 
-				// Check for older sync records that haven't yet been processed
-				if ((itemPath = syncRecord.itemPath) != nil)
-				{
-					OCPath parentPath = nil;
-
-					if ([busyPaths containsObject:itemPath])
-					{
-						// A previous sync record for the same path exists, skip
-						continue;
-					}
-
-					[busyPaths addObject:itemPath];
-
-					parentPath = [itemPath parentPath];
-
-					if ([busyPaths containsObject:parentPath])
-					{
-						// A previous sync record for the parent directory exists, skip
-						continue;
-					}
-
-					[busyPaths addObject:parentPath];
-				}
-
-				// Skip sync records that are already in processing
+				// Handle sync records that are already in processing
 				if (syncRecord.inProgressSince != nil)
 				{
 					if (syncRecord.blockedByDifferentCopyOfThisProcess && syncRecord.allowsRescheduling)
@@ -409,8 +413,8 @@
 					}
 					else
 					{
-						// Skip
-						continue;
+						// Wait until that sync record has finished processing
+						break;
 					}
 				}
 
@@ -424,16 +428,16 @@
 				// Schedule actions
 				if (syncRecord.action != nil)
 				{
-					OCCoreSyncRoute *syncRoute;
+					OCCoreSyncAction *syncAction;
 
-					if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
+					if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
 					{
 						// Schedule the record using the route for its sync action
-						OCCoreSyncContext *parameterSet = [OCCoreSyncContext schedulerContextWithSyncRecord:syncRecord];
+						OCCoreSyncContext *syncContext = [OCCoreSyncContext schedulerContextWithSyncRecord:syncRecord];
 
-						couldSchedule = syncRoute.scheduler(self, parameterSet);
+						couldSchedule = [syncAction scheduleWithContext:syncContext];
 
-						scheduleError = parameterSet.error;
+						scheduleError = syncContext.error;
 					}
 					else
 					{
@@ -507,15 +511,15 @@
 		// Handle sync record
 		if ((syncRecord != nil) && (syncRecord.action != nil))
 		{
-			OCCoreSyncRoute *syncRoute = nil;
+			OCCoreSyncAction *syncAction = nil;
 			OCCoreSyncContext *syncContext = nil;
 
 			// Dispatch to result handlers
-			if ((syncRoute = _syncRoutesByAction[syncRecord.action]) != nil)
+			if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
 			{
 				syncContext = [OCCoreSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
 
-				syncRecordActionCompleted = syncRoute.resultHandler(self, syncContext);
+				syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
 
 				if (syncContext.issues != 0)
 				{
@@ -592,15 +596,15 @@
 			OCLogWarning(@"Unhandled sync event %@ from %@", OCLogPrivate(event), sender);
 		}
 
-		// Trigger handling of any remaining sync events
-		[self setNeedsToProcessSyncRecords];
-
 		return (error);
 	} completionHandler:^(NSError *error) {
 		if (error != nil)
 		{
 			OCLogError(@"Sync Engine: error processing event %@ from %@: %@", OCLogPrivate(event), sender, error);
 		}
+
+		// Trigger handling of any remaining sync records
+		[self setNeedsToProcessSyncRecords];
 
 		[self endActivity:@"handle sync event"];
 	}];

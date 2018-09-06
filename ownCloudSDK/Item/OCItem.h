@@ -39,7 +39,8 @@ typedef NS_ENUM(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityNone,
 	OCItemSyncActivityDeleting 	= (1<<0),	//!< This item is being deleted, or scheduled to be deleted
 	OCItemSyncActivityUploading 	= (1<<1),	//!< This item is being uploaded, or scheduled to be uploaded
-	OCItemSyncActivityDownloading 	= (1<<2)	//!< This item is being downloaded, or scheduled to be downloaded
+	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
+	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -94,6 +95,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
 @property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
+@property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
 @property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
@@ -108,6 +110,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
++ (instancetype)placeholderItemOfType:(OCItemType)type;
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
@@ -117,3 +121,6 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 - (NSData *)serializedData;
 
 @end
+
+extern OCFileID   OCFileIDPlaceholderPrefix; //!< FileID placeholder prefix for items that are not in sync with the server, yet
+extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items that are not in sync with the server, yet

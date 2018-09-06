@@ -21,6 +21,18 @@
 
 @implementation OCItem
 
++ (instancetype)placeholderItemOfType:(OCItemType)type
+{
+	OCItem *item = [OCItem new];
+
+	item.type = type;
+
+	item.eTag = OCFileETagPlaceholder;
+	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
+
+	return (item);
+}
+
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
 {
@@ -153,6 +165,11 @@
 	return (_versionIdentifier);
 }
 
+- (BOOL)isPlaceholder
+{
+	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
+}
+
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
 	if (_thumbnailAvailability == OCItemThumbnailAvailabilityInternal)
@@ -235,7 +252,10 @@
 			_activeSyncRecordIDs = [_activeSyncRecordIDs mutableCopy];
 		}
 
-		[(NSMutableArray *)_activeSyncRecordIDs removeObject:syncRecordID];
+		if ([_activeSyncRecordIDs containsObject:syncRecordID])
+		{
+			[(NSMutableArray *)_activeSyncRecordIDs removeObject:syncRecordID];
+		}
 	}
 
 	if (_activeSyncRecordIDs.count == 0)
@@ -253,3 +273,6 @@
 }
 
 @end
+
+OCFileID   OCFileIDPlaceholderPrefix = @"_placeholder_";
+OCFileETag OCFileETagPlaceholder = @"_placeholder_";

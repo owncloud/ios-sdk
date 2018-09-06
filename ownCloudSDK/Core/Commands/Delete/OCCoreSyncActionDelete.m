@@ -1,8 +1,8 @@
 //
-//  OCCore+CommandDelete.m
+//  OCCoreSyncActionDelete.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 16.06.18.
+//  Created by Felix Schwarz on 06.09.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,41 +16,11 @@
  *
  */
 
-#import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
+#import "OCCoreSyncActionDelete.h"
 
-@implementation OCCore (CommandDelete)
+@implementation OCCoreSyncActionDelete
 
-#pragma mark - Command
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterRequireMatch : @(requireMatch),
-		} resultHandler:resultHandler]);
-}
-
-#pragma mark - Sync Action Registration
-- (void)registerDeleteLocal
-{
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithPreflight:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core preflightDeleteLocalWithSyncContext:syncContext]);
-	} scheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core scheduleDeleteLocalWithSyncContext:syncContext]);
-	} descheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core descheduleDeleteLocalWithSyncContext:syncContext]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core handleDeleteLocalWithSyncContext:syncContext]);
-	}] forAction:OCSyncActionDeleteLocal];
-}
-
-#pragma mark - Sync
-- (BOOL)preflightDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+- (void)preflightWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *itemToDelete;
 
@@ -60,30 +30,9 @@
 
 		syncContext.removedItems = @[ itemToDelete ];
 	}
-
-	return (YES);
 }
 
-- (BOOL)scheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
-{
-	OCItem *item;
-
-	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
-	{
-		NSProgress *progress;
-
-		if ((progress = [self.connection deleteItem:item requireMatch:((NSNumber *)syncContext.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
-		{
-			[syncContext.syncRecord addProgress:progress];
-
-			return (YES);
-		}
-	}
-
-	return (NO);
-}
-
-- (BOOL)descheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+- (void)descheduleWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *itemToRestore;
 
@@ -95,11 +44,28 @@
 
 		syncContext.updatedItems = @[ itemToRestore ];
 	}
-
-	return (YES);
 }
 
-- (BOOL)handleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)scheduleWithContext:(OCCoreSyncContext *)syncContext
+{
+	OCItem *item;
+
+	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
+	{
+		NSProgress *progress;
+
+		if ((progress = [self.core.connection deleteItem:item requireMatch:((NSNumber *)syncContext.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
+		{
+			[syncContext.syncRecord addProgress:progress];
+
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+- (BOOL)handleResultWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
@@ -107,7 +73,7 @@
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(event.error, self, syncRecord.item, event.result);
+		syncRecord.resultHandler(event.error, self.core, syncRecord.item, event.result);
 	}
 
 	if ((event.error == nil) && (event.result != nil))
@@ -134,12 +100,12 @@
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Drop sync record
-							[self descheduleSyncRecord:syncRecord];
+							[self.core descheduleSyncRecord:syncRecord];
 						}],
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeDestructive label:OCLocalizedString(@"Delete",@"") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Reschedule sync record with match requirement turned off
-							[self rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
+							[self.core rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
 								NSMutableDictionary<OCSyncActionParameter, id> *parameters = [record.parameters mutableCopy];
 
 								parameters[OCSyncActionParameterRequireMatch] = @(NO);
@@ -167,7 +133,7 @@
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Drop sync record
-							[self descheduleSyncRecord:syncRecord];
+							[self.core descheduleSyncRecord:syncRecord];
 						}],
 
 					] completionHandler:nil];
@@ -215,7 +181,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
 
 		// Reschedule for all other errors
 		/*
@@ -223,7 +189,7 @@
 
 			https://demo.owncloud.org/remote.php/dav/files/demo/Photos/: didCompleteWithError=Error Domain=NSURLErrorDomain Code=-1009 "The Internet connection appears to be offline." UserInfo={NSUnderlyingError=0x1c4653470 {Error Domain=kCFErrorDomainCFNetwork Code=-1009 "(null)" UserInfo={_kCFStreamErrorCodeKey=50, _kCFStreamErrorDomainKey=1}}, NSErrorFailingURLStringKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, NSErrorFailingURLKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, _kCFStreamErrorDomainKey=1, _kCFStreamErrorCodeKey=50, NSLocalizedDescription=The Internet connection appears to be offline.} [OCConnectionQueue.m:506|FULL]
 		*/
-		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
+		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 	}
 
 	return (canDeleteSyncRecord);

@@ -93,7 +93,10 @@
 		{
 			if ((_itemPath = ((OCItem *)self.parameters[OCSyncActionParameterItem]).path) == nil)
 			{
-				_itemPath = self.parameters[OCSyncActionParameterSourcePath];
+				if ((_itemPath = self.parameters[OCSyncActionParameterSourcePath]) == nil)
+				{
+					_itemPath = ((OCItem *)self.parameters[OCSyncActionParameterPlaceholderItem]).path;
+				}
 			}
 		}
 	}
@@ -243,5 +246,6 @@ OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
 OCSyncActionParameter OCSyncActionParameterSourceItem = @"sourceItem";
 OCSyncActionParameter OCSyncActionParameterTargetItem = @"targetItem";
 OCSyncActionParameter OCSyncActionParameterTargetName = @"targetName";
+OCSyncActionParameter OCSyncActionParameterPlaceholderItem = @"placeholderItem";
 OCSyncActionParameter OCSyncActionParameterRequireMatch = @"requireMatch";
 

@@ -26,7 +26,6 @@
 #import "OCDatabaseConsistentOperation.h"
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncRoute.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
 #import "OCCore+FileProvider.h"
@@ -142,7 +141,7 @@
 
 		_thumbnailCache = [OCCache new];
 
-		_syncRoutesByAction = [NSMutableDictionary new];
+		_syncActionsByAction = [NSMutableDictionary new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
@@ -151,7 +150,7 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
-		[self registerSyncRoutes];
+		[self registerSyncActions];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
 

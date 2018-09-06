@@ -18,7 +18,6 @@
 
 #import "OCCore.h"
 #import "OCSyncRecord.h"
-#import "OCCoreSyncRoute.h"
 
 @class OCCoreSyncContext;
 
@@ -31,7 +30,7 @@
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler;
 
 #pragma mark - Sync Engine
-- (void)registerSyncRoute:(OCCoreSyncRoute *)syncRoute forAction:(OCSyncAction)syncAction;
+- (void)registerSyncAction:(OCCoreSyncAction *)coreSyncAction forAction:(OCSyncAction)syncAction;
 
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler;
 

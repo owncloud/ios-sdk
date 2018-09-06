@@ -31,8 +31,8 @@
 
 @class OCCore;
 @class OCItem;
-@class OCCoreSyncRoute;
 @class OCCoreItemListTask;
+@class OCCoreSyncAction;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -73,7 +73,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
-	NSMutableDictionary <OCSyncAction, OCCoreSyncRoute *> *_syncRoutesByAction;
+	NSMutableDictionary <OCSyncAction, OCCoreSyncAction *> *_syncActionsByAction;
 	BOOL _needsToProcessSyncRecords;
 
 	OCSyncAnchor _latestSyncAnchor;

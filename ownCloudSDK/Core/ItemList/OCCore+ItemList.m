@@ -611,7 +611,7 @@
 			if (event.depth == 0)
 			{
 				NSError *error = nil;
-				OCItem *cacheItem;
+				OCItem *cacheItem = nil;
 				OCItem *remoteItem = items.firstObject;
 
 				if ((cacheItem = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL].firstObject) != nil)

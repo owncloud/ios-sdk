@@ -1,8 +1,8 @@
 //
-//  OCCore+CommandCopyMove.m
+//  OCCoreSyncActionCopyMove.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 19.06.18.
+//  Created by Felix Schwarz on 06.09.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,82 +16,11 @@
  *
  */
 
-#import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
+#import "OCCoreSyncActionCopyMove.h"
 
-@implementation OCCore (CommandCopyMove)
+@implementation OCCoreSyncActionCopyMove
 
-#pragma mark - Commands
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
-
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionCopy forItem:item allowNilItem:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterTargetName : name,
-			OCSyncActionParameterTargetItem : parentItem,
-		} resultHandler:resultHandler]);
-}
-
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
-
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionMove forItem:item allowNilItem:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterTargetName : name,
-			OCSyncActionParameterTargetItem : parentItem,
-			@"isRename" : ((options[@"isRename"]!=nil) ? options[@"isRename"] : @(NO))
-		} resultHandler:resultHandler]);
-}
-
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	__block OCItem *parentItem = nil;
-	dispatch_group_t retrieveItemWaitGroup = dispatch_group_create();
-
-	dispatch_group_enter(retrieveItemWaitGroup);
-
-	[self.vault.database retrieveCacheItemForFileID:item.parentFileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
-		if (item != nil)
-		{
-			parentItem = item;
-		}
-
-		dispatch_group_leave(retrieveItemWaitGroup);
-	}];
-
-	dispatch_group_wait(retrieveItemWaitGroup, DISPATCH_TIME_FOREVER);
-
-	return([self moveItem:item to:parentItem withName:newFileName options:@{ @"isRename" : @(YES) } resultHandler:resultHandler]);
-}
-
-#pragma mark - Sync Action Registration
-- (void)registerCopy
-{
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core scheduleCopyMoveWithSyncContext:syncContext]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core handleCopyMoveWithSyncContext:syncContext]);
-	}] forAction:OCSyncActionCopy];
-}
-
-- (void)registerMove
-{
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core scheduleCopyMoveWithSyncContext:syncContext]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core handleCopyMoveWithSyncContext:syncContext]);
-	}] forAction:OCSyncActionMove];
-}
-
-#pragma mark - Sync
-- (BOOL)scheduleCopyMoveWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)scheduleWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item, *parentItem;
 	NSString *targetName;
@@ -104,11 +33,11 @@
 
 		if ([syncContext.syncRecord.action isEqual:OCSyncActionCopy])
 		{
-			progress = [self.connection copyItem:item to:parentItem withName:targetName options:nil resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]];
+			progress = [self.core.connection copyItem:item to:parentItem withName:targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
 		}
 		else if ([syncContext.syncRecord.action isEqual:OCSyncActionMove])
 		{
-			progress = [self.connection moveItem:item to:parentItem withName:targetName options:nil resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]];
+			progress = [self.core.connection moveItem:item to:parentItem withName:targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
 		}
 
 		if (progress != nil)
@@ -122,7 +51,7 @@
 	return (NO);
 }
 
-- (BOOL)handleCopyMoveWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)handleResultWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
@@ -132,7 +61,7 @@
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(event.error, self, (OCItem *)event.result, nil);
+		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, nil);
 	}
 
 	if ((event.error == nil) && (event.result != nil))
@@ -250,13 +179,13 @@
 
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
-			[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription];
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription];
 		}
 	}
 	else if (event.error != nil)
 	{
 		// Reschedule for all other errors
-		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
+		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 	}
 
 	return (canDeleteSyncRecord);

@@ -37,13 +37,15 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCCoreSyncContex
 @property(strong) OCEvent *event; //!< Event to handle [Result Handler]
 @property(strong) NSMutableArray <OCConnectionIssue *> *issues; //!< Any issues that should be relayed to the user [Result Handler]
 
-// Result Handler item result properties
+// Item changes properties
 @property(assign) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
 @property(strong) NSArray <OCItem *> *addedItems; 	//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
 @property(strong) NSArray <OCItem *> *removedItems;  	//!< Removed items (f.ex. after deleting an item), used to update database and queries
 @property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries
 
-@property(copy) OCCoreSyncContextCompletionHandler completionHandler; //!< Completion handler to be called after processing newItems, removedItems, updatedItems (but not refreshPaths - use a temporary OCQuery if you need the result of these)
+@property(assign) BOOL updateStoredSyncRecordAfterItemUpdates; //!< In preflight, after processing newItems, removedItems, updatedItems (but not refreshPaths), send .syncRecord to the database for updating (NO by default)
+
+// @property(copy) OCCoreSyncContextCompletionHandler completionHandler; //!< Completion handler to be called after processing newItems, removedItems, updatedItems (but not refreshPaths - use a temporary OCQuery if you need the result of these)
 
 #pragma mark - Convenienve initializers
 + (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord;

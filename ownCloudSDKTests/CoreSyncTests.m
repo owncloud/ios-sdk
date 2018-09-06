@@ -531,8 +531,9 @@
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *dirCreatedExpectation = [self expectationWithDescription:@"Directory created"];
 	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
+	XCTestExpectation *dirPlaceholderCreationObservedExpectation = [self expectationWithDescription:@"Directory placeholder creation observed"];
 	NSString *folderName = NSUUID.UUID.UUIDString;
-	__block BOOL _dirCreationObserved = NO;
+	__block BOOL _dirCreationObserved = NO, _dirCreationPlaceholderObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -603,8 +604,19 @@
 							{
 								if ([item.name isEqualToString:folderName])
 								{
-									[dirCreationObservedExpectation fulfill];
-									_dirCreationObserved = YES;
+									if (item.isPlaceholder)
+									{
+										if (!_dirCreationPlaceholderObserved)
+										{
+											[dirPlaceholderCreationObservedExpectation fulfill];
+											_dirCreationPlaceholderObserved = YES;
+										}
+									}
+									else
+									{
+										[dirCreationObservedExpectation fulfill];
+										_dirCreationObserved = YES;
+									}
 								}
 							}
 
@@ -1134,6 +1146,7 @@
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *fileDownloadedExpectation = [self expectationWithDescription:@"File downloaded"];
+	__block BOOL startedDownload = NO;
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -1187,8 +1200,10 @@
 				{
 					for (OCItem *item in changeset.queryResult)
 					{
-						if (item.type == OCItemTypeFile)
+						if ((item.type == OCItemTypeFile) && !startedDownload)
 						{
+							startedDownload = YES;
+
 							[core downloadItem:item options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, OCFile *file) {
 								NSLog(@"Downloaded to %@ with error %@", file.url, error);
 

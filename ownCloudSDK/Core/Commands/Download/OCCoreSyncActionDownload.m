@@ -1,8 +1,8 @@
 //
-//  OCCore+CommandDownload.m
+//  OCCoreSyncActionDownload.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 02.08.18.
+//  Created by Felix Schwarz on 06.09.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,44 +16,11 @@
  *
  */
 
-#import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
-#import "OCLogger.h"
-#import "OCCore+FileProvider.h"
-#import "OCFile.h"
+#import "OCCoreSyncActionDownload.h"
 
-@implementation OCCore (CommandDownload)
+@implementation OCCoreSyncActionDownload
 
-#pragma mark - Command
-- (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler
-{
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDownload forItem:item allowNilItem:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterOptions : ((options != nil) ? options : @{})
-		} resultHandler:resultHandler]);
-}
-
-#pragma mark - Sync Action Registration
-- (void)registerDownload
-{
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithPreflight:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core preflightDownloadWithSyncContext:syncContext]);
-	} scheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core scheduleDownloadWithSyncContext:syncContext]);
-	} descheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core descheduleDownloadWithSyncContext:syncContext]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core handleDownloadWithSyncContext:syncContext]);
-	}] forAction:OCSyncActionDownload];
-}
-
-#pragma mark - Sync
-- (BOOL)preflightDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+- (void)preflightWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
 
@@ -63,11 +30,9 @@
 
 		syncContext.updatedItems = @[ item ];
 	}
-
-	return (YES);
 }
 
-- (BOOL)descheduleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+- (void)descheduleWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
 
@@ -77,11 +42,9 @@
 
 		syncContext.updatedItems = @[ item ];
 	}
-
-	return (YES);
 }
 
-- (BOOL)scheduleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)scheduleWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCItem *item;
 
@@ -95,9 +58,9 @@
 
 		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
-		if (self.postFileProviderNotifications && (item.fileID != nil) && (_vault.fileProviderDomain!=nil))
+		if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 		{
-			NSFileProviderDomain *fileProviderDomain = _vault.fileProviderDomain;
+			NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
 
 			OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
 				if (event == OCConnectionRequestObserverEventTaskResume)
@@ -132,7 +95,7 @@
 			}
 		}
 
-		if ((progress = [self.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
+		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			[syncContext.syncRecord addProgress:progress];
 
@@ -143,7 +106,7 @@
 	return (NO);
 }
 
-- (BOOL)handleDownloadWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)handleResultWithContext:(OCCoreSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCFile *downloadedFile = event.file;
@@ -160,7 +123,7 @@
 	if ((event.error == nil) && (event.file != nil) && (item != nil))
 	{
 		NSError *error = nil;
-		NSURL *vaultItemURL = [self.vault localURLForItem:item];
+		NSURL *vaultItemURL = [self.core.vault localURLForItem:item];
 
 		[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemURL.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:NULL];
 
@@ -170,7 +133,7 @@
 		}
 		if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
 		{
-			item.localRelativePath = [self.vault relativePathForItem:item];
+			item.localRelativePath = [self.core.vault relativePathForItem:item];
 			downloadedFile.url = vaultItemURL;
 		}
 
@@ -190,12 +153,12 @@
 	if (downloadError != nil)
 	{
 		// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
 	}
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(downloadError, self, item, downloadedFile);
+		syncRecord.resultHandler(downloadError, self.core, item, downloadedFile);
 	}
 
 	return (canDeleteSyncRecord);

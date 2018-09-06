@@ -532,7 +532,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 
@@ -574,7 +577,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 
@@ -597,7 +603,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 

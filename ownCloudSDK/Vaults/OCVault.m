@@ -75,7 +75,15 @@
 {
 	if (_filesRootURL == nil)
 	{
-		_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+		// Avoid use of NSFileProviderManager in unit tests
+		if ([[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.owncloud.Ocean"])
+		{
+			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
+		}
+		else
+		{
+			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+		}
 	}
 
 	return (_filesRootURL);
