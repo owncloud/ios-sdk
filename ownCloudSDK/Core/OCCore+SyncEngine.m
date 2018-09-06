@@ -521,7 +521,7 @@
 
 				syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
 
-				if (syncContext.issues != 0)
+				if (syncContext.issues.count != 0)
 				{
 					[issues addObjectsFromArray:syncContext.issues];
 				}
@@ -530,9 +530,13 @@
 			}
 
 			// Handle result handler return values
-			if (syncRecordActionCompleted && (error==nil))
+			if (syncRecordActionCompleted)
 			{
 				// Sync record action completed
+				if (error != nil)
+				{
+					OCLogWarning(@"Removing sync record %@ despite error: %@", syncRecord, error);
+				}
 
 				// - Indicate "done" to progress object
 				syncRecord.progress.totalUnitCount = 1;
