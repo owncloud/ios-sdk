@@ -227,6 +227,13 @@
 	[coder encodeObject:_actionState forKey:@"actionState"];
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, action: %@, timestamp: %@, state: %lu, inProgressSince: %@, allowsRescheduling: %d, path: %@, parameters: %@>", NSStringFromClass(self.class), self, _recordID, _action, _timestamp, _state, _inProgressSince, _allowsRescheduling, self.itemPath, _parameters]);
+}
+
+
 @end
 
 OCSyncAction OCSyncActionDeleteLocal = @"deleteLocal";

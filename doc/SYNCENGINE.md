@@ -31,15 +31,13 @@ If an action wants to cancel its own sync record during pre-flight, it should re
 
 ### Deschedule
 
-This route action is only called if `-[OCCore descheduleSyncRecord:]` was called to remove a sync record, for example in response to a user cancelling an action. It is supposed to revert any changes made in preflight.
+This method is only called if `-[OCCore descheduleSyncRecord:]` was called to remove a sync record, for example in an issue in response to a user cancelling an action. It is supposed to revert any changes made in preflight.
 
 ### Schedule
 
-If it's an action's sync record's turn, the Sync Engine will call the schedule route action with a `OCCoreSyncContext` , which will then initiate the actual action via the core's `OCConnection`.
+If it's an action's sync record's turn, the Sync Engine will call the schedule method with a `OCCoreSyncContext` , which will then initiate the actual action via the core's `OCConnection`.
 
 ### Result Handling
 
-Once the core's `OCConnection` has completed the action, it returns the result to the Sync Engine, which passes it on to the Sync Engine's result handling route action.
+Once the core's `OCConnection` has completed the action, it returns the result to the Sync Engine, which passes it on to the Sync Engine's result handling method.
 
-
-## 

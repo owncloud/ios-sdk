@@ -1139,6 +1139,149 @@
 	}];
 }
 
+- (void)testRenameStressTest
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block BOOL didStartRenames = NO;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block NSInteger remainingRenames = 0;
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/Photos/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (!didStartRenames)
+					{
+						for (OCItem *item in query.queryResults)
+						{
+							if (item.type == OCItemTypeFile)
+							{
+								NSString *originalName = item.name;
+								NSString *modifiedName1 = [item.name stringByAppendingString:@"1"];
+								NSString *modifiedName2 = [item.name stringByAppendingString:@"2"];
+								NSString *modifiedName3 = [item.name stringByAppendingString:@"3"];
+
+								remainingRenames += 4;
+
+								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@", originalName, modifiedName1, modifiedName2, modifiedName3, originalName);
+
+								[core renameItem:item to:modifiedName1 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+									NSLog(@"Renamed %@ -> %@: error=%@ item=%@", originalName, newItem.name, error, newItem);
+									remainingRenames--;
+
+									XCTAssert(error==nil);
+									XCTAssert(newItem!=nil);
+									XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+									XCTAssert([newItem.name isEqual:modifiedName1]);
+
+									[core renameItem:newItem to:modifiedName2 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+										NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName1, newItem.name, error, newItem);
+										remainingRenames--;
+
+										XCTAssert(error==nil);
+										XCTAssert(newItem!=nil);
+										XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+										XCTAssert([newItem.name isEqual:modifiedName2]);
+
+										[core renameItem:newItem to:modifiedName3 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+											NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName2, newItem.name, error, newItem);
+											remainingRenames--;
+
+											XCTAssert(error==nil);
+											XCTAssert(newItem!=nil);
+											XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+											XCTAssert([newItem.name isEqual:modifiedName3]);
+
+											[core renameItem:newItem to:originalName options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+												NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName3, newItem.name, error, newItem);
+												remainingRenames--;
+
+												XCTAssert(error==nil);
+												XCTAssert(newItem!=nil);
+												XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+												XCTAssert([newItem.name isEqual:originalName]);
+
+												if (remainingRenames == 0)
+												{
+													// Stop core
+													[core stopWithCompletionHandler:^(id sender, NSError *error) {
+														XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+														[coreStoppedExpectation fulfill];
+													}];
+												}
+											}];
+										}];
+									}];
+								}];
+							}
+						}
+
+						didStartRenames = YES;
+					}
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
 - (void)testDownload
 {
 	OCBookmark *bookmark = nil;

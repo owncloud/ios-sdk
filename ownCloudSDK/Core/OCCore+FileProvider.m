@@ -189,10 +189,10 @@
 			{
 				NSInteger signalCountAtStart = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 
-				OCLogDebug(@"Signaling %@ for changes..", changedDirectoryFileID);
+				OCLogDebug(@"FP: Signaling %@ for changes..", changedDirectoryFileID);
 
 				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
-					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
+					OCLogDebug(@"FP: Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
 
 					dispatch_async(dispatch_get_main_queue(), ^{
 						@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
@@ -219,7 +219,7 @@
 		}
 		else
 		{
-			OCLogDebug(@"Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
+			OCLogDebug(@"FP: Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
 		}
 
 	});

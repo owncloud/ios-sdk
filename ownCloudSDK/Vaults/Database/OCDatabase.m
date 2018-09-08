@@ -273,6 +273,14 @@
 
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
+	if (fileID == nil)
+	{
+		OCLogError(@"Retrieval of fileID==nil failed");
+
+		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
+		return;
+	}
+
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
