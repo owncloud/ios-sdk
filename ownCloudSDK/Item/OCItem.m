@@ -20,6 +20,7 @@
 #import "OCCore.h"
 #import "OCCore+FileProvider.h"
 #import "OCFile.h"
+#import "OCItem+OCItemCreationDebugging.h"
 
 @implementation OCItem
 
@@ -94,6 +95,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		[self _captureCallstack];
+
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 	}
 
@@ -104,6 +107,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		[self _captureCallstack];
+
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 
 		_type = [decoder decodeIntegerForKey:@"type"];

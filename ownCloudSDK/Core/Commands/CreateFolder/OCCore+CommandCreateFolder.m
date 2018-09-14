@@ -41,7 +41,7 @@
 	placeholderItem.eTag = OCFileETagPlaceholder;
 	placeholderItem.lastModified = [NSDate date];
 
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionCreateFolder forItem:nil allowNilItem:YES parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionCreateFolder forItem:nil allowNilItem:YES allowsRescheduling:NO parameters:@{
 			OCSyncActionParameterParentItem : parentItem,
 			OCSyncActionParameterTargetName : folderName,
 			OCSyncActionParameterPlaceholderItem : placeholderItem

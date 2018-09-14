@@ -73,6 +73,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemVersionIdentifier *_versionIdentifier;
 
 	OCItemThumbnailAvailability _thumbnailAvailability;
+
+	NSString *_creationHistory;
 }
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)

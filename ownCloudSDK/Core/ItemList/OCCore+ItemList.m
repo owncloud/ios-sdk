@@ -207,6 +207,7 @@
 						// Attach databaseID of cached items to the retrieved items
 						retrievedItem.databaseID = cacheItem.databaseID;
 						retrievedItem.parentFileID = cacheItem.parentFileID;
+						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 
 						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier])
 						{

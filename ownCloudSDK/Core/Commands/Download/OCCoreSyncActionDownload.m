@@ -29,7 +29,7 @@
 	{
 		if (!item.locallyModified && // Item wasn't modified locally
 		    (item.localRelativePath != nil) && // Copy of item is stored locally
-		    [item.itemVersionIdentifier isEqual:syncContext.syncRecord.archivedServerItem]) // Local item version is identical to latest known version on the server
+		    [item.itemVersionIdentifier isEqual:syncContext.syncRecord.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
 		{
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
@@ -61,11 +61,15 @@
 {
 	OCItem *item;
 
+	OCLogDebug(@"SE: record %@ enters download scheduling", syncContext.syncRecord);
+
 	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
 	{
 		// Retrieve latest version from cache
 		NSError *error = nil;
 		OCItem *latestVersionOfItem;
+
+		OCLogDebug(@"SE: record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
 		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
 		{
@@ -74,6 +78,8 @@
 			{
 				// Ask user to choose between keeping modifications or overwriting with server version
 				OCConnectionIssue *issue;
+
+				OCLogDebug(@"SE: record %@ download: latest version was locally modified", syncContext.syncRecord);
 
 				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"\"%@\" has been modified locally") localizedDescription:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") choices:@[
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Overwrite modified file") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
@@ -124,6 +130,8 @@
 
 				[syncContext addIssue:issue];
 
+				OCLogDebug(@"SE: record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
+
 				// Prevent scheduling of download
 				return (NO);
 			}
@@ -138,12 +146,12 @@
 		NSURL *temporaryDirectoryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]  URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
 		NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:item.name];
 
+		OCLogDebug(@"SE: record %@ download: setting up directory", syncContext.syncRecord);
+
 		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 		{
-			NSURL *localURL = [self.core localURLForItem:item];
-
 			/*
 				Check if a placeholder/file already exists here before registering this URL session for the item. Otherwise, the SDK may find itself on
 				the receiving end of this error:
@@ -152,50 +160,56 @@
 
 				Error registering <__NSCFBackgroundDownloadTask: 0x7f81efa08010>{ taskIdentifier: 1041 } for 00000042oc9qntjidejl: Error Domain=com.apple.FileProvider Code=-1005 "The file doesn’t exist." UserInfo={NSFileProviderErrorNonExistentItemIdentifier=00000042oc9qntjidejl} [OCCoreSyncActionDownload.m:71|FULL]
 			*/
-			if ([[NSFileManager defaultManager] fileExistsAtPath:localURL.path])
-			{
-				NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
-
-				OCLogDebug(@"SE: record %@ will register URLTask for %@", syncContext.syncRecord, item);
-
-				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
-					if (event == OCConnectionRequestObserverEventTaskResume)
-					{
-						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
-							OCLogDebug(@"SE: record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
-
-							if (error != nil)
-							{
-								OCLogError(@"SE: error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
-							}
-
-							// File provider detail: the task may not be started until after this completionHandler was called
-							[request.urlSessionTask resume];
-						}];
-
-						return (YES);
-					}
-
-					return (NO);
-				} copy];
-
-				if (options == nil)
-				{
-					options = @{ OCConnectionOptionRequestObserverKey : observer };
-				}
-				else
-				{
-					NSMutableDictionary *mutableOptions = [options mutableCopy];
-
-					mutableOptions[OCConnectionOptionRequestObserverKey] = observer;
-
-					options = mutableOptions;
-				}
-			}
+//			NSURL *localURL = [self.core localURLForItem:item];
+//
+//			if ([[NSFileManager defaultManager] fileExistsAtPath:localURL.path])
+//			{
+//				NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
+//
+//				OCLogDebug(@"SE: record %@ will register URLTask for %@", syncContext.syncRecord, item);
+//
+//				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
+//					if (event == OCConnectionRequestObserverEventTaskResume)
+//					{
+//						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
+//							OCLogDebug(@"SE: record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
+//
+//							if (error != nil)
+//							{
+//								OCLogError(@"SE: error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
+//							}
+//
+//							// File provider detail: the task may not be started until after this completionHandler was called
+//							[request.urlSessionTask resume];
+//						}];
+//
+//						return (YES);
+//					}
+//
+//					return (NO);
+//				} copy];
+//
+//				if (options == nil)
+//				{
+//					options = @{ OCConnectionOptionRequestObserverKey : observer };
+//				}
+//				else
+//				{
+//					NSMutableDictionary *mutableOptions = [options mutableCopy];
+//
+//					mutableOptions[OCConnectionOptionRequestObserverKey] = observer;
+//
+//					options = mutableOptions;
+//				}
+//			}
 		}
+
+		OCLogDebug(@"SE: record %@ download: initiating download", syncContext.syncRecord);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
+			OCLogDebug(@"SE: record %@ download: download initiated with progress %@", syncContext.syncRecord, progress);
+
 			[syncContext.syncRecord addProgress:progress];
 
 			return (YES);

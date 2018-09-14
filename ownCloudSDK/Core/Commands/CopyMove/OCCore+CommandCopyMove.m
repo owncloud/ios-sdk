@@ -30,7 +30,7 @@
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionCopy forItem:item allowNilItem:NO parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionCopy forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
 			OCSyncActionParameterItem : item,
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterTargetName : name,
@@ -42,7 +42,7 @@
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionMove forItem:item allowNilItem:NO parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionMove forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
 			OCSyncActionParameterItem : item,
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterTargetName : name,

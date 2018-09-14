@@ -713,20 +713,26 @@
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	switch (event.eventType)
-	{
-		case OCEventTypeRetrieveThumbnail:
-			[self _handleRetrieveThumbnailEvent:event sender:sender];
-		break;
+	[self beginActivity:@"Handling event"];
 
-		case OCEventTypeRetrieveItemList:
-			[self _handleRetrieveItemListEvent:event sender:sender];
-		break;
+	[self queueBlock:^{
+		switch (event.eventType)
+		{
+			case OCEventTypeRetrieveThumbnail:
+				[self _handleRetrieveThumbnailEvent:event sender:sender];
+			break;
 
-		default:
-			[self _handleSyncEvent:event sender:sender];
-		break;
-	}
+			case OCEventTypeRetrieveItemList:
+				[self _handleRetrieveItemListEvent:event sender:sender];
+			break;
+
+			default:
+				[self _handleSyncEvent:event sender:sender];
+			break;
+		}
+
+		[self endActivity:@"Handling event"];
+	}];
 }
 
 #pragma mark - Busy count

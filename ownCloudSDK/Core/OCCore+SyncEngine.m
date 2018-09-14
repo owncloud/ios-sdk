@@ -28,6 +28,7 @@
 #import "OCCoreSyncContext.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
+#import "NSString+OCFormatting.h"
 
 #import "OCCoreSyncActionCopyMove.h"
 #import "OCCoreSyncActionCreateFolder.h"
@@ -185,7 +186,7 @@
 }
 
 #pragma mark - Sync Record Scheduling
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
@@ -196,6 +197,7 @@
 
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action archivedServerItem:((item.remoteItem != nil) ? item.remoteItem : item) parameters:parameters resultHandler:resultHandler];
 		syncRecord.progress = progress;
+		syncRecord.allowsRescheduling = allowsRescheduling;
 
 		[self submitSyncRecord:syncRecord];
 	}
@@ -1106,6 +1108,26 @@
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord
 {
 	return ([self _eventTargetWithSyncRecord:syncRecord userInfo:nil ephermal:nil]);
+}
+
+#pragma mark - Sync debugging
+- (void)dumpSyncJournal
+{
+	OCSyncExec(journalDump, {
+		[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+			NSLog(@"Sync Journal Dump:");
+			NSLog(@"==================");
+
+			for (OCSyncRecord *record in syncRecords)
+			{
+				NSLog(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+							[record.action leftPaddedMinLength:20],
+							[[record.inProgressSince description] leftPaddedMinLength:20]);
+			}
+
+			OCSyncExecDone(journalDump);
+		}];
+	});
 }
 
 @end

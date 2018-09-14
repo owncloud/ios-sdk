@@ -28,7 +28,7 @@
 #pragma mark - Command
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
 			OCSyncActionParameterItem : item,
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterRequireMatch : @(requireMatch),

@@ -29,7 +29,7 @@
 #pragma mark - Command
 - (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDownload forItem:item allowNilItem:NO parameters:@{
+	return ([self _enqueueSyncRecordWithAction:OCSyncActionDownload forItem:item allowNilItem:NO allowsRescheduling:YES parameters:@{
 			OCSyncActionParameterItem : item,
 			OCSyncActionParameterPath : item.path,
 			OCSyncActionParameterOptions : ((options != nil) ? options : @{})

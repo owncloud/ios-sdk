@@ -262,4 +262,23 @@
 	XCTAssert(![[NSFileManager defaultManager] fileExistsAtPath:temporaryURL.path]);
 }
 
+- (void)testStringFormatting
+{
+	NSLog(@" 01234567890123456789");
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:10]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:10]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:10]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:10]);
+
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:20]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:20]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:20]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:20]);
+
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:30]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:30]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:30]);
+	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:30]);
+}
+
 @end
