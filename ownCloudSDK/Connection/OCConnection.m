@@ -1478,16 +1478,13 @@
 - (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue
 {
 	__block NSError *retError = nil;
-	dispatch_group_t waitForCompletionGroup = dispatch_group_create();
 
-	dispatch_group_enter(waitForCompletionGroup);
-	
-	[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-		retError = error;
-		dispatch_group_leave(waitForCompletionGroup);
-	}];
-	
-	dispatch_group_wait(waitForCompletionGroup, DISPATCH_TIME_FOREVER);
+	OCSyncExec(requestCompletion, {
+		[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			retError = error;
+			OCSyncExecDone(requestCompletion);
+		}];
+	});
 
 	return (retError);
 }

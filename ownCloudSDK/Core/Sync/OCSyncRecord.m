@@ -241,8 +241,9 @@ OCSyncAction OCSyncActionDeleteRemote = @"deleteRemote";
 OCSyncAction OCSyncActionMove = @"move";
 OCSyncAction OCSyncActionCopy = @"copy";
 OCSyncAction OCSyncActionCreateFolder = @"createFolder";
-OCSyncAction OCSyncActionUpload = @"upload";
 OCSyncAction OCSyncActionDownload = @"download";
+OCSyncAction OCSyncActionLocalCreation = @"localCreation";
+OCSyncAction OCSyncActionLocalModification = @"localModification";
 
 OCSyncActionParameter OCSyncActionParameterParentItem = @"parentItem";
 OCSyncActionParameter OCSyncActionParameterItem = @"item";

@@ -27,9 +27,21 @@
 
 	if ((item = syncContext.syncRecord.item) != nil)
 	{
-		[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+		if (!item.locallyModified && // Item wasn't modified locally
+		    (item.localRelativePath != nil) && // Copy of item is stored locally
+		    [item.itemVersionIdentifier isEqual:syncContext.syncRecord.archivedServerItem]) // Local item version is identical to latest known version on the server
+		{
+			// Item already downloaded - take some shortcuts
+			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
-		syncContext.updatedItems = @[ item ];
+			syncContext.syncRecord.resultHandler(nil, self.core, item, [item fileWithCore:self.core]);
+		}
+		else
+		{
+			[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+
+			syncContext.updatedItems = @[ item ];
+		}
 	}
 }
 
@@ -50,6 +62,75 @@
 	OCItem *item;
 
 	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
+	{
+		// Retrieve latest version from cache
+		NSError *error = nil;
+		OCItem *latestVersionOfItem;
+
+		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
+		{
+			// Check for locally modified version
+			if (latestVersionOfItem.locallyModified)
+			{
+				// Ask user to choose between keeping modifications or overwriting with server version
+				OCConnectionIssue *issue;
+
+				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"\"%@\" has been modified locally") localizedDescription:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") choices:@[
+						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Overwrite modified file") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							// Delete local representation and reschedule download
+							[self.core rescheduleSyncRecord:syncContext.syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
+								OCItem *latestItem;
+								NSError *error = nil;
+
+								if ((latestItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
+								{
+									if (latestItem.locallyModified)
+									{
+										NSURL *deleteFileURL;
+
+										if ((deleteFileURL = [self.core localURLForItem:latestItem]) != nil)
+										{
+											NSError *deleteError = nil;
+
+											if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
+											{
+												// Replace locally modified item with latest version
+												if (latestItem.remoteItem != nil)
+												{
+													[latestItem.remoteItem prepareToReplace:latestItem];
+													latestItem = latestItem.remoteItem;
+												}
+
+												latestItem.locallyModified = NO;
+												latestItem.localRelativePath = nil;
+
+												[self.core _performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil];
+											}
+
+											OCLogDebug(@"SE: deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
+										}
+									}
+								}
+
+								return (nil);
+							}];
+						}],
+
+						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							// Keep local modifications and drop sync record
+							[self.core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+						}],
+					] completionHandler:nil];
+
+				[syncContext addIssue:issue];
+
+				// Prevent scheduling of download
+				return (NO);
+			}
+		}
+	}
+
+	if (item != nil)
 	{
 		NSProgress *progress;
 		NSDictionary *options = syncContext.syncRecord.parameters[OCSyncActionParameterOptions];
@@ -130,11 +211,10 @@
 	OCFile *downloadedFile = event.file;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
-	OCItem *item = syncRecord.parameters[OCSyncActionParameterItem];
+	OCItem *item = syncRecord.archivedServerItem;
 	NSError *downloadError = event.error;
 
 	// TODO: Check for newer local version (=> throw away downloaded file or ask user)
-	// TODO: Validate checksum of downloaded file
 	// TODO: In case of errors, offer a retry option
 	// TODO: If everything's GO => update item metadata with info on local copy of file, add 1 minute retainer, so other parts of the app have a chance to add their retainers as well to keep the file around
 
@@ -142,36 +222,163 @@
 	{
 		NSError *error = nil;
 		NSURL *vaultItemURL = [self.core.vault localURLForItem:item];
+		NSString *vaultItemLocalRelativePath = [self.core.vault relativePathForItem:item];
+		BOOL useDownloadedFile = YES;
+		OCItem *latestVersionOfItem = nil;
 
-		[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemURL.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:NULL];
+		// Validate checksum of downloaded file
+		if (useDownloadedFile)
+		{
+			__block BOOL checksumIsValid = NO;
 
-		if ([[NSFileManager defaultManager] fileExistsAtPath:vaultItemURL.path])
-		{
-			[[NSFileManager defaultManager] removeItemAtURL:vaultItemURL error:&error];
+			// Verify checksum and wait for result of computation
+			OCSyncExec(checksumVerification, {
+				[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
+					checksumIsValid = isValid;
+					OCSyncExecDone(checksumVerification);
+				}];
+			});
+
+			if (!checksumIsValid)
+			{
+				// Checksum of downloaded file is not valid => bring up issue
+				OCConnectionIssue *issue;
+
+				useDownloadedFile = NO;
+
+				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"Invalid checksum") localizedDescription:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") choices:@[
+
+						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Retry") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							// Reschedule sync record
+							[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
+						}],
+
+						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							// Drop sync record
+							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+						}],
+
+					] completionHandler:nil];
+
+				[syncContext addIssue:issue];
+			}
 		}
-		if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
+
+		// Check for locally modified version
+		if (useDownloadedFile)
 		{
-			item.localRelativePath = [self.core.vault relativePathForItem:item];
-			downloadedFile.url = vaultItemURL;
+			if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:NULL]) != nil)
+			{
+				// This catches the edge case where a file was locally modified WHILE a download of the same file was already scheduled
+				// The case where a download is initiated when a locally modified version exists is caught in download scheduling
+				if (latestVersionOfItem.locallyModified)
+				{
+					OCConnectionIssue *issue;
+
+					useDownloadedFile = NO;
+
+					issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"File modified locally") localizedDescription:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] choices:@[
+
+							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+								// Drop sync record
+								[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+							}],
+
+						] completionHandler:nil];
+
+					[syncContext addIssue:issue];
+				}
+			}
 		}
+
+		// Use downloaded file?
+		if (useDownloadedFile)
+		{
+			NSURL *vaultItemParentURL = vaultItemURL.URLByDeletingLastPathComponent;
+			NSURL *existingFileTemporaryURL = nil;
+
+			if (![[NSFileManager defaultManager] fileExistsAtPath:vaultItemParentURL.path])
+			{
+				// Create target directory
+				[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemParentURL withIntermediateDirectories:YES attributes:nil error:&error];
+			}
+			else
+			{
+				// Target directory exists
+				if ([[NSFileManager defaultManager] fileExistsAtPath:vaultItemURL.path])
+				{
+					// Move existing file out of the way
+					if ((existingFileTemporaryURL = [vaultItemURL URLByAppendingPathExtension:[NSString stringWithFormat:@".%@.octmp", NSUUID.UUID.UUIDString]]) != nil)
+					{
+						[[NSFileManager defaultManager] moveItemAtURL:vaultItemURL toURL:existingFileTemporaryURL error:&error];
+					}
+				}
+			}
+
+			if (error == nil)
+			{
+				// Move download to item path
+				if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
+				{
+					// Switch to "remoteItem" or latestVersionOfItem if eTag of downloaded file doesn't match
+					if (![item.eTag isEqual:event.file.eTag])
+					{
+						if (![item.remoteItem.eTag isEqual:event.file.eTag])
+						{
+							[item.remoteItem prepareToReplace:item];
+							item = item.remoteItem;
+						}
+						else if (![latestVersionOfItem.eTag isEqual:event.file.eTag])
+						{
+							[latestVersionOfItem prepareToReplace:item];
+							item = latestVersionOfItem;
+						}
+					}
+
+					item.localRelativePath = vaultItemLocalRelativePath;
+					downloadedFile.url = vaultItemURL;
+
+					syncContext.updatedItems = @[ item ];
+				}
+
+				// Remove any previously existing file
+				if (existingFileTemporaryURL != nil)
+				{
+					if (error == nil)
+					{
+						// Moving downloaded file successful => remove existing file
+						[[NSFileManager defaultManager] removeItemAtURL:existingFileTemporaryURL error:&error];
+					}
+					else
+					{
+						// Moving downloaded file failed => put existing file back in place
+						[[NSFileManager defaultManager] moveItemAtURL:existingFileTemporaryURL toURL:vaultItemURL error:&error];
+					}
+				}
+			}
+		}
+
+		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+		canDeleteSyncRecord = YES;
 
 		if (error != nil)
 		{
 			downloadError = error;
 		}
-		else
+	}
+	else
+	{
+		if (downloadError == nil)
 		{
-			[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
-			syncContext.updatedItems = @[ item ];
+			// Result is incomplete, but can't be attributed to any error, either
+			downloadError = OCError(OCErrorInternal);
 		}
-
-		canDeleteSyncRecord = YES;
 	}
 
 	if (downloadError != nil)
 	{
 		// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 	}
 
 	if (syncRecord.resultHandler != nil)

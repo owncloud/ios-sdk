@@ -93,8 +93,9 @@ extern OCSyncAction OCSyncActionDeleteRemote; //!< Remotely triggered deletion
 extern OCSyncAction OCSyncActionMove;
 extern OCSyncAction OCSyncActionCopy;
 extern OCSyncAction OCSyncActionCreateFolder;
-extern OCSyncAction OCSyncActionUpload;
 extern OCSyncAction OCSyncActionDownload;
+extern OCSyncAction OCSyncActionLocalCreation;
+extern OCSyncAction OCSyncActionLocalModification;
 
 extern OCSyncActionParameter OCSyncActionParameterParentItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterItem; // (OCItem *)

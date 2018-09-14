@@ -22,6 +22,9 @@
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 
+@class OCFile;
+@class OCCore;
+
 typedef NS_ENUM(NSInteger, OCItemType)
 {
 	OCItemTypeFile,		//!< This item is a file.
@@ -115,6 +118,11 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
+
+- (void)prepareToReplace:(OCItem *)item;
+
+#pragma mark - File tools
+- (OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
 
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;

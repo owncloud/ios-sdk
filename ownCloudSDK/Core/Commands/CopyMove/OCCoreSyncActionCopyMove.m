@@ -179,7 +179,7 @@
 
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription];
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription invokeResultHandler:NO resultHandlerError:nil];
 		}
 	}
 	else if (event.error != nil)

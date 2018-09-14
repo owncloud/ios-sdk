@@ -54,20 +54,17 @@
 - (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	__block OCItem *parentItem = nil;
-	dispatch_group_t retrieveItemWaitGroup = dispatch_group_create();
 
-	dispatch_group_enter(retrieveItemWaitGroup);
+	OCSyncExec(cacheItemRetrieval, {
+		[self.vault.database retrieveCacheItemForFileID:item.parentFileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			if (item != nil)
+			{
+				parentItem = item;
+			}
 
-	[self.vault.database retrieveCacheItemForFileID:item.parentFileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
-		if (item != nil)
-		{
-			parentItem = item;
-		}
-
-		dispatch_group_leave(retrieveItemWaitGroup);
-	}];
-
-	dispatch_group_wait(retrieveItemWaitGroup, DISPATCH_TIME_FOREVER);
+			OCSyncExecDone(cacheItemRetrieval);
+		}];
+	});
 
 	return([self moveItem:item to:parentItem withName:newFileName options:@{ @"isRename" : @(YES) } resultHandler:resultHandler]);
 }

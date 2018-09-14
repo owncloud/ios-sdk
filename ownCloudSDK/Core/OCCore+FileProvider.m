@@ -20,6 +20,7 @@
 #import "OCCore+Internal.h"
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
+#import "OCMacros.h"
 
 @implementation OCCore (FileProvider)
 
@@ -27,17 +28,13 @@
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler
 {
 	[self queueBlock:^{
-		dispatch_group_t waitForRetrievalGroup = dispatch_group_create();
+		OCSyncExec(cacheItemRetrieval, {
+			[self.vault.database retrieveCacheItemForFileID:fileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+				completionHandler(error, syncAnchor, item);
 
-		dispatch_group_enter(waitForRetrievalGroup);
-
-		[self.vault.database retrieveCacheItemForFileID:fileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
-			dispatch_group_leave(waitForRetrievalGroup);
-
-			completionHandler(error, syncAnchor, item);
-		}];
-
-		dispatch_group_wait(waitForRetrievalGroup, DISPATCH_TIME_FOREVER);
+				OCSyncExecDone(cacheItemRetrieval);
+			}];
+		});
 	}];
 }
 

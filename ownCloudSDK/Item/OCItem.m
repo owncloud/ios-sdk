@@ -18,6 +18,8 @@
 
 #import "OCItem.h"
 #import "OCCore.h"
+#import "OCCore+FileProvider.h"
+#import "OCFile.h"
 
 @implementation OCItem
 
@@ -264,6 +266,33 @@
 	}
 
 	[self didChangeValueForKey:@"activeSyncRecordIDs"];
+}
+
+- (void)prepareToReplace:(OCItem *)item
+{
+	self.databaseID 	  = item.databaseID;
+
+	self.activeSyncRecordIDs  = item.activeSyncRecordIDs;
+	self.syncActivity 	  = item.syncActivity;
+}
+
+#pragma mark - File tools
+- (OCFile *)fileWithCore:(OCCore *)core
+{
+	OCFile *file = nil;
+
+	if (self.localRelativePath != nil)
+	{
+		file = [OCFile new];
+
+		file.url = [core localURLForItem:self];
+
+		file.item = self;
+		file.eTag = self.eTag;
+		file.fileID = self.fileID;
+	}
+
+	return (file);
 }
 
 #pragma mark - Description

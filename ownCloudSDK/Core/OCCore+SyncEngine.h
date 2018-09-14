@@ -27,6 +27,8 @@
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError *error, OCSyncAnchor latestSyncAnchor))completionHandler;
 - (OCSyncAnchor)retrieveLatestSyncAnchorWithError:(NSError * __autoreleasing *)outError;
 
+- (OCItem *)retrieveLatestVersionOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError;
+
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler;
 
 #pragma mark - Sync Engine
@@ -36,19 +38,24 @@
 
 - (NSProgress *)synchronizeWithServer;
 
+- (void)performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
+
 #pragma mark - Sync Record Scheduling
 - (void)setNeedsToProcessSyncRecords;
 
 - (void)submitSyncRecord:(OCSyncRecord *)record;
 - (void)rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates;
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord;
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
 
 @end
 
 @interface OCCore (SyncPrivate)
 
+#pragma mark - Sync update utilities
+- (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
+
 #pragma mark - Sync issues utilities
-- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description;
+- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
 - (BOOL)_isConnectivityError:(NSError *)error;
 
 #pragma mark - Sync enqueue utilities

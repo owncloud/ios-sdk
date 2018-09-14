@@ -26,6 +26,7 @@
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @interface OCDatabase ()
 {
@@ -326,21 +327,18 @@
 
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
 {
-	dispatch_group_t waitGroup = dispatch_group_create();
 	__block NSArray <OCItem *> *items = nil;
 
-	dispatch_group_enter(waitGroup);
+	OCSyncExec(cacheItemsRetrieval, {
+		[self retrieveCacheItemsAtPath:path itemOnly:itemOnly completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *dbItems) {
+			items = dbItems;
 
-	[self retrieveCacheItemsAtPath:path itemOnly:itemOnly completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *dbItems) {
-		items = dbItems;
+			if (outError != NULL) { *outError = error; }
+			if (outSyncAnchor != NULL) { *outSyncAnchor = syncAnchor; }
 
-		if (outError != NULL) { *outError = error; }
-		if (outSyncAnchor != NULL) { *outSyncAnchor = syncAnchor; }
-
-		dispatch_group_leave(waitGroup);
-	}];
-
-	dispatch_group_wait(waitGroup, DISPATCH_TIME_FOREVER);
+			OCSyncExecDone(cacheItemsRetrieval);
+		}];
+	});
 
 	return (items);
 }

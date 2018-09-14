@@ -956,8 +956,7 @@
 				DC708CD1214131C200FE43CA /* CreateFolder */,
 				DC708CD2214131D600FE43CA /* Delete */,
 				DC708CD3214131E400FE43CA /* Download */,
-				DC708CD4214131EE00FE43CA /* LocalCreation */,
-				DC708CD5214131FA00FE43CA /* LocalModification */,
+				DC624F8021494D9800D6AF20 /* Upload */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -971,6 +970,15 @@
 				DCA8925020F5F57D00AEFF98 /* NSObject+OCMockManager.h */,
 			);
 			path = Manager;
+			sourceTree = "<group>";
+		};
+		DC624F8021494D9800D6AF20 /* Upload */ = {
+			isa = PBXGroup;
+			children = (
+				DC708CD4214131EE00FE43CA /* LocalCreation */,
+				DC708CD5214131FA00FE43CA /* LocalModification */,
+			);
+			path = Upload;
 			sourceTree = "<group>";
 		};
 		DC708CD02141306B00FE43CA /* CopyMove */ = {

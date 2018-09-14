@@ -19,6 +19,7 @@
 #import "OCDatabaseConsistentOperation.h"
 #import "OCSQLiteDB.h"
 #import "OCSQLiteTransaction.h"
+#import "OCMacros.h"
 
 @implementation OCDatabaseConsistentOperation
 
@@ -82,20 +83,16 @@
 			{
 				if (self.preparation != nil)
 				{
-					dispatch_group_t waitForResultGroup = dispatch_group_create();
+					OCSyncExec(preparationCompletion, {
+						self.preparation(self, (_initialPreparationDidRun ? OCDatabaseConsistentOperationActionRepeated : OCDatabaseConsistentOperationActionInitial), newCounterValue, ^(NSError *prepError, id prepResult){
+							self.preparationError = prepError;
+							self.preparationResult = prepResult;
 
-					dispatch_group_enter(waitForResultGroup);
+							OCSyncExecDone(preparationCompletion);
+						});
 
-					self.preparation(self, (_initialPreparationDidRun ? OCDatabaseConsistentOperationActionRepeated : OCDatabaseConsistentOperationActionInitial), newCounterValue, ^(NSError *prepError, id prepResult){
-						self.preparationError = prepError;
-						self.preparationResult = prepResult;
-
-						dispatch_group_leave(waitForResultGroup);
+						_initialPreparationDidRun = YES;
 					});
-
-					_initialPreparationDidRun = YES;
-
-					dispatch_group_wait(waitForResultGroup, DISPATCH_TIME_FOREVER);
 
 					error = self.preparationError;
 				}

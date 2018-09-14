@@ -21,6 +21,7 @@
 #import "NSError+OCError.h"
 #import "OCItem.h"
 #import "OCDatabase.h"
+#import "OCMacros.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end
@@ -93,23 +94,19 @@
 {
 	if (_fileProviderDomain == nil)
 	{
-		dispatch_group_t waitForResultGroup = dispatch_group_create();
-
-		dispatch_group_enter(waitForResultGroup);
-
-		[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
-			dispatch_group_leave(waitForResultGroup);
-
-			for (NSFileProviderDomain *domain in domains)
-			{
-				if ([domain.identifier isEqual:self.uuid.UUIDString])
+		OCSyncExec(domainRetrieval, {
+			[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
+				for (NSFileProviderDomain *domain in domains)
 				{
-					_fileProviderDomain = domain;
+					if ([domain.identifier isEqual:self.uuid.UUIDString])
+					{
+						_fileProviderDomain = domain;
+					}
 				}
-			}
-		}];
 
-		dispatch_group_wait(waitForResultGroup, DISPATCH_TIME_FOREVER);
+				OCSyncExecDone(domainRetrieval);
+			}];
+		});
 	}
 
 	return (_fileProviderDomain);

@@ -18,6 +18,7 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @implementation OCConnection (Setup)
 
