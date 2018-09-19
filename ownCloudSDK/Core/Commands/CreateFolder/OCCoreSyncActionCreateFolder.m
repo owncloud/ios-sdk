@@ -72,13 +72,9 @@
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
+	OCItem *newItem = nil;
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, nil);
-	}
-
-	if ((event.error == nil) && (event.result != nil))
+	if ((event.error == nil) && ((newItem = event.result) != nil))
 	{
 		OCItem *placeholderItem;
 
@@ -89,7 +85,9 @@
 			syncContext.removedItems = @[ placeholderItem ];
 		}
 
-		syncContext.addedItems = @[ event.result ];
+		newItem.parentFileID = placeholderItem.parentFileID;
+
+		syncContext.addedItems = @[ newItem ];
 
 		canDeleteSyncRecord = YES;
 	}
@@ -97,6 +95,11 @@
 	{
 		// Create issue for cancellation for any errors
 		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+	}
+
+	if (syncRecord.resultHandler != nil)
+	{
+		syncRecord.resultHandler(event.error, self.core, newItem, nil);
 	}
 
 	return (canDeleteSyncRecord);

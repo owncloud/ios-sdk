@@ -83,6 +83,7 @@
 	[coder encodeInteger:_syncActivity 	forKey:@"syncActivity"];
 
 	[coder encodeInteger:_size  		forKey:@"size"];
+	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
@@ -134,6 +135,7 @@
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
 
 		_size = [decoder decodeIntegerForKey:@"size"];
+		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];

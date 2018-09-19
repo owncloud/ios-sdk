@@ -44,9 +44,11 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 };
 
 typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
+typedef void(^OCCoreUploadResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
 typedef void(^OCCoreDownloadResultHandler)(NSError *error, OCCore *core, OCItem *item, OCFile *file);
 typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, id retrievedObject, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
+typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 
 @protocol OCCoreDelegate <NSObject>
@@ -141,12 +143,12 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 - (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler;
 @end
 
-@interface OCCore (CommandLocalCreation)
-- (NSProgress *)createFileNamed:(NSString *)newFileName at:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options completionHandler:(OCCoreCompletionHandler)completionHandler;
+@interface OCCore (CommandLocalImport)
+- (NSProgress *)importFileNamed:(NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandLocalModification)
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options placeholderCompletionHandler:(OCCoreActionResultHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)completionHandler;
 @end
 
 @interface OCCore (FileManagement)

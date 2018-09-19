@@ -74,6 +74,7 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 @property(strong) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
 @property(strong,nonatomic) NSMutableDictionary *actionState; //!< Action-specific dictionary: provides storage for actions to track their state and progress
 
+@property(strong) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
 @property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 
 @property(strong) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
@@ -94,7 +95,7 @@ extern OCSyncAction OCSyncActionMove;
 extern OCSyncAction OCSyncActionCopy;
 extern OCSyncAction OCSyncActionCreateFolder;
 extern OCSyncAction OCSyncActionDownload;
-extern OCSyncAction OCSyncActionLocalCreation;
+extern OCSyncAction OCSyncActionLocalImport;
 extern OCSyncAction OCSyncActionLocalModification;
 
 extern OCSyncActionParameter OCSyncActionParameterParentItem; // (OCItem *)
@@ -106,5 +107,8 @@ extern OCSyncActionParameter OCSyncActionParameterTargetPath; // (OCPath)
 extern OCSyncActionParameter OCSyncActionParameterSourceItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterTargetItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterTargetName; // (NSString *)
+extern OCSyncActionParameter OCSyncActionParameterInputURL; // (NSURL *)
+extern OCSyncActionParameter OCSyncActionParameterOutputURL; // (NSURL *)
 extern OCSyncActionParameter OCSyncActionParameterPlaceholderItem; // (OCItem *)
 extern OCSyncActionParameter OCSyncActionParameterRequireMatch; // (NSNumber* (BOOL))
+extern OCSyncActionParameter OCSyncActionParameterPlaceholderCompletionHandler; // (block)

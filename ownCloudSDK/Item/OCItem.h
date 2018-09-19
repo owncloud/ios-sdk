@@ -106,6 +106,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
+@property(strong) NSDate *creationDate; //!< Date of creation
 @property(strong) NSDate *lastModified; //!< Date of last modification
 
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.

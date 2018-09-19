@@ -34,6 +34,7 @@
 #import "OCCoreSyncActionCreateFolder.h"
 #import "OCCoreSyncActionDelete.h"
 #import "OCCoreSyncActionDownload.h"
+#import "OCCoreSyncActionLocalImport.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -145,7 +146,7 @@
 		// OCSyncActionMove,
 		// OCSyncActionCopy,
 		// OCSyncActionCreateFolder,
-		OCSyncActionLocalCreation,
+		// OCSyncActionLocalImport,
 		OCSyncActionLocalModification,
 		// OCSyncActionDownload
 	];
@@ -159,6 +160,8 @@
 
 	[self registerSyncAction:[OCCoreSyncActionDelete new] forAction:OCSyncActionDeleteLocal];
 	[self registerSyncAction:[OCCoreSyncActionDownload new] forAction:OCSyncActionDownload];
+
+	[self registerSyncAction:[OCCoreSyncActionLocalImport new] forAction:OCSyncActionLocalImport];
 
 	for (OCSyncAction syncAction in syncActions)
 	{
@@ -188,6 +191,11 @@
 #pragma mark - Sync Record Scheduling
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
 {
+	return ([self _enqueueSyncRecordWithAction:action forItem:item allowNilItem:allowNilItem allowsRescheduling:allowsRescheduling parameters:parameters ephermalParameters:nil resultHandler:resultHandler]);
+}
+
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters ephermalParameters:(NSDictionary <OCSyncActionParameter, id> *)ephermalParameters resultHandler:(OCCoreActionResultHandler)resultHandler
+{
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
 
@@ -198,6 +206,7 @@
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action archivedServerItem:((item.remoteItem != nil) ? item.remoteItem : item) parameters:parameters resultHandler:resultHandler];
 		syncRecord.progress = progress;
 		syncRecord.allowsRescheduling = allowsRescheduling;
+		syncRecord.ephermalParameters = ephermalParameters;
 
 		[self submitSyncRecord:syncRecord];
 	}

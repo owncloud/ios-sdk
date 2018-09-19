@@ -38,6 +38,7 @@
 
 @synthesize actionState = _actionState;
 
+@synthesize ephermalParameters = _ephermalParameters;
 @synthesize resultHandler = _resultHandler;
 
 #pragma mark - Init & Dealloc
@@ -242,7 +243,7 @@ OCSyncAction OCSyncActionMove = @"move";
 OCSyncAction OCSyncActionCopy = @"copy";
 OCSyncAction OCSyncActionCreateFolder = @"createFolder";
 OCSyncAction OCSyncActionDownload = @"download";
-OCSyncAction OCSyncActionLocalCreation = @"localCreation";
+OCSyncAction OCSyncActionLocalImport = @"localImport";
 OCSyncAction OCSyncActionLocalModification = @"localModification";
 
 OCSyncActionParameter OCSyncActionParameterParentItem = @"parentItem";
@@ -254,6 +255,9 @@ OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
 OCSyncActionParameter OCSyncActionParameterSourceItem = @"sourceItem";
 OCSyncActionParameter OCSyncActionParameterTargetItem = @"targetItem";
 OCSyncActionParameter OCSyncActionParameterTargetName = @"targetName";
+OCSyncActionParameter OCSyncActionParameterInputURL = @"inputURL";
+OCSyncActionParameter OCSyncActionParameterOutputURL = @"outputURL";
 OCSyncActionParameter OCSyncActionParameterPlaceholderItem = @"placeholderItem";
 OCSyncActionParameter OCSyncActionParameterRequireMatch = @"requireMatch";
+OCSyncActionParameter OCSyncActionParameterPlaceholderCompletionHandler = @"placeholderCompletionHandler";
 

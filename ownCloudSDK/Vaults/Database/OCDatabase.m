@@ -32,6 +32,7 @@
 {
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
+	NSMutableDictionary <OCSyncRecordID, NSDictionary<OCSyncActionParameter,id> *> *_ephermalParametersBySyncRecordID;
 }
 
 @end
@@ -55,6 +56,7 @@
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
+		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
@@ -531,6 +533,11 @@
 						{
 							_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
 						}
+
+						if (syncRecord.ephermalParameters != nil)
+						{
+							_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.ephermalParameters;
+						}
 					}
 				}
 			}]];
@@ -574,6 +581,15 @@
 			else
 			{
 				[_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+			}
+
+			if (syncRecord.ephermalParameters != nil)
+			{
+				_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.ephermalParameters;
+			}
+			else
+			{
+				[_ephermalParametersBySyncRecordID removeObjectForKey:syncRecord.recordID];
 			}
 		}
 		else
@@ -632,6 +648,7 @@
 			{
 				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
+				syncRecord.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
 			}
 		}
 	}

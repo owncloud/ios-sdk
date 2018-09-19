@@ -121,8 +121,8 @@
 		DC708CE1214135D100FE43CA /* OCCoreSyncActionDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CDF214135D100FE43CA /* OCCoreSyncActionDelete.m */; };
 		DC708CE4214135E200FE43CA /* OCCoreSyncActionDownload.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE2214135E200FE43CA /* OCCoreSyncActionDownload.h */; };
 		DC708CE5214135E200FE43CA /* OCCoreSyncActionDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE3214135E200FE43CA /* OCCoreSyncActionDownload.m */; };
-		DC708CE8214135FE00FE43CA /* OCCoreSyncActionLocalCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalCreation.h */; };
-		DC708CE9214135FE00FE43CA /* OCCoreSyncActionLocalCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalCreation.m */; };
+		DC708CE8214135FE00FE43CA /* OCCoreSyncActionLocalImport.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalImport.h */; };
+		DC708CE9214135FE00FE43CA /* OCCoreSyncActionLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalImport.m */; };
 		DC708CEC2141361200FE43CA /* OCCoreSyncActionLocalModification.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CEA2141361200FE43CA /* OCCoreSyncActionLocalModification.h */; };
 		DC708CED2141361200FE43CA /* OCCoreSyncActionLocalModification.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CEB2141361200FE43CA /* OCCoreSyncActionLocalModification.m */; };
 		DC72568020405752006111FA /* OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72567E20405752006111FA /* OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -259,7 +259,7 @@
 		DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE3B2049F3D100189B9A /* MiscTests.m */; };
 		DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661B2113323C0001FB2C /* OCCore+CommandDownload.m */; };
 		DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */; };
-		DCE26621211348B00001FB2C /* OCCore+CommandLocalCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalCreation.m */; };
+		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCEA7D972093556600F25223 /* OCCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEA7D952093556600F25223 /* OCCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -517,8 +517,8 @@
 		DC708CDF214135D100FE43CA /* OCCoreSyncActionDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreSyncActionDelete.m; sourceTree = "<group>"; };
 		DC708CE2214135E200FE43CA /* OCCoreSyncActionDownload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreSyncActionDownload.h; sourceTree = "<group>"; };
 		DC708CE3214135E200FE43CA /* OCCoreSyncActionDownload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreSyncActionDownload.m; sourceTree = "<group>"; };
-		DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreSyncActionLocalCreation.h; sourceTree = "<group>"; };
-		DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalCreation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreSyncActionLocalCreation.m; sourceTree = "<group>"; };
+		DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalImport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreSyncActionLocalImport.h; sourceTree = "<group>"; };
+		DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalImport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreSyncActionLocalImport.m; sourceTree = "<group>"; };
 		DC708CEA2141361200FE43CA /* OCCoreSyncActionLocalModification.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreSyncActionLocalModification.h; sourceTree = "<group>"; };
 		DC708CEB2141361200FE43CA /* OCCoreSyncActionLocalModification.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreSyncActionLocalModification.m; sourceTree = "<group>"; };
 		DC72567E20405752006111FA /* OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettings.h; sourceTree = "<group>"; };
@@ -671,7 +671,7 @@
 		DCDBEE3B2049F3D100189B9A /* MiscTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MiscTests.m; sourceTree = "<group>"; };
 		DCE2661B2113323C0001FB2C /* OCCore+CommandDownload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandDownload.m"; sourceTree = "<group>"; };
 		DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalModification.m"; sourceTree = "<group>"; };
-		DCE2661F211348B00001FB2C /* OCCore+CommandLocalCreation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalCreation.m"; sourceTree = "<group>"; };
+		DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalImport.m"; sourceTree = "<group>"; };
 		DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDatabaseConsistentOperation.h; sourceTree = "<group>"; };
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
 		DCEA7D952093556600F25223 /* OCCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCache.h; sourceTree = "<group>"; };
@@ -1034,9 +1034,9 @@
 		DC708CD4214131EE00FE43CA /* LocalCreation */ = {
 			isa = PBXGroup;
 			children = (
-				DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalCreation.m */,
-				DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalCreation.h */,
-				DCE2661F211348B00001FB2C /* OCCore+CommandLocalCreation.m */,
+				DC708CE7214135FE00FE43CA /* OCCoreSyncActionLocalImport.m */,
+				DC708CE6214135FE00FE43CA /* OCCoreSyncActionLocalImport.h */,
+				DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */,
 			);
 			path = LocalCreation;
 			sourceTree = "<group>";
@@ -1694,7 +1694,7 @@
 				DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
-				DC708CE8214135FE00FE43CA /* OCCoreSyncActionLocalCreation.h in Headers */,
+				DC708CE8214135FE00FE43CA /* OCCoreSyncActionLocalImport.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCCoreSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
@@ -2021,7 +2021,7 @@
 				DC4AFAB9206AE92F00189B9A /* OCSQLiteTransaction.m in Sources */,
 				DCFFF57F20D3A51C0096D2D3 /* OCCoreSyncContext.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
-				DCE26621211348B00001FB2C /* OCCore+CommandLocalCreation.m in Sources */,
+				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
@@ -2036,7 +2036,7 @@
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
 				DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */,
-				DC708CE9214135FE00FE43CA /* OCCoreSyncActionLocalCreation.m in Sources */,
+				DC708CE9214135FE00FE43CA /* OCCoreSyncActionLocalImport.m in Sources */,
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,

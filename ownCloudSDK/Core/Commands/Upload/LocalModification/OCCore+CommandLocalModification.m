@@ -27,7 +27,7 @@
 @implementation OCCore (CommandLocalModification)
 
 #pragma mark - Command
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options completionHandler:(OCCoreCompletionHandler)completionHandler
+- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options placeholderCompletionHandler:(OCCoreActionResultHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)completionHandler
 {
 	return (nil);
 }
