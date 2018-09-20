@@ -43,6 +43,21 @@
 	return(self);
 }
 
+- (void)setMockingBlock:(id)block forLocation:(OCMockLocation)location
+{
+	@synchronized(self)
+	{
+		if (block != nil)
+		{
+			_mockBlocksByLocation[location] = block;
+		}
+		else
+		{
+			[_mockBlocksByLocation removeObjectForKey:location];
+		}
+	}
+}
+
 - (void)addMockingBlocks:(NSDictionary <OCMockLocation, id> *)mockingBlocks
 {
 	if (mockingBlocks != nil)

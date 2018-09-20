@@ -27,7 +27,8 @@ typedef NSString* OCMockLocation NS_TYPED_ENUM;
 
 @property(class,readonly,nonatomic) OCMockManager *sharedMockManager;
 
-- (void)addMockingBlocks:(NSDictionary <OCMockLocation, id> *)mockingBlocks; //!< Adds blocks to mock methods. Provide a dictionary that assigns the mocking blocks to the mock locations.
+- (void)addMockingBlocks:(NSDictionary <OCMockLocation, id> *)mockingBlocks; //!< Adds blocks to mock methods. Provide a dictionary that assigns the mocking blocks to the mock locations. CAUTION: do not use this API from Swift, as it will pass Swift functions, not Objective-C blocks in the dictionary. Instead, use an extension on OCMockManager that iterates through the dictionary and calls -setMockingBlock:forLocation: for every key/value pair.
+- (void)setMockingBlock:(id)block forLocation:(OCMockLocation)location; //!< Add/remove a block to mock methods for a mock location.
 - (void)removeMockingBlockAtLocation:(OCMockLocation)mockLocation; //!< Remove the mocking block for a particular location.
 - (void)removeMockingBlocksForClass:(Class)aClass; //!< Remove all mocking blocks for a particular class.
 
