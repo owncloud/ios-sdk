@@ -22,21 +22,47 @@
 
 + (instancetype)extensionWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider
 {
-	OCExtension *extension = [OCExtension new];
+	return ([[self alloc] initWithIdentifier:identifier type:type location:locationIdentifier features:features objectProvider:objectProvider]);
+}
 
-	extension.identifier = identifier;
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider
+{
+	return ([self initWithIdentifier:identifier type:type locations:((locationIdentifier != nil) ? @[locationIdentifier] : nil) features:features objectProvider:objectProvider]);
+}
 
-	extension.type = type;
-
-	if (locationIdentifier != nil)
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider
+{
+	if ((self = [super init]) != nil)
 	{
-		extension.locations = @[ [OCExtensionLocation locationOfType:type identifier:locationIdentifier] ];
+		self.identifier = identifier;
+
+		self.type = type;
+
+		switch ([locationIdentifiers count])
+		{
+			case 1:
+				self.locations = @[ [OCExtensionLocation locationOfType:type identifier:locationIdentifiers.firstObject] ];
+			break;
+
+			case 0:
+			break;
+
+			default: {
+				NSMutableArray <OCExtensionLocation *> *locations = [NSMutableArray arrayWithCapacity:locationIdentifiers.count];
+
+				for (OCExtensionLocationIdentifier locationIdentifier in locationIdentifiers)
+				{
+					[locations addObject:[OCExtensionLocation locationOfType:type identifier:locationIdentifier]];
+				}
+			}
+			break;
+		}
+
+		self.features = features;
+		self.objectProvider = objectProvider;
 	}
 
-	extension.features = features;
-	extension.objectProvider = objectProvider;
-
-	return (extension);
+	return(self);
 }
 
 - (OCExtensionPriority)matchesContext:(OCExtensionContext *)context

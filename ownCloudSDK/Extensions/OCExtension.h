@@ -39,6 +39,8 @@ typedef id(^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContex
 @property(copy) OCExtensionObjectProvider objectProvider; //!< Block to provide the object to return for calls to -provideObjectForContext:error:.
 
 + (instancetype)extensionWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
 
 - (OCExtensionPriority)matchesContext:(OCExtensionContext *)context; //!< Returns the priority with which the extension meets the context's criteria. Returns nil if it does not meet the criteria.
 
