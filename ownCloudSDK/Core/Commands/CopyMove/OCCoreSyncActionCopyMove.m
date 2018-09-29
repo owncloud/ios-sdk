@@ -115,8 +115,8 @@
 			break;
 
 			case OCErrorItemDestinationNotFound:
-				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), [targetPath lastPathComponent]];
-				issueDescription = [NSString stringWithFormat:OCLocalizedString(@"The target directory %@ doesn't seem to exist.",nil), targetPath];
+				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), [[targetPath stringByDeletingLastPathComponent] lastPathComponent]];
+				issueDescription = [NSString stringWithFormat:OCLocalizedString(@"The target directory %@ doesn't seem to exist.",nil), [targetPath stringByDeletingLastPathComponent]];
 			break;
 
 			case OCErrorItemAlreadyExists:
