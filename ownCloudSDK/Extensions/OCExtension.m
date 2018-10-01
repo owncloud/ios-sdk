@@ -27,10 +27,10 @@
 
 - (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider
 {
-	return ([self initWithIdentifier:identifier type:type locations:((locationIdentifier != nil) ? @[locationIdentifier] : nil) features:features objectProvider:objectProvider]);
+	return ([self initWithIdentifier:identifier type:type locations:((locationIdentifier != nil) ? @[locationIdentifier] : nil) features:features objectProvider:objectProvider customMatcher:nil]);
 }
 
-- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider customMatcher:(OCExtensionCustomContextMatcher)customMatcher
 {
 	if ((self = [super init]) != nil)
 	{
@@ -60,6 +60,7 @@
 
 		self.features = features;
 		self.objectProvider = objectProvider;
+		self.customMatcher = customMatcher;
 	}
 
 	return(self);
@@ -91,7 +92,8 @@
 
 			if (!matchedLocation)
 			{
-				return (OCExtensionPriorityNoMatch);
+				matchPriority = OCExtensionPriorityNoMatch;
+				goto returnPriority;
 			}
 		}
 
@@ -102,7 +104,8 @@
 
 			if (self.features == nil)
 			{
-				return (OCExtensionPriorityNoMatch);
+				matchPriority = OCExtensionPriorityNoMatch;
+				goto returnPriority;
 			}
 
 			for (id requirementKey in context.requirements)
@@ -115,7 +118,8 @@
 
 			if (!allRequirementsMet)
 			{
-				return (OCExtensionPriorityNoMatch);
+				matchPriority = OCExtensionPriorityNoMatch;
+				goto returnPriority;
 			}
 
 			matchPriority = OCExtensionPriorityRequirementMatch;
@@ -141,6 +145,15 @@
 				}
 			}
 		}
+	}
+
+	// Return match priority
+	returnPriority:
+
+	// - Customize priority before return
+	if (_customMatcher != nil)
+	{
+		matchPriority = _customMatcher(context, matchPriority);
 	}
 
 	return (matchPriority);
