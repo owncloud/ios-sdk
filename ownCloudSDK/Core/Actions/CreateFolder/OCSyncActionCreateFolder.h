@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionCopyMove.h
+//  OCSyncActionCreateFolder.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,16 @@
  *
  */
 
-#import "OCCoreSyncAction.h"
+#import "OCSyncAction.h"
 
-@interface OCCoreSyncActionCopyMove : OCCoreSyncAction
+@interface OCSyncActionCreateFolder : OCSyncAction
+
+// .localItem == folder to create folder in
+
+@property(strong) NSString *folderName;
+
+@property(strong) OCItem *placeholderItem;
+
+- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName;
 
 @end

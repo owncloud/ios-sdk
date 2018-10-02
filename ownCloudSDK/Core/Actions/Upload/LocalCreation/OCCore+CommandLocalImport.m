@@ -18,12 +18,13 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
+#import "OCSyncActionLocalImport.h"
 
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -144,17 +145,7 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionLocalImport forItem:nil allowNilItem:YES allowsRescheduling:NO parameters:@{
-			OCSyncActionParameterParentItem : parentItem,
-			OCSyncActionParameterTargetName : newFileName,
-			OCSyncActionParameterInputURL	: inputFileURL,
-			OCSyncActionParameterOutputURL	: outputURL,
-
-			OCSyncActionParameterPlaceholderItem : placeholderItem
-		} ephermalParameters:((placeholderCompletionHandler != nil) ? @{
-			// Save placeholder completion handler as ephermal parameter
-			OCSyncActionParameterPlaceholderCompletionHandler : [placeholderCompletionHandler copy]
-		} : nil) resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionLocalImport alloc] initWithParentItem:parentItem filename:newFileName importFileURL:outputURL placeholderItem:placeholderItem] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end

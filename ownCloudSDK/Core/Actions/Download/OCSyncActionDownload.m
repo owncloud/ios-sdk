@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionDownload.m
+//  OCSyncActionDownload.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,20 +16,32 @@
  *
  */
 
-#import "OCCoreSyncActionDownload.h"
+#import "OCSyncActionDownload.h"
 #import "OCCore+FileProvider.h"
 
-@implementation OCCoreSyncActionDownload
+@implementation OCSyncActionDownload
 
-- (void)preflightWithContext:(OCCoreSyncContext *)syncContext
+- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options
+{
+	if ((self = [super initWithItem:item]) != nil)
+	{
+		self.identifier = OCSyncActionIdentifierDownload;
+
+		self.options = options;
+	}
+
+	return (self);
+}
+
+- (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
-	if ((item = syncContext.syncRecord.item) != nil)
+	if ((item = self.localItem) != nil)
 	{
 		if (!item.locallyModified && // Item wasn't modified locally
 		    (item.localRelativePath != nil) && // Copy of item is stored locally
-		    [item.itemVersionIdentifier isEqual:syncContext.syncRecord.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
+		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
 		{
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
@@ -45,11 +57,11 @@
 	}
 }
 
-- (void)descheduleWithContext:(OCCoreSyncContext *)syncContext
+- (void)descheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
-	if ((item = syncContext.syncRecord.item) != nil)
+	if ((item = self.localItem) != nil)
 	{
 		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
@@ -57,13 +69,13 @@
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCCoreSyncContext *)syncContext
+- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
 	OCLogDebug(@"SE: record %@ enters download scheduling", syncContext.syncRecord);
 
-	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
+	if ((item = self.archivedServerItem) != nil)
 	{
 		// Retrieve latest version from cache
 		NSError *error = nil;
@@ -141,7 +153,7 @@
 	if (item != nil)
 	{
 		NSProgress *progress;
-		NSDictionary *options = syncContext.syncRecord.parameters[OCSyncActionParameterOptions];
+		NSDictionary *options = self.options;
 
 		NSURL *temporaryDirectoryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]  URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
 		NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:item.name];
@@ -219,13 +231,13 @@
 	return (NO);
 }
 
-- (BOOL)handleResultWithContext:(OCCoreSyncContext *)syncContext
+- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCFile *downloadedFile = event.file;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 	BOOL canDeleteSyncRecord = NO;
-	OCItem *item = syncRecord.archivedServerItem;
+	OCItem *item = self.archivedServerItem;
 	NSError *downloadError = event.error;
 
 	// TODO: Check for newer local version (=> throw away downloaded file or ask user)
@@ -392,7 +404,7 @@
 	if (downloadError != nil)
 	{
 		// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 	}
 
 	if (syncRecord.resultHandler != nil)
@@ -401,6 +413,17 @@
 	}
 
 	return (canDeleteSyncRecord);
+}
+
+#pragma mark - NSCoding
+- (void)decodeActionData:(NSCoder *)decoder
+{
+	_options = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"options"];
+}
+
+- (void)encodeActionData:(NSCoder *)coder
+{
+	[coder encodeObject:_options forKey:@"options"];
 }
 
 @end

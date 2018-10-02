@@ -61,7 +61,7 @@
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 			UIImage *returnImage = nil;
 
-			[_processingLock lock]; // Lock to make any subsequent (possibly identical) computations wait until this one is done, in order not to do the same computations twice
+			[self->_processingLock lock]; // Lock to make any subsequent (possibly identical) computations wait until this one is done, in order not to do the same computations twice
 
 			{
 				UIImage *sourceImage = nil;
@@ -69,14 +69,14 @@
 				// Check if, by now, what is being requested is already there
 				@synchronized(self)
 				{
-					returnImage = [_imageByRequestedMaximumSize objectForKey:requestedMaximumSizeInPixelsValue];
+					returnImage = [self->_imageByRequestedMaximumSize objectForKey:requestedMaximumSizeInPixelsValue];
 
 					if (returnImage == nil)
 					{
 						// Check if an existing image can be used. If so, go for the smallest, existing image that's still bigger than what was requested, so computation is fastest.
 						CGFloat sourceImagePixelCount = 0;
 
-						for (NSValue *otherMaximumSizeValue in _imageByRequestedMaximumSize)
+						for (NSValue *otherMaximumSizeValue in self->_imageByRequestedMaximumSize)
 						{
 							CGSize otherMaximumSize = otherMaximumSizeValue.CGSizeValue;
 
@@ -86,7 +86,7 @@
 
 								if ((pixelCount < sourceImagePixelCount) || (sourceImagePixelCount == 0))
 								{
-									sourceImage = _imageByRequestedMaximumSize[otherMaximumSizeValue];
+									sourceImage = self->_imageByRequestedMaximumSize[otherMaximumSizeValue];
 									sourceImagePixelCount = pixelCount;
 								}
 							}
@@ -105,15 +105,15 @@
 						{
 							@synchronized(self)
 							{
-								[_imageByRequestedMaximumSize removeAllObjects];
-								[_imageByRequestedMaximumSize setObject:returnImage forKey:requestedMaximumSizeInPixelsValue];
+								[self->_imageByRequestedMaximumSize removeAllObjects];
+								[self->_imageByRequestedMaximumSize setObject:returnImage forKey:requestedMaximumSizeInPixelsValue];
 							}
 						}
 					}
 				}
 			}
 
-			[_processingLock unlock]; // Done! Unlock!
+			[self->_processingLock unlock]; // Done! Unlock!
 
 			if (completionHandler != nil)
 			{

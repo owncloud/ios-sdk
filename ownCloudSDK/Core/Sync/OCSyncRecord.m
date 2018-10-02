@@ -18,41 +18,38 @@
 
 #import "OCSyncRecord.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCSyncAction.h"
 
 @implementation OCSyncRecord
 
 @synthesize recordID = _recordID;
 
+@synthesize actionIdentifier = _actionIdentifier;
 @synthesize action = _action;
 @synthesize timestamp = _timestamp;
 
-@synthesize inProgressSince = _inProgressSince;
 @synthesize state = _state;
+@synthesize inProgressSince = _inProgressSince;
+
 @synthesize blockedByBundleIdentifier = _blockedByBundleIdentifier;
 @synthesize blockedByPID = _blockedByPID;
+@dynamic blockedByDifferentCopyOfThisProcess;
+
 @synthesize allowsRescheduling = _allowsRescheduling;
 
-@synthesize archivedServerItem = _archivedServerItem;
-
-@synthesize parameters = _parameters;
-
-@synthesize actionState = _actionState;
-
-@synthesize ephermalParameters = _ephermalParameters;
 @synthesize resultHandler = _resultHandler;
+@synthesize progress = _progress;
 
 #pragma mark - Init & Dealloc
-- (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
+- (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	if ((self = [self init]) != nil)
 	{
 		_action = action;
+		_actionIdentifier = action.identifier;
 		_timestamp = [NSDate date];
 
 		_state = OCSyncRecordStatePending;
-
-		_archivedServerItem = archivedServerItem;
-		_parameters = parameters;
 
 		_resultHandler = [resultHandler copy];
 	}
@@ -61,50 +58,6 @@
 }
 
 #pragma mark - Properties
-- (NSData *)_archivedServerItemData
-{
-	if ((_archivedServerItemData == nil) && (_archivedServerItem != nil))
-	{
-		_archivedServerItemData = [NSKeyedArchiver archivedDataWithRootObject:_archivedServerItem];
-	}
-
-	return (_archivedServerItemData);
-}
-
-- (OCItem *)archivedServerItem
-{
-	if ((_archivedServerItem == nil) && (_archivedServerItemData != nil))
-	{
-		_archivedServerItem = [NSKeyedUnarchiver unarchiveObjectWithData:_archivedServerItemData];
-	}
-
-	return (_archivedServerItem);
-}
-
-- (OCItem *)item
-{
-	return (self.parameters[OCSyncActionParameterItem]);
-}
-
-- (OCPath)itemPath
-{
-	if (_itemPath == nil)
-	{
-		if ((_itemPath = self.parameters[OCSyncActionParameterPath]) == nil)
-		{
-			if ((_itemPath = ((OCItem *)self.parameters[OCSyncActionParameterItem]).path) == nil)
-			{
-				if ((_itemPath = self.parameters[OCSyncActionParameterSourcePath]) == nil)
-				{
-					_itemPath = ((OCItem *)self.parameters[OCSyncActionParameterPlaceholderItem]).path;
-				}
-			}
-		}
-	}
-
-	return (_itemPath);
-}
-
 - (void)setState:(OCSyncRecordState)state
 {
 	_state = state;
@@ -133,19 +86,6 @@
 	}
 
 	return (NO);
-}
-
-- (NSMutableDictionary *)actionState
-{
-	@synchronized(self)
-	{
-		if (_actionState == nil)
-		{
-			_actionState = [NSMutableDictionary new];
-		}
-
-		return (_actionState);
-	}
 }
 
 #pragma mark - Serialization
@@ -191,7 +131,9 @@
 	{
 		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
 
-		_action = [decoder decodeObjectOfClass:[NSString class] forKey:@"action"];
+		_actionIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"actionID"];
+		_action = [decoder decodeObjectOfClass:[OCSyncRecord class] forKey:@"action"];
+
 		_timestamp = [decoder decodeObjectOfClass:[NSDate class] forKey:@"timestamp"];
 
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
@@ -199,11 +141,6 @@
 		_blockedByBundleIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"blockedByBundleIdentifier"];
 		_blockedByPID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"blockedByPID"];
 		_allowsRescheduling = [decoder decodeBoolForKey:@"allowsRescheduling"];
-
-		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
-
-		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
-		_actionState = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"actionState"];
 	}
 	
 	return (self);
@@ -213,7 +150,9 @@
 {
 	[coder encodeObject:_recordID forKey:@"recordID"];
 
+	[coder encodeObject:_actionIdentifier forKey:@"actionID"];
 	[coder encodeObject:_action forKey:@"action"];
+
 	[coder encodeObject:_timestamp forKey:@"timestamp"];
 
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
@@ -221,43 +160,22 @@
 	[coder encodeObject:_blockedByBundleIdentifier forKey:@"blockedByBundleIdentifier"];
 	[coder encodeObject:_blockedByPID forKey:@"blockedByPID"];
 	[coder encodeBool:_allowsRescheduling forKey:@"allowsRescheduling"];
-
-	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
-
-	[coder encodeObject:_parameters forKey:@"parameters"];
-	[coder encodeObject:_actionState forKey:@"actionState"];
 }
 
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, action: %@, timestamp: %@, state: %lu, inProgressSince: %@, allowsRescheduling: %d, path: %@, parameters: %@>", NSStringFromClass(self.class), self, _recordID, _action, _timestamp, _state, _inProgressSince, _allowsRescheduling, self.itemPath, _parameters]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, allowsRescheduling: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _allowsRescheduling, _action]);
 }
 
 
 @end
 
-OCSyncAction OCSyncActionDeleteLocal = @"deleteLocal";
-OCSyncAction OCSyncActionDeleteRemote = @"deleteRemote";
-OCSyncAction OCSyncActionMove = @"move";
-OCSyncAction OCSyncActionCopy = @"copy";
-OCSyncAction OCSyncActionCreateFolder = @"createFolder";
-OCSyncAction OCSyncActionDownload = @"download";
-OCSyncAction OCSyncActionLocalImport = @"localImport";
-OCSyncAction OCSyncActionLocalModification = @"localModification";
-
-OCSyncActionParameter OCSyncActionParameterParentItem = @"parentItem";
-OCSyncActionParameter OCSyncActionParameterItem = @"item";
-OCSyncActionParameter OCSyncActionParameterPath = @"path";
-OCSyncActionParameter OCSyncActionParameterOptions = @"options";
-OCSyncActionParameter OCSyncActionParameterSourcePath = @"sourcePath";
-OCSyncActionParameter OCSyncActionParameterTargetPath = @"targetPath";
-OCSyncActionParameter OCSyncActionParameterSourceItem = @"sourceItem";
-OCSyncActionParameter OCSyncActionParameterTargetItem = @"targetItem";
-OCSyncActionParameter OCSyncActionParameterTargetName = @"targetName";
-OCSyncActionParameter OCSyncActionParameterInputURL = @"inputURL";
-OCSyncActionParameter OCSyncActionParameterOutputURL = @"outputURL";
-OCSyncActionParameter OCSyncActionParameterPlaceholderItem = @"placeholderItem";
-OCSyncActionParameter OCSyncActionParameterRequireMatch = @"requireMatch";
-OCSyncActionParameter OCSyncActionParameterPlaceholderCompletionHandler = @"placeholderCompletionHandler";
-
+OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal = @"deleteLocal";
+OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote = @"deleteRemote";
+OCSyncActionIdentifier OCSyncActionIdentifierMove = @"move";
+OCSyncActionIdentifier OCSyncActionIdentifierCopy = @"copy";
+OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder = @"createFolder";
+OCSyncActionIdentifier OCSyncActionIdentifierDownload = @"download";
+OCSyncActionIdentifier OCSyncActionIdentifierLocalImport = @"localImport";
+OCSyncActionIdentifier OCSyncActionIdentifierLocalModification = @"localModification";

@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionCreateFolder.h
+//  OCSyncActionDelete.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,12 @@
  *
  */
 
-#import "OCCoreSyncAction.h"
+#import "OCSyncAction.h"
 
-@interface OCCoreSyncActionCreateFolder : OCCoreSyncAction
+@interface OCSyncActionDelete : OCSyncAction
+
+@property(assign) BOOL requireMatch;
+
+- (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch;
 
 @end

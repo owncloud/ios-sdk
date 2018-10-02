@@ -138,7 +138,7 @@
 
 		// Signal NSFileProviderManager
 		dispatch_async(dispatch_get_main_queue(), ^{
-			NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:_vault.fileProviderDomain];
+			NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:self->_vault.fileProviderDomain];
 
 			for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
 			{
@@ -182,9 +182,9 @@
 
 		if ((fileProviderManager = [self fileProviderManager]) != nil)
 		{
-			@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
+			@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
 			{
-				NSInteger signalCountAtStart = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+				NSInteger signalCountAtStart = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 
 				OCLogDebug(@"FP: Signaling %@ for changes..", changedDirectoryFileID);
 
@@ -192,22 +192,22 @@
 					OCLogDebug(@"FP: Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
 
 					dispatch_async(dispatch_get_main_queue(), ^{
-						@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
+						@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
 						{
-							NSInteger signalCountAtEnd = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+							NSInteger signalCountAtEnd = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 							NSInteger remainingSignalCount = signalCountAtEnd - signalCountAtStart;
 
 							if (remainingSignalCount > 0)
 							{
 								// There were signals after initiating the last signal => schedule another signal
-								_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
+								self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
 
 								[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
 							}
 							else
 							{
 								// The last signal was sent after the last signal was requested => remove from dict
-								[_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
+								[self->_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
 							}
 						}
 					});

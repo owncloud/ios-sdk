@@ -154,7 +154,7 @@
 	{
 		[_certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				_sectionNodes = detailsViewNodes;
+				self->_sectionNodes = detailsViewNodes;
 				[self.tableView reloadData];
 			});
 		}];

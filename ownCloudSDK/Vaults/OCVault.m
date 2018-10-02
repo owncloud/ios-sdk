@@ -100,7 +100,7 @@
 				{
 					if ([domain.identifier isEqual:self.uuid.UUIDString])
 					{
-						_fileProviderDomain = domain;
+						self->_fileProviderDomain = domain;
 					}
 				}
 

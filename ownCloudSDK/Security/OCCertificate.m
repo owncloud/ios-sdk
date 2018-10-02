@@ -338,7 +338,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 			
 			if (savedCertificate != self)
 			{
-				_userAcceptedDate = savedCertificate.userAcceptedDate;
+				self->_userAcceptedDate = savedCertificate.userAcceptedDate;
 			}
 		}];
 	}
@@ -362,7 +362,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 					[userAcceptedCertificatesBySHA256Fingerprints setObject:self forKey:sha256Fingerprint];
 					
 					// Save accepted date
-					_userAcceptedDate = [NSDate date];
+					self->_userAcceptedDate = [NSDate date];
 
 					// Save change
 					[[self class] _saveUserAcceptedCertificates];
@@ -380,7 +380,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 				}
 				
 				// Wipe accepted date
-				_userAcceptedDate = nil;
+				self->_userAcceptedDate = nil;
 
 				// Save change
 				[[self class] _saveUserAcceptedCertificates];
@@ -406,7 +406,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 				{
 					if (savedCertificate != self)
 					{
-						_userAcceptedDate = savedCertificate.userAcceptedDate;
+						self->_userAcceptedDate = savedCertificate.userAcceptedDate;
 					}
 				}
 			}];

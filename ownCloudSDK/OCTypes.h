@@ -32,7 +32,7 @@ typedef void(^OCCompletionHandler)(id sender, NSError *error);
 
 typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOOL authenticationIsAvailable);
 
-typedef NSString* OCSyncAction NS_TYPED_ENUM;
+typedef NSString* OCSyncActionIdentifier NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
 typedef NSNumber* OCSyncRecordID;
 

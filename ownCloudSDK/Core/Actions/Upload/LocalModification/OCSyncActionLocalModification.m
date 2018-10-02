@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionLocalImport.h
+//  OCSyncActionLocalModification.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,8 @@
  *
  */
 
-#import "OCCoreSyncAction.h"
+#import "OCSyncActionLocalModification.h"
 
-@interface OCCoreSyncActionLocalImport : OCCoreSyncAction
+@implementation OCSyncActionLocalModification
 
 @end

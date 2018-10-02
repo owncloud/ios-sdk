@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncContext.h
+//  OCSyncContext.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 15.06.18.
@@ -19,11 +19,11 @@
 #import <Foundation/Foundation.h>
 #import "OCCore.h"
 
-@class OCCoreSyncContext;
+@class OCSyncContext;
 
-typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCCoreSyncContext *parameterSet);
+typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *parameterSet);
 
-@interface OCCoreSyncContext : NSObject
+@interface OCSyncContext : NSObject
 
 // Shared properties (Scheduler + Result Handler)
 @property(strong) OCSyncRecord *syncRecord; //!< The sync record to schedule / handle the result for.

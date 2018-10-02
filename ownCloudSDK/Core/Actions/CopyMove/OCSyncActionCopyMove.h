@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionDownload.h
+//  OCSyncActionCopyMove.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,15 @@
  *
  */
 
-#import "OCCoreSyncAction.h"
+#import "OCSyncAction.h"
 
-@interface OCCoreSyncActionDownload : OCCoreSyncAction
+@interface OCSyncActionCopyMove : OCSyncAction
+
+@property(strong) NSString *targetName;
+@property(strong) OCItem *targetParentItem;
+
+@property(assign) BOOL isRename;
+
+- (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename;
 
 @end

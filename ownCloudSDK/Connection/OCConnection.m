@@ -233,8 +233,8 @@
 							certificate.userAccepted = YES;
 						}
 
-						_bookmark.certificate = request.responseCertificate;
-						_bookmark.certificateModificationDate = [NSDate date];
+						self->_bookmark.certificate = request.responseCertificate;
+						self->_bookmark.certificateModificationDate = [NSDate date];
 					}
 				}]];
 			}
@@ -329,17 +329,17 @@
 							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
 							{
 								// Create an issue if the redirectURL replicates the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 									if (decision == OCConnectionIssueDecisionApprove)
 									{
-										_bookmark.url = alternativeBaseURL;
+										self->_bookmark.url = alternativeBaseURL;
 									}
 								}];
 							}
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
+								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
 								issue.level = OCConnectionIssueLevelError;
 
 								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
@@ -384,7 +384,7 @@
 				{
 					NSError *jsonError = nil;
 					
-					if ((_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
+					if ((self->_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
 					{
 						// JSON decode error
 						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
@@ -491,7 +491,7 @@
 		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
 			self.state = OCConnectionStateDisconnected;
 
-			_serverStatus = nil;
+			self->_serverStatus = nil;
 
 			if (completionHandler!=nil)
 			{

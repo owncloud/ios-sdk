@@ -33,8 +33,6 @@
 - (OCDatabase *)database;
 
 #pragma mark - Sync Engine
-- (void)registerSyncActions;
-
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
 
 @end

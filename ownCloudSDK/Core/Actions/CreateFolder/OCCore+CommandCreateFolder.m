@@ -1,5 +1,5 @@
 //
-//  OCCore+CommandDelete.m
+//  OCCore+CommandCreateFolder.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 16.06.18.
@@ -18,21 +18,20 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
-#import "OCCoreSyncActionDelete.h"
+#import "OCSyncActionCreateFolder.h"
 
-@implementation OCCore (CommandDelete)
+@implementation OCCore (CommandCreateFolder)
 
 #pragma mark - Command
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterRequireMatch : @(requireMatch),
-		} resultHandler:resultHandler]);
+	if (folderName == nil) { return(nil); }
+	if (parentItem == nil) { return(nil); }
+
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCreateFolder alloc] initWithParentItem:parentItem folderName:folderName] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end

@@ -349,20 +349,20 @@
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-											newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+											self->newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
 											if (preConnectAction != nil)
 											{
-												preConnectAction(newConnection);
+												preConnectAction(self->newConnection);
 											}
 
 											// newConnection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-											[newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+											[self->newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 
 												NSLog(@"Done connecting: %@ %@", error, issue);
 
-												connectionAction(error, issue, newConnection);
+												connectionAction(error, issue, self->newConnection);
 											}];
 										});
 									}

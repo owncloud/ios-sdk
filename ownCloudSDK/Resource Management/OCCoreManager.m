@@ -254,7 +254,7 @@
 				offlineOperation(bookmark, ^{
 					@synchronized(self)
 					{
-						[_runningOfflineOperationByUUID removeObjectForKey:bookmark.uuid];
+						[self->_runningOfflineOperationByUUID removeObjectForKey:bookmark.uuid];
 
 						[self _runNextOfflineOperationForBookmark:bookmark];
 					}

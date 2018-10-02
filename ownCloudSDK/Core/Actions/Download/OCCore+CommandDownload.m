@@ -18,22 +18,18 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "NSString+OCParentPath.h"
-#import "OCCoreSyncActionDownload.h"
+#import "OCSyncActionDownload.h"
 
 @implementation OCCore (CommandDownload)
 
 #pragma mark - Command
 - (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDownload forItem:item allowNilItem:NO allowsRescheduling:YES parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterOptions : ((options != nil) ? options : @{})
-		} resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] allowsRescheduling:YES resultHandler:resultHandler]);
 }
 
 @end

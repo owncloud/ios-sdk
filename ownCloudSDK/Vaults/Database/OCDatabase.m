@@ -27,6 +27,7 @@
 #import "NSString+OCParentPath.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
+#import "OCSyncAction.h"
 
 @interface OCDatabase ()
 {
@@ -509,13 +510,17 @@
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
-		if (syncRecord.itemPath != nil)
+		NSString *path = syncRecord.action.localItem.path;
+
+		if (path == nil) { path = @""; }
+
+		if (path != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
 				@"timestampDate" 	: syncRecord.timestamp,
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
-				@"action"		: syncRecord.action,
-				@"path"			: syncRecord.itemPath,
+				@"action"		: syncRecord.actionIdentifier,
+				@"path"			: path,
 				@"recordData"		: [syncRecord serializedData]
 			} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 				syncRecord.recordID = rowID;
@@ -526,17 +531,17 @@
 					{
 						if (syncRecord.progress != nil)
 						{
-							_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
 						}
 
 						if (syncRecord.resultHandler != nil)
 						{
-							_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+							self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
 						}
 
-						if (syncRecord.ephermalParameters != nil)
+						if (syncRecord.action.ephermalParameters != nil)
 						{
-							_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.ephermalParameters;
+							self->_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
 						}
 					}
 				}
@@ -583,9 +588,9 @@
 				[_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
 			}
 
-			if (syncRecord.ephermalParameters != nil)
+			if (syncRecord.action.ephermalParameters != nil)
 			{
-				_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.ephermalParameters;
+				_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
 			}
 			else
 			{
@@ -648,7 +653,7 @@
 			{
 				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
-				syncRecord.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
+				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
 			}
 		}
 	}
@@ -689,7 +694,7 @@
 	}]];
 }
 
-- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
+- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
 		@"path" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path 		 apply:(path!=nil)],

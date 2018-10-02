@@ -18,8 +18,8 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
-#import "OCCoreSyncActionCopyMove.h"
+#import "OCSyncContext.h"
+#import "OCSyncActionCopyMove.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 
@@ -30,25 +30,14 @@
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionCopy forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterTargetName : name,
-			OCSyncActionParameterTargetItem : parentItem,
-		} resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierCopy targetName:name targetParentItem:parentItem isRename:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 - (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionMove forItem:item allowNilItem:NO allowsRescheduling:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterTargetName : name,
-			OCSyncActionParameterTargetItem : parentItem,
-			@"isRename" : ((options[@"isRename"]!=nil) ? options[@"isRename"] : @(NO))
-		} resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:name targetParentItem:parentItem isRename:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 - (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
@@ -66,7 +55,9 @@
 		}];
 	});
 
-	return([self moveItem:item to:parentItem withName:newFileName options:@{ @"isRename" : @(YES) } resultHandler:resultHandler]);
+	if ((item == nil) || (newFileName == nil) || (parentItem == nil)) { return(nil); }
+
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:newFileName targetParentItem:parentItem isRename:YES] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end

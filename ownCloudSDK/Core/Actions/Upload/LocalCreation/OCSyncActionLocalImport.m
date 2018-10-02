@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionLocalImport.m
+//  OCSyncActionLocalImport.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,15 +16,29 @@
  *
  */
 
-#import "OCCoreSyncActionLocalImport.h"
+#import "OCSyncActionLocalImport.h"
 
-@implementation OCCoreSyncActionLocalImport
+@implementation OCSyncActionLocalImport
 
-- (void)preflightWithContext:(OCCoreSyncContext *)syncContext
+- (instancetype)initWithParentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL placeholderItem:(OCItem *)placeholderItem
+{
+	if ((self = [super initWithItem:parentItem]) != nil)
+	{
+		self.identifier = OCSyncActionIdentifierLocalImport;
+
+		self.filename = filename;
+		self.importFileURL = importFileURL;
+		self.placeholderItem = placeholderItem;
+	}
+
+	return (self);
+}
+
+- (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *placeholderItem;
 
-	if ((placeholderItem = syncContext.syncRecord.parameters[OCSyncActionParameterPlaceholderItem]) != nil)
+	if ((placeholderItem = self.placeholderItem) != nil)
 	{
 		[placeholderItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
@@ -34,11 +48,11 @@
 	}
 }
 
-- (void)descheduleWithContext:(OCCoreSyncContext *)syncContext
+- (void)descheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *placeholderItem;
 
-	if ((placeholderItem = syncContext.syncRecord.parameters[OCSyncActionParameterPlaceholderItem]) != nil)
+	if ((placeholderItem = self.placeholderItem) != nil)
 	{
 		[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
@@ -46,17 +60,16 @@
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCCoreSyncContext *)syncContext
+- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCPath newItemName;
 	OCItem *parentItem, *placeholderItem;
 	NSURL *uploadURL;
-	NSDictionary<OCSyncActionParameter,id> *parameters = syncContext.syncRecord.parameters;
 
-	if (((newItemName = parameters[OCSyncActionParameterTargetName]) != nil) &&
-	    ((parentItem = parameters[OCSyncActionParameterParentItem]) != nil) &&
-	    ((placeholderItem = parameters[OCSyncActionParameterPlaceholderItem]) != nil) &&
-	    ((uploadURL = parameters[OCSyncActionParameterOutputURL]) != nil))
+	if (((newItemName = self.filename) != nil) &&
+	    ((parentItem = self.localItem) != nil) &&
+	    ((placeholderItem = self.placeholderItem) != nil) &&
+	    ((uploadURL = self.importFileURL) != nil))
 	{
 		NSProgress *progress;
 
@@ -71,7 +84,7 @@
 	return (NO);
 }
 
-- (BOOL)handleResultWithContext:(OCCoreSyncContext *)syncContext
+- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
@@ -81,7 +94,7 @@
 	{
 		OCItem *placeholderItem;
 
-		if ((placeholderItem = syncRecord.parameters[OCSyncActionParameterPlaceholderItem]) != nil)
+		if ((placeholderItem = self.placeholderItem) != nil)
 		{
 			OCItem *uploadedItem = (OCItem *)event.result;
 			NSURL *uploadedItemURL = nil, *placeholderItemURL = nil;
@@ -146,7 +159,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 	}
 
 	if (syncRecord.resultHandler != nil)
@@ -155,6 +168,21 @@
 	}
 
 	return (canDeleteSyncRecord);
+}
+
+#pragma mark - NSCoding
+- (void)decodeActionData:(NSCoder *)decoder
+{
+	_filename = [decoder decodeObjectOfClass:[NSString class] forKey:@"filename"];
+	_importFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"importFileURL"];
+	_placeholderItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"placeholderItem"];
+}
+
+- (void)encodeActionData:(NSCoder *)coder
+{
+	[coder encodeObject:_filename forKey:@"filename"];
+	[coder encodeObject:_importFileURL forKey:@"importFileURL"];
+	[coder encodeObject:_placeholderItem forKey:@"placeholderItem"];
 }
 
 @end

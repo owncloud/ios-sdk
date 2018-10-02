@@ -312,7 +312,7 @@
 			dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
 				for (OCItem *deleteItem in deletedCacheItems)
 				{
-					[_thumbnailCache removeObjectForKey:deleteItem.fileID];
+					[self->_thumbnailCache removeObjectForKey:deleteItem.fileID];
 				}
 
 				dispatch_group_leave(cacheUpdateGroup);

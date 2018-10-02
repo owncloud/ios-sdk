@@ -150,7 +150,7 @@ OCAuthenticationMethodAutoRegister
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			// Create and start authentication session on main thread
-			authenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:^(NSURL *callbackURL, NSError *error) {
+			self->authenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:^(NSURL *callbackURL, NSError *error) {
 
 				// Handle authentication session result
 				if (error == nil)
@@ -197,11 +197,11 @@ OCAuthenticationMethodAutoRegister
 				OCLogDebug(@"Error: %@", OCLogPrivate(error));
 				
 				// Release Authentication Session
-				authenticationSession = nil;
+				self->authenticationSession = nil;
 			}];
 
 			// Start authentication session
-			[authenticationSession start];
+			[self->authenticationSession start];
 		});
 	}
 	else

@@ -70,15 +70,15 @@
 		_cachedSet.state = OCCoreItemListStateStarted;
 
 		[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
-			[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-				[_cachedSet updateWithError:error items:items];
+			[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+				[self->_cachedSet updateWithError:error items:items];
 
-				if ((_cachedSet.state == OCCoreItemListStateSuccess) || (_cachedSet.state == OCCoreItemListStateFailed))
+				if ((self->_cachedSet.state == OCCoreItemListStateSuccess) || (self->_cachedSet.state == OCCoreItemListStateFailed))
 				{
-					self.changeHandler(_core, self);
+					self.changeHandler(self->_core, self);
 				}
 
-				[_core endActivity:@"update cache set"];
+				[self->_core endActivity:@"update cache set"];
 			}];
 		}];
 	}
@@ -101,19 +101,19 @@
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
 		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
-			[_core queueConnectivityBlock:^{
-				[_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					[_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-						[_retrievedSet updateWithError:error items:items];
+			[self->_core queueConnectivityBlock:^{
+				[self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+						[self->_retrievedSet updateWithError:error items:items];
 
-						if (_retrievedSet.state == OCCoreItemListStateSuccess)
+						if (self->_retrievedSet.state == OCCoreItemListStateSuccess)
 						{
 							// Update all items with root item
 							if (self.path != nil)
 							{
 								OCItem *rootItem;
 
-								if ((rootItem = _retrievedSet.itemsByPath[self.path]) != nil)
+								if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
 								{
 									if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
 									{
@@ -133,15 +133,15 @@
 								}
 							}
 
-							self.changeHandler(_core, self);
+							self.changeHandler(self->_core, self);
 						}
 
-						if (_retrievedSet.state == OCCoreItemListStateFailed)
+						if (self->_retrievedSet.state == OCCoreItemListStateFailed)
 						{
-							self.changeHandler(_core, self);
+							self.changeHandler(self->_core, self);
 						}
 
-						[_core endActivity:@"update retrieved set"];
+						[self->_core endActivity:@"update retrieved set"];
 					}];
 				}];
 			}];
@@ -159,11 +159,11 @@
 				NSArray <OCItem *> *items = nil;
 
 				// Retrieve parent item from cache.
-				items = [_core.vault.database retrieveCacheItemsSyncAtPath:[self.path parentPath] itemOnly:YES error:&dbError syncAnchor:NULL];
+				items = [self->_core.vault.database retrieveCacheItemsSyncAtPath:[self.path parentPath] itemOnly:YES error:&dbError syncAnchor:NULL];
 
 				if (dbError != nil)
 				{
-					[_retrievedSet updateWithError:dbError items:nil];
+					[self->_retrievedSet updateWithError:dbError items:nil];
 				}
 				else
 				{
@@ -185,11 +185,11 @@
 								RetrieveItems(query.rootItem);
 
 								// Remove query from core
-								[_core stopQuery:query];
+								[self->_core stopQuery:query];
 							}
 						};
 
-						[_core startQuery:parentDirectoryQuery];
+						[self->_core startQuery:parentDirectoryQuery];
 					}
 					else
 					{

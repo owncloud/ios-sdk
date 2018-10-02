@@ -141,16 +141,12 @@
 
 		_thumbnailCache = [OCCache new];
 
-		_syncActionsByAction = [NSMutableDictionary new];
-
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		_runningActivitiesGroup = dispatch_group_create();
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
-
-		[self registerSyncActions];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
 
@@ -181,13 +177,13 @@
 - (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
-		if (_state == OCCoreStateStopped)
+		if (self->_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
 			dispatch_group_t startGroup = nil;
 
 			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateStarting;
+			self->_state = OCCoreStateStarting;
 			[self didChangeValueForKey:@"state"];
 
 			startGroup = dispatch_group_create();
@@ -214,15 +210,15 @@
 			// Proceed with connecting - or stop
 			if (startError == nil)
 			{
-				_attemptConnect = YES;
+				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
 			else
 			{
-				_attemptConnect = NO;
+				self->_attemptConnect = NO;
 
 				[self willChangeValueForKey:@"state"];
-				_state = OCCoreStateStopped;
+				self->_state = OCCoreStateStopped;
 				[self didChangeValueForKey:@"state"];
 			}
 
@@ -246,23 +242,23 @@
 	[self queueBlock:^{
 		__block NSError *stopError = nil;
 
-		if ((_state == OCCoreStateRunning) || (_state == OCCoreStateStarting))
+		if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
 		{
 			__weak OCCore *weakSelf = self;
 
 			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateStopping;
+			self->_state = OCCoreStateStopping;
 			[self didChangeValueForKey:@"state"];
 
 			// Wait for running operations to finish
-			_runningActivitiesCompleteBlock = ^{
+			self->_runningActivitiesCompleteBlock = ^{
 				dispatch_group_t stopGroup = nil;
 
 				// Stop..
 				stopGroup = dispatch_group_create();
 
 				// Close connection
-				_attemptConnect = NO;
+				self->_attemptConnect = NO;
 
 				dispatch_group_enter(stopGroup);
 
@@ -283,7 +279,7 @@
 				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
 
 				[weakSelf willChangeValueForKey:@"state"];
-				_state = OCCoreStateStopped;
+				self->_state = OCCoreStateStopped;
 				[weakSelf didChangeValueForKey:@"state"];
 
 				if (completionHandler != nil)
@@ -292,12 +288,12 @@
 				}
 			};
 
-			if (_runningActivities == 0)
+			if (self->_runningActivities == 0)
 			{
-				if (_runningActivitiesCompleteBlock != nil)
+				if (self->_runningActivitiesCompleteBlock != nil)
 				{
-					_runningActivitiesCompleteBlock();
-					_runningActivitiesCompleteBlock = nil;
+					self->_runningActivitiesCompleteBlock();
+					self->_runningActivitiesCompleteBlock = nil;
 				}
 			}
 		}
@@ -312,7 +308,7 @@
 - (void)attemptConnect:(BOOL)doAttempt
 {
 	[self queueBlock:^{
-		_attemptConnect = doAttempt;
+		self->_attemptConnect = doAttempt;
 
 		[self _attemptConnect];
 	}];
@@ -321,10 +317,10 @@
 - (void)_attemptConnect
 {
 	[self queueConnectivityBlock:^{
-		if ((_state == OCCoreStateStarting) && _attemptConnect)
+		if ((self->_state == OCCoreStateStarting) && self->_attemptConnect)
 		{
 			// Open connection
-			dispatch_suspend(_connectivityQueue);
+			dispatch_suspend(self->_connectivityQueue);
 
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 				[self queueBlock:^{
@@ -332,7 +328,7 @@
 					if (error == nil)
 					{
 						[self willChangeValueForKey:@"state"];
-						_state = OCCoreStateRunning;
+						self->_state = OCCoreStateRunning;
 						[self didChangeValueForKey:@"state"];
 
 						if (self.automaticItemListUpdatesEnabled)
@@ -342,12 +338,12 @@
 					}
 
 					// Relay error and issues to delegate
-					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
 					{
-						[_delegate core:self handleError:error issue:issue];
+						[self->_delegate core:self handleError:error issue:issue];
 					}
 
-					dispatch_resume(_connectivityQueue);
+					dispatch_resume(self->_connectivityQueue);
 				}];
 			}];
 		}
@@ -360,16 +356,16 @@
 	if (_reachabilityMonitor.available)
 	{
 		[self queueBlock:^{
-			if (_state == OCCoreStateStarting)
+			if (self->_state == OCCoreStateStarting)
 			{
 				[self _attemptConnect];
 			}
 
 			[self queueConnectivityBlock:^{	// Wait for _attemptConnect to finish
 				[self queueBlock:^{ // See if we can proceed
-					if (_state == OCCoreStateRunning)
+					if (self->_state == OCCoreStateRunning)
 					{
-						for (OCQuery *query in _queries)
+						for (OCQuery *query in self->_queries)
 						{
 							if (query.state == OCQueryStateContentsFromCache)
 							{
@@ -438,7 +434,7 @@
 
 	// Add query to list of queries
 	[self queueBlock:^{
-		[_queries addObject:query];
+		[self->_queries addObject:query];
 	}];
 
 	if (query.querySinceSyncAnchor == nil)
@@ -466,7 +462,7 @@
 	if (query == nil) { return; }
 
 	[self queueBlock:^{
-		[_queries removeObject:query];
+		[self->_queries removeObject:query];
 		query.state = OCQueryStateStopped;
 	}];
 }
@@ -529,7 +525,7 @@
 			BOOL requestThumbnail = YES;
 
 			// Is there a thumbnail for this file in the cache?
-			if ((thumbnail = [_thumbnailCache objectForKey:item.fileID]) != nil)
+			if ((thumbnail = [self->_thumbnailCache objectForKey:item.fileID]) != nil)
 			{
 				// Yes! But is it the version we want?
 				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier] && [thumbnail.specID isEqual:item.thumbnailSpecID])
@@ -551,7 +547,7 @@
 				else
 				{
 					// No it's not => remove outdated version from cache
-					[_thumbnailCache removeObjectForKey:item.fileID];
+					[self->_thumbnailCache removeObjectForKey:item.fileID];
 
 					thumbnail = nil;
 				}
@@ -580,7 +576,7 @@
 							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
 							{
 								[self queueBlock:^{
-									[_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
+									[self->_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
 									retrieveHandler(nil, self, item, cachedThumbnail, NO, progress);
 								}];
 
@@ -605,11 +601,11 @@
 								// Queue retrieve handlers
 								NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue;
 
-								if ((retrieveHandlersQueue = _pendingThumbnailRequests[requestID]) == nil)
+								if ((retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID]) == nil)
 								{
 									retrieveHandlersQueue = [NSMutableArray new];
 
-									_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
+									self->_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
 								}
 
 								if (retrieveHandlersQueue.count != 0)
@@ -682,7 +678,7 @@
 		if ((event.error == nil) && (event.result != nil))
 		{
 			// Update cache
-			[_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
+			[self->_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
 
 			// Store in database
 			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
@@ -691,11 +687,11 @@
 		// Call all retrieveHandlers
 		if (requestID != nil)
 		{
-			NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue = _pendingThumbnailRequests[requestID];
+			NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID];
 
 			if (retrieveHandlersQueue != nil)
 			{
-				[_pendingThumbnailRequests removeObjectForKey:requestID];
+				[self->_pendingThumbnailRequests removeObjectForKey:requestID];
 			}
 
 			item.thumbnail = thumbnail;
@@ -740,11 +736,11 @@
 {
 	OCLogDebug(@"Beginning activity '%@' ..", description);
 	[self queueBlock:^{
-		_runningActivities++;
+		self->_runningActivities++;
 
-		if (_runningActivities == 1)
+		if (self->_runningActivities == 1)
 		{
-			dispatch_group_enter(_runningActivitiesGroup);
+			dispatch_group_enter(self->_runningActivitiesGroup);
 		}
 	}];
 }
@@ -753,16 +749,16 @@
 {
 	OCLogDebug(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
-		_runningActivities--;
+		self->_runningActivities--;
 		
-		if (_runningActivities == 0)
+		if (self->_runningActivities == 0)
 		{
-			dispatch_group_leave(_runningActivitiesGroup);
+			dispatch_group_leave(self->_runningActivitiesGroup);
 
-			if (_runningActivitiesCompleteBlock != nil)
+			if (self->_runningActivitiesCompleteBlock != nil)
 			{
-				_runningActivitiesCompleteBlock();
-				_runningActivitiesCompleteBlock = nil;
+				self->_runningActivitiesCompleteBlock();
+				self->_runningActivitiesCompleteBlock = nil;
 			}
 		}
 	}];

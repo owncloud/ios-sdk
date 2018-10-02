@@ -146,7 +146,7 @@
 				_authenticatedRequestsCanBeScheduled = [_connection canSendAuthenticatedRequestsForQueue:self availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
 					// Set _authenticatedRequestsCanBeScheduled to YES regardless of authenticationIsAvailable's value in order to ensure -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] is called ever again (for requests queued in the future)
 					[self _queueBlock:^{
-						_authenticatedRequestsCanBeScheduled = YES;
+						self->_authenticatedRequestsCanBeScheduled = YES;
 					}];
 
 					if (authenticationIsAvailable)
@@ -356,11 +356,11 @@
 	
 		@synchronized(self)
 		{
-			if ((finishRequests = [[NSMutableArray alloc] initWithArray:_queuedRequests]) != nil)
+			if ((finishRequests = [[NSMutableArray alloc] initWithArray:self->_queuedRequests]) != nil)
 			{
 				if (requestFilter!=nil)
 				{
-					for (OCConnectionRequest *request in _queuedRequests)
+					for (OCConnectionRequest *request in self->_queuedRequests)
 					{
 						if (!requestFilter(request))
 						{
@@ -369,7 +369,7 @@
 					}
 				}
 				
-				[_queuedRequests removeObjectsInArray:finishRequests];
+				[self->_queuedRequests removeObjectsInArray:finishRequests];
 			}
 		}
 		
@@ -667,7 +667,7 @@
 					}
 					else
 					{
-						[_connection handleValidationOfRequest:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+						[self->_connection handleValidationOfRequest:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
 					}
 				}
 			}
@@ -901,7 +901,7 @@
 		[self _queueBlock:^{
 			@synchronized(self)
 			{
-				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:_runningRequests];
+				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:self->_runningRequests];
 
 				// Compare tasks against list of runningRequests
 				for (NSURLSessionTask *task in tasks)

@@ -70,7 +70,7 @@
 						{
 							if (error == nil)
 							{
-								_appliedSchemas++;
+								self->_appliedSchemas++;
 								[self applySchemasToDatabase:db completionHandler:completionHandler];
 							}
 							else

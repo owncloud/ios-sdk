@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncContext.m
+//  OCSyncContext.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 15.06.18.
@@ -16,13 +16,13 @@
  *
  */
 
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 
-@implementation OCCoreSyncContext
+@implementation OCSyncContext
 
 + (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
 
@@ -31,7 +31,7 @@
 
 + (instancetype)schedulerContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
 
@@ -40,7 +40,7 @@
 
 + (instancetype)descheduleContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
-	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
 
@@ -49,7 +49,7 @@
 
 + (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues
 {
-	OCCoreSyncContext *syncContext = [OCCoreSyncContext new];
+	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
 	syncContext.event = event;

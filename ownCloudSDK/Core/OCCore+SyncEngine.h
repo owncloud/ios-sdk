@@ -19,7 +19,7 @@
 #import "OCCore.h"
 #import "OCSyncRecord.h"
 
-@class OCCoreSyncContext;
+@class OCSyncContext;
 
 @interface OCCore (SyncEngine)
 
@@ -32,8 +32,6 @@
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler;
 
 #pragma mark - Sync Engine
-- (void)registerSyncAction:(OCCoreSyncAction *)coreSyncAction forAction:(OCSyncAction)syncAction;
-
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler;
 
 - (NSProgress *)synchronizeWithServer;
@@ -55,13 +53,11 @@
 - (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
 
 #pragma mark - Sync issues utilities
-- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
+- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
 - (BOOL)_isConnectivityError:(NSError *)error;
 
 #pragma mark - Sync enqueue utilities
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
-
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters ephermalParameters:(NSDictionary <OCSyncActionParameter, id> *)ephermalParameters resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action allowsRescheduling:(BOOL)allowsRescheduling resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo;

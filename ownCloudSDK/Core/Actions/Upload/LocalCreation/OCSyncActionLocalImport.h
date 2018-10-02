@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionLocalModification.m
+//  OCSyncActionLocalImport.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,16 @@
  *
  */
 
-#import "OCCoreSyncActionLocalModification.h"
+#import "OCSyncAction.h"
 
-@implementation OCCoreSyncActionLocalModification
+@interface OCSyncActionLocalImport : OCSyncAction
+
+// .localItem == folder to import item into
+
+@property(strong) NSString *filename;
+@property(strong) NSURL *importFileURL;
+@property(strong) OCItem *placeholderItem;
+
+- (instancetype)initWithParentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL placeholderItem:(OCItem *)placeholderItem;
 
 @end

@@ -1,8 +1,8 @@
 //
-//  OCCore+CommandLocalModification.m
+//  OCCore+CommandDelete.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 02.08.18.
+//  Created by Felix Schwarz on 16.06.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -18,18 +18,17 @@
 
 #import "OCCore.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
-#import "NSString+OCParentPath.h"
-#import "OCLogger.h"
+#import "OCSyncActionDelete.h"
 
-@implementation OCCore (CommandLocalModification)
+@implementation OCCore (CommandDelete)
 
 #pragma mark - Command
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options placeholderCompletionHandler:(OCCoreActionResultHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)completionHandler
+- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
 {
-	return (nil);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDelete alloc] initWithItem:item requireMatch:requireMatch] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end

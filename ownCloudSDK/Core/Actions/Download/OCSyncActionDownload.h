@@ -1,5 +1,5 @@
 //
-//  OCCoreSyncActionDelete.h
+//  OCSyncActionDownload.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -16,8 +16,12 @@
  *
  */
 
-#import "OCCoreSyncAction.h"
+#import "OCSyncAction.h"
 
-@interface OCCoreSyncActionDelete : OCCoreSyncAction
+@interface OCSyncActionDownload : OCSyncAction
+
+@property(strong) NSDictionary *options;
+
+- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options;
 
 @end

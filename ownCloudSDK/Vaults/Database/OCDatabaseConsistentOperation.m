@@ -52,9 +52,9 @@
 
 		if (self.preparation != nil)
 		{
-			if (!_initialPreparationDidRun)
+			if (!self->_initialPreparationDidRun)
 			{
-				_initialPreparationDidRun = YES;
+				self->_initialPreparationDidRun = YES;
 
 				self.preparation(self, OCDatabaseConsistentOperationActionInitial, nil, ^(NSError *error, id prepResult){
 					self.preparationError = error;
@@ -79,19 +79,19 @@
 
 		if (error == nil)
 		{
-			if (_preparationCounterValue.unsignedIntegerValue < previousCounterValue.unsignedIntegerValue)
+			if (self->_preparationCounterValue.unsignedIntegerValue < previousCounterValue.unsignedIntegerValue)
 			{
 				if (self.preparation != nil)
 				{
 					OCSyncExec(preparationCompletion, {
-						self.preparation(self, (_initialPreparationDidRun ? OCDatabaseConsistentOperationActionRepeated : OCDatabaseConsistentOperationActionInitial), newCounterValue, ^(NSError *prepError, id prepResult){
+						self.preparation(self, (self->_initialPreparationDidRun ? OCDatabaseConsistentOperationActionRepeated : OCDatabaseConsistentOperationActionInitial), newCounterValue, ^(NSError *prepError, id prepResult){
 							self.preparationError = prepError;
 							self.preparationResult = prepResult;
 
 							OCSyncExecDone(preparationCompletion);
 						});
 
-						_initialPreparationDidRun = YES;
+						self->_initialPreparationDidRun = YES;
 					});
 
 					error = self.preparationError;

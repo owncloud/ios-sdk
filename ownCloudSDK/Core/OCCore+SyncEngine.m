@@ -20,21 +20,15 @@
 #import "OCCore+Internal.h"
 #import "NSError+OCError.h"
 #import "OCLogger.h"
-#import "OCCoreSyncAction.h"
+#import "OCSyncAction.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
 #import "NSString+OCParentPath.h"
 #import "OCQuery+Internal.h"
-#import "OCCoreSyncContext.h"
+#import "OCSyncContext.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "NSString+OCFormatting.h"
-
-#import "OCCoreSyncActionCopyMove.h"
-#import "OCCoreSyncActionCreateFolder.h"
-#import "OCCoreSyncActionDelete.h"
-#import "OCCoreSyncActionDownload.h"
-#import "OCCoreSyncActionLocalImport.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -43,7 +37,7 @@
 {
 	[self.vault.database retrieveValueForCounter:OCCoreSyncAnchorCounter completionHandler:^(NSError *error, NSNumber *counterValue) {
 		[self willChangeValueForKey:@"latestSyncAnchor"];
-		_latestSyncAnchor = counterValue;
+		self->_latestSyncAnchor = counterValue;
 		[self didChangeValueForKey:@"latestSyncAnchor"];
 
 		if (completionHandler != nil)
@@ -104,7 +98,7 @@
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		[self willChangeValueForKey:@"latestSyncAnchor"];
-		_latestSyncAnchor = newCounterValue;
+		self->_latestSyncAnchor = newCounterValue;
 		[self didChangeValueForKey:@"latestSyncAnchor"];
 
 		if (completionHandler != nil)
@@ -137,76 +131,20 @@
 	return(nil); // Stub implementation
 }
 
-#pragma mark - Sync Engine Actions
-- (void)registerSyncActions
-{
-	NSArray<OCSyncAction> *syncActions = @[
-		// OCSyncActionDeleteLocal,
-		OCSyncActionDeleteRemote,
-		// OCSyncActionMove,
-		// OCSyncActionCopy,
-		// OCSyncActionCreateFolder,
-		// OCSyncActionLocalImport,
-		OCSyncActionLocalModification,
-		// OCSyncActionDownload
-	];
-
-	OCCoreSyncAction *copyMoveSyncAction = [OCCoreSyncActionCopyMove new];
-
-	[self registerSyncAction:copyMoveSyncAction forAction:OCSyncActionCopy];
-	[self registerSyncAction:copyMoveSyncAction forAction:OCSyncActionMove];
-
-	[self registerSyncAction:[OCCoreSyncActionCreateFolder new] forAction:OCSyncActionCreateFolder];
-
-	[self registerSyncAction:[OCCoreSyncActionDelete new] forAction:OCSyncActionDeleteLocal];
-	[self registerSyncAction:[OCCoreSyncActionDownload new] forAction:OCSyncActionDownload];
-
-	[self registerSyncAction:[OCCoreSyncActionLocalImport new] forAction:OCSyncActionLocalImport];
-
-	for (OCSyncAction syncAction in syncActions)
-	{
-		NSString *registrationMethodName = [NSString stringWithFormat:@"register%@%@", [[syncAction substringToIndex:1] uppercaseString], [syncAction substringFromIndex:1]];
-		SEL registrationMethodSelector = NSSelectorFromString(registrationMethodName);
-
-		if ([self respondsToSelector:registrationMethodSelector])
-		{
-			// Below is identical to [self performSelector:registrationMethodSelector], but in an ARC-friendly manner.
-			void (*impFunction)(id, SEL) = (void *)[self methodForSelector:registrationMethodSelector];
-
-			if (impFunction != NULL)
-			{
-				impFunction(self, registrationMethodSelector);
-			}
-		}
-	}
-}
-
-- (void)registerSyncAction:(OCCoreSyncAction *)coreSyncAction forAction:(OCSyncAction)syncAction
-{
-	coreSyncAction.core = self;
-
-	_syncActionsByAction[syncAction] = coreSyncAction;
-}
-
 #pragma mark - Sync Record Scheduling
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return ([self _enqueueSyncRecordWithAction:action forItem:item allowNilItem:allowNilItem allowsRescheduling:allowsRescheduling parameters:parameters ephermalParameters:nil resultHandler:resultHandler]);
-}
-
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction)action forItem:(OCItem *)item allowNilItem:(BOOL)allowNilItem allowsRescheduling:(BOOL)allowsRescheduling parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters ephermalParameters:(NSDictionary <OCSyncActionParameter, id> *)ephermalParameters resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action allowsRescheduling:(BOOL)allowsRescheduling resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
 
-	if (allowNilItem || (!allowNilItem && (item!=nil)))
+	if (action != nil)
 	{
 		progress = [NSProgress indeterminateProgress];
 
-		syncRecord = [[OCSyncRecord alloc] initWithAction:action archivedServerItem:((item.remoteItem != nil) ? item.remoteItem : item) parameters:parameters resultHandler:resultHandler];
+		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
+
 		syncRecord.progress = progress;
 		syncRecord.allowsRescheduling = allowsRescheduling;
-		syncRecord.ephermalParameters = ephermalParameters;
 
 		[self submitSyncRecord:syncRecord];
 	}
@@ -230,40 +168,39 @@
 		// Pre-flight
 		if (blockError == nil)
 		{
-			if (record.action != nil)
+			OCSyncAction *syncAction;
+
+			if ((syncAction = record.action) != nil)
 			{
-				OCCoreSyncAction *syncAction;
+				syncAction.core = self;
 
-				if ((syncAction = _syncActionsByAction[record.action]) != nil)
+				if ([syncAction implements:@selector(preflightWithContext:)])
 				{
-					if ([syncAction implements:@selector(preflightWithContext:)])
+					OCSyncContext *syncContext;
+
+					OCLogDebug(@"SE: record %@ enters preflight", record);
+
+					if ((syncContext = [OCSyncContext preflightContextWithSyncRecord:record]) != nil)
 					{
-						OCCoreSyncContext *syncContext;
+						// Run pre-flight
+						[syncAction preflightWithContext:syncContext];
 
-						OCLogDebug(@"SE: record %@ enters preflight", record);
+						OCLogDebug(@"SE: record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
-						if ((syncContext = [OCCoreSyncContext preflightContextWithSyncRecord:record]) != nil)
+						// Perform any preflight-triggered updates
+						[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+
+						if (syncContext.removeRecords != nil)
 						{
-							// Run pre-flight
-							[syncAction preflightWithContext:syncContext];
-
-							OCLogDebug(@"SE: record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
-
-							// Perform any preflight-triggered updates
-							[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
-
-							if (syncContext.removeRecords != nil)
-							{
-								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
-							}
-
-							if (syncContext.updateStoredSyncRecordAfterItemUpdates)
-							{
-								[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
-							}
-
-							blockError = syncContext.error;
+							[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
 						}
+
+						if (syncContext.updateStoredSyncRecordAfterItemUpdates)
+						{
+							[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
+						}
+
+						blockError = syncContext.error;
 					}
 				}
 			}
@@ -285,7 +222,7 @@
 			if (record.resultHandler != nil)
 			{
 				// Call result handler
-				record.resultHandler(error, self, record.item, record);
+				record.resultHandler(error, self, record.action.localItem, record);
 				record.resultHandler = nil;
 			}
 		}
@@ -335,6 +272,7 @@
 - (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
 {
 	__block NSError *error = nil;
+	OCSyncAction *syncAction;
 
 	if (syncRecord==nil) { return(OCError(OCErrorInsufficientParameters)); }
 
@@ -344,30 +282,27 @@
 		error = removeError;
 	}];
 
-	if (syncRecord.action != nil)
+	if ((syncAction = syncRecord.action) != nil)
 	{
-		OCCoreSyncAction *syncAction;
+		syncAction.core = self;
 
-		if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
+		if ([syncAction implements:@selector(descheduleWithContext:)])
 		{
-			if ([syncAction implements:@selector(descheduleWithContext:)])
+			OCSyncContext *syncContext;
+
+			if ((syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord]) != nil)
 			{
-				OCCoreSyncContext *syncContext;
+				OCLogDebug(@"SE: record %@ enters post-deschedule", syncRecord);
 
-				if ((syncContext = [OCCoreSyncContext descheduleContextWithSyncRecord:syncRecord]) != nil)
-				{
-					OCLogDebug(@"SE: record %@ enters post-deschedule", syncRecord);
+				// Run descheduler
+				[syncAction descheduleWithContext:syncContext];
 
-					// Run descheduler
-					[syncAction descheduleWithContext:syncContext];
+				OCLogDebug(@"SE: record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
-					OCLogDebug(@"SE: record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
+				// Perform any descheduler-triggered updates
+				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
 
-					// Perform any descheduler-triggered updates
-					[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
-
-					error = syncContext.error;
-				}
+				error = syncContext.error;
 			}
 		}
 	}
@@ -376,7 +311,7 @@
 	{
 		if (syncRecord.resultHandler != nil)
 		{
-			syncRecord.resultHandler(resultHandlerError, self, syncRecord.item, syncRecord);
+			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, syncRecord);
 		}
 	}
 
@@ -421,8 +356,8 @@
 		{
 			@synchronized(self)
 			{
-				needsToProcessSyncRecords = _needsToProcessSyncRecords;
-				_needsToProcessSyncRecords = NO;
+				needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
+				self->_needsToProcessSyncRecords = NO;
 			}
 
 			if (needsToProcessSyncRecords)
@@ -495,14 +430,15 @@
 				}
 
 				// Schedule actions
-				if (syncRecord.action != nil)
 				{
-					OCCoreSyncAction *syncAction;
+					OCSyncAction *syncAction;
 
-					if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
+					if ((syncAction = syncRecord.action) != nil)
 					{
+						syncAction.core = self;
+
 						// Schedule the record using the route for its sync action
-						OCCoreSyncContext *syncContext = [OCCoreSyncContext schedulerContextWithSyncRecord:syncRecord];
+						OCSyncContext *syncContext = [OCSyncContext schedulerContextWithSyncRecord:syncRecord];
 
 						scheduleSyncRecord = syncRecord;
 
@@ -524,11 +460,6 @@
 						// No route for scheduling this sync record => sync action not implementd
 						scheduleError = OCError(OCErrorFeatureNotImplemented);
 					}
-				}
-				else
-				{
-					// Every sync record should have an action, so something went awfully wrong here
-					scheduleError = OCError(OCErrorInternal);
 				}
 
 				OCLogDebug(@"SE: record %@ couldSchedule=%d with error %@", OCLogPrivate(syncRecord), couldSchedule, OCLogPrivate(scheduleError));
@@ -554,8 +485,8 @@
 					if (!couldSchedule && (issues.count == 0))
 					{
 						// The sync record failed scheduling with an error, but provides no issue to dismiss it
-						// [_] create issue for sync scheduling error that allows dismissing the action
-						//     [issues addObject:[self _issueForCancellationAndDeschedulingSyncRecord:syncRecord title:[NSString stringWithFormat:OCLocalized(@"Sync action %@ failed"), syncRecord.action] description:error.localizedDescription]];
+						// [_] create issue for sync scheduling error that allows dismissing the actionIdentifier
+						//     [issues addObject:[self _issueForCancellationAndDeschedulingSyncRecord:syncRecord title:[NSString stringWithFormat:OCLocalized(@"Sync actionIdentifier %@ failed"), syncRecord.actionIdentifier] description:error.localizedDescription]];
 						// [x] let Sync Engine retry the next time it is called, make sure all actions create issues if needed
 					}
 				}
@@ -614,13 +545,15 @@
 		// Handle event for sync record
 		if ((syncRecord != nil) && (syncRecord.action != nil))
 		{
-			OCCoreSyncAction *syncAction = nil;
-			OCCoreSyncContext *syncContext = nil;
+			OCSyncAction *syncAction = nil;
+			OCSyncContext *syncContext = nil;
 
 			// Dispatch to result handlers
-			if ((syncAction = _syncActionsByAction[syncRecord.action]) != nil)
+			if ((syncAction = syncRecord.action) != nil)
 			{
-				syncContext = [OCCoreSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
+				syncAction.core = self;
+
+				syncContext = [OCSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
 
 				OCLogDebug(@"SE: record %@ enters event handling %@", OCLogPrivate(syncRecord), OCLogPrivate(event));
 
@@ -745,7 +678,7 @@
 			OCCoreItemList *updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
 			NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
 
-			for (OCQuery *query in _queries)
+			for (OCQuery *query in self->_queries)
 			{
 				// Queries targeting directories
 				if (query.queryPath != nil)
@@ -982,7 +915,7 @@
 }
 
 #pragma mark - Sync issues utilities
-- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCCoreSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
 {
 	OCConnectionIssue *issue;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
@@ -1130,7 +1063,7 @@
 			for (OCSyncRecord *record in syncRecords)
 			{
 				NSLog(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
-							[record.action leftPaddedMinLength:20],
+							[record.actionIdentifier leftPaddedMinLength:20],
 							[[record.inProgressSince description] leftPaddedMinLength:20]);
 			}
 
