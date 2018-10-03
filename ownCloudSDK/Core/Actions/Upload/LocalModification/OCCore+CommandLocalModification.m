@@ -23,6 +23,7 @@
 #import "OCMacros.h"
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
+#import "OCSyncActionLocalModification.h"
 
 @implementation OCCore (CommandLocalModification)
 

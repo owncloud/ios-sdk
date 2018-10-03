@@ -240,10 +240,6 @@
 	OCItem *item = self.archivedServerItem;
 	NSError *downloadError = event.error;
 
-	// TODO: Check for newer local version (=> throw away downloaded file or ask user)
-	// TODO: In case of errors, offer a retry option
-	// TODO: If everything's GO => update item metadata with info on local copy of file, add 1 minute retainer, so other parts of the app have a chance to add their retainers as well to keep the file around
-
 	if ((event.error == nil) && (event.file != nil) && (item != nil))
 	{
 		NSError *error = nil;

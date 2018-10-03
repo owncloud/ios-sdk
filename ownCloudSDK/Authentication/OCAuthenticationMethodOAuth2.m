@@ -18,6 +18,7 @@
 
 #import <UIKit/UIKit.h>
 #import <SafariServices/SafariServices.h>
+#import <AuthenticationServices/AuthenticationServices.h>
 
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethod+OCTools.h"
@@ -39,9 +40,12 @@ static OA2DictKeyPath OA2TokenType      = @"tokenResponse.token_type";
 static OA2DictKeyPath OA2MessageURL     = @"tokenResponse.message_url";
 static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 
+// Common API of SFAuthenticationSession and ASWebAuthenticationSession
+typedef void (^OCAuthenticationMethodOAuth2AuthenticationSessionCompletionHandler)(NSURL *callbackURL, NSError *error);
+
 @interface OCAuthenticationMethodOAuth2 ()
 {
-	SFAuthenticationSession *authenticationSession;
+	id authenticationSession;
 }
 @end
 
@@ -149,14 +153,12 @@ OCAuthenticationMethodAutoRegister
 					  } replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
-			// Create and start authentication session on main thread
-			self->authenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:^(NSURL *callbackURL, NSError *error) {
-
+			OCAuthenticationMethodOAuth2AuthenticationSessionCompletionHandler oauth2CompletionHandler = ^(NSURL *callbackURL, NSError *error) {
 				// Handle authentication session result
 				if (error == nil)
 				{
 					NSString *authorizationCode;
-					
+
 					// Obtain Authorization Code
 					if ((authorizationCode = [callbackURL queryParameters][@"code"]) != nil)
 					{
@@ -180,28 +182,63 @@ OCAuthenticationMethodAutoRegister
 						error = OCError(OCErrorAuthorizationFailed);
 					}
 				}
-				
+
 				if (error != nil)
 				{
-					if ((error!=nil) && [error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
+					if (error!=nil)
 					{
-						// User cancelled authorization
-						error = OCError(OCErrroAuthorizationCancelled);
+						if (@available(iOS 12.0, *))
+						{
+							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
+							{
+								// User cancelled authorization
+								error = OCError(OCErrroAuthorizationCancelled);
+							}
+						}
+						else
+						{
+							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
+							{
+								// User cancelled authorization
+								error = OCError(OCErrroAuthorizationCancelled);
+							}
+						}
 					}
 
 					// Return errors
 					completionHandler(error, OCAuthenticationMethodOAuth2Identifier, nil);
 				}
-			
+
 				OCLogDebug(@"Callback URL: %@", OCLogPrivate(callbackURL));
 				OCLogDebug(@"Error: %@", OCLogPrivate(error));
-				
+
 				// Release Authentication Session
 				self->authenticationSession = nil;
-			}];
+			};
 
-			// Start authentication session
-			[self->authenticationSession start];
+			// Create and start authentication session on main thread
+			if (@available(iOS 12, *))
+			{
+				ASWebAuthenticationSession *webAuthenticationSession;
+
+				webAuthenticationSession = [[ASWebAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
+
+				self->authenticationSession = webAuthenticationSession;
+
+				// Start authentication session
+				[webAuthenticationSession start];
+			}
+			else
+			{
+				SFAuthenticationSession *authenticationSession;
+
+				authenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
+
+				self->authenticationSession = authenticationSession;
+
+				// Start authentication session
+				[authenticationSession start];
+			}
 		});
 	}
 	else

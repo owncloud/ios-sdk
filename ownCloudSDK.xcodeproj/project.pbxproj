@@ -281,6 +281,7 @@
 		DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F02047094500189B9A /* NSData+OCHash.m */; };
 		DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */; };
+		DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */; };
 		DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */; };
 /* End PBXBuildFile section */
@@ -689,6 +690,7 @@
 		DCEEB2F02047094500189B9A /* NSData+OCHash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSData+OCHash.m"; sourceTree = "<group>"; };
 		DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionIssue.h; sourceTree = "<group>"; };
 		DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionIssue.m; sourceTree = "<group>"; };
+		DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = System/Library/Frameworks/AuthenticationServices.framework; sourceTree = SDKROOT; };
 		DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncContext.h; sourceTree = "<group>"; };
 		DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncContext.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -734,6 +736,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */,
 				DCC8FA082029BB1200EB6701 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1525,6 +1528,7 @@
 		DCC8FA062029BB1100EB6701 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */,
 				DCA8922020F5EFBB00AEFF98 /* libobjc.tbd */,
 				DCC8FA072029BB1200EB6701 /* libsqlite3.tbd */,
 			);
