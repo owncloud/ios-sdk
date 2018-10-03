@@ -147,7 +147,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @end
 
 @interface OCCore (CommandLocalModification)
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL options:(NSDictionary *)options placeholderCompletionHandler:(OCCoreActionResultHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)completionHandler;
+- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options resultHandler:(OCCoreUploadResultHandler)completionHandler;
 @end
 
 @interface OCCore (FileManagement)

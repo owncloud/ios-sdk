@@ -282,6 +282,8 @@
 		DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2F6204802CF00189B9A /* OCConnectionIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */; };
 		DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFF1AAE21655C8800ABE40A /* OCItem+OCFileURLMetadata.h */; };
+		DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */; };
 		DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */; };
 		DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */; };
 /* End PBXBuildFile section */
@@ -691,6 +693,8 @@
 		DCEEB2F3204802CF00189B9A /* OCConnectionIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionIssue.h; sourceTree = "<group>"; };
 		DCEEB2F4204802CF00189B9A /* OCConnectionIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionIssue.m; sourceTree = "<group>"; };
 		DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = System/Library/Frameworks/AuthenticationServices.framework; sourceTree = SDKROOT; };
+		DCFF1AAE21655C8800ABE40A /* OCItem+OCFileURLMetadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCFileURLMetadata.h"; sourceTree = "<group>"; };
+		DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCFileURLMetadata.m"; sourceTree = "<group>"; };
 		DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncContext.h; sourceTree = "<group>"; };
 		DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncContext.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1279,6 +1283,8 @@
 				DCC8F9F02028559600EB6701 /* OCItem.h */,
 				DC75D30E214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.m */,
 				DC75D30D214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.h */,
+				DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */,
+				DCFF1AAE21655C8800ABE40A /* OCItem+OCFileURLMetadata.h */,
 				DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */,
 				DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */,
 				DC0283652090A8EE005B6334 /* Images */,
@@ -1596,6 +1602,7 @@
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
 				DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */,
+				DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DC708CEC2141361200FE43CA /* OCSyncActionLocalModification.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
@@ -2100,6 +2107,7 @@
 				DC89136120910F0E00028999 /* OCConnection+Compatibility.m in Sources */,
 				DC4A2C5F20D4608100A47260 /* OCConnectionIssueChoice.m in Sources */,
 				DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */,
+				DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */,
 				DC434D0F20D68C3000740056 /* NSString+OCParentPath.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,

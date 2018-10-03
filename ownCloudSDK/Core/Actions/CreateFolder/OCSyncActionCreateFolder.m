@@ -34,8 +34,6 @@
 		{
 			placeholderItem.parentFileID = parentItem.fileID;
 			placeholderItem.path = [parentItem.path stringByAppendingPathComponent:folderName];
-			placeholderItem.fileID = [OCFileIDPlaceholderPrefix stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
-			placeholderItem.eTag = OCFileETagPlaceholder;
 			placeholderItem.lastModified = [NSDate date];
 
 			self.placeholderItem = placeholderItem;

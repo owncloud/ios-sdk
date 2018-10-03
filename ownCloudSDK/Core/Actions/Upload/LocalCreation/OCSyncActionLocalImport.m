@@ -73,6 +73,37 @@
 	{
 		NSProgress *progress;
 
+		// Find unoccupied filename to make a copy of the file before upload
+		for (NSUInteger uploadFileNamingAttempt=0; uploadFileNamingAttempt < 100; uploadFileNamingAttempt++)
+		{
+			NSURL *uploadCopyFileURLCandidate = [uploadURL URLByAppendingPathExtension:[NSString stringWithFormat:@"upld-%lu-%@", (unsigned long)uploadFileNamingAttempt, NSUUID.UUID.UUIDString]];
+
+			if (![[NSFileManager defaultManager] fileExistsAtPath:uploadCopyFileURLCandidate.path])
+			{
+				_uploadCopyFileURL = uploadCopyFileURLCandidate;
+			}
+		}
+
+		// Make a copy of the file before upload (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
+		if (_uploadCopyFileURL != nil)
+		{
+			NSError *error = nil;
+
+			if ([[NSFileManager defaultManager] copyItemAtURL:uploadURL toURL:_uploadCopyFileURL error:&error])
+			{
+				// Cloning succeeded - upload from the clone
+				uploadURL = _uploadCopyFileURL;
+			}
+			else
+			{
+				// Cloning failed - continue to use the "original"
+				_uploadCopyFileURL = nil;
+
+				OCLogError(@"SE: error cloning file to import from %@ to %@: %@", uploadURL, _uploadCopyFileURL, error);
+			}
+		}
+
+		// Schedule the upload
 		if ((progress = [self.core.connection uploadFileFromURL:uploadURL withName:newItemName to:parentItem replacingItem:nil options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			[syncContext.syncRecord addProgress:progress];
@@ -104,11 +135,12 @@
 			    ((uploadedItemURL = [self.core.vault localURLForItem:uploadedItem]) != nil))
 			{
 				NSError *error;
+				NSURL *placeholderItemContainerURL = [uploadedItemURL URLByDeletingLastPathComponent];
 
 				// Create directory to house file for new item
-				if (![[NSFileManager defaultManager] fileExistsAtPath:[[uploadedItemURL URLByDeletingLastPathComponent] path]])
+				if (![[NSFileManager defaultManager] fileExistsAtPath:[placeholderItemContainerURL path]])
 				{
-					if (![[NSFileManager defaultManager] createDirectoryAtURL:[uploadedItemURL URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:&error])
+					if (![[NSFileManager defaultManager] createDirectoryAtURL:placeholderItemContainerURL withIntermediateDirectories:YES attributes:nil error:&error])
 					{
 						OCLogError(@"Upload completion target directory creation failed for %@ with error %@", OCLogPrivate(uploadedItemURL), error);
 					}
@@ -118,12 +150,19 @@
 					OCLogWarning(@"Upload completion target directory already exists for %@", OCLogPrivate(uploadedItemURL));
 				}
 
+				// Use _uploadCopyFileURL as source if available
+				if (_uploadCopyFileURL != nil)
+				{
+					placeholderItemURL = _uploadCopyFileURL;
+				}
+
 				// Move file from placeholder to uploaded item URL
 				if ([[NSFileManager defaultManager] moveItemAtURL:placeholderItemURL toURL:uploadedItemURL error:&error])
 				{
 					// => File move successful
 
 					// Update uploaded item with local relative path and remove the reference from placeholderItem
+					// - the locallyModified property is not mirrored to the uploadedItem as the file is now the same on the server
 					uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
 					placeholderItem.localRelativePath = nil;
 
@@ -137,6 +176,12 @@
 
 					// Remove sync record from placeholder
 					[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
+
+					// Remove placeholder directory (may still contain a copy of the file after all) if no other sync records are active on it
+					if (placeholderItem.activeSyncRecordIDs.count == 0)
+					{
+						[[NSFileManager defaultManager] removeItemAtURL:placeholderItemContainerURL error:&error];
+					}
 				}
 				else
 				{
@@ -176,6 +221,7 @@
 	_filename = [decoder decodeObjectOfClass:[NSString class] forKey:@"filename"];
 	_importFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"importFileURL"];
 	_placeholderItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"placeholderItem"];
+	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -183,6 +229,7 @@
 	[coder encodeObject:_filename forKey:@"filename"];
 	[coder encodeObject:_importFileURL forKey:@"importFileURL"];
 	[coder encodeObject:_placeholderItem forKey:@"placeholderItem"];
+	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
 }
 
 @end

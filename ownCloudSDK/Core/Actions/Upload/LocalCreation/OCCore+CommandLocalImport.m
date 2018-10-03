@@ -25,6 +25,7 @@
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
 #import "OCSyncActionLocalImport.h"
+#import "OCItem+OCFileURLMetadata.h"
 
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -33,10 +34,7 @@
 #pragma mark - Command
 - (NSProgress *)importFileNamed:(NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler
 {
-	NSNumber *filesize = nil;
-	NSString *typeIdentifier = nil;
 	NSError *error = nil, *criticalError = nil;
-	NSDate *creationDate = nil,  *lastModified = nil;
 	NSURL *outputURL;
 
 	OCItem *placeholderItem;
@@ -51,28 +49,11 @@
 		newFileName = inputFileURL.lastPathComponent;
 	}
 
-	// Get metadata from input file
-	[inputFileURL getResourceValue:&filesize forKey:NSURLFileSizeKey error:&error];
-	[inputFileURL getResourceValue:&creationDate forKey:NSURLCreationDateKey error:&error];
-	[inputFileURL getResourceValue:&lastModified forKey:NSURLContentModificationDateKey error:&error];
-	[inputFileURL getResourceValue:&typeIdentifier forKey:NSURLTypeIdentifierKey error:&error];
-
 	// Create placeholder item and fill fields required by -[NSFileProviderExtension importDocumentAtURL:toParentItemIdentifier:completionHandler:] completion handler
 	placeholderItem = [OCItem placeholderItemOfType:OCItemTypeFile];
 
 	placeholderItem.parentFileID = parentItem.fileID;
 	placeholderItem.path = [parentItem.path stringByAppendingPathComponent:newFileName];
-	placeholderItem.fileID = [OCFileIDPlaceholderPrefix stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
-	placeholderItem.eTag = OCFileETagPlaceholder;
-
-	placeholderItem.creationDate = creationDate;
-	placeholderItem.lastModified = lastModified;
-	placeholderItem.size = filesize.integerValue;
-
-	if (typeIdentifier != nil)
-	{
-		placeholderItem.mimeType = ((NSString *)CFBridgingRelease(UTTypeCopyPreferredTagWithClass((__bridge CFStringRef _Nonnull)(typeIdentifier), kUTTagClassMIMEType)));
-	}
 
 	// Move file into the vault for uploading
 	if ((outputURL = [self.vault localURLForItem:placeholderItem]) != nil)
@@ -86,6 +67,10 @@
 
 		if (proceed)
 		{
+			// Update metadata from input file
+			[placeholderItem updateMetadataFromFileURL:inputFileURL];
+
+			// Create directory for placeholder item
 			if (![[NSFileManager defaultManager] fileExistsAtPath:[[outputURL URLByDeletingLastPathComponent] path]]) // This should always be true since its supposed to be a new file
 			{
 				if (![[NSFileManager defaultManager] createDirectoryAtURL:[outputURL URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:&error])
@@ -98,9 +83,11 @@
 				OCLogWarning(@"Local creation target directory already exists for %@", OCLogPrivate(outputURL));
 			}
 
+			// Move file to placeholder item location
 			if ([[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:outputURL error:&error])
 			{
 				placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
+				placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
 			}
 			else
 			{

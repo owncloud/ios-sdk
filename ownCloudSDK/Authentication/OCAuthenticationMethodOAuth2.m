@@ -40,9 +40,6 @@ static OA2DictKeyPath OA2TokenType      = @"tokenResponse.token_type";
 static OA2DictKeyPath OA2MessageURL     = @"tokenResponse.message_url";
 static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 
-// Common API of SFAuthenticationSession and ASWebAuthenticationSession
-typedef void (^OCAuthenticationMethodOAuth2AuthenticationSessionCompletionHandler)(NSURL *callbackURL, NSError *error);
-
 @interface OCAuthenticationMethodOAuth2 ()
 {
 	id authenticationSession;
@@ -153,7 +150,7 @@ OCAuthenticationMethodAutoRegister
 					  } replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
-			OCAuthenticationMethodOAuth2AuthenticationSessionCompletionHandler oauth2CompletionHandler = ^(NSURL *callbackURL, NSError *error) {
+			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {
 				// Handle authentication session result
 				if (error == nil)
 				{
