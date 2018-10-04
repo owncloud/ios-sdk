@@ -51,32 +51,37 @@
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
 
+	core.stateChangedHandler = ^(OCCore *core) {
+		if (core.state == OCCoreStateRunning)
+		{
+			// Stop core
+			[core stopWithCompletionHandler:^(id sender, NSError *error) {
+				NSURL *vaultRootURL = core.vault.rootURL;
+
+				XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+				[coreStoppedExpectation fulfill];
+
+				// Erase vault
+				[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+					XCTAssert((error==nil), @"Erased with error: %@", error);
+
+					if (![[NSFileManager defaultManager] fileExistsAtPath:vaultRootURL.path])
+					{
+						[vaultErasedExpectation fulfill];
+					}
+				}];
+			}];
+		}
+	};
+
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-		NSURL *vaultRootURL = core.vault.rootURL;
-
 		XCTAssert((error==nil), @"Started with error: %@", error);
 
 		[coreStartedExpectation fulfill];
 
 		NSLog(@"Vault location: %@", core.vault.rootURL);
-
-		// Stop core
-		[core stopWithCompletionHandler:^(id sender, NSError *error) {
-			XCTAssert((error==nil), @"Stopped with error: %@", error);
-
-			[coreStoppedExpectation fulfill];
-
-			// Erase vault
-			[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-				XCTAssert((error==nil), @"Erased with error: %@", error);
-
-				if (![[NSFileManager defaultManager] fileExistsAtPath:vaultRootURL.path])
-				{
-					[vaultErasedExpectation fulfill];
-				}
-			}];
-		}];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
@@ -667,49 +672,49 @@
 											{
 												thumbnail1 = thumbnail;
 											}
-										}];
 
-										// Send forth request for smaller version, which should use the same thumbnail
-										[core retrieveThumbnailFor:item maximumSize:CGSizeMake(50, 50) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
-											if (!isOngoing)
-											{
-												thumbnail2 = thumbnail;
+											// Send forth request for smaller version, which should use the same thumbnail
+											[core retrieveThumbnailFor:item maximumSize:CGSizeMake(50, 50) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+												if (!isOngoing)
+												{
+													thumbnail2 = thumbnail;
 
-												XCTAssert((thumbnail1 != nil), @"Thumbnail 1 should have been set first.");
-												XCTAssert((thumbnail2 != nil), @"Thumbnail 2 should not be nil either.");
-												XCTAssert((thumbnail1 == thumbnail2), @"Thumbnail 1 is identical to Thumbnail 2");
+													XCTAssert((thumbnail1 != nil), @"Thumbnail 1 should have been set first.");
+													XCTAssert((thumbnail2 != nil), @"Thumbnail 2 should not be nil either.");
+													XCTAssert((thumbnail1 == thumbnail2), @"Thumbnail 1 is identical to Thumbnail 2");
 
-												// Verify thumbnail size
-												[thumbnail requestImageForSize:CGSizeMake(100,100) scale:1.0 withCompletionHandler:^(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image) {
-													XCTAssert ((image.size.width == 100.0), @"Thumbnail width is 100: %f", image.size.width);
-													XCTAssert ((image.size.height <= 100.0), @"Thumbnail height is <= 100: %f", image.size.height);
-													XCTAssert ((image.scale == 1.0), @"Thumbnail scale is 1");
+													// Verify thumbnail size
+													[thumbnail requestImageForSize:CGSizeMake(100,100) scale:1.0 withCompletionHandler:^(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image) {
+														XCTAssert ((image.size.width == 100.0), @"Thumbnail width is 100: %f", image.size.width);
+														XCTAssert ((image.size.height <= 100.0), @"Thumbnail height is <= 100: %f", image.size.height);
+														XCTAssert ((image.scale == 1.0), @"Thumbnail scale is 1");
 
-													// Verify that the next call will actually lead to a new request
-													hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
-														[requestOfLargerSizeExpectation fulfill];
-														requestOfLargerSizeExpectation = nil;
+														// Verify that the next call will actually lead to a new request
+														hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+															[requestOfLargerSizeExpectation fulfill];
+															requestOfLargerSizeExpectation = nil;
 
-														return (NO);
-													};
+															return (NO);
+														};
 
-													// Request larger size, so a new request will be sent
-													[core retrieveThumbnailFor:item maximumSize:CGSizeMake(200, 200) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
-														if (!isOngoing)
-														{
-															// Remove host simulator
-															core.connection.hostSimulator = nil;
+														// Request larger size, so a new request will be sent
+														[core retrieveThumbnailFor:item maximumSize:CGSizeMake(200, 200) scale:1.0 retrieveHandler:^(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress) {
+															if (!isOngoing)
+															{
+																// Remove host simulator
+																core.connection.hostSimulator = nil;
 
-															// Stop core
-															[core stopWithCompletionHandler:^(id sender, NSError *error) {
-																XCTAssert((error==nil), @"Stopped with error: %@", error);
+																// Stop core
+																[core stopWithCompletionHandler:^(id sender, NSError *error) {
+																	XCTAssert((error==nil), @"Stopped with error: %@", error);
 
-																[coreStoppedExpectation fulfill];
-															}];
-														}
+																	[coreStoppedExpectation fulfill];
+																}];
+															}
+														}];
 													}];
-												}];
-											}
+												}
+											}];
 										}];
 									}
 								}];
@@ -744,21 +749,11 @@
 
 - (void)testInvalidLoginData
 {
-	OCBookmark *bookmark = nil;
 	OCCore *core;
+	OCBookmark *bookmark = nil;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreErrorExpectation = [self expectationWithDescription:@"Core reported error"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
-	OCHostSimulator *hostSimulator = [[OCHostSimulator alloc] init];
-
-	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
-		// Return host not found errors by default
-		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
-
-		XCTFail(@"Request for %@ when no request should have been made.", request.url);
-
-		return (YES);
-	};
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -774,6 +769,14 @@
 	coreErrorHandler = ^(OCCore *core, NSError *error, OCConnectionIssue *issue) {
 		_XCTPrimitiveAssertTrue(weakSelf, (error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain]), @"(error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain])"); // Expected error received
 		[coreErrorExpectation fulfill];
+
+		// Stop core
+		[core stopWithCompletionHandler:^(id sender, NSError *error) {
+			_XCTPrimitiveAssertTrue(weakSelf, (error==nil), @"Stopped without error");
+			NSLog(@"Stopped with error: %@", error);
+
+			[coreStoppedExpectation fulfill];
+		}];
 	};
 
 	// Start core
@@ -781,13 +784,6 @@
 		NSLog(@"Core: %@ Error: %@", core, error);
 
 		[coreStartedExpectation fulfill];
-
-		// Stop core
-		[core stopWithCompletionHandler:^(id sender, NSError *error) {
-			XCTAssert((error==nil), @"Stopped with error: %@", error);
-
-			[coreStoppedExpectation fulfill];
-		}];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];

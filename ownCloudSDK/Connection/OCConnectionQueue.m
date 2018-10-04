@@ -99,24 +99,24 @@
 
 - (void)dealloc
 {
-	if (_deallocHandler)
+	if (_invalidationCompletionHandler)
 	{
-		_deallocHandler();
-		_deallocHandler = nil;
+		_invalidationCompletionHandler();
+		_invalidationCompletionHandler = nil;
 	}
 }
 
 #pragma mark - Invalidation
-- (void)finishTasksAndInvalidateWithDeallocHandler:(dispatch_block_t)deallocHandler
+- (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	_deallocHandler = deallocHandler;
+	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession finishTasksAndInvalidate];
 }
 
-- (void)invalidateAndCancelWithDeallocHandler:(dispatch_block_t)deallocHandler
+- (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	_deallocHandler = deallocHandler;
+	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession invalidateAndCancel];
 }
@@ -670,6 +670,15 @@
 
 	// Tell connection that handling this queue finished
 	[_connection finishedQueueForResumedBackgroundSessionWithIdentifier:session.configuration.identifier];
+}
+
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
+{
+	if (_invalidationCompletionHandler != nil)
+	{
+		_invalidationCompletionHandler();
+		_invalidationCompletionHandler = nil;
+	}
 }
 
 - (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler

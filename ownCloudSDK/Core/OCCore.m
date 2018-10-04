@@ -49,6 +49,7 @@
 @synthesize connection = _connection;
 
 @synthesize state = _state;
+@synthesize stateChangedHandler = _stateChangedHandler;
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
@@ -173,6 +174,18 @@
 	[OCEvent unregisterEventHandlerForIdentifier:_eventHandlerIdentifier];
 }
 
+- (void)_updateState:(OCCoreState)newState
+{
+	[self willChangeValueForKey:@"state"];
+	_state = newState;
+	[self didChangeValueForKey:@"state"];
+
+	if (_stateChangedHandler)
+	{
+		_stateChangedHandler(self);
+	}
+}
+
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
@@ -182,9 +195,7 @@
 			__block NSError *startError = nil;
 			dispatch_group_t startGroup = nil;
 
-			[self willChangeValueForKey:@"state"];
-			self->_state = OCCoreStateStarting;
-			[self didChangeValueForKey:@"state"];
+			[self _updateState:OCCoreStateStarting];
 
 			startGroup = dispatch_group_create();
 
@@ -217,9 +228,7 @@
 			{
 				self->_attemptConnect = NO;
 
-				[self willChangeValueForKey:@"state"];
-				self->_state = OCCoreStateStopped;
-				[self didChangeValueForKey:@"state"];
+				[self _updateState:OCCoreStateStopped];
 			}
 
 			if (completionHandler != nil)
@@ -246,9 +255,7 @@
 		{
 			__weak OCCore *weakSelf = self;
 
-			[self willChangeValueForKey:@"state"];
-			self->_state = OCCoreStateStopping;
-			[self didChangeValueForKey:@"state"];
+			[self _updateState:OCCoreStateStopping];
 
 			// Wait for running operations to finish
 			self->_runningActivitiesCompleteBlock = ^{
@@ -278,9 +285,7 @@
 
 				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
 
-				[weakSelf willChangeValueForKey:@"state"];
-				self->_state = OCCoreStateStopped;
-				[weakSelf didChangeValueForKey:@"state"];
+				[weakSelf _updateState:OCCoreStateStopped];
 
 				if (completionHandler != nil)
 				{
@@ -327,9 +332,7 @@
 					// Change state
 					if (error == nil)
 					{
-						[self willChangeValueForKey:@"state"];
-						self->_state = OCCoreStateRunning;
-						[self didChangeValueForKey:@"state"];
+						[self _updateState:OCCoreStateRunning];
 
 						if (self.automaticItemListUpdatesEnabled)
 						{

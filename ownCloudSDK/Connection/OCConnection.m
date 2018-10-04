@@ -132,13 +132,13 @@
 
 - (void)dealloc
 {
-	[_commandQueue invalidateAndCancelWithDeallocHandler:nil];
+	[_commandQueue invalidateAndCancelWithCompletionHandler:nil];
 
-	[_uploadQueue invalidateAndCancelWithDeallocHandler:nil];
+	[_uploadQueue invalidateAndCancelWithCompletionHandler:nil];
 
 	if (_uploadQueue != _downloadQueue)
 	{
-		[_downloadQueue invalidateAndCancelWithDeallocHandler:nil];
+		[_downloadQueue invalidateAndCancelWithCompletionHandler:nil];
 	}
 }
 
@@ -505,8 +505,8 @@
 	if (invalidateConnection)
 	{
 		dispatch_block_t invalidationCompletionHandler = ^{
-			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
 			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
+			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
 
 			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
 			[connectionQueues addObject:self->_uploadQueue];
@@ -517,20 +517,20 @@
 			{
 				dispatch_group_enter(waitQueueTerminationGroup);
 
-				// Wait for the queue to finish all tasks, then invalidate it and call the deallocHandler
-				[connectionQueue finishTasksAndInvalidateWithDeallocHandler:^{
+				// Wait for the queue to finish all tasks, then invalidate it and call the invalidation completion handler
+				[connectionQueue finishTasksAndInvalidateWithCompletionHandler:^{
 					dispatch_group_leave(waitQueueTerminationGroup);
 				}];
 			}
 
-			// In order for the deallocHandlers to trigger, the NSURLSession.delegate must be the only remaining strong reference to
+			// In order for the invalidation completion handlers to trigger, the NSURLSession.delegate must be the only remaining strong reference to
 			// the OCConnectionQueue, so drop ours
 			self->_uploadQueue = nil;
 			self->_downloadQueue = nil;
 			self->_commandQueue = nil;
 
-			// Wait for all deallocHandlers to finish executing, then call the provided completionHandler
-			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_main_queue(), ^{
+			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
+			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
 				if (completionHandler!=nil)
 				{
 					completionHandler();

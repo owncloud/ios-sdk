@@ -57,7 +57,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 
 	dispatch_queue_t _actionQueue;
 
-	dispatch_block_t _deallocHandler;
+	dispatch_block_t _invalidationCompletionHandler;
 }
 
 @property(weak) OCConnection *connection; //!< The connection this queue belongs to
@@ -68,8 +68,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 - (instancetype)initEphermalQueueWithConnection:(OCConnection *)connection;
 
 #pragma mark - Invalidation
-- (void)finishTasksAndInvalidateWithDeallocHandler:(dispatch_block_t)deallocHandler;
-- (void)invalidateAndCancelWithDeallocHandler:(dispatch_block_t)deallocHandler;
+- (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler;
+- (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler;
 
 #pragma mark - Queue management
 - (void)enqueueRequest:(OCConnectionRequest *)request; //!< Adds a request to the queue

@@ -50,6 +50,7 @@ typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item,
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
 typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
+typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
 @protocol OCCoreDelegate <NSObject>
 
@@ -72,6 +73,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 	dispatch_queue_t _connectivityQueue;
 
 	OCCoreState _state;
+	OCCoreStateChangedHandler _stateChangedHandler;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
@@ -101,6 +103,7 @@ typedef void(^OCCoreCompletionHandler)(NSError *error);
 @property(readonly) OCReachabilityMonitor *reachabilityMonitor; //!< ReachabilityMonitor observing the reachability of the bookmark.url.host.
 
 @property(readonly,nonatomic) OCCoreState state;
+@property(copy) OCCoreStateChangedHandler stateChangedHandler;
 
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
