@@ -21,6 +21,7 @@
 #import "OCBookmarkManager.h"
 #import "OCConnectionQueue+BackgroundSessionRecovery.h"
 #import "OCLogger.h"
+#import "OCCore+FileProvider.h"
 
 @implementation OCCoreManager
 
@@ -34,6 +35,7 @@
 
 	dispatch_once(&onceToken, ^{
 		sharedManager = [OCCoreManager new];
+		sharedManager.postFileProviderNotifications = OCCore.hostHasFileProvider;
 	});
 
 	return (sharedManager);

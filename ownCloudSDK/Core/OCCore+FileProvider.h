@@ -20,6 +20,8 @@
 
 @interface OCCore (FileProvider)
 
+@property(class,nonatomic,assign) BOOL hostHasFileProvider;
+
 #pragma mark - Fileprovider tools
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler;
 - (NSURL *)localURLForItem:(OCItem *)item;

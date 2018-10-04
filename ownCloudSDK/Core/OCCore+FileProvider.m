@@ -22,7 +22,34 @@
 #import "OCLogger.h"
 #import "OCMacros.h"
 
+static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
+
 @implementation OCCore (FileProvider)
+
+#pragma mark - Fileprovider capability
++ (BOOL)hostHasFileProvider
+{
+	static BOOL didAutoDetectFromInfoPlist = NO;
+
+	if (!didAutoDetectFromInfoPlist)
+	{
+		NSNumber *hasFileProvider;
+
+		if ((hasFileProvider = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"OCHasFileProvider"]) != nil)
+		{
+			sOCCoreFileProviderHostHasFileProvider = [hasFileProvider boolValue];
+		}
+
+		didAutoDetectFromInfoPlist = YES;
+	}
+
+	return (sOCCoreFileProviderHostHasFileProvider);
+}
+
++ (void)setHostHasFileProvider:(BOOL)hostHasFileProvider
+{
+	sOCCoreFileProviderHostHasFileProvider = hostHasFileProvider;
+}
 
 #pragma mark - Fileprovider tools
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler
@@ -55,11 +82,14 @@
 
 	if (_fileProviderManager == nil)
 	{
-		@synchronized(self)
+		if (OCCore.hostHasFileProvider)
 		{
-			if (_fileProviderManager == nil)
+			@synchronized(self)
 			{
-				_fileProviderManager = [NSFileProviderManager managerForDomain:_vault.fileProviderDomain];
+				if (_fileProviderManager == nil)
+				{
+					_fileProviderManager = [NSFileProviderManager managerForDomain:_vault.fileProviderDomain];
+				}
 			}
 		}
 	}
@@ -137,16 +167,19 @@
 		}
 
 		// Signal NSFileProviderManager
-		dispatch_async(dispatch_get_main_queue(), ^{
-			NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:self->_vault.fileProviderDomain];
+		if (OCCore.hostHasFileProvider)
+		{
+			dispatch_async(dispatch_get_main_queue(), ^{
+				NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:self->_vault.fileProviderDomain];
 
-			for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
-			{
-				OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+				for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
+				{
+					OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
 
-				[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
-			}
-		});
+					[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
+				}
+			});
+		}
 	}
 }
 
