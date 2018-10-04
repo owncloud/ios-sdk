@@ -399,8 +399,17 @@
 
 	if (downloadError != nil)
 	{
-		// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		if ([downloadError isOCErrorWithCode:OCErrorCancelled])
+		{
+			// Download has been cancelled by the user => create no issue, remove sync record reference and the record itself instead
+			[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+			canDeleteSyncRecord = YES;
+		}
+		else
+		{
+			// Create cancellation issue for any errors (TODO: extend options to include "Retry")
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		}
 	}
 
 	if (syncRecord.resultHandler != nil)

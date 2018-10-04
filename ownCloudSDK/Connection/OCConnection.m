@@ -879,34 +879,41 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (request.cancelled)
 		{
-			event.error = request.error;
+			event.error = OCError(OCErrorCancelled);
 		}
 		else
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.error != nil)
 			{
-				OCFile *file = [OCFile new];
-
-				file.item = request.userInfo[@"item"];
-
-				file.url = request.downloadedFileURL;
-
-				file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
-
-				file.eTag = request.response.allHeaderFields[@"oc-etag"];
-				file.fileID = file.item.fileID;
-
-				event.file = file;
+				event.error = request.error;
 			}
 			else
 			{
-				switch (request.responseHTTPStatus.code)
+				if (request.responseHTTPStatus.isSuccess)
 				{
-					default:
-						event.error = request.responseHTTPStatus.error;
-					break;
+					OCFile *file = [OCFile new];
+
+					file.item = request.userInfo[@"item"];
+
+					file.url = request.downloadedFileURL;
+
+					file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+
+					file.eTag = request.response.allHeaderFields[@"oc-etag"];
+					file.fileID = file.item.fileID;
+
+					event.file = file;
+				}
+				else
+				{
+					switch (request.responseHTTPStatus.code)
+					{
+						default:
+							event.error = request.responseHTTPStatus.error;
+						break;
+					}
 				}
 			}
 		}
