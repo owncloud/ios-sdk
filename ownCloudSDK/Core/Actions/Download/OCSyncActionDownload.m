@@ -408,7 +408,7 @@
 		else
 		{
 			// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[downloadError localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 		}
 	}
 

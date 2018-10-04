@@ -130,6 +130,18 @@
 	return (self);
 }
 
+- (void)dealloc
+{
+	[_commandQueue invalidateAndCancelWithDeallocHandler:nil];
+
+	[_uploadQueue invalidateAndCancelWithDeallocHandler:nil];
+
+	if (_uploadQueue != _downloadQueue)
+	{
+		[_downloadQueue invalidateAndCancelWithDeallocHandler:nil];
+	}
+}
+
 #pragma mark - State
 - (void)setState:(OCConnectionState)state
 {
@@ -483,8 +495,52 @@
 
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	[self disconnectWithCompletionHandler:completionHandler invalidate:YES];
+}
+
+- (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection
+{
 	OCAuthenticationMethod *authMethod;
-	
+
+	if (invalidateConnection)
+	{
+		dispatch_block_t invalidationCompletionHandler = ^{
+			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
+
+			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
+			[connectionQueues addObject:self->_uploadQueue];
+			[connectionQueues addObject:self->_downloadQueue];
+			[connectionQueues addObject:self->_commandQueue];
+
+			for (OCConnectionQueue *connectionQueue in connectionQueues)
+			{
+				dispatch_group_enter(waitQueueTerminationGroup);
+
+				// Wait for the queue to finish all tasks, then invalidate it and call the deallocHandler
+				[connectionQueue finishTasksAndInvalidateWithDeallocHandler:^{
+					dispatch_group_leave(waitQueueTerminationGroup);
+				}];
+			}
+
+			// In order for the deallocHandlers to trigger, the NSURLSession.delegate must be the only remaining strong reference to
+			// the OCConnectionQueue, so drop ours
+			self->_uploadQueue = nil;
+			self->_downloadQueue = nil;
+			self->_commandQueue = nil;
+
+			// Wait for all deallocHandlers to finish executing, then call the provided completionHandler
+			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_main_queue(), ^{
+				if (completionHandler!=nil)
+				{
+					completionHandler();
+				}
+			});
+		};
+
+		completionHandler = invalidationCompletionHandler;
+	}
+
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		// Deauthenticate the connection
@@ -875,7 +931,6 @@
 - (void)_handleDownloadItemResult:(OCConnectionRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
-	BOOL postEvent = YES;
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
 	{
@@ -918,10 +973,7 @@
 			}
 		}
 
-		if (postEvent)
-		{
-			[request.eventTarget handleEvent:event sender:self];
-		}
+		[request.eventTarget handleEvent:event sender:self];
 	}
 }
 

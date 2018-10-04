@@ -99,7 +99,26 @@
 
 - (void)dealloc
 {
+	if (_deallocHandler)
+	{
+		_deallocHandler();
+		_deallocHandler = nil;
+	}
+}
+
+#pragma mark - Invalidation
+- (void)finishTasksAndInvalidateWithDeallocHandler:(dispatch_block_t)deallocHandler
+{
+	_deallocHandler = deallocHandler;
+
 	[_urlSession finishTasksAndInvalidate];
+}
+
+- (void)invalidateAndCancelWithDeallocHandler:(dispatch_block_t)deallocHandler
+{
+	_deallocHandler = deallocHandler;
+
+	[_urlSession invalidateAndCancel];
 }
 
 #pragma mark - Queue management
@@ -286,6 +305,8 @@
 					[_runningRequests addObject:request];
 
 					_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
+
+					OCLogDebug(@"CQ[%@]: saved request for taskIdentifier <%@>, URL: %@, %p, %p", _urlSession.configuration.identifier, request.urlSessionTaskIdentifier, urlRequest, self, _runningRequestsByTaskIdentifier);
 
 					// Start task
 					if (resumeTask)
@@ -496,6 +517,7 @@
 
 			if (request.urlSessionTaskIdentifier != nil)
 			{
+				OCLogDebug(@"CQ[%@]: Removing request %@ with taskIdentifier <%@>", _urlSession.configuration.identifier, OCLogPrivate(request.url), request.urlSessionTaskIdentifier);
 				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
 			}
 		}
@@ -539,6 +561,11 @@
 			{
 				request.urlSessionTask = task;
 			}
+
+			if (request == nil)
+			{
+				OCLogError(@"CQ[%@]: could not find request for task %@ (%@) %p %p", _urlSession.configuration.identifier, OCLogPrivate(task), OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
+			}
 		}
 	}
 	
@@ -564,7 +591,7 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
 	// NSLog(@"DID COMPLETE: task=%@ error=%@", task, error);
-	OCLogDebug(@"%@: didCompleteWithError=%@", task.currentRequest.URL, error);
+	OCLogDebug(@"CQ[%@]: %@ [taskIdentifier=%lu]: didCompleteWithError=%@", _urlSession.configuration.identifier, task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
 }
@@ -587,7 +614,7 @@
         newRequest:(NSURLRequest *)request
         completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
 {
-	OCLogDebug(@"%@: wants to perform redirection from %@ to %@ via %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
+	OCLogDebug(@"CQ[%@]: %@: wants to perform redirection from %@ to %@ via %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
 
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
@@ -622,7 +649,7 @@
 		}
 	}
 
-	OCLogDebug(@"%@: downloadTask:didFinishDownloadingToURL: %@", downloadTask.currentRequest.URL, location);
+	OCLogDebug(@"CQ[%@]: %@: downloadTask:didFinishDownloadingToURL: %@", _urlSession.configuration.identifier, downloadTask.currentRequest.URL, location);
 	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
@@ -630,7 +657,7 @@
 {
 	dispatch_block_t completionHandler;
 
-	OCLogDebug(@"URLSessionDidFinishEventsForBackgroundSession: %@", session);
+	OCLogDebug(@"CQ[%@]: URLSessionDidFinishEventsForBackgroundSession: %@", _urlSession.configuration.identifier, session);
 
 	// Call completion handler
 	if ((completionHandler = [OCConnectionQueue completionHandlerForBackgroundSessionWithIdentifier:session.configuration.identifier remove:YES]) != nil)
@@ -680,7 +707,7 @@
         didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
         completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
-	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
+	OCLogDebug(@"CQ[%@]: %@: %@ => protection space: %@ method: %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
 
 	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
 	{

@@ -568,34 +568,37 @@
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
 				@"recordData"		: [syncRecord serializedData]
-			} completionHandler:nil]];
+			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
+				@synchronized(db)
+				{
+					if (syncRecord.progress != nil)
+					{
+						self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+					}
+					else
+					{
+						[self->_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
 
-			if (syncRecord.progress != nil)
-			{
-				_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
-			}
-			else
-			{
-				[_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
-			}
+					if (syncRecord.resultHandler != nil)
+					{
+						self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+					}
+					else
+					{
+						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
 
-			if (syncRecord.resultHandler != nil)
-			{
-				_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
-			}
-			else
-			{
-				[_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
-			}
-
-			if (syncRecord.action.ephermalParameters != nil)
-			{
-				_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
-			}
-			else
-			{
-				[_ephermalParametersBySyncRecordID removeObjectForKey:syncRecord.recordID];
-			}
+					if (syncRecord.action.ephermalParameters != nil)
+					{
+						self->_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
+					}
+					else
+					{
+						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
+				}
+			}]];
 		}
 		else
 		{
@@ -620,7 +623,19 @@
 		if (syncRecord.recordID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:syncRecord.recordID fromTable:OCDatabaseTableNameSyncJournal completionHandler:^(OCSQLiteDB *db, NSError *error) {
-				syncRecord.recordID = nil;
+				OCSyncRecordID syncRecordID;
+
+				if ((syncRecordID = syncRecord.recordID) != nil)
+				{
+					syncRecord.recordID = nil;
+
+					@synchronized(db)
+					{
+						[self->_progressBySyncRecordID removeObjectForKey:syncRecordID];
+						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecordID];
+						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecordID];
+					}
+				}
 			}]];
 		}
 		else
@@ -649,7 +664,7 @@
 		{
 			syncRecord.recordID = recordID;
 
-			@synchronized(self)
+			@synchronized(self.sqlDB)
 			{
 				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
