@@ -139,6 +139,15 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 - (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
 
+#pragma mark - Item location & directory lifecycle
+- (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself.
+- (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
+
+- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
+
+- (NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
+- (NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
+
 @end
 
 @interface OCCore (CommandDownload)
@@ -153,15 +162,15 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options resultHandler:(OCCoreUploadResultHandler)completionHandler;
 @end
 
-@interface OCCore (FileManagement)
-- (void)performFile:(OCFile *)file retainerOperation:(void(^)(OCCore *core, OCFile *file, OCRetainerCollection *retainers))retainerOperation;
+//@interface OCCore (FileManagement)
+//- (void)performFile:(OCFile *)file retainerOperation:(void(^)(OCCore *core, OCFile *file, OCRetainerCollection *retainers))retainerOperation;
 //
 //- (BOOL)retainFile:(OCFile *)file with:(OCRetainer *)retainer;
 //- (BOOL)releaseFile:(OCFile *)file from:(OCRetainer *)retainer;
 //
 //- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
-@end
+//@end
 
 @interface OCCore (CommandCreateFolder)
 - (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;

@@ -709,6 +709,99 @@
 	}];
 }
 
+#pragma mark - Item location & directory lifecycle
+- (NSURL *)localURLForItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+	}
+
+	return ([self.vault localURLForItem:item]);
+}
+
+- (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
+{
+	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
+}
+
+- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
+{
+	NSURL *temporaryURL = nil;
+	NSURL *baseURL = [self localParentDirectoryURLForItem:item];
+
+	for (NSUInteger attempt=0; attempt < 100; attempt++)
+	{
+		NSString *filename;
+
+		if ((filename = [NSString stringWithFormat:@"%lu-%@.tmp", (unsigned long)attempt, NSUUID.UUID.UUIDString]) != nil)
+		{
+			NSURL *temporaryURLCandidate;
+
+			if ((temporaryURLCandidate = [baseURL URLByAppendingPathExtension:filename]) != nil)
+			{
+				if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryURLCandidate.path])
+				{
+					temporaryURL = temporaryURLCandidate;
+
+					if (returnFileName != NULL)
+					{
+						*returnFileName = filename;
+					}
+				}
+			}
+		}
+	}
+
+	return (temporaryURL);
+}
+
+- (NSError *)createDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if (![[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error])
+			{
+				OCLogError(@"Item parent directory creation at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
+}
+
+- (NSError *)deleteDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if ([[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] removeItemAtURL:parentURL error:&error])
+			{
+				OCLogError(@"Item parent directory deletion at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {

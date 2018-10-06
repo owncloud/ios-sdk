@@ -26,7 +26,7 @@
 @property(strong) NSURL *importFileURL;
 @property(strong) OCItem *placeholderItem;
 
-@property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading 
+@property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading
 
 - (instancetype)initWithParentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL placeholderItem:(OCItem *)placeholderItem;
 

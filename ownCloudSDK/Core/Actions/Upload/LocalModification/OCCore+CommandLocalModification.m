@@ -30,7 +30,7 @@
 #pragma mark - Command
 - (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options resultHandler:(OCCoreUploadResultHandler)completionHandler
 {
-	
+
 	return (nil);
 }
 

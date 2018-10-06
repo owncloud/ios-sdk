@@ -57,6 +57,8 @@
 		[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
 		syncContext.removedItems = @[ placeholderItem ];
+
+		[self.core deleteDirectoryForItem:placeholderItem];
 	}
 }
 
@@ -74,15 +76,7 @@
 		NSProgress *progress;
 
 		// Find unoccupied filename to make a copy of the file before upload
-		for (NSUInteger uploadFileNamingAttempt=0; uploadFileNamingAttempt < 100; uploadFileNamingAttempt++)
-		{
-			NSURL *uploadCopyFileURLCandidate = [uploadURL URLByAppendingPathExtension:[NSString stringWithFormat:@"upld-%lu-%@", (unsigned long)uploadFileNamingAttempt, NSUUID.UUID.UUIDString]];
-
-			if (![[NSFileManager defaultManager] fileExistsAtPath:uploadCopyFileURLCandidate.path])
-			{
-				_uploadCopyFileURL = uploadCopyFileURLCandidate;
-			}
-		}
+		_uploadCopyFileURL = [self.core availableTemporaryURLAlongsideItem:self.placeholderItem fileName:NULL];
 
 		// Make a copy of the file before upload (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
 		if (_uploadCopyFileURL != nil)
@@ -138,16 +132,9 @@
 				NSURL *placeholderItemContainerURL = [uploadedItemURL URLByDeletingLastPathComponent];
 
 				// Create directory to house file for new item
-				if (![[NSFileManager defaultManager] fileExistsAtPath:[placeholderItemContainerURL path]])
+				if ((error = [self.core createDirectoryForItem:uploadedItem]) != nil)
 				{
-					if (![[NSFileManager defaultManager] createDirectoryAtURL:placeholderItemContainerURL withIntermediateDirectories:YES attributes:nil error:&error])
-					{
-						OCLogError(@"Upload completion target directory creation failed for %@ with error %@", OCLogPrivate(uploadedItemURL), error);
-					}
-				}
-				else
-				{
-					OCLogWarning(@"Upload completion target directory already exists for %@", OCLogPrivate(uploadedItemURL));
+					OCLogError(@"Upload completion target directory creation failed for %@ with error %@", OCLogPrivate(uploadedItem), error);
 				}
 
 				// Use _uploadCopyFileURL as source if available

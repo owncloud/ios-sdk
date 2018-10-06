@@ -65,16 +65,6 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 	}];
 }
 
-- (NSURL *)localURLForItem:(OCItem *)item
-{
-	if (item.localRelativePath != nil)
-	{
-		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
-	}
-
-	return ([self.vault localURLForItem:item]);
-}
-
 #pragma mark - File provider manager
 - (NSFileProviderManager *)fileProviderManager
 {
