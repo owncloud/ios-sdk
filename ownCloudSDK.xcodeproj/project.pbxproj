@@ -7,8 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5912E096216B8E1900FA4A58 /* OCMockTestClass.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8925420F5F8A600AEFF98 /* OCMockTestClass.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5912E097216B8E3B00FA4A58 /* OCMockTestClass+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8925920F5F91300AEFF98 /* OCMockTestClass+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5912E098216C806600FA4A58 /* OCMockTestClass.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925520F5F8A600AEFF98 /* OCMockTestClass.m */; };
+		5912E09A216C817F00FA4A58 /* OCMockManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8921420F5E9D100AEFF98 /* OCMockManager.m */; };
+		5912E09B216C817F00FA4A58 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */; };
+		5912E09D216C83BB00FA4A58 /* OCMockTestClass+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925A20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m */; };
 		DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC01969A20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m */; };
 		DC02835B209098D7005B6334 /* OCImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC028359209098D7005B6334 /* OCImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC02835C209098D7005B6334 /* OCImage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC02835A209098D7005B6334 /* OCImage.m */; };
 		DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0283612090A3E8005B6334 /* OCItemThumbnail.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -179,7 +184,6 @@
 		DCA8923D20F5F13F00AEFF98 /* ownCloudMocking.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DCA8924720F5F1BF00AEFF98 /* NSObject+OCSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8921D20F5ED9800AEFF98 /* NSObject+OCSwizzle.m */; };
 		DCA8924820F5F1BF00AEFF98 /* NSObject+OCSwizzle.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8921C20F5ED9800AEFF98 /* NSObject+OCSwizzle.h */; };
-		DCA8924920F5F1BF00AEFF98 /* OCMockManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8921420F5E9D100AEFF98 /* OCMockManager.m */; };
 		DCA8924A20F5F1BF00AEFF98 /* OCMockManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8921320F5E9D100AEFF98 /* OCMockManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA8924B20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8921820F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.m */; };
 		DCA8924C20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8921720F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -187,7 +191,6 @@
 		DCA8925220F5F57D00AEFF98 /* NSObject+OCMockManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8925020F5F57D00AEFF98 /* NSObject+OCMockManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925120F5F57D00AEFF98 /* NSObject+OCMockManager.m */; };
 		DCA8925820F5F8AC00AEFF98 /* OCMockTestClass.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925520F5F8A600AEFF98 /* OCMockTestClass.m */; };
-		DCA8925B20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925A20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m */; };
 		DCADC03F2072774200DB8E83 /* OCQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC03D2072774200DB8E83 /* OCQuery+Internal.h */; };
 		DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC03E2072774200DB8E83 /* OCQuery+Internal.m */; };
 		DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0422072CCC900DB8E83 /* OCCoreItemListTask.h */; };
@@ -1585,7 +1588,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5912E097216B8E3B00FA4A58 /* OCMockTestClass+OCMocking.h in Headers */,
 				DCA8924C20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.h in Headers */,
+				5912E096216B8E1900FA4A58 /* OCMockTestClass.h in Headers */,
 				DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */,
 				DCA8924A20F5F1BF00AEFF98 /* OCMockManager.h in Headers */,
 				DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */,
@@ -1991,11 +1996,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5912E09A216C817F00FA4A58 /* OCMockManager.m in Sources */,
+				5912E09B216C817F00FA4A58 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */,
+				5912E09D216C83BB00FA4A58 /* OCMockTestClass+OCMocking.m in Sources */,
+				5912E098216C806600FA4A58 /* OCMockTestClass.m in Sources */,
 				DCA8924B20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.m in Sources */,
 				DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */,
 				DCA8924720F5F1BF00AEFF98 /* NSObject+OCSwizzle.m in Sources */,
-				DCA8924920F5F1BF00AEFF98 /* OCMockManager.m in Sources */,
-				DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2005,7 +2012,6 @@
 			files = (
 				DCA8925820F5F8AC00AEFF98 /* OCMockTestClass.m in Sources */,
 				DCA8923720F5F13F00AEFF98 /* ownCloudMockingTests.m in Sources */,
-				DCA8925B20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
