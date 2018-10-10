@@ -91,6 +91,8 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
 
+	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
+
 	BOOL _automaticItemListUpdatesEnabled;
 
 	__weak id <OCCoreDelegate> _delegate;
@@ -112,6 +114,8 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 @property(assign) BOOL postFileProviderNotifications; //!< YES if the core should post file provider notifications and integrate with file provider APIs.
 
 @property(readonly, strong) OCSyncAnchor latestSyncAnchor;
+
+@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm; //!< Identifier of the preferred checksum algorithm
 
 @property(assign) BOOL automaticItemListUpdatesEnabled; //!< Whether OCCore should scan for item list updates automatically.
 
@@ -144,6 +148,7 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
 
 - (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
+- (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
 
 - (NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
@@ -159,7 +164,7 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 @end
 
 @interface OCCore (CommandLocalModification)
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item withContentsOfFileAtURL:(NSURL *)localFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options resultHandler:(OCCoreUploadResultHandler)completionHandler;
+- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL * __nullable)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler;
 @end
 
 //@interface OCCore (FileManagement)

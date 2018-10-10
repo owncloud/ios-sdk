@@ -43,7 +43,7 @@
 
 @dynamic authenticationMethod;
 
-@synthesize preferredChecksumAlgorithmIdentifier = _preferredChecksumAlgorithmIdentifier;
+@synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 @synthesize bookmark = _bookmark;
 
@@ -124,7 +124,7 @@
 		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
-		_preferredChecksumAlgorithmIdentifier = OCChecksumAlgorithmIdentifierSHA1;
+		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
 	return (self);
@@ -788,6 +788,32 @@
 		if ([sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
 		{
 			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-Mtime"];
+		}
+
+		// Compute and set checksum header
+		OCChecksumHeaderString checksumHeaderValue = nil;
+		__block OCChecksum *checksum = nil;
+
+		if ((checksum = options[OCConnectionOptionChecksumKey]) == nil)
+		{
+			OCChecksumAlgorithmIdentifier checksumAlgorithmIdentifier = options[OCConnectionOptionChecksumAlgorithmKey];
+
+			if (checksumAlgorithmIdentifier==nil)
+			{
+				checksumAlgorithmIdentifier = _preferredChecksumAlgorithm;
+			}
+
+			OCSyncExec(checksumComputation, {
+				[OCChecksum computeForFile:sourceURL checksumAlgorithm:checksumAlgorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+					checksum = computedChecksum;
+					OCSyncExecDone(checksumComputation);
+				}];
+			});
+		}
+
+		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
+		{
+			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
 		}
 
 		// Set meta data for handling
@@ -1599,3 +1625,5 @@ OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-ser
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
+OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
+OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";

@@ -59,6 +59,8 @@
 
 @synthesize delegate = _delegate;
 
+@synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
 #pragma mark - Class settings
@@ -128,6 +130,13 @@
 
 		_automaticItemListUpdatesEnabled = YES;
 
+		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
+		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
+		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
+		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
+		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
+		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
+
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
 
@@ -150,6 +159,7 @@
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
+		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
@@ -738,7 +748,7 @@
 		{
 			NSURL *temporaryURLCandidate;
 
-			if ((temporaryURLCandidate = [baseURL URLByAppendingPathExtension:filename]) != nil)
+			if ((temporaryURLCandidate = [baseURL URLByAppendingPathComponent:filename]) != nil)
 			{
 				if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryURLCandidate.path])
 				{
@@ -754,6 +764,11 @@
 	}
 
 	return (temporaryURL);
+}
+
+- (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item
+{
+	return ([[url URLByDeletingLastPathComponent] isEqual:[self localParentDirectoryURLForItem:item]] && [url.pathExtension isEqual:@"tmp"]);
 }
 
 - (NSError *)createDirectoryForItem:(OCItem *)item

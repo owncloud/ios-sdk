@@ -24,7 +24,7 @@
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
-#import "OCSyncActionLocalImport.h"
+#import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
 
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -125,7 +125,7 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionLocalImport alloc] initWithParentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL placeholderItem:placeholderItem] allowsRescheduling:NO resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end
