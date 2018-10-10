@@ -22,9 +22,17 @@
 @interface OCCertificateViewController : UITableViewController
 {
 	OCCertificate *_certificate;
+
+	UIColor *_sectionHeaderTextColor;
+	UIColor *_lineTitleColor;
+	UIColor *_lineValueColor;
 }
 
 @property(strong,nonatomic) OCCertificate *certificate;
+
+@property(strong,nonatomic) UIColor *sectionHeaderTextColor;
+@property(strong,nonatomic) UIColor *lineTitleColor;
+@property(strong,nonatomic) UIColor *lineValueColor;
 
 - (instancetype)initWithCertificate:(OCCertificate *)certificate;
 

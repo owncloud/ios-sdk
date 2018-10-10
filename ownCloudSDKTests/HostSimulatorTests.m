@@ -10,6 +10,7 @@
 
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
+#import "OCTestTarget.h"
 
 @interface HostSimulatorTests : XCTestCase
 {
@@ -58,7 +59,7 @@
 
 - (void)testSimulatorMissingCertificate
 {
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
 		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeError), @"Issue is error issue");
@@ -70,7 +71,7 @@
 
 - (void)testSimulatorSimulatedNotFoundResponses
 {
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.insecureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
 		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeError), @"Issue is error issue");
@@ -99,7 +100,7 @@
 
 	};
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
 		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");

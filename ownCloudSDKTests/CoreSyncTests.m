@@ -11,6 +11,7 @@
 #import "OCHostSimulator.h"
 #import "OCCore+Internal.h"
 #import "TestTools.h"
+#import "OCTestTarget.h"
 
 @interface CoreSyncTests : XCTestCase
 
@@ -47,7 +48,7 @@
 	}]];
 }
 
-- (void)testSyncAnchorIncreaseOnETagChange
+- (void)_testSyncAnchorIncreaseOnETagChange // TODO: Fix this test to rely on events rather than timing, then add it back
 {
 	OCBookmark *bookmark = nil;
 	OCCore *core;
@@ -61,8 +62,8 @@
 	__block OCItem *firstRootItemReturnedBySyncAnchorQuery = nil, *secondRootItemReturnedBySyncAnchorQuery = nil;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -230,8 +231,8 @@
 	__block OCItem *topLevelFileItem = nil, *rootItem = nil, *newFolderItem = nil;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -399,8 +400,8 @@
 	__block BOOL _dirCreationObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -530,12 +531,13 @@
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *dirCreatedExpectation = [self expectationWithDescription:@"Directory created"];
 	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
+	XCTestExpectation *dirPlaceholderCreationObservedExpectation = [self expectationWithDescription:@"Directory placeholder creation observed"];
 	NSString *folderName = NSUUID.UUID.UUIDString;
-	__block BOOL _dirCreationObserved = NO;
+	__block BOOL _dirCreationObserved = NO, _dirCreationPlaceholderObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -602,8 +604,19 @@
 							{
 								if ([item.name isEqualToString:folderName])
 								{
-									[dirCreationObservedExpectation fulfill];
-									_dirCreationObserved = YES;
+									if (item.isPlaceholder)
+									{
+										if (!_dirCreationPlaceholderObserved)
+										{
+											[dirPlaceholderCreationObservedExpectation fulfill];
+											_dirCreationPlaceholderObserved = YES;
+										}
+									}
+									else
+									{
+										[dirCreationObservedExpectation fulfill];
+										_dirCreationObserved = YES;
+									}
 								}
 							}
 
@@ -651,8 +664,8 @@
 	NSString *folderName = NSUUID.UUID.UUIDString;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -869,8 +882,8 @@
 
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -1126,6 +1139,149 @@
 	}];
 }
 
+- (void)testRenameStressTest
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	__block BOOL didStartRenames = NO;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block NSInteger remainingRenames = 0;
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/Photos/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (!didStartRenames)
+					{
+						for (OCItem *item in query.queryResults)
+						{
+							if (item.type == OCItemTypeFile)
+							{
+								NSString *originalName = item.name;
+								NSString *modifiedName1 = [item.name stringByAppendingString:@"1"];
+								NSString *modifiedName2 = [item.name stringByAppendingString:@"2"];
+								NSString *modifiedName3 = [item.name stringByAppendingString:@"3"];
+
+								remainingRenames += 4;
+
+								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@", originalName, modifiedName1, modifiedName2, modifiedName3, originalName);
+
+								[core renameItem:item to:modifiedName1 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+									NSLog(@"Renamed %@ -> %@: error=%@ item=%@", originalName, newItem.name, error, newItem);
+									remainingRenames--;
+
+									XCTAssert(error==nil);
+									XCTAssert(newItem!=nil);
+									XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+									XCTAssert([newItem.name isEqual:modifiedName1]);
+
+									[core renameItem:newItem to:modifiedName2 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+										NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName1, newItem.name, error, newItem);
+										remainingRenames--;
+
+										XCTAssert(error==nil);
+										XCTAssert(newItem!=nil);
+										XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+										XCTAssert([newItem.name isEqual:modifiedName2]);
+
+										[core renameItem:newItem to:modifiedName3 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+											NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName2, newItem.name, error, newItem);
+											remainingRenames--;
+
+											XCTAssert(error==nil);
+											XCTAssert(newItem!=nil);
+											XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+											XCTAssert([newItem.name isEqual:modifiedName3]);
+
+											[core renameItem:newItem to:originalName options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+												NSLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName3, newItem.name, error, newItem);
+												remainingRenames--;
+
+												XCTAssert(error==nil);
+												XCTAssert(newItem!=nil);
+												XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
+												XCTAssert([newItem.name isEqual:originalName]);
+
+												if (remainingRenames == 0)
+												{
+													// Stop core
+													[core stopWithCompletionHandler:^(id sender, NSError *error) {
+														XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+														[coreStoppedExpectation fulfill];
+													}];
+												}
+											}];
+										}];
+									}];
+								}];
+							}
+						}
+
+						didStartRenames = YES;
+					}
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
 - (void)testDownload
 {
 	OCBookmark *bookmark = nil;
@@ -1133,10 +1289,11 @@
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *fileDownloadedExpectation = [self expectationWithDescription:@"File downloaded"];
+	__block BOOL startedDownload = NO;
 
 	// Create bookmark for demo.owncloud.org
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"demo" passphrase:@"demo" authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
 
 	// Create core with it
@@ -1186,8 +1343,10 @@
 				{
 					for (OCItem *item in changeset.queryResult)
 					{
-						if (item.type == OCItemTypeFile)
+						if ((item.type == OCItemTypeFile) && !startedDownload)
 						{
+							startedDownload = YES;
+
 							[core downloadItem:item options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, OCFile *file) {
 								NSLog(@"Downloaded to %@ with error %@", file.url, error);
 
@@ -1224,6 +1383,156 @@
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
+}
+
+- (void)testUpload
+{
+	OCBookmark *bookmark = nil;
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *placeholderCreatedExpectation = [self expectationWithDescription:@"Placeholder created"];
+	XCTestExpectation *modificationItemCreatedExpectation = [self expectationWithDescription:@"Modification item created"];
+	XCTestExpectation *fileUploadedExpectation = [self expectationWithDescription:@"File uploaded"];
+	XCTestExpectation *updatedFileUploadedExpectation = [self expectationWithDescription:@"File uploaded"];
+	NSURL *uploadFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow" withExtension:@"png"];
+	NSURL *modifiedFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow-crystalized" withExtension:@"png"];
+	NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
+	__block BOOL startedUpload = NO;
+	OCChecksum *(^ComputeChecksumForURL)(NSURL *url) = ^(NSURL *url) {
+		__block OCChecksum *checksum = nil;
+
+		OCSyncExec(computeChecksum, {
+			[OCChecksum computeForFile:url checksumAlgorithm:OCChecksumAlgorithmIdentifierSHA1 completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+				checksum = computedChecksum;
+				OCSyncExecDone(computeChecksum);
+			}];
+		});
+
+		return (checksum);
+	};
+	OCChecksum *uploadFileChecksum = ComputeChecksumForURL(uploadFileURL);
+	OCChecksum *modifiedFileChecksum = ComputeChecksumForURL(modifiedFileURL);
+
+	// Create bookmark for demo.owncloud.org
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+
+	// Create core with it
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		NSLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (changeset != nil)
+				{
+					NSLog(@"============================================");
+					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+
+					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
+						switch(operation)
+						{
+							case OCQueryChangeSetOperationInsert:
+								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationRemove:
+								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationUpdate:
+								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+							break;
+
+							case OCQueryChangeSetOperationContentSwap:
+								NSLog(@"[%@] Content Swap", query.queryPath);
+							break;
+						}
+					}];
+				}
+
+				if (query.state == OCQueryStateIdle)
+				{
+					if (query.rootItem != nil)
+					{
+						if (!startedUpload)
+						{
+							startedUpload = YES;
+
+							// Test upload by import
+							[core importFileNamed:uploadName at:query.rootItem fromURL:uploadFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:^(NSError *error, OCItem *item) {
+								XCTAssert(item!=nil);
+								XCTAssert(item.isPlaceholder);
+								XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:uploadFileChecksum]);
+
+								NSLog(@"### Placeholder item: %@", item);
+
+
+								[placeholderCreatedExpectation fulfill];
+							} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+								XCTAssert(error==nil);
+								XCTAssert(item!=nil);
+								XCTAssert(!item.isPlaceholder);
+								XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:uploadFileChecksum]);
+
+								NSLog(@"### Uploaded item: %@", item);
+
+								[fileUploadedExpectation fulfill];
+
+								// Test upload by local modification
+								[core reportLocalModificationOfItem:item parentItem:query.rootItem withContentsOfFileAtURL:modifiedFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:^(NSError *error, OCItem *item) {
+									XCTAssert(item!=nil);
+									XCTAssert(!item.isPlaceholder);
+									XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:modifiedFileChecksum]);
+
+									NSLog(@"### Update \"placeholder\" item=%@ error=%@", item, error);
+
+									[modificationItemCreatedExpectation fulfill];
+								} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+									XCTAssert(error==nil);
+									XCTAssert(item!=nil);
+									XCTAssert(!item.isPlaceholder);
+									XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:modifiedFileChecksum]);
+
+									NSLog(@"### Uploaded updated item=%@, error=%@", item, error);
+
+									[updatedFileUploadedExpectation fulfill];
+
+									// Stop core
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+									}];
+								}];
+							}];
+						}
+					}
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+
 }
 
 @end

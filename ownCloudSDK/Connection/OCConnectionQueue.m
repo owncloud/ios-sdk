@@ -87,6 +87,8 @@
 
 		_connection = connection;
 
+		_encloseRunningRequestsInSystemActivities = YES;
+
 		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
 					    delegate:self
 					    delegateQueue:nil];
@@ -97,7 +99,26 @@
 
 - (void)dealloc
 {
+	if (_invalidationCompletionHandler)
+	{
+		_invalidationCompletionHandler();
+		_invalidationCompletionHandler = nil;
+	}
+}
+
+#pragma mark - Invalidation
+- (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
+{
+	_invalidationCompletionHandler = completionHandler;
+
 	[_urlSession finishTasksAndInvalidate];
+}
+
+- (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
+{
+	_invalidationCompletionHandler = completionHandler;
+
+	[_urlSession invalidateAndCancel];
 }
 
 #pragma mark - Queue management
@@ -144,7 +165,7 @@
 				_authenticatedRequestsCanBeScheduled = [_connection canSendAuthenticatedRequestsForQueue:self availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
 					// Set _authenticatedRequestsCanBeScheduled to YES regardless of authenticationIsAvailable's value in order to ensure -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] is called ever again (for requests queued in the future)
 					[self _queueBlock:^{
-						_authenticatedRequestsCanBeScheduled = YES;
+						self->_authenticatedRequestsCanBeScheduled = YES;
 					}];
 
 					if (authenticationIsAvailable)
@@ -245,7 +266,7 @@
 					else if (request.bodyURL != nil)
 					{
 						// Body comes from a file. Make it an upload task.
-						task = [_urlSession uploadTaskWithStreamedRequest:urlRequest];
+						task = [_urlSession uploadTaskWithRequest:urlRequest fromFile:request.bodyURL];
 					}
 					else
 					{
@@ -255,6 +276,12 @@
 
 					// Apply priority
 					task.priority = request.priority;
+
+					// Apply earliest date
+					if (request.earliestBeginDate != nil)
+					{
+						task.earliestBeginDate = request.earliestBeginDate;
+					}
 				}
 
 				if (task != nil)
@@ -266,7 +293,8 @@
 					request.urlSessionTaskIdentifier = @(task.taskIdentifier);
 
 					// Connect task progress to request progress
-					[request.progress addChild:task.progress withPendingUnitCount:100];
+					request.progress.totalUnitCount += 200;
+					[request.progress addChild:task.progress withPendingUnitCount:200];
 
 					// Update internal tracking collections
 					if (request.groupID!=nil)
@@ -278,7 +306,31 @@
 
 					_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
 
+					OCLogDebug(@"CQ[%@]: saved request for taskIdentifier <%@>, URL: %@, %p, %p", _urlSession.configuration.identifier, request.urlSessionTaskIdentifier, urlRequest, self, _runningRequestsByTaskIdentifier);
+
 					// Start task
+					if (resumeTask)
+					{
+						// Prevent suspension for as long as this runs
+						if (_encloseRunningRequestsInSystemActivities)
+						{
+							NSString *absoluteURLString = request.url.absoluteString;
+
+							if (absoluteURLString==nil)
+							{
+								absoluteURLString = @"";
+							}
+
+							request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
+						}
+
+						// Notify request observer
+						if (request.requestObserver != nil)
+						{
+							resumeTask = !request.requestObserver(request, OCConnectionRequestObserverEventTaskResume);
+						}
+					}
+
 					if (resumeTask)
 					{
 						[task resume];
@@ -325,11 +377,11 @@
 	
 		@synchronized(self)
 		{
-			if ((finishRequests = [[NSMutableArray alloc] initWithArray:_queuedRequests]) != nil)
+			if ((finishRequests = [[NSMutableArray alloc] initWithArray:self->_queuedRequests]) != nil)
 			{
 				if (requestFilter!=nil)
 				{
-					for (OCConnectionRequest *request in _queuedRequests)
+					for (OCConnectionRequest *request in self->_queuedRequests)
 					{
 						if (!requestFilter(request))
 						{
@@ -338,7 +390,7 @@
 					}
 				}
 				
-				[_queuedRequests removeObjectsInArray:finishRequests];
+				[self->_queuedRequests removeObjectsInArray:finishRequests];
 			}
 		}
 		
@@ -406,6 +458,12 @@
 						else
 						{
 							[self _handleFinishedRequest:request error:OCError(OCErrorCertificateMissing) scheduleQueuedRequests:scheduleQueuedRequests];
+
+							if (request.systemActivity != nil)
+							{
+								[[NSProcessInfo processInfo] endActivity:request.systemActivity];
+								request.systemActivity = nil;
+							}
 						}
 						return;
 					}
@@ -459,6 +517,7 @@
 
 			if (request.urlSessionTaskIdentifier != nil)
 			{
+				OCLogDebug(@"CQ[%@]: Removing request %@ with taskIdentifier <%@>", _urlSession.configuration.identifier, OCLogPrivate(request.url), request.urlSessionTaskIdentifier);
 				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
 			}
 		}
@@ -478,6 +537,13 @@
 
 	// Save state
 	[self saveState];
+
+	// End system activity
+	if (request.systemActivity != nil)
+	{
+		[[NSProcessInfo processInfo] endActivity:request.systemActivity];
+		request.systemActivity = nil;
+	}
 }
 
 #pragma mark - Request retrieval
@@ -494,6 +560,11 @@
 			if (request.urlSessionTask == nil)
 			{
 				request.urlSessionTask = task;
+			}
+
+			if (request == nil)
+			{
+				OCLogError(@"CQ[%@]: could not find request for task %@ (%@) %p %p", _urlSession.configuration.identifier, OCLogPrivate(task), OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
 			}
 		}
 	}
@@ -520,7 +591,7 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
 	// NSLog(@"DID COMPLETE: task=%@ error=%@", task, error);
-	OCLogDebug(@"%@: didCompleteWithError=%@", task.currentRequest.URL, error);
+	OCLogDebug(@"CQ[%@]: %@ [taskIdentifier=%lu]: didCompleteWithError=%@", _urlSession.configuration.identifier, task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
 }
@@ -543,7 +614,7 @@
         newRequest:(NSURLRequest *)request
         completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
 {
-	OCLogDebug(@"%@: wants to perform redirection from %@ to %@ via %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
+	OCLogDebug(@"CQ[%@]: %@: wants to perform redirection from %@ to %@ via %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
 
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
@@ -578,7 +649,7 @@
 		}
 	}
 
-	OCLogDebug(@"%@: downloadTask:didFinishDownloadingToURL: %@", downloadTask.currentRequest.URL, location);
+	OCLogDebug(@"CQ[%@]: %@: downloadTask:didFinishDownloadingToURL: %@", _urlSession.configuration.identifier, downloadTask.currentRequest.URL, location);
 	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
@@ -586,14 +657,28 @@
 {
 	dispatch_block_t completionHandler;
 
+	OCLogDebug(@"CQ[%@]: URLSessionDidFinishEventsForBackgroundSession: %@", _urlSession.configuration.identifier, session);
+
 	// Call completion handler
 	if ((completionHandler = [OCConnectionQueue completionHandlerForBackgroundSessionWithIdentifier:session.configuration.identifier remove:YES]) != nil)
 	{
-		completionHandler();
+		// Apple docs: "Because the provided completion handler is part of UIKit, you must call it on your main thread."
+		dispatch_async(dispatch_get_main_queue(), ^{
+			completionHandler();
+		});
 	}
 
 	// Tell connection that handling this queue finished
 	[_connection finishedQueueForResumedBackgroundSessionWithIdentifier:session.configuration.identifier];
+}
+
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
+{
+	if (_invalidationCompletionHandler != nil)
+	{
+		_invalidationCompletionHandler();
+		_invalidationCompletionHandler = nil;
+	}
 }
 
 - (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
@@ -618,7 +703,7 @@
 					}
 					else
 					{
-						[_connection handleValidationOfRequest:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+						[self->_connection handleValidationOfRequest:request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
 					}
 				}
 			}
@@ -631,7 +716,7 @@
         didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
         completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
-	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
+	OCLogDebug(@"CQ[%@]: %@: %@ => protection space: %@ method: %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
 
 	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
 	{
@@ -661,6 +746,8 @@
 				}
 			}
 
+			request = [self requestForTask:task];
+
 			OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed, NSError *error) {
 				if (proceed)
 				{
@@ -673,7 +760,7 @@
 				}
 			};
 
-			if ((request = [self requestForTask:task]) != nil)
+			if (request != nil)
 			{
 				[self evaluateCertificate:certificate forRequest:request proceedHandler:proceedHandler];
 			}
@@ -787,7 +874,7 @@
 		{
 			if ([[self uuidForBackgroundSessionIdentifier:backgroundSessionIdentifier] isEqual:uuid])
 			{
-				if ([self backgroundSessionOriginatesLocallyForIdentifier:backgroundSessionIdentifier])
+				if (![self backgroundSessionOriginatesLocallyForIdentifier:backgroundSessionIdentifier])
 				{
 					if (otherBackgroundSessionIdentifiers == nil) { otherBackgroundSessionIdentifiers = [NSMutableArray new]; }
 
@@ -850,7 +937,7 @@
 		[self _queueBlock:^{
 			@synchronized(self)
 			{
-				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:_runningRequests];
+				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:self->_runningRequests];
 
 				// Compare tasks against list of runningRequests
 				for (NSURLSessionTask *task in tasks)

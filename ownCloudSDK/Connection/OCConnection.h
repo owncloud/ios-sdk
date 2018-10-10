@@ -40,6 +40,7 @@ typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *erro
 typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
+typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
@@ -68,7 +69,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
-	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithmIdentifier;
+	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	OCUser *_loggedInUser;
 
@@ -92,10 +93,12 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
+@property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
+
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
-@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithmIdentifier;
+@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
 @property(strong) OCUser *loggedInUser;
 
@@ -117,21 +120,24 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 #pragma mark - Connect & Disconnect
 - (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
+- (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
 
-#pragma mark - Actions
-- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+#pragma mark - Actions
+- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+
+- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
@@ -227,6 +233,11 @@ extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Arr
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
+extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
+
+extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
+extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
+extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 
 #import "OCClassSettings.h"
 

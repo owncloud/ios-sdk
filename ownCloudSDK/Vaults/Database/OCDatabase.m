@@ -25,11 +25,15 @@
 #import "OCItemVersionIdentifier.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
+#import "NSError+OCError.h"
+#import "OCMacros.h"
+#import "OCSyncAction.h"
 
 @interface OCDatabase ()
 {
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
+	NSMutableDictionary <OCSyncRecordID, NSDictionary<OCSyncActionParameter,id> *> *_ephermalParametersBySyncRecordID;
 }
 
 @end
@@ -53,6 +57,7 @@
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
+		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
@@ -272,6 +277,14 @@
 
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
+	if (fileID == nil)
+	{
+		OCLogError(@"Retrieval of fileID==nil failed");
+
+		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
+		return;
+	}
+
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
@@ -315,6 +328,24 @@
 	}]];
 }
 
+- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
+{
+	__block NSArray <OCItem *> *items = nil;
+
+	OCSyncExec(cacheItemsRetrieval, {
+		[self retrieveCacheItemsAtPath:path itemOnly:itemOnly completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *dbItems) {
+			items = dbItems;
+
+			if (outError != NULL) { *outError = error; }
+			if (outSyncAnchor != NULL) { *outSyncAnchor = syncAnchor; }
+
+			OCSyncExecDone(cacheItemsRetrieval);
+		}];
+	});
+
+	return (items);
+}
+
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE syncAnchor > ?";
@@ -337,11 +368,17 @@
 }
 
 #pragma mark - Thumbnail interface
-- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType specID:(NSString *)specID forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	if ((itemVersion.fileID == nil) || (itemVersion.eTag == nil))
 	{
 		OCLogError(@"Error storing thumbnail for itemVersion %@ because it lacks fileID or eTag.", OCLogPrivate(itemVersion));
+		return;
+	}
+
+	if (specID == nil)
+	{
+		OCLogError(@"Error storing thumbnail for itemVersion %@ because it lacks a specID.", OCLogPrivate(itemVersion));
 		return;
 	}
 
@@ -353,10 +390,11 @@
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:@[
 		// Remove outdated versions and smaller thumbnail sizes
-		[OCSQLiteQuery  query:@"DELETE FROM thumb.thumbnails WHERE fileID = :fileID AND ((eTag != :eTag) OR (maxWidth < :maxWidth AND maxHeight < :maxHeight))" // relatedTo:OCDatabaseTableNameThumbnails
+		[OCSQLiteQuery  query:@"DELETE FROM thumb.thumbnails WHERE fileID = :fileID AND ((eTag != :eTag) OR (maxWidth < :maxWidth AND maxHeight < :maxHeight) OR (specID != :specID))" // relatedTo:OCDatabaseTableNameThumbnails
 			        withNamedParameters:@{
 					@"fileID" : itemVersion.fileID,
 					@"eTag" : itemVersion.eTag,
+					@"specID" : specID,
 					@"maxWidth" : @(maximumSizeInPixels.width),
 					@"maxHeight" : @(maximumSizeInPixels.height),
 			        } resultHandler:nil],
@@ -366,6 +404,7 @@
 				rowValues:@{
 					@"fileID" : itemVersion.fileID,
 					@"eTag" : itemVersion.eTag,
+					@"specID" : specID,
 					@"maxWidth" : @(maximumSizeInPixels.width),
 					@"maxHeight" : @(maximumSizeInPixels.height),
 					@"mimeType" : mimeType,
@@ -379,7 +418,7 @@
 	}]];
 }
 
-- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler
+- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler
 {
 	/*
 		// This is a bit more complex SQL statement. Here's how it was tested and what it is meant to achieve:
@@ -420,9 +459,19 @@
 		this way will be tiny and shouldn't have any measurable performance impact.
 	*/
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT maxWidth, maxHeight, mimeType, imageData FROM thumbnails WHERE fileID = :fileID AND eTag = :eTag ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1" withNamedParameters:@{
+	if ((itemVersion.fileID==nil) || (itemVersion.eTag==nil) || (specID == nil))
+	{
+		if (completionHandler!=nil)
+		{
+			completionHandler(self, OCError(OCErrorInsufficientParameters), CGSizeZero, nil, nil);
+		}
+		return;
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT maxWidth, maxHeight, mimeType, imageData FROM thumbnails WHERE fileID = :fileID AND eTag = :eTag AND specID = :specID ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1" withNamedParameters:@{
 		@"fileID"	: itemVersion.fileID,
 		@"eTag"		: itemVersion.eTag,
+		@"specID"	: specID,
 		@"maxWidth"  	: @(maximumSizeInPixels.width),
 		@"maxHeight" 	: @(maximumSizeInPixels.height),
 	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
@@ -461,13 +510,17 @@
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
-		if (syncRecord.itemPath != nil)
+		NSString *path = syncRecord.action.localItem.path;
+
+		if (path == nil) { path = @""; }
+
+		if (path != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
 				@"timestampDate" 	: syncRecord.timestamp,
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
-				@"action"		: syncRecord.action,
-				@"path"			: syncRecord.itemPath,
+				@"action"		: syncRecord.actionIdentifier,
+				@"path"			: path,
 				@"recordData"		: [syncRecord serializedData]
 			} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 				syncRecord.recordID = rowID;
@@ -478,12 +531,17 @@
 					{
 						if (syncRecord.progress != nil)
 						{
-							_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
 						}
 
 						if (syncRecord.resultHandler != nil)
 						{
-							_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+							self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+						}
+
+						if (syncRecord.action.ephermalParameters != nil)
+						{
+							self->_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
 						}
 					}
 				}
@@ -492,7 +550,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 
@@ -507,25 +568,37 @@
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
 				@"recordData"		: [syncRecord serializedData]
-			} completionHandler:nil]];
+			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
+				@synchronized(db)
+				{
+					if (syncRecord.progress != nil)
+					{
+						self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+					}
+					else
+					{
+						[self->_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
 
-			if (syncRecord.progress != nil)
-			{
-				_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
-			}
-			else
-			{
-				[_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
-			}
+					if (syncRecord.resultHandler != nil)
+					{
+						self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+					}
+					else
+					{
+						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
 
-			if (syncRecord.resultHandler != nil)
-			{
-				_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
-			}
-			else
-			{
-				[_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
-			}
+					if (syncRecord.action.ephermalParameters != nil)
+					{
+						self->_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
+					}
+					else
+					{
+						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecord.recordID];
+					}
+				}
+			}]];
 		}
 		else
 		{
@@ -534,7 +607,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 
@@ -547,7 +623,19 @@
 		if (syncRecord.recordID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:syncRecord.recordID fromTable:OCDatabaseTableNameSyncJournal completionHandler:^(OCSQLiteDB *db, NSError *error) {
-				syncRecord.recordID = nil;
+				OCSyncRecordID syncRecordID;
+
+				if ((syncRecordID = syncRecord.recordID) != nil)
+				{
+					syncRecord.recordID = nil;
+
+					@synchronized(db)
+					{
+						[self->_progressBySyncRecordID removeObjectForKey:syncRecordID];
+						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecordID];
+						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecordID];
+					}
+				}
 			}]];
 		}
 		else
@@ -557,7 +645,10 @@
 	}
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
+		if (completionHandler != nil)
+		{
+			completionHandler(self, error);
+		}
 	}]];
 }
 
@@ -573,10 +664,11 @@
 		{
 			syncRecord.recordID = recordID;
 
-			@synchronized(self)
+			@synchronized(self.sqlDB)
 			{
 				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
+				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
 			}
 		}
 	}
@@ -617,7 +709,7 @@
 	}]];
 }
 
-- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
+- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
 		@"path" 		: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path 		 apply:(path!=nil)],

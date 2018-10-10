@@ -48,10 +48,10 @@
 
 				if ((identifier != nil) && (key != nil))
 				{
-					if (_settingsByKeyByIdentifier == nil) { _settingsByKeyByIdentifier = [NSMutableDictionary new]; }
-					if (_settingsByKeyByIdentifier[identifier] == nil) { _settingsByKeyByIdentifier[identifier] = [NSMutableDictionary new]; }
+					if (self->_settingsByKeyByIdentifier == nil) { self->_settingsByKeyByIdentifier = [NSMutableDictionary new]; }
+					if (self->_settingsByKeyByIdentifier[identifier] == nil) { self->_settingsByKeyByIdentifier[identifier] = [NSMutableDictionary new]; }
 
-					_settingsByKeyByIdentifier[identifier][key] = value;
+					self->_settingsByKeyByIdentifier[identifier][key] = value;
 				}
 			}
 		}];

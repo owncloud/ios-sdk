@@ -56,7 +56,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 - (NSString *)name;
 
 #pragma mark - Authentication Data Access
-+ (BOOL)usesUserName; //!< This authentication method uses a user name (passphrase-based only)
+@property(readonly,class,nonatomic) BOOL usesUserName; //!< This authentication method uses a user name (passphrase-based only)
 + (NSString *)userNameFromAuthenticationData:(NSData *)authenticationData; //!< Returns the user name stored inside authenticationData
 + (NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData; //!< Returns the passphrase stored inside authenticationData (passphrase-based only)
 

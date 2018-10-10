@@ -218,9 +218,9 @@
 					{
 						@synchronized(self)
 						{
-							if (_cachedAuthenticationSecret == nil)
+							if (self->_cachedAuthenticationSecret == nil)
 							{
-								_cachedAuthenticationSecret = cachedAuthenticationSecret;
+								self->_cachedAuthenticationSecret = cachedAuthenticationSecret;
 							}
 						}
 					}

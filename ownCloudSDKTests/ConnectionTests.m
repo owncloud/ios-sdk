@@ -20,6 +20,8 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import <ownCloudSDK/NSString+OCVersionCompare.h>
 
+#import "OCTestTarget.h"
+
 @interface ConnectionTests : XCTestCase <OCEventHandler, OCClassSettingsSource>
 {
 	 OCConnection *newConnection;
@@ -216,7 +218,7 @@
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
 		[issue approve];
-		
+
 		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
 	}];
 }
@@ -256,7 +258,7 @@
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
 		[issue approve];
-		
+
 		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
 	}];
 }
@@ -279,7 +281,7 @@
 	// NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
 	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
 	OCBookmark *bookmark = nil; // Bookmark from previous recipe
-	NSString *userName=@"admin", *password=@"admin"; // Either provided as part of userEnteredURLString - or set independently
+	NSString *userName=OCTestTarget.userLogin, *password=OCTestTarget.userPassword; // Either provided as part of userEnteredURLString - or set independently
 	__block OCConnection *connection;
 	
 	// Create bookmark from normalized URL (and extract username and password if included)
@@ -347,20 +349,20 @@
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-											newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+											self->newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
 											if (preConnectAction != nil)
 											{
-												preConnectAction(newConnection);
+												preConnectAction(self->newConnection);
 											}
 
 											// newConnection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-											[newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+											[self->newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 
 												NSLog(@"Done connecting: %@ %@", error, issue);
 
-												connectionAction(error, issue, newConnection);
+												connectionAction(error, issue, self->newConnection);
 											}];
 										});
 									}
@@ -602,10 +604,11 @@
 	XCTestExpectation *expectFileDownload = [self expectationWithDescription:@"File downloaded"];
 	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
 	OCConnection *connection = nil;
-	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	__block NSProgress *downloadProgress = nil;
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 
@@ -632,7 +635,7 @@
 
 				if (downloadItem != nil)
 				{
-					[connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+					downloadProgress = [connection downloadItem:downloadItem to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 						if (event.file != nil)
 						{
 							[expectFileDownload fulfill];
@@ -650,6 +653,8 @@
 							}];
 						}
 					} userInfo:nil ephermalUserInfo:nil]];
+
+					[downloadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
 				}
 
 				XCTAssert((error==nil), @"No error");
@@ -667,7 +672,257 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	[downloadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
 }
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+	if ([keyPath isEqualToString:@"fractionCompleted"])
+	{
+		NSLog(@"Fraction of %@: %f", object, ((NSProgress *)object).fractionCompleted);
+	}
+}
+
+- (void)testConnectAndBackgroundItemListRetrieval
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[expectConnect fulfill];
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+				NSLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+				XCTAssert(event.result!=nil);
+				XCTAssert([event.result isKindOfClass:[NSArray class]]);
+				XCTAssert(((NSArray *)event.result).count > 0);
+				XCTAssert(event.error==nil);
+				XCTAssert([event.path isEqual:@"/Photos"]);
+				XCTAssert(event.depth==1);
+
+				[expectFileList fulfill];
+			} userInfo:nil ephermalUserInfo:nil]];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testConnectAndUploadFile
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	XCTestExpectation *expectFileUpload = [self expectationWithDescription:@"File uploaded"];
+	XCTestExpectation *expectFileDeleted = [self expectationWithDescription:@"File deleted"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	__block NSProgress *uploadProgress = nil;
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at /: %@", items);
+				OCItem *rootItem = nil;
+
+				for (OCItem *item in items)
+				{
+					if ([item.path isEqual:@"/"])
+					{
+						rootItem = item;
+						break;
+					}
+				}
+
+				if (rootItem != nil)
+				{
+					NSURL *uploadFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow" withExtension:@"png"];
+					NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
+
+					uploadProgress = [connection uploadFileFromURL:uploadFileURL withName:uploadName to:rootItem replacingItem:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"File uploaded: %@ error = %@", event.result, event.error);
+
+						XCTAssert(event.result!=nil);
+						XCTAssert(event.error==nil);
+
+						[expectFileUpload fulfill];
+
+						[connection deleteItem:event.result requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							NSLog(@"File deleted with error = %@", event.error);
+
+							XCTAssert(event.error==nil);
+
+							[expectFileDeleted fulfill];
+						} userInfo:nil ephermalUserInfo:nil]];
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[uploadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
+				}
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectFileList fulfill];
+			}];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	[uploadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
+}
+
+- (void)_testPropFindZeroStresstest
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	__block XCTestExpectation *expectFileList = [self expectationWithDescription:@"Received file list"];
+	__block XCTestExpectation *expectFolderCreateList = [self expectationWithDescription:@"Create folder"];
+	__block XCTestExpectation *expectFolderDeleteList = [self expectationWithDescription:@"Deleted folder"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	__block NSUInteger scheduleCount = 100, remaining = scheduleCount, remainingFolder = scheduleCount, deleteCount = scheduleCount;
+
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[expectConnect fulfill];
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+				OCItem *rootFolder = ((NSArray <OCItem *> *)event.result).firstObject;
+
+				for (NSUInteger i=0; i < scheduleCount; i++)
+				{
+					[connection createFolder:[NSString stringWithFormat:@"test-%lu-%f", (unsigned long)i, NSDate.timeIntervalSinceReferenceDate] inside:rootFolder options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"Create folder: error=%@, result=%@", event.error, event.result);
+
+						@synchronized(self)
+						{
+							remainingFolder--;
+							if (remainingFolder == 0)
+							{
+								[expectFolderCreateList fulfill];
+								expectFolderCreateList = nil;
+							}
+						}
+
+						[connection deleteItem:(OCItem *)event.result requireMatch:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							NSLog(@"Delete folder: error=%@, result=%@", event.error, event.result);
+
+							@synchronized(self)
+							{
+								deleteCount--;
+								if (deleteCount == 0)
+								{
+									[expectFolderDeleteList fulfill];
+									expectFolderDeleteList = nil;
+								}
+							}
+
+							[connection retrieveItemListAtPath:@"/" depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+								NSLog(@"Items at /: %@, Error: %@", items, error);
+
+								XCTAssert(items.count > 0);
+								XCTAssert(items.firstObject.eTag != nil);
+							}];
+
+							[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+								NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+								XCTAssert(event.result!=nil);
+								XCTAssert([event.result isKindOfClass:[NSArray class]]);
+								XCTAssert(((NSArray *)event.result).count > 0);
+								XCTAssert(((NSArray <OCItem *> *)event.result).firstObject.eTag != nil);
+								XCTAssert(event.error==nil);
+								XCTAssert([event.path isEqual:@"/"]);
+								XCTAssert(event.depth==0);
+							} userInfo:nil ephermalUserInfo:nil]];
+						} userInfo:nil ephermalUserInfo:nil]];
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+
+						XCTAssert(event.result!=nil);
+						XCTAssert([event.result isKindOfClass:[NSArray class]]);
+						XCTAssert(((NSArray *)event.result).count > 0);
+						XCTAssert(((NSArray <OCItem *> *)event.result).firstObject.eTag != nil);
+						XCTAssert(event.error==nil);
+						XCTAssert([event.path isEqual:@"/"]);
+						XCTAssert(event.depth==0);
+
+						@synchronized(self)
+						{
+							remaining--;
+							if (remaining == 0)
+							{
+								[expectFileList fulfill];
+								expectFileList = nil;
+							}
+						}
+					} userInfo:nil ephermalUserInfo:nil]];
+
+					[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+						NSLog(@"Items at /: %@, Error: %@", items, error);
+
+						XCTAssert(items.count > 0);
+						XCTAssert(items.firstObject.eTag != nil);
+					}];
+
+					usleep(20000);
+				}
+			} userInfo:nil ephermalUserInfo:nil]];
+		}
+		else
+		{
+			[expectFileList fulfill];
+		}
+	}];
+
+	[self waitForExpectationsWithTimeout:120 handler:nil];
+}
+
 
 @end
 

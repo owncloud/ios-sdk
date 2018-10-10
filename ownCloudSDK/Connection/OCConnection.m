@@ -16,6 +16,8 @@
  *
  */
 
+#import <MobileCoreServices/MobileCoreServices.h>
+
 #import "OCConnection.h"
 #import "OCConnection+OCConnectionQueue.h"
 #import "OCConnectionRequest.h"
@@ -41,7 +43,7 @@
 
 @dynamic authenticationMethod;
 
-@synthesize preferredChecksumAlgorithmIdentifier = _preferredChecksumAlgorithmIdentifier;
+@synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 @synthesize bookmark = _bookmark;
 
@@ -76,8 +78,14 @@
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
 		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
-		OCConnectionMinimumVersionRequired		: @"9.0"
+		OCConnectionMinimumVersionRequired		: @"9.0",
+		OCConnectionAllowBackgroundURLSessions		: @(YES)
 	});
+}
+
++ (BOOL)backgroundURLSessionsAllowed
+{
+	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowBackgroundURLSessions] boolValue]);
 }
 
 #pragma mark - Init
@@ -116,10 +124,22 @@
 		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
-		_preferredChecksumAlgorithmIdentifier = OCChecksumAlgorithmIdentifierSHA1;
+		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
 	return (self);
+}
+
+- (void)dealloc
+{
+	[_commandQueue invalidateAndCancelWithCompletionHandler:nil];
+
+	[_uploadQueue invalidateAndCancelWithCompletionHandler:nil];
+
+	if (_uploadQueue != _downloadQueue)
+	{
+		[_downloadQueue invalidateAndCancelWithCompletionHandler:nil];
+	}
 }
 
 #pragma mark - State
@@ -184,12 +204,7 @@
 	{
 		if (_bookmark.certificate != nil)
 		{
-			fulfillsBookmarkRequirements = NO;
-
-			if ([_bookmark.certificate isEqual:certificate])
-			{
-				fulfillsBookmarkRequirements = YES;
-			}
+			fulfillsBookmarkRequirements = [_bookmark.certificate isEqual:certificate];
 		}
 	}
 
@@ -200,37 +215,43 @@
 	}
 	else
 	{
-		if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
+		if (proceedHandler != nil)
 		{
-			// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
-			if (proceedHandler != nil)
+			NSError *errorIssue = nil;
+			BOOL doProceed = NO, changeUserAccepted = NO;
+
+			if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
 			{
-				NSError *errorIssue = nil;
+				// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
+				doProceed = fulfillsBookmarkRequirements;
+			}
+			else
+			{
+				// Default to safe option: reject
+				changeUserAccepted = (validationResult == OCCertificateValidationResultPromptUser);
+				doProceed = NO;
+			}
 
-				if (!fulfillsBookmarkRequirements)
-				{
-					errorIssue = OCError(OCErrorRequestServerCertificateRejected);
+			if (!doProceed)
+			{
+				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
-					// Embed issue
-					errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-						if (decision == OCConnectionIssueDecisionApprove)
+				// Embed issue
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+					if (decision == OCConnectionIssueDecisionApprove)
+					{
+						if (changeUserAccepted)
 						{
-							_bookmark.certificate = request.responseCertificate;
-							_bookmark.certificateModificationDate = [NSDate date];
+							certificate.userAccepted = YES;
 						}
-					}]];
-				}
 
-				proceedHandler(fulfillsBookmarkRequirements, errorIssue);
+						self->_bookmark.certificate = request.responseCertificate;
+						self->_bookmark.certificateModificationDate = [NSDate date];
+					}
+				}]];
 			}
-		}
-		else
-		{
-			// Default to safe option: reject
-			if (proceedHandler != nil)
-			{
-				proceedHandler(NO, nil);
-			}
+
+			proceedHandler(doProceed, errorIssue);
 		}
 	}
 }
@@ -320,17 +341,17 @@
 							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
 							{
 								// Create an issue if the redirectURL replicates the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
+								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 									if (decision == OCConnectionIssueDecisionApprove)
 									{
-										_bookmark.url = alternativeBaseURL;
+										self->_bookmark.url = alternativeBaseURL;
 									}
 								}];
 							}
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
+								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
 								issue.level = OCConnectionIssueLevelError;
 
 								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
@@ -353,8 +374,15 @@
 				if (error != nil)
 				{
 					// An error occured
+					OCConnectionIssue *issue = error.embeddedIssue;
+
+					if (issue == nil)
+					{
+						issue = [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil];
+					}
+
 					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
-					completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+					completionHandler(error, issue);
 					resultHandler(request, error);
 				}
 			};
@@ -368,7 +396,7 @@
 				{
 					NSError *jsonError = nil;
 					
-					if ((_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
+					if ((self->_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
 					{
 						// JSON decode error
 						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
@@ -467,15 +495,59 @@
 
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	[self disconnectWithCompletionHandler:completionHandler invalidate:YES];
+}
+
+- (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection
+{
 	OCAuthenticationMethod *authMethod;
-	
+
+	if (invalidateConnection)
+	{
+		dispatch_block_t invalidationCompletionHandler = ^{
+			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
+			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+
+			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
+			[connectionQueues addObject:self->_uploadQueue];
+			[connectionQueues addObject:self->_downloadQueue];
+			[connectionQueues addObject:self->_commandQueue];
+
+			for (OCConnectionQueue *connectionQueue in connectionQueues)
+			{
+				dispatch_group_enter(waitQueueTerminationGroup);
+
+				// Wait for the queue to finish all tasks, then invalidate it and call the invalidation completion handler
+				[connectionQueue finishTasksAndInvalidateWithCompletionHandler:^{
+					dispatch_group_leave(waitQueueTerminationGroup);
+				}];
+			}
+
+			// In order for the invalidation completion handlers to trigger, the NSURLSession.delegate must be the only remaining strong reference to
+			// the OCConnectionQueue, so drop ours
+			self->_uploadQueue = nil;
+			self->_downloadQueue = nil;
+			self->_commandQueue = nil;
+
+			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
+			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+				if (completionHandler!=nil)
+				{
+					completionHandler();
+				}
+			});
+		};
+
+		completionHandler = invalidationCompletionHandler;
+	}
+
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		// Deauthenticate the connection
 		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
 			self.state = OCConnectionStateDisconnected;
 
-			_serverStatus = nil;
+			self->_serverStatus = nil;
 
 			if (completionHandler!=nil)
 			{
@@ -497,11 +569,15 @@
 }
 
 #pragma mark - Metadata actions
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (OCConnectionDAVRequest *)_davRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
 	OCConnectionDAVRequest *davRequest;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 	NSURL *url = endpointURL;
+
+	if (endpointURL == nil)
+	{
+		return (nil);
+	}
 
 	if (path != nil)
 	{
@@ -524,9 +600,19 @@
 			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 		]];
+	}
 
-		// OCLog(@"%@", davRequest.xmlRequest.XMLString);
-		
+	return (davRequest);
+}
+
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+{
+	OCConnectionDAVRequest *davRequest;
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSProgress *progress = nil;
+
+	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	{
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
 			{
@@ -537,26 +623,291 @@
 
 			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
 		}];
+
+		progress = davRequest.progress;
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
+	}
+	else
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(OCError(OCErrorInternal), nil);
+		}
 	}
 
-	return(nil);
+	return(progress);
+}
+
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	OCConnectionDAVRequest *davRequest;
+	NSProgress *progress = nil;
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	{
+		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
+		davRequest.userInfo = @{
+			@"path" : path,
+			@"depth" : @(depth),
+			@"endpointURL" : endpointURL,
+			@"options" : ((options != nil) ? options : [NSNull null])
+		};
+		davRequest.eventTarget = eventTarget;
+		davRequest.downloadRequest = YES;
+		davRequest.earliestBeginDate = notBeforeDate;
+		davRequest.downloadedFileIsTemporary = YES;
+
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		// Enqueue request
+		[self.downloadQueue enqueueRequest:davRequest];
+
+		progress = davRequest.progress;
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleRetrieveItemListAtPathResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
+	OCEventType eventType = OCEventTypeRetrieveItemList;
+
+	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
+	{
+		eventType = (OCEventType)[options[@"alternativeEventType"] integerValue];
+	}
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			NSURL *endpointURL = request.userInfo[@"endpointURL"];
+
+			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+
+			OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
+
+			switch (eventType)
+			{
+				case OCEventTypeUpload:
+					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path].firstObject;
+				break;
+
+				default:
+					event.path = request.userInfo[@"path"];
+					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
+
+					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path];
+				break;
+			}
+		}
+
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Actions
-- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
 }
 
-- (NSProgress *)uploadFileFromURL:(NSURL *)url to:(OCItem *)newParentDirectory options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+#pragma mark - File transfer: upload
+- (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// Stub implementation
-	return(nil);
+	NSProgress *progress = nil;
+	NSURL *uploadURL;
+
+	if ((sourceURL == nil) || (newParentDirectory == nil))
+	{
+		return(nil);
+	}
+
+	if (fileName == nil)
+	{
+		if (replacedItem != nil)
+		{
+			fileName = replacedItem.name;
+		}
+		else
+		{
+			fileName = sourceURL.lastPathComponent;
+		}
+	}
+
+	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
+	{
+		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:uploadURL];
+
+		request.method = OCConnectionRequestMethodPUT;
+
+		// Set Content-Type
+		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
+
+		// Set conditions
+		if (replacedItem != nil)
+		{
+			// Ensure the upload fails if there's a different version at the target already
+			[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
+		}
+		else
+		{
+			// Ensure the upload fails if there's any file at the target already
+			[request setValue:@"*" forHeaderField:@"If-None-Match"];
+		}
+
+		// Set Content-Length
+		NSNumber *fileSize = nil;
+		if ([sourceURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
+			[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
+		}
+
+		// Set modification date
+		NSDate *modDate = nil;
+		if ([sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+		{
+			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-Mtime"];
+		}
+
+		// Compute and set checksum header
+		OCChecksumHeaderString checksumHeaderValue = nil;
+		__block OCChecksum *checksum = nil;
+
+		if ((checksum = options[OCConnectionOptionChecksumKey]) == nil)
+		{
+			OCChecksumAlgorithmIdentifier checksumAlgorithmIdentifier = options[OCConnectionOptionChecksumAlgorithmKey];
+
+			if (checksumAlgorithmIdentifier==nil)
+			{
+				checksumAlgorithmIdentifier = _preferredChecksumAlgorithm;
+			}
+
+			OCSyncExec(checksumComputation, {
+				[OCChecksum computeForFile:sourceURL checksumAlgorithm:checksumAlgorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+					checksum = computedChecksum;
+					OCSyncExecDone(checksumComputation);
+				}];
+			});
+		}
+
+		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
+		{
+			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
+		}
+
+		// Set meta data for handling
+		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
+		request.userInfo = @{
+			@"sourceURL" : sourceURL,
+			@"fileName" : fileName,
+			@"parentItem" : newParentDirectory,
+			@"modDate" : modDate,
+			@"fileSize" : fileSize
+		};
+		request.eventTarget = eventTarget;
+		request.bodyURL = sourceURL;
+
+		// Enqueue request
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		[self.uploadQueue enqueueRequest:request];
+
+		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload sender:self];
+	}
+
+	return(progress);
+}
+
+- (void)_handleUploadFileResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	if (request.responseHTTPStatus.isSuccess)
+	{
+		NSString *fileName = request.userInfo[@"fileName"];
+		OCItem *parentItem = request.userInfo[@"parentItem"];
+
+		/*
+			Almost there! Only lacking permissions and mime type and we'd not have to do this PROPFIND 0.
+
+			{
+			    "Cache-Control" = "no-store, no-cache, must-revalidate";
+			    "Content-Length" = 0;
+			    "Content-Type" = "text/html; charset=UTF-8";
+			    Date = "Tue, 31 Jul 2018 09:35:22 GMT";
+			    Etag = "\"b4e54628946633eba3a601228e638f21\"";
+			    Expires = "Thu, 19 Nov 1981 08:52:00 GMT";
+			    Pragma = "no-cache";
+			    Server = Apache;
+			    "Strict-Transport-Security" = "max-age=15768000; preload";
+			    "content-security-policy" = "default-src 'none';";
+			    "oc-etag" = "\"b4e54628946633eba3a601228e638f21\"";
+			    "oc-fileid" = 00000066ocxll7pjzvku;
+			    "x-content-type-options" = nosniff;
+			    "x-download-options" = noopen;
+			    "x-frame-options" = SAMEORIGIN;
+			    "x-permitted-cross-domain-policies" = none;
+			    "x-robots-tag" = none;
+			    "x-xss-protection" = "1; mode=block";
+			}
+		*/
+
+		// Retrieve item information and continue in _handleUploadFileItemResult:error:
+		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 notBefore:nil options:@{
+			@"alternativeEventType"  : @(OCEventTypeUpload),
+			@"_originalUserInfo"	: request.userInfo
+		} resultTarget:request.eventTarget];
+	}
+	else
+	{
+		OCEvent *event = nil;
+
+		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload attributes:nil]) != nil)
+		{
+			if (request.error != nil)
+			{
+				event.error = request.error;
+			}
+			else
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+
+			[request.eventTarget handleEvent:event sender:self];
+		}
+	}
 }
 
 #pragma mark - File transfer: download
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	NSProgress *progress = nil;
 	NSURL *downloadURL;
@@ -583,10 +934,17 @@
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
+		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		{
+			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
 		// Enqueue request
 		[self.downloadQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 	}
 	else
 	{
@@ -599,45 +957,48 @@
 - (void)_handleDownloadItemResult:(OCConnectionRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
-	BOOL postEvent = YES;
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (request.cancelled)
 		{
-			event.error = request.error;
+			event.error = OCError(OCErrorCancelled);
 		}
 		else
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.error != nil)
 			{
-				OCFile *file = [OCFile new];
-
-				file.item = request.userInfo[@"item"];
-
-				file.url = request.downloadedFileURL;
-
-				file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
-
-				file.eTag = request.response.allHeaderFields[@"oc-etag"];
-				file.fileID = file.item.fileID;
-
-				event.file = file;
+				event.error = request.error;
 			}
 			else
 			{
-				switch (request.responseHTTPStatus.code)
+				if (request.responseHTTPStatus.isSuccess)
 				{
-					default:
-						event.error = request.responseHTTPStatus.error;
-					break;
+					OCFile *file = [OCFile new];
+
+					file.item = request.userInfo[@"item"];
+
+					file.url = request.downloadedFileURL;
+
+					file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+
+					file.eTag = request.response.allHeaderFields[@"oc-etag"];
+					file.fileID = file.item.fileID;
+
+					event.file = file;
+				}
+				else
+				{
+					switch (request.responseHTTPStatus.code)
+					{
+						default:
+							event.error = request.responseHTTPStatus.error;
+						break;
+					}
 				}
 			}
 		}
-	}
 
-	if (postEvent)
-	{
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -674,6 +1035,8 @@
 		[self.commandQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
 	}
 	else
 	{
@@ -743,12 +1106,33 @@
 #pragma mark - Action: Copy Item + Move Item
 - (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	return ([self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+	NSProgress *progress;
+
+	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	{
+		if ([item.parentFileID isEqualToString:parentItem.fileID])
+		{
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
+		}
+		else
+		{
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, parentItem.name];
+		}
+	}
+
+	return (progress);
 }
 
 - (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	return ([self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]);
+	NSProgress *progress;
+
+	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	{
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
+	}
+
+	return (progress);
 }
 
 - (NSProgress *)_copyMoveMethod:(OCConnectionRequestMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
@@ -904,6 +1288,8 @@
 		[self.commandQueue enqueueRequest:request];
 
 		progress = request.progress;
+
+		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
 	}
 	else
 	{
@@ -1177,16 +1563,13 @@
 - (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue
 {
 	__block NSError *retError = nil;
-	dispatch_group_t waitForCompletionGroup = dispatch_group_create();
 
-	dispatch_group_enter(waitForCompletionGroup);
-	
-	[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-		retError = error;
-		dispatch_group_leave(waitForCompletionGroup);
-	}];
-	
-	dispatch_group_wait(waitForCompletionGroup, DISPATCH_TIME_FOREVER);
+	OCSyncExec(requestCompletion, {
+		[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			retError = error;
+			OCSyncExecDone(requestCompletion);
+		}];
+	});
 
 	return (retError);
 }
@@ -1239,3 +1622,8 @@ OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-p
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
+OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
+
+OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
+OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
+OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";

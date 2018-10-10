@@ -23,6 +23,8 @@
 #import "OCSQLiteMigration.h"
 #import "OCSQLiteTableSchema.h"
 
+#import "OCExtension+License.h"
+
 #define IsSQLiteError(error) [error.domain isEqualToString:OCSQLiteErrorDomain]
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
 
@@ -32,6 +34,11 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 
 @synthesize databaseURL = _databaseURL;
 @synthesize maxBusyRetryTimeInterval = _maxBusyRetryTimeInterval;
+
++ (void)load
+{
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.ISRunLoopThread" bundleOfClass:[OCRunLoopThread class] title:@"ISRunLoopThread" resourceName:@"ISRunLoopThread" fileExtension:@"LICENSE"]];
+}
 
 + (BOOL)allowConcurrentFileAccess
 {
@@ -165,7 +172,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 		if (!self.opened)
 		{
-			const char *filename = [[_databaseURL path] UTF8String];
+			const char *filename = [[self->_databaseURL path] UTF8String];
 			int sqErr;
 
 			if (filename == NULL)
@@ -174,11 +181,11 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				OCLogDebug(@"OCSQLiteDB using in-memory database");
 			}
 
-			if ((sqErr = sqlite3_open_v2(filename, &_db, flags, NULL)) == SQLITE_OK)
+			if ((sqErr = sqlite3_open_v2(filename, &self->_db, flags, NULL)) == SQLITE_OK)
 			{
 				// Success
-				self.maxBusyRetryTimeInterval = _maxBusyRetryTimeInterval;
-				_opened = YES;
+				self.maxBusyRetryTimeInterval = self->_maxBusyRetryTimeInterval;
+				self->_opened = YES;
 			}
 			else
 			{
@@ -190,7 +197,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		{
 			// Instance already open
 			error = OCSQLiteDBError(OCSQLiteDBErrorAlreadyOpenedInInstance);
-			OCLogDebug(@"Attempt to open OCSQLiteDB %@ more than once", _databaseURL);
+			OCLogDebug(@"Attempt to open OCSQLiteDB %@ more than once", self->_databaseURL);
 		}
 
 		if (completionHandler != nil)
@@ -291,13 +298,13 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 					else
 					{
 						// Sort schemas by table and version
-						[_tableSchemas sortUsingDescriptors:@[
+						[self->_tableSchemas sortUsingDescriptors:@[
 							[NSSortDescriptor sortDescriptorWithKey:@"tableName" ascending:YES],
 							[NSSortDescriptor sortDescriptorWithKey:@"version"   ascending:YES],
 						]];
 
 						// Determine schemas
-						for (OCSQLiteTableSchema *tableSchema in _tableSchemas)
+						for (OCSQLiteTableSchema *tableSchema in self->_tableSchemas)
 						{
 							NSNumber *currentVersion = nil;
 							__block OCSQLiteTableSchema *_latestTableSchema = nil;
@@ -305,7 +312,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 							OCSQLiteTableSchema *(^GetLatestTableSchemaForCurrent)(void) = ^{
 								if (_latestTableSchema == nil)
 								{
-									for (OCSQLiteTableSchema *tableSchemaCandidate in _tableSchemas)
+									for (OCSQLiteTableSchema *tableSchemaCandidate in self->_tableSchemas)
 									{
 										if ([tableSchemaCandidate.tableName isEqualToString:tableSchema.tableName])
 										{

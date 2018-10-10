@@ -7,25 +7,22 @@
 //
 
 #import "TestTools.h"
+#import "OCMacros.h"
 
 @implementation OCVault (TestTools)
 
 - (void)eraseSyncWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
-	dispatch_group_t syncEraseGroup = dispatch_group_create();
+	OCSyncExec(erasure, {
+		[self eraseWithCompletionHandler:^(id sender, NSError *error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(sender, error);
+			}
 
-	dispatch_group_enter(syncEraseGroup);
-
-	[self eraseWithCompletionHandler:^(id sender, NSError *error) {
-		if (completionHandler != nil)
-		{
-			completionHandler(sender, error);
-		}
-
-		dispatch_group_leave(syncEraseGroup);
-	}];
-
-	dispatch_group_wait(syncEraseGroup, DISPATCH_TIME_FOREVER);
+			OCSyncExecDone(erasure);
+		}];
+	});
 }
 
 @end

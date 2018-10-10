@@ -32,6 +32,13 @@ typedef NSString* OCConnectionRequestGroupID;
 
 typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the format -handleResultForRequest:(OCConnectionRequest *)request error:(NSError *)error;
 
+typedef NS_ENUM(NSUInteger, OCConnectionRequestObserverEvent)
+{
+	OCConnectionRequestObserverEventTaskResume	//!< Return YES if the observer takes care of resuming the URL session task, NO if the observer doesn't.
+};
+
+typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConnectionRequestObserverEvent event);
+
 @interface OCConnectionRequest : NSObject <NSSecureCoding>
 {
 	NSURLSessionTask *_urlSessionTask;
@@ -51,6 +58,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	NSURL *_bodyURL;
 	NSInputStream *_bodyURLInputStream;
 
+	NSDate *_earliestBeginDate;
+
 	OCConnectionRequestResultHandlerAction _resultHandlerAction;
 	OCConnectionEphermalResultHandler _ephermalResultHandler;
 	OCConnectionEphermalRequestCertificateProceedHandler _ephermalRequestCertificateProceedHandler;
@@ -63,6 +72,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	OCConnectionRequestGroupID _groupID;
 	BOOL _skipAuthorization;
 
+	OCConnectionRequestObserver _requestObserver;
+
 	BOOL _downloadRequest;
 	NSURL *_downloadedFileURL;
 	BOOL _downloadedFileIsTemporary;
@@ -73,6 +84,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 	OCCertificate *_responseCertificate;
 	
 	BOOL _cancelled;
+
+	id _systemActivity;
 
 	NSError *_error;
 }
@@ -93,6 +106,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(strong,nonatomic) NSData *bodyData;			//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
 
+@property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
+
 @property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
@@ -105,6 +120,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(strong) OCConnectionRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 @property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
 
+@property(copy) OCConnectionRequestObserver requestObserver; //!< OCConnectionRequestObserver block called as the request encounters various events
+
 @property(assign) BOOL downloadRequest;			//!< If the request is for the download of a file and the response body should be written to a file.
 @property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.
 @property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (mostly if downloadedFileURL was set before starting the download).
@@ -113,6 +130,8 @@ typedef SEL OCConnectionRequestResultHandlerAction; //!< Selector following the 
 @property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
 
 @property(readonly) BOOL cancelled;
+
+@property(strong) id systemActivity;
 
 @property(strong) NSError *error;
 

@@ -1,8 +1,8 @@
 //
-//  OCCore+CommandDelete.m
+//  OCSyncActionDelete.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 16.06.18.
+//  Created by Felix Schwarz on 06.09.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,47 +16,59 @@
  *
  */
 
-#import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCCoreSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
+#import "OCSyncActionDelete.h"
 
-@implementation OCCore (CommandDelete)
+@implementation OCSyncActionDelete
 
-#pragma mark - Command
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
+- (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch
 {
-	return ([self _enqueueSyncRecordWithAction:OCSyncActionDeleteLocal forItem:item allowNilItem:NO parameters:@{
-			OCSyncActionParameterItem : item,
-			OCSyncActionParameterPath : item.path,
-			OCSyncActionParameterRequireMatch : @(requireMatch),
-		} resultHandler:resultHandler]);
+	if ((self = [super initWithItem:item]) != nil)
+	{
+		self.identifier = OCSyncActionIdentifierDeleteLocal;
+
+		self.requireMatch = requireMatch;
+	}
+
+	return (self);
 }
 
-#pragma mark - Sync Action Registration
-- (void)registerDeleteLocal
+- (void)preflightWithContext:(OCSyncContext *)syncContext
 {
-	[self registerSyncRoute:[OCCoreSyncRoute routeWithScheduler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core scheduleDeleteLocalWithSyncContext:syncContext]);
-	} resultHandler:^BOOL(OCCore *core, OCCoreSyncContext *syncContext) {
-		return ([core handleDeleteLocalWithSyncContext:syncContext]);
-	}] forAction:OCSyncActionDeleteLocal];
+	OCItem *itemToDelete;
+
+	if ((itemToDelete = self.localItem) != nil)
+	{
+		[itemToDelete addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
+		syncContext.removedItems = @[ itemToDelete ];
+	}
 }
 
-#pragma mark - Sync
-- (BOOL)scheduleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+- (void)descheduleWithContext:(OCSyncContext *)syncContext
+{
+	OCItem *itemToRestore;
+
+	if ((itemToRestore = self.localItem) != nil)
+	{
+		[itemToRestore removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
+		itemToRestore.removed = NO;
+
+		syncContext.updatedItems = @[ itemToRestore ];
+	}
+}
+
+- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
-	if ((item = syncContext.syncRecord.archivedServerItem) != nil)
+	if ((item = self.archivedServerItem) != nil)
 	{
 		NSProgress *progress;
 
-		if ((progress = [self.connection deleteItem:item requireMatch:((NSNumber *)syncContext.syncRecord.parameters[OCSyncActionParameterRequireMatch]).boolValue resultTarget:[self _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
+		if ((progress = [self.core.connection deleteItem:item requireMatch:self.requireMatch resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
-			syncContext.syncRecord.progress = progress;
+			[syncContext.syncRecord addProgress:progress];
 
 			return (YES);
 		}
@@ -65,7 +77,7 @@
 	return (NO);
 }
 
-- (BOOL)handleDeleteLocalWithSyncContext:(OCCoreSyncContext *)syncContext
+- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
@@ -73,12 +85,13 @@
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(event.error, self, syncRecord.item, event.result);
+		syncRecord.resultHandler(event.error, self.core, self.localItem, event.result);
 	}
 
 	if ((event.error == nil) && (event.result != nil))
 	{
-		syncContext.removedItems = @[ syncRecord.item ];
+		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+		syncContext.removedItems = @[ self.localItem ];
 
 		canDeleteSyncRecord = YES;
 	}
@@ -90,8 +103,8 @@
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
 				OCConnectionIssue *issue;
-				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), syncRecord.itemPath.lastPathComponent];
-				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), syncRecord.itemPath.lastPathComponent];
+				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
+				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
 				syncRecord.allowsRescheduling = YES;
 
@@ -99,17 +112,13 @@
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Drop sync record
-							[self descheduleSyncRecord:syncRecord];
+							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
 						}],
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeDestructive label:OCLocalizedString(@"Delete",@"") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Reschedule sync record with match requirement turned off
-							[self rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
-								NSMutableDictionary<OCSyncActionParameter, id> *parameters = [record.parameters mutableCopy];
-
-								parameters[OCSyncActionParameterRequireMatch] = @(NO);
-
-								record.parameters = parameters;
+							[self.core rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
+								self.requireMatch = NO;
 
 								return (nil);
 							}];
@@ -125,14 +134,14 @@
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
 				OCConnectionIssue *issue;
-				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), syncRecord.itemPath.lastPathComponent];
-				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), syncRecord.itemPath.lastPathComponent];
+				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), self.localItem.path.lastPathComponent];
+				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), self.localItem.path.lastPathComponent];
 
 				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Drop sync record
-							[self descheduleSyncRecord:syncRecord];
+							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
 						}],
 
 					] completionHandler:nil];
@@ -147,20 +156,21 @@
 				// The item that was supposed to be deleted could not be found on the server
 
 				// => remove item
-				syncContext.removedItems = @[ syncRecord.item ];
+				[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+				syncContext.removedItems = @[ self.localItem ];
 
 				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed
-				if (syncRecord.itemPath.parentPath != nil)
+				if (self.localItem.path.parentPath != nil)
 				{
-					syncContext.refreshPaths = @[ syncRecord.itemPath.parentPath ];
+					syncContext.refreshPaths = @[ self.localItem.path.parentPath ];
 				}
 
 				// => inform the user
 				{
 					OCConnectionIssue *issue;
 
-					NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), syncRecord.itemPath.lastPathComponent];
-					NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), syncRecord.itemPath.lastPathComponent];
+					NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), self.localItem.path.lastPathComponent];
+					NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), self.localItem.path.lastPathComponent];
 
 					issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:nil],
@@ -179,7 +189,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), syncContext.syncRecord.item.name] description:[event.error localizedDescription]];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 
 		// Reschedule for all other errors
 		/*
@@ -187,10 +197,21 @@
 
 			https://demo.owncloud.org/remote.php/dav/files/demo/Photos/: didCompleteWithError=Error Domain=NSURLErrorDomain Code=-1009 "The Internet connection appears to be offline." UserInfo={NSUnderlyingError=0x1c4653470 {Error Domain=kCFErrorDomainCFNetwork Code=-1009 "(null)" UserInfo={_kCFStreamErrorCodeKey=50, _kCFStreamErrorDomainKey=1}}, NSErrorFailingURLStringKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, NSErrorFailingURLKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, _kCFStreamErrorDomainKey=1, _kCFStreamErrorCodeKey=50, NSLocalizedDescription=The Internet connection appears to be offline.} [OCConnectionQueue.m:506|FULL]
 		*/
-		[self rescheduleSyncRecord:syncRecord withUpdates:nil];
+		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 	}
 
 	return (canDeleteSyncRecord);
+}
+
+#pragma mark - NSCoding
+- (void)decodeActionData:(NSCoder *)decoder
+{
+	_requireMatch = [decoder decodeBoolForKey:@"requireMatch"];
+}
+
+- (void)encodeActionData:(NSCoder *)coder
+{
+	[coder encodeBool:_requireMatch forKey:@"requireMatch"];
 }
 
 @end

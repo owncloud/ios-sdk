@@ -53,7 +53,11 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 
 	BOOL _authenticatedRequestsCanBeScheduled;
 
+	BOOL _encloseRunningRequestsInSystemActivities;
+
 	dispatch_queue_t _actionQueue;
+
+	dispatch_block_t _invalidationCompletionHandler;
 }
 
 @property(weak) OCConnection *connection; //!< The connection this queue belongs to
@@ -62,6 +66,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 #pragma mark - Init
 - (instancetype)initBackgroundSessionQueueWithIdentifier:(NSString *)identifier persistentStore:(OCKeyValueStore *)persistentStore connection:(OCConnection *)connection;
 - (instancetype)initEphermalQueueWithConnection:(OCConnection *)connection;
+
+#pragma mark - Invalidation
+- (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler;
+- (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler;
 
 #pragma mark - Queue management
 - (void)enqueueRequest:(OCConnectionRequest *)request; //!< Adds a request to the queue

@@ -1,8 +1,8 @@
 //
-//  OCCoreSyncRoute.m
+//  OCSyncActionDelete.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 15.06.18.
+//  Created by Felix Schwarz on 06.09.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,12 @@
  *
  */
 
-#import "OCCoreSyncRoute.h"
+#import "OCSyncAction.h"
 
-@implementation OCCoreSyncRoute
+@interface OCSyncActionDelete : OCSyncAction
 
-+ (instancetype)routeWithScheduler:(OCCoreSyncRouteAction)scheduler resultHandler:(OCCoreSyncRouteAction)resultHandler
-{
-	OCCoreSyncRoute *route = [OCCoreSyncRoute new];
+@property(assign) BOOL requireMatch;
 
-	route.scheduler = scheduler;
-	route.resultHandler = resultHandler;
-
-	return (route);
-}
+- (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch;
 
 @end

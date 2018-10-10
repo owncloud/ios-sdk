@@ -43,7 +43,7 @@
 			{
 				if ([self _isAlternativeBaseURLSafeUpgrade:redirectURLBase])
 				{
-					_bookmark.url = redirectURLBase;
+					self->_bookmark.url = redirectURLBase;
 					
 					[self requestSupportedAuthenticationMethodsWithOptions:options completionHandler:completionHandler];
 
@@ -187,7 +187,7 @@
 					{
 						if ([self _isAlternativeBaseURLSafeUpgrade:redirectURLBase])
 						{
-							_bookmark.url = redirectURLBase;
+							self->_bookmark.url = redirectURLBase;
 							
 							[self generateAuthenticationDataWithMethod:methodIdentifier options:options completionHandler:completionHandler];
 

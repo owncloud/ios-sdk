@@ -18,8 +18,23 @@
 
 #import "OCItem.h"
 #import "OCCore.h"
+#import "OCCore+FileProvider.h"
+#import "OCFile.h"
+#import "OCItem+OCItemCreationDebugging.h"
 
 @implementation OCItem
+
++ (instancetype)placeholderItemOfType:(OCItemType)type
+{
+	OCItem *item = [OCItem new];
+
+	item.type = type;
+
+	item.eTag = OCFileETagPlaceholder;
+	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
+
+	return (item);
+}
 
 #pragma mark - Serialization tools
 + (instancetype)itemFromSerializedData:(NSData *)serializedData;
@@ -64,7 +79,11 @@
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
 
+	[coder encodeObject:_activeSyncRecordIDs forKey:@"activeSyncRecordIDs"];
+	[coder encodeInteger:_syncActivity 	forKey:@"syncActivity"];
+
 	[coder encodeInteger:_size  		forKey:@"size"];
+	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
@@ -77,6 +96,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		[self _captureCallstack];
+
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 	}
 
@@ -87,6 +108,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		[self _captureCallstack];
+
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 
 		_type = [decoder decodeIntegerForKey:@"type"];
@@ -108,7 +131,11 @@
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
 
+		_activeSyncRecordIDs = [decoder decodeObjectOfClass:[NSArray class] forKey:@"activeSyncRecordIDs"];
+		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
+
 		_size = [decoder decodeIntegerForKey:@"size"];
+		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
@@ -147,6 +174,11 @@
 	return (_versionIdentifier);
 }
 
+- (BOOL)isPlaceholder
+{
+	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
+}
+
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
 	if (_thumbnailAvailability == OCItemThumbnailAvailabilityInternal)
@@ -182,6 +214,94 @@
 	}
 }
 
+#pragma mark - Sync record tools
+- (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
+{
+	if (activity != OCItemSyncActivityNone)
+	{
+		self.syncActivity |= activity;
+	}
+
+	if (syncRecordID == nil) { return; }
+
+	[self willChangeValueForKey:@"activeSyncRecordIDs"];
+
+	if (_activeSyncRecordIDs != nil)
+	{
+		if (![_activeSyncRecordIDs isKindOfClass:[NSMutableArray class]])
+		{
+			_activeSyncRecordIDs = [_activeSyncRecordIDs mutableCopy];
+		}
+
+		[(NSMutableArray *)_activeSyncRecordIDs addObject:syncRecordID];
+	}
+	else
+	{
+		_activeSyncRecordIDs = [NSMutableArray arrayWithObject:syncRecordID];
+	}
+
+	[self didChangeValueForKey:@"activeSyncRecordIDs"];
+}
+
+- (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
+{
+	if (activity != OCItemSyncActivityNone)
+	{
+		self.syncActivity &= ~activity;
+	}
+
+	if (syncRecordID == nil) { return; }
+
+	[self willChangeValueForKey:@"activeSyncRecordIDs"];
+
+	if (_activeSyncRecordIDs != nil)
+	{
+		if (![_activeSyncRecordIDs isKindOfClass:[NSMutableArray class]])
+		{
+			_activeSyncRecordIDs = [_activeSyncRecordIDs mutableCopy];
+		}
+
+		if ([_activeSyncRecordIDs containsObject:syncRecordID])
+		{
+			[(NSMutableArray *)_activeSyncRecordIDs removeObject:syncRecordID];
+		}
+	}
+
+	if (_activeSyncRecordIDs.count == 0)
+	{
+		_activeSyncRecordIDs = nil;
+	}
+
+	[self didChangeValueForKey:@"activeSyncRecordIDs"];
+}
+
+- (void)prepareToReplace:(OCItem *)item
+{
+	self.databaseID 	  = item.databaseID;
+
+	self.activeSyncRecordIDs  = item.activeSyncRecordIDs;
+	self.syncActivity 	  = item.syncActivity;
+}
+
+#pragma mark - File tools
+- (OCFile *)fileWithCore:(OCCore *)core
+{
+	OCFile *file = nil;
+
+	if (self.localRelativePath != nil)
+	{
+		file = [OCFile new];
+
+		file.url = [core localURLForItem:self];
+
+		file.item = self;
+		file.eTag = self.eTag;
+		file.fileID = self.fileID;
+	}
+
+	return (file);
+}
+
 #pragma mark - Description
 - (NSString *)description
 {
@@ -189,3 +309,6 @@
 }
 
 @end
+
+OCFileID   OCFileIDPlaceholderPrefix = @"_placeholder_";
+OCFileETag OCFileETagPlaceholder = @"_placeholder_";

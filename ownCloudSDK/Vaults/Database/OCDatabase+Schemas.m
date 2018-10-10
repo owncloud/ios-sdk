@@ -321,34 +321,6 @@
 	];
 }
 
-//- (void)addOrUpdateFilesSchema
-//{
-//	/*** Files ***/
-//
-//	// Version 1
-//	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
-//		schemaWithTableName:OCDatabaseTableNameFiles
-//		version:1
-//		creationQueries:@[
-//			/*
-//				flID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
-//				fileID : TEXT		- OCFileID of the item to which this thumbnail belongs
-//				eTag : TEXT		- OCFileETag of the item to which this thumbnail belongs
-//				maxWidth : INTEGER	- maximum width of the item when retrieving the thumbnail from the server
-//				maxHeight : INTEGER	- maximum height of the item when retrieving the thumbnail from the server
-//				mimeType : TEXT		- MIME Type of imageData
-//				imageData : BLOB	- image data of the thumbnail
-//			*/
-//			@"CREATE TABLE thumb.thumbnails (tnID INTEGER PRIMARY KEY, fileID TEXT NOT NULL, eTag TEXT NOT NULL, maxWidth INTEGER NOT NULL, maxHeight INTEGER NOT NULL, mimeType TEXT NOT NULL, imageData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameThumbnails
-//
-//			// Create index over fileID
-//			@"CREATE INDEX thumb.idx_thumbnails_fileID ON thumbnails (fileID)" // relatedTo:OCDatabaseTableNameThumbnails
-//		]
-//		openStatements:nil
-//		upgradeMigrator:nil]
-//	];
-//}
-
 - (void)addOrUpdateThumbnailsSchema
 {
 	/*** Thumbnails ***/
@@ -374,6 +346,43 @@
 		]
 		openStatements:nil
 		upgradeMigrator:nil]
+	];
+
+	// Version 2
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameThumbnails
+		version:2
+		creationQueries:@[
+			/*
+				tnID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
+				fileID : TEXT		- OCFileID of the item to which this thumbnail belongs
+				eTag : TEXT		- OCFileETag of the item to which this thumbnail belongs
+				specID : TEXT		- a string consisting of other attributes affecting thumbnail creation, like f.ex. the MIME Type (which can change after a rename)
+				maxWidth : INTEGER	- maximum width of the item when retrieving the thumbnail from the server
+				maxHeight : INTEGER	- maximum height of the item when retrieving the thumbnail from the server
+				mimeType : TEXT		- MIME Type of imageData
+				imageData : BLOB	- image data of the thumbnail
+			*/
+			@"CREATE TABLE thumb.thumbnails (tnID INTEGER PRIMARY KEY, fileID TEXT NOT NULL, eTag TEXT NOT NULL, specID TEXT NOT NULL, maxWidth INTEGER NOT NULL, maxHeight INTEGER NOT NULL, mimeType TEXT NOT NULL, imageData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameThumbnails
+
+			// Create index over fileID
+			@"CREATE INDEX thumb.idx_thumbnails_fileID ON thumbnails (fileID)" // relatedTo:OCDatabaseTableNameThumbnails
+		]
+		openStatements:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 2
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Add "specID" column
+				[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE thumb.thumbnails ADD COLUMN specID TEXT" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
 	];
 }
 

@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <FileProvider/FileProvider.h>
 #import "OCBookmark.h"
 
 @class OCDatabase;
@@ -31,6 +32,8 @@
 	NSURL *_filesRootURL;
 	NSURL *_connectionDataRootURL;
 
+	NSFileProviderDomain *_fileProviderDomain;
+
 	OCDatabase *_database;
 }
 
@@ -42,6 +45,8 @@
 @property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
 @property(readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
 @property(readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
+
+@property(readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -55,6 +60,7 @@
 
 #pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+- (NSString *)relativePathForItem:(OCItem *)item;
 
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
 

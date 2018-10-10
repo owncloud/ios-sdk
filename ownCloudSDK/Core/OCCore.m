@@ -18,7 +18,6 @@
 
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
-#import "OCCoreItemListTask.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
@@ -27,13 +26,17 @@
 #import "OCDatabaseConsistentOperation.h"
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreSyncRoute.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCParentPath.h"
+#import "OCCore+FileProvider.h"
+#import "OCCore+ItemList.h"
+#import "OCItem+OCThumbnail.h"
 
 @interface OCCore ()
 {
-	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
+	dispatch_group_t _runningActivitiesGroup;
+	NSInteger _runningActivities;
+	dispatch_block_t _runningActivitiesCompleteBlock;
 }
 
 @end
@@ -46,12 +49,19 @@
 @synthesize connection = _connection;
 
 @synthesize state = _state;
+@synthesize stateChangedHandler = _stateChangedHandler;
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
 @synthesize latestSyncAnchor = _latestSyncAnchor;
 
+@synthesize postFileProviderNotifications = _postFileProviderNotifications;
+
 @synthesize delegate = _delegate;
+
+@synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+
+@synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -118,8 +128,20 @@
 	{
 		_bookmark = bookmark;
 
+		_automaticItemListUpdatesEnabled = YES;
+
+		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
+		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
+		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
+		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
+		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
+		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
+
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
+
+		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
+		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
@@ -129,8 +151,6 @@
 
 		_thumbnailCache = [OCCache new];
 
-		_syncRoutesByAction = [NSMutableDictionary new];
-
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
@@ -138,9 +158,8 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
-		[self registerSyncRoutes];
-
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
+		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
@@ -165,18 +184,28 @@
 	[OCEvent unregisterEventHandlerForIdentifier:_eventHandlerIdentifier];
 }
 
+- (void)_updateState:(OCCoreState)newState
+{
+	[self willChangeValueForKey:@"state"];
+	_state = newState;
+	[self didChangeValueForKey:@"state"];
+
+	if (_stateChangedHandler)
+	{
+		_stateChangedHandler(self);
+	}
+}
+
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
-		if (_state == OCCoreStateStopped)
+		if (self->_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
 			dispatch_group_t startGroup = nil;
 
-			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateStarting;
-			[self didChangeValueForKey:@"state"];
+			[self _updateState:OCCoreStateStarting];
 
 			startGroup = dispatch_group_create();
 
@@ -202,16 +231,14 @@
 			// Proceed with connecting - or stop
 			if (startError == nil)
 			{
-				_attemptConnect = YES;
+				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
 			else
 			{
-				_attemptConnect = NO;
+				self->_attemptConnect = NO;
 
-				[self willChangeValueForKey:@"state"];
-				_state = OCCoreStateStopped;
-				[self didChangeValueForKey:@"state"];
+				[self _updateState:OCCoreStateStopped];
 			}
 
 			if (completionHandler != nil)
@@ -234,23 +261,21 @@
 	[self queueBlock:^{
 		__block NSError *stopError = nil;
 
-		if ((_state == OCCoreStateRunning) || (_state == OCCoreStateStarting))
+		if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
 		{
 			__weak OCCore *weakSelf = self;
 
-			[self willChangeValueForKey:@"state"];
-			_state = OCCoreStateStopping;
-			[self didChangeValueForKey:@"state"];
+			[self _updateState:OCCoreStateStopping];
 
 			// Wait for running operations to finish
-			_runningActivitiesCompleteBlock = ^{
+			self->_runningActivitiesCompleteBlock = ^{
 				dispatch_group_t stopGroup = nil;
 
 				// Stop..
 				stopGroup = dispatch_group_create();
 
 				// Close connection
-				_attemptConnect = NO;
+				self->_attemptConnect = NO;
 
 				dispatch_group_enter(stopGroup);
 
@@ -270,9 +295,7 @@
 
 				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
 
-				[weakSelf willChangeValueForKey:@"state"];
-				_state = OCCoreStateStopped;
-				[weakSelf didChangeValueForKey:@"state"];
+				[weakSelf _updateState:OCCoreStateStopped];
 
 				if (completionHandler != nil)
 				{
@@ -280,12 +303,12 @@
 				}
 			};
 
-			if (_runningActivities == 0)
+			if (self->_runningActivities == 0)
 			{
-				if (_runningActivitiesCompleteBlock != nil)
+				if (self->_runningActivitiesCompleteBlock != nil)
 				{
-					_runningActivitiesCompleteBlock();
-					_runningActivitiesCompleteBlock = nil;
+					self->_runningActivitiesCompleteBlock();
+					self->_runningActivitiesCompleteBlock = nil;
 				}
 			}
 		}
@@ -300,7 +323,7 @@
 - (void)attemptConnect:(BOOL)doAttempt
 {
 	[self queueBlock:^{
-		_attemptConnect = doAttempt;
+		self->_attemptConnect = doAttempt;
 
 		[self _attemptConnect];
 	}];
@@ -309,28 +332,31 @@
 - (void)_attemptConnect
 {
 	[self queueConnectivityBlock:^{
-		if ((_state == OCCoreStateStarting) && _attemptConnect)
+		if ((self->_state == OCCoreStateStarting) && self->_attemptConnect)
 		{
 			// Open connection
-			dispatch_suspend(_connectivityQueue);
+			dispatch_suspend(self->_connectivityQueue);
 
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)
 					{
-						[self willChangeValueForKey:@"state"];
-						_state = OCCoreStateRunning;
-						[self didChangeValueForKey:@"state"];
+						[self _updateState:OCCoreStateRunning];
+
+						if (self.automaticItemListUpdatesEnabled)
+						{
+							[self startCheckingForUpdates];
+						}
 					}
 
 					// Relay error and issues to delegate
-					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
 					{
-						[_delegate core:self handleError:error issue:issue];
+						[self->_delegate core:self handleError:error issue:issue];
 					}
 
-					dispatch_resume(_connectivityQueue);
+					dispatch_resume(self->_connectivityQueue);
 				}];
 			}];
 		}
@@ -343,16 +369,16 @@
 	if (_reachabilityMonitor.available)
 	{
 		[self queueBlock:^{
-			if (_state == OCCoreStateStarting)
+			if (self->_state == OCCoreStateStarting)
 			{
 				[self _attemptConnect];
 			}
 
 			[self queueConnectivityBlock:^{	// Wait for _attemptConnect to finish
 				[self queueBlock:^{ // See if we can proceed
-					if (_state == OCCoreStateRunning)
+					if (self->_state == OCCoreStateRunning)
 					{
-						for (OCQuery *query in _queries)
+						for (OCQuery *query in self->_queries)
 						{
 							if (query.state == OCQueryStateContentsFromCache)
 							{
@@ -421,7 +447,7 @@
 
 	// Add query to list of queries
 	[self queueBlock:^{
-		[_queries addObject:query];
+		[self->_queries addObject:query];
 	}];
 
 	if (query.querySinceSyncAnchor == nil)
@@ -449,7 +475,7 @@
 	if (query == nil) { return; }
 
 	[self queueBlock:^{
-		[_queries removeObject:query];
+		[self->_queries removeObject:query];
 		query.state = OCQueryStateStopped;
 	}];
 }
@@ -458,526 +484,6 @@
 - (OCDatabase *)database
 {
 	return (_vault.database);
-}
-
-#pragma mark - Item List Tasks
-- (void)startItemListTaskForPath:(OCPath)path
-{
-	if (path==nil) { return; }
-
-	if (_itemListTasksByPath[path] == nil) // Don't start a new item list task if one is already running for the path
-	{
-		OCCoreItemListTask *task;
-
-		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
-		{
-			_itemListTasksByPath[path] = task;
-
-			task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
-				// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
-				[core handleUpdatedTask:task];
-			};
-
-			// Retrieve and store current sync anchor value
-			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
-				task.syncAnchorAtStart = syncAnchor;
-
-				[task update];
-			}];
-		}
-	}
-}
-
-- (void)handleUpdatedTask:(OCCoreItemListTask *)task
-{
-	OCQueryState queryState = OCQueryStateStarted;
-	BOOL performMerge = NO;
-	BOOL removeTask = NO;
-	BOOL targetRemoved = NO;
-	NSMutableArray <OCItem *> *queryResults = nil;
-	__block NSMutableArray <OCItem *> *queryResultsChangedItems = nil;
-	OCItem *taskRootItem = nil;
-	NSString *taskPath = task.path;
-	__block OCSyncAnchor querySyncAnchor = nil;
-
-	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
-	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
-
-	[self beginActivity:@"item list task"];
-
-	switch (task.cachedSet.state)
-	{
-		case OCCoreItemListStateSuccess:
-			if (task.retrievedSet.state == OCCoreItemListStateSuccess)
-			{
-				// Merge item sets to final result and update cache
-				queryState = OCQueryStateIdle;
-				performMerge = YES;
-				removeTask = YES;
-			}
-			else
-			{
-				// Use items from cache
-				if (task.retrievedSet.state == OCCoreItemListStateStarted)
-				{
-					queryState = OCQueryStateWaitingForServerReply;
-				}
-				else
-				{
-					queryState = OCQueryStateContentsFromCache;
-
-					if (task.retrievedSet.state == OCCoreItemListStateFailed)
-					{
-						if (task.retrievedSet.error != nil)
-						{
-							// Not Found => removed
-							if (IsHTTPErrorWithStatus(task.retrievedSet.error, OCHTTPStatusCodeNOT_FOUND))
-							{
-								queryState = OCQueryStateTargetRemoved;
-								targetRemoved = YES;
-								performMerge = YES;
-							}
-						}
-
-						removeTask = YES;
-					}
-				}
-			}
-		break;
-
-		case OCCoreItemListStateFailed:
-			// Error retrieving items from cache. This should never happen.
-			OCLogError(@"Error retrieving items from cache for %@: %@", OCLogPrivate(task.path), OCLogPrivate(task.cachedSet.error));
-			performMerge = YES;
-			removeTask = YES;
-		break;
-
-		default:
-		break;
-	}
-
-	if (performMerge)
-	{
-		// Perform merge
-		OCCoreItemList *cacheSet = task.cachedSet;
-		OCCoreItemList *retrievedSet = task.retrievedSet;
-		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
-		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
-
-		NSMutableArray <OCItem *> *changedCacheItems = [NSMutableArray new];
-		NSMutableArray <OCItem *> *deletedCacheItems = [NSMutableArray new];
-		NSMutableArray <OCItem *> *newItems = [NSMutableArray new];
-
-		__block NSError *cacheUpdateError = nil;
-
-		queryResults = [NSMutableArray new];
-
-		dispatch_group_t cacheUpdateGroup = dispatch_group_create();
-
-		dispatch_group_enter(cacheUpdateGroup);
-
-		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			if (![previousSyncAnchor isEqualToNumber:task.syncAnchorAtStart])
-			{
-				// Out of sync - trigger catching the latest from the cache again, rinse and repeat
-				OCLogDebug(@"Sync anchor changed before task finished: %@ != %@", previousSyncAnchor, task.syncAnchorAtStart);
-
-				task.syncAnchorAtStart = newSyncAnchor; // Update sync anchor before triggering the reload from cache
-
-				cacheUpdateError = OCError(OCErrorOutdatedCache);
-				dispatch_group_leave(cacheUpdateGroup);
-
-				return(nil);
-			}
-
-			// Iterate retrieved set
-			[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
-				OCItem *cacheItem;
-
-				// Item for this path already in the cache?
-				if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
-				{
-					// Existing local item?
-					if (cacheItem.locallyModified || (cacheItem.localRelativePath!=nil))
-					{
-						// Preserve local item, but merge in info on latest server version
-						cacheItem.remoteItem = retrievedItem;
-
-						// Return updated cached version
-						[queryResults addObject:cacheItem];
-
-						// Update cache
-						[changedCacheItems addObject:cacheItem];
-					}
-					else
-					{
-						// Attach databaseID of cached items to the retrieved items
-						retrievedItem.databaseID = cacheItem.databaseID;
-						retrievedItem.parentFileID = cacheItem.parentFileID;
-
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier])
-						{
-							// Update item in the cache if the server has a different version
-							[changedCacheItems addObject:retrievedItem];
-						}
-
-						// Return server version
-						[queryResults addObject:retrievedItem];
-					}
-				}
-				else
-				{
-					// New item!
-					[queryResults addObject:retrievedItem];
-					[newItems addObject:retrievedItem];
-				}
-			}];
-
-			// Iterate cache set
-			[cacheSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull cachePath, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
-				OCItem *retrievedItem;
-
-				// Item for this cached path still on the server?
-				if ((retrievedItem = retrievedItemsByPath[cachePath]) == nil)
-				{
-					// Cache item no longer on the server
-					if (cacheItem.locallyModified)
-					{
-						// Preserve locally modified items
-						[queryResults addObject:cacheItem];
-					}
-					else
-					{
-						// Remove item
-						[deletedCacheItems addObject:cacheItem];
-					}
-				}
-			}];
-
-			// Commit changes to the cache
-			[self.database performBatchUpdates:^(OCDatabase *database){
-				__block NSError *returnError = nil;
-
-				if ((deletedCacheItems.count > 0) && (returnError==nil))
-				{
-					[self.database removeCacheItems:deletedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-						returnError = error;
-					}];
-
-					if (queryResultsChangedItems == nil)
-					{
-						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:deletedCacheItems];
-					}
-					else
-					{
-						[queryResultsChangedItems addObjectsFromArray:deletedCacheItems];
-					}
-				}
-
-				if ((changedCacheItems.count > 0) && (returnError==nil))
-				{
-					[self.database updateCacheItems:changedCacheItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-						returnError = error;
-					}];
-
-					if (queryResultsChangedItems == nil)
-					{
-						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:changedCacheItems];
-					}
-					else
-					{
-						[queryResultsChangedItems addObjectsFromArray:changedCacheItems];
-					}
-				}
-
-				if ((newItems.count > 0) && (returnError==nil))
-				{
-					[self.database addCacheItems:newItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-						returnError = error;
-					}];
-
-					if (queryResultsChangedItems == nil)
-					{
-						queryResultsChangedItems = [[NSMutableArray alloc] initWithArray:newItems];
-					}
-					else
-					{
-						[queryResultsChangedItems addObjectsFromArray:newItems];
-					}
-				}
-
-				return (returnError);
-			} completionHandler:^(OCDatabase *db, NSError *error) {
-				cacheUpdateError = error;
-				dispatch_group_leave(cacheUpdateGroup);
-			}];
-
-			// In parallel: remove thumbnails from in-memory cache
-			dispatch_group_enter(cacheUpdateGroup);
-
-			dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
-				for (OCItem *deleteItem in deletedCacheItems)
-				{
-					[_thumbnailCache removeObjectForKey:deleteItem.fileID];
-				}
-
-				dispatch_group_leave(cacheUpdateGroup);
-			});
-
-			querySyncAnchor = newSyncAnchor;
-
-			return (nil);
-		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			NSLog(@"Sync anchor increase result: %@ for %@ => %@", error, previousSyncAnchor, newSyncAnchor);
-		}];
-
-		dispatch_group_wait(cacheUpdateGroup, DISPATCH_TIME_FOREVER);
-
-		if (cacheUpdateError != nil)
-		{
-			// An error occured updating the cache, so don't update queries either, log the error and return here
-			if ([cacheUpdateError isOCErrorWithCode:OCErrorOutdatedCache])
-			{
-				// Sync anchor value increased while fetching data from the server
-				OCLogDebug(@"Sync anchor changed, refreshing from cache before merge..");
-				[task forceUpdateCacheSet];
-			}
-			else
-			{
-				// Actual error
-				OCLogError(@"Error updating metaData cache: %@", cacheUpdateError);
-			}
-
-			[self endActivity:@"item list task"];
-
-			return;
-		}
-	}
-	else
-	{
-		if (task.cachedSet.state == OCCoreItemListStateSuccess)
-		{
-			// Use cache
-			queryResults = (task.cachedSet.items != nil) ? [[NSMutableArray alloc] initWithArray:task.cachedSet.items] : [NSMutableArray new];
-		}
-		else
-		{
-			// No result (yet)
-		}
-	}
-
-	// Determine root item
-	if ((taskPath != nil) && !targetRemoved)
-	{
-		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
-
-		retrievedRootItem = task.retrievedSet.itemsByPath[taskPath];
-		cacheRootItem = task.cachedSet.itemsByPath[taskPath];
-
-		if ((taskRootItem==nil) && (cacheRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:cacheRootItem]!=NSNotFound))
-		{
-			taskRootItem = cacheRootItem;
-		}
-
-		if ((taskRootItem==nil) && (retrievedRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:retrievedRootItem]!=NSNotFound))
-		{
-			taskRootItem = retrievedRootItem;
-		}
-	}
-
-	// Remove task
-	if (removeTask)
-	{
-		if (task.path != nil)
-		{
-			if (_itemListTasksByPath[task.path] != nil)
-			{
-				[_itemListTasksByPath removeObjectForKey:task.path];
-			}
-		}
-	}
-
-	// Update queries
-	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
-	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
-	NSString *parentTaskPath = [taskPath parentPath];
-
-	for (OCQuery *query in _queries)
-	{
-		NSMutableArray <OCItem *> *useQueryResults = nil;
-		OCItem *queryRootItem = nil;
-
-		// Queries targeting the path
-		if ([query.queryPath isEqual:taskPath])
-		{
-			if ( (query.state != OCQueryStateIdle) ||	// Keep updating queries that have not gone through its complete, initial content update
-			    ((query.state == OCQueryStateIdle) && (queryState == OCQueryStateIdle))) // Don't update queries that have previously gotten a complete, initial content update with content from the cache (as that cache content is prone to be identical with what we already have in it). Instead, update these queries only if we have an idle ("finished") queryResult again.
-			{
-				NSLog(@"Task root item: %@, include root item: %d", taskRootItem, query.includeRootItem);
-
-				if (query.includeRootItem || (taskRootItem==nil))
-				{
-					useQueryResults = queryResults;
-				}
-				else
-				{
-					if (queryResultWithoutRootItem == nil)
-					{
-						queryResultWithoutRootItem = [[NSMutableArray alloc] initWithArray:queryResults];
-
-						if (taskRootItem != nil)
-						{
-							[queryResultWithoutRootItem removeObjectIdenticalTo:taskRootItem];
-						}
-					}
-
-					useQueryResults = queryResultWithoutRootItem;
-				}
-
-				queryRootItem = taskRootItem;
-			}
-		}
-		else
-		{
-			OCPath queryItemPath = nil;
-			OCSyncAnchor syncAnchor = nil;
-
-			// Queries targeting the parent directory of taskPath
-			if ([query.queryPath isEqual:parentTaskPath])
-			{
-				// Should contain taskRootItem
-				if (taskRootItem != nil)
-				{
-					@synchronized(query) // Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
-					{
-						NSMutableArray <OCItem *> *fullQueryResults;
-
-						if ((fullQueryResults = query.fullQueryResults) != nil)
-						{
-							OCPath taskRootItemPath;
-
-							if ((taskRootItemPath = taskRootItem.path) != nil)
-							{
-								NSUInteger itemIndex = 0, replaceAtIndex = NSNotFound;
-
-								// Find root item
-								for (OCItem *item in fullQueryResults)
-								{
-									if ([item.path isEqual:taskRootItemPath])
-									{
-										replaceAtIndex = itemIndex;
-										break;
-									}
-
-									itemIndex++;
-								}
-
-								// Replace if found
-								if (replaceAtIndex != NSNotFound)
-								{
-									[fullQueryResults removeObjectAtIndex:replaceAtIndex];
-									[fullQueryResults insertObject:taskRootItem atIndex:replaceAtIndex];
-
-									[query setNeedsRecomputation];
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					if (targetRemoved)
-					{
-						// Task's root item was removed
-						@synchronized(query) // Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
-						{
-							NSMutableArray <OCItem *> *fullQueryResults;
-
-							if ((fullQueryResults = query.fullQueryResults) != nil)
-							{
-								NSUInteger itemIndex = 0, removeAtIndex = NSNotFound;
-
-								// Find root item
-								for (OCItem *item in fullQueryResults)
-								{
-									if ([item.path isEqual:taskPath])
-									{
-										removeAtIndex = itemIndex;
-										break;
-									}
-
-									itemIndex++;
-								}
-
-								// Remove if found
-								if (removeAtIndex != NSNotFound)
-								{
-									[fullQueryResults removeObjectAtIndex:removeAtIndex];
-
-									[query setNeedsRecomputation];
-								}
-							}
-						}
-
-					}
-				}
-			}
-
-			// Queries targeting a particular item
-			if ((queryItemPath = query.queryItem.path) != nil)
-			{
-				OCItem *itemAtPath;
-
-				if (queryResultItemsByPath == nil)
-				{
-					OCCoreItemList *queryResultSet = [OCCoreItemList new];
-					[queryResultSet updateWithError:nil items:queryResults];
-
-					queryResultItemsByPath = queryResultSet.itemsByPath;
-				}
-
-				if ((itemAtPath = queryResultItemsByPath[queryItemPath]) != nil)
-				{
-					// Item contained in queried directory, new info may be available
-					useQueryResults = [[NSMutableArray alloc] initWithObjects:itemAtPath, nil];
-				}
-				else
-				{
-					if ([[queryItemPath parentPath] isEqual:task.path])
-					{
-						// Item was contained in queried directory, but is no longer there
-						useQueryResults = [NSMutableArray new];
-						queryState = OCQueryStateTargetRemoved;
-					}
-				}
-			}
-
-			// Queries targeting a sync anchor
-			if (((syncAnchor = query.querySinceSyncAnchor) != nil) &&
-			    (querySyncAnchor!=nil) &&
-			    (taskRootItem!=nil) &&
-			    (queryResultsChangedItems!=nil) &&
-			    (queryResultsChangedItems.count > 0))
-			{
-				query.state = OCQueryStateWaitingForServerReply;
-
-				[query mergeItemsToFullQueryResults:queryResultsChangedItems syncAnchor:querySyncAnchor];
-
-				query.state = OCQueryStateIdle;
-
-				[query setNeedsRecomputation];
-			}
-		}
-
-		if (useQueryResults != nil)
-		{
-			query.state = queryState;
-			query.rootItem = queryRootItem;
-			query.fullQueryResults = useQueryResults;
-		}
-	}
-
-	[self endActivity:@"item list task"];
 }
 
 #pragma mark - Tools
@@ -989,16 +495,6 @@
 }
 
 #pragma mark - ## Commands
-- (NSProgress *)createEmptyFileNamed:(NSString *)newFileName atPath:(OCPath)path options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (NSProgress *)uploadFileAtURL:(NSURL *)url to:(OCPath)newParentDirectoryPath resultHandler:(OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
@@ -1020,6 +516,7 @@
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
 	OCItemVersionIdentifier *versionIdentifier = item.itemVersionIdentifier;
+	NSString *specID = item.thumbnailSpecID;
 	CGSize requestedMaximumSizeInPixels;
 
 	retrieveHandler = [retrieveHandler copy];
@@ -1041,10 +538,10 @@
 			BOOL requestThumbnail = YES;
 
 			// Is there a thumbnail for this file in the cache?
-			if ((thumbnail = [_thumbnailCache objectForKey:item.fileID]) != nil)
+			if ((thumbnail = [self->_thumbnailCache objectForKey:item.fileID]) != nil)
 			{
 				// Yes! But is it the version we want?
-				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier])
+				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier] && [thumbnail.specID isEqual:item.thumbnailSpecID])
 				{
 					// Yes it is!
 					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
@@ -1063,7 +560,7 @@
 				else
 				{
 					// No it's not => remove outdated version from cache
-					[_thumbnailCache removeObjectForKey:item.fileID];
+					[self->_thumbnailCache removeObjectForKey:item.fileID];
 
 					thumbnail = nil;
 				}
@@ -1075,23 +572,24 @@
 				if (!progress.cancelled)
 				{
 					// Thumbnail
-					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
+					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier specID:specID maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
 						OCItemThumbnail *cachedThumbnail = nil;
 
 						if (thumbnailData != nil)
 						{
-							// Create OCItemThumbnail from data returned from data base
+							// Create OCItemThumbnail from data returned from database
 							OCItemThumbnail *cachedThumbnail = [OCItemThumbnail new];
 
 							cachedThumbnail.maximumSizeInPixels = maxSize;
 							cachedThumbnail.mimeType = mimeType;
 							cachedThumbnail.data = thumbnailData;
+							cachedThumbnail.specID = specID;
 							cachedThumbnail.itemVersionIdentifier = versionIdentifier;
 
 							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
 							{
 								[self queueBlock:^{
-									[_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
+									[self->_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
 									retrieveHandler(nil, self, item, cachedThumbnail, NO, progress);
 								}];
 
@@ -1108,7 +606,7 @@
 						// Request a thumbnail from the server if the operation hasn't been cancelled yet.
 						if (!progress.cancelled)
 						{
-							NSString *requestID = [NSString stringWithFormat:@"%@:%@-%fx%f", versionIdentifier.fileID, versionIdentifier.eTag, requestedMaximumSizeInPixels.width, requestedMaximumSizeInPixels.height];
+							NSString *requestID = [NSString stringWithFormat:@"%@:%@-%@-%fx%f", versionIdentifier.fileID, versionIdentifier.eTag, specID, requestedMaximumSizeInPixels.width, requestedMaximumSizeInPixels.height];
 
 							[self queueBlock:^{
 								BOOL sendRequest = YES;
@@ -1116,11 +614,11 @@
 								// Queue retrieve handlers
 								NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue;
 
-								if ((retrieveHandlersQueue = _pendingThumbnailRequests[requestID]) == nil)
+								if ((retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID]) == nil)
 								{
 									retrieveHandlersQueue = [NSMutableArray new];
 
-									_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
+									self->_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
 								}
 
 								if (retrieveHandlersQueue.count != 0)
@@ -1141,6 +639,7 @@
 										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
 										@"scale" : @(scale),
 										@"itemVersionIdentifier" : item.itemVersionIdentifier,
+										@"specID" : item.thumbnailSpecID,
 										@"item" : item,
 									} ephermalUserInfo:@{
 										@"requestID" : requestID
@@ -1186,25 +685,26 @@
 		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
 		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[@"itemVersionIdentifier"];
 		OCItem *item = event.userInfo[@"item"];
+		NSString *specID = event.userInfo[@"specID"];
 		NSString *requestID = event.ephermalUserInfo[@"requestID"];
 
 		if ((event.error == nil) && (event.result != nil))
 		{
 			// Update cache
-			[_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
+			[self->_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
 
 			// Store in database
-			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
+			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
 		}
 
 		// Call all retrieveHandlers
 		if (requestID != nil)
 		{
-			NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue = _pendingThumbnailRequests[requestID];
+			NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID];
 
 			if (retrieveHandlersQueue != nil)
 			{
-				[_pendingThumbnailRequests removeObjectForKey:requestID];
+				[self->_pendingThumbnailRequests removeObjectForKey:requestID];
 			}
 
 			item.thumbnail = thumbnail;
@@ -1219,36 +719,139 @@
 	}];
 }
 
+#pragma mark - Item location & directory lifecycle
+- (NSURL *)localURLForItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+	}
+
+	return ([self.vault localURLForItem:item]);
+}
+
+- (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
+{
+	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
+}
+
+- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
+{
+	NSURL *temporaryURL = nil;
+	NSURL *baseURL = [self localParentDirectoryURLForItem:item];
+
+	for (NSUInteger attempt=0; attempt < 100; attempt++)
+	{
+		NSString *filename;
+
+		if ((filename = [NSString stringWithFormat:@"%lu-%@.tmp", (unsigned long)attempt, NSUUID.UUID.UUIDString]) != nil)
+		{
+			NSURL *temporaryURLCandidate;
+
+			if ((temporaryURLCandidate = [baseURL URLByAppendingPathComponent:filename]) != nil)
+			{
+				if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryURLCandidate.path])
+				{
+					temporaryURL = temporaryURLCandidate;
+
+					if (returnFileName != NULL)
+					{
+						*returnFileName = filename;
+					}
+				}
+			}
+		}
+	}
+
+	return (temporaryURL);
+}
+
+- (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item
+{
+	return ([[url URLByDeletingLastPathComponent] isEqual:[self localParentDirectoryURLForItem:item]] && [url.pathExtension isEqual:@"tmp"]);
+}
+
+- (NSError *)createDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if (![[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error])
+			{
+				OCLogError(@"Item parent directory creation at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
+}
+
+- (NSError *)deleteDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if ([[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] removeItemAtURL:parentURL error:&error])
+			{
+				OCLogError(@"Item parent directory deletion at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	switch (event.eventType)
-	{
-		case OCEventTypeRetrieveThumbnail:
-			[self _handleRetrieveThumbnailEvent:event sender:sender];
-		break;
+	[self beginActivity:@"Handling event"];
 
-		case OCEventTypeDownload:
-			[self _handleDownloadFileEvent:event sender:sender];
-		break;
+	[self queueBlock:^{
+		switch (event.eventType)
+		{
+			case OCEventTypeRetrieveThumbnail:
+				[self _handleRetrieveThumbnailEvent:event sender:sender];
+			break;
 
-		default:
-			[self _handleSyncEvent:event sender:sender];
-		break;
-	}
+			case OCEventTypeRetrieveItemList:
+				[self _handleRetrieveItemListEvent:event sender:sender];
+			break;
+
+			default:
+				[self _handleSyncEvent:event sender:sender];
+			break;
+		}
+
+		[self endActivity:@"Handling event"];
+	}];
 }
-
 
 #pragma mark - Busy count
 - (void)beginActivity:(NSString *)description
 {
 	OCLogDebug(@"Beginning activity '%@' ..", description);
 	[self queueBlock:^{
-		_runningActivities++;
+		self->_runningActivities++;
 
-		if (_runningActivities == 1)
+		if (self->_runningActivities == 1)
 		{
-			dispatch_group_enter(_runningActivitiesGroup);
+			dispatch_group_enter(self->_runningActivitiesGroup);
 		}
 	}];
 }
@@ -1257,16 +860,16 @@
 {
 	OCLogDebug(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
-		_runningActivities--;
+		self->_runningActivities--;
 		
-		if (_runningActivities == 0)
+		if (self->_runningActivities == 0)
 		{
-			dispatch_group_leave(_runningActivitiesGroup);
+			dispatch_group_leave(self->_runningActivitiesGroup);
 
-			if (_runningActivitiesCompleteBlock != nil)
+			if (self->_runningActivitiesCompleteBlock != nil)
 			{
-				_runningActivitiesCompleteBlock();
-				_runningActivitiesCompleteBlock = nil;
+				self->_runningActivitiesCompleteBlock();
+				self->_runningActivitiesCompleteBlock = nil;
 			}
 		}
 	}];

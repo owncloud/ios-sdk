@@ -50,3 +50,20 @@
 
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";
+
+/* Download */
+"Downloading %@…" = "Downloading %@…";
+
+/* Move/Rename/Copy */
+"Renaming %@ to %@…" = "Renaming %@ to %@…";
+"Moving %@ to %@…" = "Moving %@ to %@…";
+"Copying %@ to %@…" = "Copying %@ to %@…";
+
+/* Create folder */
+"Creating folder %@…" = "Creating folder %@…";
+
+/* Delete */
+"Deleting %@…" = "Deleting %@…";
+
+/* Retrieving file list */
+"Retrieving file list for %@…" = "Retrieving file list for %@…";

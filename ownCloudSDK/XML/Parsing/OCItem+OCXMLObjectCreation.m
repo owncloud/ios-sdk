@@ -50,6 +50,13 @@
 				}
 			} copy],
 
+			@"d:creationdate" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSDate class]])
+				{
+					item.creationDate = value;
+				}
+			} copy],
+
 			@"d:getcontenttype" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{

@@ -75,11 +75,13 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
+
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 #pragma mark - Thumbnail interface
-- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType forItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)item maximumSizeInPixels:(CGSize)maxSize completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
+- (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
+- (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType specID:(NSString *)specID forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - File interface
 //- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
@@ -92,7 +94,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
-- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncAction)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
+- (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
 #pragma mark - Log interface
 

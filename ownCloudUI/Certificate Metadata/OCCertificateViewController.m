@@ -47,7 +47,6 @@
 
 		_titleLabel = [UILabel new];
 		_titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-		_titleLabel.textColor = [UIColor grayColor];
 		_titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize] weight:UIFontWeightMedium];
 		[contentView addSubview:_titleLabel];
 
@@ -97,6 +96,10 @@
 
 @synthesize certificate = _certificate;
 
+@synthesize sectionHeaderTextColor = _sectionHeaderTextColor;
+@synthesize lineTitleColor = _lineTitleColor;
+@synthesize lineValueColor = _lineValueColor;
+
 - (instancetype)initWithCertificate:(OCCertificate *)certificate
 {
 	if ((self = [self initWithStyle:UITableViewStyleGrouped]) != nil)
@@ -117,6 +120,10 @@
 	self.tableView.rowHeight = UITableViewAutomaticDimension;
 	self.tableView.estimatedRowHeight = 100;
 	self.tableView.sectionFooterHeight = 1;
+
+	_sectionHeaderTextColor = [UIColor blackColor];
+	_lineTitleColor = [UIColor grayColor];
+	_lineValueColor = [UIColor blackColor];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -147,7 +154,7 @@
 	{
 		[_certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				_sectionNodes = detailsViewNodes;
+				self->_sectionNodes = detailsViewNodes;
 				[self.tableView reloadData];
 			});
 		}];
@@ -174,7 +181,8 @@
 	((OCCertificateTableCell *)cell).titleLabel.text = node.title.uppercaseString;
 	((OCCertificateTableCell *)cell).descriptionLabel.text = node.value;
 
-	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : nil;
+	((OCCertificateTableCell *)cell).titleLabel.textColor = _lineTitleColor;
+	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : _lineValueColor;
 
 	return cell;
 }
@@ -192,7 +200,7 @@
 
 		sectionHeaderLabel = [UILabel new];
 		sectionHeaderLabel.translatesAutoresizingMaskIntoConstraints = NO;
-		sectionHeaderLabel.textColor = [UIColor blackColor];
+		sectionHeaderLabel.textColor = self.sectionHeaderTextColor;
 		sectionHeaderLabel.font = [UIFont systemFontOfSize:[UIFont systemFontSize]*1.25 weight:UIFontWeightBold];
 
 		[headerView addSubview:sectionHeaderLabel];
@@ -218,6 +226,25 @@
 - (NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	return (nil);
+}
+
+#pragma mark - Color support
+-(void)setSectionHeaderTextColor:(UIColor *)sectionHeaderTextColor
+{
+	_sectionHeaderTextColor = sectionHeaderTextColor;
+	[self.tableView reloadData];
+}
+
+- (void)setLineTitleColor:(UIColor *)lineTitleColor
+{
+	_lineTitleColor = lineTitleColor;
+	[self.tableView reloadData];
+}
+
+- (void)setLineValueColor:(UIColor *)lineValueColor
+{
+	_lineValueColor = lineValueColor;
+	[self.tableView reloadData];
 }
 
 @end

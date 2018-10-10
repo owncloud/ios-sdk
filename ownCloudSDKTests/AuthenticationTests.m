@@ -19,6 +19,8 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 
+#import "OCTestTarget.h"
+
 @interface AuthenticationTests : XCTestCase <OCConnectionDelegate>
 
 @end
@@ -132,17 +134,17 @@
 
 - (void)testBasicAuthenticationSuccess
 {
-	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] user:@"demo" password:@"demo" allowUpgrades:YES expectsSuccess:YES];
+	[self _performBasicAuthenticationTestWithURL:OCTestTarget.insecureTargetURL user:OCTestTarget.userLogin password:OCTestTarget.userPassword allowUpgrades:YES expectsSuccess:YES];
 }
 
 - (void)testBasicAuthenticationRedirectFailure
 {
-	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] user:@"demo" password:@"demo" allowUpgrades:NO expectsSuccess:NO];
+	[self _performBasicAuthenticationTestWithURL:OCTestTarget.insecureTargetURL user:OCTestTarget.userLogin password:OCTestTarget.userPassword allowUpgrades:NO expectsSuccess:NO];
 }
 
 - (void)testBasicAuthenticationFailure
 {
-	[self _performBasicAuthenticationTestWithURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] user:@"nosuchuser" password:@"nosuchpass" allowUpgrades:YES expectsSuccess:NO];
+	[self _performBasicAuthenticationTestWithURL:OCTestTarget.secureTargetURL user:@"nosuchuser" password:@"nosuchpass" allowUpgrades:YES expectsSuccess:NO];
 }
 
 - (void)testAuthenticationMethodDetection
@@ -153,7 +155,7 @@
 	OCConnection *connection;
 
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://owncloud-io.lan/"]];
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
@@ -184,7 +186,7 @@
 	OCBookmark *bookmark;
 	OCConnection *connection;
 
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
@@ -228,7 +230,7 @@
 	OCConnection *connection;
 
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
@@ -256,7 +258,7 @@
 	OCConnection *connection;
 
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
-	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"]];
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{

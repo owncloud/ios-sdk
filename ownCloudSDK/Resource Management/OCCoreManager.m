@@ -20,8 +20,12 @@
 #import "NSError+OCError.h"
 #import "OCBookmarkManager.h"
 #import "OCConnectionQueue+BackgroundSessionRecovery.h"
+#import "OCLogger.h"
+#import "OCCore+FileProvider.h"
 
 @implementation OCCoreManager
+
+@synthesize postFileProviderNotifications = _postFileProviderNotifications;
 
 #pragma mark - Shared instance
 + (instancetype)sharedCoreManager
@@ -31,6 +35,7 @@
 
 	dispatch_once(&onceToken, ^{
 		sharedManager = [OCCoreManager new];
+		sharedManager.postFileProviderNotifications = OCCore.hostHasFileProvider;
 	});
 
 	return (sharedManager);
@@ -79,6 +84,8 @@
 				if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 				{
 					returnCore = core;
+
+					core.postFileProviderNotifications = self.postFileProviderNotifications;
 
 					_coresByUUID[bookmark.uuid] = core;
 
@@ -172,6 +179,8 @@
 #pragma mark - Background session recovery
 - (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"=> Handle events for background URL session: %@", identifier);
+
 	@synchronized(self)
 	{
 		if ((identifier != nil) && (completionHandler != nil))
@@ -247,7 +256,7 @@
 				offlineOperation(bookmark, ^{
 					@synchronized(self)
 					{
-						[_runningOfflineOperationByUUID removeObjectForKey:bookmark.uuid];
+						[self->_runningOfflineOperationByUUID removeObjectForKey:bookmark.uuid];
 
 						[self _runNextOfflineOperationForBookmark:bookmark];
 					}

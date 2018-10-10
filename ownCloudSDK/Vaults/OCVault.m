@@ -21,6 +21,8 @@
 #import "NSError+OCError.h"
 #import "OCItem.h"
 #import "OCDatabase.h"
+#import "OCMacros.h"
+#import "OCCore+FileProvider.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end
@@ -75,10 +77,42 @@
 {
 	if (_filesRootURL == nil)
 	{
-		_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+		if (OCCore.hostHasFileProvider)
+		{
+			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+		}
+		else
+		{
+			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
+		}
 	}
 
 	return (_filesRootURL);
+}
+
+- (NSFileProviderDomain *)fileProviderDomain
+{
+	if (_fileProviderDomain == nil)
+	{
+		if (OCCore.hostHasFileProvider)
+		{
+			OCSyncExec(domainRetrieval, {
+				[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
+					for (NSFileProviderDomain *domain in domains)
+					{
+						if ([domain.identifier isEqual:self.uuid.UUIDString])
+						{
+							self->_fileProviderDomain = domain;
+						}
+					}
+
+					OCSyncExecDone(domainRetrieval);
+				}];
+			});
+		}
+	}
+
+	return (_fileProviderDomain);
 }
 
 - (NSURL *)connectionDataRootURL
@@ -176,7 +210,13 @@
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
-	return ([[self.filesRootURL URLByAppendingPathComponent:item.fileID isDirectory:YES] URLByAppendingPathComponent:item.name isDirectory:NO]);
+	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
+}
+
+- (NSString *)relativePathForItem:(OCItem *)item
+{
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
+	return ([item.fileID stringByAppendingPathComponent:item.name]);
 }
 
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid

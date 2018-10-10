@@ -34,7 +34,8 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 {
 	OCSyncRecordID _recordID;
 
-	OCSyncAction _action;
+	OCSyncActionIdentifier _actionIdentifier;
+	OCSyncAction *_action;
 	NSDate *_timestamp;
 
 	OCSyncRecordState _state;
@@ -43,61 +44,48 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 	NSNumber *_blockedByPID;
 	BOOL _allowsRescheduling;
 
-	NSData *_archivedServerItemData;
-	OCItem *_archivedServerItem;
-
-	OCPath _itemPath;
-
-	NSDictionary<OCSyncActionParameter, id> *_parameters;
-
 	OCCoreActionResultHandler _resultHandler;
 }
 
+#pragma mark - Database ID
 @property(strong) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
 
-@property(readonly) OCSyncAction action; //!< The action
+#pragma mark - Action Definition
+@property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action
+@property(strong) OCSyncAction *action; //!< The sync action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
 
+#pragma mark - Scheduling and processing tracking
 @property(assign,nonatomic) OCSyncRecordState state; //!< Current processing state
+
 @property(strong) NSDate *inProgressSince; //!< Time since which the action is being executed
+
 @property(strong) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
 @property(strong) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.
 @property(readonly,nonatomic) BOOL blockedByDifferentCopyOfThisProcess; //!< If state==OCSyncRecordStateAwaitingUserInteraction, checks if blockedByBundleIdentifier and blockedByPID match the calling process.
+
 @property(assign) BOOL allowsRescheduling; //!< If YES, the record may be rescheduled if state==OCSyncRecordStateAwaitingUserInteraction.
 
-@property(readonly,nonatomic) OCPath itemPath; //!< the path of the item, drawn from OCSyncActionParameterPath, OCSyncActionParameterItem and OCSyncActionParameterSourcePath (in that order)
-@property(readonly,nonatomic) OCItem *item; //!< OCSyncActionParameterItem
-
-@property(readonly,nonatomic) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the record was committed.
-
-@property(strong) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
-
+#pragma mark - Result, cancel and progress handling
 @property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
-
 @property(strong) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
-- (instancetype)initWithAction:(OCSyncAction)action archivedServerItem:(OCItem *)archivedServerItem parameters:(NSDictionary <OCSyncActionParameter, id> *)parameters resultHandler:(OCCoreActionResultHandler)resultHandler;
+#pragma - Instantiation
+- (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
 
+#pragma - Serialization / Deserialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
-
 - (NSData *)serializedData;
+
+#pragma - Progress convenience method
+- (void)addProgress:(NSProgress *)progress;
 
 @end
 
-extern OCSyncAction OCSyncActionDeleteLocal; //!< Locally triggered deletion
-extern OCSyncAction OCSyncActionDeleteRemote; //!< Remotely triggered deletion
-extern OCSyncAction OCSyncActionMove;
-extern OCSyncAction OCSyncActionCopy;
-extern OCSyncAction OCSyncActionCreateFolder;
-extern OCSyncAction OCSyncActionUpload;
-extern OCSyncAction OCSyncActionDownload;
-
-extern OCSyncActionParameter OCSyncActionParameterParentItem; // (OCItem *)
-extern OCSyncActionParameter OCSyncActionParameterItem; // (OCItem *)
-extern OCSyncActionParameter OCSyncActionParameterPath; // (OCPath)
-extern OCSyncActionParameter OCSyncActionParameterSourcePath; // (OCPath)
-extern OCSyncActionParameter OCSyncActionParameterTargetPath; // (OCPath)
-extern OCSyncActionParameter OCSyncActionParameterSourceItem; // (OCItem *)
-extern OCSyncActionParameter OCSyncActionParameterTargetItem; // (OCItem *)
-extern OCSyncActionParameter OCSyncActionParameterTargetName; // (NSString *)
-extern OCSyncActionParameter OCSyncActionParameterRequireMatch; // (NSNumber* (BOOL))
+extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal; //!< Locally triggered deletion
+extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote; //!< Remotely triggered deletion
+extern OCSyncActionIdentifier OCSyncActionIdentifierMove;
+extern OCSyncActionIdentifier OCSyncActionIdentifierCopy;
+extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;
+extern OCSyncActionIdentifier OCSyncActionIdentifierDownload;
+extern OCSyncActionIdentifier OCSyncActionIdentifierUpload;

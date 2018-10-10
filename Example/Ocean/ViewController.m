@@ -30,17 +30,6 @@
 
 @implementation ViewController
 
-- (void)viewDidLoad {
-	[super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
-}
-
-
-- (void)didReceiveMemoryWarning {
-	[super didReceiveMemoryWarning];
-	// Dispose of any resources that can be recreated.
-}
-
 - (IBAction)connectAndGetInfo:(id)sender
 {
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
@@ -54,15 +43,15 @@
 				
 				if (error == nil)
 				{
-					bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
-					bookmark.authenticationData = authenticationData;
+					self->bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
+					self->bookmark.authenticationData = authenticationData;
 
 					// Request resource
 					OCConnectionRequest *request = nil;
-					request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
+					request = [OCConnectionRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 					[request setValue:@"json" forParameter:@"format"];
 		
-					[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+					[self->connection sendRequest:request toQueue:self->connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\nTask: %@\n\nResponse: %@\n\nBody: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString]];
 						
 						if (request.responseHTTPStatus.isSuccess)
@@ -105,7 +94,7 @@
 
 						[attributedString appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"\n\n------\nCertificate metadata:\n%@\nError: %@", [certificate metaDataWithError:&parseError], parseError]]];
 
-						_logTextView.attributedText = attributedString;
+						self->_logTextView.attributedText = attributedString;
 					}];
 				}];
 			}];
@@ -120,8 +109,8 @@
 - (void)appendLog:(NSString *)appendToLogString
 {
 	dispatch_async(dispatch_get_main_queue(), ^{
-		_logTextView.text = [_logTextView.text stringByAppendingFormat:@"\n%@ ---------------------------------\n%@", [NSDate date], appendToLogString];
-		[_logTextView scrollRangeToVisible:NSMakeRange(_logTextView.text.length-1, 1)];
+		self->_logTextView.text = [self->_logTextView.text stringByAppendingFormat:@"\n%@ ---------------------------------\n%@", [NSDate date], appendToLogString];
+		[self->_logTextView scrollRangeToVisible:NSMakeRange(self->_logTextView.text.length-1, 1)];
 	});
 }
 

@@ -18,6 +18,7 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @implementation OCConnection (Setup)
 
@@ -77,12 +78,12 @@
 		issue = [OCConnectionIssue issueForRedirectionFromURL:fromURL toSuggestedURL:toURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 			if (decision == OCConnectionIssueDecisionApprove)
 			{
-				if (_bookmark.originURL == nil)
+				if (self->_bookmark.originURL == nil)
 				{
-					_bookmark.originURL = _bookmark.url;
+					self->_bookmark.originURL = self->_bookmark.url;
 				}
 
-				_bookmark.url = toURL;
+				self->_bookmark.url = toURL;
 			}
 		}];
 
@@ -133,8 +134,8 @@
 						{
 							certificate.userAccepted = YES;
 
-							_bookmark.certificate = certificate;
-							_bookmark.certificateModificationDate = [NSDate date];
+							self->_bookmark.certificate = certificate;
+							self->_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]);
 				}
@@ -145,8 +146,8 @@
 					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelInformal issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
 						if (decision == OCConnectionIssueDecisionApprove)
 						{
-							_bookmark.certificate = certificate;
-							_bookmark.certificateModificationDate = [NSDate date];
+							self->_bookmark.certificate = certificate;
+							self->_bookmark.certificateModificationDate = [NSDate date];
 						}
 					}]);
 

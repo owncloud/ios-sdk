@@ -21,6 +21,7 @@
 #import <ownCloudSDK/NSError+OCError.h>
 #import <ownCloudSDK/OCLogger.h>
 #import <ownCloudSDK/NSData+OCHash.h>
+#import <ownCloudSDK/OCExtension+License.h>
 
 #import <openssl/pem.h>
 #import <openssl/conf.h>
@@ -28,6 +29,11 @@
 #import <openssl/pkcs12.h>
 
 @implementation OCCertificate (OpenSSL)
+
++ (void)load
+{
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.openssl" bundle:[NSBundle bundleWithIdentifier:@"com.owncloud.openssl"] title:@"OpenSSL" resourceName:@"LICENSE" fileExtension:nil]];
+}
 
 + (void)_initializeOpenSSL
 {

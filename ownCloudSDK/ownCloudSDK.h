@@ -40,6 +40,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCCore.h>
 #import <ownCloudSDK/OCCore+FileProvider.h>
+#import <ownCloudSDK/OCCore+ItemList.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
 #import <ownCloudSDK/OCBookmark.h>
@@ -81,6 +82,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>
 #import <ownCloudSDK/NSString+OCVersionCompare.h>
 #import <ownCloudSDK/NSString+OCParentPath.h>
+#import <ownCloudSDK/NSString+OCFormatting.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
@@ -107,3 +109,11 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCKeyValueStore.h>
 
 #import <ownCloudSDK/OCLogger.h>
+
+#import <ownCloudSDK/OCExtensionTypes.h>
+#import <ownCloudSDK/OCExtensionManager.h>
+#import <ownCloudSDK/OCExtensionContext.h>
+#import <ownCloudSDK/OCExtensionLocation.h>
+#import <ownCloudSDK/OCExtensionMatch.h>
+#import <ownCloudSDK/OCExtension.h>
+#import <ownCloudSDK/OCExtension+License.h>
