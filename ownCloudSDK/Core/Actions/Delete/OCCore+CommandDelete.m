@@ -26,7 +26,7 @@
 @implementation OCCore (CommandDelete)
 
 #pragma mark - Command
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress * __nullable)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler __nullable)resultHandler
 {
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDelete alloc] initWithItem:item requireMatch:requireMatch] allowsRescheduling:NO resultHandler:resultHandler]);
 }

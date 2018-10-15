@@ -32,7 +32,7 @@
 @implementation OCCore (CommandLocalImport)
 
 #pragma mark - Command
-- (NSProgress *)importFileNamed:(NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler
+- (NSProgress * __nullable)importFileNamed:(NSString * __nullable)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary * __nullable)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler __nullable)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler __nullable)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *placeholderOutputURL;

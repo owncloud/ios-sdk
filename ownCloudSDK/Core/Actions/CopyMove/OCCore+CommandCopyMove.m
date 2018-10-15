@@ -26,21 +26,21 @@
 @implementation OCCore (CommandCopyMove)
 
 #pragma mark - Commands
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress * __nullable)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary * __nullable)options resultHandler:(OCCoreActionResultHandler __nullable)resultHandler
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierCopy targetName:name targetParentItem:parentItem isRename:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress * __nullable)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary * __nullable)options resultHandler:(OCCoreActionResultHandler __nullable)resultHandler
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:name targetParentItem:parentItem isRename:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress * __nullable)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary * __nullable)options resultHandler:(OCCoreActionResultHandler __nullable)resultHandler
 {
 	__block OCItem *parentItem = nil;
 
