@@ -42,6 +42,12 @@
 	{
 		BOOL proceed = YES;
 
+		// Use itemFileURL if no inputFileURL was provided
+		if (inputFileURL == nil)
+		{
+			inputFileURL = itemFileURL;
+		}
+
 		// Copy file into the vault for uploading
 		if (isSecurityScoped)
 		{
