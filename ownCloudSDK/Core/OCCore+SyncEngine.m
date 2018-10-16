@@ -559,11 +559,6 @@
 
 				syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
 
-				if (syncContext.issues.count != 0)
-				{
-					[issues addObjectsFromArray:syncContext.issues];
-				}
-
 				error = syncContext.error;
 			}
 
