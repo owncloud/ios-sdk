@@ -89,6 +89,8 @@
 
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler
 {
+//	NSLog(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
+
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -269,7 +271,7 @@
 	}];
 }
 
-- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
 {
 	__block NSError *error = nil;
 	OCSyncAction *syncAction;
@@ -311,19 +313,19 @@
 	{
 		if (syncRecord.resultHandler != nil)
 		{
-			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, syncRecord);
+			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, parameter);
 		}
 	}
 
 	return (error);
 }
 
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
 {
 	if (syncRecord==nil) { return; }
 
 	[self performProtectedSyncBlock:^NSError *{
-		return ([self _descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler resultHandlerError:resultHandlerError]);
+		return ([self _descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:parameter resultHandlerError:resultHandlerError]);
 	} completionHandler:^(NSError *error) {
 		if (error != nil)
 		{
@@ -400,7 +402,7 @@
 					OCLogDebug(@"SE: record %@ has been cancelled - removing", syncRecord);
 
 					// Deschedule & call resultHandler
-					[self _descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+					[self _descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 					continue;
 				}
 
@@ -904,7 +906,7 @@
 				refreshPath = [refreshPath stringByAppendingString:@"/"];
 			}
 
-			[self startItemListTaskForPath:refreshPath];
+			[self scheduleItemListTaskForPath:refreshPath];
 		}
 	}
 }
@@ -930,7 +932,7 @@
 
 			[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 				// Drop sync record
-				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
+				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:nil resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
 			}],
 
 		] completionHandler:nil];

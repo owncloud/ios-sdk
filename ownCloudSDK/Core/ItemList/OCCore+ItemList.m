@@ -30,66 +30,56 @@
 @implementation OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (OCCoreItemListTask *)startItemListTaskForPath:(OCPath)path
+- (OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path
 {
 	OCCoreItemListTask *task = nil;
 
 	if (path!=nil)
 	{
-		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
+		if ((task = _itemListTasksByPath[path]) == nil) // Don't start a new item list task if one is already running for the path
 		{
-			[self startItemListTask:task];
+			if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
+			{
+				_itemListTasksByPath[task.path] = task;
+
+				// Start item list task
+				if (task.syncAnchorAtStart == nil)
+				{
+					task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
+						// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
+						[core handleUpdatedTask:task];
+					};
+
+					// Retrieve and store current sync anchor value
+					[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
+						task.syncAnchorAtStart = syncAnchor;
+
+						[task update];
+					}];
+				}
+				else
+				{
+					[task update];
+				}
+			}
 		}
 	}
 
 	return (task);
 }
 
-- (BOOL)startItemListTask:(OCCoreItemListTask *)task
-{
-	if (task==nil) { return(NO); }
-	if (task.path==nil) { return(NO); }
-
-	if (_itemListTasksByPath[task.path] == nil) // Don't start a new item list task if one is already running for the path
-	{
-		_itemListTasksByPath[task.path] = task;
-
-		task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
-			// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
-			[core handleUpdatedTask:task];
-		};
-
-		if (task.syncAnchorAtStart == nil)
-		{
-			// Retrieve and store current sync anchor value
-			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
-				task.syncAnchorAtStart = syncAnchor;
-
-				[task update];
-			}];
-		}
-		else
-		{
-			[task update];
-		}
-
-		return (YES);
-	}
-
-	return (NO);
-}
-
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task
 {
 	OCQueryState queryState = OCQueryStateStarted;
 	BOOL performMerge = NO;
-	BOOL removeTask = NO;
+	__block BOOL removeTask = NO;
 	BOOL targetRemoved = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 	__block NSMutableArray <OCItem *> *queryResultsChangedItems = nil;
 	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
 	__block OCSyncAnchor querySyncAnchor = nil;
+	OCCoreItemListTask *nextTask = nil;
 
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
@@ -147,6 +137,42 @@
 		break;
 	}
 
+	if (performMerge && (task.path!=nil))
+	{
+		OCCoreItemListTask *existingTask;
+
+		if ((existingTask = _itemListTasksByPath[task.path]) != nil)
+		{
+			if (existingTask != task)
+			{
+				// Find end of chain
+				while (existingTask.nextItemListTask != nil)
+				{
+					existingTask = existingTask.nextItemListTask;
+
+					if (existingTask == task)
+					{
+						// Avoid adding the same task more than once into the chain
+						goto earlyExit;
+					}
+				}
+
+				// Link task at end of the chain
+				existingTask.nextItemListTask = task;
+
+				// Handle this task after the existingTask has finished (makes no sense to have two tasks concurrently update the same path)
+				earlyExit:
+				
+				[self endActivity:@"item list task"];
+				return;
+			}
+		}
+		else
+		{
+			_itemListTasksByPath[task.path] = task;
+		}
+	}
+
 	if (performMerge)
 	{
 		// Perform merge
@@ -171,7 +197,7 @@
 			if (![previousSyncAnchor isEqualToNumber:task.syncAnchorAtStart])
 			{
 				// Out of sync - trigger catching the latest from the cache again, rinse and repeat
-				OCLogDebug(@"Sync anchor changed before task finished: %@ != %@", previousSyncAnchor, task.syncAnchorAtStart);
+				OCLogDebug(@"IL[%@, path=%@]: Sync anchor changed before task finished: previousSyncAnchor=%@ != task.syncAnchorAtStart=%@", task, task.path, previousSyncAnchor, task.syncAnchorAtStart);
 
 				task.syncAnchorAtStart = newSyncAnchor; // Update sync anchor before triggering the reload from cache
 
@@ -334,7 +360,18 @@
 			{
 				// Sync anchor value increased while fetching data from the server
 				OCLogDebug(@"Sync anchor changed, refreshing from cache before merge..");
-				[task forceUpdateCacheSet];
+
+//				double randomDelay = ((double)arc4random() / (double)UINT32_MAX) / 2.0; // Avoid race conditions with external or competing updates and the resulting infinite loops by delaying forced cache update by up to 0.5 secs, so other updates have a chence to settle inbetween (and don't interleave each other, which leads to an infinite loop)
+//				int64_t randomDelayDelta = (int64_t)(randomDelay * (double)NSEC_PER_SEC);
+//
+//				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, randomDelayDelta), _queue, ^{
+//					[task forceUpdateCacheSet];
+//				});
+
+				removeTask = NO; // Don't remove task just yet, we're still busy here
+
+				[task _updateCacheSet];
+				[self handleUpdatedTask:task];
 			}
 			else
 			{
@@ -384,9 +421,18 @@
 	{
 		if (task.path != nil)
 		{
-			if (_itemListTasksByPath[task.path] != nil)
+			if (_itemListTasksByPath[task.path] == task)
 			{
-				[_itemListTasksByPath removeObjectForKey:task.path];
+				if (task.nextItemListTask != nil)
+				{
+					_itemListTasksByPath[task.path] = task.nextItemListTask;
+					nextTask = task.nextItemListTask;
+					task.nextItemListTask = nil;
+				}
+				else
+				{
+					[_itemListTasksByPath removeObjectForKey:task.path];
+				}
 			}
 		}
 	}
@@ -577,6 +623,12 @@
 		[self signalChangesForItems:@[ taskRootItem ]];
 	}
 
+	// Handle next task in the chain (if any)
+	if (nextTask != nil)
+	{
+		[self handleUpdatedTask:nextTask];
+	}
+
 	[self endActivity:@"item list task"];
 }
 
@@ -673,6 +725,17 @@
 				}
 
 				// Update cache with new results
+				if (_itemListTasksByPath[itemListTask.path] != nil)
+				{
+					OCLogWarning(@"Concurrent item list tasks: %@ (background) vs %@ (queries)", itemListTask, _itemListTasksByPath[itemListTask.path]);
+				}
+
+				// Add a change handler in case another OCCoreItemListTask is already running for this path
+				itemListTask.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
+					// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
+					[core handleUpdatedTask:task];
+				};
+
 				[self handleUpdatedTask:itemListTask];
 
 				// Trigger fetching file lists for updated/new folders

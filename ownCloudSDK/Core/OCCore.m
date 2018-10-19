@@ -405,14 +405,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self startItemListTaskForPath:query.queryPath];
+			[self scheduleItemListTaskForPath:query.queryPath];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self startItemListTaskForPath:[query.queryItem.path parentPath]];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath]];
 			}
 		}
 	}];
