@@ -515,7 +515,7 @@
 
 			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
 			{
-				OCLogWarning(@"CQ[%@]: clearing out attached extension queues before they finished: %@", _urlSession.configuration.identifier, self->_attachedExtensionQueuesBySessionIdentifier);
+				OCLogWarning(@"OCConnection: clearing out attached extension queues before they finished: %@", self->_attachedExtensionQueuesBySessionIdentifier);
 				[connectionQueues addObjectsFromArray:self->_attachedExtensionQueuesBySessionIdentifier.allValues];
 			}
 
