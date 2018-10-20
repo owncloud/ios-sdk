@@ -109,6 +109,8 @@
 #pragma mark - Invalidation
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"CQ[%@]: finish tasks and invalidate", _urlSession.configuration.identifier);
+
 	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession finishTasksAndInvalidate];
@@ -116,6 +118,8 @@
 
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"CQ[%@]: cancel tasks and invalidate", _urlSession.configuration.identifier);
+
 	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession invalidateAndCancel];
@@ -674,6 +678,8 @@
 
 - (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
 {
+	OCLogDebug(@"CQ[%@]: did become invalid, running completionHandler %p", _urlSession.configuration.identifier, _invalidationCompletionHandler);
+
 	if (_invalidationCompletionHandler != nil)
 	{
 		_invalidationCompletionHandler();
