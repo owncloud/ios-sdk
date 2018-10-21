@@ -67,6 +67,7 @@
 	}
 }
 
+#pragma mark - XML en-/decoding
 - (void)testXMLEncoding
 {
 	// Just a playground right now.. proper tests coming.
@@ -153,6 +154,7 @@
 	XCTAssert((items[3].type == OCItemTypeFile), 	   @"Type match: %ld", (long)items[3].type);
 }
 
+#pragma mark - OCCache
 - (void)testCacheCountLimit
 {
 	OCCache *cache = [OCCache new];
@@ -219,6 +221,7 @@
 	XCTAssert([cache objectForKey:@"3"] != nil, @"Value 3 still in cache");
 }
 
+#pragma mark - NSData hashing extension
 - (void)testHashes
 {
 	NSData *data = [@"Hello" dataUsingEncoding:NSUTF8StringEncoding];
@@ -234,6 +237,7 @@
 
 }
 
+#pragma mark - OCKeyValueStore
 - (void)testKeyValueStore
 {
 	NSURL *temporaryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"kvStore"];
@@ -264,21 +268,79 @@
 
 - (void)testStringFormatting
 {
-	NSLog(@" 01234567890123456789");
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:10]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:10]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:10]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:10]);
+	XCTAssert([@"The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" leftPaddedMinLength:10]]);
+	XCTAssert([@"The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMinLength:10]]);
+	XCTAssert([@"The quick…" isEqual:[@"The quick brown fox jumps" leftPaddedMaxLength:10]]);
+	XCTAssert([@"…fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMaxLength:10]]);
 
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:20]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:20]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:20]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:20]);
+	XCTAssert([@"The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" leftPaddedMinLength:20]]);
+	XCTAssert([@"The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMinLength:20]]);
+	XCTAssert([@"The quick brown fox…" isEqual:[@"The quick brown fox jumps" leftPaddedMaxLength:20]]);
+	XCTAssert([@"…ick brown fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMaxLength:20]]);
 
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMinLength:30]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMinLength:30]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" leftPaddedMaxLength:30]);
-	NSLog(@"'%@'", [@"The quick brown fox jumps" rightPaddedMaxLength:30]);
+	XCTAssert([@"The quick brown fox jumps     " isEqual:[@"The quick brown fox jumps" leftPaddedMinLength:30]]);
+	XCTAssert([@"     The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMinLength:30]]);
+	XCTAssert([@"The quick brown fox jumps     " isEqual:[@"The quick brown fox jumps" leftPaddedMaxLength:30]]);
+	XCTAssert([@"     The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" rightPaddedMaxLength:30]]);
+}
+
+#pragma mark - OCIPCNotificationCenter
+- (void)testIPNotifications
+{
+	OCIPNotificationCenter *notificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
+
+	// Test raw sending of darwin message and receipt by XCTDarwinNotificationExpectation
+	XCTDarwinNotificationExpectation *darwinMessageSentExpectation = [[XCTDarwinNotificationExpectation alloc] initWithNotificationName:@"hello-darwin"];
+	[notificationCenter postNotificationForName:@"hello-darwin" ignoreSelf:NO];
+
+	// Test sending with listener
+	__block XCTestExpectation *observerExpectation = [self expectationWithDescription:@"Received hello-all notification"];
+	__block XCTestExpectation *secondObserverExpectation = [self expectationWithDescription:@"Received hello-all notification"];
+	[notificationCenter addObserver:self forName:@"hello-all" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		if (observerExpectation != nil)
+		{
+			[observerExpectation fulfill];
+			observerExpectation = nil;
+		}
+		else
+		{
+			if (secondObserverExpectation != nil)
+			{
+				[secondObserverExpectation fulfill];
+				secondObserverExpectation = nil;
+
+				[notificationCenter removeObserver:observer forName:notificationName];
+			}
+			else
+			{
+				XCTAssert(1==0); // Assert since this should never be called a third time
+			}
+		}
+
+		XCTAssert(observer == self);
+	}];
+	[notificationCenter postNotificationForName:@"hello-all" ignoreSelf:NO];
+
+	// Test sending with listener but ignored
+	[notificationCenter addObserver:self forName:@"hello-others" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		XCTAssert(1==0); // Assert since this should never be called
+	}];
+	[notificationCenter postNotificationForName:@"hello-others" ignoreSelf:YES];
+
+	// Test adding listener, then removing all, then send a test message that should not be received
+	[notificationCenter addObserver:self forName:@"hello-noone" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		XCTAssert(1==0); // Assert since this should never be called
+	}];
+	[notificationCenter removeAllObserversForName:@"hello-noone"];
+	[notificationCenter postNotificationForName:@"hello-noone" ignoreSelf:NO];
+
+	// Verify that two messages generate too calls, send message after hello-others to ensure that message has already run through the system
+	// and ending this test at this point, so that the XCTAssert for hello-others would have fired
+	[notificationCenter postNotificationForName:@"hello-all" ignoreSelf:YES]; // don't fulfill the secondObserverExpectation just yet
+	[notificationCenter postNotificationForName:@"hello-all" ignoreSelf:YES]; // don't fulfill the secondObserverExpectation just yet, but test ignore increments
+	[notificationCenter postNotificationForName:@"hello-all" ignoreSelf:NO]; // fulfill secondObserverExpectation now and end the test
+
+	[self waitForExpectations:@[ darwinMessageSentExpectation, observerExpectation, secondObserverExpectation ] timeout:3 enforceOrder:YES];
 }
 
 @end

@@ -29,7 +29,7 @@
 @implementation OCCore (CommandLocalModification)
 
 #pragma mark - Command
-- (NSProgress * __nullable)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL * __nullable)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary * __nullable)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler __nullable)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler __nullable)resultHandler
+- (nullable NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(nullable NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *itemFileURL, *temporaryFileURL;

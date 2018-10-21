@@ -39,7 +39,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 	OCKeyValueStore *_persistentStore;
 
 	NSURLSession *_urlSession;
-	
+	BOOL _urlSessionInvalidated;
+
 	NSMutableArray<OCConnectionRequest *> *_queuedRequests;
 
 	NSMutableArray<OCConnectionRequest *> *_runningRequests;

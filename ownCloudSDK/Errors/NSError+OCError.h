@@ -35,8 +35,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
 	OCErrorRequestDroppedByURLSession,		//!< Request was dropped by the NSURLSession
 	OCErrorRequestCompletedWithError,		//!< Request completed with error
+	OCErrorRequestURLSessionInvalidated,		//!< Request couldn't be scheduled because the underlying NSURLSession has been invalidated
 
-	OCErrorResponseUnknownFormat,			//!< Response was in an unknown format
+	OCErrorException,		//!< An exception occured
+
+	OCErrorResponseUnknownFormat,	//!< Response was in an unknown format
 	
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects

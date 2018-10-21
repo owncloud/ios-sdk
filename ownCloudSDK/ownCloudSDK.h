@@ -117,3 +117,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCExtensionMatch.h>
 #import <ownCloudSDK/OCExtension.h>
 #import <ownCloudSDK/OCExtension+License.h>
+
+#import <ownCloudSDK/OCIPNotificationCenter.h>

@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCItem (OCFileURLMetadata)
 
-- (NSError * __nullable)updateMetadataFromFileURL:(NSURL *)fileURL;
+- (nullable NSError *)updateMetadataFromFileURL:(NSURL *)fileURL;
 
 @end
 

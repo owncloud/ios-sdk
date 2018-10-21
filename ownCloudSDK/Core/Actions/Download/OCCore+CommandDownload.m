@@ -27,7 +27,7 @@
 @implementation OCCore (CommandDownload)
 
 #pragma mark - Command
-- (NSProgress * __nullable)downloadItem:(OCItem *)item options:(NSDictionary * __nullable)options resultHandler:(OCCoreDownloadResultHandler __nullable)resultHandler
+- (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler
 {
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] allowsRescheduling:YES resultHandler:resultHandler]);
 }

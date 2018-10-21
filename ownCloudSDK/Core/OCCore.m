@@ -197,7 +197,7 @@
 }
 
 #pragma mark - Start / Stop
-- (void)startWithCompletionHandler:(OCCompletionHandler __nullable)completionHandler
+- (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
 		if (self->_state == OCCoreStateStopped)
@@ -256,7 +256,7 @@
 	}];
 }
 
-- (void)stopWithCompletionHandler:(OCCompletionHandler __nullable)completionHandler
+- (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
 		__block NSError *stopError = nil;
@@ -495,23 +495,23 @@
 }
 
 #pragma mark - ## Commands
-- (NSProgress * __nullable)shareItem:(OCItem *)item options:(OCShareOptions __nullable)options resultHandler:(OCCoreActionResultHandler __nullable)resultHandler
+- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
 }
 
-- (NSProgress * __nullable)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler __nullable)completionHandler
+- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
 }
 
-- (NSProgress * __nullable)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler __nullable)completionHandler
+- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
 }
 
 #pragma mark - Command: Retrieve Thumbnail
-- (NSProgress * __nullable)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
@@ -735,7 +735,7 @@
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
 }
 
-- (NSURL * __nullable)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
+- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
 {
 	NSURL *temporaryURL = nil;
 	NSURL *baseURL = [self localParentDirectoryURLForItem:item];

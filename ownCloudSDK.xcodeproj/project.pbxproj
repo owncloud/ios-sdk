@@ -67,6 +67,8 @@
 		DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */; };
 		DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30956020580D5F00189B9A /* OCCertificateViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30956120580D5F00189B9A /* OCCertificateViewController.m */; };
+		DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */; };
 		DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */; };
@@ -462,6 +464,8 @@
 		DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fake-demo_owncloud_org.cer"; sourceTree = "<group>"; };
 		DC30956020580D5F00189B9A /* OCCertificateViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateViewController.h; sourceTree = "<group>"; };
 		DC30956120580D5F00189B9A /* OCCertificateViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateViewController.m; sourceTree = "<group>"; };
+		DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIPNotificationCenter.h; sourceTree = "<group>"; };
+		DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIPNotificationCenter.m; sourceTree = "<group>"; };
 		DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreSyncTests.m; sourceTree = "<group>"; };
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
 		DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationMethodBasicAuth.m; sourceTree = "<group>"; };
@@ -1543,6 +1547,8 @@
 				DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */,
 				DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */,
 				DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */,
+				DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */,
+				DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */,
 			);
 			path = Toolkit;
 			sourceTree = "<group>";
@@ -1598,6 +1604,7 @@
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DC8556ED204DEA2900189B9A /* OCConnectionDAVRequest.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
+				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
@@ -2029,6 +2036,7 @@
 				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
+				DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
 				DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */,
 				DC72E42A2063D61F00189B9A /* OCClassSettingsFlatSource.m in Sources */,
