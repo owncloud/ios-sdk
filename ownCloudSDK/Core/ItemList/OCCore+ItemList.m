@@ -178,6 +178,8 @@
 		// Perform merge
 		OCCoreItemList *cacheSet = task.cachedSet;
 		OCCoreItemList *retrievedSet = task.retrievedSet;
+		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByFileID = cacheSet.itemsByFileID;
+		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByFileID = retrievedSet.itemsByFileID;
 		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
 		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
 
@@ -207,12 +209,47 @@
 				return(nil);
 			}
 
+			/*
+				Merge algorithm:
+					- retrievedItem
+						- corresponding cacheItem
+							- with SAME fileID or SAME path
+								- cacheItem has local changes or active sync status
+									=> update cacheItem.remoteItem with retrievedItem
+									=> changedItems += cacheItem
+
+								- cacheItem has NO local changes or active sync status
+									=> prepare retrievedItem to replace cacheItem
+									- fileID matches ?
+										=> changedItems += cacheItem
+									- fileID doesn't match
+										=> removedItems += cacheItem
+										=> newItems += retrievedItem
+
+						- no corresponding cacheItem
+							=> newItems += retrievedItem
+
+					- cacheItem
+						- no corresponding retrievedItem with SAME fileID or SAME path
+							- has been locally modified or has active sync records
+								=> keep around
+							- has neither
+								=> remove
+			*/
+
 			// Iterate retrieved set
-			[retrievedSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull retrievedPath, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
+			[retrievedItemsByFileID enumerateKeysAndObjectsUsingBlock:^(OCFileID  _Nonnull retrievedFileID, OCItem * _Nonnull retrievedItem, BOOL * _Nonnull stop) {
 				OCItem *cacheItem;
 
-				// Item for this path already in the cache?
-				if ((cacheItem = cacheItemsByPath[retrievedPath]) != nil)
+				// Item for this fileID already in the cache?
+				if ((cacheItem = cacheItemsByFileID[retrievedFileID]) == nil)
+				{
+					// Alternatively: is there an item with the same path (but a different fileID)?
+					cacheItem = cacheItemsByPath[retrievedItem.path];
+				}
+
+				// Found a corresponding cache item?
+				if (cacheItem != nil)
 				{
 					// Overriding local item?
 					if ((cacheItem.locallyModified && (cacheItem.localRelativePath!=nil)) || // Reason 1: existing local version that's been modified
@@ -231,14 +268,23 @@
 					else
 					{
 						// Attach databaseID of cached items to the retrieved items
-						retrievedItem.databaseID = cacheItem.databaseID;
-						retrievedItem.parentFileID = cacheItem.parentFileID;
+						[retrievedItem prepareToReplace:cacheItem];
+
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 
 						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier])
 						{
 							// Update item in the cache if the server has a different version
-							[changedCacheItems addObject:retrievedItem];
+							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
+							{
+								[changedCacheItems addObject:retrievedItem];
+							}
+							else
+							{
+								[deletedCacheItems addObject:cacheItem];
+								retrievedItem.databaseID = nil;
+								[newItems addObject:retrievedItem];
+							}
 						}
 
 						// Return server version
@@ -254,14 +300,21 @@
 			}];
 
 			// Iterate cache set
-			[cacheSet.itemsByPath enumerateKeysAndObjectsUsingBlock:^(OCPath  _Nonnull cachePath, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
+			[cacheItemsByFileID enumerateKeysAndObjectsUsingBlock:^(OCFileID  _Nonnull cacheFileID, OCItem * _Nonnull cacheItem, BOOL * _Nonnull stop) {
 				OCItem *retrievedItem;
 
-				// Item for this cached path still on the server?
-				if ((retrievedItem = retrievedItemsByPath[cachePath]) == nil)
+				// Item for this cached fileID or path on the server?
+				if ((retrievedItem = retrievedItemsByFileID[cacheFileID]) == nil)
+				{
+					retrievedItem = retrievedItemsByPath[cacheItem.path];
+				}
+
+				if (retrievedItem == nil)
 				{
 					// Cache item no longer on the server
-					if (cacheItem.locallyModified)
+					if ((cacheItem.locallyModified && (cacheItem.localRelativePath!=nil)) || // Reason 1: existing local version that's been modified
+  				            (cacheItem.activeSyncRecordIDs.count > 0)				 // Reason 2: item has active sync records
+					   )
 					{
 						// Preserve locally modified items
 						[queryResults addObject:cacheItem];
