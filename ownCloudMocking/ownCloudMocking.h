@@ -32,3 +32,4 @@ FOUNDATION_EXPORT const unsigned char ownCloudMockingVersionString[];
 #import <ownCloudMocking/OCAuthenticationMethodBasicAuth+OCMocking.h>
 #import <ownCloudMocking/OCMockTestClass.h>
 #import <ownCloudMocking/OCMockTestClass+OCMocking.h>
+#import <ownCloudMocking/OCConnection+OCMocking.h>
