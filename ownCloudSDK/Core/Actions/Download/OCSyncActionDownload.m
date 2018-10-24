@@ -18,6 +18,7 @@
 
 #import "OCSyncActionDownload.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemUpdates.h"
 
 @implementation OCSyncActionDownload
 
@@ -122,7 +123,7 @@
 												latestItem.locallyModified = NO;
 												latestItem.localRelativePath = nil;
 
-												[self.core _performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil];
+												[self.core _performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil queryPostProcessor:nil];
 											}
 
 											OCLogDebug(@"SE: deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);

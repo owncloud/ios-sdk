@@ -47,9 +47,6 @@
 
 @interface OCCore (SyncPrivate)
 
-#pragma mark - Perform updates
-- (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
-
 #pragma mark - Sync issues utilities
 - (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
 - (BOOL)_isConnectivityError:(NSError *)error;
