@@ -26,7 +26,14 @@ typedef void(^OCCoreItemUpdateQueryPostProcessor)(OCCore *core, OCQuery *query, 
 @interface OCCore (ItemUpdates)
 
 #pragma mark - Perform updates
-- (void)_performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems removedItems:(nullable NSArray<OCItem *> *)removedItems updatedItems:(nullable NSArray<OCItem *> *)updatedItems refreshPaths:(nullable NSArray <OCPath> *)refreshPaths queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor;
+- (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
+			removedItems:(nullable NSArray<OCItem *> *)removedItems
+			updatedItems:(nullable NSArray<OCItem *> *)updatedItems
+			refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		       newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
+		     preflightAction:(nullable void(^)(dispatch_block_t completionHandler))preflightAction
+		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
+		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor;
 
 @end
 

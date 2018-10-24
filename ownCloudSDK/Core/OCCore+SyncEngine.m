@@ -197,18 +197,21 @@
 						OCLogDebug(@"SE: record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 						// Perform any preflight-triggered updates
-						[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths queryPostProcessor:nil];
+						[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:^(dispatch_block_t completionHandler){
+							if (syncContext.removeRecords != nil)
+							{
+								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+							}
 
-						if (syncContext.removeRecords != nil)
-						{
-							[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
-						}
+							if (syncContext.updateStoredSyncRecordAfterItemUpdates)
+							{
+								[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
+							}
 
-						if (syncContext.updateStoredSyncRecordAfterItemUpdates)
-						{
-							[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
-						}
+							completionHandler();
+						} postflightAction:nil queryPostProcessor:nil];
 
+						// Tunnel error outside
 						blockError = syncContext.error;
 					}
 				}
@@ -309,7 +312,7 @@
 				OCLogDebug(@"SE: record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 				// Perform any descheduler-triggered updates
-				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths queryPostProcessor:nil];
+				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 
 				error = syncContext.error;
 			}
@@ -592,7 +595,7 @@
 				}];
 
 				// - Perform updates for added/changed/removed items and refresh paths
-				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths queryPostProcessor:nil];
+				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 
 				OCLogDebug(@"SE: record %@ returned from event handling post-processing with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.error);
 			}

@@ -123,7 +123,7 @@
 												latestItem.locallyModified = NO;
 												latestItem.localRelativePath = nil;
 
-												[self.core _performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil queryPostProcessor:nil];
+												[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 											}
 
 											OCLogDebug(@"SE: deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
