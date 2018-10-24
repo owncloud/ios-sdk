@@ -113,6 +113,8 @@
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler
 {
+	__weak OCCore *weakSelf = self;
+
 	[self.vault.database increaseValueForCounter:OCCoreSyncJournalCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -121,10 +123,14 @@
 
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+		OCCore *strongSelf = weakSelf;
+
 		if (completionHandler != nil)
 		{
 			completionHandler(error);
 		}
+
+		[strongSelf postIPCChangeNotification];
 	}];
 }
 
@@ -612,59 +618,79 @@
 	}];
 }
 
-- (void)performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths
-{
-	[self beginActivity:@"perform item updates"];
-
-	[self performProtectedSyncBlock:^NSError *{
-		[self _performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths];
-		return (nil);
-	} completionHandler:^(NSError *error) {
-		[self endActivity:@"perform item updates"];
-	}];
-}
-
 - (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths
 {
 	// - Update metaData table and queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0))
 	{
 		__block OCSyncAnchor syncAnchor = nil;
+		OCWaitInit(cacheUpdatesGroup);
+
+		OCWaitWillStartTask(cacheUpdatesGroup);
 
 		// Update metaData table with changes from the parameter set
 		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			__block NSError *updateError = nil;
+			__block NSError *databaseError = nil;
 
-			if (addedItems.count > 0)
-			{
-				[self.vault.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
+			OCWaitWillStartTask(cacheUpdatesGroup);
 
-			if (removedItems.count > 0)
-			{
-				[self.vault.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
+			[self.database performBatchUpdates:^(OCDatabase *database){
+				if (removedItems.count > 0)
+				{
+					[self.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
 
-			if (updatedItems.count > 0)
-			{
-				[self.vault.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
+				if (addedItems.count > 0)
+				{
+					[self.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
+
+				if (updatedItems.count > 0)
+				{
+					[self.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
+
+				return ((NSError *)nil);
+			} completionHandler:^(OCDatabase *db, NSError *error) {
+				OCWaitDidFinishTask(cacheUpdatesGroup);
+			}];
+
+			// In parallel: remove thumbnails from in-memory cache for removed and updated items
+			OCWaitWillStartTask(cacheUpdatesGroup);
+
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+				for (OCItem *removeItem in removedItems)
+				{
+					[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
+				}
+
+				for (OCItem *updateItem in updatedItems)
+				{
+					[self->_thumbnailCache removeObjectForKey:updateItem.fileID];
+				}
+
+				OCWaitDidFinishTask(cacheUpdatesGroup);
+			});
 
 			syncAnchor = newSyncAnchor;
 
-			return (updateError);
+			return (databaseError);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
 			if (error != nil)
 			{
 				OCLogError(@"SE: error updating metaData database after sync engine result handler pass: %@", error);
 			}
+
+			OCWaitDidFinishTask(cacheUpdatesGroup);
 		}];
+
+		OCWaitForCompletion(cacheUpdatesGroup);
 
 		// Update queries
 		[self beginActivity:@"handle sync event - update queries"];
@@ -673,7 +699,29 @@
 			OCCoreItemList *addedItemList   = ((addedItems.count>0)   ? [OCCoreItemList itemListWithItems:addedItems]   : nil);
 			OCCoreItemList *removedItemList = ((removedItems.count>0) ? [OCCoreItemList itemListWithItems:removedItems] : nil);
 			OCCoreItemList *updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
-			NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
+			__block NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
+
+			void (^BuildAddedUpdatedRemovedItemList)(void) = ^{
+				if (addedUpdatedRemovedItemList==nil)
+				{
+					addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
+
+					if (removedItemList!=nil)
+					{
+						[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
+					}
+
+					if (addedItemList!=nil)
+					{
+						[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
+					}
+
+					if (updatedItemList!=nil)
+					{
+						[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
+					}
+				}
+			};
 
 			for (OCQuery *query in self->_queries)
 			{
@@ -837,57 +885,30 @@
 				// Queries targeting sync anchors
 				if ((query.querySinceSyncAnchor != nil) && (syncAnchor!=nil))
 				{
-					if (addedUpdatedRemovedItemList==nil)
+					BuildAddedUpdatedRemovedItemList();
+
+					if (addedUpdatedRemovedItemList.count > 0)
 					{
-						addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
+						query.state = OCQueryStateWaitingForServerReply;
 
-						if (addedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
-						}
+						[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
 
-						if (updatedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
-						}
+						query.state = OCQueryStateIdle;
 
-						if (removedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
-						}
+						[query setNeedsRecomputation];
 					}
-
-					query.state = OCQueryStateWaitingForServerReply;
-
-					[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
-
-					query.state = OCQueryStateIdle;
-
-					[query setNeedsRecomputation];
 				}
 			}
 
 			// Signal file provider
 			if (self.postFileProviderNotifications)
 			{
-				NSMutableArray <OCItem *> *changedItems = [NSMutableArray new];
+				BuildAddedUpdatedRemovedItemList();
 
-				if (addedItemList.items != nil)
+				if (addedUpdatedRemovedItemList.count > 0)
 				{
-					[changedItems addObjectsFromArray:addedItemList.items];
+					[self signalChangesForItems:addedUpdatedRemovedItemList];
 				}
-
-				if (updatedItemList.items != nil)
-				{
-					[changedItems addObjectsFromArray:updatedItemList.items];
-				}
-
-				if (removedItemList.items != nil)
-				{
-					[changedItems addObjectsFromArray:removedItemList.items];
-				}
-
-				[self signalChangesForItems:changedItems];
 			}
 
 			[self endActivity:@"handle sync event - update queries"];

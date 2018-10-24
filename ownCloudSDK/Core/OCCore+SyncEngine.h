@@ -36,8 +36,6 @@
 
 - (NSProgress *)synchronizeWithServer;
 
-- (void)performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
-
 #pragma mark - Sync Record Scheduling
 - (void)setNeedsToProcessSyncRecords;
 
@@ -49,7 +47,7 @@
 
 @interface OCCore (SyncPrivate)
 
-#pragma mark - Sync update utilities
+#pragma mark - Perform updates
 - (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths;
 
 #pragma mark - Sync issues utilities

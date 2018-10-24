@@ -28,11 +28,13 @@
 #import "OCCache.h"
 #import "OCDatabase.h"
 #import "OCRetainerCollection.h"
+#import "OCIPNotificationCenter.h"
 
 @class OCCore;
 @class OCItem;
 @class OCCoreItemListTask;
 @class OCSyncAction;
+@class OCIPNotificationCenter;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -92,6 +94,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
+
+	OCIPCNotificationName _ipNotificationName;
+	OCIPNotificationCenter *_ipNotificationCenter;
 
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 

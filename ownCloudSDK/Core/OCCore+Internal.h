@@ -35,4 +35,8 @@
 #pragma mark - Sync Engine
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
 
+#pragma mark - Inter-Process change notification/handling
+- (void)postIPCChangeNotification;
+- (void)_checkForChangesByOtherProcessesAndUpdateQueries;
+
 @end

@@ -31,6 +31,7 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "OCItem+OCThumbnail.h"
+#import "OCIPNotificationCenter.h"
 
 @interface OCCore ()
 {
@@ -143,6 +144,8 @@
 		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
+		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
+
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
@@ -164,6 +167,8 @@
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+
+		[self startIPCObservation];
 	}
 
 	return(self);
@@ -171,6 +176,8 @@
 
 - (void)dealloc
 {
+	[self stopIPCObserveration];
+
 	if (_reachabilityMonitor != nil)
 	{
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
@@ -480,18 +487,72 @@
 	}];
 }
 
-#pragma mark - Convenience
+#pragma mark - Tools
 - (OCDatabase *)database
 {
 	return (_vault.database);
 }
 
-#pragma mark - Tools
 - (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
 {
 	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
+}
+
+#pragma mark - Inter-Process change notification/handling
+- (NSString *)ipcNotificationName
+{
+	if (_ipNotificationName == nil)
+	{
+		_ipNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.bookmark.uuid.UUIDString];
+	}
+
+	return (_ipNotificationName);
+}
+
+- (void)startIPCObservation
+{
+	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		[(OCCore *)observer handleIPCChangeNotification];
+	}];
+}
+
+- (void)stopIPCObserveration
+{
+	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
+}
+
+- (void)postIPCChangeNotification
+{
+	[_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+}
+
+- (void)handleIPCChangeNotification
+{
+	OCLogDebug(@"Received IPC change notification");
+
+	[self queueBlock:^{
+		[self _checkForChangesByOtherProcessesAndUpdateQueries];
+	}];
+}
+
+#pragma mark - Check for changes by other processes
+- (void)_checkForChangesByOtherProcessesAndUpdateQueries
+{
+	// Needs to run in queue
+	OCSyncAnchor lastKnownSyncAnchor = _latestSyncAnchor;
+	OCSyncAnchor latestSyncAnchor = nil;
+	NSError *error = nil;
+
+	if ((latestSyncAnchor = [self retrieveLatestSyncAnchorWithError:&error]) != nil)
+	{
+		if (![lastKnownSyncAnchor isEqual:latestSyncAnchor])
+		{
+			// Sync anchor changed, so there may be changes
+
+		}
+	}
 }
 
 #pragma mark - ## Commands
