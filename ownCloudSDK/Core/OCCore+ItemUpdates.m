@@ -106,18 +106,13 @@
 			OCWaitDidFinishTask(cacheUpdatesGroup);
 		}];
 
-		// In parallel: remove thumbnails from in-memory cache for removed and updated items
+		// In parallel: remove thumbnails from in-memory cache for removed items
 		OCWaitWillStartTask(cacheUpdatesGroup);
 
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
 			for (OCItem *removeItem in removedItems)
 			{
 				[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
-			}
-
-			for (OCItem *updateItem in updatedItems)
-			{
-				[self->_thumbnailCache removeObjectForKey:updateItem.fileID];
 			}
 
 			OCWaitDidFinishTask(cacheUpdatesGroup);
