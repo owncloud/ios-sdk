@@ -69,7 +69,7 @@
 		DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30956120580D5F00189B9A /* OCCertificateViewController.m */; };
 		DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */; };
-		DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3422802180765900705508 /* OCCore+ItemUpdates.h */; };
+		DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3422802180765900705508 /* OCCore+ItemUpdates.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3422812180765900705508 /* OCCore+ItemUpdates.m */; };
 		DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -195,7 +195,7 @@
 		DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC03E2072774200DB8E83 /* OCQuery+Internal.m */; };
 		DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0422072CCC900DB8E83 /* OCCoreItemListTask.h */; };
 		DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0432072CCC900DB8E83 /* OCCoreItemListTask.m */; };
-		DCADC0482072CDEA00DB8E83 /* OCCoreItemList.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0462072CDEA00DB8E83 /* OCCoreItemList.h */; };
+		DCADC0482072CDEA00DB8E83 /* OCCoreItemList.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0462072CDEA00DB8E83 /* OCCoreItemList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0472072CDEA00DB8E83 /* OCCoreItemList.m */; };
 		DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC04B2072D54200DB8E83 /* OCSQLiteTableSchema.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */; };

@@ -1217,7 +1217,7 @@
 
 								remainingRenames += 4;
 
-								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@", originalName, modifiedName1, modifiedName2, modifiedName3, originalName);
+								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@ (%@)", originalName, modifiedName1, modifiedName2, modifiedName3, originalName, query.queryResults);
 
 								[core renameItem:item to:modifiedName1 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 									NSLog(@"Renamed %@ -> %@: error=%@ item=%@", originalName, newItem.name, error, newItem);
@@ -1272,6 +1272,10 @@
 						}
 
 						didStartRenames = YES;
+					}
+					else
+					{
+						NSLog(@"Query update! %@", query.queryResults);
 					}
 				}
 			}];

@@ -37,6 +37,8 @@
 		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
 		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
 {
+	[self beginActivity:@"Perform item and query updates"];
+
 	// Ensure protection
 	if (newSyncAnchor == nil)
 	{
@@ -45,7 +47,9 @@
 			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor preflightAction:preflightAction postflightAction:postflightAction queryPostProcessor:queryPostProcessor];
 
 			return ((NSError *)nil);
-		} completionHandler:nil];
+		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			[self endActivity:@"Perform item and query updates"];
+		}];
 
 		return;
 	}
@@ -124,7 +128,7 @@
 	}
 
 	// Update queries
-	if (YES)
+	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (postflightAction!=nil) || (queryPostProcessor!=nil))
 	{
 		[self beginActivity:@"Item Updates - update queries"];
 
@@ -419,6 +423,8 @@
 			[self scheduleItemListTaskForPath:refreshPath];
 		}
 	}
+
+	[self endActivity:@"Perform item and query updates"];
 }
 
 @end
