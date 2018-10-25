@@ -16,5 +16,5 @@
 @end
 
 // Block and mock location for every mockable method
-typedef void(^OCMockPrepareForSetupWithOptionsBlock)(NSDictionary<NSString *, id> *options, void(^completionHandler)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods));
+typedef void(^OCMockOCConnectionPrepareForSetupWithOptionsBlock)(NSDictionary<NSString *, id> *options, void(^completionHandler)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods));
 extern OCMockLocation OCMockLocationOCConnectionPrepareForSetupWithOptions;

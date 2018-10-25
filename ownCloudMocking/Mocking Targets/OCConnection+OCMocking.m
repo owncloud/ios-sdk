@@ -14,14 +14,13 @@
 + (void)load
 {
 	[self addMockLocation:OCMockLocationOCConnectionPrepareForSetupWithOptions
-		 forClassSelector:@selector(prepareForSetupWithOptions:completionHandler:)
+		 forSelector:@selector(prepareForSetupWithOptions:completionHandler:)
 					 with:@selector(ocm_prepareForSetupWithOptions:completionHandler:)];
 }
 
 - (void)ocm_prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
-	NSLog(@"1. ocm_prepareForSetupWithOptions");
-	OCMockPrepareForSetupWithOptionsBlock mockBlock;
+	OCMockOCConnectionPrepareForSetupWithOptionsBlock mockBlock;
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionPrepareForSetupWithOptions]) != nil)
 	{
