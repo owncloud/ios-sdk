@@ -20,7 +20,7 @@
 
 @implementation OCExtensionLocation
 
-+ (instancetype)locationOfType:(OCExtensionType)type identifier:(OCExtensionLocationIdentifier)identifier
++ (instancetype)locationOfType:(nullable OCExtensionType)type identifier:(nullable OCExtensionLocationIdentifier)identifier
 {
 	OCExtensionLocation *location = [self new];
 

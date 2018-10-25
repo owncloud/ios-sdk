@@ -19,12 +19,16 @@
 #import <Foundation/Foundation.h>
 #import "OCExtensionTypes.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCExtensionLocation : NSObject
 
-@property(strong) OCExtensionType type; //!< The type of extension.
+@property(nullable, strong) OCExtensionType type; //!< The type of extension.
 
-@property(strong) OCExtensionLocationIdentifier identifier; //!< Identifier uniquely identifying a particular location in the app / SDK.
+@property(nullable, strong) OCExtensionLocationIdentifier identifier; //!< Identifier uniquely identifying a particular location in the app / SDK.
 
-+ (instancetype)locationOfType:(OCExtensionType)type identifier:(OCExtensionLocationIdentifier)identifier;
++ (instancetype)locationOfType:(nullable OCExtensionType)type identifier:(nullable OCExtensionLocationIdentifier)identifier;
 
 @end
+
+NS_ASSUME_NONNULL_END

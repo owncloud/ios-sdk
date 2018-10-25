@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCExtension.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCExtensionMatch : NSObject
 
 @property(strong,readonly) OCExtension *extension; //!< A matching extension
@@ -27,3 +29,5 @@
 - (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority;
 
 @end
+
+NS_ASSUME_NONNULL_END
