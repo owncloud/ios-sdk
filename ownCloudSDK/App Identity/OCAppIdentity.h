@@ -34,6 +34,8 @@
 	<string>group.com.owncloud.ios-client</string>
 */
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCAppIdentity : NSObject
 {
 	NSString *_appIdentifierPrefix;
@@ -47,22 +49,24 @@
 }
 
 #pragma mark - App Identifiers
-@property(strong,nonatomic) NSString *appIdentifierPrefix;
+@property(strong,nonatomic,nullable) NSString *appIdentifierPrefix;
 
-@property(strong,nonatomic) NSString *keychainAccessGroupIdentifier;
+@property(strong,nonatomic,nullable) NSString *keychainAccessGroupIdentifier;
 
-@property(strong,nonatomic) NSString *appGroupIdentifier;
+@property(strong,nonatomic,nullable) NSString *appGroupIdentifier;
 
-@property(strong,nonatomic) NSString *appName;
+@property(strong,nonatomic,nullable) NSString *appName;
 
 #pragma mark - App Paths
-@property(strong,nonatomic) NSURL *appGroupContainerURL;
+@property(strong,nonatomic,nullable) NSURL *appGroupContainerURL;
 
 #pragma mark - App Resources
-@property(strong,nonatomic) OCKeychain *keychain;
-@property(strong,nonatomic) NSUserDefaults *userDefaults;
+@property(strong,nonatomic,nullable) OCKeychain *keychain;
+@property(strong,nonatomic,nullable) NSUserDefaults *userDefaults;
 
 #pragma mark - Singleton
 @property(class, readonly, strong, nonatomic) OCAppIdentity *sharedAppIdentity;
 
 @end
+
+NS_ASSUME_NONNULL_END
