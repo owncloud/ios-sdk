@@ -220,7 +220,7 @@
 										{
 											OCItem *removeItem;
 
-											if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
+											if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
 											{
 												[updatedFullQueryResults removeObjectIdenticalTo:removeItem];
 											}
@@ -265,7 +265,7 @@
 										{
 											OCItem *removeItem;
 
-											if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
+											if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
 											{
 												NSUInteger replaceAtIndex;
 

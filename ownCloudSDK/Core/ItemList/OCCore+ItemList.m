@@ -274,7 +274,7 @@
 
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier])
+						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || ![retrievedItem.name isEqualToString:cacheItem.name])
 						{
 							// Update item in the cache if the server has a different version
 							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
