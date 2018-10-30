@@ -37,12 +37,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCSyncActionIdentifier identifier;
 
 #pragma mark - Persisted properties
-@property(strong) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action
 @property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on
-@property(readonly,nonatomic) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed.
+@property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed.
+
+@property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action (persisted)
 
 #pragma mark - Ephermal properties
-@property(strong) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
+@property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
 
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item;

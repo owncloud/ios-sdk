@@ -1,5 +1,5 @@
 //
-//  OCSyncActionLocalImport.h
+//  OCSyncActionUpload.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.09.18.
@@ -18,16 +18,20 @@
 
 #import "OCSyncAction.h"
 
-@interface OCSyncActionLocalImport : OCSyncAction
+@interface OCSyncActionUpload : OCSyncAction
 
 // .localItem == folder to import item into
 
-@property(strong) NSString *filename;
+@property(strong) OCItem *parentItem;
+
 @property(strong) NSURL *importFileURL;
-@property(strong) OCItem *placeholderItem;
+@property(assign) BOOL importFileIsTemporaryAlongsideCopy;
+@property(strong) OCChecksum *importFileChecksum;
 
-@property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading 
+@property(strong) NSString *filename;
 
-- (instancetype)initWithParentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL placeholderItem:(OCItem *)placeholderItem;
+@property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading
+
+- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy;
 
 @end

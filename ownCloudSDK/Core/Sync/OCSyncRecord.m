@@ -177,5 +177,4 @@ OCSyncActionIdentifier OCSyncActionIdentifierMove = @"move";
 OCSyncActionIdentifier OCSyncActionIdentifierCopy = @"copy";
 OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder = @"createFolder";
 OCSyncActionIdentifier OCSyncActionIdentifierDownload = @"download";
-OCSyncActionIdentifier OCSyncActionIdentifierLocalImport = @"localImport";
-OCSyncActionIdentifier OCSyncActionIdentifierLocalModification = @"localModification";
+OCSyncActionIdentifier OCSyncActionIdentifierUpload = @"upload";

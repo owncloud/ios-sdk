@@ -69,7 +69,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
-	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithmIdentifier;
+	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	OCUser *_loggedInUser;
 
@@ -98,7 +98,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
-@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithmIdentifier;
+@property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
 @property(strong) OCUser *loggedInUser;
 
@@ -236,6 +236,8 @@ extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure co
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
+extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
+extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 
 #import "OCClassSettings.h"
 

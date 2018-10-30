@@ -59,6 +59,8 @@
 
 @synthesize delegate = _delegate;
 
+@synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
 #pragma mark - Class settings
@@ -128,6 +130,13 @@
 
 		_automaticItemListUpdatesEnabled = YES;
 
+		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
+		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
+		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
+		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
+		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
+		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
+
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
 
@@ -150,6 +159,7 @@
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
+		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
@@ -707,6 +717,104 @@
 			});
 		}
 	}];
+}
+
+#pragma mark - Item location & directory lifecycle
+- (NSURL *)localURLForItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+	}
+
+	return ([self.vault localURLForItem:item]);
+}
+
+- (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
+{
+	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
+}
+
+- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
+{
+	NSURL *temporaryURL = nil;
+	NSURL *baseURL = [self localParentDirectoryURLForItem:item];
+
+	for (NSUInteger attempt=0; attempt < 100; attempt++)
+	{
+		NSString *filename;
+
+		if ((filename = [NSString stringWithFormat:@"%lu-%@.tmp", (unsigned long)attempt, NSUUID.UUID.UUIDString]) != nil)
+		{
+			NSURL *temporaryURLCandidate;
+
+			if ((temporaryURLCandidate = [baseURL URLByAppendingPathComponent:filename]) != nil)
+			{
+				if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryURLCandidate.path])
+				{
+					temporaryURL = temporaryURLCandidate;
+
+					if (returnFileName != NULL)
+					{
+						*returnFileName = filename;
+					}
+				}
+			}
+		}
+	}
+
+	return (temporaryURL);
+}
+
+- (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item
+{
+	return ([[url URLByDeletingLastPathComponent] isEqual:[self localParentDirectoryURLForItem:item]] && [url.pathExtension isEqual:@"tmp"]);
+}
+
+- (NSError *)createDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if (![[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error])
+			{
+				OCLogError(@"Item parent directory creation at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
+}
+
+- (NSError *)deleteDirectoryForItem:(OCItem *)item
+{
+	NSError *error = nil;
+	NSURL *parentURL;
+
+	if ((parentURL = [self localParentDirectoryURLForItem:item]) != nil)
+	{
+		if ([[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
+		{
+			if (![[NSFileManager defaultManager] removeItemAtURL:parentURL error:&error])
+			{
+				OCLogError(@"Item parent directory deletion at %@ failed with error %@", OCLogPrivate(parentURL), error);
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInternal);
+	}
+
+	return (error);
 }
 
 #pragma mark - OCEventHandler methods

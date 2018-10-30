@@ -1385,18 +1385,34 @@
 	}];
 }
 
-- (void)testUploadByImport
+- (void)testUpload
 {
-
 	OCBookmark *bookmark = nil;
 	OCCore *core;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *placeholderCreatedExpectation = [self expectationWithDescription:@"Placeholder created"];
+	XCTestExpectation *modificationItemCreatedExpectation = [self expectationWithDescription:@"Modification item created"];
 	XCTestExpectation *fileUploadedExpectation = [self expectationWithDescription:@"File uploaded"];
+	XCTestExpectation *updatedFileUploadedExpectation = [self expectationWithDescription:@"File uploaded"];
 	NSURL *uploadFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow" withExtension:@"png"];
+	NSURL *modifiedFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow-crystalized" withExtension:@"png"];
 	NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
 	__block BOOL startedUpload = NO;
+	OCChecksum *(^ComputeChecksumForURL)(NSURL *url) = ^(NSURL *url) {
+		__block OCChecksum *checksum = nil;
+
+		OCSyncExec(computeChecksum, {
+			[OCChecksum computeForFile:url checksumAlgorithm:OCChecksumAlgorithmIdentifierSHA1 completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+				checksum = computedChecksum;
+				OCSyncExecDone(computeChecksum);
+			}];
+		});
+
+		return (checksum);
+	};
+	OCChecksum *uploadFileChecksum = ComputeChecksumForURL(uploadFileURL);
+	OCChecksum *modifiedFileChecksum = ComputeChecksumForURL(modifiedFileURL);
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -1454,25 +1470,51 @@
 						{
 							startedUpload = YES;
 
+							// Test upload by import
 							[core importFileNamed:uploadName at:query.rootItem fromURL:uploadFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:^(NSError *error, OCItem *item) {
 								XCTAssert(item!=nil);
+								XCTAssert(item.isPlaceholder);
+								XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:uploadFileChecksum]);
 
 								NSLog(@"### Placeholder item: %@", item);
+
 
 								[placeholderCreatedExpectation fulfill];
 							} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 								XCTAssert(error==nil);
 								XCTAssert(item!=nil);
+								XCTAssert(!item.isPlaceholder);
+								XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:uploadFileChecksum]);
 
 								NSLog(@"### Uploaded item: %@", item);
 
 								[fileUploadedExpectation fulfill];
 
-								// Stop core
-								[core stopWithCompletionHandler:^(id sender, NSError *error) {
-									XCTAssert((error==nil), @"Stopped with error: %@", error);
+								// Test upload by local modification
+								[core reportLocalModificationOfItem:item parentItem:query.rootItem withContentsOfFileAtURL:modifiedFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:^(NSError *error, OCItem *item) {
+									XCTAssert(item!=nil);
+									XCTAssert(!item.isPlaceholder);
+									XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:modifiedFileChecksum]);
 
-									[coreStoppedExpectation fulfill];
+									NSLog(@"### Update \"placeholder\" item=%@ error=%@", item, error);
+
+									[modificationItemCreatedExpectation fulfill];
+								} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+									XCTAssert(error==nil);
+									XCTAssert(item!=nil);
+									XCTAssert(!item.isPlaceholder);
+									XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:modifiedFileChecksum]);
+
+									NSLog(@"### Uploaded updated item=%@, error=%@", item, error);
+
+									[updatedFileUploadedExpectation fulfill];
+
+									// Stop core
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+									}];
 								}];
 							}];
 						}

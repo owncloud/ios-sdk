@@ -24,7 +24,6 @@
 
 #pragma mark - Fileprovider tools
 - (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler;
-- (NSURL *)localURLForItem:(OCItem *)item;
 
 #pragma mark - File provider manager
 - (NSFileProviderManager *)fileProviderManager;

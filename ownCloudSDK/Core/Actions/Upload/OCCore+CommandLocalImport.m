@@ -24,7 +24,7 @@
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
-#import "OCSyncActionLocalImport.h"
+#import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
 
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -35,7 +35,7 @@
 - (NSProgress *)importFileNamed:(NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
-	NSURL *outputURL;
+	NSURL *placeholderOutputURL;
 
 	OCItem *placeholderItem;
 
@@ -56,7 +56,7 @@
 	placeholderItem.path = [parentItem.path stringByAppendingPathComponent:newFileName];
 
 	// Move file into the vault for uploading
-	if ((outputURL = [self.vault localURLForItem:placeholderItem]) != nil)
+	if ((placeholderOutputURL = [self.vault localURLForItem:placeholderItem]) != nil)
 	{
 		BOOL proceed = YES;
 
@@ -71,27 +71,20 @@
 			[placeholderItem updateMetadataFromFileURL:inputFileURL];
 
 			// Create directory for placeholder item
-			if (![[NSFileManager defaultManager] fileExistsAtPath:[[outputURL URLByDeletingLastPathComponent] path]]) // This should always be true since its supposed to be a new file
+			if ((error = [self createDirectoryForItem:placeholderItem]) != nil)
 			{
-				if (![[NSFileManager defaultManager] createDirectoryAtURL:[outputURL URLByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:&error])
-				{
-					OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(outputURL), error);
-				}
-			}
-			else
-			{
-				OCLogWarning(@"Local creation target directory already exists for %@", OCLogPrivate(outputURL));
+				OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(placeholderItem), error);
 			}
 
 			// Move file to placeholder item location
-			if ([[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:outputURL error:&error])
+			if ([[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error])
 			{
 				placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
 				placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
 			}
 			else
 			{
-				OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(outputURL), OCLogPrivate(error));
+				OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
 				criticalError = error;
 			}
 
@@ -132,7 +125,7 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionLocalImport alloc] initWithParentItem:parentItem filename:newFileName importFileURL:outputURL placeholderItem:placeholderItem] allowsRescheduling:NO resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] allowsRescheduling:NO resultHandler:resultHandler]);
 }
 
 @end

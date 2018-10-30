@@ -119,7 +119,6 @@
 		DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */ = {isa = PBXBuildFile; fileRef = DC68057C212EB438006C3B1F /* OCExtensionMatch.m */; };
 		DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */ = {isa = PBXBuildFile; fileRef = DC680583212EC27B006C3B1F /* OCExtension+License.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */ = {isa = PBXBuildFile; fileRef = DC680584212EC27B006C3B1F /* OCExtension+License.m */; };
-		DC6AF4F32163684D00B1802A /* OCSyncActionLocalModification.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CEB2141361200FE43CA /* OCSyncActionLocalModification.m */; };
 		DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CCC2141306100FE43CA /* OCSyncActionCopyMove.h */; };
 		DC708CCF2141306100FE43CA /* OCSyncActionCopyMove.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CCD2141306100FE43CA /* OCSyncActionCopyMove.m */; };
 		DC708CDC214135C000FE43CA /* OCSyncActionCreateFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CDA214135C000FE43CA /* OCSyncActionCreateFolder.h */; };
@@ -128,9 +127,9 @@
 		DC708CE1214135D100FE43CA /* OCSyncActionDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CDF214135D100FE43CA /* OCSyncActionDelete.m */; };
 		DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE2214135E200FE43CA /* OCSyncActionDownload.h */; };
 		DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE3214135E200FE43CA /* OCSyncActionDownload.m */; };
-		DC708CE8214135FE00FE43CA /* OCSyncActionLocalImport.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE6214135FE00FE43CA /* OCSyncActionLocalImport.h */; };
-		DC708CE9214135FE00FE43CA /* OCSyncActionLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE7214135FE00FE43CA /* OCSyncActionLocalImport.m */; };
-		DC708CEC2141361200FE43CA /* OCSyncActionLocalModification.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CEA2141361200FE43CA /* OCSyncActionLocalModification.h */; };
+		DC708CE8214135FE00FE43CA /* OCSyncActionUpload.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CE6214135FE00FE43CA /* OCSyncActionUpload.h */; };
+		DC708CE9214135FE00FE43CA /* OCSyncActionUpload.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CE7214135FE00FE43CA /* OCSyncActionUpload.m */; };
+		DC7185BB216E160500BDEA2A /* rainbow-crystalized.png in Resources */ = {isa = PBXBuildFile; fileRef = DC7185BA216E160500BDEA2A /* rainbow-crystalized.png */; };
 		DC72568020405752006111FA /* OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72567E20405752006111FA /* OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC72568120405752006111FA /* OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72567F20405752006111FA /* OCClassSettings.m */; };
 		DC72E41B2061665D00189B9A /* OCHostSimulator.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41A2061665D00189B9A /* OCHostSimulator.m */; };
@@ -524,10 +523,9 @@
 		DC708CDF214135D100FE43CA /* OCSyncActionDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionDelete.m; sourceTree = "<group>"; };
 		DC708CE2214135E200FE43CA /* OCSyncActionDownload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionDownload.h; sourceTree = "<group>"; };
 		DC708CE3214135E200FE43CA /* OCSyncActionDownload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionDownload.m; sourceTree = "<group>"; };
-		DC708CE6214135FE00FE43CA /* OCSyncActionLocalImport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionLocalImport.h; sourceTree = "<group>"; };
-		DC708CE7214135FE00FE43CA /* OCSyncActionLocalImport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionLocalImport.m; sourceTree = "<group>"; };
-		DC708CEA2141361200FE43CA /* OCSyncActionLocalModification.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionLocalModification.h; sourceTree = "<group>"; };
-		DC708CEB2141361200FE43CA /* OCSyncActionLocalModification.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionLocalModification.m; sourceTree = "<group>"; };
+		DC708CE6214135FE00FE43CA /* OCSyncActionUpload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionUpload.h; sourceTree = "<group>"; };
+		DC708CE7214135FE00FE43CA /* OCSyncActionUpload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionUpload.m; sourceTree = "<group>"; };
+		DC7185BA216E160500BDEA2A /* rainbow-crystalized.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "rainbow-crystalized.png"; sourceTree = "<group>"; };
 		DC72567E20405752006111FA /* OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettings.h; sourceTree = "<group>"; };
 		DC72567F20405752006111FA /* OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettings.m; sourceTree = "<group>"; };
 		DC72E4192061665D00189B9A /* OCHostSimulator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHostSimulator.h; sourceTree = "<group>"; };
@@ -987,8 +985,10 @@
 		DC624F8021494D9800D6AF20 /* Upload */ = {
 			isa = PBXGroup;
 			children = (
-				DC708CD4214131EE00FE43CA /* LocalCreation */,
-				DC708CD5214131FA00FE43CA /* LocalModification */,
+				DC708CE7214135FE00FE43CA /* OCSyncActionUpload.m */,
+				DC708CE6214135FE00FE43CA /* OCSyncActionUpload.h */,
+				DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */,
+				DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */,
 			);
 			path = Upload;
 			sourceTree = "<group>";
@@ -1031,26 +1031,6 @@
 				DCE2661B2113323C0001FB2C /* OCCore+CommandDownload.m */,
 			);
 			path = Download;
-			sourceTree = "<group>";
-		};
-		DC708CD4214131EE00FE43CA /* LocalCreation */ = {
-			isa = PBXGroup;
-			children = (
-				DC708CE7214135FE00FE43CA /* OCSyncActionLocalImport.m */,
-				DC708CE6214135FE00FE43CA /* OCSyncActionLocalImport.h */,
-				DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */,
-			);
-			path = LocalCreation;
-			sourceTree = "<group>";
-		};
-		DC708CD5214131FA00FE43CA /* LocalModification */ = {
-			isa = PBXGroup;
-			children = (
-				DC708CEB2141361200FE43CA /* OCSyncActionLocalModification.m */,
-				DC708CEA2141361200FE43CA /* OCSyncActionLocalModification.h */,
-				DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */,
-			);
-			path = LocalModification;
 			sourceTree = "<group>";
 		};
 		DC72E41C2061666900189B9A /* Host Simulator */ = {
@@ -1532,6 +1512,7 @@
 				DC4AFAAC206A7FDB00189B9A /* SQLTests.m */,
 				DC72E4362063DF7700189B9A /* customSettings.plist */,
 				DCEB94DA21105FDE004EF8D7 /* rainbow.png */,
+				DC7185BA216E160500BDEA2A /* rainbow-crystalized.png */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 				DCC6563C20C979FB00110A97 /* TestTools.m */,
@@ -1616,7 +1597,6 @@
 				DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */,
 				DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
-				DC708CEC2141361200FE43CA /* OCSyncActionLocalModification.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
 				DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */,
 				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
@@ -1704,7 +1684,7 @@
 				DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
-				DC708CE8214135FE00FE43CA /* OCSyncActionLocalImport.h in Headers */,
+				DC708CE8214135FE00FE43CA /* OCSyncActionUpload.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
@@ -1972,6 +1952,7 @@
 				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
 				DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
+				DC7185BB216E160500BDEA2A /* rainbow-crystalized.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2047,7 +2028,7 @@
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
 				DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */,
-				DC708CE9214135FE00FE43CA /* OCSyncActionLocalImport.m in Sources */,
+				DC708CE9214135FE00FE43CA /* OCSyncActionUpload.m in Sources */,
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
@@ -2091,7 +2072,6 @@
 				DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
-				DC6AF4F32163684D00B1802A /* OCSyncActionLocalModification.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
 				DCEA7D982093556600F25223 /* OCCache.m in Sources */,
 				DC07C29D2124526000B815A4 /* OCExtensionContext.m in Sources */,
