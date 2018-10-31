@@ -32,19 +32,21 @@
 	- OCClassSettings thereby provides a central, flexible mechanism to modify the behaviour and default values of classes in the SDK (ready for customization and MDM)
 */
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NSString* OCClassSettingsIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
 @protocol OCClassSettingsSupport <NSObject>
 
-+ (OCClassSettingsIdentifier)classSettingsIdentifier;
-+ (NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
+@property(strong,readonly,class) OCClassSettingsIdentifier classSettingsIdentifier;
++ (nullable NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
 @end
 
 @protocol OCClassSettingsSource <NSObject>
 
-- (NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier;
+- (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
 @end
 
@@ -55,8 +57,10 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 - (void)addSource:(id <OCClassSettingsSource>)source;
 - (void)removeSource:(id <OCClassSettingsSource>)source;
 
-- (NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
+- (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #import "NSObject+OCClassSettings.h"

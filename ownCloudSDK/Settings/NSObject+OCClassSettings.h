@@ -19,8 +19,12 @@
 #import <Foundation/Foundation.h>
 #import "OCClassSettings.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSObject (OCClassSettings)
 
-- (id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key;
+- (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -58,7 +58,7 @@
 	}
 }
 
-- (NSDictionary<NSString *, id> *)flatSettingsDictionary
+- (nullable NSDictionary<NSString *, id> *)flatSettingsDictionary
 {
 	return(@{});
 }
