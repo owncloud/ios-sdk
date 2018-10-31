@@ -17,10 +17,48 @@
  */
 
 #import "OCLogWriter.h"
+#import "OCAppIdentity.h"
 
 @implementation OCLogWriter
 
 @synthesize isOpen = _isOpen;
+@synthesize enabled = _enabled;
+
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		NSNumber *enabledNumber;
+
+		if ((enabledNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:[@"logwriter-enabled:" stringByAppendingString:self.identifier]]) != nil)
+		{
+			_enabled = enabledNumber.boolValue;
+		}
+		else
+		{
+			_enabled = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogEnabledWriters] containsObject:self.identifier];
+		}
+	}
+
+	return (self);
+}
+
+- (OCLogWriterIdentifier)identifier
+{
+	return (OCLogWriterIdentifierStandardOut);
+}
+
+- (NSString *)name
+{
+	return (@"Standard out");
+}
+
+- (void)setEnabled:(BOOL)enabled
+{
+	_enabled = enabled;
+
+	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:enabled forKey:[@"logwriter-enabled:" stringByAppendingString:self.identifier]];
+}
 
 - (NSError *)open
 {
@@ -85,3 +123,5 @@
 }
 
 @end
+
+OCLogWriterIdentifier OCLogWriterIdentifierStandardOut = @"stdout";

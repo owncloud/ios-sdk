@@ -44,6 +44,16 @@ static NSURL *sDefaultLogFileURL;
 	return (sDefaultLogFileURL);
 }
 
+- (OCLogWriterIdentifier)identifier
+{
+	return (OCLogWriterIdentifierFile);
+}
+
+- (NSString *)name
+{
+	return (@"Logfile");
+}
+
 - (instancetype)initWithLogFileURL:(NSURL *)url
 {
 	if ((self = [super init]) != nil)
@@ -115,3 +125,5 @@ static NSURL *sDefaultLogFileURL;
 }
 
 @end
+
+OCLogWriterIdentifier OCLogWriterIdentifierFile = @"file";

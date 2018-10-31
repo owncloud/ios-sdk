@@ -21,12 +21,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
+
 @interface OCLogWriter : NSObject
 {
 	BOOL _isOpen;
+	BOOL _enabled;
 }
 
+@property(strong,readonly,nonatomic) OCLogWriterIdentifier identifier;
+@property(strong,readonly,nonatomic) NSString *name;
+
 @property(readonly) BOOL isOpen;
+@property(assign,nonatomic) BOOL enabled;
 
 - (nullable NSError *)open;	//!< Opens the log for writing
 - (nullable NSError *)close;	//!< Closes the log
@@ -35,5 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)appendMessage:(NSString *)message; //!< Called by the default implementation of -appendMessageWithLogLevel:functionName:file:line:message:
 
 @end
+
+extern OCLogWriterIdentifier OCLogWriterIdentifierStandardOut;
 
 NS_ASSUME_NONNULL_END

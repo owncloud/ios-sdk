@@ -30,4 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCLogWriterIdentifier OCLogWriterIdentifierFile;
+
 NS_ASSUME_NONNULL_END

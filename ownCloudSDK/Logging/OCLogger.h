@@ -17,10 +17,11 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCClassSettings.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, OCLogLevel)
+typedef NS_ENUM(NSInteger, OCLogLevel)
 {
 	OCLogLevelDebug,	//!< Verbose information
 	OCLogLevelDefault,	//!< Default log level
@@ -32,7 +33,7 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 
 @class OCLogWriter;
 
-@interface OCLogger : NSObject
+@interface OCLogger : NSObject <OCClassSettingsSupport>
 {
 	BOOL _maskPrivateData;
 
@@ -42,6 +43,8 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
+
+@property(copy, readonly) NSMutableArray<OCLogWriter *> *writers;
 
 @property(class, readonly, strong, nonatomic) OCLogger *sharedLogger;
 
@@ -56,6 +59,12 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 - (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock; //!< Pauses log writing: closes all writers, executes intermittentBlock, opens all writers, resumes logging
 
 @end
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierLog;
+
+extern OCClassSettingsKey OCClassSettingsKeyLogLevel;
+extern OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask;
+extern OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters;
 
 NS_ASSUME_NONNULL_END
 

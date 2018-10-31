@@ -19,10 +19,14 @@
 #import "OCLogger.h"
 #import "OCLogWriter.h"
 #import "OCLogFileWriter.h"
+#import "OCAppIdentity.h"
 #import <pthread/pthread.h>
 
 static OCLogLevel sOCLogLevel;
+static BOOL sOCLogLevelInitialized;
+
 static BOOL sOCLogMaskPrivateData;
+static BOOL sOCLogMaskPrivateDataInitialized;
 
 @interface OCLogger ()
 {
@@ -31,6 +35,8 @@ static BOOL sOCLogMaskPrivateData;
 @end
 
 @implementation OCLogger
+
+@synthesize writers = _writers;
 
 + (instancetype)sharedLogger
 {
@@ -47,24 +53,91 @@ static BOOL sOCLogMaskPrivateData;
 	return (sharedLogger);
 }
 
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierLog);
+}
+
++ (NSDictionary<OCClassSettingsKey,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	if ([identifier isEqual:OCClassSettingsIdentifierLog])
+	{
+		return (@{
+			OCClassSettingsKeyLogLevel		: @(OCLogLevelDebug),
+			OCClassSettingsKeyLogPrivacyMask	: @(NO),
+			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardOut ]
+		});
+	}
+
+	return (nil);
+}
+
+#pragma mark - Settings
 + (OCLogLevel)logLevel
 {
+	if (!sOCLogLevelInitialized)
+	{
+		NSNumber *logLevelNumber = nil;
+
+		if ((logLevelNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) == nil)
+		{
+			logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel];
+		}
+
+		if (logLevelNumber != nil)
+		{
+			sOCLogLevel = [logLevelNumber integerValue];
+		}
+		else
+		{
+			sOCLogLevel = OCLogLevelOff;
+		}
+
+		sOCLogLevelInitialized = YES;
+	}
+
 	return (sOCLogLevel);
 }
 
 + (void)setLogLevel:(OCLogLevel)newLogLevel
 {
 	sOCLogLevel = newLogLevel;
+
+	[OCAppIdentity.sharedAppIdentity.userDefaults setInteger:newLogLevel forKey:OCClassSettingsKeyLogLevel];
 }
 
 + (BOOL)maskPrivateData
 {
+	if (!sOCLogMaskPrivateDataInitialized)
+	{
+		NSNumber *maskPrivateDataNumber = nil;
+
+		if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogPrivacyMask]) == nil)
+		{
+			maskPrivateDataNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
+		}
+
+		if (maskPrivateDataNumber != nil)
+		{
+			sOCLogMaskPrivateData = maskPrivateDataNumber.boolValue;
+		}
+		else
+		{
+			sOCLogMaskPrivateData = YES;
+		}
+
+		sOCLogMaskPrivateDataInitialized = YES;
+	}
+
 	return (sOCLogMaskPrivateData);
 }
 
 + (void)setMaskPrivateData:(BOOL)maskPrivateData
 {
 	sOCLogMaskPrivateData = maskPrivateData;
+
+	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:maskPrivateData forKey:OCClassSettingsKeyLogPrivacyMask];
 }
 
 #pragma mark - Init
@@ -74,6 +147,18 @@ static BOOL sOCLogMaskPrivateData;
 	{
 		_writers = [NSMutableArray new];
 		_writerQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			// Determine main thread ID
+			if (pthread_main_np() != 0)
+			{
+				uint64_t mainThreadID;
+
+				pthread_threadid_np(pthread_self(), &mainThreadID);
+
+				self->_mainThreadThreadID = mainThreadID;
+			}
+		});
 	}
 
 	return (self);
@@ -87,7 +172,7 @@ static BOOL sOCLogMaskPrivateData;
 #pragma mark - Logging
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...
 {
-	if (logLevel >= sOCLogLevel)
+	if (logLevel >= OCLogger.logLevel)
 	{
 		va_list args;
 
@@ -99,12 +184,11 @@ static BOOL sOCLogMaskPrivateData;
 
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args
 {
-	if (logLevel >= sOCLogLevel)
+	if (logLevel >= OCLogger.logLevel)
 	{
 		NSString *logMessage;
 		NSDate *timestamp;
 		uint64_t threadID = 0, mainThreadID = 0;
-		// mach_port_t rawThreadID = pthread_mach_thread_np(pthread_self());
 
 		pthread_threadid_np(pthread_self(), &threadID);
 
@@ -124,9 +208,34 @@ static BOOL sOCLogMaskPrivateData;
 		dispatch_async(_writerQueue, ^{
 			for (OCLogWriter *writer in self->_writers)
 			{
-				if (writer.isOpen)
+				if (writer.enabled)
 				{
-					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==mainThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line message:logMessage];
+					if (!writer.isOpen)
+					{
+						NSError *error;
+
+						if ((error = [writer open]) != nil)
+						{
+							NSLog(@"Error opening writer %@: %@", writer, error);
+						}
+					}
+
+					if (writer.isOpen)
+					{
+						[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==mainThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line message:logMessage];
+					}
+				}
+				else
+				{
+					if (writer.isOpen)
+					{
+						NSError *error;
+
+						if ((error = [writer close]) != nil)
+						{
+							NSLog(@"Error closing writer %@: %@", writer, error);
+						}
+					}
 				}
 			}
 		});
@@ -135,7 +244,7 @@ static BOOL sOCLogMaskPrivateData;
 
 + (id)applyPrivacyMask:(id)object
 {
-	if (sOCLogMaskPrivateData && (object!=nil))
+	if (self.maskPrivateData && (object!=nil))
 	{
 		// Remove userInfo for NSErrors
 		if ([object isKindOfClass:[NSError class]])
@@ -156,16 +265,7 @@ static BOOL sOCLogMaskPrivateData;
 - (void)addWriter:(OCLogWriter *)logWriter
 {
 	dispatch_async(_writerQueue, ^{
-		NSError *error;
-
-		if ((error = [logWriter open]) == nil)
-		{
-			[self->_writers addObject:logWriter];
-		}
-		else
-		{
-			NSLog(@"Did not add log writer %@: couldn't be opened due to error %@", logWriter, error);
-		}
+		[self->_writers addObject:logWriter];
 	});
 }
 
@@ -184,7 +284,7 @@ static BOOL sOCLogMaskPrivateData;
 {
 	for (OCLogWriter *writer in _writers)
 	{
-		if (!writer.isOpen)
+		if (!writer.isOpen && writer.enabled)
 		{
 			NSError *error;
 
@@ -213,3 +313,9 @@ static BOOL sOCLogMaskPrivateData;
 }
 
 @end
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
+
+OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log--level";
+OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log--privacy-mask";
+OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters = @"log--enabled-writers";
