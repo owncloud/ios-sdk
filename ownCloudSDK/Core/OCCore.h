@@ -101,6 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	BOOL _automaticItemListUpdatesEnabled;
+	NSDate *_lastScheduledItemListUpdateDate;
 
 	__weak id <OCCoreDelegate> _delegate;
 }

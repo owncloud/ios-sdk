@@ -645,7 +645,7 @@
 				// Find new folders and folders with changes
 				for (OCItem *item in items)
 				{
-					if ((item.type == OCItemTypeCollection) && (item.path != nil))
+					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil))
 					{
 						OCItem *cacheItem = itemListTask.cachedSet.itemsByPath[item.path];
 
@@ -696,9 +696,20 @@
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
 		// Check again in 10 seconds (TOOD: add configurable timing and option to enable/disable)
+		NSTimeInterval minimumTimeInterval = 10;
+
 		if (self.state == OCCoreStateRunning)
 		{
-			[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:10]];
+			@synchronized([OCCoreItemList class])
+			{
+				if ((_lastScheduledItemListUpdateDate==nil) || ([_lastScheduledItemListUpdateDate timeIntervalSinceNow]<-(minimumTimeInterval-1)))
+				{
+					_lastScheduledItemListUpdateDate = [NSDate date];
+
+					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval]];
+				}
+			}
+
 		}
 	}
 }

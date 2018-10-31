@@ -55,8 +55,6 @@
 		{
 			if ((_flatSettingsDictionary = [NSMutableDictionary new]) != nil)
 			{
-				// NSLog(@"ENV VARS: %@", environmentVariables);
-
 				[environmentVariables enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull varName, NSString * _Nonnull valueString, BOOL * _Nonnull stop) {
 					if ([varName hasPrefix:self->_prefix])
 					{
