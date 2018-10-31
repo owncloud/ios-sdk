@@ -626,7 +626,7 @@
 				error = request.responseHTTPStatus.error;
 			}
 
-			NSLog(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
+			OCLogDebug(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
 
 			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
 		}];

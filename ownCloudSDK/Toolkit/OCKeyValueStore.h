@@ -29,7 +29,7 @@
 		keyValueStore[@"example"] = [NSDate date];
 
 		// Get value
-		NSLog(@"Example value: %@", keyValueStore[@"example"]);
+		OCLogDebug(@"Example value: %@", keyValueStore[@"example"]);
 
 		// Delete value
  		keyValueStore[@"example"] = nil;

@@ -360,7 +360,7 @@
 
 			return (nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			NSLog(@"Sync anchor increase result: %@ for %@ => %@", error, previousSyncAnchor, newSyncAnchor);
+			OCLogDebug(@"Sync anchor increase result: %@ for %@ => %@", error, previousSyncAnchor, newSyncAnchor);
 		}];
 
 		OCWaitForCompletion(cacheUpdateGroup);
@@ -480,7 +480,7 @@
 		{
 			if (query.state != OCQueryStateIdle)	// Keep updating queries that have not gone through its complete, initial content update
 			{
-				NSLog(@"Task root item: %@, include root item: %d", taskRootItem, query.includeRootItem);
+				OCLogDebug(@"Task root item: %@, include root item: %d", taskRootItem, query.includeRootItem);
 
 				if (query.includeRootItem || (taskRootItem==nil))
 				{

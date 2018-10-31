@@ -432,7 +432,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 				status = SecTrustEvaluate(trustRef, &trustResult);
 			}
 
-			// NSLog(@"Server trust: %@ Status: %d Result: %d", trustRef, status, trustResult);
+			// OCLogDebug(@"Server trust: %@ Status: %d Result: %d", trustRef, status, trustResult);
 
 			if (status == errSecSuccess)
 			{

@@ -23,14 +23,14 @@
 
 + (void)addMockLocation:(OCMockLocation)mockLocation forSelector:(SEL)originalSelector with:(SEL)mockingSelector
 {
-	// NSLog(@"Added mocking location %@", mockLocation);
+	// OCLogDebug(@"Added mocking location %@", mockLocation);
 
 	[self exchangeInstanceMethodImplementationOfClass:self selector:originalSelector withSelector:mockingSelector ofClass:self];
 }
 
 + (void)addMockLocation:(OCMockLocation)mockLocation forClassSelector:(SEL)originalSelector with:(SEL)mockingSelector;
 {
-	// NSLog(@"Added mocking location %@", mockLocation);
+	// OCLogDebug(@"Added mocking location %@", mockLocation);
 
 	[self exchangeClassMethodImplementationOfClass:self selector:originalSelector withSelector:mockingSelector ofClass:self];
 }

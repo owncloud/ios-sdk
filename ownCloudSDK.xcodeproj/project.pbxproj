@@ -40,6 +40,10 @@
 		DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */; };
 		DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889772189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h */; };
 		DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1889782189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m */; };
+		DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC18897E2189EC2600CFB3F9 /* OCLogWriter.h */; };
+		DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */; };
+		DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */; };
+		DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };
 		DC1D4D3F20DC2281005A3DFC /* OCRetainer.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -446,6 +450,10 @@
 		DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCExtensions.m"; sourceTree = "<group>"; };
 		DC1889772189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsFlatSourceEnvironment.h; sourceTree = "<group>"; };
 		DC1889782189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSourceEnvironment.m; sourceTree = "<group>"; };
+		DC18897E2189EC2600CFB3F9 /* OCLogWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogWriter.h; sourceTree = "<group>"; };
+		DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogWriter.m; sourceTree = "<group>"; };
+		DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileWriter.h; sourceTree = "<group>"; };
+		DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileWriter.m; sourceTree = "<group>"; };
 		DC1D4D3520DBD58E005A3DFC /* OCFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFile.h; sourceTree = "<group>"; };
 		DC1D4D3620DBD58E005A3DFC /* OCFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCFile.m; sourceTree = "<group>"; };
 		DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRetainer.h; sourceTree = "<group>"; };
@@ -844,6 +852,17 @@
 				DC75D309214BF1BA00B6FB62 /* NSString+OCFormatting.h */,
 			);
 			path = Foundation;
+			sourceTree = "<group>";
+		};
+		DC18897D2189EC0C00CFB3F9 /* Writers */ = {
+			isa = PBXGroup;
+			children = (
+				DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */,
+				DC18897E2189EC2600CFB3F9 /* OCLogWriter.h */,
+				DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */,
+				DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */,
+			);
+			path = Writers;
 			sourceTree = "<group>";
 		};
 		DC1D4D3420DBD557005A3DFC /* File Handling */ = {
@@ -1333,6 +1352,7 @@
 			children = (
 				DC8556F5204F361100189B9A /* OCLogger.m */,
 				DC8556F4204F361100189B9A /* OCLogger.h */,
+				DC18897D2189EC0C00CFB3F9 /* Writers */,
 			);
 			path = Logging;
 			sourceTree = "<group>";
@@ -1607,6 +1627,7 @@
 				DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */,
 				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
+				DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */,
 				DCC6567820CA696A00110A97 /* OCBookmarkManager.h in Headers */,
 				DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */,
 				DC07C296212450DC00B815A4 /* OCExtensionLocation.h in Headers */,
@@ -1619,6 +1640,7 @@
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCConnectionIssue.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
+				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCParentPath.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
@@ -2068,6 +2090,7 @@
 				DC07C29321244FD800B815A4 /* OCExtension.m in Sources */,
 				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
+				DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */,
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
@@ -2090,6 +2113,7 @@
 				DC708CCF2141306100FE43CA /* OCSyncActionCopyMove.m in Sources */,
 				DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */,
 				DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */,
+				DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */,
 				DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */,
 				DC75D30C214BF1BA00B6FB62 /* NSString+OCFormatting.m in Sources */,
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,

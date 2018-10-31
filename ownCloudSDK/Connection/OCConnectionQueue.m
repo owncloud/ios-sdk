@@ -301,7 +301,7 @@
 					}
 					@catch (NSException *exception)
 					{
-						NSLog(@"Exception creating a task: %@", exception);
+						OCLogDebug(@"Exception creating a task: %@", exception);
 						error = OCErrorWithInfo(OCErrorException, exception);
 					}
 				}
@@ -611,7 +611,7 @@
 #pragma mark - NSURLSessionTaskDelegate
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
-	// NSLog(@"DID COMPLETE: task=%@ error=%@", task, error);
+	// OCLogDebug(@"DID COMPLETE: task=%@ error=%@", task, error);
 	OCLogDebug(@"CQ[%@]: %@ [taskIdentifier=%lu]: didCompleteWithError=%@", _urlSession.configuration.identifier, task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
@@ -671,7 +671,7 @@
 	}
 
 	OCLogDebug(@"CQ[%@]: %@: downloadTask:didFinishDownloadingToURL: %@", _urlSession.configuration.identifier, downloadTask.currentRequest.URL, location);
-	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
+	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session

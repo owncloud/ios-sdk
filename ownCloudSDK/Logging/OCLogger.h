@@ -18,17 +18,26 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NS_ENUM(NSUInteger, OCLogLevel)
 {
 	OCLogLevelDebug,	//!< Verbose information
 	OCLogLevelDefault,	//!< Default log level
 	OCLogLevelWarning,	//!< Log level for warnings
-	OCLogLevelError		//!< Log level for errors
+	OCLogLevelError,	//!< Log level for errors
+
+	OCLogLevelOff		//!< No logging
 };
+
+@class OCLogWriter;
 
 @interface OCLogger : NSObject
 {
 	BOOL _maskPrivateData;
+
+	NSMutableArray<OCLogWriter *> *_writers;
+	dispatch_queue_t _writerQueue;
 }
 
 @property(assign,class) OCLogLevel logLevel;
@@ -36,12 +45,19 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 
 @property(class, readonly, strong, nonatomic) OCLogger *sharedLogger;
 
+#pragma mark - Logging
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...;
 
-- (id)applyPrivacyMask:(id)object;
++ (nullable id)applyPrivacyMask:(nullable id)object;
+
+#pragma mark - Writers
+- (void)addWriter:(OCLogWriter *)logWriter; //!< Adds a writer and opens it
+- (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock; //!< Pauses log writing: closes all writers, executes intermittentBlock, opens all writers, resumes logging
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #define OCLogDebug(format,...)   if (OCLogger.logLevel <= OCLogLevelDebug) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
@@ -51,4 +67,4 @@ typedef NS_ENUM(NSUInteger, OCLogLevel)
 
 #define OCLogError(format,...)   if (OCLogger.logLevel <= OCLogLevelError) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
-#define OCLogPrivate(obj) [[OCLogger sharedLogger] applyPrivacyMask:(obj)]
+#define OCLogPrivate(obj) [OCLogger applyPrivacyMask:(obj)]

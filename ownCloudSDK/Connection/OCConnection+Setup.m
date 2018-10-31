@@ -166,7 +166,7 @@
 		
 		requestCount++;
 
-		// NSLog(@"Loaded URL %@ with error=%@", url, error);
+		// OCLogDebug(@"Loaded URL %@ with error=%@", url, error);
 
 		return (error);
 	};

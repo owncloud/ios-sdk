@@ -98,5 +98,5 @@ extern NSErrorDomain OCErrorDomain;
 extern NSString *OCErrorInfoKey;
 extern NSString *OCErrorIssueKey;
 
-#define OCFRelease(obj) NSLog(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
-#define OCFRetain(obj) NSLog(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);
+#define OCFRelease(obj) OCLogDebug(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
+#define OCFRetain(obj) OCLogDebug(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);

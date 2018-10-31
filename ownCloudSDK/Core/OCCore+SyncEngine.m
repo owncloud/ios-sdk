@@ -90,7 +90,7 @@
 
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler
 {
-//	NSLog(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
+//	OCLogDebug(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
 
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
@@ -765,14 +765,14 @@
 {
 	OCSyncExec(journalDump, {
 		[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-			NSLog(@"Sync Journal Dump:");
-			NSLog(@"==================");
+			OCLogDebug(@"Sync Journal Dump:");
+			OCLogDebug(@"==================");
 
 			for (OCSyncRecord *record in syncRecords)
 			{
-				NSLog(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
-							[record.actionIdentifier leftPaddedMinLength:20],
-							[[record.inProgressSince description] leftPaddedMinLength:20]);
+				OCLogDebug(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+								[record.actionIdentifier leftPaddedMinLength:20],
+								[[record.inProgressSince description] leftPaddedMinLength:20]);
 			}
 
 			OCSyncExecDone(journalDump);
