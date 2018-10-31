@@ -18,6 +18,7 @@
 
 #import "OCLogFileWriter.h"
 #import "OCAppIdentity.h"
+#import "OCMacros.h"
 
 @interface OCLogFileWriter ()
 {
@@ -51,7 +52,7 @@ static NSURL *sDefaultLogFileURL;
 
 - (NSString *)name
 {
-	return (@"Logfile");
+	return (OCLocalized(@"Logfile"));
 }
 
 - (instancetype)initWithLogFileURL:(NSURL *)url
@@ -76,7 +77,7 @@ static NSURL *sDefaultLogFileURL;
 	if (!_isOpen)
 	{
 		// Open file
-		if ((_logFileFD = open((const char *)_logFileURL.path.UTF8String, O_APPEND|O_WRONLY|O_CREAT)) != -1)
+		if ((_logFileFD = open((const char *)_logFileURL.path.UTF8String, O_APPEND|O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR)) != -1)
 		{
 			_isOpen = YES;
 
@@ -122,6 +123,30 @@ static NSURL *sDefaultLogFileURL;
 			write(_logFileFD, messageData.bytes, (size_t)messageData.length);
 		}
 	}
+}
+
+- (NSError *)eraseOrTruncate
+{
+	NSError *error = nil;
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:self.logFileURL.path])
+	{
+		if (![[NSFileManager defaultManager] removeItemAtURL:self.logFileURL error:&error])
+		{
+			int truncateFD;
+
+			if ((truncateFD = open((const char *)_logFileURL.path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
+			{
+				close(truncateFD);
+			}
+			else
+			{
+				error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			}
+		}
+	}
+
+	return (error);
 }
 
 @end

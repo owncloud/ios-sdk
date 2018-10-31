@@ -20,6 +20,7 @@
 #import "OCLogWriter.h"
 #import "OCLogFileWriter.h"
 #import "OCAppIdentity.h"
+#import "OCIPNotificationCenter.h"
 #import <pthread/pthread.h>
 
 static OCLogLevel sOCLogLevel;
@@ -35,8 +36,6 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 @end
 
 @implementation OCLogger
-
-@synthesize writers = _writers;
 
 + (instancetype)sharedLogger
 {
@@ -105,6 +104,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	sOCLogLevel = newLogLevel;
 
 	[OCAppIdentity.sharedAppIdentity.userDefaults setInteger:newLogLevel forKey:OCClassSettingsKeyLogLevel];
+
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
 }
 
 + (BOOL)maskPrivateData
@@ -138,6 +139,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	sOCLogMaskPrivateData = maskPrivateData;
 
 	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:maskPrivateData forKey:OCClassSettingsKeyLogPrivacyMask];
+
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
 }
 
 #pragma mark - Init
@@ -159,6 +162,11 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 				self->_mainThreadThreadID = mainThreadID;
 			}
 		});
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameLogSettingsChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogger * _Nonnull logger, OCIPCNotificationName  _Nonnull notificationName) {
+			sOCLogLevelInitialized = NO;
+			sOCLogMaskPrivateDataInitialized = NO;
+		}];
 	}
 
 	return (self);
@@ -166,6 +174,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 - (void)dealloc
 {
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameLogSettingsChanged];
+
 	[self _closeAllWriters];
 }
 
@@ -280,6 +290,24 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	});
 }
 
+- (NSArray<OCLogWriter *> *)writers
+{
+	return ([NSArray arrayWithArray:_writers]);
+}
+
+- (nullable OCLogWriter *)writerWithIdentifier:(OCLogWriterIdentifier)identifier
+{
+	for (OCLogWriter *writer in _writers)
+	{
+		if ([writer.identifier isEqual:identifier])
+		{
+			return (writer);
+		}
+	}
+
+	return (nil);
+}
+
 - (void)_openAllWriters
 {
 	for (OCLogWriter *writer in _writers)
@@ -319,3 +347,5 @@ OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
 OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log--level";
 OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log--privacy-mask";
 OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters = @"log--enabled-writers";
+
+OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

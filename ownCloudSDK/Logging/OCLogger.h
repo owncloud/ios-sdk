@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCClassSettings.h"
+#import "OCIPNotificationCenter.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,6 +31,8 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 
 	OCLogLevelOff		//!< No logging
 };
+
+typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @class OCLogWriter;
 
@@ -44,9 +47,9 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
 
-@property(copy, readonly) NSMutableArray<OCLogWriter *> *writers;
+@property(copy,readonly,nonatomic) NSArray<OCLogWriter *> *writers;
 
-@property(class, readonly, strong, nonatomic) OCLogger *sharedLogger;
+@property(class,readonly,strong,nonatomic) OCLogger *sharedLogger;
 
 #pragma mark - Logging
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
@@ -56,6 +59,7 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 
 #pragma mark - Writers
 - (void)addWriter:(OCLogWriter *)logWriter; //!< Adds a writer and opens it
+- (nullable OCLogWriter *)writerWithIdentifier:(OCLogWriterIdentifier)identifier;
 - (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock; //!< Pauses log writing: closes all writers, executes intermittentBlock, opens all writers, resumes logging
 
 @end
@@ -65,6 +69,8 @@ extern OCClassSettingsIdentifier OCClassSettingsIdentifierLog;
 extern OCClassSettingsKey OCClassSettingsKeyLogLevel;
 extern OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask;
 extern OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters;
+
+extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
 
 NS_ASSUME_NONNULL_END
 

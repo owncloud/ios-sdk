@@ -28,6 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithLogFileURL:(NSURL *)url;
 
+- (NSError *)eraseOrTruncate;
+
 @end
 
 extern OCLogWriterIdentifier OCLogWriterIdentifierFile;

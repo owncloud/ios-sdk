@@ -40,9 +40,9 @@
 		DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */; };
 		DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889772189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h */; };
 		DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1889782189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m */; };
-		DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC18897E2189EC2600CFB3F9 /* OCLogWriter.h */; };
+		DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC18897E2189EC2600CFB3F9 /* OCLogWriter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */; };
-		DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */; };
+		DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };

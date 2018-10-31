@@ -18,6 +18,7 @@
 
 #import "OCLogWriter.h"
 #import "OCAppIdentity.h"
+#import "OCMacros.h"
 
 @implementation OCLogWriter
 
@@ -28,19 +29,19 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		NSNumber *enabledNumber;
+		[self determineEnabled];
 
-		if ((enabledNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:[@"logwriter-enabled:" stringByAppendingString:self.identifier]]) != nil)
-		{
-			_enabled = enabledNumber.boolValue;
-		}
-		else
-		{
-			_enabled = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogEnabledWriters] containsObject:self.identifier];
-		}
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:[self _enabledNotificationName] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogWriter * _Nonnull logWriter, OCIPCNotificationName  _Nonnull notificationName) {
+			[logWriter determineEnabled];
+		}];
 	}
 
 	return (self);
+}
+
+- (void)dealloc
+{
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:[self _enabledNotificationName]];
 }
 
 - (OCLogWriterIdentifier)identifier
@@ -50,14 +51,40 @@
 
 - (NSString *)name
 {
-	return (@"Standard out");
+	return (OCLocalized(@"Standard output"));
+}
+
+- (OCIPCNotificationName)_enabledNotificationName
+{
+	return ([@"org.owncloud.log-writer-enabled:" stringByAppendingString:self.identifier]);
+}
+
+- (NSString *)_enabledUserDefaultsKey
+{
+	return ([@"logwriter-enabled:" stringByAppendingString:self.identifier]);
+}
+
+- (void)determineEnabled
+{
+	NSNumber *enabledNumber;
+
+	if ((enabledNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:[self _enabledUserDefaultsKey]]) != nil)
+	{
+		_enabled = enabledNumber.boolValue;
+	}
+	else
+	{
+		_enabled = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogEnabledWriters] containsObject:self.identifier];
+	}
 }
 
 - (void)setEnabled:(BOOL)enabled
 {
 	_enabled = enabled;
 
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:enabled forKey:[@"logwriter-enabled:" stringByAppendingString:self.identifier]];
+	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:enabled forKey:[self _enabledUserDefaultsKey]];
+
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self _enabledNotificationName] ignoreSelf:YES];
 }
 
 - (NSError *)open
