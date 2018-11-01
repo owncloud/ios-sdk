@@ -24,6 +24,7 @@
 
 @synthesize isOpen = _isOpen;
 @synthesize enabled = _enabled;
+@synthesize writeHandler = _writeHandler;
 
 - (instancetype)init
 {
@@ -39,6 +40,16 @@
 	return (self);
 }
 
+- (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler
+{
+	if ((self = [self init]) != nil)
+	{
+		self.writeHandler = writeHandler;
+	}
+
+	return (self);
+}
+
 - (void)dealloc
 {
 	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:[self _enabledNotificationName]];
@@ -46,12 +57,12 @@
 
 - (OCLogWriterIdentifier)identifier
 {
-	return (OCLogWriterIdentifierStandardOut);
+	return (OCLogWriterIdentifierStandardError);
 }
 
 - (NSString *)name
 {
-	return (OCLocalized(@"Standard output"));
+	return (OCLocalized(@"Standard error output"));
 }
 
 - (OCIPCNotificationName)_enabledNotificationName
@@ -145,10 +156,12 @@
 
 - (void)appendMessage:(NSString *)message
 {
-	fwrite([message UTF8String], [message lengthOfBytesUsingEncoding:NSUTF8StringEncoding], 1, stdout);
-	fflush(stdout);
+	if (_writeHandler != nil)
+	{
+		_writeHandler(message);
+	}
 }
 
 @end
 
-OCLogWriterIdentifier OCLogWriterIdentifierStandardOut = @"stdout";
+OCLogWriterIdentifier OCLogWriterIdentifierStandardError = @"stderr";

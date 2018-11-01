@@ -32,7 +32,7 @@
 @implementation OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path
+- (nullable OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path
 {
 	OCCoreItemListTask *task = nil;
 

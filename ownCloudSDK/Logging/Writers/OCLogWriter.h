@@ -23,10 +23,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
+typedef void(^OCLogWriteHandler)(NSString *message);
+
 @interface OCLogWriter : NSObject
 {
 	BOOL _isOpen;
 	BOOL _enabled;
+
+	OCLogWriteHandler _writeHandler;
 }
 
 @property(strong,readonly,nonatomic) OCLogWriterIdentifier identifier;
@@ -34,6 +38,10 @@ typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @property(readonly) BOOL isOpen;
 @property(assign,nonatomic) BOOL enabled;
+
+@property(copy) OCLogWriteHandler writeHandler;
+
+- (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler;
 
 - (nullable NSError *)open;	//!< Opens the log for writing
 - (nullable NSError *)close;	//!< Closes the log
@@ -43,6 +51,6 @@ typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @end
 
-extern OCLogWriterIdentifier OCLogWriterIdentifierStandardOut;
+extern OCLogWriterIdentifier OCLogWriterIdentifierStandardError;
 
 NS_ASSUME_NONNULL_END

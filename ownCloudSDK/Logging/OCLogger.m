@@ -19,6 +19,8 @@
 #import "OCLogger.h"
 #import "OCLogWriter.h"
 #import "OCLogFileWriter.h"
+#import "OCLogSource.h"
+#import "OCLogFileSource.h"
 #import "OCAppIdentity.h"
 #import "OCIPNotificationCenter.h"
 #import <pthread/pthread.h>
@@ -43,9 +45,28 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	static OCLogger *sharedLogger;
 
 	dispatch_once(&onceToken, ^{
+		OCLogFileSource *stdErrLogger;
+
 		sharedLogger = [OCLogger new];
 
-		[sharedLogger addWriter:[OCLogWriter new]];
+		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"stderr" logger:sharedLogger]) != nil)
+		{
+			__weak OCLogFileSource *weakStdErrLogger = stdErrLogger;
+
+			[sharedLogger addSource:stdErrLogger];
+
+			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSString * _Nonnull message) {
+				[weakStdErrLogger writeDataToOriginalFile:[message dataUsingEncoding:NSUTF8StringEncoding]];
+			}]];
+		}
+		else
+		{
+			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSString * _Nonnull message) {
+				fwrite([message UTF8String], [message lengthOfBytesUsingEncoding:NSUTF8StringEncoding], 1, stderr);
+				fflush(stderr);
+			}]];
+		}
+
 		[sharedLogger addWriter:[OCLogFileWriter new]];
 	});
 	
@@ -65,7 +86,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		return (@{
 			OCClassSettingsKeyLogLevel		: @(OCLogLevelDebug),
 			OCClassSettingsKeyLogPrivacyMask	: @(NO),
-			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardOut ]
+			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardError ]
 		});
 	}
 
@@ -151,6 +172,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		_writers = [NSMutableArray new];
 		_writerQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
+		_sources = [NSMutableArray new];
+
 		dispatch_async(dispatch_get_main_queue(), ^{
 			// Determine main thread ID
 			if (pthread_main_np() != 0)
@@ -177,6 +200,11 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameLogSettingsChanged];
 
 	[self _closeAllWriters];
+
+	for (OCLogSource *source in _sources)
+	{
+		[source stop];
+	}
 }
 
 #pragma mark - Logging
@@ -198,7 +226,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	{
 		NSString *logMessage;
 		NSDate *timestamp;
-		uint64_t threadID = 0, mainThreadID = 0;
+		uint64_t threadID = 0;
 
 		pthread_threadid_np(pthread_self(), &threadID);
 
@@ -210,46 +238,49 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			}
 		}
 
-		mainThreadID = _mainThreadThreadID;
-
 		timestamp = [NSDate date];
 		logMessage = [[NSString alloc] initWithFormat:formatString arguments:args];
 
-		dispatch_async(_writerQueue, ^{
-			for (OCLogWriter *writer in self->_writers)
+		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line logMessage:logMessage threadID:threadID timestamp:timestamp];
+	}
+}
+
+- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
+{
+	dispatch_async(_writerQueue, ^{
+		for (OCLogWriter *writer in self->_writers)
+		{
+			if (writer.enabled)
 			{
-				if (writer.enabled)
+				if (!writer.isOpen)
 				{
-					if (!writer.isOpen)
-					{
-						NSError *error;
+					NSError *error;
 
-						if ((error = [writer open]) != nil)
-						{
-							NSLog(@"Error opening writer %@: %@", writer, error);
-						}
-					}
-
-					if (writer.isOpen)
+					if ((error = [writer open]) != nil)
 					{
-						[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==mainThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line message:logMessage];
+						NSLog(@"Error opening writer %@: %@", writer, error);
 					}
 				}
-				else
-				{
-					if (writer.isOpen)
-					{
-						NSError *error;
 
-						if ((error = [writer close]) != nil)
-						{
-							NSLog(@"Error closing writer %@: %@", writer, error);
-						}
+				if (writer.isOpen)
+				{
+					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line message:logMessage];
+				}
+			}
+			else
+			{
+				if (writer.isOpen)
+				{
+					NSError *error;
+
+					if ((error = [writer close]) != nil)
+					{
+						NSLog(@"Error closing writer %@: %@", writer, error);
 					}
 				}
 			}
-		});
-	}
+		}
+	});
 }
 
 + (id)applyPrivacyMask:(id)object
@@ -269,6 +300,25 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	}
 
 	return (object);
+}
+
+#pragma mark - Sources
+- (void)addSource:(OCLogSource *)logSource
+{
+	@synchronized(self)
+	{
+		[_sources addObject:logSource];
+		[logSource start];
+	}
+}
+
+- (void)removeSource:(OCLogSource *)logSource
+{
+	@synchronized(self)
+	{
+		[logSource stop];
+		[_sources removeObject:logSource];
+	}
 }
 
 #pragma mark - Writers

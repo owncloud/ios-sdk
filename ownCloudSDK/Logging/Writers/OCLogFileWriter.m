@@ -125,7 +125,7 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (NSError *)eraseOrTruncate
+- (nullable NSError *)eraseOrTruncate
 {
 	NSError *error = nil;
 

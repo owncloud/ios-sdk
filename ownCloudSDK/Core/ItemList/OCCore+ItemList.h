@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path;
+- (nullable OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 #pragma mark - Check for updates

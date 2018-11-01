@@ -1,8 +1,8 @@
 //
-//  OCLogFileWriter.h
+//  OCLogSource.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 31.10.18.
+//  Created by Felix Schwarz on 01.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,22 +16,22 @@
  *
  */
 
-#import "OCLogWriter.h"
+#import <Foundation/Foundation.h>
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCLogFileWriter : OCLogWriter
+@interface OCLogSource : NSObject
 
-@property(strong,class,nonatomic) NSURL *logFileURL;
+@property(weak) OCLogger *logger;
+@property(strong) NSString *name;
 
-@property(strong,readonly) NSURL *logFileURL;
+- (instancetype)initWithName:(NSString *)name logger:(OCLogger *)logger;
 
-- (instancetype)initWithLogFileURL:(NSURL *)url;
-
-- (nullable NSError *)eraseOrTruncate;
+#pragma mark - Start / Stop source
+- (void)start;
+- (void)stop;
 
 @end
-
-extern OCLogWriterIdentifier OCLogWriterIdentifierFile;
 
 NS_ASSUME_NONNULL_END

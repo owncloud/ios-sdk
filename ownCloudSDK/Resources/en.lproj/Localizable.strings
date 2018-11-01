@@ -69,6 +69,6 @@
 "Retrieving file list for %@…" = "Retrieving file list for %@…";
 
 /* Logging */
-"Standard output" = "Standard output";
+"Standard error output" = "Standard error output";
 "Logfile" = "Logfile";
 

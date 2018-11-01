@@ -44,6 +44,10 @@
 		DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */; };
 		DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */; };
+		DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DC188991218B031600CFB3F9 /* OCLogSource.h */; };
+		DC188994218B031600CFB3F9 /* OCLogSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DC188992218B031600CFB3F9 /* OCLogSource.m */; };
+		DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DC188995218B09CC00CFB3F9 /* OCLogFileSource.h */; };
+		DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DC188996218B09CC00CFB3F9 /* OCLogFileSource.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };
 		DC1D4D3F20DC2281005A3DFC /* OCRetainer.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -454,6 +458,10 @@
 		DC18897F2189EC2600CFB3F9 /* OCLogWriter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogWriter.m; sourceTree = "<group>"; };
 		DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileWriter.h; sourceTree = "<group>"; };
 		DC1889832189F50500CFB3F9 /* OCLogFileWriter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileWriter.m; sourceTree = "<group>"; };
+		DC188991218B031600CFB3F9 /* OCLogSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogSource.h; sourceTree = "<group>"; };
+		DC188992218B031600CFB3F9 /* OCLogSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogSource.m; sourceTree = "<group>"; };
+		DC188995218B09CC00CFB3F9 /* OCLogFileSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileSource.h; sourceTree = "<group>"; };
+		DC188996218B09CC00CFB3F9 /* OCLogFileSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileSource.m; sourceTree = "<group>"; };
 		DC1D4D3520DBD58E005A3DFC /* OCFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFile.h; sourceTree = "<group>"; };
 		DC1D4D3620DBD58E005A3DFC /* OCFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCFile.m; sourceTree = "<group>"; };
 		DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRetainer.h; sourceTree = "<group>"; };
@@ -863,6 +871,17 @@
 				DC1889822189F50500CFB3F9 /* OCLogFileWriter.h */,
 			);
 			path = Writers;
+			sourceTree = "<group>";
+		};
+		DC188990218B02FB00CFB3F9 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				DC188992218B031600CFB3F9 /* OCLogSource.m */,
+				DC188991218B031600CFB3F9 /* OCLogSource.h */,
+				DC188996218B09CC00CFB3F9 /* OCLogFileSource.m */,
+				DC188995218B09CC00CFB3F9 /* OCLogFileSource.h */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 		DC1D4D3420DBD557005A3DFC /* File Handling */ = {
@@ -1352,6 +1371,7 @@
 			children = (
 				DC8556F5204F361100189B9A /* OCLogger.m */,
 				DC8556F4204F361100189B9A /* OCLogger.h */,
+				DC188990218B02FB00CFB3F9 /* Sources */,
 				DC18897D2189EC0C00CFB3F9 /* Writers */,
 			);
 			path = Logging;
@@ -1701,9 +1721,11 @@
 				DC0364FB20AAD75700F62732 /* OCCore+SyncEngine.h in Headers */,
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
+				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */,
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
+				DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */,
 				DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
 				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
@@ -2066,6 +2088,7 @@
 				DC07C297212450DC00B815A4 /* OCExtensionLocation.m in Sources */,
 				DC971BEF20D15D4400428EF1 /* OCSQLiteQueryCondition.m in Sources */,
 				DC446C84206B8DB500189B9A /* OCRunLoopThread.m in Sources */,
+				DC188994218B031600CFB3F9 /* OCLogSource.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
 				DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */,
 				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
@@ -2140,6 +2163,7 @@
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
 				DC708CE1214135D100FE43CA /* OCSyncActionDelete.m in Sources */,
+				DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */,
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
 				DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */,

@@ -34,11 +34,14 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 
 typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
+@class OCLogSource;
 @class OCLogWriter;
 
 @interface OCLogger : NSObject <OCClassSettingsSupport>
 {
 	BOOL _maskPrivateData;
+
+	NSMutableArray<OCLogSource *> *_sources;
 
 	NSMutableArray<OCLogWriter *> *_writers;
 	dispatch_queue_t _writerQueue;
@@ -51,11 +54,18 @@ typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @property(class,readonly,strong,nonatomic) OCLogger *sharedLogger;
 
-#pragma mark - Logging
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...;
-
+#pragma mark - Privacy masking
 + (nullable id)applyPrivacyMask:(nullable id)object;
+
+#pragma mark - Logging
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args;
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...;
+
+- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp;
+
+#pragma mark - Sources
+- (void)addSource:(OCLogSource *)logSource;
+- (void)removeSource:(OCLogSource *)logSource;
 
 #pragma mark - Writers
 - (void)addWriter:(OCLogWriter *)logWriter; //!< Adds a writer and opens it
