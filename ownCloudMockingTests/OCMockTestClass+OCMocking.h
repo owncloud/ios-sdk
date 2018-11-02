@@ -8,6 +8,7 @@
 
 #import "OCMockTestClass.h"
 #import "OCMockManager.h"
+#import "OCMockTestClass.h"
 
 @interface OCMockTestClass (OCMocking)
 
