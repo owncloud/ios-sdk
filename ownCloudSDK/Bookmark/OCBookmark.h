@@ -48,7 +48,7 @@ typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 + (instancetype)bookmarkForURL:(NSURL *)url; //!< Creates a bookmark for the ownCloud server with the specified URL.
 
 #pragma mark - Persist / Restore
-+ (instancetype)bookmarkFromBookmarkData:(NSData *)bookmarkData; //!< Creates a bookmark from BookmarkData
++ (instancetype)bookmarkFromBookmarkData:(NSData *)bookmarkData; //!< Creates a bookmark from BookmarkData.
 - (NSData *)bookmarkData; //!< Returns the BookmarkData for the bookmark, suitable for saving to disk.
 
 #pragma mark - Data replacement
