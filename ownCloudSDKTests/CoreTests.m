@@ -752,7 +752,7 @@
 	OCCore *core;
 	OCBookmark *bookmark = nil;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
-	XCTestExpectation *coreErrorExpectation = [self expectationWithDescription:@"Core reported error"];
+	__block XCTestExpectation *coreErrorExpectation = [self expectationWithDescription:@"Core reported error"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 
 	// Create bookmark for demo.owncloud.org
@@ -767,16 +767,23 @@
 	__weak CoreTests *weakSelf = self;
 
 	coreErrorHandler = ^(OCCore *core, NSError *error, OCConnectionIssue *issue) {
-		_XCTPrimitiveAssertTrue(weakSelf, (error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain]), @"(error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain])"); // Expected error received
-		[coreErrorExpectation fulfill];
+		NSLog(@"######### Handle error: %@, issue: %@", error, issue);
 
-		// Stop core
-		[core stopWithCompletionHandler:^(id sender, NSError *error) {
-			_XCTPrimitiveAssertTrue(weakSelf, (error==nil), @"Stopped without error");
-			NSLog(@"Stopped with error: %@", error);
+		if (coreErrorExpectation != nil)
+		{
+			_XCTPrimitiveAssertTrue(weakSelf, (error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain]), @"(error.code == OCErrorAuthorizationFailed) && ([error.domain isEqual:OCErrorDomain])"); // Expected error received
 
-			[coreStoppedExpectation fulfill];
-		}];
+			[coreErrorExpectation fulfill];
+			coreErrorExpectation = nil;
+
+			// Stop core
+			[core stopWithCompletionHandler:^(id sender, NSError *error) {
+				_XCTPrimitiveAssertTrue(weakSelf, (error==nil), @"Stopped without error");
+				NSLog(@"Stopped with error: %@", error);
+
+				[coreStoppedExpectation fulfill];
+			}];
+		}
 	};
 
 	// Start core

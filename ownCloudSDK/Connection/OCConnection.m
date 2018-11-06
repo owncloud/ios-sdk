@@ -513,6 +513,12 @@
 			[connectionQueues addObject:self->_downloadQueue];
 			[connectionQueues addObject:self->_commandQueue];
 
+			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
+			{
+				OCLogWarning(@"OCConnection: clearing out attached extension queues before they finished: %@", self->_attachedExtensionQueuesBySessionIdentifier);
+				[connectionQueues addObjectsFromArray:self->_attachedExtensionQueuesBySessionIdentifier.allValues];
+			}
+
 			for (OCConnectionQueue *connectionQueue in connectionQueues)
 			{
 				dispatch_group_enter(waitQueueTerminationGroup);
@@ -528,6 +534,7 @@
 			self->_uploadQueue = nil;
 			self->_downloadQueue = nil;
 			self->_commandQueue = nil;
+			[self->_attachedExtensionQueuesBySessionIdentifier removeAllObjects];
 
 			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
 			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
@@ -619,7 +626,7 @@
 				error = request.responseHTTPStatus.error;
 			}
 
-			NSLog(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
+			OCLogDebug(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
 
 			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
 		}];
@@ -1600,11 +1607,18 @@
 
 - (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier
 {
+	OCConnectionQueue *resumedBackgroundConnectionQueue = nil;
+
 	if (backgroundSessionIdentifier == nil) { return; }
 
-	@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+	if ((resumedBackgroundConnectionQueue = _attachedExtensionQueuesBySessionIdentifier[backgroundSessionIdentifier]) != nil)
 	{
-		[_attachedExtensionQueuesBySessionIdentifier removeObjectForKey:backgroundSessionIdentifier];
+		@synchronized(_attachedExtensionQueuesBySessionIdentifier)
+		{
+			[_attachedExtensionQueuesBySessionIdentifier removeObjectForKey:backgroundSessionIdentifier];
+		}
+
+		[resumedBackgroundConnectionQueue finishTasksAndInvalidateWithCompletionHandler:nil];
 	}
 }
 

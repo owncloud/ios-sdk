@@ -27,6 +27,12 @@
 @synthesize itemsByPath = _itemsByPath;
 @synthesize itemPathsSet = _itemPathsSet;
 
+@synthesize itemsByFileID = _itemsByFileID;
+@synthesize itemFileIDsSet = _itemFileIDsSet;
+
+@synthesize itemsByParentPaths = _itemsByParentPaths;
+@synthesize itemParentPaths = _itemParentPaths;
+
 @synthesize error = _error;
 
 + (instancetype)itemListWithItems:(NSArray <OCItem *> *)items
@@ -96,6 +102,43 @@
 	}
 
 	return (_itemPathsSet);
+}
+
+- (NSMutableDictionary<OCFileID,OCItem *> *)itemsByFileID
+{
+	if (_itemsByFileID == nil)
+	{
+		_itemsByFileID = [NSMutableDictionary new];
+
+		for (OCItem *item in self.items)
+		{
+			if (item.fileID != nil)
+			{
+				_itemsByFileID[item.fileID] = item;
+			}
+		}
+	}
+
+	return (_itemsByFileID);
+}
+
+- (NSSet<OCFileID> *)itemFileIDsSet
+{
+	if (_itemFileIDsSet == nil)
+	{
+		NSArray<OCPath> *itemFileIDs;
+
+		if ((itemFileIDs = [self.itemsByFileID allKeys]) != nil)
+		{
+			_itemFileIDsSet = [[NSSet alloc] initWithArray:itemFileIDs];
+		}
+		else
+		{
+			_itemFileIDsSet = [NSSet new];
+		}
+	}
+
+	return (_itemFileIDsSet);
 }
 
 - (NSMutableDictionary<OCPath,NSMutableArray<OCItem *> *> *)itemsByParentPaths

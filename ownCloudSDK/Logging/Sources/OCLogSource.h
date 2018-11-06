@@ -1,8 +1,8 @@
 //
-//  OCExtensionMatch.h
+//  OCLogSource.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 23.08.18.
+//  Created by Felix Schwarz on 01.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,16 +17,20 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCExtension.h"
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCExtensionMatch : NSObject
+@interface OCLogSource : NSObject
 
-@property(strong,readonly) OCExtension *extension; //!< A matching extension
-@property(assign,readonly) OCExtensionPriority priority; //!< The priority with which the extension matched
+@property(weak) OCLogger *logger;
+@property(strong) NSString *name;
 
-- (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority;
+- (instancetype)initWithName:(NSString *)name logger:(OCLogger *)logger;
+
+#pragma mark - Start / Stop source
+- (void)start;
+- (void)stop;
 
 @end
 

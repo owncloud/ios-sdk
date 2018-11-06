@@ -281,6 +281,11 @@
 
 	self.activeSyncRecordIDs  = item.activeSyncRecordIDs;
 	self.syncActivity 	  = item.syncActivity;
+
+	if (self.parentFileID == nil)
+	{
+		self.parentFileID = item.parentFileID;
+	}
 }
 
 #pragma mark - File tools

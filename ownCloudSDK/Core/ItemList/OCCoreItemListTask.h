@@ -46,11 +46,15 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 @property(copy) OCCoreItemListTaskChangeHandler changeHandler;
 
+@property(strong) OCCoreItemListTask *nextItemListTask;
+
 - (instancetype)initWithCore:(OCCore *)core path:(OCPath)path;
 
 - (void)update;
 
 - (void)forceUpdateCacheSet;
 - (void)forceUpdateRetrievedSet;
+
+- (void)_updateCacheSet;
 
 @end

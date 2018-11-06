@@ -1,8 +1,8 @@
 //
-//  OCExtensionMatch.h
+//  OCLogFileWriter.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 23.08.18.
+//  Created by Felix Schwarz on 31.10.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,22 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCExtension.h"
+#import "OCLogWriter.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCExtensionMatch : NSObject
+@interface OCLogFileWriter : OCLogWriter
 
-@property(strong,readonly) OCExtension *extension; //!< A matching extension
-@property(assign,readonly) OCExtensionPriority priority; //!< The priority with which the extension matched
+@property(strong,class,nonatomic) NSURL *logFileURL;
 
-- (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority;
+@property(strong,readonly) NSURL *logFileURL;
+
+- (instancetype)initWithLogFileURL:(NSURL *)url;
+
+- (nullable NSError *)eraseOrTruncate;
 
 @end
+
+extern OCLogWriterIdentifier OCLogWriterIdentifierFile;
 
 NS_ASSUME_NONNULL_END

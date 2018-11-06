@@ -159,7 +159,7 @@ OCAuthenticationMethodAutoRegister
 					// Obtain Authorization Code
 					if ((authorizationCode = [callbackURL queryParameters][@"code"]) != nil)
 					{
-						// NSLog(@"Authorization Code: %@", authorizationCode);
+						// OCLogDebug(@"Authorization Code: %@", authorizationCode);
 
 						// Send Access Token Request
 						[self 	_sendTokenRequestToConnection:connection
@@ -351,7 +351,7 @@ OCAuthenticationMethodAutoRegister
 		
 		// Send Token Request
 		[connection sendRequest:tokenRequest toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-			NSLog(@"Token Request Result: %@, %@ %@ %@", error, request.response, request.responseBodyAsString, [request responseBodyConvertedDictionaryFromJSONWithError:NULL]);
+			OCLogDebug(@"Token Request Result: %@, %@ %@ %@", error, request.response, request.responseBodyAsString, [request responseBodyConvertedDictionaryFromJSONWithError:NULL]);
 
 			// Handle Token Request Result
 			if (error == nil)

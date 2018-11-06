@@ -97,6 +97,14 @@
 				unlocalizedString = @"Request completed with error.";
 			break;
 
+			case OCErrorRequestURLSessionInvalidated:
+				unlocalizedString = @"Request couldn't be scheduled because the underlying URL session has been invalidated.";
+			break;
+
+			case OCErrorException:
+				unlocalizedString = @"An exception occured.";
+			break;
+
 			case OCErrorResponseUnknownFormat:
 				unlocalizedString = @"Response was in an unknown format.";
 			break;

@@ -1,8 +1,8 @@
 //
-//  OCExtensionLocation.m
+//  OCLogSource.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 15.08.18.
+//  Created by Felix Schwarz on 01.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,29 @@
  *
  */
 
-#import "OCExtensionLocation.h"
+#import "OCLogSource.h"
 
-@implementation OCExtensionLocation
+@implementation OCLogSource
 
-+ (instancetype)locationOfType:(nullable OCExtensionType)type identifier:(nullable OCExtensionLocationIdentifier)identifier
+#pragma mark - Init
+- (instancetype)initWithName:(NSString *)name logger:(OCLogger *)logger
 {
-	OCExtensionLocation *location = [self new];
+	if ((self = [super init]) != nil)
+	{
+		_name = name;
+		_logger = logger;
+	}
 
-	location.type = type;
-	location.identifier = identifier;
+	return (self);
+}
 
-	return (location);
+#pragma mark - Start / Stop source
+- (void)start
+{
+}
+
+- (void)stop
+{
 }
 
 @end

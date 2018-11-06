@@ -658,7 +658,7 @@
 	XCTestExpectation *fileCopiedExpectation = [self expectationWithDescription:@"File copied"];
 	XCTestExpectation *fileCopiedToExistingLocationExpectation = [self expectationWithDescription:@"File copied to existing location failed"];
 	XCTestExpectation *folderCopiedExpectation = [self expectationWithDescription:@"Folder copied"];
-	XCTestExpectation *targetRemovedStateChangeExpectation = [self expectationWithDescription:@"State changed to target removed"];
+	__block XCTestExpectation *targetRemovedStateChangeExpectation = [self expectationWithDescription:@"State changed to target removed"];
 	__block XCTestExpectation *fileCopiedNotificationExpectation = [self expectationWithDescription:@"File copied notification"];
 	__block XCTestExpectation *folderCopiedNotificationExpectation = [self expectationWithDescription:@"Folder copied notification"];
 	NSString *folderName = NSUUID.UUID.UUIDString;
@@ -789,7 +789,13 @@
 
 									if (query.state == OCQueryStateTargetRemoved)
 									{
+										if (targetRemovedStateChangeExpectation == nil)
+										{
+											NSLog(@"Duplicate removal call!");
+										}
+
 										[targetRemovedStateChangeExpectation fulfill];
+										targetRemovedStateChangeExpectation = nil;
 									}
 								}];
 							};
@@ -1211,7 +1217,7 @@
 
 								remainingRenames += 4;
 
-								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@", originalName, modifiedName1, modifiedName2, modifiedName3, originalName);
+								NSLog(@"Renaming %@ -> %@ -> %@ -> %@ -> %@ (%@)", originalName, modifiedName1, modifiedName2, modifiedName3, originalName, query.queryResults);
 
 								[core renameItem:item to:modifiedName1 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 									NSLog(@"Renamed %@ -> %@: error=%@ item=%@", originalName, newItem.name, error, newItem);
@@ -1266,6 +1272,10 @@
 						}
 
 						didStartRenames = YES;
+					}
+					else
+					{
+						NSLog(@"Query update! %@", query.queryResults);
 					}
 				}
 			}];

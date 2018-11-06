@@ -28,11 +28,13 @@
 #import "OCCache.h"
 #import "OCDatabase.h"
 #import "OCRetainerCollection.h"
+#import "OCIPNotificationCenter.h"
 
 @class OCCore;
 @class OCItem;
 @class OCCoreItemListTask;
 @class OCSyncAction;
+@class OCIPNotificationCenter;
 
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
@@ -57,6 +59,8 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue;
 
 @end
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport>
 {
@@ -91,9 +95,13 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
 
+	OCIPCNotificationName _ipNotificationName;
+	OCIPNotificationCenter *_ipNotificationCenter;
+
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	BOOL _automaticItemListUpdatesEnabled;
+	NSDate *_lastScheduledItemListUpdateDate;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -126,8 +134,8 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (void)unregisterEventHandler; //!< Unregisters the core as an event handler. Should only be called after the core has been stopped and called the completionHandler. This call is needed to clear the last reference to the core and remove it from memory.
 
 #pragma mark - Start / Stop Core
-- (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler;
-- (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler;
+- (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler;
+- (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler;
 
 #pragma mark - Query
 - (void)startQuery:(OCQuery *)query;	//!< Starts a query
@@ -135,36 +143,24 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 
-- (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
-- (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
 
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself.
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
 
-- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
+- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
 
-- (NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
-- (NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
+- (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
+- (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 
-@end
-
-@interface OCCore (CommandDownload)
-- (NSProgress *)downloadItem:(OCItem *)item options:(NSDictionary *)options resultHandler:(OCCoreDownloadResultHandler)resultHandler;
-@end
-
-@interface OCCore (CommandLocalImport)
-- (NSProgress *)importFileNamed:(NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler;
-@end
-
-@interface OCCore (CommandLocalModification)
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL * __nullable)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler;
 @end
 
 //@interface OCCore (FileManagement)
@@ -177,19 +173,33 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
 //@end
 
+@interface OCCore (CommandDownload)
+- (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandLocalImport)
+- (nullable NSProgress *)importFileNamed:(nullable NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler;
+@end
+
+@interface OCCore (CommandLocalModification)
+- (nullable NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(nullable NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler;
+@end
+
 @interface OCCore (CommandCreateFolder)
-- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandDelete)
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandCopyMove)
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
-- (NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
+
+NS_ASSUME_NONNULL_END
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 

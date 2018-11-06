@@ -29,6 +29,7 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "NSString+OCFormatting.h"
+#import "OCCore+ItemUpdates.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -89,6 +90,8 @@
 
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler
 {
+//	OCLogDebug(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
+
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -111,6 +114,8 @@
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler
 {
+	__weak OCCore *weakSelf = self;
+
 	[self.vault.database increaseValueForCounter:OCCoreSyncJournalCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -119,10 +124,14 @@
 
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+		OCCore *strongSelf = weakSelf;
+
 		if (completionHandler != nil)
 		{
 			completionHandler(error);
 		}
+
+		[strongSelf postIPCChangeNotification];
 	}];
 }
 
@@ -188,18 +197,21 @@
 						OCLogDebug(@"SE: record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 						// Perform any preflight-triggered updates
-						[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+						[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:^(dispatch_block_t completionHandler){
+							if (syncContext.removeRecords != nil)
+							{
+								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+							}
 
-						if (syncContext.removeRecords != nil)
-						{
-							[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
-						}
+							if (syncContext.updateStoredSyncRecordAfterItemUpdates)
+							{
+								[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
+							}
 
-						if (syncContext.updateStoredSyncRecordAfterItemUpdates)
-						{
-							[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
-						}
+							completionHandler();
+						} postflightAction:nil queryPostProcessor:nil];
 
+						// Tunnel error outside
 						blockError = syncContext.error;
 					}
 				}
@@ -269,7 +281,7 @@
 	}];
 }
 
-- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
 {
 	__block NSError *error = nil;
 	OCSyncAction *syncAction;
@@ -300,7 +312,7 @@
 				OCLogDebug(@"SE: record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 				// Perform any descheduler-triggered updates
-				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 
 				error = syncContext.error;
 			}
@@ -311,19 +323,19 @@
 	{
 		if (syncRecord.resultHandler != nil)
 		{
-			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, syncRecord);
+			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, parameter);
 		}
 	}
 
 	return (error);
 }
 
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
 {
 	if (syncRecord==nil) { return; }
 
 	[self performProtectedSyncBlock:^NSError *{
-		return ([self _descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler resultHandlerError:resultHandlerError]);
+		return ([self _descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:parameter resultHandlerError:resultHandlerError]);
 	} completionHandler:^(NSError *error) {
 		if (error != nil)
 		{
@@ -400,7 +412,7 @@
 					OCLogDebug(@"SE: record %@ has been cancelled - removing", syncRecord);
 
 					// Deschedule & call resultHandler
-					[self _descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+					[self _descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 					continue;
 				}
 
@@ -559,11 +571,6 @@
 
 				syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
 
-				if (syncContext.issues.count != 0)
-				{
-					[issues addObjectsFromArray:syncContext.issues];
-				}
-
 				error = syncContext.error;
 			}
 
@@ -588,7 +595,7 @@
 				}];
 
 				// - Perform updates for added/changed/removed items and refresh paths
-				[self _performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths];
+				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 
 				OCLogDebug(@"SE: record %@ returned from event handling post-processing with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.error);
 			}
@@ -615,305 +622,6 @@
 	}];
 }
 
-- (void)performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths
-{
-	[self beginActivity:@"perform item updates"];
-
-	[self performProtectedSyncBlock:^NSError *{
-		[self _performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths];
-		return (nil);
-	} completionHandler:^(NSError *error) {
-		[self endActivity:@"perform item updates"];
-	}];
-}
-
-- (void)_performUpdatesForAddedItems:(NSArray<OCItem *> *)addedItems removedItems:(NSArray<OCItem *> *)removedItems updatedItems:(NSArray<OCItem *> *)updatedItems refreshPaths:(NSArray <OCPath> *)refreshPaths
-{
-	// - Update metaData table and queries
-	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0))
-	{
-		__block OCSyncAnchor syncAnchor = nil;
-
-		// Update metaData table with changes from the parameter set
-		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			__block NSError *updateError = nil;
-
-			if (addedItems.count > 0)
-			{
-				[self.vault.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
-
-			if (removedItems.count > 0)
-			{
-				[self.vault.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
-
-			if (updatedItems.count > 0)
-			{
-				[self.vault.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { updateError = error; }
-				}];
-			}
-
-			syncAnchor = newSyncAnchor;
-
-			return (updateError);
-		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			if (error != nil)
-			{
-				OCLogError(@"SE: error updating metaData database after sync engine result handler pass: %@", error);
-			}
-		}];
-
-		// Update queries
-		[self beginActivity:@"handle sync event - update queries"];
-
-		[self queueBlock:^{
-			OCCoreItemList *addedItemList   = ((addedItems.count>0)   ? [OCCoreItemList itemListWithItems:addedItems]   : nil);
-			OCCoreItemList *removedItemList = ((removedItems.count>0) ? [OCCoreItemList itemListWithItems:removedItems] : nil);
-			OCCoreItemList *updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
-			NSMutableArray <OCItem *> *addedUpdatedRemovedItemList = nil;
-
-			for (OCQuery *query in self->_queries)
-			{
-				// Queries targeting directories
-				if (query.queryPath != nil)
-				{
-					// Only update queries that have already gone through their complete, initial content update
-					if (query.state == OCQueryStateIdle)
-					{
-						__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
-						__block OCCoreItemList *updatedFullQueryResultsItemList = nil;
-
-						void (^GetUpdatedFullResultsReady)(void) = ^{
-							if (updatedFullQueryResults == nil)
-							{
-								NSMutableArray <OCItem *> *fullQueryResults;
-
-								if ((fullQueryResults = query.fullQueryResults) != nil)
-								{
-									updatedFullQueryResults = [fullQueryResults mutableCopy];
-								}
-								else
-								{
-									updatedFullQueryResults = [NSMutableArray new];
-								}
-							}
-
-							if (updatedFullQueryResultsItemList == nil)
-							{
-								updatedFullQueryResultsItemList = [OCCoreItemList itemListWithItems:updatedFullQueryResults];
-							}
-						};
-
-						if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[query.queryPath].count > 0))
-						{
-							// Items were added in the target path of this query
-							GetUpdatedFullResultsReady();
-
-							for (OCItem *item in addedItemList.itemsByParentPaths[query.queryPath])
-							{
-								[updatedFullQueryResults addObject:item];
-							}
-						}
-
-						if (removedItemList != nil)
-						{
-							if (removedItemList.itemsByParentPaths[query.queryPath].count > 0)
-							{
-								// Items were removed in the target path of this query
-								GetUpdatedFullResultsReady();
-
-								for (OCItem *item in removedItemList.itemsByParentPaths[query.queryPath])
-								{
-									if (item.path != nil)
-									{
-										OCItem *removeItem;
-
-										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
-										{
-											[updatedFullQueryResults removeObject:removeItem];
-										}
-									}
-								}
-							}
-
-							if (removedItemList.itemsByPath[query.queryPath] != nil)
-							{
-								// The target of this query was removed
-								updatedFullQueryResults = [NSMutableArray new];
-								query.state = OCQueryStateTargetRemoved;
-							}
-						}
-
-						if ((updatedItemList != nil) && (query.state != OCQueryStateTargetRemoved))
-						{
-							OCItem *updatedRootItem = nil;
-
-							if (updatedItemList.itemsByParentPaths[query.queryPath].count > 0)
-							{
-								// Items were updated
-								GetUpdatedFullResultsReady();
-
-								for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
-								{
-									if (item.path != nil)
-									{
-										OCItem *removeItem;
-
-										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[item.path]) != nil)
-										{
-											[updatedFullQueryResults removeObject:removeItem];
-										}
-
-										[updatedFullQueryResults addObject:item];
-									}
-								}
-							}
-
-							if ((updatedRootItem = updatedItemList.itemsByPath[query.queryPath]) != nil)
-							{
-								// Root item of query was updated
-								query.rootItem = updatedRootItem;
-
-								if (query.includeRootItem)
-								{
-									OCItem *removeItem;
-
-									if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[query.queryPath]) != nil)
-									{
-										[updatedFullQueryResults removeObject:removeItem];
-									}
-
-									[updatedFullQueryResults addObject:updatedRootItem];
-								}
-							}
-						}
-
-						if (updatedFullQueryResults != nil)
-						{
-							query.fullQueryResults = updatedFullQueryResults;
-						}
-					}
-				}
-
-				// Queries targeting items
-				if (query.queryItem != nil)
-				{
-					// Only update queries that have already gone through their complete, initial content update
-					if (query.state == OCQueryStateIdle)
-					{
-						OCPath queryItemPath = query.queryItem.path;
-						OCItem *newQueryItem = nil;
-
-						if (addedItemList!=nil)
-						{
-							if ((newQueryItem = addedItemList.itemsByPath[queryItemPath]) != nil)
-							{
-								query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
-							}
-						}
-
-						if (updatedItemList!=nil)
-						{
-							if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
-							{
-								query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
-							}
-						}
-
-						if (removedItemList!=nil)
-						{
-							if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
-							{
-								query.fullQueryResults = [NSMutableArray new];
-								query.state = OCQueryStateTargetRemoved;
-							}
-						}
-					}
-				}
-
-				// Queries targeting sync anchors
-				if ((query.querySinceSyncAnchor != nil) && (syncAnchor!=nil))
-				{
-					if (addedUpdatedRemovedItemList==nil)
-					{
-						addedUpdatedRemovedItemList = [NSMutableArray arrayWithCapacity:(addedItemList.items.count + updatedItemList.items.count + removedItemList.items.count)];
-
-						if (addedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:addedItemList.items];
-						}
-
-						if (updatedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:updatedItemList.items];
-						}
-
-						if (removedItemList!=nil)
-						{
-							[addedUpdatedRemovedItemList addObjectsFromArray:removedItemList.items];
-						}
-					}
-
-					query.state = OCQueryStateWaitingForServerReply;
-
-					[query mergeItemsToFullQueryResults:addedUpdatedRemovedItemList syncAnchor:syncAnchor];
-
-					query.state = OCQueryStateIdle;
-
-					[query setNeedsRecomputation];
-				}
-			}
-
-			// Signal file provider
-			if (self.postFileProviderNotifications)
-			{
-				NSMutableArray <OCItem *> *changedItems = [NSMutableArray new];
-
-				if (addedItemList.items != nil)
-				{
-					[changedItems addObjectsFromArray:addedItemList.items];
-				}
-
-				if (updatedItemList.items != nil)
-				{
-					[changedItems addObjectsFromArray:updatedItemList.items];
-				}
-
-				if (removedItemList.items != nil)
-				{
-					[changedItems addObjectsFromArray:removedItemList.items];
-				}
-
-				[self signalChangesForItems:changedItems];
-			}
-
-			[self endActivity:@"handle sync event - update queries"];
-		}];
-	}
-
-	// - Fetch updated directory contents as needed
-	if (refreshPaths.count > 0)
-	{
-		for (OCPath path in refreshPaths)
-		{
-			OCPath refreshPath = path;
-
-			if (![refreshPath hasSuffix:@"/"])
-			{
-				refreshPath = [refreshPath stringByAppendingString:@"/"];
-			}
-
-			[self startItemListTaskForPath:refreshPath];
-		}
-	}
-}
-
 #pragma mark - Sync issues utilities
 - (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
 {
@@ -935,7 +643,7 @@
 
 			[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 				// Drop sync record
-				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
+				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:nil resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
 			}],
 
 		] completionHandler:nil];
@@ -1057,14 +765,14 @@
 {
 	OCSyncExec(journalDump, {
 		[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-			NSLog(@"Sync Journal Dump:");
-			NSLog(@"==================");
+			OCLogDebug(@"Sync Journal Dump:");
+			OCLogDebug(@"==================");
 
 			for (OCSyncRecord *record in syncRecords)
 			{
-				NSLog(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
-							[record.actionIdentifier leftPaddedMinLength:20],
-							[[record.inProgressSince description] leftPaddedMinLength:20]);
+				OCLogDebug(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+								[record.actionIdentifier leftPaddedMinLength:20],
+								[[record.inProgressSince description] leftPaddedMinLength:20]);
 			}
 
 			OCSyncExecDone(journalDump);

@@ -20,7 +20,7 @@
 
 @implementation NSObject (OCClassSettings)
 
-- (id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key
+- (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key
 {
 	if (key==nil) { return(nil); }
 

@@ -18,11 +18,12 @@
 
 #import "OCCore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (OCCoreItemListTask *)startItemListTaskForPath:(OCPath)path;
-- (BOOL)startItemListTask:(OCCoreItemListTask *)task;
+- (nullable OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 #pragma mark - Check for updates
@@ -31,3 +32,5 @@
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
 
 @end
+
+NS_ASSUME_NONNULL_END

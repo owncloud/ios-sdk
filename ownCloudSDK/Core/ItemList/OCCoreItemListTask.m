@@ -19,7 +19,9 @@
 #import "OCCoreItemListTask.h"
 #import "OCCore.h"
 #import "OCCore+Internal.h"
+#import "OCCore+SyncEngine.h"
 #import "NSString+OCParentPath.h"
+#import "OCLogger.h"
 
 @implementation OCCoreItemListTask
 
@@ -71,11 +73,20 @@
 
 		[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+				self->_syncAnchorAtStart = [self->_core retrieveLatestSyncAnchorWithError:NULL];
+
 				[self->_cachedSet updateWithError:error items:items];
 
 				if ((self->_cachedSet.state == OCCoreItemListStateSuccess) || (self->_cachedSet.state == OCCoreItemListStateFailed))
 				{
-					self.changeHandler(self->_core, self);
+					if (self.changeHandler != nil)
+					{
+						self.changeHandler(self->_core, self);
+					}
+					else
+					{
+						OCLogWarning(@"OCCoreItemListTask: no changeHandler specified");
+					}
 				}
 
 				[self->_core endActivity:@"update cache set"];

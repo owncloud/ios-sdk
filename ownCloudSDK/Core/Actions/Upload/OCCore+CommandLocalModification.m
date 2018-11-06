@@ -29,7 +29,7 @@
 @implementation OCCore (CommandLocalModification)
 
 #pragma mark - Command
-- (NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(NSURL * __nullable)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(NSDictionary *)options placeholderCompletionHandler:(OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(OCCoreUploadResultHandler)resultHandler
+- (nullable NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(nullable NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *itemFileURL, *temporaryFileURL;
@@ -41,6 +41,12 @@
 	    ((temporaryFileURL = [self availableTemporaryURLAlongsideItem:item fileName:NULL]) != nil))
 	{
 		BOOL proceed = YES;
+
+		// Use itemFileURL if no inputFileURL was provided
+		if (inputFileURL == nil)
+		{
+			inputFileURL = itemFileURL;
+		}
 
 		// Copy file into the vault for uploading
 		if (isSecurityScoped)

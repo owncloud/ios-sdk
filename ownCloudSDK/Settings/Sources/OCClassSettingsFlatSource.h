@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCClassSettings.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCClassSettingsFlatSource : NSObject <OCClassSettingsSource>
 {
 	NSMutableDictionary <OCClassSettingsIdentifier, NSMutableDictionary<OCClassSettingsKey, id> *> *_settingsByKeyByIdentifier;
@@ -26,6 +28,8 @@
 
 - (void)parseFlatSettingsDictionary; //!< Forces parsing of flat settings dictionary
 
-- (NSDictionary <NSString *, id> *)flatSettingsDictionary; //!< Returns dictionary with keys in the form of [settingsIdentifier].[settingsKey] for *all* settings
+- (nullable NSDictionary <NSString *, id> *)flatSettingsDictionary; //!< Returns dictionary with keys in the form of [settingsIdentifier].[settingsKey] for *all* settings
+
+NS_ASSUME_NONNULL_END
 
 @end

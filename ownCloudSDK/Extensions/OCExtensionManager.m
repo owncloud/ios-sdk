@@ -80,7 +80,7 @@
 }
 
 #pragma mark - Matching
-- (NSArray <OCExtensionMatch *> *)provideExtensionsForContext:(OCExtensionContext *)context error:(NSError **)outError
+- (nullable NSArray <OCExtensionMatch *> *)provideExtensionsForContext:(OCExtensionContext *)context error:(NSError * _Nullable *)outError
 {
 	NSMutableArray <OCExtensionMatch *> *matches = nil;
 
@@ -109,7 +109,7 @@
 	return (matches);
 }
 
-- (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError *error, OCExtensionContext *context, NSArray <OCExtensionMatch *> *))completionHandler
+- (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError * _Nullable error, OCExtensionContext *context, NSArray <OCExtensionMatch *> * _Nullable))completionHandler
 {
 	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
 		NSError *error = nil;

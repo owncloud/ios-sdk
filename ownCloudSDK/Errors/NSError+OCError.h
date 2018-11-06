@@ -35,8 +35,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRequestServerCertificateRejected,	//!< Request was cancelled because the server certificate was rejected
 	OCErrorRequestDroppedByURLSession,		//!< Request was dropped by the NSURLSession
 	OCErrorRequestCompletedWithError,		//!< Request completed with error
+	OCErrorRequestURLSessionInvalidated,		//!< Request couldn't be scheduled because the underlying NSURLSession has been invalidated
 
-	OCErrorResponseUnknownFormat,			//!< Response was in an unknown format
+	OCErrorException,		//!< An exception occured
+
+	OCErrorResponseUnknownFormat,	//!< Response was in an unknown format
 	
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
@@ -95,5 +98,5 @@ extern NSErrorDomain OCErrorDomain;
 extern NSString *OCErrorInfoKey;
 extern NSString *OCErrorIssueKey;
 
-#define OCFRelease(obj) NSLog(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
-#define OCFRetain(obj) NSLog(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);
+#define OCFRelease(obj) OCLogDebug(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
+#define OCFRetain(obj) OCLogDebug(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);

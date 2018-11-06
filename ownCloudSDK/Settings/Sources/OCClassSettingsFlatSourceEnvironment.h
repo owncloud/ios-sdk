@@ -1,8 +1,8 @@
 //
-//  OCExtensionMatch.h
+//  OCClassSettingsFlatSourceEnvironment.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 23.08.18.
+//  Created by Felix Schwarz on 31.10.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,17 +16,13 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCExtension.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCExtensionMatch : NSObject
+@interface OCClassSettingsFlatSourceEnvironment : OCClassSettingsFlatSource
 
-@property(strong,readonly) OCExtension *extension; //!< A matching extension
-@property(assign,readonly) OCExtensionPriority priority; //!< The priority with which the extension matched
-
-- (instancetype)initWithExtension:(OCExtension *)extension priority:(OCExtensionPriority)priority;
+- (instancetype)initWithPrefix:(NSString *)prefix;
 
 @end
 

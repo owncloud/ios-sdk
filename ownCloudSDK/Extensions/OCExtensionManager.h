@@ -22,6 +22,8 @@
 #import "OCExtensionContext.h"
 #import "OCExtensionMatch.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCExtensionManager : NSObject
 {
 	NSMutableArray <OCExtension *> *_extensions;
@@ -35,7 +37,9 @@
 - (void)addExtension:(OCExtension *)extension;
 - (void)removeExtension:(OCExtension *)extension;
 
-- (NSArray <OCExtensionMatch *> *)provideExtensionsForContext:(OCExtensionContext *)context error:(NSError **)outError; //!< Matches extensions against a given context. Extensions with higher priority rank first.
-- (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError *error, OCExtensionContext *context, NSArray <OCExtensionMatch *> *))completionHandler; //!< Async matching of extensions against a given context. Expect the completionHandler to be called on a different thread. Prefer this API over -provideExtensionsForContext:error: whenever feasible.
+- (nullable NSArray <OCExtensionMatch *> *)provideExtensionsForContext:(OCExtensionContext *)context error:(NSError * _Nullable *)outError; //!< Matches extensions against a given context. Extensions with higher priority rank first.
+- (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError * _Nullable error, OCExtensionContext *context, NSArray <OCExtensionMatch *> * _Nullable))completionHandler; //!< Async matching of extensions against a given context. Expect the completionHandler to be called on a different thread. Prefer this API over -provideExtensionsForContext:error: whenever feasible.
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -18,6 +18,7 @@
 
 #import "OCClassSettings.h"
 #import "OCClassSettingsFlatSourceManagedConfiguration.h"
+#import "OCClassSettingsFlatSourceEnvironment.h"
 
 @interface OCClassSettings ()
 {
@@ -38,6 +39,7 @@
 		sharedClassSettings = [OCClassSettings new];
 
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourceManagedConfiguration new]];
+		[sharedClassSettings addSource:[[OCClassSettingsFlatSourceEnvironment alloc] initWithPrefix:@"oc:"]];
 	});
 	
 	return(sharedClassSettings);
@@ -106,7 +108,7 @@
 	return (overrideDict);
 }
 
-- (NSDictionary<OCClassSettingsKey,id> *)settingsForClass:(Class<OCClassSettingsSupport>)settingsClass
+- (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)settingsClass
 {
 	NSDictionary<NSString *, id> *classSettings = nil;
 	OCClassSettingsIdentifier classSettingsIdentifier;

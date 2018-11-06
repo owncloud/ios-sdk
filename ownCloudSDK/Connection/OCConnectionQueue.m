@@ -109,6 +109,8 @@
 #pragma mark - Invalidation
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"CQ[%@]: finish tasks and invalidate", _urlSession.configuration.identifier);
+
 	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession finishTasksAndInvalidate];
@@ -116,6 +118,8 @@
 
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"CQ[%@]: cancel tasks and invalidate", _urlSession.configuration.identifier);
+
 	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession invalidateAndCancel];
@@ -226,7 +230,17 @@
 	// Remove request from queue
 	[_queuedRequests removeObject:request];
 	
-	if (!request.cancelled) // Make sure this request hasn't been cancelled
+	if (request.cancelled)
+	{
+		// This request has been cancelled
+		error = OCError(OCErrorRequestCancelled);
+	}
+	else if (_urlSessionInvalidated)
+	{
+		// The underlying NSURLSession has been invalidated
+		error = OCError(OCErrorRequestURLSessionInvalidated);
+	}
+	else
 	{
 		// Prepare request
 		[self _prepareRequestForScheduling:request];
@@ -257,30 +271,38 @@
 				// Generate NSURLRequest and create an NSURLSessionTask with it
 				if ((urlRequest = [request generateURLRequestForQueue:self]) != nil)
 				{
-					// Construct NSURLSessionTask
-					if (request.downloadRequest)
+					@try
 					{
-						// Request is a download request. Make it a download task.
-						task = [_urlSession downloadTaskWithRequest:urlRequest];
-					}
-					else if (request.bodyURL != nil)
-					{
-						// Body comes from a file. Make it an upload task.
-						task = [_urlSession uploadTaskWithRequest:urlRequest fromFile:request.bodyURL];
-					}
-					else
-					{
-						// Create a regular data task
-						task = [_urlSession dataTaskWithRequest:urlRequest];
-					}
+						// Construct NSURLSessionTask
+						if (request.downloadRequest)
+						{
+							// Request is a download request. Make it a download task.
+							task = [_urlSession downloadTaskWithRequest:urlRequest];
+						}
+						else if (request.bodyURL != nil)
+						{
+							// Body comes from a file. Make it an upload task.
+							task = [_urlSession uploadTaskWithRequest:urlRequest fromFile:request.bodyURL];
+						}
+						else
+						{
+							// Create a regular data task
+							task = [_urlSession dataTaskWithRequest:urlRequest];
+						}
 
-					// Apply priority
-					task.priority = request.priority;
+						// Apply priority
+						task.priority = request.priority;
 
-					// Apply earliest date
-					if (request.earliestBeginDate != nil)
+						// Apply earliest date
+						if (request.earliestBeginDate != nil)
+						{
+							task.earliestBeginDate = request.earliestBeginDate;
+						}
+					}
+					@catch (NSException *exception)
 					{
-						task.earliestBeginDate = request.earliestBeginDate;
+						OCLogDebug(@"Exception creating a task: %@", exception);
+						error = OCErrorWithInfo(OCErrorException, exception);
 					}
 				}
 
@@ -339,7 +361,10 @@
 				else
 				{
 					// Request failure
-					error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
+					if (error == nil)
+					{
+						error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
+					}
 				}
 			}
 		}
@@ -349,11 +374,7 @@
 			error = OCError(OCErrorRequestRemovedBeforeScheduling);
 		}
 	}
-	else
-	{
-		error = OCError(OCErrorRequestCancelled);
-	}
-	
+
 	if (error != nil)
 	{
 		// Finish with error
@@ -590,7 +611,7 @@
 #pragma mark - NSURLSessionTaskDelegate
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
-	// NSLog(@"DID COMPLETE: task=%@ error=%@", task, error);
+	// OCLogDebug(@"DID COMPLETE: task=%@ error=%@", task, error);
 	OCLogDebug(@"CQ[%@]: %@ [taskIdentifier=%lu]: didCompleteWithError=%@", _urlSession.configuration.identifier, task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
@@ -650,7 +671,7 @@
 	}
 
 	OCLogDebug(@"CQ[%@]: %@: downloadTask:didFinishDownloadingToURL: %@", _urlSession.configuration.identifier, downloadTask.currentRequest.URL, location);
-	// NSLog(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
+	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
@@ -674,6 +695,10 @@
 
 - (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
 {
+	_urlSessionInvalidated = YES;
+
+	OCLogDebug(@"CQ[%@]: did become invalid, running completionHandler %p", _urlSession.configuration.identifier, _invalidationCompletionHandler);
+
 	if (_invalidationCompletionHandler != nil)
 	{
 		_invalidationCompletionHandler();

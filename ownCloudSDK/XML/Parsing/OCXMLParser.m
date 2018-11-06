@@ -244,7 +244,7 @@
 		else
 		{
 			// OCLogDebug(@"%@", lastParserElementOnStack);
-			// NSLog(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
+			// OCLogDebug(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
 		}
 	}
 

@@ -26,7 +26,7 @@
 @implementation OCCore (CommandCreateFolder)
 
 #pragma mark - Command
-- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	if (folderName == nil) { return(nil); }
 	if (parentItem == nil) { return(nil); }

@@ -31,6 +31,7 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "OCItem+OCThumbnail.h"
+#import "OCIPNotificationCenter.h"
 
 @interface OCCore ()
 {
@@ -143,6 +144,8 @@
 		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
+		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
+
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
@@ -164,6 +167,8 @@
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+
+		[self startIPCObservation];
 	}
 
 	return(self);
@@ -171,6 +176,8 @@
 
 - (void)dealloc
 {
+	[self stopIPCObserveration];
+
 	if (_reachabilityMonitor != nil)
 	{
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
@@ -197,7 +204,7 @@
 }
 
 #pragma mark - Start / Stop
-- (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
+- (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
 		if (self->_state == OCCoreStateStopped)
@@ -256,7 +263,7 @@
 	}];
 }
 
-- (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler
+- (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
 		__block NSError *stopError = nil;
@@ -405,14 +412,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self startItemListTaskForPath:query.queryPath];
+			[self scheduleItemListTaskForPath:query.queryPath];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self startItemListTaskForPath:[query.queryItem.path parentPath]];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath]];
 			}
 		}
 	}];
@@ -480,13 +487,12 @@
 	}];
 }
 
-#pragma mark - Convenience
+#pragma mark - Tools
 - (OCDatabase *)database
 {
 	return (_vault.database);
 }
 
-#pragma mark - Tools
 - (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
 {
 	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
@@ -494,24 +500,79 @@
 	}];
 }
 
+#pragma mark - Inter-Process change notification/handling
+- (NSString *)ipcNotificationName
+{
+	if (_ipNotificationName == nil)
+	{
+		_ipNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.bookmark.uuid.UUIDString];
+	}
+
+	return (_ipNotificationName);
+}
+
+- (void)startIPCObservation
+{
+	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		[(OCCore *)observer handleIPCChangeNotification];
+	}];
+}
+
+- (void)stopIPCObserveration
+{
+	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
+}
+
+- (void)postIPCChangeNotification
+{
+	[_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+}
+
+- (void)handleIPCChangeNotification
+{
+	OCLogDebug(@"Received IPC change notification");
+
+	[self queueBlock:^{
+		[self _checkForChangesByOtherProcessesAndUpdateQueries];
+	}];
+}
+
+#pragma mark - Check for changes by other processes
+- (void)_checkForChangesByOtherProcessesAndUpdateQueries
+{
+	// Needs to run in queue
+	OCSyncAnchor lastKnownSyncAnchor = _latestSyncAnchor;
+	OCSyncAnchor latestSyncAnchor = nil;
+	NSError *error = nil;
+
+	if ((latestSyncAnchor = [self retrieveLatestSyncAnchorWithError:&error]) != nil)
+	{
+		if (![lastKnownSyncAnchor isEqual:latestSyncAnchor])
+		{
+			// Sync anchor changed, so there may be changes
+
+		}
+	}
+}
+
 #pragma mark - ## Commands
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultHandler:(OCCoreActionResultHandler)resultHandler
+- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	return(nil); // Stub implementation
 }
 
-- (NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
+- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
 }
 
-- (NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(OCCoreCompletionHandler)completionHandler
+- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
 }
 
 #pragma mark - Command: Retrieve Thumbnail
-- (NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
@@ -735,7 +796,7 @@
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
 }
 
-- (NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
+- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
 {
 	NSURL *temporaryURL = nil;
 	NSURL *baseURL = [self localParentDirectoryURLForItem:item];

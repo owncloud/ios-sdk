@@ -19,16 +19,20 @@
 #import <Foundation/Foundation.h>
 #import "OCExtensionLocation.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCExtensionContext : NSObject
 
-@property(strong) OCExtensionLocation *location; //!< The type and location of the extension(s) that suit this context.
+@property(nullable,strong) OCExtensionLocation *location; //!< The type and location of the extension(s) that suit this context.
 
-@property(strong) OCExtensionRequirements requirements; //!< If specified: requirements that extension(s) must meet to suit the context.
+@property(nullable,strong) OCExtensionRequirements requirements; //!< If specified: requirements that extension(s) must meet to suit the context.
 
-@property(strong) OCExtensionRequirements preferences; //!< If specified: "soft" version of .requirements. If met, increases the priority of the match. Extensions not meeting preferences will still be included, just rank lower.
+@property(nullable,strong) OCExtensionRequirements preferences; //!< If specified: "soft" version of .requirements. If met, increases the priority of the match. Extensions not meeting preferences will still be included, just rank lower.
 
-@property(strong) NSError *error; //!< Any error occuring in an extension while trying to provide the object
+@property(nullable,strong) NSError *error; //!< Any error occuring in an extension while trying to provide the object
 
-+ (instancetype)contextWithLocation:(OCExtensionLocation *)location requirements:(OCExtensionRequirements)requirements preferences:(OCExtensionRequirements)preferences;
++ (instancetype)contextWithLocation:(nullable OCExtensionLocation *)location requirements:(nullable OCExtensionRequirements)requirements preferences:(nullable OCExtensionRequirements)preferences;
 
 @end
+
+NS_ASSUME_NONNULL_END

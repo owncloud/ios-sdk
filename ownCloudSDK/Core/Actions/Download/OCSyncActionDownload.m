@@ -18,6 +18,7 @@
 
 #import "OCSyncActionDownload.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemUpdates.h"
 
 @implementation OCSyncActionDownload
 
@@ -122,7 +123,7 @@
 												latestItem.locallyModified = NO;
 												latestItem.localRelativePath = nil;
 
-												[self.core _performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil];
+												[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 											}
 
 											OCLogDebug(@"SE: deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
@@ -136,7 +137,7 @@
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Keep local modifications and drop sync record
-							[self.core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+							[self.core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
 					] completionHandler:nil];
 
@@ -277,7 +278,7 @@
 
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 							// Drop sync record
-							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
 
 					] completionHandler:nil];
@@ -303,7 +304,7 @@
 
 							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
 								// Drop sync record
-								[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES resultHandlerError:OCError(OCErrorCancelled)];
+								[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 							}],
 
 						] completionHandler:nil];
