@@ -21,31 +21,36 @@
 #import "OCExtensionLocation.h"
 #import "OCExtensionContext.h"
 
+
 @class OCExtension;
 
-typedef id(^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContext *context, NSError **outError);
+NS_ASSUME_NONNULL_BEGIN
+
+typedef id(^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContext *context, NSError * __nullable * __nullable outError);
 typedef OCExtensionPriority(^OCExtensionCustomContextMatcher)(OCExtensionContext *context, OCExtensionPriority defaultPriority);
 
 @interface OCExtension : NSObject
 
 @property(strong) OCExtensionType type;	//!< The type of extension.
 
-@property(strong) NSArray<OCExtensionLocation *> *locations; //!< (optional) array of locations this extension is limited to
+@property(nullable,strong) NSArray<OCExtensionLocation *> *locations; //!< (optional) array of locations this extension is limited to
 
 @property(strong) OCExtensionIdentifier identifier; //!< Identifier uniquely identifying the extension.
 @property(assign) OCExtensionPriority priority; //!< Priority of the extension in comparison to others. Larger values rank higher. Value is used by default by -matchesContext:
 
-@property(strong) OCExtensionRequirements features; //!< Requirements this extension satisfies
+@property(nullable,strong) OCExtensionRequirements features; //!< Requirements this extension satisfies
 
-@property(copy) OCExtensionObjectProvider objectProvider; //!< Block to provide the object to return for calls to -provideObjectForContext:error:.
-@property(copy) OCExtensionCustomContextMatcher customMatcher; //!< Block to manipulate the extension priority returned by -matchesContext: without having to subclass OCExtension
+@property(nullable,copy) OCExtensionObjectProvider objectProvider; //!< Block to provide the object to return for calls to -provideObjectForContext:error:.
+@property(nullable,copy) OCExtensionCustomContextMatcher customMatcher; //!< Block to manipulate the extension priority returned by -matchesContext: without having to subclass OCExtension
 
-+ (instancetype)extensionWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
-- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(OCExtensionLocationIdentifier)locationIdentifier features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider;
-- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(OCExtensionRequirements)features objectProvider:(OCExtensionObjectProvider)objectProvider customMatcher:(OCExtensionCustomContextMatcher)customMatcher;
++ (instancetype)extensionWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(nullable OCExtensionLocationIdentifier)locationIdentifier features:(nullable OCExtensionRequirements)features objectProvider:(nullable OCExtensionObjectProvider)objectProvider;
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type location:(nullable OCExtensionLocationIdentifier)locationIdentifier features:(nullable OCExtensionRequirements)features objectProvider:(nullable OCExtensionObjectProvider)objectProvider;
+- (instancetype)initWithIdentifier:(OCExtensionIdentifier)identifier type:(OCExtensionType)type locations:(nullable NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers features:(nullable OCExtensionRequirements)features objectProvider:(nullable OCExtensionObjectProvider)objectProvider customMatcher:(nullable OCExtensionCustomContextMatcher)customMatcher;
 
 - (OCExtensionPriority)matchesContext:(OCExtensionContext *)context; //!< Returns the priority with which the extension meets the context's criteria. Returns nil if it does not meet the criteria.
 
-- (id)provideObjectForContext:(OCExtensionContext *)context; //!< Provides the object (usually a new instance of whatever the extension implements) for the provided context. Returns any errors in outError.
+- (nullable id)provideObjectForContext:(OCExtensionContext *)context; //!< Provides the object (usually a new instance of whatever the extension implements) for the provided context. Returns any errors in context.error.
 
 @end
+
+NS_ASSUME_NONNULL_END
