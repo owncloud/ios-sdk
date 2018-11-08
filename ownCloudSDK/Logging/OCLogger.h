@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, OCLogLevel)
 {
 	OCLogLevelDebug,	//!< Verbose information
-	OCLogLevelDefault,	//!< Default log level
+	OCLogLevelInfo,		//!< Info log level
 	OCLogLevelWarning,	//!< Log level for warnings
 	OCLogLevelError,	//!< Log level for errors
 
@@ -86,7 +86,7 @@ NS_ASSUME_NONNULL_END
 
 #define OCLogDebug(format,...)   if (OCLogger.logLevel <= OCLogLevelDebug) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
-#define OCLog(format,...)   if (OCLogger.logLevel <= OCLogLevelDefault) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDefault   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
+#define OCLog(format,...)   if (OCLogger.logLevel <= OCLogLevelInfo) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
 #define OCLogWarning(format,...)   if (OCLogger.logLevel <= OCLogLevelWarning) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
