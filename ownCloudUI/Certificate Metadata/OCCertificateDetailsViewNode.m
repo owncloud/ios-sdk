@@ -248,7 +248,7 @@
 
 						case OCCertificateValidationResultUserAccepted:
 							status = OCLocalizedString(@"User-accepted.", @"");
-							backgroundColor = [UIColor blueColor];
+							backgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:1.0 alpha:1.0];
 						break;
 
 						case OCCertificateValidationResultPassed:
