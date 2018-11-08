@@ -84,9 +84,9 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	if ([identifier isEqual:OCClassSettingsIdentifierLog])
 	{
 		return (@{
-			OCClassSettingsKeyLogLevel		: @(OCLogLevelDebug),
+			OCClassSettingsKeyLogLevel		: @(OCLogLevelOff),
 			OCClassSettingsKeyLogPrivacyMask	: @(NO),
-			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardError ]
+			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardError, OCLogWriterIdentifierFile ]
 		});
 	}
 
@@ -250,7 +250,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	dispatch_async(_writerQueue, ^{
 		for (OCLogWriter *writer in self->_writers)
 		{
-			if (writer.enabled)
+			if ((sOCLogLevel != OCLogLevelOff) && writer.enabled)
 			{
 				if (!writer.isOpen)
 				{
@@ -394,8 +394,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
 
-OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log--level";
-OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log--privacy-mask";
-OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters = @"log--enabled-writers";
+OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log-level";
+OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log-privacy-mask";
+OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters = @"log-enabled-writers";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";
