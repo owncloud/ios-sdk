@@ -74,6 +74,9 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 	OCItemThumbnailAvailability _thumbnailAvailability;
 
+	NSMutableDictionary<OCLocalAttribute, id> *_localAttributes;
+	NSTimeInterval _localAttributesLastModified;
+
 	NSString *_creationHistory;
 }
 
@@ -102,6 +105,9 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
+@property(strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
+@property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
+
 @property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
@@ -124,6 +130,10 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 - (void)prepareToReplace:(OCItem *)item;
 
+#pragma mark - Local attribute access
+- (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;
+- (void)setValue:(id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
+
 #pragma mark - File tools
 - (OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
 
@@ -135,3 +145,6 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 extern OCFileID   OCFileIDPlaceholderPrefix; //!< FileID placeholder prefix for items that are not in sync with the server, yet
 extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items that are not in sync with the server, yet
+
+extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
+extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data

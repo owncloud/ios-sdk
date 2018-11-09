@@ -86,6 +86,9 @@
 	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
+	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
+	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
+
 	[coder encodeObject:_shares		forKey:@"shares"];
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
@@ -137,6 +140,9 @@
 		_size = [decoder decodeIntegerForKey:@"size"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
+
+		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
+		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
@@ -214,6 +220,41 @@
 	}
 }
 
+- (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute
+{
+	@synchronized(self)
+	{
+		return (_localAttributes[localAttribute]);
+	}
+}
+
+- (void)setValue:(id)value forLocalAttribute:(OCLocalAttribute)localAttribute
+{
+	@synchronized(self)
+	{
+		if (value != nil)
+		{
+			if (_localAttributes==nil)
+			{
+				_localAttributes = [NSMutableDictionary new];
+			}
+
+			_localAttributes[localAttribute] = value;
+		}
+		else
+		{
+			[_localAttributes removeObjectForKey:localAttribute];
+
+			if (_localAttributes.count==0)
+			{
+				_localAttributes = nil;
+			}
+		}
+
+		_localAttributesLastModified = NSDate.timeIntervalSinceReferenceDate;
+	}
+}
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
 {
@@ -286,6 +327,13 @@
 	{
 		self.parentFileID = item.parentFileID;
 	}
+
+	// Make sure to use latest version of local attributes
+	if (self.localAttributesLastModified < item.localAttributesLastModified)
+	{
+		self.localAttributes 	  	 = item.localAttributes;
+		self.localAttributesLastModified = item.localAttributesLastModified;
+	}
 }
 
 #pragma mark - File tools
@@ -317,3 +365,6 @@
 
 OCFileID   OCFileIDPlaceholderPrefix = @"_placeholder_";
 OCFileETag OCFileETagPlaceholder = @"_placeholder_";
+
+OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
+OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
