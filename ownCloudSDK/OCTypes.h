@@ -26,6 +26,9 @@ typedef NSString* OCFileETag; //!< Identifier unique to a specific combination o
 
 typedef NSString* OCLocalAttribute NS_TYPED_ENUM; //!< Identifier uniquely identifying a local attribute
 
+typedef NSNumber* OCItemFavorite; //!< Favorite status of an item (boolean)
+typedef NSString* OCItemPropertyName NS_TYPED_ENUM; //!< Name of an item property
+
 typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific, OCItem's NSSecureCoding support assumes NSValue or NSValue subclass).
 
 typedef NSNumber* OCSyncAnchor; //!< Sync Anchor (running number, increasing in value with every change made)

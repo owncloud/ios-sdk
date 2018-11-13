@@ -39,7 +39,8 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 	// Metadata
 	OCEventTypeRetrieveThumbnail,
-	OCEventTypeRetrieveItemList
+	OCEventTypeRetrieveItemList,
+	OCEventTypeUpdate
 };
 
 @class OCEvent;

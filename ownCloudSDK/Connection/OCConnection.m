@@ -32,6 +32,7 @@
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCFile.h"
+#import "NSDate+OCDateParser.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -576,7 +577,7 @@
 }
 
 #pragma mark - Metadata actions
-- (OCConnectionDAVRequest *)_davRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
+- (OCConnectionDAVRequest *)_propfindDAVRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
 	OCConnectionDAVRequest *davRequest;
 	NSURL *url = endpointURL;
@@ -606,6 +607,14 @@
 			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+			[OCXMLNode elementWithName:@"favorite" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+
+//			[OCXMLNode elementWithName:@"tags" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+//			[OCXMLNode elementWithName:@"share-types" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+//			[OCXMLNode elementWithName:@"comments-count" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+//			[OCXMLNode elementWithName:@"comments-href" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+//			[OCXMLNode elementWithName:@"comments-unread" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
+//			[OCXMLNode elementWithName:@"owner-display-name" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
 		]];
 	}
 
@@ -618,7 +627,7 @@
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 	NSProgress *progress = nil;
 
-	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
@@ -651,7 +660,7 @@
 	NSProgress *progress = nil;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
-	if ((davRequest = [self _davRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
 		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 		davRequest.userInfo = @{
@@ -732,11 +741,6 @@
 }
 
 #pragma mark - Actions
-- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
 
 #pragma mark - File transfer: upload
 - (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
@@ -1008,6 +1012,160 @@
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
+}
+
+#pragma mark - Action: Item update
+- (NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	NSProgress *progress = nil;
+	NSURL *itemURL;
+
+	if ((itemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	{
+		OCXMLNode *setPropNode = [OCXMLNode elementWithName:@"D:prop"];
+		OCXMLNode *removePropNode = [OCXMLNode elementWithName:@"D:prop"];
+		NSMutableArray <OCXMLNode *> *contentNodes = [NSMutableArray new];
+		NSMutableDictionary <OCItemPropertyName, NSString *> *responseTagsByPropertyName = [NSMutableDictionary new];
+
+		for (OCItemPropertyName propertyName in properties)
+		{
+			// Favorite
+			if ([propertyName isEqualToString:OCItemPropertyNameIsFavorite])
+			{
+				if ([item.isFavorite isEqual:@(1)])
+				{
+					// Set favorite
+					[setPropNode addChild:[OCXMLNode elementWithName:@"favorite" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]] stringValue:@"1"]];
+				}
+				else
+				{
+					// Remove favorite
+					[removePropNode addChild:[OCXMLNode elementWithName:@"favorite" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]];
+				}
+
+				responseTagsByPropertyName[OCItemPropertyNameIsFavorite] = @"oc:favorite";
+			}
+
+			// Last modified
+			if ([propertyName isEqualToString:OCItemPropertyNameLastModified])
+			{
+				// Set last modified date
+				[setPropNode addChild:[OCXMLNode elementWithName:@"D:lastmodified" stringValue:[item.lastModified davDateString]]];
+
+				responseTagsByPropertyName[OCItemPropertyNameLastModified] = @"d:lastmodified";
+			}
+		}
+
+		if (setPropNode.children.count > 0)
+		{
+			OCXMLNode *setNode = [OCXMLNode elementWithName:@"D:set"];
+
+			[setNode addChild:setPropNode];
+			[contentNodes addObject:setNode];
+		}
+
+		if (removePropNode.children.count > 0)
+		{
+			OCXMLNode *removeNode = [OCXMLNode elementWithName:@"D:remove"];
+
+			[removeNode addChild:removePropNode];
+			[contentNodes addObject:removeNode];
+		}
+
+		if (contentNodes.count > 0)
+		{
+			OCConnectionDAVRequest *patchRequest;
+
+			if ((patchRequest = [OCConnectionDAVRequest proppatchRequestWithURL:itemURL content:contentNodes]) != nil)
+			{
+				patchRequest.resultHandlerAction = @selector(_handleUpdateItemResult:error:);
+				patchRequest.userInfo = @{
+					@"item" : item,
+					@"properties" : properties,
+					@"responseTagsByPropertyName" : responseTagsByPropertyName
+				};
+				patchRequest.eventTarget = eventTarget;
+
+				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
+
+				// Enqueue request
+				[self.commandQueue enqueueRequest:patchRequest];
+
+				progress = patchRequest.progress;
+
+				progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
+			}
+		}
+		else
+		{
+			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpdate sender:self];
+		}
+	}
+	else
+	{
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate sender:self];
+	}
+
+	return (progress);
+}
+
+- (void)_handleUpdateItemResult:(OCConnectionRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+	OCLogDebug(@"Update response: %@", request.responseBodyAsString);
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.responseHTTPStatus.isSuccess)
+			{
+				NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *multistatusResponsesByPath;
+				NSDictionary <OCItemPropertyName, NSString *> *responseTagsByPropertyName = request.userInfo[@"responseTagsByPropertyName"];
+
+				if (((multistatusResponsesByPath = [((OCConnectionDAVRequest *)request) multistatusResponsesForBasePath:endpointURL.path]) != nil) && (responseTagsByPropertyName != nil))
+				{
+					OCConnectionDAVMultistatusResponse *multistatusResponse;
+
+					OCLogDebug(@"Response parsed: %@", multistatusResponsesByPath);
+
+					if ((multistatusResponse = multistatusResponsesByPath.allValues.firstObject) != nil)
+					{
+						NSMutableDictionary <OCItemPropertyName, OCHTTPStatus *> *propertyUpdateResults = [NSMutableDictionary new];
+
+						// Success
+						[responseTagsByPropertyName enumerateKeysAndObjectsUsingBlock:^(OCItemPropertyName  _Nonnull propertyName, NSString * _Nonnull tagName, BOOL * _Nonnull stop) {
+							OCHTTPStatus *status;
+
+							if ((status = [multistatusResponse statusForProperty:tagName]) != nil)
+							{
+								propertyUpdateResults[propertyName] = status;
+							}
+						}];
+
+						event.result = propertyUpdateResults;
+					}
+				}
+
+				if (event.result == nil)
+				{
+					event.error = OCError(OCErrorInternal);
+				}
+			}
+			else
+			{
+				event.error = request.responseHTTPStatus.error;
+			}
+		}
+	}
+
+	[request.eventTarget handleEvent:event sender:self];
 }
 
 #pragma mark - Action: Create Directory

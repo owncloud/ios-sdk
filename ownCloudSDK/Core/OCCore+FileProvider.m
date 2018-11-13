@@ -52,7 +52,7 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 }
 
 #pragma mark - Fileprovider tools
-- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler
+- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler
 {
 	[self queueBlock:^{
 		OCSyncExec(cacheItemRetrieval, {

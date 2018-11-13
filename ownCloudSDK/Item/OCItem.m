@@ -86,6 +86,8 @@
 	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
 
+	[coder encodeObject:_isFavorite		forKey:@"isFavorite"];
+
 	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
 	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
@@ -140,6 +142,8 @@
 		_size = [decoder decodeIntegerForKey:@"size"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
+
+		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
 
 		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
@@ -368,3 +372,6 @@ OCFileETag OCFileETagPlaceholder = @"_placeholder_";
 
 OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
 OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
+
+OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
+OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";

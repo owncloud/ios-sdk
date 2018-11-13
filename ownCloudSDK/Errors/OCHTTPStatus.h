@@ -45,7 +45,9 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeBAD_GATEWAY = 502
 };
 
-@interface OCHTTPStatus : NSObject
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCHTTPStatus : NSObject <NSCopying>
 {
 	OCHTTPStatusCode _code;
 }
@@ -65,5 +67,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 @end
 
 extern NSErrorDomain OCHTTPStatusErrorDomain;
+
+NS_ASSUME_NONNULL_END
 
 #define IsHTTPErrorWithStatus(error,status) ([error.domain isEqual:OCHTTPStatusErrorDomain] && (error.code==status))

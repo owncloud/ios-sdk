@@ -20,20 +20,31 @@
 
 @implementation NSDate (OCDateParser)
 
-+ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error
++ (NSDateFormatter *)_ocDateFormatter
 {
-	static dispatch_once_t onceToken;
 	static NSDateFormatter *dateFormatter;
+	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
 		if ((dateFormatter = [NSDateFormatter new]) != nil)
 		{
 			[dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
+			[dateFormatter setTimeZone:[NSTimeZone timeZoneWithName:@"GMT"]];
 			[dateFormatter setDateFormat:@"EEE, dd MMM y HH:mm:ss zzz"];
 		}
 	});
 
-	return ([dateFormatter dateFromString:dateString]);
+	return (dateFormatter);
+}
+
++ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error
+{
+	return ([[self _ocDateFormatter] dateFromString:dateString]);
+}
+
+- (NSString *)davDateString
+{
+	return ([[[self class] _ocDateFormatter] stringFromDate:self]);
 }
 
 @end

@@ -115,6 +115,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(strong) NSDate *creationDate; //!< Date of creation
 @property(strong) NSDate *lastModified; //!< Date of last modification
 
+@property(strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
+
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
@@ -148,3 +150,6 @@ extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items t
 
 extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
 extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
+
+extern OCItemPropertyName OCItemPropertyNameLastModified;
+extern OCItemPropertyName OCItemPropertyNameIsFavorite;

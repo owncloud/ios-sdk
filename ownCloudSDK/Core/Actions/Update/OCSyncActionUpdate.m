@@ -1,8 +1,8 @@
 //
-//  NSDate+OCDateParser.h
+//  OCSyncActionUpdate.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 10.03.18.
+//  Created by Felix Schwarz on 09.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,11 +16,8 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "OCSyncActionUpdate.h"
 
-@interface NSDate (OCDateParser)
-
-+ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error;
-- (NSString *)davDateString;
+@implementation OCSyncActionUpdate
 
 @end

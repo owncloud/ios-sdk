@@ -18,18 +18,22 @@
 
 #import "OCCore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCCore (FileProvider)
 
 @property(class,nonatomic,assign) BOOL hostHasFileProvider;
 
 #pragma mark - Fileprovider tools
-- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase))completionHandler;
+- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler;
 
 #pragma mark - File provider manager
-- (NSFileProviderManager *)fileProviderManager;
+- (nullable NSFileProviderManager *)fileProviderManager;
 
 #pragma mark - Signal changes for items
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
 - (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID;
 
 @end
+
+NS_ASSUME_NONNULL_END

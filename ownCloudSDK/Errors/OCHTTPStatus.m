@@ -66,6 +66,26 @@
 	return ([NSString stringWithFormat:@"<%@: %p, code: %lu>", NSStringFromClass(self.class), self, (unsigned long)_code]);
 }
 
+- (id)copyWithZone:(NSZone *)zone
+{
+	return ([[self class] HTTPStatusWithCode:_code]);
+}
+
+- (NSUInteger)hash
+{
+	return ([[self class] hash] ^ _code);
+}
+
+- (BOOL)isEqual:(id)object
+{
+	if ([object isKindOfClass:[self class]])
+	{
+		return (((OCHTTPStatus *)object).code == _code);
+	}
+
+	return (NO);
+}
+
 @end
 
 NSErrorDomain OCHTTPStatusErrorDomain = @"OCHTTPStatusErrorDomain";

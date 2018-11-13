@@ -199,6 +199,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
+@interface OCCore (CommandUpdate)
+- (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+@end
+
 NS_ASSUME_NONNULL_END
 
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;

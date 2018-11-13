@@ -18,6 +18,8 @@
 
 #import "OCConnectionRequest.h"
 #import "OCXMLNode.h"
+#import "OCConnectionDAVMultistatusResponse.h"
+#import "OCTypes.h"
 
 @interface OCConnectionDAVRequest : OCConnectionRequest <NSXMLParserDelegate>
 {
@@ -29,16 +31,19 @@
 	NSError *_parseError;
 	
 	NSMutableArray <NSString *> *_parseTagPath;
-	
+	NSMutableDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *_parsedResponsesByPath;
+
 	NSString *_parseCurrentElement;
 }
 
 @property(strong) OCXMLNode *xmlRequest;
 
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth;
++ (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes;
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 
 - (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath;
+- (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
 
 @end
