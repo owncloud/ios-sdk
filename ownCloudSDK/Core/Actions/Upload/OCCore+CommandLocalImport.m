@@ -25,7 +25,7 @@
 @implementation OCCore (CommandLocalImport)
 
 #pragma mark - Command
-- (nullable NSProgress *)importFileNamed:(nullable NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
+- (nullable NSProgress *)importFileNamed:(nullable NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *placeholderOutputURL;
@@ -70,7 +70,20 @@
 			}
 
 			// Move file to placeholder item location
-			if ([[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error])
+			BOOL importFileOperationSuccessful;
+
+			if (((NSNumber *)options[OCCoreOptionImportByCopying]).boolValue)
+			{
+				// Import by copy
+				importFileOperationSuccessful = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+			}
+			else
+			{
+				// Import by moving
+				importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+			}
+
+			if (importFileOperationSuccessful)
 			{
 				placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
 				placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.

@@ -22,7 +22,7 @@
 @implementation OCCore (CommandUpdate)
 
 #pragma mark - Command
-- (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
+- (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpdate alloc] initWithItem:item updateProperties:properties] allowsRescheduling:YES resultHandler:resultHandler]);
 }

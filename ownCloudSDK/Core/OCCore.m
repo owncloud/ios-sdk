@@ -960,3 +960,5 @@ OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-ava
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 
+OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
+
