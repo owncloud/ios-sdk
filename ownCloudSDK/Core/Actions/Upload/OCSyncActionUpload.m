@@ -22,6 +22,7 @@
 
 @implementation OCSyncActionUpload
 
+#pragma mark - Initializer
 - (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
@@ -38,6 +39,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *uploadItem;

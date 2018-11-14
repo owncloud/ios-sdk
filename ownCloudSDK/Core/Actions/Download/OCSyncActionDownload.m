@@ -22,6 +22,7 @@
 
 @implementation OCSyncActionDownload
 
+#pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options
 {
 	if ((self = [super initWithItem:item]) != nil)
@@ -34,6 +35,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;

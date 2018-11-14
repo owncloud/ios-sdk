@@ -60,6 +60,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
 
+	OCErrorNewerVersionExists, //!< A newer version already exists
+
 	OCErrorCancelled, //!< The operation was cancelled
 
 	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information

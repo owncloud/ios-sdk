@@ -34,6 +34,7 @@
 @class OCConnectionRequest;
 @class OCConnection;
 @class OCCertificate;
+@class OCHTTPStatus;
 
 typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
 typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *error);
@@ -41,6 +42,7 @@ typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnection
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
+typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {

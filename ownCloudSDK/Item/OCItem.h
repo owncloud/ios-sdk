@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityUploading 	= (1<<1),	//!< This item is being uploaded, or scheduled to be uploaded
 	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
 	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
+	OCItemSyncActivityUpdating	= (1<<4),	//!< This item is being updated, or scheduled to be updated (both files and folders)
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -126,6 +127,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 
++ (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
@@ -153,3 +156,4 @@ extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag 
 
 extern OCItemPropertyName OCItemPropertyNameLastModified;
 extern OCItemPropertyName OCItemPropertyNameIsFavorite;
+extern OCItemPropertyName OCItemPropertyNameLocalAttributes;

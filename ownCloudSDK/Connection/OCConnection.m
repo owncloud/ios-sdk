@@ -33,6 +33,8 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCFile.h"
 #import "NSDate+OCDateParser.h"
+#import "OCEvent.h"
+#import "NSProgress+OCEvent.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -641,6 +643,7 @@
 		}];
 
 		progress = davRequest.progress;
+		progress.eventType = OCEventTypeRetrieveItemList;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 	}
 	else
@@ -683,6 +686,7 @@
 		[self.downloadQueue enqueueRequest:davRequest];
 
 		progress = davRequest.progress;
+		progress.eventType = OCEventTypeRetrieveItemList;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 	}
 	else
@@ -848,7 +852,7 @@
 		[self.uploadQueue enqueueRequest:request];
 
 		progress = request.progress;
-
+		progress.eventType = OCEventTypeUpload;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
 	}
 	else
@@ -954,7 +958,7 @@
 		[self.downloadQueue enqueueRequest:request];
 
 		progress = request.progress;
-
+		progress.eventType = OCEventTypeDownload;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 	}
 	else
@@ -1092,7 +1096,7 @@
 				[self.commandQueue enqueueRequest:patchRequest];
 
 				progress = patchRequest.progress;
-
+				progress.eventType = OCEventTypeUpdate;
 				progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
 			}
 		}
@@ -1137,7 +1141,7 @@
 
 					if ((multistatusResponse = multistatusResponsesByPath.allValues.firstObject) != nil)
 					{
-						NSMutableDictionary <OCItemPropertyName, OCHTTPStatus *> *propertyUpdateResults = [NSMutableDictionary new];
+						OCConnectionPropertyUpdateResult propertyUpdateResults = [NSMutableDictionary new];
 
 						// Success
 						[responseTagsByPropertyName enumerateKeysAndObjectsUsingBlock:^(OCItemPropertyName  _Nonnull propertyName, NSString * _Nonnull tagName, BOOL * _Nonnull stop) {
@@ -1145,7 +1149,7 @@
 
 							if ((status = [multistatusResponse statusForProperty:tagName]) != nil)
 							{
-								propertyUpdateResults[propertyName] = status;
+								((NSMutableDictionary *)propertyUpdateResults)[propertyName] = status;
 							}
 						}];
 
@@ -1200,7 +1204,7 @@
 		[self.commandQueue enqueueRequest:request];
 
 		progress = request.progress;
-
+		progress.eventType = OCEventTypeCreateFolder;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
 	}
 	else
@@ -1275,6 +1279,8 @@
 
 	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
+		progress.eventType = OCEventTypeMove;
+
 		if ([item.parentFileID isEqualToString:parentItem.fileID])
 		{
 			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
@@ -1294,6 +1300,7 @@
 
 	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
+		progress.eventType = OCEventTypeCopy;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
 	}
 
@@ -1454,6 +1461,7 @@
 
 		progress = request.progress;
 
+		progress.eventType = OCEventTypeDelete;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
 	}
 	else

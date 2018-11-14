@@ -22,33 +22,23 @@
 #import "OCTypes.h"
 #import "OCRetainerCollection.h"
 
-typedef NSNumber* OCFileRowID; //!< Row ID of the OCFile in the files table
-
 @interface OCFile : NSObject <NSSecureCoding>
 {
 	OCFileID _fileID;
 	OCFileETag _eTag;
-
-	OCRetainerCollection *_retainers;
 
 	OCItem *_item;
 
 	NSURL *_url;
 
 	OCChecksum *_checksum;
-
-	OCFileRowID _rowID;
 }
 
 @property(strong) OCFileID fileID;
 @property(strong) OCFileETag eTag;
 
-@property(strong,nonatomic) OCRetainerCollection *retainers;
-
 @property(strong) OCItem *item;
 @property(strong) NSURL *url;
 @property(strong) OCChecksum *checksum;
-
-@property(strong) OCFileRowID rowID;
 
 @end

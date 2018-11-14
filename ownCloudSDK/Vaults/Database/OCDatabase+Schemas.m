@@ -414,4 +414,3 @@ OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";
-OCDatabaseTableName OCDatabaseTableNameFiles = @"files";

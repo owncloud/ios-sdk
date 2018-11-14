@@ -17,10 +17,6 @@
  */
 
 #import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
 #import "OCSyncActionDelete.h"
 
 @implementation OCCore (CommandDelete)

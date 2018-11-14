@@ -17,11 +17,6 @@
  */
 
 #import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
 #import "OCSyncActionUpdate.h"
 
 @implementation OCCore (CommandUpdate)
@@ -29,8 +24,7 @@
 #pragma mark - Command
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
-	return (nil);
-	// return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] allowsRescheduling:YES resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpdate alloc] initWithItem:item updateProperties:properties] allowsRescheduling:YES resultHandler:resultHandler]);
 }
 
 @end

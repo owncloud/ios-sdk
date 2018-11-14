@@ -17,11 +17,6 @@
  */
 
 #import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
 #import "OCSyncActionDownload.h"
 
 @implementation OCCore (CommandDownload)

@@ -77,6 +77,10 @@
 				unlocalizedString = @"Construction of URL Session Task failed.";
 			break;
 
+			case OCErrorNewerVersionExists:
+				unlocalizedString = @"A newer version already exists.";
+			break;
+
 			case OCErrorRequestCancelled:
 				unlocalizedString = @"Request was cancelled.";
 			break;

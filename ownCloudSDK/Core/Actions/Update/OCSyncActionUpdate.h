@@ -22,6 +22,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSyncActionUpdate : OCSyncAction
 
+@property(nullable,strong) OCItem *archivedItemVersion;
+@property(strong) NSArray <OCItemPropertyName> *updateProperties;
+
+- (instancetype)initWithItem:(OCItem *)item updateProperties:(NSArray <OCItemPropertyName> *)properties;
+
 @end
 
 NS_ASSUME_NONNULL_END

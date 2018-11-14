@@ -200,7 +200,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface OCCore (CommandUpdate)
-- (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
 @end
 
 NS_ASSUME_NONNULL_END

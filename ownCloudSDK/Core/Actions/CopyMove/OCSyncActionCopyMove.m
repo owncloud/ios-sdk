@@ -20,6 +20,7 @@
 
 @implementation OCSyncActionCopyMove
 
+#pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename
 {
 	if ((self = [super initWithItem:item]) != nil)
@@ -35,6 +36,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	if ((self.localItem != nil) && (self.targetParentItem != nil) && (self.targetName != nil))

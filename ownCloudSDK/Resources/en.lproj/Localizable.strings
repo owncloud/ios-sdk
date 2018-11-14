@@ -6,6 +6,11 @@
   Copyright © 2018 ownCloud GmbH. All rights reserved.
 */
 
+/* Item property names */
+"itemProperty.lastModified" = "Last modified";
+"itemProperty.isFavorite" = "Favorite";
+"itemProperty.localAttributes" = "Local attributes";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -68,7 +73,11 @@
 /* Retrieving file list */
 "Retrieving file list for %@…" = "Retrieving file list for %@…";
 
+/* Update */
+"\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
+"Update failed with status code %d" = "Update failed with status code %d";
+"Error updating %@ metadata" = "Error updating %@ metadata";
+
 /* Logging */
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
-

@@ -21,9 +21,11 @@
 #import "OCCore+FileProvider.h"
 #import "OCFile.h"
 #import "OCItem+OCItemCreationDebugging.h"
+#import "OCMacros.h"
 
 @implementation OCItem
 
+#pragma mark - Placeholder
 + (instancetype)placeholderItemOfType:(OCItemType)type
 {
 	OCItem *item = [OCItem new];
@@ -34,6 +36,12 @@
 	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
 
 	return (item);
+}
+
+#pragma mark - Property localization
++ (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName
+{
+	return (OCLocalized([@"itemProperty.%@" stringByAppendingString:propertyName]));
 }
 
 #pragma mark - Serialization tools
@@ -156,7 +164,7 @@
 	return (self);
 }
 
-#pragma mark - Properties
+#pragma mark - Metadata
 - (NSString *)name
 {
 	return ([self.path lastPathComponent]);
@@ -189,6 +197,7 @@
 	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
 }
 
+#pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
 	if (_thumbnailAvailability == OCItemThumbnailAvailabilityInternal)
@@ -222,6 +231,19 @@
 	{
 		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
 	}
+}
+
+#pragma mark - Local attributes
+- (NSDictionary<OCLocalAttribute,id> *)localAttributes
+{
+	NSDictionary<OCLocalAttribute,id> *localAttributesCopy = nil;
+
+	@synchronized(self)
+	{
+		localAttributesCopy = [NSDictionary dictionaryWithDictionary:_localAttributes];
+	}
+
+	return (localAttributesCopy);
 }
 
 - (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute
@@ -375,3 +397,5 @@ OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
 
 OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
 OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";
+OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
+
