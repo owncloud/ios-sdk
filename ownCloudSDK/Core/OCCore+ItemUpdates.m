@@ -37,6 +37,14 @@
 		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
 		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
 {
+	// Discard empty updates
+	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshPaths.count == 0) &&
+	     (preflightAction == nil) && (postflightAction == nil) && (queryPostProcessor == nil))
+	{
+		return;
+	}
+
+	// Begin
 	[self beginActivity:@"Perform item and query updates"];
 
 	// Ensure protection

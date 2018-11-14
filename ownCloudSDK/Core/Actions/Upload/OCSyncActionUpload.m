@@ -48,7 +48,14 @@
 	{
 		[uploadItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-		syncContext.addedItems = @[ uploadItem ];
+		if (uploadItem.isPlaceholder)
+		{
+			syncContext.addedItems = @[ uploadItem ];
+		}
+		else
+		{
+			syncContext.updatedItems = @[ uploadItem ];
+		}
 
 		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated uploadItem (now with databaseID) will be stored in the database and can later be used to remove the uploadItem again.
 	}
@@ -62,9 +69,23 @@
 	{
 		[uploadItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-		syncContext.removedItems = @[ uploadItem ];
+		if (uploadItem.isPlaceholder)
+		{
+			// Import descheduled - delete entire item
+			syncContext.removedItems = @[ uploadItem ];
 
-		[self.core deleteDirectoryForItem:uploadItem];
+			[self.core deleteDirectoryForItem:uploadItem];
+		}
+		else
+		{
+			// Remove temporary copy (main file should remain intact)
+			if ((_importFileURL!=nil) && _importFileIsTemporaryAlongsideCopy)
+			{
+				NSError *error;
+
+				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+			}
+		}
 	}
 }
 
@@ -247,6 +268,9 @@
 				// Indicate item update
 				syncContext.updatedItems = @[ uploadedItem ];
 
+				// Update localItem
+				self.localItem = uploadedItem;
+
 				// Remove temporary copy
 				if (_importFileIsTemporaryAlongsideCopy)
 				{
@@ -263,15 +287,17 @@
 
 		canDeleteSyncRecord = YES;
 	}
-	else if (event.error != nil)
-	{
-		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.parentItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
-	}
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, nil);
+		// Call resultHandler (and give file provider a chance to attach an uploadingError
+		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, self.localItem);
+	}
+
+	if (event.error != nil)
+	{
+		// Create issue for cancellation for any errors
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 	}
 
 	return (canDeleteSyncRecord);
