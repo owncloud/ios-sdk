@@ -23,6 +23,8 @@ typedef NSString* OCEventHandlerIdentifier;
 
 typedef NS_ENUM(NSUInteger, OCEventType)
 {
+	OCEventTypeNone,
+
 	// Creation
 	OCEventTypeCreateFolder,
 	OCEventTypeCreateEmptyFile,

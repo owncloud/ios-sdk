@@ -30,4 +30,14 @@
 	[self setUserInfoObject:@(eventType) forKey:@"_eventType"];
 }
 
+- (OCFileID)fileID
+{
+	return (self.userInfo[@"_fileID"]);
+}
+
+- (void)setFileID:(OCFileID)fileID
+{
+	[self setUserInfoObject:fileID forKey:@"_fileID"];
+}
+
 @end

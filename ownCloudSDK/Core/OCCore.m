@@ -152,6 +152,8 @@
 
 		_itemListTasksByPath = [NSMutableDictionary new];
 
+		_progressByFileID = [NSMutableDictionary new];
+
 		_thumbnailCache = [OCCache new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
@@ -778,6 +780,120 @@
 			});
 		}
 	}];
+}
+
+#pragma mark - Progress tracking
+- (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item
+{
+	OCFileID fileID;
+
+	if ((fileID = item.fileID) != nil)
+	{
+		@synchronized(_progressByFileID)
+		{
+			NSMutableArray <NSProgress *> *progressObjects;
+
+			if ((progressObjects = _progressByFileID[fileID]) == nil)
+			{
+				progressObjects = (_progressByFileID[fileID] = [NSMutableArray new]);
+			}
+
+			[progressObjects addObject:progress];
+
+			[progress addObserver:self forKeyPath:@"isFinished" options:NSKeyValueObservingOptionInitial context:(__bridge void *)_progressByFileID];
+			[progress addObserver:self forKeyPath:@"isCancelled" options:0 context:(__bridge void *)_progressByFileID];
+			progress.fileID = fileID;
+		}
+	}
+}
+
+- (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item
+{
+	OCFileID fileID;
+
+	if ((fileID = item.fileID) != nil)
+	{
+		[self unregisterProgress:progress forFileID:fileID];
+	}
+}
+
+- (void)unregisterProgress:(NSProgress *)progress forFileID:(OCFileID)fileID
+{
+	if (fileID != nil)
+	{
+		@synchronized(_progressByFileID)
+		{
+			NSMutableArray <NSProgress *> *progressObjects;
+
+			if ((progressObjects = _progressByFileID[fileID]) != nil)
+			{
+				[progressObjects removeObjectIdenticalTo:progress];
+
+				[progress removeObserver:self forKeyPath:@"isFinished" context:(__bridge void *)_progressByFileID];
+				[progress removeObserver:self forKeyPath:@"isCancelled" context:(__bridge void *)_progressByFileID];
+			}
+		}
+	}
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+	if (context == (__bridge void *)_progressByFileID)
+	{
+		if ([object isKindOfClass:[NSProgress class]])
+		{
+			NSProgress *progress = object;
+
+			if ((progress.isFinished || progress.isCancelled) && (progress.fileID != nil))
+			{
+				[self unregisterProgress:progress forFileID:progress.fileID];
+			}
+		}
+	}
+	else
+	{
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+	}
+}
+
+- (NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType
+{
+	NSMutableArray <NSProgress *> *resultProgressObjects = nil;
+
+	OCFileID fileID;
+
+	if ((fileID = item.fileID) != nil)
+	{
+		@synchronized(_progressByFileID)
+		{
+			NSMutableArray <NSProgress *> *progressObjects;
+
+			if ((progressObjects = _progressByFileID[fileID]) != nil)
+			{
+				if (eventType == OCEventTypeNone)
+				{
+					resultProgressObjects = [[NSMutableArray alloc] initWithArray:progressObjects];
+				}
+				else
+				{
+					for (NSProgress *progress in progressObjects)
+					{
+						if (progress.eventType == eventType)
+						{
+							if (resultProgressObjects == nil)
+							{
+								resultProgressObjects = [NSMutableArray new];
+							}
+
+							[resultProgressObjects addObject:progress];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return (resultProgressObjects);
 }
 
 #pragma mark - Item location & directory lifecycle
