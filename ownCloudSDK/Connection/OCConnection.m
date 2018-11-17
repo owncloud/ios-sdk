@@ -124,7 +124,8 @@
 		}
 			
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-		_uploadQueue = _downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+		_downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+		_uploadQueue = _downloadQueue;
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
