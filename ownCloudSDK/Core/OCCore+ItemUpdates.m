@@ -386,17 +386,6 @@
 				}
 			}
 
-			// Signal file provider
-			if (self.postFileProviderNotifications)
-			{
-				BuildAddedUpdatedRemovedItemList();
-
-				if (addedUpdatedRemovedItems.count > 0)
-				{
-					[self signalChangesForItems:addedUpdatedRemovedItems];
-				}
-			}
-
 			// Run postflight action
 			if (postflightAction != nil)
 			{
@@ -407,6 +396,17 @@
 			else
 			{
 				[self endActivity:@"Item Updates - update queries"];
+			}
+
+			// Signal file provider
+			if (self.postFileProviderNotifications)
+			{
+				BuildAddedUpdatedRemovedItemList();
+
+				if (addedUpdatedRemovedItems.count > 0)
+				{
+					[self signalChangesForItems:addedUpdatedRemovedItems];
+				}
 			}
 		}];
 	}

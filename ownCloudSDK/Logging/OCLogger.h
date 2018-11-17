@@ -49,6 +49,7 @@ typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
+@property(readonly,class) BOOL synchronousLoggingEnabled;
 
 @property(copy,readonly,nonatomic) NSArray<OCLogWriter *> *writers;
 
@@ -79,6 +80,7 @@ extern OCClassSettingsIdentifier OCClassSettingsIdentifierLog;
 extern OCClassSettingsKey OCClassSettingsKeyLogLevel;
 extern OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask;
 extern OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters;
+extern OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
 

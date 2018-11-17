@@ -164,7 +164,7 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 
 				for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
 				{
-					OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+					OCLogDebug(@"[FP] Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
 
 					[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
 				}
@@ -191,7 +191,7 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 		{
 			// Another signal hasn't completed yet, so increase the counter and wait for the scheduled signal to complete
 			// (at which point, another signal will be triggered)
-			OCLogDebug(@"Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
+			OCLogDebug(@"[FP] Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
 
 			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue + 1);
 		}
@@ -200,7 +200,9 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 
 - (void)_scheduleSignalForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
 {
-	dispatch_async(dispatch_get_main_queue(), ^{
+	NSTimeInterval minimumSignalInterval = 0.2; // effectively throttle FP container update notifications to at most once per [minimumSignalInterval]
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(minimumSignalInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		NSFileProviderManager *fileProviderManager;
 
 		if ((fileProviderManager = [self fileProviderManager]) != nil)
@@ -209,10 +211,10 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 			{
 				NSInteger signalCountAtStart = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 
-				OCLogDebug(@"FP: Signaling %@ for changes..", changedDirectoryFileID);
+				OCLogDebug(@"[FP] Signaling %@ for changes..", changedDirectoryFileID);
 
 				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
-					OCLogDebug(@"FP: Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
+					OCLogDebug(@"[FP] Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
 
 					dispatch_async(dispatch_get_main_queue(), ^{
 						@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
@@ -239,7 +241,7 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 		}
 		else
 		{
-			OCLogDebug(@"FP: Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
+			OCLogDebug(@"[FP] Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
 		}
 
 	});
