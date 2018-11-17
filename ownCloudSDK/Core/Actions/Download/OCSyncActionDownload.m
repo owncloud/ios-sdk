@@ -42,8 +42,7 @@
 
 	if ((item = self.localItem) != nil)
 	{
-		if (!item.locallyModified && // Item wasn't modified locally
-		    (item.localRelativePath != nil) && // Copy of item is stored locally
+		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
 		{
 			// Item already downloaded - take some shortcuts
