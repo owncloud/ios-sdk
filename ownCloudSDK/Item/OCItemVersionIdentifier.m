@@ -79,4 +79,10 @@
 	return (self);
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, fileID: %@, eTag: %@>", NSStringFromClass(self.class), self, _fileID, _eTag]);
+}
+
 @end

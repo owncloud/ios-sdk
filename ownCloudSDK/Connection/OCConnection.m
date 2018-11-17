@@ -991,12 +991,16 @@
 				if (request.responseHTTPStatus.isSuccess)
 				{
 					OCFile *file = [OCFile new];
+					OCChecksumHeaderString checksumString;
 
 					file.item = request.userInfo[@"item"];
 
 					file.url = request.downloadedFileURL;
 
-					file.checksum = [OCChecksum checksumFromHeaderString:request.response.allHeaderFields[@"oc-checksum"]];
+					if ((checksumString = request.response.allHeaderFields[@"oc-checksum"]) != nil)
+					{
+						file.checksum = [OCChecksum checksumFromHeaderString:checksumString];
+					}
 
 					file.eTag = request.response.allHeaderFields[@"oc-etag"];
 					file.fileID = file.item.fileID;

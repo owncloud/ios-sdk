@@ -62,6 +62,37 @@
 		return;
 	}
 
+	// Remove outdated versions of updated items
+	if (updatedItems.count > 0)
+	{
+		for (OCItem *updateItem in updatedItems)
+		{
+			if ((!updateItem.locallyModified) && // don't delete local modified versions
+			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
+			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
+			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier])) // different versions?
+			{
+				// delete local copy
+				NSURL *deleteFileURL;
+
+				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
+				{
+					NSError *deleteError = nil;
+
+					OCLogDebug(@"Deleting outdated local copy of %@ (%@ vs %@)", updateItem, updateItem.itemVersionIdentifier, updateItem.localCopyVersionIdentifier);
+
+					updateItem.localRelativePath = nil;
+					updateItem.localCopyVersionIdentifier = nil;
+
+					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
+					{
+						OCLogError(@"Error removing %@: %@", deleteFileURL, deleteError);
+					}
+				}
+			}
+		}
+	}
+
 	// Update metaData table and queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (preflightAction!=nil))
 	{

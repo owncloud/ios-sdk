@@ -207,13 +207,21 @@
 		{
 			__block BOOL checksumIsValid = NO;
 
-			// Verify checksum and wait for result of computation
-			OCSyncExec(checksumVerification, {
-				[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
-					checksumIsValid = isValid;
-					OCSyncExecDone(checksumVerification);
-				}];
-			});
+			if (event.file.checksum != nil)
+			{
+				// Verify checksum and wait for result of computation
+				OCSyncExec(checksumVerification, {
+					[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
+						checksumIsValid = isValid;
+						OCSyncExecDone(checksumVerification);
+					}];
+				});
+			}
+			else
+			{
+				// No checksum available ¯\_(ツ)_/¯
+				checksumIsValid = YES;
+			}
 
 			if (!checksumIsValid)
 			{
