@@ -78,6 +78,7 @@
 
 	[coder encodeObject:_localRelativePath	forKey:@"localRelativePath"];
 	[coder encodeBool:_locallyModified      forKey:@"locallyModified"];
+	[coder encodeObject:_localCopyVersionIdentifier forKey:@"localCopyVersionIdentifier"];
 
 	[coder encodeObject:_remoteItem		forKey:@"remoteItem"];
 
@@ -135,6 +136,7 @@
 
 		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
+		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
 
 		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
 

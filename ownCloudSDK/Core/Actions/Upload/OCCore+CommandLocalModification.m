@@ -95,6 +95,7 @@
 			[item updateMetadataFromFileURL:itemFileURL];
 
 			item.localRelativePath = [self.vault relativePathForItem:item];
+			item.localCopyVersionIdentifier = nil;
 			item.locallyModified = YES; // Unsynced yet, so it's a local modification. Also prevents pruning before upload finishes.
 		}
 	}

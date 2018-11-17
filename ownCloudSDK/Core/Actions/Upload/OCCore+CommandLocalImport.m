@@ -84,6 +84,7 @@
 		if (importFileOperationSuccessful)
 		{
 			placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
+			placeholderItem.localCopyVersionIdentifier = nil;
 			placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
 		}
 		else

@@ -124,6 +124,7 @@
 
 												latestItem.locallyModified = NO;
 												latestItem.localRelativePath = nil;
+												latestItem.localCopyVersionIdentifier = nil;
 
 												[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 											}
@@ -311,6 +312,8 @@
 					}
 
 					item.localRelativePath = vaultItemLocalRelativePath;
+					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
+
 					downloadedFile.url = vaultItemURL;
 				}
 

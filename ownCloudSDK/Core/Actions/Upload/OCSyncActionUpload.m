@@ -221,6 +221,7 @@
 						uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
 						uploadItem.localRelativePath = nil;
 
+						uploadedItem.localCopyVersionIdentifier = uploadItem.itemVersionIdentifier;
 						uploadedItem.parentFileID = uploadItem.parentFileID;
 
 						// Update uploaded item with local relative path
