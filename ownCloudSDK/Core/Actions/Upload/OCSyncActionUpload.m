@@ -126,44 +126,47 @@
 				else
 				{
 					// Cloning failed - continue to use the "original"
-					_uploadCopyFileURL = nil;
-
 					OCLogError(@"SE: error cloning file to import from %@ to %@: %@", uploadURL, _uploadCopyFileURL, error);
+
+					_uploadCopyFileURL = nil;
 				}
 			}
 		}
 
 		// Compute checksum
-		OCSyncExec(checksumComputation, {
-			[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
-				self.importFileChecksum = computedChecksum;
-				OCSyncExecDone(checksumComputation);
-			}];
-		});
-
-		// Schedule the upload
-		OCItem *latestVersionOfLocalItem;
-		NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-						self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
-					nil];
-
-		if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
+		if (_uploadCopyFileURL != nil)
 		{
-			latestVersionOfLocalItem = self.localItem;
-		}
+			OCSyncExec(checksumComputation, {
+				[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+					self.importFileChecksum = computedChecksum;
+					OCSyncExecDone(checksumComputation);
+				}];
+			});
 
-		[self setupProgressSupportForItem:latestVersionOfLocalItem options:&options syncContext:syncContext];
+			// Schedule the upload
+			OCItem *latestVersionOfLocalItem;
+			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
+						nil];
 
-		if ((progress = [self.core.connection uploadFileFromURL:uploadURL
-							       withName:remoteFileName
-								     to:parentItem
-							  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
-								options:options
-							   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
-		{
-			[syncContext.syncRecord addProgress:progress];
+			if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
+			{
+				latestVersionOfLocalItem = self.localItem;
+			}
 
-			return (YES);
+			[self setupProgressSupportForItem:latestVersionOfLocalItem options:&options syncContext:syncContext];
+
+			if ((progress = [self.core.connection uploadFileFromURL:uploadURL
+								       withName:remoteFileName
+									     to:parentItem
+								  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
+									options:options
+								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
+			{
+				[syncContext.syncRecord addProgress:progress];
+
+				return (YES);
+			}
 		}
 	}
 

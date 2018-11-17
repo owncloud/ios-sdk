@@ -51,53 +51,50 @@
 	// Move file into the vault for uploading
 	if ((placeholderOutputURL = [self.vault localURLForItem:placeholderItem]) != nil)
 	{
-		BOOL proceed = YES;
+		BOOL relinquishSecurityScopedResourceAccess = NO;
 
 		if (isSecurityScoped)
 		{
-			proceed = [inputFileURL startAccessingSecurityScopedResource];
+			relinquishSecurityScopedResourceAccess = [inputFileURL startAccessingSecurityScopedResource];
 		}
 
-		if (proceed)
+		// Update metadata from input file
+		[placeholderItem updateMetadataFromFileURL:inputFileURL];
+
+		// Create directory for placeholder item
+		if ((error = [self createDirectoryForItem:placeholderItem]) != nil)
 		{
-			// Update metadata from input file
-			[placeholderItem updateMetadataFromFileURL:inputFileURL];
+			OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(placeholderItem), error);
+		}
 
-			// Create directory for placeholder item
-			if ((error = [self createDirectoryForItem:placeholderItem]) != nil)
-			{
-				OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(placeholderItem), error);
-			}
+		// Move file to placeholder item location
+		BOOL importFileOperationSuccessful;
 
-			// Move file to placeholder item location
-			BOOL importFileOperationSuccessful;
+		if (((NSNumber *)options[OCCoreOptionImportByCopying]).boolValue)
+		{
+			// Import by copy
+			importFileOperationSuccessful = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+		}
+		else
+		{
+			// Import by moving
+			importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+		}
 
-			if (((NSNumber *)options[OCCoreOptionImportByCopying]).boolValue)
-			{
-				// Import by copy
-				importFileOperationSuccessful = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
-			}
-			else
-			{
-				// Import by moving
-				importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
-			}
+		if (importFileOperationSuccessful)
+		{
+			placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
+			placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
+		}
+		else
+		{
+			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
+			criticalError = error;
+		}
 
-			if (importFileOperationSuccessful)
-			{
-				placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
-				placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
-			}
-			else
-			{
-				OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
-				criticalError = error;
-			}
-
-			if (isSecurityScoped)
-			{
-				[inputFileURL stopAccessingSecurityScopedResource];
-			}
+		if (isSecurityScoped && relinquishSecurityScopedResourceAccess)
+		{
+			[inputFileURL stopAccessingSecurityScopedResource];
 		}
 	}
 	else
