@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncActionDownload.h"
+#import "OCSyncAction+FileProvider.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
 
@@ -164,63 +165,7 @@
 
 		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
-		if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
-		{
-			/*
-				Check if a placeholder/file already exists here before registering this URL session for the item. Otherwise, the SDK may find itself on
-				the receiving end of this error:
-
-				[default] [ERROR] Failed registering URL session task <__NSCFBackgroundDownloadTask: 0x7f81efa08010>{ taskIdentifier: 1041 } with item 00000042oc9qntjidejl; Error Domain=com.apple.FileProvider Code=-1005 "The file doesn’t exist." UserInfo={NSFileProviderErrorNonExistentItemIdentifier=00000042oc9qntjidejl}
-
-				Error registering <__NSCFBackgroundDownloadTask: 0x7f81efa08010>{ taskIdentifier: 1041 } for 00000042oc9qntjidejl: Error Domain=com.apple.FileProvider Code=-1005 "The file doesn’t exist." UserInfo={NSFileProviderErrorNonExistentItemIdentifier=00000042oc9qntjidejl} [OCCoreSyncActionDownload.m:71|FULL]
-			*/
-			NSURL *localURL, *placeholderURL;
-
-			if (((localURL = [self.core localURLForItem:item]) != nil) &&
-			    ((placeholderURL = [NSFileProviderManager placeholderURLForURL:localURL]) != nil))
-			{
-				if ([[NSFileManager defaultManager] fileExistsAtPath:placeholderURL.path])
-				{
-					NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
-
-					OCLogDebug(@"SE: record %@ will register URLTask for %@", syncContext.syncRecord, item);
-
-					OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
-						if (event == OCConnectionRequestObserverEventTaskResume)
-						{
-							[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
-								OCLogDebug(@"SE: record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
-
-								if (error != nil)
-								{
-									OCLogError(@"SE: error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
-								}
-
-								// File provider detail: the task may not be started until after this completionHandler was called
-								[request.urlSessionTask resume];
-							}];
-
-							return (YES);
-						}
-
-						return (NO);
-					} copy];
-
-					if (options == nil)
-					{
-						options = @{ OCConnectionOptionRequestObserverKey : observer };
-					}
-					else
-					{
-						NSMutableDictionary *mutableOptions = [options mutableCopy];
-
-						mutableOptions[OCConnectionOptionRequestObserverKey] = observer;
-
-						options = mutableOptions;
-					}
-				}
-			}
-		}
+		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
 		OCLogDebug(@"SE: record %@ download: initiating download", syncContext.syncRecord);
 

@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncActionUpload.h"
+#import "OCSyncAction+FileProvider.h"
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
 
@@ -142,19 +143,22 @@
 
 		// Schedule the upload
 		OCItem *latestVersionOfLocalItem;
+		NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+						self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
+					nil];
 
 		if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
 		{
 			latestVersionOfLocalItem = self.localItem;
 		}
 
+		[self setupProgressSupportForItem:latestVersionOfLocalItem options:&options syncContext:syncContext];
+
 		if ((progress = [self.core.connection uploadFileFromURL:uploadURL
 							       withName:remoteFileName
 								     to:parentItem
 							  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
-								options:[NSDictionary dictionaryWithObjectsAndKeys:
-										self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
-									nil]
+								options:options
 							   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			[syncContext.syncRecord addProgress:progress];

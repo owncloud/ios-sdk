@@ -206,6 +206,8 @@
 		DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925120F5F57D00AEFF98 /* NSObject+OCMockManager.m */; };
 		DCA8925820F5F8AC00AEFF98 /* OCMockTestClass.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925520F5F8A600AEFF98 /* OCMockTestClass.m */; };
 		DCA8925B20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925A20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m */; };
+		DCA91F2F21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA91F2D21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h */; };
+		DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA91F2E21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m */; };
 		DCADC03F2072774200DB8E83 /* OCQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC03D2072774200DB8E83 /* OCQuery+Internal.h */; };
 		DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC03E2072774200DB8E83 /* OCQuery+Internal.m */; };
 		DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0422072CCC900DB8E83 /* OCCoreItemListTask.h */; };
@@ -632,6 +634,8 @@
 		DCA8925520F5F8A600AEFF98 /* OCMockTestClass.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMockTestClass.m; sourceTree = "<group>"; };
 		DCA8925920F5F91300AEFF98 /* OCMockTestClass+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCMockTestClass+OCMocking.h"; sourceTree = "<group>"; };
 		DCA8925A20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCMockTestClass+OCMocking.m"; sourceTree = "<group>"; };
+		DCA91F2D21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCSyncAction+FileProvider.h"; sourceTree = "<group>"; };
+		DCA91F2E21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCSyncAction+FileProvider.m"; sourceTree = "<group>"; };
 		DCADC03D2072774200DB8E83 /* OCQuery+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+Internal.h"; sourceTree = "<group>"; };
 		DCADC03E2072774200DB8E83 /* OCQuery+Internal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQuery+Internal.m"; sourceTree = "<group>"; };
 		DCADC0422072CCC900DB8E83 /* OCCoreItemListTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreItemListTask.h; sourceTree = "<group>"; };
@@ -1015,6 +1019,8 @@
 			children = (
 				DCDA307021412A0100DB61A9 /* OCSyncAction.m */,
 				DCDA306F21412A0100DB61A9 /* OCSyncAction.h */,
+				DCA91F2E21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m */,
+				DCA91F2D21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h */,
 				DC708CD02141306B00FE43CA /* CopyMove */,
 				DC708CD1214131C200FE43CA /* CreateFolder */,
 				DC708CD2214131D600FE43CA /* Delete */,
@@ -1664,6 +1670,7 @@
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
 				DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */,
+				DCA91F2F21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h in Headers */,
 				DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
@@ -2144,6 +2151,7 @@
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
