@@ -81,3 +81,7 @@
 /* Logging */
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
+
+/* Errors */
+"Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
+"This server runs an unsupported version (%@). Version %@ or later is required by this app." = "This server runs an unsupported version (%@). Version %@ or later is required by this app.";

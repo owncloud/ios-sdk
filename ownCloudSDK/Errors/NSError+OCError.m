@@ -129,6 +129,10 @@
 				unlocalizedString = @"This server version is not supported.";
 			break;
 
+			case OCErrorServerNoSupportedAuthMethods:
+				unlocalizedString = @"Server doesn't seem to support any authentication method supported by this app.";
+			break;
+
 			case OCErrorCertificateInvalid:
 				unlocalizedString = @"The certificate is invalid or contains errors";
 			break;

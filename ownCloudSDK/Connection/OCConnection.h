@@ -218,9 +218,13 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (NSString *)serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
 
 - (NSString *)serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
++ (NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus;
 
 #pragma mark - API Switches
 - (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+
+#pragma mark - Checks
+- (NSError *)supportsServerVersion:(NSString *)serverVersion longVersion:(NSString *)longVersion;
 
 @end
 

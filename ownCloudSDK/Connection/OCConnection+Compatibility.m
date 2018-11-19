@@ -18,6 +18,8 @@
 
 #import "OCConnection.h"
 #import "NSString+OCVersionCompare.h"
+#import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @implementation OCConnection (Compatibility)
 
@@ -42,9 +44,14 @@
 	return (_serverStatus[@"edition"]);
 }
 
++ (NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus
+{
+	return ([NSString stringWithFormat:@"%@ %@ %@", serverStatus[@"productname"], serverStatus[@"edition"], serverStatus[@"version"]]);
+}
+
 - (NSString *)serverLongProductVersionString
 {
-	return ([NSString stringWithFormat:@"%@ %@ %@", _serverStatus[@"productname"], _serverStatus[@"edition"], _serverStatus[@"version"]]);
+	return ([OCConnection serverLongProductVersionStringFromServerStatus:_serverStatus]);
 }
 
 #pragma mark - API Switches
@@ -56,6 +63,24 @@
 - (BOOL)supportsPreviewAPI
 {
 	return ([self runsServerVersionOrHigher:@"10.0.9"]);
+}
+
+#pragma mark - Checks
+- (NSError *)supportsServerVersion:(NSString *)serverVersion longVersion:(NSString *)longVersion
+{
+	NSString *minimumVersion;
+
+	if ((minimumVersion = [self classSettingForOCClassSettingsKey:OCConnectionMinimumVersionRequired]) != nil)
+	{
+		if ([serverVersion compareVersionWith:minimumVersion] == NSOrderedAscending)
+		{
+			return ([NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
+				NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"This server runs an unsupported version (%@). Version %@ or later is required by this app.", @""), longVersion, minimumVersion]
+			}]);
+		}
+	}
+
+	return (nil);
 }
 
 @end

@@ -410,22 +410,13 @@
 						// Got status successfully => now check minimum version + authenticate connection
 
 						// Check minimum version
+						NSError *minimumVersionError;
+
+						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion longVersion:self.serverLongProductVersionString]) != nil)
 						{
-							NSString *minimumVersion;
+							completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
 
-							if ((minimumVersion = [self classSettingForOCClassSettingsKey:OCConnectionMinimumVersionRequired]) != nil)
-							{
-								if (![self runsServerVersionOrHigher:minimumVersion])
-								{
-									NSError *minimumVersionError = [NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
-										NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"This server runs an unsupported version (%@). Version %@ or later is required by this app.", @""), self.serverLongProductVersionString, minimumVersion]
-									}];
-
-									completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
-
-									return;
-								}
-							}
+							return;
 						}
 
 						// Authenticate connection
