@@ -77,11 +77,17 @@
 
 	if ((event.error == nil) && (event.result != nil))
 	{
-		syncContext.addedItems = @[ event.result ];
-
-		if (!isCopy && (self.localItem!=nil))
+		if (isCopy)
 		{
-			syncContext.removedItems = @[ self.localItem ];
+			syncContext.addedItems = @[ event.result ];
+		}
+		else
+		{
+			if (self.localItem!=nil)
+			{
+				[event.result prepareToReplace:self.localItem];
+				syncContext.updatedItems = @[ event.result ];
+			}
 		}
 
 		canDeleteSyncRecord = YES;

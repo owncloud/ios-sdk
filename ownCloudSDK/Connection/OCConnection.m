@@ -1383,13 +1383,13 @@
 
 				// Retrieve all details on the new item
 				[self retrieveItemListAtPath:newFullPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					OCItem *newFolderItem = items.firstObject;
+					OCItem *newItem = items.firstObject;
 
-					newFolderItem.parentFileID = parentItem.fileID;
+					newItem.parentFileID = parentItem.fileID;
 
 					if (error == nil)
 					{
-						event.result = newFolderItem;
+						event.result = newItem;
 					}
 					else
 					{
