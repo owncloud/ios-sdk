@@ -366,8 +366,11 @@
 		if ([downloadError isOCErrorWithCode:OCErrorCancelled])
 		{
 			// Download has been cancelled by the user => create no issue, remove sync record reference and the record itself instead
-			[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
-			syncContext.updatedItems = @[ item ];
+			if (item != nil)
+			{
+				[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+				syncContext.updatedItems = @[ item ];
+			}
 
 			canDeleteSyncRecord = YES;
 		}

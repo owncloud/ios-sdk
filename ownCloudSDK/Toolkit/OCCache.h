@@ -20,6 +20,8 @@
 
 #define OCCacheLimitNone 0
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCCache<K,V> : NSObject
 {
 	NSMutableDictionary<K, V> *_valuesByKey;
@@ -37,7 +39,7 @@
 @property(assign) NSUInteger totalCostLimit;	//!< Impose limit on the maximum cost of key-value pairs. If the limit is exceeded, least recently used key-value pairs are removed first. A value of OCCacheLimitNone (default) means no limit.
 
 #pragma mark - Retrieval
-- (V)objectForKey:(K)key;
+- (nullable V)objectForKey:(K)key;
 
 #pragma mark - Modification
 - (void)setObject:(V)obj forKey:(K)key;
@@ -48,3 +50,5 @@
 - (void)removeObjectForKey:(K)key;
 
 @end
+
+NS_ASSUME_NONNULL_END

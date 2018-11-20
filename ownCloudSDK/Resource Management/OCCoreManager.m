@@ -266,4 +266,17 @@
 	}
 }
 
+#pragma mark - Memory configuration
+- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+{
+	@synchronized (self)
+	{
+		_memoryConfiguration = memoryConfiguration;
+
+		[_coresByUUID enumerateKeysAndObjectsUsingBlock:^(NSUUID * _Nonnull key, OCCore * _Nonnull core, BOOL * _Nonnull stop) {
+			core.memoryConfiguration = memoryConfiguration;
+		}];
+	}
+}
+
 @end

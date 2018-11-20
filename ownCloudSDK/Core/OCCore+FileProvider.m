@@ -22,14 +22,13 @@
 #import "OCLogger.h"
 #import "OCMacros.h"
 
-static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
-
 @implementation OCCore (FileProvider)
 
 #pragma mark - Fileprovider capability
 + (BOOL)hostHasFileProvider
 {
 	static BOOL didAutoDetectFromInfoPlist = NO;
+	static BOOL hostHasFileProvider = NO;
 
 	if (!didAutoDetectFromInfoPlist)
 	{
@@ -37,18 +36,13 @@ static BOOL sOCCoreFileProviderHostHasFileProvider = NO;
 
 		if ((hasFileProvider = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"OCHasFileProvider"]) != nil)
 		{
-			sOCCoreFileProviderHostHasFileProvider = [hasFileProvider boolValue];
+			hostHasFileProvider = [hasFileProvider boolValue];
 		}
 
 		didAutoDetectFromInfoPlist = YES;
 	}
 
-	return (sOCCoreFileProviderHostHasFileProvider);
-}
-
-+ (void)setHostHasFileProvider:(BOOL)hostHasFileProvider
-{
-	sOCCoreFileProviderHostHasFileProvider = hostHasFileProvider;
+	return (hostHasFileProvider);
 }
 
 #pragma mark - Fileprovider tools

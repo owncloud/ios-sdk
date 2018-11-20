@@ -49,6 +49,8 @@
 @synthesize vault = _vault;
 @synthesize connection = _connection;
 
+@synthesize memoryConfiguration = _memoryConfiguration;
+
 @synthesize state = _state;
 @synthesize stateChangedHandler = _stateChangedHandler;
 
@@ -169,6 +171,8 @@
 		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
 		_reachabilityMonitor.enabled = YES;
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+
+		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
 
 		[self startIPCObservation];
 	}
@@ -500,6 +504,23 @@
 	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
+}
+
+#pragma mark - Memory configuration
+- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+{
+	_memoryConfiguration = memoryConfiguration;
+
+	switch (_memoryConfiguration)
+	{
+		case OCCoreMemoryConfigurationDefault:
+			_thumbnailCache.countLimit = OCCacheLimitNone;
+		break;
+
+		case OCCoreMemoryConfigurationMinimum:
+			_thumbnailCache.countLimit = 1;
+		break;
+	}
 }
 
 #pragma mark - Inter-Process change notification/handling

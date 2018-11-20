@@ -45,6 +45,12 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 	OCCoreStateRunning
 };
 
+typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
+{
+	OCCoreMemoryConfigurationDefault,	//!< Default memory configuration
+	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
+};
+
 typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
 typedef void(^OCCoreUploadResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
 typedef void(^OCCoreDownloadResultHandler)(NSError *error, OCCore *core, OCItem *item, OCFile *file);
@@ -72,6 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
 	OCConnection *_connection;
 	OCReachabilityMonitor *_reachabilityMonitor;
 	BOOL _attemptConnect;
+
+	OCCoreMemoryConfiguration _memoryConfiguration;
 
 	NSMutableArray <OCQuery *> *_queries;
 
@@ -116,6 +124,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
 @property(readonly) OCReachabilityMonitor *reachabilityMonitor; //!< ReachabilityMonitor observing the reachability of the bookmark.url.host.
 
+@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;
 
@@ -159,7 +169,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item;   //!< Registers a progress object for an item. Once the progress is finished, it's unregistered automatically.
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item; //!< Unregisters a progress object for an item
 
-- (NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
+- (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
 
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself.

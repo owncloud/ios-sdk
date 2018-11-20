@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,readonly) NSDictionary <OCHTTPStatus *, NSDictionary <NSString *, id> *> *valueForPropByStatusCode;
 @property(strong,readonly) OCPath path;
 
-- (OCHTTPStatus *)statusForProperty:(NSString *)propertyName;
+- (nullable OCHTTPStatus *)statusForProperty:(NSString *)propertyName;
 
 @end
 
