@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCBookmarkManager : NSObject
 {
 	NSMutableArray<OCBookmark *> *_bookmarks;
@@ -43,10 +45,14 @@
 
 - (void)moveBookmarkFrom:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
 
+- (BOOL)updateBookmark:(OCBookmark *)bookmark; //!< Notify the manager that properties of the bookmark have been changed. Will return YES if the bookmark is managed by the manager, NO if it's not.
+
 #pragma mark - Acessing bookmarks
-- (OCBookmark *)bookmarkAtIndex:(NSUInteger)index;
-- (OCBookmark *)bookmarkForUUID:(NSUUID *)uuid;
+- (nullable OCBookmark *)bookmarkAtIndex:(NSUInteger)index;
+- (nullable OCBookmark *)bookmarkForUUID:(NSUUID *)uuid;
 
 @end
 
 extern NSNotificationName OCBookmarkManagerListChanged;
+
+NS_ASSUME_NONNULL_END

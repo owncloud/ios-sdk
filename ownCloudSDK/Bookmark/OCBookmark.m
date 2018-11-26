@@ -114,6 +114,20 @@
 	}
 }
 
+#pragma mark - User info
+- (NSMutableDictionary<NSString *,id<NSObject,NSSecureCoding>> *)userInfo
+{
+	@synchronized(self)
+	{
+		if (_userInfo == nil)
+		{
+			_userInfo = [NSMutableDictionary new];
+		}
+	}
+
+	return (_userInfo);
+}
+
 #pragma mark - Data replacement
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark
 {
@@ -178,7 +192,10 @@
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 
-	[coder encodeObject:_userInfo forKey:@"userInfo"];
+	if (_userInfo.count > 0)
+	{
+		[coder encodeObject:_userInfo forKey:@"userInfo"];
+	}
 
 	// _authenticationData is not stored in the bookmark
 }

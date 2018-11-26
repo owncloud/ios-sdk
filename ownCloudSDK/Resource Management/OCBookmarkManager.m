@@ -153,6 +153,26 @@
 	[self saveBookmarks];
 }
 
+- (BOOL)updateBookmark:(OCBookmark *)bookmark
+{
+	BOOL saveAndPostUpdate = NO;
+
+	if (bookmark==nil) { return (NO); }
+
+	@synchronized (self)
+	{
+		saveAndPostUpdate = ([_bookmarks indexOfObjectIdenticalTo:bookmark] != NSNotFound);
+	}
+
+	if (saveAndPostUpdate)
+	{
+		[self postChangeNotification];
+		[self saveBookmarks];
+	}
+
+	return (saveAndPostUpdate);
+}
+
 #pragma mark - Acessing bookmarks
 - (OCBookmark *)bookmarkAtIndex:(NSUInteger)index
 {
