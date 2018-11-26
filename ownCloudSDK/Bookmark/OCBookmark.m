@@ -130,6 +130,8 @@
 	_authenticationMethodIdentifier = sourceBookmark.authenticationMethodIdentifier;
 	_authenticationData = sourceBookmark.authenticationData;
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
+
+	_userInfo = sourceBookmark.userInfo;
 }
 
 #pragma mark - Secure Coding
@@ -154,6 +156,8 @@
 
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"authenticationMethodIdentifier"];
 
+		_userInfo = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"userInfo"];
+
 		// _authenticationData is not stored in the bookmark
 	}
 	
@@ -173,6 +177,8 @@
 	[coder encodeObject:_certificateModificationDate forKey:@"certificateModificationDate"];
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
+
+	[coder encodeObject:_userInfo forKey:@"userInfo"];
 
 	// _authenticationData is not stored in the bookmark
 }
