@@ -78,7 +78,7 @@
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
-		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ],
+		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"9.0",

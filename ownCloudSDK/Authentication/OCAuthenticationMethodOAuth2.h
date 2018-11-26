@@ -23,7 +23,7 @@
 
 @end
 
-extern OCAuthenticationMethodIdentifier OCAuthenticationMethodOAuth2Identifier;
+extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOAuth2;
 
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2AuthorizationEndpoint;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint;

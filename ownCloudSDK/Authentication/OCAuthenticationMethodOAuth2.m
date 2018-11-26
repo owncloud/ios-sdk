@@ -76,7 +76,7 @@ OCAuthenticationMethodAutoRegister
 
 + (OCAuthenticationMethodIdentifier)identifier
 {
-	return (OCAuthenticationMethodOAuth2Identifier);
+	return (OCAuthenticationMethodIdentifierOAuth2);
 }
 
 + (NSString *)name
@@ -169,7 +169,7 @@ OCAuthenticationMethodAutoRegister
 								@"redirect_uri"  : [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]
 							}
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
-								completionHandler(error, OCAuthenticationMethodOAuth2Identifier, authenticationData);
+								completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, authenticationData);
 							}
 						];
 					}
@@ -203,7 +203,7 @@ OCAuthenticationMethodAutoRegister
 					}
 
 					// Return errors
-					completionHandler(error, OCAuthenticationMethodOAuth2Identifier, nil);
+					completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, nil);
 				}
 
 				OCLogDebug(@"Callback URL: %@", OCLogPrivate(callbackURL));
@@ -240,7 +240,7 @@ OCAuthenticationMethodAutoRegister
 	}
 	else
 	{
-		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodOAuth2Identifier, nil);
+		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodIdentifierOAuth2, nil);
 	}
 }
 
@@ -366,7 +366,7 @@ OCAuthenticationMethodAutoRegister
 					{
 						// Handle errors coming from JSON response
 						NSDictionary *errorInfo = @{
-							@"authMethod" : OCAuthenticationMethodOAuth2Identifier,
+							@"authMethod" : OCAuthenticationMethodIdentifierOAuth2,
 							@"jsonError" : jsonError
 						};
 
@@ -422,7 +422,7 @@ OCAuthenticationMethodAutoRegister
 
 @end
 
-OCAuthenticationMethodIdentifier OCAuthenticationMethodOAuth2Identifier = @"com.owncloud.oauth2";
+OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOAuth2 = @"com.owncloud.oauth2";
 
 OCClassSettingsKey OCAuthenticationMethodOAuth2AuthorizationEndpoint = @"oa2-authorization-endpoint";
 OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint = @"oa2-token-endpoint";
