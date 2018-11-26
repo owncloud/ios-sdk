@@ -25,6 +25,10 @@
 
 #import "OCExtension+License.h"
 
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IOS */
+
 #define IsSQLiteError(error) [error.domain isEqualToString:OCSQLiteErrorDomain]
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
 
@@ -55,9 +59,13 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 	if ((self = [super init]) != nil)
 	{
 		_maxBusyRetryTimeInterval = 2.0;
+
+		#if TARGET_OS_IOS
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+		#endif /* TARGET_OS_IOS */
 	}
 
-	return (self);
+	return(self);
 }
 
 - (instancetype)initWithURL:(NSURL *)sqliteFileURL
@@ -72,6 +80,10 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 
 - (void)dealloc
 {
+	#if TARGET_OS_IOS
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+	#endif /* TARGET_OS_IOS */
+
 	if (self.opened)
 	{
 		OCLogWarning(@"OCSQLiteDB still open on deallocation for %@ - force closing", _databaseURL);
@@ -662,6 +674,30 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	// Will return nil otherwise.
 	return (nil);
+}
+
+#pragma mark - Miscellaneous
+- (void)shrinkMemory
+{
+	if ([self isOnSQLiteThread])
+	{
+		sqlite3_db_release_memory(_db);
+	}
+	else
+	{
+		[self queueBlock:^{
+			sqlite3_db_release_memory(self->_db);
+		}];
+	}
+}
+
++ (int64_t)setMemoryLimit:(int64_t)memoryLimit
+{
+	int64_t previousMemoryLimit = sqlite3_soft_heap_limit64(memoryLimit);
+
+	OCLogDebug(@"[SQL] Changed memory limit from %lld to %lld bytes", previousMemoryLimit, memoryLimit);
+
+	return (previousMemoryLimit);
 }
 
 @end

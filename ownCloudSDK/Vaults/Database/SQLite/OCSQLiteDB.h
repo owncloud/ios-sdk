@@ -94,6 +94,10 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumb
 #pragma mark - Insertion Row ID
 - (NSNumber *)lastInsertRowID; //!< Returns the last insert row ID. May only be used within query and transaction completionHandlers. Will return nil otherwise.
 
+#pragma mark - Miscellaneous
+- (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.
++ (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a memory limit on the 
+
 @end
 
 extern NSErrorDomain OCSQLiteErrorDomain; //!< Native SQLite errors
