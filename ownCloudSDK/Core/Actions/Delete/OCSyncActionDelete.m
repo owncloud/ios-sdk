@@ -20,6 +20,7 @@
 
 @implementation OCSyncActionDelete
 
+#pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch
 {
 	if ((self = [super initWithItem:item]) != nil)
@@ -32,6 +33,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *itemToDelete;

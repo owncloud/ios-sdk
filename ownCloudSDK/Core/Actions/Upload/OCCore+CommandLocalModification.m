@@ -17,19 +17,13 @@
  */
 
 #import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
-#import "OCLogger.h"
 #import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
 
 @implementation OCCore (CommandLocalModification)
 
 #pragma mark - Command
-- (nullable NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(nullable NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
+- (nullable NSProgress *)reportLocalModificationOfItem:(OCItem *)item parentItem:(OCItem *)parentItem withContentsOfFileAtURL:(nullable NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *itemFileURL, *temporaryFileURL;
@@ -101,6 +95,7 @@
 			[item updateMetadataFromFileURL:itemFileURL];
 
 			item.localRelativePath = [self.vault relativePathForItem:item];
+			item.localCopyVersionIdentifier = nil;
 			item.locallyModified = YES; // Unsynced yet, so it's a local modification. Also prevents pruning before upload finishes.
 		}
 	}

@@ -266,4 +266,27 @@
 	}
 }
 
+#pragma mark - Memory configuration
+- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+{
+	@synchronized (self)
+	{
+		_memoryConfiguration = memoryConfiguration;
+
+		[_coresByUUID enumerateKeysAndObjectsUsingBlock:^(NSUUID * _Nonnull key, OCCore * _Nonnull core, BOOL * _Nonnull stop) {
+			core.memoryConfiguration = memoryConfiguration;
+		}];
+
+		switch (memoryConfiguration)
+		{
+			case OCCoreMemoryConfigurationMinimum:
+				[OCSQLiteDB setMemoryLimit:(1 * 1024 * 1024)]; // Set 1 MB memory limit for SQLite;
+			break;
+
+			default: break;
+		}
+
+	}
+}
+
 @end

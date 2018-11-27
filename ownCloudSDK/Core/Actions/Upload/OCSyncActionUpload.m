@@ -17,11 +17,13 @@
  */
 
 #import "OCSyncActionUpload.h"
+#import "OCSyncAction+FileProvider.h"
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
 
 @implementation OCSyncActionUpload
 
+#pragma mark - Initializer
 - (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
@@ -38,6 +40,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *uploadItem;
@@ -46,7 +49,14 @@
 	{
 		[uploadItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-		syncContext.addedItems = @[ uploadItem ];
+		if (uploadItem.isPlaceholder)
+		{
+			syncContext.addedItems = @[ uploadItem ];
+		}
+		else
+		{
+			syncContext.updatedItems = @[ uploadItem ];
+		}
 
 		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated uploadItem (now with databaseID) will be stored in the database and can later be used to remove the uploadItem again.
 	}
@@ -60,9 +70,23 @@
 	{
 		[uploadItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-		syncContext.removedItems = @[ uploadItem ];
+		if (uploadItem.isPlaceholder)
+		{
+			// Import descheduled - delete entire item
+			syncContext.removedItems = @[ uploadItem ];
 
-		[self.core deleteDirectoryForItem:uploadItem];
+			[self.core deleteDirectoryForItem:uploadItem];
+		}
+		else
+		{
+			// Remove temporary copy (main file should remain intact)
+			if ((_importFileURL!=nil) && _importFileIsTemporaryAlongsideCopy)
+			{
+				NSError *error;
+
+				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+			}
+		}
 	}
 }
 
@@ -102,41 +126,47 @@
 				else
 				{
 					// Cloning failed - continue to use the "original"
-					_uploadCopyFileURL = nil;
-
 					OCLogError(@"SE: error cloning file to import from %@ to %@: %@", uploadURL, _uploadCopyFileURL, error);
+
+					_uploadCopyFileURL = nil;
 				}
 			}
 		}
 
 		// Compute checksum
-		OCSyncExec(checksumComputation, {
-			[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
-				self.importFileChecksum = computedChecksum;
-				OCSyncExecDone(checksumComputation);
-			}];
-		});
-
-		// Schedule the upload
-		OCItem *latestVersionOfLocalItem;
-
-		if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
+		if (_uploadCopyFileURL != nil)
 		{
-			latestVersionOfLocalItem = self.localItem;
-		}
+			OCSyncExec(checksumComputation, {
+				[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+					self.importFileChecksum = computedChecksum;
+					OCSyncExecDone(checksumComputation);
+				}];
+			});
 
-		if ((progress = [self.core.connection uploadFileFromURL:uploadURL
-							       withName:remoteFileName
-								     to:parentItem
-							  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
-								options:[NSDictionary dictionaryWithObjectsAndKeys:
-										self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
-									nil]
-							   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
-		{
-			[syncContext.syncRecord addProgress:progress];
+			// Schedule the upload
+			OCItem *latestVersionOfLocalItem;
+			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
+						nil];
 
-			return (YES);
+			if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
+			{
+				latestVersionOfLocalItem = self.localItem;
+			}
+
+			[self setupProgressSupportForItem:latestVersionOfLocalItem options:&options syncContext:syncContext];
+
+			if ((progress = [self.core.connection uploadFileFromURL:uploadURL
+								       withName:remoteFileName
+									     to:parentItem
+								  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
+									options:options
+								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
+			{
+				[syncContext.syncRecord addProgress:progress];
+
+				return (YES);
+			}
 		}
 	}
 
@@ -191,6 +221,7 @@
 						uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
 						uploadItem.localRelativePath = nil;
 
+						uploadedItem.localCopyVersionIdentifier = uploadItem.itemVersionIdentifier;
 						uploadedItem.parentFileID = uploadItem.parentFileID;
 
 						// Update uploaded item with local relative path
@@ -245,6 +276,9 @@
 				// Indicate item update
 				syncContext.updatedItems = @[ uploadedItem ];
 
+				// Update localItem
+				self.localItem = uploadedItem;
+
 				// Remove temporary copy
 				if (_importFileIsTemporaryAlongsideCopy)
 				{
@@ -261,15 +295,17 @@
 
 		canDeleteSyncRecord = YES;
 	}
-	else if (event.error != nil)
-	{
-		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.parentItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
-	}
 
 	if (syncRecord.resultHandler != nil)
 	{
-		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, nil);
+		// Call resultHandler (and give file provider a chance to attach an uploadingError
+		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, self.localItem);
+	}
+
+	if (event.error != nil)
+	{
+		// Create issue for cancellation for any errors
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
 	}
 
 	return (canDeleteSyncRecord);

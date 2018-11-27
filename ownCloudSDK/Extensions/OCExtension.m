@@ -54,6 +54,8 @@
 				{
 					[locations addObject:[OCExtensionLocation locationOfType:type identifier:locationIdentifier]];
 				}
+
+				self.locations = locations;
 			}
 			break;
 		}

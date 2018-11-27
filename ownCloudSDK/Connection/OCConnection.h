@@ -34,6 +34,7 @@
 @class OCConnectionRequest;
 @class OCConnection;
 @class OCCertificate;
+@class OCHTTPStatus;
 
 typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
 typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *error);
@@ -41,6 +42,7 @@ typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnection
 
 typedef OCClassSettingsKey OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
+typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
@@ -129,7 +131,6 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Actions
 - (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)createEmptyFile:(NSString *)fileName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 - (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
@@ -138,6 +139,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 - (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 - (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+
+- (NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
@@ -215,9 +218,13 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (NSString *)serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
 
 - (NSString *)serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
++ (NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus;
 
 #pragma mark - API Switches
 - (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+
+#pragma mark - Checks
+- (NSError *)supportsServerVersion:(NSString *)serverVersion longVersion:(NSString *)longVersion;
 
 @end
 

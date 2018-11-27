@@ -220,13 +220,20 @@
 
 		if ((error = MakeJSONRequest(statusURL, &request, &redirectionURL, &jsonDict)) == nil)
 		{
-			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || jsonDict==nil)
+			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || (jsonDict==nil))
 			{
 				error = OCError(OCErrorServerDetectionFailed);
 			}
 			else
 			{
-				if (redirectionURL != nil)
+				NSString *serverVersion;
+
+				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
+				{
+					error = [self supportsServerVersion:serverVersion longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict]];
+				}
+
+				if ((error == nil) && (redirectionURL != nil))
 				{
 					NSURL *suggestedURL = nil;
 					
@@ -302,15 +309,6 @@
 						{
 							OCConnectionRequest *rootURLRequest = nil;
 							NSURL *rootURL = urlForTryingRootURL;
-							/*
-							NSURLComponents *urlComponents;
-							
-							if ((urlComponents = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:YES]) != nil)
-							{
-								urlComponents.path = nil;
-								rootURL = urlComponents.URL;
-							}
-							*/
 
 							if ((error = MakeRequest(rootURL, &rootURLRequest)) != nil)
 							{
@@ -437,6 +435,12 @@
 						{
 							AddIssue([OCConnectionIssue issueForError:supportedAuthError level:OCConnectionIssueLevelError issueHandler:nil]);
 						}
+					}
+
+					if (supportedMethodIdentifiers.count == 0)
+					{
+						AddIssue([OCConnectionIssue issueForError:[NSError errorWithDomain:OCErrorDomain code:OCErrorServerNoSupportedAuthMethods userInfo:@{
+							NSLocalizedDescriptionKey : OCLocalizedString(@"Server doesn't seem to support any authentication method supported by this app.", @"") }] level:OCConnectionIssueLevelError issueHandler:nil]);
 					}
 
 					if (requestCount > maxRequestCount)

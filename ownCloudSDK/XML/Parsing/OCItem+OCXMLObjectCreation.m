@@ -133,6 +133,13 @@
 
 					item.permissions = permissions;
 				}
+			} copy],
+
+			@"oc:favorite" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.isFavorite = (((NSString *)value).integerValue) ? (__bridge id)kCFBooleanTrue : (__bridge id)kCFBooleanFalse;
+				}
 			} copy]
 		};
 	});

@@ -21,9 +21,11 @@
 #import "OCCore+FileProvider.h"
 #import "OCFile.h"
 #import "OCItem+OCItemCreationDebugging.h"
+#import "OCMacros.h"
 
 @implementation OCItem
 
+#pragma mark - Placeholder
 + (instancetype)placeholderItemOfType:(OCItemType)type
 {
 	OCItem *item = [OCItem new];
@@ -34,6 +36,12 @@
 	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
 
 	return (item);
+}
+
+#pragma mark - Property localization
++ (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName
+{
+	return (OCLocalized([@"itemProperty.%@" stringByAppendingString:propertyName]));
 }
 
 #pragma mark - Serialization tools
@@ -70,6 +78,7 @@
 
 	[coder encodeObject:_localRelativePath	forKey:@"localRelativePath"];
 	[coder encodeBool:_locallyModified      forKey:@"locallyModified"];
+	[coder encodeObject:_localCopyVersionIdentifier forKey:@"localCopyVersionIdentifier"];
 
 	[coder encodeObject:_remoteItem		forKey:@"remoteItem"];
 
@@ -85,6 +94,11 @@
 	[coder encodeInteger:_size  		forKey:@"size"];
 	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
+
+	[coder encodeObject:_isFavorite		forKey:@"isFavorite"];
+
+	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
+	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
 
@@ -122,6 +136,7 @@
 
 		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
+		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
 
 		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
 
@@ -138,6 +153,11 @@
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
 
+		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
+
+		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
+		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
+
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
@@ -146,7 +166,7 @@
 	return (self);
 }
 
-#pragma mark - Properties
+#pragma mark - Metadata
 - (NSString *)name
 {
 	return ([self.path lastPathComponent]);
@@ -179,6 +199,7 @@
 	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
 }
 
+#pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
 	if (_thumbnailAvailability == OCItemThumbnailAvailabilityInternal)
@@ -211,6 +232,54 @@
 	if (thumbnail != nil)
 	{
 		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
+	}
+}
+
+#pragma mark - Local attributes
+- (NSDictionary<OCLocalAttribute,id> *)localAttributes
+{
+	NSDictionary<OCLocalAttribute,id> *localAttributesCopy = nil;
+
+	@synchronized(self)
+	{
+		localAttributesCopy = [NSDictionary dictionaryWithDictionary:_localAttributes];
+	}
+
+	return (localAttributesCopy);
+}
+
+- (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute
+{
+	@synchronized(self)
+	{
+		return (_localAttributes[localAttribute]);
+	}
+}
+
+- (void)setValue:(id)value forLocalAttribute:(OCLocalAttribute)localAttribute
+{
+	@synchronized(self)
+	{
+		if (value != nil)
+		{
+			if (_localAttributes==nil)
+			{
+				_localAttributes = [NSMutableDictionary new];
+			}
+
+			_localAttributes[localAttribute] = value;
+		}
+		else
+		{
+			[_localAttributes removeObjectForKey:localAttribute];
+
+			if (_localAttributes.count==0)
+			{
+				_localAttributes = nil;
+			}
+		}
+
+		_localAttributesLastModified = NSDate.timeIntervalSinceReferenceDate;
 	}
 }
 
@@ -286,6 +355,13 @@
 	{
 		self.parentFileID = item.parentFileID;
 	}
+
+	// Make sure to use latest version of local attributes
+	if (self.localAttributesLastModified < item.localAttributesLastModified)
+	{
+		self.localAttributes 	  	 = item.localAttributes;
+		self.localAttributesLastModified = item.localAttributesLastModified;
+	}
 }
 
 #pragma mark - File tools
@@ -310,10 +386,18 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, parentID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.parentFileID, (_removed ? @", removed" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, (_removed ? @", removed" : @"")]);
 }
 
 @end
 
 OCFileID   OCFileIDPlaceholderPrefix = @"_placeholder_";
 OCFileETag OCFileETagPlaceholder = @"_placeholder_";
+
+OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
+OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
+
+OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
+OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";
+OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
+

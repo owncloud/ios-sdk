@@ -89,7 +89,10 @@
 #pragma mark - Sorting
 - (void)setSortComparator:(NSComparator)sortComparator
 {
-	_sortComparator = [sortComparator copy];
+	@synchronized(self)
+	{
+		_sortComparator = [sortComparator copy];
+	}
 
 	[self setNeedsRecomputation];
 }

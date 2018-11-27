@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, OCLogLevel)
 {
 	OCLogLevelDebug,	//!< Verbose information
-	OCLogLevelDefault,	//!< Default log level
+	OCLogLevelInfo,		//!< Info log level
 	OCLogLevelWarning,	//!< Log level for warnings
 	OCLogLevelError,	//!< Log level for errors
 
@@ -49,6 +49,7 @@ typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
+@property(readonly,class) BOOL synchronousLoggingEnabled;
 
 @property(copy,readonly,nonatomic) NSArray<OCLogWriter *> *writers;
 
@@ -79,6 +80,7 @@ extern OCClassSettingsIdentifier OCClassSettingsIdentifierLog;
 extern OCClassSettingsKey OCClassSettingsKeyLogLevel;
 extern OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask;
 extern OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters;
+extern OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
 
@@ -86,7 +88,7 @@ NS_ASSUME_NONNULL_END
 
 #define OCLogDebug(format,...)   if (OCLogger.logLevel <= OCLogLevelDebug) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
-#define OCLog(format,...)   if (OCLogger.logLevel <= OCLogLevelDefault) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDefault   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
+#define OCLog(format,...)   if (OCLogger.logLevel <= OCLogLevelInfo) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 
 #define OCLogWarning(format,...)   if (OCLogger.logLevel <= OCLogLevelWarning) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ message:format, ##__VA_ARGS__]; }
 

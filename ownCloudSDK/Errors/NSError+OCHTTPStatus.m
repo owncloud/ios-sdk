@@ -1,8 +1,8 @@
 //
-//  NSDate+OCDateParser.h
+//  NSError+OCHTTPStatus.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 10.03.18.
+//  Created by Felix Schwarz on 22.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,11 +16,19 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "NSError+OCHTTPStatus.h"
+#import "OCHTTPStatus.h"
 
-@interface NSDate (OCDateParser)
+@implementation NSError (OCHTTPStatus)
 
-+ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error;
-- (NSString *)davDateString;
+- (nullable OCHTTPStatus *)HTTPStatus
+{
+	if ([self.domain isEqualToString:OCHTTPStatusErrorDomain])
+	{
+		return ([OCHTTPStatus HTTPStatusWithCode:self.code]);
+	}
+
+	return (nil);
+}
 
 @end

@@ -20,6 +20,7 @@
 #import "OCItem.h"
 #import "OCXMLParser.h"
 #import "OCLogger.h"
+#import "OCConnectionDAVMultistatusResponse.h"
 
 @implementation OCConnectionDAVRequest
 
@@ -37,6 +38,19 @@
 	];
 	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
 	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:@"Depth"];
+
+	return (request);
+}
+
++ (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes
+{
+	OCConnectionDAVRequest *request = [OCConnectionDAVRequest requestWithURL:url];
+
+	request.method = OCConnectionRequestMethodPROPPATCH;
+	request.xmlRequest = [OCXMLNode documentWithRootElement:
+		[OCXMLNode elementWithName:@"D:propertyupdate" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:contentNodes]
+	];
+	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
 
 	return (request);
 }
@@ -106,6 +120,73 @@
 	}
 	
 	return (responseItems);
+}
+
+- (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
+{
+	NSMutableDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *responsesByPath = nil;
+	NSData *responseData = nil;
+
+	if (self.downloadRequest)
+	{
+		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
+	}
+	else
+	{
+		responseData = self.responseBodyData;
+	}
+
+	if (responseData != nil)
+	{
+		@synchronized(self)
+		{
+			responsesByPath = _parsedResponsesByPath;
+		}
+
+		if (responsesByPath == nil)
+		{
+			OCXMLParser *parser;
+
+			if ((parser = [[OCXMLParser alloc] initWithData:responseData]) != nil)
+			{
+				if (basePath != nil)
+				{
+					parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+						basePath, @"basePath",
+					nil];
+				}
+
+				[parser addObjectCreationClasses:@[ [OCConnectionDAVMultistatusResponse class] ]];
+
+				if ([parser parse])
+				{
+					// OCLogDebug(@"Parsed objects: %@", parser.parsedObjects);
+
+					@synchronized(self)
+					{
+						responsesByPath = [NSMutableDictionary new];
+
+						for (id parsedObject in parser.parsedObjects)
+						{
+							if ([parsedObject isKindOfClass:[OCConnectionDAVMultistatusResponse class]])
+							{
+								OCConnectionDAVMultistatusResponse *multiStatusResponse = (OCConnectionDAVMultistatusResponse *)parsedObject;
+
+								if (multiStatusResponse.path != nil)
+								{
+									responsesByPath[multiStatusResponse.path] = multiStatusResponse;
+								}
+							}
+						}
+
+						_parsedResponsesByPath = responsesByPath;
+					}
+				}
+			}
+		}
+	}
+
+	return (responsesByPath);
 }
 
 @end

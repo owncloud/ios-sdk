@@ -24,4 +24,7 @@
 - (OCEventType)eventType;
 - (void)setEventType:(OCEventType)eventType;
 
+- (OCFileID)fileID;
+- (void)setFileID:(OCFileID)fileID;
+
 @end

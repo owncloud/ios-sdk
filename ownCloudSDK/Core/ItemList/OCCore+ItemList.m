@@ -273,6 +273,7 @@
 						[retrievedItem prepareToReplace:cacheItem];
 
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
+						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
 
 						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || ![retrievedItem.name isEqualToString:cacheItem.name])
 						{

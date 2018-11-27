@@ -205,8 +205,8 @@
 
 		[headerView addSubview:sectionHeaderLabel];
 
-		[sectionHeaderLabel.leftAnchor constraintEqualToAnchor:headerView.leftAnchor constant:18].active = YES;
-		[sectionHeaderLabel.rightAnchor constraintEqualToAnchor:headerView.rightAnchor constant:-10].active = YES;
+		[sectionHeaderLabel.leftAnchor constraintEqualToAnchor:headerView.safeAreaLayoutGuide.leftAnchor constant:18].active = YES;
+		[sectionHeaderLabel.rightAnchor constraintEqualToAnchor:headerView.safeAreaLayoutGuide.rightAnchor constant:-10].active = YES;
 		[sectionHeaderLabel.topAnchor constraintEqualToAnchor:headerView.topAnchor constant:20].active = YES;
 		[sectionHeaderLabel.bottomAnchor constraintEqualToAnchor:headerView.bottomAnchor constant:-3].active = YES;
 

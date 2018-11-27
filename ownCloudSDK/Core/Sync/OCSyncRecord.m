@@ -178,3 +178,4 @@ OCSyncActionIdentifier OCSyncActionIdentifierCopy = @"copy";
 OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder = @"createFolder";
 OCSyncActionIdentifier OCSyncActionIdentifierDownload = @"download";
 OCSyncActionIdentifier OCSyncActionIdentifierUpload = @"upload";
+OCSyncActionIdentifier OCSyncActionIdentifierUpdate = @"update";

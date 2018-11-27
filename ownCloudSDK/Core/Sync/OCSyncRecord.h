@@ -89,3 +89,4 @@ extern OCSyncActionIdentifier OCSyncActionIdentifierCopy;
 extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;
 extern OCSyncActionIdentifier OCSyncActionIdentifierDownload;
 extern OCSyncActionIdentifier OCSyncActionIdentifierUpload;
+extern OCSyncActionIdentifier OCSyncActionIdentifierUpdate;

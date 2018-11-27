@@ -17,13 +17,6 @@
  */
 
 #import "OCCore.h"
-#import "OCCore+SyncEngine.h"
-#import "OCSyncContext.h"
-#import "NSError+OCError.h"
-#import "OCMacros.h"
-#import "NSString+OCParentPath.h"
-#import "OCLogger.h"
-#import "OCCore+FileProvider.h"
 #import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
 
@@ -32,7 +25,7 @@
 @implementation OCCore (CommandLocalImport)
 
 #pragma mark - Command
-- (nullable NSProgress *)importFileNamed:(nullable NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
+- (nullable NSProgress *)importFileNamed:(nullable NSString *)newFileName at:(OCItem *)parentItem fromURL:(NSURL *)inputFileURL isSecurityScoped:(BOOL)isSecurityScoped options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreUploadResultHandler)resultHandler
 {
 	NSError *error = nil, *criticalError = nil;
 	NSURL *placeholderOutputURL;
@@ -58,40 +51,51 @@
 	// Move file into the vault for uploading
 	if ((placeholderOutputURL = [self.vault localURLForItem:placeholderItem]) != nil)
 	{
-		BOOL proceed = YES;
+		BOOL relinquishSecurityScopedResourceAccess = NO;
 
 		if (isSecurityScoped)
 		{
-			proceed = [inputFileURL startAccessingSecurityScopedResource];
+			relinquishSecurityScopedResourceAccess = [inputFileURL startAccessingSecurityScopedResource];
 		}
 
-		if (proceed)
+		// Update metadata from input file
+		[placeholderItem updateMetadataFromFileURL:inputFileURL];
+
+		// Create directory for placeholder item
+		if ((error = [self createDirectoryForItem:placeholderItem]) != nil)
 		{
-			// Update metadata from input file
-			[placeholderItem updateMetadataFromFileURL:inputFileURL];
+			OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(placeholderItem), error);
+		}
 
-			// Create directory for placeholder item
-			if ((error = [self createDirectoryForItem:placeholderItem]) != nil)
-			{
-				OCLogError(@"Local creation target directory creation failed for %@ with error %@", OCLogPrivate(placeholderItem), error);
-			}
+		// Move file to placeholder item location
+		BOOL importFileOperationSuccessful;
 
-			// Move file to placeholder item location
-			if ([[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error])
-			{
-				placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
-				placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
-			}
-			else
-			{
-				OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
-				criticalError = error;
-			}
+		if (((NSNumber *)options[OCCoreOptionImportByCopying]).boolValue)
+		{
+			// Import by copy
+			importFileOperationSuccessful = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+		}
+		else
+		{
+			// Import by moving
+			importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+		}
 
-			if (isSecurityScoped)
-			{
-				[inputFileURL stopAccessingSecurityScopedResource];
-			}
+		if (importFileOperationSuccessful)
+		{
+			placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
+			placeholderItem.localCopyVersionIdentifier = nil;
+			placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.
+		}
+		else
+		{
+			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
+			criticalError = error;
+		}
+
+		if (isSecurityScoped && relinquishSecurityScopedResourceAccess)
+		{
+			[inputFileURL stopAccessingSecurityScopedResource];
 		}
 	}
 	else

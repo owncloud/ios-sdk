@@ -18,10 +18,12 @@
 
 #import "OCExtension.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCExtension (License)
 
-+ (instancetype)licenseExtensionWithIdentifier:(NSString *)identifier bundleOfClass:(Class)class title:(NSString *)title resourceName:(NSString *)resourceName fileExtension:(NSString *)fileExtension;
-+ (instancetype)licenseExtensionWithIdentifier:(NSString *)identifier bundle:(NSBundle *)bundle title:(NSString *)title resourceName:(NSString *)resourceName fileExtension:(NSString *)fileExtension;
++ (instancetype)licenseExtensionWithIdentifier:(NSString *)identifier bundleOfClass:(Class)class title:(NSString *)title resourceName:(NSString *)resourceName fileExtension:(nullable NSString *)fileExtension;
++ (instancetype)licenseExtensionWithIdentifier:(NSString *)identifier bundle:(NSBundle *)bundle title:(NSString *)title resourceName:(NSString *)resourceName fileExtension:(nullable NSString *)fileExtension;
 
 @end
 
@@ -33,5 +35,7 @@
 		- "url" [NSURL]: URL of the license text. The suffix should indicate file type. Unknown suffixes are handled as plain text.
 */
 extern OCExtensionType OCExtensionTypeLicense;
+
+NS_ASSUME_NONNULL_END
 
 #import "OCExtensionManager.h"

@@ -23,6 +23,8 @@ typedef NSString* OCEventHandlerIdentifier;
 
 typedef NS_ENUM(NSUInteger, OCEventType)
 {
+	OCEventTypeNone,
+
 	// Creation
 	OCEventTypeCreateFolder,
 	OCEventTypeCreateEmptyFile,
@@ -39,7 +41,8 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 	// Metadata
 	OCEventTypeRetrieveThumbnail,
-	OCEventTypeRetrieveItemList
+	OCEventTypeRetrieveItemList,
+	OCEventTypeUpdate
 };
 
 @class OCEvent;

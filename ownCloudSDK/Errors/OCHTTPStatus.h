@@ -36,6 +36,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeUNAUTHORIZED = 401,
 	OCHTTPStatusCodeFORBIDDEN = 403,
 	OCHTTPStatusCodeNOT_FOUND = 404,
+	OCHTTPStatusCodeMETHOD_NOT_ALLOWED = 405,
 	OCHTTPStatusCodeCONFLICT = 409,
 	OCHTTPStatusCodePRECONDITION_FAILED = 412,
 
@@ -45,7 +46,9 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeBAD_GATEWAY = 502
 };
 
-@interface OCHTTPStatus : NSObject
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCHTTPStatus : NSObject <NSCopying>
 {
 	OCHTTPStatusCode _code;
 }
@@ -65,5 +68,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 @end
 
 extern NSErrorDomain OCHTTPStatusErrorDomain;
+
+NS_ASSUME_NONNULL_END
 
 #define IsHTTPErrorWithStatus(error,status) ([error.domain isEqual:OCHTTPStatusErrorDomain] && (error.code==status))

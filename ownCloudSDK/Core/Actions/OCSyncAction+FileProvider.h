@@ -1,8 +1,8 @@
 //
-//  NSDate+OCDateParser.h
+//  OCSyncAction+FileProvider.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 10.03.18.
+//  Created by Felix Schwarz on 17.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,11 +16,14 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "OCSyncAction.h"
 
-@interface NSDate (OCDateParser)
+NS_ASSUME_NONNULL_BEGIN
 
-+ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error;
-- (NSString *)davDateString;
+@interface OCSyncAction (FileProviderProgressReporting)
+
+- (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext *)syncContext;
 
 @end
+
+NS_ASSUME_NONNULL_END

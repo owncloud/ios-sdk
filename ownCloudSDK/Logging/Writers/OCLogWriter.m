@@ -128,20 +128,20 @@
 
 	switch (logLevel)
 	{
-		case OCLogLevelDefault:
-			logLevelName = @"deflt";
+		case OCLogLevelInfo:
+			logLevelName = @"info";
 		break;
 
 		case OCLogLevelDebug:
-			logLevelName = @"debug";
+			logLevelName = @"dbug";
 		break;
 
 		case OCLogLevelWarning:
-			logLevelName = @"WARNG";
+			logLevelName = @"WARN";
 		break;
 
 		case OCLogLevelError:
-			logLevelName = @"ERROR";
+			logLevelName = @"ERRO";
 		break;
 
 		case OCLogLevelOff:

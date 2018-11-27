@@ -103,7 +103,7 @@
 		}
 
 		// Make matches with higher priority rank first
-		[matches sortedArrayUsingDescriptors:@[ [NSSortDescriptor sortDescriptorWithKey:@"priority" ascending:NO]]];
+		[matches sortUsingDescriptors:@[ [NSSortDescriptor sortDescriptorWithKey:@"priority" ascending:NO]]];
 	}
 
 	return (matches);

@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityUploading 	= (1<<1),	//!< This item is being uploaded, or scheduled to be uploaded
 	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
 	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
+	OCItemSyncActivityUpdating	= (1<<4),	//!< This item is being updated, or scheduled to be updated (both files and folders)
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -74,6 +75,9 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 	OCItemThumbnailAvailability _thumbnailAvailability;
 
+	NSMutableDictionary<OCLocalAttribute, id> *_localAttributes;
+	NSTimeInterval _localAttributesLastModified;
+
 	NSString *_creationHistory;
 }
 
@@ -90,6 +94,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
 @property(assign) BOOL locallyModified; //!< YES if the file at .localURL was created or modified locally. NO if the file at .localURL was downloaded from the server and not modified since.
+@property(strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
 
 @property(strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
@@ -102,12 +107,17 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
+@property(strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
+@property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
+
 @property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(strong) NSDate *creationDate; //!< Date of creation
 @property(strong) NSDate *lastModified; //!< Date of last modification
+
+@property(strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
 
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
@@ -118,11 +128,17 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 
++ (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 
 - (void)prepareToReplace:(OCItem *)item;
+
+#pragma mark - Local attribute access
+- (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;
+- (void)setValue:(id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
 
 #pragma mark - File tools
 - (OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
@@ -135,3 +151,10 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 extern OCFileID   OCFileIDPlaceholderPrefix; //!< FileID placeholder prefix for items that are not in sync with the server, yet
 extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items that are not in sync with the server, yet
+
+extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
+extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
+
+extern OCItemPropertyName OCItemPropertyNameLastModified;
+extern OCItemPropertyName OCItemPropertyNameIsFavorite;
+extern OCItemPropertyName OCItemPropertyNameLocalAttributes;

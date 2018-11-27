@@ -177,7 +177,14 @@
 	{
 		child.parent = self;
 		
-		[_children addObject:child];
+		if (_children == nil)
+		{
+			_children = [[NSMutableArray alloc] initWithObjects:child, nil];
+		}
+		else
+		{
+			[_children addObject:child];
+		}
 	}
 }
 

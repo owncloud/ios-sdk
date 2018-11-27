@@ -1,8 +1,8 @@
 //
-//  OCFile.h
+//  NSError+OCHTTPStatus.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 21.06.18.
+//  Created by Felix Schwarz on 22.11.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,28 +17,14 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCChecksum.h"
-#import "OCItem.h"
-#import "OCTypes.h"
-#import "OCRetainerCollection.h"
+#import "OCHTTPStatus.h"
 
-@interface OCFile : NSObject <NSSecureCoding>
-{
-	OCFileID _fileID;
-	OCFileETag _eTag;
+NS_ASSUME_NONNULL_BEGIN
 
-	OCItem *_item;
+@interface NSError (OCHTTPStatus)
 
-	NSURL *_url;
-
-	OCChecksum *_checksum;
-}
-
-@property(strong) OCFileID fileID;
-@property(strong) OCFileETag eTag;
-
-@property(strong) OCItem *item;
-@property(strong) NSURL *url;
-@property(strong) OCChecksum *checksum;
+- (nullable OCHTTPStatus *)HTTPStatus;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -24,4 +24,4 @@
 
 @end
 
-extern OCAuthenticationMethodIdentifier OCAuthenticationMethodBasicAuthIdentifier;
+extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierBasicAuth;

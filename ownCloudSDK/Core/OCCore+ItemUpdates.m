@@ -37,6 +37,14 @@
 		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
 		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
 {
+	// Discard empty updates
+	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshPaths.count == 0) &&
+	     (preflightAction == nil) && (postflightAction == nil) && (queryPostProcessor == nil))
+	{
+		return;
+	}
+
+	// Begin
 	[self beginActivity:@"Perform item and query updates"];
 
 	// Ensure protection
@@ -52,6 +60,37 @@
 		}];
 
 		return;
+	}
+
+	// Remove outdated versions of updated items
+	if (updatedItems.count > 0)
+	{
+		for (OCItem *updateItem in updatedItems)
+		{
+			if ((!updateItem.locallyModified) && // don't delete local modified versions
+			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
+			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
+			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier])) // different versions?
+			{
+				// delete local copy
+				NSURL *deleteFileURL;
+
+				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
+				{
+					NSError *deleteError = nil;
+
+					OCLogDebug(@"Deleting outdated local copy of %@ (%@ vs %@)", updateItem, updateItem.itemVersionIdentifier, updateItem.localCopyVersionIdentifier);
+
+					updateItem.localRelativePath = nil;
+					updateItem.localCopyVersionIdentifier = nil;
+
+					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
+					{
+						OCLogError(@"Error removing %@: %@", deleteFileURL, deleteError);
+					}
+				}
+			}
+		}
 	}
 
 	// Update metaData table and queries
@@ -378,17 +417,6 @@
 				}
 			}
 
-			// Signal file provider
-			if (self.postFileProviderNotifications)
-			{
-				BuildAddedUpdatedRemovedItemList();
-
-				if (addedUpdatedRemovedItems.count > 0)
-				{
-					[self signalChangesForItems:addedUpdatedRemovedItems];
-				}
-			}
-
 			// Run postflight action
 			if (postflightAction != nil)
 			{
@@ -399,6 +427,17 @@
 			else
 			{
 				[self endActivity:@"Item Updates - update queries"];
+			}
+
+			// Signal file provider
+			if (self.postFileProviderNotifications)
+			{
+				BuildAddedUpdatedRemovedItemList();
+
+				if (addedUpdatedRemovedItems.count > 0)
+				{
+					[self signalChangesForItems:addedUpdatedRemovedItems];
+				}
 			}
 		}];
 	}

@@ -135,7 +135,9 @@
 	{
 		if ([childNode.name isEqualToString:name])
 		{
-			block(childNode);
+			@autoreleasepool {
+				block(childNode);
+			}
 		}
 	}
 }
@@ -150,7 +152,9 @@
 
 			if ((parseBlock = blockForElementNamesDict[childNode->name]) != nil)
 			{
-				parseBlock(target, childNode);
+				@autoreleasepool {
+					parseBlock(target, childNode);
+				}
 			}
 		}
 	}
@@ -163,7 +167,9 @@
 
 		if ((parseBlock = blockForKeysDict[key]) != nil)
 		{
-			parseBlock(target, key, value);
+			@autoreleasepool {
+				parseBlock(target, key, value);
+			}
 		}
 	}];
 }

@@ -36,7 +36,7 @@ OCAuthenticationMethodAutoRegister
 
 + (OCAuthenticationMethodIdentifier)identifier
 {
-	return (OCAuthenticationMethodBasicAuthIdentifier);
+	return (OCAuthenticationMethodIdentifierBasicAuth);
 }
 
 + (NSString *)name
@@ -178,7 +178,7 @@ OCAuthenticationMethodAutoRegister
 			[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 				if (error != nil)
 				{
-					completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
+					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 				}
 				else
 				{
@@ -224,26 +224,26 @@ OCAuthenticationMethodAutoRegister
 							error = OCError(OCErrorAuthorizationFailed);
 						}
 
-						completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
+						completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 					}
 					else
 					{
-						completionHandler(nil, OCAuthenticationMethodBasicAuthIdentifier, authenticationData);
+						completionHandler(nil, OCAuthenticationMethodIdentifierBasicAuth, authenticationData);
 					}
 				}
 			}];
 		}
 		else
 		{
-			completionHandler(error, OCAuthenticationMethodBasicAuthIdentifier, nil);
+			completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 		}
 	}
 	else
 	{
-		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodBasicAuthIdentifier, nil);
+		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodIdentifierBasicAuth, nil);
 	}
 }
 
 @end
 
-OCAuthenticationMethodIdentifier OCAuthenticationMethodBasicAuthIdentifier = @"com.owncloud.basicauth";
+OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierBasicAuth = @"com.owncloud.basicauth";

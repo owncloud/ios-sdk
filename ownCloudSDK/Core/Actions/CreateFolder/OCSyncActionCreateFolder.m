@@ -20,6 +20,7 @@
 
 @implementation OCSyncActionCreateFolder
 
+#pragma mark - Initializer
 - (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName
 {
 	if ((self = [super initWithItem:parentItem]) != nil)
@@ -43,6 +44,7 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	if (self.placeholderItem != nil)

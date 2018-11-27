@@ -804,6 +804,67 @@
 	[uploadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
 }
 
+- (void)testConnectAndFavoriteFirstFile
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFavorite = [self expectationWithDescription:@"Received favorite response"];
+	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+		NSLog(@"User: %@", connection.loggedInUser.userName);
+
+		XCTAssert((error==nil), @"No error");
+		XCTAssert((issue==nil), @"No issue");
+		XCTAssert((connection!=nil), @"Connection!");
+
+		if (error == nil)
+		{
+			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
+
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				NSLog(@"Items at root: %@", items);
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectRootList fulfill];
+
+				for (OCItem *item in items)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						NSArray<OCItemPropertyName> *propertiesToUpdate = @[ OCItemPropertyNameIsFavorite, OCItemPropertyNameLastModified ];
+
+						item.isFavorite = @(!item.isFavorite.boolValue);
+						item.lastModified = [NSDate dateWithTimeIntervalSinceNow:-(24*60*60*7)];
+
+						[connection updateItem:item properties:propertiesToUpdate options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = event.result;
+
+							NSLog(@"Update item result event: %@, result: %@", event, statusByPropertyName);
+
+							for (OCItemPropertyName propertyName in propertiesToUpdate)
+							{
+								XCTAssert(statusByPropertyName[propertyName].isSuccess);
+							}
+
+							[expectFavorite fulfill];
+						} userInfo:nil ephermalUserInfo:nil]];
+					}
+				}
+			}];
+		}
+		else
+		{
+			[expectRootList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 - (void)_testPropFindZeroStresstest
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];

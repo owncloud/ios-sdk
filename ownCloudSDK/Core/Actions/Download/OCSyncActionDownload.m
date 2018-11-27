@@ -17,11 +17,13 @@
  */
 
 #import "OCSyncActionDownload.h"
+#import "OCSyncAction+FileProvider.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
 
 @implementation OCSyncActionDownload
 
+#pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options
 {
 	if ((self = [super initWithItem:item]) != nil)
@@ -34,14 +36,14 @@
 	return (self);
 }
 
+#pragma mark - Action implementation
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
 	if ((item = self.localItem) != nil)
 	{
-		if (!item.locallyModified && // Item wasn't modified locally
-		    (item.localRelativePath != nil) && // Copy of item is stored locally
+		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
 		{
 			// Item already downloaded - take some shortcuts
@@ -122,6 +124,7 @@
 
 												latestItem.locallyModified = NO;
 												latestItem.localRelativePath = nil;
+												latestItem.localCopyVersionIdentifier = nil;
 
 												[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 											}
@@ -163,59 +166,7 @@
 
 		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
-		if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
-		{
-			/*
-				Check if a placeholder/file already exists here before registering this URL session for the item. Otherwise, the SDK may find itself on
-				the receiving end of this error:
-
-				[default] [ERROR] Failed registering URL session task <__NSCFBackgroundDownloadTask: 0x7f81efa08010>{ taskIdentifier: 1041 } with item 00000042oc9qntjidejl; Error Domain=com.apple.FileProvider Code=-1005 "The file doesn’t exist." UserInfo={NSFileProviderErrorNonExistentItemIdentifier=00000042oc9qntjidejl}
-
-				Error registering <__NSCFBackgroundDownloadTask: 0x7f81efa08010>{ taskIdentifier: 1041 } for 00000042oc9qntjidejl: Error Domain=com.apple.FileProvider Code=-1005 "The file doesn’t exist." UserInfo={NSFileProviderErrorNonExistentItemIdentifier=00000042oc9qntjidejl} [OCCoreSyncActionDownload.m:71|FULL]
-			*/
-//			NSURL *localURL = [self.core localURLForItem:item];
-//
-//			if ([[NSFileManager defaultManager] fileExistsAtPath:localURL.path])
-//			{
-//				NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
-//
-//				OCLogDebug(@"SE: record %@ will register URLTask for %@", syncContext.syncRecord, item);
-//
-//				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
-//					if (event == OCConnectionRequestObserverEventTaskResume)
-//					{
-//						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
-//							OCLogDebug(@"SE: record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
-//
-//							if (error != nil)
-//							{
-//								OCLogError(@"SE: error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
-//							}
-//
-//							// File provider detail: the task may not be started until after this completionHandler was called
-//							[request.urlSessionTask resume];
-//						}];
-//
-//						return (YES);
-//					}
-//
-//					return (NO);
-//				} copy];
-//
-//				if (options == nil)
-//				{
-//					options = @{ OCConnectionOptionRequestObserverKey : observer };
-//				}
-//				else
-//				{
-//					NSMutableDictionary *mutableOptions = [options mutableCopy];
-//
-//					mutableOptions[OCConnectionOptionRequestObserverKey] = observer;
-//
-//					options = mutableOptions;
-//				}
-//			}
-		}
+		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
 		OCLogDebug(@"SE: record %@ download: initiating download", syncContext.syncRecord);
 
@@ -224,6 +175,8 @@
 			OCLogDebug(@"SE: record %@ download: download initiated with progress %@", syncContext.syncRecord, progress);
 
 			[syncContext.syncRecord addProgress:progress];
+
+			[self.core registerProgress:progress forItem:item];
 
 			return (YES);
 		}
@@ -254,13 +207,21 @@
 		{
 			__block BOOL checksumIsValid = NO;
 
-			// Verify checksum and wait for result of computation
-			OCSyncExec(checksumVerification, {
-				[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
-					checksumIsValid = isValid;
-					OCSyncExecDone(checksumVerification);
-				}];
-			});
+			if (event.file.checksum != nil)
+			{
+				// Verify checksum and wait for result of computation
+				OCSyncExec(checksumVerification, {
+					[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
+						checksumIsValid = isValid;
+						OCSyncExecDone(checksumVerification);
+					}];
+				});
+			}
+			else
+			{
+				// No checksum available ¯\_(ツ)_/¯
+				checksumIsValid = YES;
+			}
 
 			if (!checksumIsValid)
 			{
@@ -359,9 +320,9 @@
 					}
 
 					item.localRelativePath = vaultItemLocalRelativePath;
-					downloadedFile.url = vaultItemURL;
+					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
 
-					syncContext.updatedItems = @[ item ];
+					downloadedFile.url = vaultItemURL;
 				}
 
 				// Remove any previously existing file
@@ -382,6 +343,8 @@
 		}
 
 		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+		syncContext.updatedItems = @[ item ];
+
 		canDeleteSyncRecord = YES;
 
 		if (error != nil)
@@ -403,7 +366,12 @@
 		if ([downloadError isOCErrorWithCode:OCErrorCancelled])
 		{
 			// Download has been cancelled by the user => create no issue, remove sync record reference and the record itself instead
-			[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+			if (item != nil)
+			{
+				[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+				syncContext.updatedItems = @[ item ];
+			}
+
 			canDeleteSyncRecord = YES;
 		}
 		else

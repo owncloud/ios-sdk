@@ -49,25 +49,31 @@
 {
 	if (source == nil) { return; }
 
-	if (_sources == nil)
+	@synchronized(self)
 	{
-		_sources = [NSMutableArray new];
+		if (_sources == nil)
+		{
+			_sources = [NSMutableArray new];
+		}
+
+		[_sources addObject:source];
+
+		[_overrideValuesByKeyByIdentifier removeAllObjects];
 	}
-
-	[_sources addObject:source];
-
-	[_overrideValuesByKeyByIdentifier removeAllObjects];
 }
 
 - (void)removeSource:(id <OCClassSettingsSource>)source
 {
 	if (source == nil) { return; }
 
-	if (_sources != nil)
+	@synchronized(self)
 	{
-		[_sources removeObjectIdenticalTo:source];
+		if (_sources != nil)
+		{
+			[_sources removeObjectIdenticalTo:source];
 
-		[_overrideValuesByKeyByIdentifier removeAllObjects];
+			[_overrideValuesByKeyByIdentifier removeAllObjects];
+		}
 	}
 }
 
@@ -75,32 +81,35 @@
 {
 	NSMutableDictionary<OCClassSettingsKey,id> *overrideDict = nil;
 
-	if (_sources != nil)
+	@synchronized(self)
 	{
-		if ((overrideDict = _overrideValuesByKeyByIdentifier[settingsIdentifier]) == nil)
+		if (_sources != nil)
 		{
-			if (_overrideValuesByKeyByIdentifier == nil)
+			if ((overrideDict = _overrideValuesByKeyByIdentifier[settingsIdentifier]) == nil)
 			{
-				_overrideValuesByKeyByIdentifier = [NSMutableDictionary new];
-			}
-
-			for (id <OCClassSettingsSource> source in _sources)
-			{
-				NSDictionary<OCClassSettingsKey,id> *sourceOverrideDict;
-
-				if ((sourceOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
+				if (_overrideValuesByKeyByIdentifier == nil)
 				{
-					if (overrideDict==nil) { overrideDict = [NSMutableDictionary new]; }
-
-					[overrideDict setValuesForKeysWithDictionary:sourceOverrideDict];
+					_overrideValuesByKeyByIdentifier = [NSMutableDictionary new];
 				}
-			}
 
-			if (overrideDict != nil)
-			{
-				if (_overrideValuesByKeyByIdentifier == nil) { _overrideValuesByKeyByIdentifier = [NSMutableDictionary new]; }
+				for (id <OCClassSettingsSource> source in _sources)
+				{
+					NSDictionary<OCClassSettingsKey,id> *sourceOverrideDict;
 
-				_overrideValuesByKeyByIdentifier[settingsIdentifier] = overrideDict;
+					if ((sourceOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
+					{
+						if (overrideDict==nil) { overrideDict = [NSMutableDictionary new]; }
+
+						[overrideDict setValuesForKeysWithDictionary:sourceOverrideDict];
+					}
+				}
+
+				if (overrideDict != nil)
+				{
+					if (_overrideValuesByKeyByIdentifier == nil) { _overrideValuesByKeyByIdentifier = [NSMutableDictionary new]; }
+
+					_overrideValuesByKeyByIdentifier[settingsIdentifier] = overrideDict;
+				}
 			}
 		}
 	}

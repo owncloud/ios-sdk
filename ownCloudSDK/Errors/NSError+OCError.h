@@ -44,7 +44,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerDetectionFailed,	//!< Server detection failed, i.e. when the server at a URL is not an ownCloud instance
 	OCErrorServerTooManyRedirects,	//!< Server detection failed because of too many redirects
 	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
-	OCErrorServerVersionNotSupported,   //!< This server version is not supported.
+	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
+	OCErrorServerNoSupportedAuthMethods, //!< This server doesn't offer any supported auth methods
 
 	OCErrorCertificateInvalid,	//!< The certificate is invalid or contains errors
 	OCErrorCertificateMissing,	//!< No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)
@@ -59,6 +60,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
+
+	OCErrorNewerVersionExists, //!< A newer version already exists
 
 	OCErrorCancelled, //!< The operation was cancelled
 

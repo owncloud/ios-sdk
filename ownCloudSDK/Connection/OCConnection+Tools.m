@@ -33,9 +33,7 @@
 
 			if (_loggedInUser.userName != nil)
 			{
-				NSString *percentEscapedUserName = [_loggedInUser.userName stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
-
-				endpointPath = [endpointPath stringByAppendingPathComponent:percentEscapedUserName];
+				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
 			}
 		}
 		else
@@ -55,7 +53,7 @@
 	
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
-		return ([[NSURL URLWithString:endpointPath relativeToURL:_bookmark.url] absoluteURL]);
+		return ([[_bookmark.url URLByAppendingPathComponent:endpointPath] absoluteURL]);
 	}
 
 	return (nil);
