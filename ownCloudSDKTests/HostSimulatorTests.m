@@ -107,8 +107,8 @@
 		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
 
 		XCTAssert((preferredAuthenticationMethods.count == 2), @"2 preferred authentication methods");
-		XCTAssert([preferredAuthenticationMethods[0] isEqual:OCAuthenticationMethodOAuth2Identifier], @"OAuth2 is first detected authentication method");
-		XCTAssert([preferredAuthenticationMethods[1] isEqual:OCAuthenticationMethodBasicAuthIdentifier], @"Basic Auth is second detected authentication method");
+		XCTAssert([preferredAuthenticationMethods[0] isEqual:OCAuthenticationMethodIdentifierOAuth2], @"OAuth2 is first detected authentication method");
+		XCTAssert([preferredAuthenticationMethods[1] isEqual:OCAuthenticationMethodIdentifierBasicAuth], @"Basic Auth is second detected authentication method");
 
 		[issue approve];
 

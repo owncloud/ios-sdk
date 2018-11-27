@@ -520,7 +520,7 @@
 
 	[OCEvent registerEventHandler:self forIdentifier:@"test"];
 
-	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodBasicAuthIdentifier preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodIdentifierBasicAuth preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
 		NSLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
 
 		XCTAssert((error==nil), @"No error: %@", error);
@@ -607,7 +607,7 @@
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	__block NSProgress *downloadProgress = nil;
 
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
@@ -691,7 +691,7 @@
 	OCConnection *connection = nil;
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
@@ -738,7 +738,7 @@
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	__block NSProgress *uploadProgress = nil;
 
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
@@ -875,7 +875,7 @@
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	__block NSUInteger scheduleCount = 100, remaining = scheduleCount, remainingFolder = scheduleCount, deleteCount = scheduleCount;
 
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];

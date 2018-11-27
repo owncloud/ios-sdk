@@ -46,8 +46,8 @@
 	if ((authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses]) != nil)
 	{
 		NSMutableArray <OCAuthenticationMethodIdentifier> *expectedIdentifiers = [NSMutableArray arrayWithObjects:
-			OCAuthenticationMethodOAuth2Identifier,
-			OCAuthenticationMethodBasicAuthIdentifier,
+			OCAuthenticationMethodIdentifierOAuth2,
+			OCAuthenticationMethodIdentifierBasicAuth,
 		nil];
 		
 		for (Class authenticationMethodClass in authenticationMethodClasses)
@@ -70,7 +70,7 @@
 
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
-		[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodBasicAuthIdentifier
+		[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierBasicAuth
 							 options:@{
 							 		OCAuthenticationMethodUsernameKey : user,
 							 		OCAuthenticationMethodPassphraseKey : password,
@@ -279,20 +279,20 @@
 
 - (void)testAuthenticationMethodSorting
 {
-	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
-	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier, @"other-method"];
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodIdentifierBasicAuth, @"other-method", OCAuthenticationMethodIdentifierOAuth2 ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth, @"other-method"];
 
-	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:nil preferredMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier]];
+	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:nil preferredMethodIdentifiers:@[OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth]];
 	
 	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
 }
 
 - (void)testAuthenticationMethodFiltering
 {
-	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
-	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier];
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodIdentifierBasicAuth, @"other-method", OCAuthenticationMethodIdentifierOAuth2 ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodIdentifierOAuth2];
 
-	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier] preferredMethodIdentifiers:@[OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier]];
+	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:@[OCAuthenticationMethodIdentifierOAuth2] preferredMethodIdentifiers:@[OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth]];
 	
 	XCTAssert([filteredAndSorted isEqualToArray:expectedMethods], @"Result has expected order and content");
 }
@@ -300,8 +300,8 @@
 
 - (void)testAuthenticationMethodSortingAndFiltering
 {
-	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodBasicAuthIdentifier, @"other-method", OCAuthenticationMethodOAuth2Identifier ];
-	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier];
+	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodIdentifierBasicAuth, @"other-method", OCAuthenticationMethodIdentifierOAuth2 ];
+	NSArray <OCAuthenticationMethodIdentifier> *expectedMethods = @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth];
 
 	NSArray <OCAuthenticationMethodIdentifier> *filteredAndSorted = [OCConnection filteredAndSortedMethodIdentifiers:authMethods allowedMethodIdentifiers:expectedMethods preferredMethodIdentifiers:expectedMethods];
 	

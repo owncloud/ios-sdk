@@ -236,7 +236,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 
 extern OCClassSettingsKey OCConnectionInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]
-extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodOAuth2Identifier, OCAuthenticationMethodBasicAuthIdentifier ]. [NSArray <OCAuthenticationMethodIdentifier> *]
+extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
