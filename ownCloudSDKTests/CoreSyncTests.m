@@ -64,7 +64,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -233,7 +233,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -402,7 +402,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -538,7 +538,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -666,7 +666,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -890,7 +890,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -1157,7 +1157,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -1304,7 +1304,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -1427,7 +1427,7 @@
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodBasicAuthIdentifier;
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];

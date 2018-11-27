@@ -106,7 +106,7 @@ UIViewController *topViewController; // View controller to use as parent for pre
 
 if (connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 {
-    [connection generateAuthenticationDataWithMethod:OCAuthenticationMethodOAuth2Identifier
+    [connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierOAuth2
                 options:@{ OCAuthenticationMethodPresentingViewControllerKey : topViewController }
                 completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
                     if (error == nil)
