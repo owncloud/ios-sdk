@@ -69,6 +69,14 @@
 	}
 }
 
+- (void)removeAllMockingBlocks
+{
+	@synchronized(self)
+	{
+		[_mockBlocksByLocation removeAllObjects];
+	}
+}
+
 - (void)removeMockingBlockAtLocation:(OCMockLocation)mockLocation
 {
 	if (mockLocation != nil)

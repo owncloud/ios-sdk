@@ -243,8 +243,8 @@
 		}
 		else
 		{
-			// OCLogDebug(@"%@", lastParserElementOnStack);
-			// OCLogDebug(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
+			//OCLogDebug(@"%@", lastParserElementOnStack);
+			//OCLogDebug(@"%@", [(OCXMLParserNode *)lastParserElementOnStack nodesForXPath:@"d:response/d:propstat"]);
 		}
 	}
 
