@@ -64,4 +64,3 @@ Note: since `OCEventTarget` handles the resolution and actual delivery of the ev
 ## License
 
 This project is currently licensed under GPL v3.
-
