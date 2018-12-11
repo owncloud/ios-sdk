@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D62195A11600C8875E /* OCCoreManager+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 5966C8D42195A11600C8875E /* OCCoreManager+OCMocking.m */; };
+		5993F59921B6D63E004F7DE9 /* OCCore+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5993F59721B6D63E004F7DE9 /* OCCore+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5993F59A21B6D63E004F7DE9 /* OCCore+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 5993F59821B6D63E004F7DE9 /* OCCore+OCMocking.m */; };
 		599A45AA218C566C003CAB00 /* OCConnection+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 599A45A8218C566C003CAB00 /* OCConnection+OCMocking.m */; };
 		599A45AB218C566C003CAB00 /* OCConnection+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		599A45AC218C570D003CAB00 /* OCMockTestClass.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8925420F5F8A600AEFF98 /* OCMockTestClass.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -442,6 +444,8 @@
 		590CCF3E20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
 		5966C8D42195A11600C8875E /* OCCoreManager+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCoreManager+OCMocking.m"; sourceTree = "<group>"; };
+		5993F59721B6D63E004F7DE9 /* OCCore+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+OCMocking.h"; sourceTree = "<group>"; };
+		5993F59821B6D63E004F7DE9 /* OCCore+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+OCMocking.m"; sourceTree = "<group>"; };
 		599A45A8218C566C003CAB00 /* OCConnection+OCMocking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+OCMocking.m"; sourceTree = "<group>"; };
 		599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCConnection+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+OCMocking.h"; sourceTree = "<group>"; };
@@ -1472,6 +1476,8 @@
 				5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */,
 				59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */,
 				59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */,
+				5993F59821B6D63E004F7DE9 /* OCCore+OCMocking.m */,
+				5993F59721B6D63E004F7DE9 /* OCCore+OCMocking.h */,
 			);
 			path = "Mocking Targets";
 			sourceTree = "<group>";
@@ -1689,6 +1695,7 @@
 				DCA8924A20F5F1BF00AEFF98 /* OCMockManager.h in Headers */,
 				599A45AD218C5727003CAB00 /* OCMockTestClass+OCMocking.h in Headers */,
 				DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */,
+				5993F59921B6D63E004F7DE9 /* OCCore+OCMocking.h in Headers */,
 				59F6476D219AD11600C016FD /* OCQuery+OCMocking.h in Headers */,
 				DCA8924820F5F1BF00AEFF98 /* NSObject+OCSwizzle.h in Headers */,
 				DCA8925220F5F57D00AEFF98 /* NSObject+OCMockManager.h in Headers */,
@@ -2103,6 +2110,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5993F59A21B6D63E004F7DE9 /* OCCore+OCMocking.m in Sources */,
 				599A45AF218C589C003CAB00 /* OCMockTestClass+OCMocking.m in Sources */,
 				599A45AE218C5835003CAB00 /* OCMockTestClass.m in Sources */,
 				DCA8924B20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.m in Sources */,

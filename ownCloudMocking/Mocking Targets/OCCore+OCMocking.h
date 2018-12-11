@@ -1,8 +1,8 @@
 //
-//  OCQuery+OCMocking.h
+//  OCCore+OCMocking.h
 //  ownCloudMocking
 //
-//  Created by Javier Gonzalez on 13/11/2018.
+//  Created by Javier Gonzalez on 04/12/2018.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -19,11 +19,11 @@
 #import <ownCloudSDK/ownCloudSDK.h>
 #import "OCMockManager.h"
 
-@interface OCQuery (OCMocking)
+@interface OCCore (OCMocking)
 
-- (void)ocm_requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flags completionHandler:(void(^)(OCQueryChangeSetRequestCompletionHandler))completionHandler;
+- (NSProgress *)ocm_createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary<OCCoreOption,id> *)options resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 @end
 
-typedef void *(^OCMockOCQueryRequestChangeSetWithFlagsBlock)(OCQueryChangeSetRequestFlag flags, void(^completionHandler)(OCQueryChangeSetRequestCompletionHandler));
-extern OCMockLocation OCMockLocationOCQueryRequestChangeSetWithFlags;
+typedef NSProgress *(^OCMockOCCoreCreateFolderBlock)(NSString *folderName, OCItem *parentItem,  NSDictionary<OCCoreOption,id> *, OCCoreActionResultHandler);
+extern OCMockLocation OCMockLocationOCCoreCreateFolder;
