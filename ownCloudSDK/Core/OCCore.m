@@ -32,6 +32,9 @@
 #import "OCCore+ItemList.h"
 #import "OCItem+OCThumbnail.h"
 #import "OCIPNotificationCenter.h"
+#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
+#import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCCore+ConnectionStatus.h"
 
 @interface OCCore ()
 {
@@ -53,6 +56,9 @@
 
 @synthesize state = _state;
 @synthesize stateChangedHandler = _stateChangedHandler;
+
+@synthesize connectionStatus = _connectionStatus;
+@synthesize connectionStatusSignals = _connectionStatusSignals;
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
@@ -117,7 +123,6 @@
 	return (NO);
 }
 
-
 #pragma mark - Init
 - (instancetype)init
 {
@@ -167,10 +172,17 @@
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+		_connection.delegate = self;
 
-		_reachabilityMonitor = [[OCReachabilityMonitor alloc] initWithHostname:bookmark.url.host];
-		_reachabilityMonitor.enabled = YES;
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_reachabilityChanged:) name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
+		_connectionStatusSignalProviders = [NSMutableArray new];
+
+		_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+		_maintenanceModeStatusSignalProvider = [OCCoreMaintenanceModeStatusSignalProvider new];
+		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+
+		[self addSignalProvider:_reachabilityStatusSignalProvider];
+		[self addSignalProvider:_maintenanceModeStatusSignalProvider];
+		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
 
@@ -184,12 +196,7 @@
 {
 	[self stopIPCObserveration];
 
-	if (_reachabilityMonitor != nil)
-	{
-		[[NSNotificationCenter defaultCenter] removeObserver:self name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
-		_reachabilityMonitor.enabled = NO;
-		_reachabilityMonitor = nil;
-	}
+	[self removeSignalProviders];
 }
 
 - (void)unregisterEventHandler
@@ -217,6 +224,8 @@
 		{
 			__block NSError *startError = nil;
 			dispatch_group_t startGroup = nil;
+
+			[self recomputeConnectionStatus];
 
 			[self _updateState:OCCoreStateStarting];
 
@@ -250,7 +259,6 @@
 			else
 			{
 				self->_attemptConnect = NO;
-
 				[self _updateState:OCCoreStateStopped];
 			}
 
@@ -350,6 +358,8 @@
 			// Open connection
 			dispatch_suspend(self->_connectivityQueue);
 
+			[self beginActivity:@"Connection connect"];
+
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 				[self queueBlock:^{
 					// Change state
@@ -370,41 +380,12 @@
 					}
 
 					dispatch_resume(self->_connectivityQueue);
+
+					[self endActivity:@"Connection connect"];
 				}];
 			}];
 		}
 	}];
-}
-
-#pragma mark - Reachability
-- (void)_reachabilityChanged:(NSNotification *)notification
-{
-	if (_reachabilityMonitor.available)
-	{
-		[self queueBlock:^{
-			if (self->_state == OCCoreStateStarting)
-			{
-				[self _attemptConnect];
-			}
-
-			[self queueConnectivityBlock:^{	// Wait for _attemptConnect to finish
-				[self queueBlock:^{ // See if we can proceed
-					if (self->_state == OCCoreStateRunning)
-					{
-						for (OCQuery *query in self->_queries)
-						{
-							if (query.state == OCQueryStateContentsFromCache)
-							{
-								[self reloadQuery:query];
-							}
-						}
-
-						[self setNeedsToProcessSyncRecords];
-					}
-				}];
-			}];
-		}];
-	}
 }
 
 #pragma mark - Query
@@ -1088,6 +1069,50 @@
 	{
 		dispatch_async(_connectivityQueue, block);
 	}
+}
+
+#pragma mark - Log tags
++ (void)initialize
+{
+	if (self == [OCCore self])
+	{
+		[[OCLogger sharedLogger] addFilter:^BOOL(OCLogger * _Nonnull logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> *__autoreleasing * _Nullable pTags, NSString *__autoreleasing *pLogMessage, uint64_t threadID, NSDate * _Nonnull timestamp) {
+			NSString *fileName = [file lastPathComponent];
+
+			// Automatically detect messages from OCCore+[Category].m and add [Category] as tag
+			if ([fileName hasPrefix:@"OCCore+"])
+			{
+				NSString *autoTag;
+
+				if ((autoTag = [fileName substringWithRange:NSMakeRange(7, fileName.length-(7+2))]) != nil)
+				{
+					if (pTags!=NULL)
+					{
+						if (*pTags!=nil)
+						{
+							*pTags = [*pTags arrayByAddingObject:autoTag];
+						}
+						else
+						{
+							*pTags = @[autoTag];
+						}
+					}
+				}
+			}
+
+			return (YES);
+		}];
+	}
+}
+
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"CORE"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"CORE"]);
 }
 
 @end

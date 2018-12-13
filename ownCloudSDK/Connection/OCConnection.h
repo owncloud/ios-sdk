@@ -26,6 +26,7 @@
 #import "OCCertificate.h"
 #import "OCConnectionIssue.h"
 #import "OCChecksum.h"
+#import "OCLogTag.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -58,6 +59,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 - (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
+- (void)connectionChangedState:(OCConnection *)connection;
+
 @end
 
 @protocol OCConnectionHostSimulator <NSObject>
@@ -66,7 +69,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
-@interface OCConnection : NSObject <OCClassSettingsSupport>
+@interface OCConnection : NSObject <OCClassSettingsSupport, OCLogTagging>
 {
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
@@ -123,6 +126,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
+
+#pragma mark - Server Status
+- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
 
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path

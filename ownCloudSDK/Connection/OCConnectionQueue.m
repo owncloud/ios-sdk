@@ -71,6 +71,8 @@
 					    delegate:self
 					    delegateQueue:nil];
 
+		_urlSessionIdentifier = identifier;
+
 		[self updateStateWithURLSession];
 	}
 	
@@ -109,7 +111,7 @@
 #pragma mark - Invalidation
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	OCLogDebug(@"CQ[%@]: finish tasks and invalidate", _urlSession.configuration.identifier);
+	OCLogDebug(@"finish tasks and invalidate");
 
 	_invalidationCompletionHandler = completionHandler;
 
@@ -118,7 +120,7 @@
 
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	OCLogDebug(@"CQ[%@]: cancel tasks and invalidate", _urlSession.configuration.identifier);
+	OCLogDebug(@"cancel tasks and invalidate");
 
 	_invalidationCompletionHandler = completionHandler;
 
@@ -328,7 +330,7 @@
 
 					_runningRequestsByTaskIdentifier[request.urlSessionTaskIdentifier] = request;
 
-					OCLogDebug(@"CQ[%@]: saved request for taskIdentifier <%@>, URL: %@, %p, %p", _urlSession.configuration.identifier, request.urlSessionTaskIdentifier, urlRequest, self, _runningRequestsByTaskIdentifier);
+					OCLogDebug(@"saved request for taskIdentifier <%@>, URL: %@, %p, %p", request.urlSessionTaskIdentifier, urlRequest, self, _runningRequestsByTaskIdentifier);
 
 					// Start task
 					if (resumeTask)
@@ -374,6 +376,10 @@
 			error = OCError(OCErrorRequestRemovedBeforeScheduling);
 		}
 	}
+
+	// Log request
+	NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+	OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
 
 	if (error != nil)
 	{
@@ -504,7 +510,11 @@
 	{
 		error = [_connection postProcessFinishedRequest:request error:error];
 	}
-	
+
+	// Log response
+	NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+	OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.headerFields[@"X-Request-ID"], ((error != nil) ? error : @"-"), request.responseDescription);
+
 	// Deliver Finished Request
 	if ((_connection!=nil) && (request.resultHandlerAction != NULL))
 	{
@@ -514,8 +524,7 @@
 		if (impFunction != NULL)
 		{
 			impFunction(_connection, request.resultHandlerAction, request, error);
-		}
-	}
+		}	}
 	else
 	{
 		if (request.ephermalResultHandler != nil)
@@ -538,7 +547,7 @@
 
 			if (request.urlSessionTaskIdentifier != nil)
 			{
-				OCLogDebug(@"CQ[%@]: Removing request %@ with taskIdentifier <%@>", _urlSession.configuration.identifier, OCLogPrivate(request.url), request.urlSessionTaskIdentifier);
+				OCLogDebug(@"Removing request %@ with taskIdentifier <%@>", OCLogPrivate(request.url), request.urlSessionTaskIdentifier);
 				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
 			}
 		}
@@ -585,7 +594,7 @@
 
 			if (request == nil)
 			{
-				OCLogError(@"CQ[%@]: could not find request for task %@ (%@) %p %p", _urlSession.configuration.identifier, OCLogPrivate(task), OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
+				OCLogError(@"could not find request for task %@ (%@) %p %p", OCLogPrivate(task), OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
 			}
 		}
 	}
@@ -612,7 +621,7 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
 	// OCLogDebug(@"DID COMPLETE: task=%@ error=%@", task, error);
-	OCLogDebug(@"CQ[%@]: %@ [taskIdentifier=%lu]: didCompleteWithError=%@", _urlSession.configuration.identifier, task.currentRequest.URL, task.taskIdentifier, error);
+	OCLogDebug(@"%@ [taskIdentifier=%lu]: didCompleteWithError=%@", task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
 }
@@ -635,7 +644,7 @@
         newRequest:(NSURLRequest *)request
         completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
 {
-	OCLogDebug(@"CQ[%@]: %@: wants to perform redirection from %@ to %@ via %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
+	OCLogDebug(@"%@: wants to perform redirection from %@ to %@ via %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(task.currentRequest.URL), OCLogPrivate(request.URL), response);
 
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
@@ -670,7 +679,7 @@
 		}
 	}
 
-	OCLogDebug(@"CQ[%@]: %@: downloadTask:didFinishDownloadingToURL: %@", _urlSession.configuration.identifier, downloadTask.currentRequest.URL, location);
+	OCLogDebug(@"%@: downloadTask:didFinishDownloadingToURL: %@", downloadTask.currentRequest.URL, location);
 	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
@@ -678,7 +687,7 @@
 {
 	dispatch_block_t completionHandler;
 
-	OCLogDebug(@"CQ[%@]: URLSessionDidFinishEventsForBackgroundSession: %@", _urlSession.configuration.identifier, session);
+	OCLogDebug(@"URLSessionDidFinishEventsForBackgroundSession: %@", session);
 
 	// Call completion handler
 	if ((completionHandler = [OCConnectionQueue completionHandlerForBackgroundSessionWithIdentifier:session.configuration.identifier remove:YES]) != nil)
@@ -697,7 +706,7 @@
 {
 	_urlSessionInvalidated = YES;
 
-	OCLogDebug(@"CQ[%@]: did become invalid, running completionHandler %p", _urlSession.configuration.identifier, _invalidationCompletionHandler);
+	OCLogDebug(@"did become invalid, running completionHandler %p", _invalidationCompletionHandler);
 
 	if (_invalidationCompletionHandler != nil)
 	{
@@ -741,7 +750,7 @@
         didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
         completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
-	OCLogDebug(@"CQ[%@]: %@: %@ => protection space: %@ method: %@", _urlSession.configuration.identifier, OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
+	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(task.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
 
 	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
 	{
@@ -800,6 +809,38 @@
 		// All other challenges
 		completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 	}
+}
+
+
+#pragma mark - Log tags
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"CQ"]);
+}
+
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	NSArray<OCLogTagName> *logTags = nil;
+
+	if (_cachedLogTags == nil)
+	{
+		@synchronized(self)
+		{
+			if (_cachedLogTags == nil)
+			{
+				_cachedLogTags = [NSArray arrayWithObjects:@"CQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+			}
+		}
+	}
+
+	logTags = _cachedLogTags;
+
+	if (_connection == nil)
+	{
+		logTags = [logTags arrayByAddingObject:@"ConnectionIsNil"];
+	}
+
+	return (logTags);
 }
 
 @end

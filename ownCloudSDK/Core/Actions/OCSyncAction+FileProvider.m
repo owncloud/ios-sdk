@@ -41,17 +41,17 @@
 			{
 				NSFileProviderDomain *fileProviderDomain = self.core.vault.fileProviderDomain;
 
-				OCLogDebug(@"SE: record %@ will register URLTask for %@", syncContext.syncRecord, item);
+				OCLogDebug(@"record %@ will register URLTask for %@", syncContext.syncRecord, item);
 
 				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
 					if (event == OCConnectionRequestObserverEventTaskResume)
 					{
 						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
-							OCLogDebug(@"SE: record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
+							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
 
 							if (error != nil)
 							{
-								OCLogError(@"SE: error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
+								OCLogError(@"error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
 							}
 
 							// File provider detail: the task may not be started until after this completionHandler was called

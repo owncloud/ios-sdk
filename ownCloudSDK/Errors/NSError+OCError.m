@@ -133,6 +133,10 @@
 				unlocalizedString = @"Server doesn't seem to support any authentication method supported by this app.";
 			break;
 
+			case OCErrorServerInMaintenanceMode:
+				unlocalizedString = @"Server down for maintenance.";
+			break;
+
 			case OCErrorCertificateInvalid:
 				unlocalizedString = @"The certificate is invalid or contains errors";
 			break;
@@ -193,7 +197,14 @@
 	
 	if ((value==nil) && (unlocalizedString != nil))
 	{
-		value = [NSString stringWithFormat:@"%@ (error %ld, %@)", OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+		if ((error.userInfo.count) > 0 && (!((error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo.count==1))))
+		{
+			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+		}
+		else
+		{
+			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+		}
 	}
 
 	return (value);

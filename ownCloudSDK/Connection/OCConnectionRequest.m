@@ -326,6 +326,23 @@
 	}
 }
 
+- (NSStringEncoding)responseBodyEncoding
+{
+	NSString *textEncodingName;
+	NSStringEncoding stringEncoding;
+
+	if ((textEncodingName = self.response.textEncodingName) != nil)
+	{
+		stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
+	}
+	else
+	{
+		stringEncoding = NSISOLatin1StringEncoding; // ISO-8859-1
+	}
+
+	return(stringEncoding);
+}
+
 - (NSString *)responseBodyAsString
 {
 	NSString *responseBodyAsString = nil;
@@ -333,19 +350,7 @@
 
 	if ((responseBodyData = self.responseBodyData) != nil)
 	{
-		NSString *textEncodingName;
-		NSStringEncoding stringEncoding;
-
-		if ((textEncodingName = self.response.textEncodingName) != nil)
-		{
-			stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
-		}
-		else
-		{
-			stringEncoding = NSISOLatin1StringEncoding; // ISO-8859-1
-		}
-			
-		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:stringEncoding];
+		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:self.responseBodyEncoding];
 	}
 	
 	return (responseBodyAsString);
@@ -383,6 +388,101 @@
 	}
 	
 	return (nil);
+}
+
+#pragma mark - Description
+- (NSString *)_bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
+{
+	NSString *contentType = headers[@"Content-Type"];
+	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"];
+
+	if (url != nil)
+	{
+		if (readableContent)
+		{
+			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:self.responseBodyEncoding]);
+		}
+
+		return ([NSString stringWithFormat:@"[Contents from %@]", url.path]);
+	}
+
+	if (data != nil)
+	{
+		if (readableContent)
+		{
+			return (self.responseBodyAsString);
+		}
+
+		return ([NSString stringWithFormat:@"[%lu bytes of %@ data]", (unsigned long)data.length, contentType]);
+	}
+
+	return (nil);
+}
+
+- (NSString *)_formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers
+{
+	NSMutableString *formattedHeaders = [NSMutableString new];
+
+	[headers enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull headerField, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+		if ([headerField isEqualToString:@"Authorization"])
+		{
+			value = @"[redacted]";
+		}
+		[formattedHeaders appendFormat:@"%@: %@\n", headerField, value];
+	}];
+
+	return (formattedHeaders);
+}
+
+- (NSString *)requestDescription
+{
+	NSMutableString *requestDescription = [NSMutableString new];
+
+	NSString *bodyDescription = [self _bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+
+	[requestDescription appendFormat:@"%@ %@ HTTP/1.1\nHost: %@\n", self.method, self.url.path, self.url.hostAndPort];
+	if (_bodyData != nil)
+	{
+		[requestDescription appendFormat:@"Content-Length: %lu\n", (unsigned long)_bodyData.length];
+	}
+	if (_bodyURL != nil)
+	{
+		NSNumber *fileSize = nil;
+		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL]) {
+			[requestDescription appendFormat:@"Content-Length: %lu\n", fileSize.unsignedIntegerValue];
+		}
+	}
+	if (_headerFields.count > 0)
+	{
+		[requestDescription appendString:[self _formattedHeaders:self.headerFields]];
+	}
+
+	if (bodyDescription != nil)
+	{
+		[requestDescription appendFormat:@"\n%@\n", bodyDescription];
+	}
+
+	return (requestDescription);
+}
+
+- (NSString *)responseDescription
+{
+	NSMutableString *responseDescription = [NSMutableString new];
+
+	NSString *bodyDescription = [self _bodyDescriptionForURL:self.downloadedFileURL data:self.responseBodyData headers:self.response.allHeaderFields];
+
+	[responseDescription appendFormat:@"%ld %@\n", (long)self.response.statusCode, [NSHTTPURLResponse localizedStringForStatusCode:self.response.statusCode].uppercaseString];
+	if (self.response.allHeaderFields.count > 0)
+	{
+		[responseDescription appendString:[self _formattedHeaders:self.response.allHeaderFields]];
+	}
+
+	if (bodyDescription != nil)
+	{
+		[responseDescription appendFormat:@"\n%@\n", bodyDescription];
+	}
+
+	return (responseDescription);
 }
 
 #pragma mark - Secure Coding

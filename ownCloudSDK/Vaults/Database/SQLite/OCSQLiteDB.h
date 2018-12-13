@@ -22,6 +22,7 @@
 
 #import "OCSQLiteResultSet.h"
 #import "OCRunLoopThread.h"
+#import "OCLogTag.h"
 
 @class OCSQLiteDB;
 @class OCSQLiteTransaction;
@@ -46,7 +47,7 @@ typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError *error);
 typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet);
 typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumber *rowID);
 
-@interface OCSQLiteDB : NSObject
+@interface OCSQLiteDB : NSObject <OCLogTagging>
 {
 	NSURL *_databaseURL;
 	OCRunLoopThread *_sqliteThread;

@@ -22,6 +22,7 @@
 #import "OCSQLiteDB.h"
 #import "OCTypes.h"
 #import "OCSQLiteTableSchema.h"
+#import "OCLogTag.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -40,7 +41,7 @@ typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumbe
 typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 typedef NSString* OCDatabaseCounterIdentifier;
 
-@interface OCDatabase : NSObject
+@interface OCDatabase : NSObject <OCLogTagging>
 {
 	NSURL *_databaseURL;
 

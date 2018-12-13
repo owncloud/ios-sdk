@@ -35,6 +35,10 @@
 #pragma mark - Sync Engine
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
 
+#pragma mark - Attempt Connect
+- (void)attemptConnect:(BOOL)doAttempt;
+- (void)_attemptConnect;
+
 #pragma mark - Inter-Process change notification/handling
 - (void)postIPCChangeNotification;
 - (void)_checkForChangesByOtherProcessesAndUpdateQueries;

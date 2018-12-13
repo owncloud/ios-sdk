@@ -70,14 +70,17 @@
 
 		do
 		{
-			if (error == nil)
+			@autoreleasepool
 			{
-				iterator(self, lineNumber, [self rowDictionary], &stop);
-				lineNumber++;
-			}
-			else
-			{
-				stop = YES;
+				if (error == nil)
+				{
+					iterator(self, lineNumber, [self rowDictionary], &stop);
+					lineNumber++;
+				}
+				else
+				{
+					stop = YES;
+				}
 			}
 		}while([self nextRow:&error] && !stop);
 	}

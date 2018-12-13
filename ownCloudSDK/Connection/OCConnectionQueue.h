@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCConnectionRequest.h"
 #import "OCKeyValueStore.h"
+#import "OCLogTag.h"
 
 @class OCConnection;
 
@@ -32,13 +33,14 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 	OCConnectionQueueTrustActionProceed
 };
 
-@interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate>
+@interface OCConnectionQueue : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, OCLogTagging>
 {
 	__weak OCConnection *_connection;
 
 	OCKeyValueStore *_persistentStore;
 
 	NSURLSession *_urlSession;
+	NSString *_urlSessionIdentifier;
 	BOOL _urlSessionInvalidated;
 
 	NSMutableArray<OCConnectionRequest *> *_queuedRequests;
@@ -59,6 +61,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 	dispatch_queue_t _actionQueue;
 
 	dispatch_block_t _invalidationCompletionHandler;
+
+	NSArray<OCLogTagName> *_cachedLogTags;
 }
 
 @property(weak) OCConnection *connection; //!< The connection this queue belongs to

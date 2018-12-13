@@ -26,12 +26,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,readonly) NSURL *logFileURL;
 
+- (instancetype)init;
 - (instancetype)initWithLogFileURL:(NSURL *)url;
 
 - (nullable NSError *)eraseOrTruncate;
 
 @end
 
-extern OCLogWriterIdentifier OCLogWriterIdentifierFile;
+extern OCLogComponentIdentifier OCLogComponentIdentifierWriterFile;
 
 NS_ASSUME_NONNULL_END

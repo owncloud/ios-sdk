@@ -62,6 +62,8 @@
 						static NSString *stringPrefix = @"string:";
 						static NSString *integerPrefix = @"int:";
 						static NSString *boolPrefix = @"bool:";
+						static NSString *arrayPrefix = @"[";
+						static NSString *arraySuffix = @"]";
 						NSString *settingsKey;
 
 						// Remove prefix
@@ -94,6 +96,10 @@
 							{
 								value = @(NO);
 							}
+						} else if ([valueString hasPrefix:arrayPrefix] && [valueString hasSuffix:arraySuffix])
+						{
+							// Array pre- und suffix
+							value = [[valueString substringWithRange:NSMakeRange(1, valueString.length-2)] componentsSeparatedByString:@","];
 						}
 
 						// Try to detect type

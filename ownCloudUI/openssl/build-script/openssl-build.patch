@@ -5,11 +5,11 @@
 31c31
 < 	OSX_DEPLOYMENT_TARGET="10.11"
 ---
-> 	OSX_DEPLOYMENT_TARGET="10.12"
+> 	OSX_DEPLOYMENT_TARGET="10.13"
 38c38
 < OPENSSL_VERSION="openssl-1.0.2d"
 ---
-> OPENSSL_VERSION="openssl-1.0.2o"
+> OPENSSL_VERSION="openssl-1.0.2q"
 164a165,166
 > if false; then
 > 

@@ -85,8 +85,17 @@
 		{
 			if (self.localItem!=nil)
 			{
-				[event.result prepareToReplace:self.localItem];
-				syncContext.updatedItems = @[ event.result ];
+				OCItem *resultItem = event.result;
+
+				[resultItem prepareToReplace:self.localItem];
+
+				resultItem.locallyModified = self.localItem.locallyModified;
+				resultItem.localRelativePath = self.localItem.localRelativePath;
+				resultItem.localCopyVersionIdentifier = self.localItem.localCopyVersionIdentifier;
+
+				resultItem.previousPath = self.localItem.path; // Indicate this item has been moved (to allow efficient handling of relocations to another parent directory)
+
+				syncContext.updatedItems = @[ resultItem ];
 			}
 		}
 

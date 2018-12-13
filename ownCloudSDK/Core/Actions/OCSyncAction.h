@@ -21,12 +21,13 @@
 #import "OCCore.h"
 #import "OCSyncRecord.h"
 #import "OCTypes.h"
+#import "OCLogTag.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCSyncContext;
 
-@interface OCSyncAction : NSObject <NSSecureCoding>
+@interface OCSyncAction : NSObject <NSSecureCoding, OCLogTagging>
 {
 	OCItem *_archivedServerItem;
 	NSData *_archivedServerItemData;

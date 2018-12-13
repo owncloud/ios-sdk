@@ -85,3 +85,119 @@
 /* Errors */
 "Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
 "This server runs an unsupported version (%@). Version %@ or later is required by this app." = "This server runs an unsupported version (%@). Version %@ or later is required by this app.";
+
+/* DAV Errors */
+// OCDAVErrorServiceUnavailable
+"Server down for maintenance." = "Server down for maintenance.";
+
+/* OC Errors */
+"%@ (error %ld, %@)" = "%@ (error %ld, %@)";
+"%@ (error %ld)" = "%@ (error %ld)";
+
+// OCErrorInternal
+"Internal error." = "Internal error.";
+
+// OCErrorInsufficientParameters
+"Insufficient parameters." = "Insufficient parameters.";
+
+// OCErrorAuthorizationFailed
+"Authorization failed." = "Authorization failed.";
+
+// OCErrorAuthorizationRedirect
+"Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL.";
+
+// OCErrorAuthorizationNoMethodData
+"Authorization failed because no secret data was set for the authentication method." = "Authorization failed because no secret data was set for the authentication method.";
+
+// OCErrorAuthorizationMissingData
+"Authorization failed because data was missing from the secret data for the authentication method." = "Authorization failed because data was missing from the secret data for the authentication method.";
+
+// OCErrroAuthorizationCancelled
+"Authorization was cancelled by the user." = "Authorization was cancelled by the user.";
+
+// OCErrorRequestURLSessionTaskConstructionFailed
+"Construction of URL Session Task failed." = "Construction of URL Session Task failed.";
+
+// OCErrorNewerVersionExists
+"A newer version already exists." = "A newer version already exists.";
+
+// OCErrorRequestCancelled
+"Request was cancelled." = "Request was cancelled.";
+
+// OCErrorRequestRemovedBeforeScheduling
+"Request was removed before scheduling." = "Request was removed before scheduling.";
+
+// OCErrorRequestServerCertificateRejected
+"Request was cancelled because the server certificate was rejected." = "Request was cancelled because the server certificate was rejected.";
+
+// OCErrorRequestDroppedByURLSession
+"Request was dropped by the NSURLSession." = "Request was dropped by the NSURLSession.";
+
+// OCErrorRequestCompletedWithError
+"Request completed with error." = "Request completed with error.";
+
+// OCErrorRequestURLSessionInvalidated
+"Request couldn't be scheduled because the underlying URL session has been invalidated." = "Request couldn't be scheduled because the underlying URL session has been invalidated.";
+
+// OCErrorException
+"An exception occured." = "An exception occured.";
+
+// OCErrorResponseUnknownFormat
+"Response was in an unknown format." = "Response was in an unknown format.";
+
+// OCErrorServerDetectionFailed
+"Server detection failed, i.e. when the server at a URL is not an ownCloud instance." = "Server detection failed, i.e. when the server at a URL is not an ownCloud instance.";
+
+// OCErrorServerTooManyRedirects
+"Server detection failed because of too many redirects." = "Server detection failed because of too many redirects.";
+
+// OCErrorServerBadRedirection
+"Server redirection to bad/invalid URL." = "Server redirection to bad/invalid URL.";
+
+// OCErrorServerVersionNotSupported
+"This server version is not supported." = "This server version is not supported.";
+
+// OCErrorServerNoSupportedAuthMethods
+"Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
+
+// OCErrorCertificateInvalid
+"The certificate is invalid or contains errors" = "The certificate is invalid or contains errors";
+
+// OCErrorCertificateMissing
+"No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests).";
+
+// OCErrorFeatureNotSupportedForItem
+"This feature is not supported for this item." = "This feature is not supported for this item.";
+
+// OCErrorFeatureNotSupportedByServer
+"This feature is not supported for this server (version)." = "This feature is not supported for this server (version).";
+
+// OCErrorFeatureNotImplemented
+"This feature is currently not implemented" = "This feature is currently not implemented";
+
+// OCErrorItemNotFound
+"The targeted item has not been found." = "The targeted item has not been found.";
+
+// OCErrorItemDestinationNotFound
+"The destination item has not been found." = "The destination item has not been found.";
+
+// OCErrorItemChanged
+"The targeted item has changed." = "The targeted item has changed.";
+
+// OCErrorItemInsufficientPermissions
+"The action couldn't be performed on the targeted item because the client lacks permisssions." = "The action couldn't be performed on the targeted item because the client lacks permisssions.";
+
+// OCErrorItemOperationForbidden
+"The operation on the targeted item is not allowed." = "The operation on the targeted item is not allowed.";
+
+// OCErrorItemAlreadyExists
+"There already is an item at the destination of this action." = "There already is an item at the destination of this action.";
+
+// OCErrorCancelled
+"The operation was cancelled." = "The operation was cancelled.";
+
+// OCErrorOutdatedCache
+"An operation failed due to outdated cache information." = "An operation failed due to outdated cache information.";
+
+// OCErrorRunningOperation
+"A running operation prevents execution." = "A running operation prevents execution.";

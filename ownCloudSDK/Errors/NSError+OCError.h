@@ -46,6 +46,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
 	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
 	OCErrorServerNoSupportedAuthMethods, //!< This server doesn't offer any supported auth methods
+	OCErrorServerInMaintenanceMode,	//!< Server is in maintenance mode
 
 	OCErrorCertificateInvalid,	//!< The certificate is invalid or contains errors
 	OCErrorCertificateMissing,	//!< No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)

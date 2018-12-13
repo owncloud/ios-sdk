@@ -41,7 +41,7 @@
 
 	[vault openWithCompletionHandler:^(id sender, NSError *error) {
 		[database increaseValueForCounter:counterIdentifier withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-			NSLog(@"Increase from %@ to %@", previousCounterValue, newCounterValue);
+			OCLog(@"Increase from %@ to %@", previousCounterValue, newCounterValue);
 
 			XCTAssert((previousCounterValue!=nil) && (previousCounterValue.integerValue == 0));
 			XCTAssert((newCounterValue!=nil) && (newCounterValue.integerValue == 1));
@@ -50,7 +50,7 @@
 
 			return(nil);
 		} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-			NSLog(@"Completion with %@ for increase from %@ to %@", error, previousCounterValue, newCounterValue);
+			OCLog(@"Completion with %@ for increase from %@ to %@", error, previousCounterValue, newCounterValue);
 
 			XCTAssert((error == nil));
 			XCTAssert((previousCounterValue!=nil) && (previousCounterValue.integerValue == 0));
@@ -60,7 +60,7 @@
 
 			[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 				[vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-					NSLog(@"Vault erase result: %@", error);
+					OCLog(@"Vault erase result: %@", error);
 
 					[vaultEraseExpectation fulfill];
 				}];
@@ -94,7 +94,7 @@
 	dispatch_group_enter(waitGroup);
 
 	[vault openWithCompletionHandler:^(id sender, NSError *error) {
-		NSLog(@"Vault open=%@", error);
+		OCLog(@"Vault open=%@", error);
 
 		for (NSUInteger i=0; i<concurrencyLevel; i++)
 		{
@@ -119,7 +119,7 @@
 					} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 						if (error != nil)
 						{
-							NSLog(@"Completion with error=%@", error);
+							OCLog(@"Completion with error=%@", error);
 						}
 
 						if (newValues.count == transactions)
@@ -165,7 +165,7 @@
 
 	[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 		[vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-			NSLog(@"Vault erase result: %@", error);
+			OCLog(@"Vault erase result: %@", error);
 
 			[vaultEraseExpectation fulfill];
 		}];
@@ -196,7 +196,7 @@
 	dispatch_group_enter(waitGroup);
 
 	[vault openWithCompletionHandler:^(id sender, NSError *error) {
-		NSLog(@"Vault open=%@", error);
+		OCLog(@"Vault open=%@", error);
 
 		NSURL *databaseURL = vault.databaseURL;
 
@@ -229,7 +229,7 @@
 						} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 							if (error != nil)
 							{
-								NSLog(@"Completion with error=%@", error);
+								OCLog(@"Completion with error=%@", error);
 							}
 
 							if (newValues.count == transactions)
@@ -280,7 +280,7 @@
 
 	[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 		[vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-			NSLog(@"Vault erase result: %@", error);
+			OCLog(@"Vault erase result: %@", error);
 
 			[vaultEraseExpectation fulfill];
 		}];
@@ -309,7 +309,7 @@
 		consistentOperation = [[OCDatabaseConsistentOperation alloc] initWithDatabase:database counterIdentifier:counterID preparation:^(OCDatabaseConsistentOperation *operation, OCDatabaseConsistentOperationAction action, NSNumber *newCounterValue, void (^completionHandler)(NSError *error, id preparationResult)) {
 			[preparationExpectation fulfill];
 
-			NSLog(@"Prepare with new counter value = %@ (%@)", newCounterValue, ((action==OCDatabaseConsistentOperationActionInitial) ? @"inital" : @"repeated"));
+			OCLog(@"Prepare with new counter value = %@ (%@)", newCounterValue, ((action==OCDatabaseConsistentOperationActionInitial) ? @"inital" : @"repeated"));
 
 			completionHandler(nil, @"prep result");
 		}];
@@ -318,7 +318,7 @@
 			[consistentOperation performOperation:^NSError *(OCDatabaseConsistentOperation *operation, id preparationResult, NSNumber *newCounterValue) {
 				XCTAssert([preparationResult isEqual:@"prep result"]);
 
-				NSLog(@"Perform with new counter value = %@", newCounterValue);
+				OCLog(@"Perform with new counter value = %@", newCounterValue);
 
 				[performExpectation fulfill];
 
@@ -328,7 +328,7 @@
 
 				[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 					[vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-						NSLog(@"Vault erase result: %@", error);
+						OCLog(@"Vault erase result: %@", error);
 
 						[vaultEraseExpectation fulfill];
 					}];
@@ -360,21 +360,21 @@
 
 			preparationCalls++;
 
-			NSLog(@"Prepare with new counter value = %@ (%@)", newCounterValue, ((action==OCDatabaseConsistentOperationActionInitial) ? @"inital" : @"repeated"));
+			OCLog(@"Prepare with new counter value = %@ (%@)", newCounterValue, ((action==OCDatabaseConsistentOperationActionInitial) ? @"inital" : @"repeated"));
 
 			completionHandler(nil, @"prep result");
 		}];
 
 		[consistentOperation prepareWithCompletionHandler:^{
 			[database increaseValueForCounter:counterID withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-				NSLog(@"Incremented counter value from %@ to %@", previousCounterValue, newCounterValue);
+				OCLog(@"Incremented counter value from %@ to %@", previousCounterValue, newCounterValue);
 
 				return (nil);
 			} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 				[consistentOperation performOperation:^NSError *(OCDatabaseConsistentOperation *operation, id preparationResult, NSNumber *newCounterValue) {
 					XCTAssert([preparationResult isEqual:@"prep result"]);
 
-					NSLog(@"Perform with new counter value = %@", newCounterValue);
+					OCLog(@"Perform with new counter value = %@", newCounterValue);
 
 					[performExpectation fulfill];
 
@@ -384,7 +384,7 @@
 
 					[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 						[vault eraseWithCompletionHandler:^(id sender, NSError *error) {
-							NSLog(@"Vault erase result: %@", error);
+							OCLog(@"Vault erase result: %@", error);
 
 							[vaultEraseExpectation fulfill];
 						}];

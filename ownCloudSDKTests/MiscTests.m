@@ -110,9 +110,9 @@
 		]]
 	];
 	
-	NSLog(@"%@", [xmlDocument XMLString]);
+	OCLog(@"%@", [xmlDocument XMLString]);
 
-	NSLog(@"%@", [xmlDocument nodesForXPath:@"D:propfind/D:prop/size"]);
+	OCLog(@"%@", [xmlDocument nodesForXPath:@"D:propfind/D:prop/size"]);
 
 	XCTAssert([[xmlDocument XMLString] isEqualToString:[NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<D:propfind xmlns:D=\"DAV:\">\n<D:prop>\n<D:resourcetype/>\n<D:getlastmodified/>\n<D:creationdate/>\n<D:getcontentlength/>\n<D:displayname/>\n<D:getcontenttype/>\n<D:getetag/>\n<D:quota-available-bytes/>\n<D:quota-used-bytes/>\n<size xmlns=\"http://owncloud.org/ns\"/>\n<id xmlns=\"http://owncloud.org/ns\"/>\n<permissions xmlns=\"http://owncloud.org/ns\"/>\n<test escapeThese=\"Attribute &quot;&apos;&amp;&lt;&gt;\">Value &quot;&apos;&amp;&lt;&gt;</test>\n</D:prop>\n</D:propfind>\n"]], @"Produced XML as expected.");
 
@@ -133,7 +133,7 @@
 	
 	[parser parse];
 
-	NSLog(@"Parsed objects: %@", parser.parsedObjects);
+	OCLog(@"Parsed objects: %@", parser.parsedObjects);
 
 	NSArray <OCItem *> *items = parser.parsedObjects;
 
@@ -152,6 +152,31 @@
 	XCTAssert((items[1].type == OCItemTypeCollection), @"Type match: %ld", (long)items[1].type);
 	XCTAssert((items[2].type == OCItemTypeCollection), @"Type match: %ld", (long)items[2].type);
 	XCTAssert((items[3].type == OCItemTypeFile), 	   @"Type match: %ld", (long)items[3].type);
+}
+
+- (void)testXMLDAVExceptionDecoding
+{
+	NSString *xmlString=@"<?xml version='1.0' encoding='utf-8'?><d:error xmlns:d=\"DAV:\" xmlns:s=\"http://sabredav.org/ns\">  <s:exception>Sabre\\DAV\\Exception\\ServiceUnavailable</s:exception>  <s:message>System in maintenance mode.</s:message></d:error>";
+	NSError *error = nil;
+
+	OCXMLParser *parser = [[OCXMLParser alloc] initWithData:[xmlString dataUsingEncoding:NSUTF8StringEncoding]];
+
+	parser.forceRetain = YES;
+	[parser addObjectCreationClasses:@[ [NSError class] ]];
+
+	[parser parse];
+
+	OCLog(@"Parsed objects: %@ - Errors: %@", parser.parsedObjects, parser.errors);
+
+	error = parser.errors.firstObject;
+
+	XCTAssert(parser.parsedObjects.count == 0);
+	XCTAssert(parser.errors.count == 1);
+	XCTAssert([error isKindOfClass:[NSError class]]);
+	XCTAssert(error.isDAVException);
+	XCTAssert([error.davExceptionName isEqual:@"Sabre\\DAV\\Exception\\ServiceUnavailable"]);
+	XCTAssert([error.davExceptionMessage isEqual:@"System in maintenance mode."]);
+	XCTAssert([error.localizedDescription isEqual:@"Server down for maintenance."]);
 }
 
 #pragma mark - OCCache
@@ -221,18 +246,74 @@
 	XCTAssert([cache objectForKey:@"3"] != nil, @"Value 3 still in cache");
 }
 
+#pragma mark - OCUser
+- (void)testUserSerialization
+{
+	OCUser *user = [OCUser new];
+
+	user.displayName = @"Display Name";
+	user.userName = @"userName";
+	user.emailAddress = @"em@il.address";
+	user.avatarData = [NSData data];
+
+	NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:user];
+
+	XCTAssert(userData!=nil);
+
+	OCUser *deserializedUser = [NSKeyedUnarchiver unarchiveObjectWithData:userData];
+
+	XCTAssert([deserializedUser.displayName isEqual:user.displayName]);
+	XCTAssert([deserializedUser.userName isEqual:user.userName]);
+	XCTAssert([deserializedUser.emailAddress isEqual:user.emailAddress]);
+	XCTAssert([deserializedUser.avatarData isEqual:user.avatarData]);
+}
+
+#pragma mark - OCHTTPStatus
+- (void)testHTTPStatus
+{
+	// isError
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:200].isError);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:300].isError);
+	XCTAssert([OCHTTPStatus HTTPStatusWithCode:400].isError);
+	XCTAssert([OCHTTPStatus HTTPStatusWithCode:500].isError);
+
+	// isSuccess
+	XCTAssert([OCHTTPStatus HTTPStatusWithCode:200].isSuccess);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:300].isSuccess);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:400].isSuccess);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:500].isSuccess);
+
+	// isRedirection
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:200].isRedirection);
+	XCTAssert([OCHTTPStatus HTTPStatusWithCode:300].isRedirection);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:400].isRedirection);
+	XCTAssert(![OCHTTPStatus HTTPStatusWithCode:500].isRedirection);
+
+	// Comparison
+	XCTAssert([[OCHTTPStatus HTTPStatusWithCode:200] isEqual:[OCHTTPStatus HTTPStatusWithCode:200]]);
+	XCTAssert(![[OCHTTPStatus HTTPStatusWithCode:500] isEqual:[OCHTTPStatus HTTPStatusWithCode:200]]);
+
+	// Error creation
+	XCTAssert([[OCHTTPStatus HTTPStatusWithCode:200].error.domain isEqual:OCHTTPStatusErrorDomain]);
+	XCTAssert([OCHTTPStatus HTTPStatusWithCode:200].error.code == 200);
+	XCTAssert([[[OCHTTPStatus HTTPStatusWithCode:200] errorWithURL:[NSURL URLWithString:@"https://demo.owncloud.com/"]].userInfo[@"url"] isEqual:[NSURL URLWithString:@"https://demo.owncloud.com/"]]);
+	XCTAssert([[OCHTTPStatus HTTPStatusWithCode:200] errorWithResponse:[[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://demo.owncloud.com/"] statusCode:200 HTTPVersion:(id)kCFHTTPVersion1_1 headerFields:nil]].userInfo[@"response"] != nil);
+	XCTAssert([[OCHTTPStatus HTTPStatusWithCode:200].error HTTPStatus] != nil);
+	XCTAssert([[NSError errorWithOCError:OCErrorInternal] HTTPStatus] == nil);
+}
+
 #pragma mark - NSData hashing extension
 - (void)testHashes
 {
 	NSData *data = [@"Hello" dataUsingEncoding:NSUTF8StringEncoding];
 
-	NSLog(@"%@", [[data md5Hash] asHexStringWithSeparator:@" "]);
+	OCLog(@"%@", [[data md5Hash] asHexStringWithSeparator:@" "]);
 	XCTAssert([[[data md5Hash] asHexStringWithSeparator:@" "] isEqual:@"8B 1A 99 53 C4 61 12 96 A8 27 AB F8 C4 78 04 D7"]);
 
-	NSLog(@"%@", [[data sha1Hash] asHexStringWithSeparator:@" "]);
+	OCLog(@"%@", [[data sha1Hash] asHexStringWithSeparator:@" "]);
 	XCTAssert([[[data sha1Hash] asHexStringWithSeparator:@" "] isEqual:@"F7 FF 9E 8B 7B B2 E0 9B 70 93 5A 5D 78 5E 0C C5 D9 D0 AB F0"]);
 
-	NSLog(@"%@", [[data sha256Hash] asHexStringWithSeparator:@" "]);
+	OCLog(@"%@", [[data sha256Hash] asHexStringWithSeparator:@" "]);
 	XCTAssert([[[data sha256Hash] asHexStringWithSeparator:@" "] isEqual:@"18 5F 8D B3 22 71 FE 25 F5 61 A6 FC 93 8B 2E 26 43 06 EC 30 4E DA 51 80 07 D1 76 48 26 38 19 69"]);
 
 }
@@ -242,11 +323,11 @@
 {
 	NSURL *temporaryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"kvStore"];
 	OCKeyValueStore *keyValueStore = [[OCKeyValueStore alloc] initWithRootURL:temporaryURL];
-	NSDate *testDate = [NSDate date], *retrievedDate = nil;
+	NSUUID *testUUID = [NSUUID UUID], *retrievedUUID = nil;
 
 	XCTAssert(keyValueStore!=nil);
 
-	keyValueStore[@"test"] = testDate;
+	keyValueStore[@"test"] = testUUID;
 	XCTAssert(keyValueStore.allKeys.count == 1);
 
 	keyValueStore[@"test2"] = @"test";
@@ -255,11 +336,11 @@
 	keyValueStore[@"test2"] = nil;
 	XCTAssert(keyValueStore.allKeys.count == 1);
 
-	retrievedDate = keyValueStore[@"test"];
+	retrievedUUID = keyValueStore[@"test"];
 
-	XCTAssert(retrievedDate!=nil);
-	XCTAssert([retrievedDate isEqual:testDate]);
-	XCTAssert(retrievedDate!=testDate);
+	XCTAssert(retrievedUUID!=nil);
+	XCTAssert([retrievedUUID isEqual:testUUID]);
+	XCTAssert(retrievedUUID!=testUUID);
 
 	NSError *error = [keyValueStore eraseBackinngStore];
 	XCTAssert(error==nil);

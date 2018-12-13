@@ -25,6 +25,9 @@ FOUNDATION_EXPORT double ownCloudMockingVersionNumber;
 FOUNDATION_EXPORT const unsigned char ownCloudMockingVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <ownCloudMocking/PublicHeader.h>
+#import <ownCloudMocking/OCHostSimulator.h>
+#import <ownCloudMocking/OCHostSimulatorResponse.h>
+
 #import <ownCloudMocking/OCMockManager.h>
 #import <ownCloudMocking/NSObject+OCMockManager.h>
 

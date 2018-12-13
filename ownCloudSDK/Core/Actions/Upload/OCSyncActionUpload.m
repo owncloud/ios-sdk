@@ -126,7 +126,7 @@
 				else
 				{
 					// Cloning failed - continue to use the "original"
-					OCLogError(@"SE: error cloning file to import from %@ to %@: %@", uploadURL, _uploadCopyFileURL, error);
+					OCLogError(@"error cloning file to import from %@ to %@: %@", uploadURL, _uploadCopyFileURL, error);
 
 					_uploadCopyFileURL = nil;
 				}

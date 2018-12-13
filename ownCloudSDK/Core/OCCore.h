@@ -24,11 +24,11 @@
 #import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
 #import "OCShare.h"
-#import "OCReachabilityMonitor.h"
 #import "OCCache.h"
 #import "OCDatabase.h"
 #import "OCRetainerCollection.h"
 #import "OCIPNotificationCenter.h"
+#import "OCLogTag.h"
 
 @class OCCore;
 @class OCItem;
@@ -36,6 +36,11 @@
 @class OCSyncAction;
 @class OCIPNotificationCenter;
 
+@class OCCoreConnectionStatusSignalProvider;
+@class OCCoreReachabilityConnectionStatusSignalProvider;
+@class OCCoreMaintenanceModeStatusSignalProvider;
+
+#pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
 	OCCoreStateStopped,
@@ -43,6 +48,30 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 
 	OCCoreStateStarting,
 	OCCoreStateRunning
+};
+
+typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
+{
+	OCCoreConnectionStatusOffline,		//!< The server or client device is currently offline
+	OCCoreConnectionStatusUnavailable,	//!< The server is in maintenance mode and returns with 503 Service Unavailable or /status.php returns "maintenance"=true
+	OCCoreConnectionStatusOnline,		//!< The server and client device are online
+};
+
+typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignal)
+{
+	OCCoreConnectionStatusSignalReachable = (1 << 0), //!< The server is reachable
+	OCCoreConnectionStatusSignalAvailable = (1 << 1), //!< The server is available (not in maintenance mode, not responding with unexpected responses)
+	OCCoreConnectionStatusSignalConnected = (1 << 2), //!< The OCConnection has connected successfully
+
+	OCCoreConnectionStatusSignalBitCount  = 3	  //!< Number of bits used for status signal
+};
+
+typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
+{
+	OCCoreConnectionStatusSignalStateFalse,		//!< Signal state is false
+	OCCoreConnectionStatusSignalStateTrue,  	//!< Signal state is true
+	OCCoreConnectionStatusSignalStateForceFalse,	//!< Signal state is force false (overriding any true + force true states)
+	OCCoreConnectionStatusSignalStateForceTrue   	//!< Signal state is force true (overriding any false states)
 };
 
 typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
@@ -62,21 +91,22 @@ typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
 typedef NSString* OCCoreOption;
 
+#pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
 
 - (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue;
 
 @end
 
+#pragma mark - Class
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport>
+@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging>
 {
 	OCBookmark *_bookmark;
 
 	OCVault *_vault;
 	OCConnection *_connection;
-	OCReachabilityMonitor *_reachabilityMonitor;
 	BOOL _attemptConnect;
 
 	OCCoreMemoryConfiguration _memoryConfiguration;
@@ -88,6 +118,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	OCCoreState _state;
 	OCCoreStateChangedHandler _stateChangedHandler;
+
+	OCCoreConnectionStatus _connectionStatus;
+	OCCoreConnectionStatusSignal _connectionStatusSignals;
+	NSMutableArray <OCCoreConnectionStatusSignalProvider *> *_connectionStatusSignalProviders;
+	OCCoreReachabilityConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor
+	OCCoreMaintenanceModeStatusSignalProvider *_maintenanceModeStatusSignalProvider; // Processes reports of maintenance mode repsonses and performs status.php polls for status changes
+	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
@@ -122,12 +159,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) OCVault *vault; //!< Vault managing storage and database access for this core.
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
-@property(readonly) OCReachabilityMonitor *reachabilityMonitor; //!< ReachabilityMonitor observing the reachability of the bookmark.url.host.
 
 @property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
 
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;
+
+@property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
+@property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals
 
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 

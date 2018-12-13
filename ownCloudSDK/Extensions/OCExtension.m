@@ -73,7 +73,7 @@
 	OCExtensionPriority matchPriority = OCExtensionPriorityNoMatch;
 
 	// Match type
-	if ([context.location.type isEqual:self.type])
+	if ([context.location.type isEqual:self.type] || (context.location.type==nil))
 	{
 		matchPriority = OCExtensionPriorityTypeMatch;
 
@@ -140,7 +140,7 @@
 			{
 				for (id preferenceKey in context.preferences)
 				{
-					if (![_features[preferenceKey] isEqual:context.preferences[preferenceKey]])
+					if ([_features[preferenceKey] isEqual:context.preferences[preferenceKey]])
 					{
 						matchPriority += OCExtensionPriorityFeatureMatchPlus;
 					}

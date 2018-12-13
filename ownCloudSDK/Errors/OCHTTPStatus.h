@@ -43,7 +43,8 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	// Server Error (5xx)
 	OCHTTPStatusCodeINTERNAL_SERVER_ERROR = 500,
 	OCHTTPStatusCodeNOT_IMPLEMENTED = 501,
-	OCHTTPStatusCodeBAD_GATEWAY = 502
+	OCHTTPStatusCodeBAD_GATEWAY = 502,
+	OCHTTPStatusCodeSERVICE_UNAVAILABLE = 503
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -60,6 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isError;
 
 + (instancetype)HTTPStatusWithCode:(OCHTTPStatusCode)code;
+- (instancetype)initWithCode:(OCHTTPStatusCode)code;
 
 - (NSError *)error;
 - (NSError *)errorWithURL:(NSURL *)url;

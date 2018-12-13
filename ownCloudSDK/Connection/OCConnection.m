@@ -106,8 +106,6 @@
 
 		self.bookmark = bookmark;
 
-		_persistentStoreBaseURL = persistentStoreBaseURL;
-		
 		if (self.bookmark.authenticationMethodIdentifier != nil)
 		{
 			Class authenticationMethodClass;
@@ -118,13 +116,23 @@
 			}
 		}
 
-		if (_persistentStoreBaseURL != nil)
-		{
-			persistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:backgroundSessionIdentifier]];
-		}
-			
 		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-		_downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+
+		if (OCConnection.backgroundURLSessionsAllowed)
+		{
+			_persistentStoreBaseURL = persistentStoreBaseURL;
+
+			if (_persistentStoreBaseURL != nil)
+			{
+				persistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:backgroundSessionIdentifier]];
+			}
+
+			_downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
+		}
+		else
+		{
+			_downloadQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
+		}
 		_uploadQueue = _downloadQueue;
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
@@ -164,6 +172,11 @@
 		case OCConnectionStateDisconnected:
 			OCLogDebug(@"## Connection State changed to DISCONNECTED");
 		break;
+	}
+
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionChangedState:)])
+	{
+		[_delegate connectionChangedState:self];
 	}
 }
 
@@ -368,6 +381,11 @@
 
 						return;
 					}
+					else if (request.responseHTTPStatus.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+					{
+						// Maintenance mode
+						error = OCError(OCErrorServerInMaintenanceMode);
+					}
 					else
 					{
 						// Unknown / Unexpected HTTP status => return an error
@@ -395,12 +413,17 @@
 		// Check status
 		if ((statusRequest =  [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
+			statusRequest.skipAuthorization = YES;
+
 			[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
 				if ((error == nil) && (request.responseHTTPStatus.isSuccess))
 				{
 					NSError *jsonError = nil;
-					
-					if ((self->_serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
+					NSDictionary <NSString *, id> *serverStatus;
+
+					serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError];
+
+					if (serverStatus == nil)
 					{
 						// JSON decode error
 						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
@@ -408,6 +431,7 @@
 					else
 					{
 						// Got status successfully => now check minimum version + authenticate connection
+						self->_serverStatus = serverStatus;
 
 						// Check minimum version
 						NSError *minimumVersionError;
@@ -417,6 +441,19 @@
 							completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
 
 							return;
+						}
+
+						// Check maintenance status
+						if ([serverStatus[@"maintenance"] isKindOfClass:[NSNumber class]])
+						{
+							if (((NSNumber *)serverStatus[@"maintenance"]).boolValue)
+							{
+								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
+
+								completionHandler(maintenanceModeError, [OCConnectionIssue issueForError:maintenanceModeError level:OCConnectionIssueLevelError issueHandler:nil]);
+
+								return;
+							}
 						}
 
 						// Authenticate connection
@@ -510,12 +547,14 @@
 
 			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
 			{
-				OCLogWarning(@"OCConnection: clearing out attached extension queues before they finished: %@", self->_attachedExtensionQueuesBySessionIdentifier);
+				OCLogWarning(@"clearing out attached extension queues before they finished: %@", self->_attachedExtensionQueuesBySessionIdentifier);
 				[connectionQueues addObjectsFromArray:self->_attachedExtensionQueuesBySessionIdentifier.allValues];
 			}
 
 			for (OCConnectionQueue *connectionQueue in connectionQueues)
 			{
+				OCLogDebug(@"telling queue %@ to finish tasks and invalidate", connectionQueue);
+
 				dispatch_group_enter(waitQueueTerminationGroup);
 
 				// Wait for the queue to finish all tasks, then invalidate it and call the invalidation completion handler
@@ -532,7 +571,15 @@
 			[self->_attachedExtensionQueuesBySessionIdentifier removeAllObjects];
 
 			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
-			dispatch_group_async(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+			OCConnection *strongReference = self;
+
+			dispatch_group_notify(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+				// In order for the OCConnection to be able to process outstanding responses,
+				// A REFERENCE TO SELF MUST BE KEPT AROUND UNTIL ALL QUEUES HAVE TERMINATED.
+				// this is done through this log message, which makes this block retain
+				// strongReference (aka self):
+				OCLogDebug(@"all queues terminated, calling completionHandler: %@, bookmark: %@", completionHandler, strongReference.bookmark);
+
 				if (completionHandler!=nil)
 				{
 					completionHandler();
@@ -568,6 +615,43 @@
 			completionHandler();
 		}
 	}
+}
+
+#pragma mark - Server Status
+- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
+{
+	OCConnectionRequest *statusRequest;
+
+	if ((statusRequest =  [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+	{
+		statusRequest.skipAuthorization = YES;
+
+		[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+			{
+				NSError *jsonError = nil;
+				NSDictionary <NSString *, id> *serverStatus;
+
+				if ((serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
+				{
+					// JSON decode error
+					completionHandler(jsonError, request, nil);
+				}
+				else
+				{
+					// Got status successfully
+					self->_serverStatus = serverStatus;
+					completionHandler(nil, request, serverStatus);
+				}
+			}
+			else
+			{
+				completionHandler(error, request, nil);
+			}
+		}];
+	}
+
+	return (nil);
 }
 
 #pragma mark - Metadata actions
@@ -624,14 +708,22 @@
 	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
 		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			NSArray <OCItem *> *items = nil;
+			NSArray <NSError *> *errors = nil;
+
+			items = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
+
+			if ((items.count == 0) && (errors.count > 0) && (error == nil))
+			{
+				error = errors.firstObject;
+			}
+
 			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
 			{
 				error = request.responseHTTPStatus.error;
 			}
 
-			OCLogDebug(@"Error: %@ - Response: %@", error, request.responseBodyAsString);
-
-			completionHandler(error, [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path]);
+			completionHandler(error, items);
 		}];
 
 		progress = davRequest.progress;
@@ -709,26 +801,35 @@
 		else
 		{
 			NSURL *endpointURL = request.userInfo[@"endpointURL"];
+			NSArray <NSError *> *errors = nil;
+			NSArray <OCItem *> *items = nil;
 
-			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
+
+			items = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
+
+			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{
-				event.error = request.responseHTTPStatus.error;
+				event.error = errors.firstObject;
 			}
-
-			OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
 			switch (eventType)
 			{
 				case OCEventTypeUpload:
-					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path].firstObject;
+					event.result = items.firstObject;
 				break;
 
 				default:
 					event.path = request.userInfo[@"path"];
 					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
 
-					event.result = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path];
+					event.result = items;
 				break;
+			}
+
+			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			{
+				event.error = request.responseHTTPStatus.error;
 			}
 		}
 
@@ -1113,8 +1214,6 @@
 {
 	OCEvent *event;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
-
-	OCLogDebug(@"Update response: %@", request.responseBodyAsString);
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate attributes:nil]) != nil)
 	{
@@ -1782,6 +1881,17 @@
 
 		[resumedBackgroundConnectionQueue finishTasksAndInvalidateWithCompletionHandler:nil];
 	}
+}
+
+#pragma mark - Log tags
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"CN"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"CN"]);
 }
 
 @end

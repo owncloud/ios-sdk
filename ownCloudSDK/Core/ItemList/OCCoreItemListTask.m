@@ -22,6 +22,8 @@
 #import "OCCore+SyncEngine.h"
 #import "NSString+OCParentPath.h"
 #import "OCLogger.h"
+#import "NSError+OCDAVError.h"
+#import "OCCore+ConnectionStatus.h"
 
 @implementation OCCoreItemListTask
 
@@ -115,6 +117,16 @@
 			[self->_core queueConnectivityBlock:^{
 				[self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+						// Check for maintenance mode errors
+						if ((error==nil) || (error.isDAVException))
+						{
+							if (error.davError == OCDAVErrorServiceUnavailable)
+							{
+								[self->_core reportReponseIndicatingMaintenanceMode];
+							}
+						}
+
+						// Update
 						[self->_retrievedSet updateWithError:error items:items];
 
 						if (self->_retrievedSet.state == OCCoreItemListStateSuccess)

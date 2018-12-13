@@ -158,7 +158,7 @@
 
 				for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
 				{
-					OCLogDebug(@"[FP] Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+					OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
 
 					[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
 				}
@@ -185,7 +185,7 @@
 		{
 			// Another signal hasn't completed yet, so increase the counter and wait for the scheduled signal to complete
 			// (at which point, another signal will be triggered)
-			OCLogDebug(@"[FP] Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
+			OCLogDebug(@"Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
 
 			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue + 1);
 		}
@@ -205,10 +205,10 @@
 			{
 				NSInteger signalCountAtStart = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
 
-				OCLogDebug(@"[FP] Signaling %@ for changes..", changedDirectoryFileID);
+				OCLogDebug(@"Signaling %@ for changes..", changedDirectoryFileID);
 
 				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
-					OCLogDebug(@"[FP] Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
+					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
 
 					dispatch_async(dispatch_get_main_queue(), ^{
 						@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
@@ -235,7 +235,7 @@
 		}
 		else
 		{
-			OCLogDebug(@"[FP] Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
+			OCLogDebug(@"Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
 		}
 
 	});

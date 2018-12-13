@@ -38,7 +38,7 @@
 	XCTAssert(((metaData = [certificate metaDataWithError:&parseError]) != nil), @"Metadata returned");
 	XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:@"demo.owncloud.org"], @"Common name is correct");
 
-	NSLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
+	OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
 }
 
 - (void)testCertificateMetaDataParsingFromWeb
@@ -58,7 +58,7 @@
 			NSError *parseError = nil;
 			NSDictionary *metaData = [certificate metaDataWithError:&parseError];
 
-			NSLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
+			OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
 
 			XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:urlToTest.host], @"Common name is host name");
 

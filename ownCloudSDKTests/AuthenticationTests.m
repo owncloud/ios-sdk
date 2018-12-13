@@ -86,7 +86,7 @@
 								XCTAssert((error!=nil), @"Authentication failed: %@", error);
 								if (error!=nil)
 								{
-									NSLog(@"Failed as expected. Error: %@", error);
+									OCLog(@"Failed as expected. Error: %@", error);
 								}
 							}
 
@@ -102,7 +102,7 @@
 								[request setValue:@"json" forParameter:@"format"];
 								
 							       	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-									NSLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
+									OCLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
 									
 									if (request.responseHTTPStatus.isSuccess)
 									{
@@ -113,8 +113,8 @@
 										XCTAssert((capabilitiesDict!=nil), @"Conversion from JSON successful");
 										XCTAssert(([capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]!=nil), @"Capabilities structure intact");
 										
-										NSLog(@"Capabilities: %@", capabilitiesDict);
-										NSLog(@"Version: %@", [capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]);
+										OCLog(@"Capabilities: %@", capabilitiesDict);
+										OCLog(@"Version: %@", [capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]);
 									}
 									
 									[receivedReplyExpectation fulfill];
@@ -162,7 +162,7 @@
 		connection.delegate = self;
 	
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-			NSLog(@"Error: %@ Supported methods: %@", error, supportMethods);
+			OCLog(@"Error: %@ Supported methods: %@", error, supportMethods);
 			
 			[receivedReplyExpectation fulfill];
 		}];
@@ -173,7 +173,7 @@
 
 - (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError recommendsProceeding:(BOOL)recommendsProceeding proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
-	NSLog(@"Connection asked for user confirmation of certificate for %@, would recommend: %d", certificate.hostName, recommendsProceeding);
+	OCLog(@"Connection asked for user confirmation of certificate for %@, would recommend: %d", certificate.hostName, recommendsProceeding);
 	proceedHandler(YES, nil);
 }
 
@@ -191,7 +191,7 @@
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-			NSLog(@"1 - Error: %@ - Supported methods: %@", error, supportMethods);
+			OCLog(@"1 - Error: %@ - Supported methods: %@", error, supportMethods);
 
 			if ([error isOCErrorWithCode:OCErrorAuthorizationRedirect])
 			{
@@ -204,7 +204,7 @@
 					connection.bookmark.url = redirectURLBase;
 
 					[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-						NSLog(@"2 - Error: %@ - Supported methods: %@", error, supportMethods);
+						OCLog(@"2 - Error: %@ - Supported methods: %@", error, supportMethods);
 			
 						[receivedReplyExpectation fulfill];
 						
@@ -235,7 +235,7 @@
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) } completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-			NSLog(@"Supported methods: %@", supportMethods);
+			OCLog(@"Supported methods: %@", supportMethods);
 			
 			if (supportMethods.count > 0)
 			{
@@ -263,7 +263,7 @@
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
-			NSLog(@"Supported methods: %@", supportMethods);
+			OCLog(@"Supported methods: %@", supportMethods);
 			
 			if (supportMethods.count == 0)
 			{
