@@ -829,6 +829,21 @@
 			if (_cachedLogTags == nil)
 			{
 				_cachedLogTags = [NSArray arrayWithObjects:@"CQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+
+				if ((_connection.bookmark != nil) && !OCLogger.maskPrivateData)
+				{
+					NSString *hostTag, *userTag;
+
+					if ((hostTag = OCLogTagTypedID(@"Host", _connection.bookmark.url.host)) != nil)
+					{
+						_cachedLogTags = [_cachedLogTags arrayByAddingObject:hostTag];
+					}
+
+					if ((userTag = OCLogTagTypedID(@"User", _connection.bookmark.userName)) != nil)
+					{
+						_cachedLogTags = [_cachedLogTags arrayByAddingObject:userTag];
+					}
+				}
 			}
 		}
 	}
