@@ -1,8 +1,8 @@
 //
-//  OCItem+OCThumbnail.h
+//  OCCore+Thumbnails.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 08.08.18.
+//  Created by Felix Schwarz on 14.12.18.
 //  Copyright © 2018 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,13 +16,13 @@
  *
  */
 
-#import "OCItem.h"
+#import "OCCore.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCItem (OCThumbnail)
+@interface OCCore (ThumbnailInternals)
 
-@property(readonly,nonatomic,strong) NSString *thumbnailSpecID;
+- (void)_handleRetrieveThumbnailEvent:(OCEvent *)event sender:(id)sender;
 
 @end
 

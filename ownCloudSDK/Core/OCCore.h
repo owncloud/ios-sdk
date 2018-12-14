@@ -196,9 +196,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
-+ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
-
 - (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
@@ -231,6 +228,11 @@ NS_ASSUME_NONNULL_BEGIN
 //- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
 //@end
+
+@interface OCCore (Thumbnails)
++ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
+@end
 
 @interface OCCore (CommandDownload)
 - (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler;

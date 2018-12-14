@@ -81,6 +81,8 @@
 		DC27A19820CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */; };
 		DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */; };
+		DC2D646621C3D63000EB26FD /* OCCore+Thumbnails.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2D646421C3D63000EB26FD /* OCCore+Thumbnails.m */; };
+		DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */; };
 		DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2EF1B820ECBB7100BA2A3E /* OCKeyValueStore.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */; };
 		DC2EF1C020ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EF1BE20ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h */; };
@@ -529,6 +531,8 @@
 		DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+UIAppExtension.m"; sourceTree = "<group>"; };
 		DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+FileProvider.h"; sourceTree = "<group>"; };
 		DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+FileProvider.m"; sourceTree = "<group>"; };
+		DC2D646421C3D63000EB26FD /* OCCore+Thumbnails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+Thumbnails.m"; sourceTree = "<group>"; };
+		DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+Thumbnails.h"; sourceTree = "<group>"; };
 		DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueStore.h; sourceTree = "<group>"; };
 		DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueStore.m; sourceTree = "<group>"; };
 		DC2EF1BE20ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCConnectionQueue+BackgroundSessionRecovery.h"; sourceTree = "<group>"; };
@@ -1024,6 +1028,15 @@
 			path = "UIApp extensions";
 			sourceTree = "<group>";
 		};
+		DC2D646221C3D60900EB26FD /* Thumbnails */ = {
+			isa = PBXGroup;
+			children = (
+				DC2D646421C3D63000EB26FD /* OCCore+Thumbnails.m */,
+				DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */,
+			);
+			path = Thumbnails;
+			sourceTree = "<group>";
+		};
 		DC2EF1BD20ED776300BA2A3E /* Security */ = {
 			isa = PBXGroup;
 			children = (
@@ -1299,6 +1312,7 @@
 				DCB0A46121B9227400FAC4E9 /* Connection Status */,
 				DC54396620D51138002BF291 /* Actions */,
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
+				DC2D646221C3D60900EB26FD /* Thumbnails */,
 				DC855704204FE9E900189B9A /* Activity */,
 				DC855705204FE9F100189B9A /* Sync */,
 			);
@@ -1850,6 +1864,7 @@
 				DC4A2C5E20D4608100A47260 /* OCConnectionIssueChoice.h in Headers */,
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
+				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
 				DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */,
 				DC1D4D4420DC2DC7005A3DFC /* OCRetainerCollection.h in Headers */,
 				DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */,
@@ -2362,6 +2377,7 @@
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
 				DC708CE1214135D100FE43CA /* OCSyncActionDelete.m in Sources */,
+				DC2D646621C3D63000EB26FD /* OCCore+Thumbnails.m in Sources */,
 				DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */,
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
