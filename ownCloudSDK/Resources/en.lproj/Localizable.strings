@@ -185,7 +185,7 @@
 "The targeted item has changed." = "The targeted item has changed.";
 
 // OCErrorItemInsufficientPermissions
-"The action couldn't be performed on the targeted item because the client lacks permisssions." = "The action couldn't be performed on the targeted item because the client lacks permisssions.";
+"The action couldn't be performed on the targeted item because the client lacks permissions." = "The action couldn't be performed on the targeted item because the client lacks permissions.";
 
 // OCErrorItemOperationForbidden
 "The operation on the targeted item is not allowed." = "The operation on the targeted item is not allowed.";
