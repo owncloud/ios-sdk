@@ -170,7 +170,7 @@
 			break;
 
 			case OCErrorItemInsufficientPermissions:
-				unlocalizedString = @"The action couldn't be performed on the targeted item because the client lacks permisssions.";
+				unlocalizedString = @"The action couldn't be performed on the targeted item because the client lacks permissions.";
 			break;
 
 			case OCErrorItemOperationForbidden:
