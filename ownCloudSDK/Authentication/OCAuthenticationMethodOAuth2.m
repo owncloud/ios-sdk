@@ -189,7 +189,7 @@ OCAuthenticationMethodAutoRegister
 							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
 							{
 								// User cancelled authorization
-								error = OCError(OCErrroAuthorizationCancelled);
+								error = OCError(OCErrorAuthorizationCancelled);
 							}
 						}
 						else
@@ -197,7 +197,7 @@ OCAuthenticationMethodAutoRegister
 							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
 							{
 								// User cancelled authorization
-								error = OCError(OCErrroAuthorizationCancelled);
+								error = OCError(OCErrorAuthorizationCancelled);
 							}
 						}
 					}

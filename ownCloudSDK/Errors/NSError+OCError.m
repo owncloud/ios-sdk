@@ -69,7 +69,7 @@
 				unlocalizedString = @"Authorization failed because data was missing from the secret data for the authentication method.";
 			break;
 
-			case OCErrroAuthorizationCancelled:
+			case OCErrorAuthorizationCancelled:
 				unlocalizedString = @"Authorization was cancelled by the user.";
 			break;
 
