@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
+#import "OCLogTag.h"
 
 @class OCConnection;
 @class OCConnectionRequest;
@@ -37,7 +38,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
 };
 
-@interface OCAuthenticationMethod : NSObject
+@interface OCAuthenticationMethod : NSObject <OCLogTagging>
 {
 	@private
 	id _cachedAuthenticationSecret;

@@ -93,7 +93,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		NSString *authorizationHeaderValue;
 		
-		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
+		if ((authorizationHeaderValue = authSecret[OA2BearerString]) != nil)
 		{
 			[request setValue:authorizationHeaderValue forHeaderField:@"Authorization"];
 		}
@@ -151,6 +151,8 @@ OCAuthenticationMethodAutoRegister
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {
+				OCLogDebug(@"Auth session returned with callbackURL=%@, error=%@", OCLogPrivate(callbackURL), error);
+
 				// Handle authentication session result
 				if (error == nil)
 				{
@@ -159,7 +161,7 @@ OCAuthenticationMethodAutoRegister
 					// Obtain Authorization Code
 					if ((authorizationCode = [callbackURL queryParameters][@"code"]) != nil)
 					{
-						// OCLogDebug(@"Authorization Code: %@", authorizationCode);
+						OCLogDebug(@"Auth session concluded with authorization code: %@", OCLogPrivate(authorizationCode));
 
 						// Send Access Token Request
 						[self 	_sendTokenRequestToConnection:connection
@@ -169,6 +171,7 @@ OCAuthenticationMethodAutoRegister
 								@"redirect_uri"  : [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]
 							}
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
+								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
 								completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, authenticationData);
 							}
 						];
@@ -204,16 +207,17 @@ OCAuthenticationMethodAutoRegister
 
 					// Return errors
 					completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, nil);
-				}
 
-				OCLogDebug(@"Callback URL: %@", OCLogPrivate(callbackURL));
-				OCLogDebug(@"Error: %@", OCLogPrivate(error));
+					OCLogDebug(@"Auth session concluded with error=%@", error);
+				}
 
 				// Release Authentication Session
 				self->authenticationSession = nil;
 			};
 
 			// Create and start authentication session on main thread
+			BOOL authSessionDidStart;
+
 			if (@available(iOS 12, *))
 			{
 				ASWebAuthenticationSession *webAuthenticationSession;
@@ -223,7 +227,7 @@ OCAuthenticationMethodAutoRegister
 				self->authenticationSession = webAuthenticationSession;
 
 				// Start authentication session
-				[webAuthenticationSession start];
+				authSessionDidStart = [webAuthenticationSession start];
 			}
 			else
 			{
@@ -234,8 +238,10 @@ OCAuthenticationMethodAutoRegister
 				self->authenticationSession = authenticationSession;
 
 				// Start authentication session
-				[authenticationSession start];
+				authSessionDidStart = [authenticationSession start];
 			}
+
+			OCLogDebug(@"Started (%d) auth session %@", authSessionDidStart, self->authenticationSession);
 		});
 	}
 	else
@@ -264,11 +270,12 @@ OCAuthenticationMethodAutoRegister
 	
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
-		NSTimeInterval timeLeftUntilExpiration = [[authSecret valueForKeyPath:OA2ExpirationDate] timeIntervalSinceNow];
+		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)authSecret[OA2ExpirationDate]) timeIntervalSinceNow];
 
 		// Get a new token up to 2 minutes before the old one expires
 		if (timeLeftUntilExpiration < 120)
 		{
+			OCLogDebug(@"OAuth2 token expired %@ - refreshing token for connection..", authSecret[OA2ExpirationDate])
 			[self _refreshTokenForConnection:connection availabilityHandler:availabilityHandler];
 
 			return (NO);
@@ -289,19 +296,25 @@ OCAuthenticationMethodAutoRegister
 {
 	NSDictionary<NSString *, id> *authSecret;
 	NSError *error=nil;
-	
+
+	OCLogDebug(@"Token refresh started");
+
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSString *refreshToken;
-		
-		if ((refreshToken = [authSecret valueForKeyPath:OA2RefreshToken]) != nil)
+
+		if ((refreshToken = authSecret[OA2RefreshToken]) != nil)
 		{
+			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
+
 			[self 	_sendTokenRequestToConnection:connection
 				withParameters:@{
 					@"grant_type"    : @"refresh_token",
 					@"refresh_token" : refreshToken,
 				}
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
+					OCLogDebug(@"Token refresh finished with error=%@, jsonResponseDict=%@", error, OCLogPrivate(jsonResponseDict));
+
 					// Update authentication data of the bookmark
 					if ((error==nil) && (authenticationData!=nil))
 					{
@@ -326,6 +339,8 @@ OCAuthenticationMethodAutoRegister
 
 	if (error != nil)
 	{
+		OCLogDebug(@"Token can't be refreshed due to error=%@", error);
+
 		if (availabilityHandler!=nil)
 		{
 			availabilityHandler(error, NO);
@@ -336,6 +351,8 @@ OCAuthenticationMethodAutoRegister
 - (void)_sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
 	OCConnectionRequest *tokenRequest;
+
+	OCLogDebug(@"Sending token request with parameters: %@", OCLogPrivate(parameters));
 
 	// Compose Token Request
 	if ((tokenRequest = [OCConnectionRequest requestWithURL:[connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]]) != nil)
@@ -351,7 +368,7 @@ OCAuthenticationMethodAutoRegister
 		
 		// Send Token Request
 		[connection sendRequest:tokenRequest toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-			OCLogDebug(@"Token Request Result: %@, %@ %@ %@", error, request.response, request.responseBodyAsString, [request responseBodyConvertedDictionaryFromJSONWithError:NULL]);
+			OCLogDebug(@"Received token request result (error=%@)", error);
 
 			// Handle Token Request Result
 			if (error == nil)
@@ -361,7 +378,9 @@ OCAuthenticationMethodAutoRegister
 				if ((jsonResponseDict = [request responseBodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
 				{
 					NSString *jsonError;
-				
+
+					OCLogDebug(@"Received token request response:", OCLogPrivate(jsonResponseDict));
+
 					if ((jsonError = jsonResponseDict[@"error"]) != nil)
 					{
 						// Handle errors coming from JSON response
@@ -369,6 +388,8 @@ OCAuthenticationMethodAutoRegister
 							@"authMethod" : OCAuthenticationMethodIdentifierOAuth2,
 							@"jsonError" : jsonError
 						};
+
+						OCLogDebug(@"Token authorization failed with error=%@", OCLogPrivate(jsonError));
 
 						error = OCErrorWithInfo(OCErrorAuthorizationFailed, errorInfo);
 					}
@@ -393,7 +414,9 @@ OCAuthenticationMethodAutoRegister
 							@"bearerString"  : [NSString stringWithFormat:@"Bearer %@", jsonResponseDict[@"access_token"]],
 							@"tokenResponse" : jsonResponseDict
 						};
-						
+
+						OCLogDebug(@"Token authorization succeeded with: %@", OCLogPrivate(authenticationDataDict));
+
 						if ((authenticationData = [NSPropertyListSerialization dataWithPropertyList:authenticationDataDict format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error]) != nil)
 						{
 							completionHandler(nil, jsonResponseDict, authenticationData);
