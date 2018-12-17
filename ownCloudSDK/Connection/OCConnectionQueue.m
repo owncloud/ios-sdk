@@ -815,7 +815,7 @@
 #pragma mark - Log tags
 + (nonnull NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CQ"]);
+	return (@[@"CONNQ"]);
 }
 
 - (nonnull NSArray<OCLogTagName> *)logTags
@@ -828,7 +828,7 @@
 		{
 			if (_cachedLogTags == nil)
 			{
-				_cachedLogTags = [NSArray arrayWithObjects:@"CQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+				_cachedLogTags = [NSArray arrayWithObjects:@"CONNQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
 
 				if ((_connection.bookmark != nil) && !OCLogger.maskPrivateData)
 				{

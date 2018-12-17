@@ -39,6 +39,9 @@
 
 			self.placeholderItem = placeholderItem;
 		}
+
+		self.actionEventType = OCEventTypeCreateFolder;
+		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
 	}
 
 	return (self);

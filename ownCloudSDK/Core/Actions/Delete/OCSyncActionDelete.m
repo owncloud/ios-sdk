@@ -28,6 +28,9 @@
 		self.identifier = OCSyncActionIdentifierDeleteLocal;
 
 		self.requireMatch = requireMatch;
+
+		self.actionEventType = OCEventTypeDelete;
+		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
 	}
 
 	return (self);

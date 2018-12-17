@@ -1886,12 +1886,12 @@
 #pragma mark - Log tags
 + (NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CN"]);
+	return (@[@"CONN"]);
 }
 
 - (NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CN"]);
+	return (@[@"CONN"]);
 }
 
 @end

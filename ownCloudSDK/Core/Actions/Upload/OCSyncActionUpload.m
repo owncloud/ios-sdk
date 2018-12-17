@@ -35,6 +35,9 @@
 		self.importFileURL = importFileURL;
 		self.importFileIsTemporaryAlongsideCopy = isTemporaryCopy;
 		self.filename = filename;
+
+		self.actionEventType = OCEventTypeUpload;
+		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
 	}
 
 	return (self);

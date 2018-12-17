@@ -162,6 +162,24 @@
 	[coder encodeBool:_allowsRescheduling forKey:@"allowsRescheduling"];
 }
 
+#pragma mark - Progress setup
+- (void)setProgress:(NSProgress *)progress
+{
+	_progress = progress;
+	if (progress!=nil)
+	{
+		if ((progress.localizedDescription == nil) || (progress.localizedDescription.length == 0))
+		{
+			progress.localizedDescription = _action.localizedDescription;
+		}
+
+		if (progress.eventType == OCEventTypeNone)
+		{
+			progress.eventType = _action.actionEventType;
+		}
+	}
+}
+
 #pragma mark - Description
 - (NSString *)description
 {

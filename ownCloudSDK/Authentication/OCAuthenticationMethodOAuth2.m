@@ -151,6 +151,7 @@ OCAuthenticationMethodAutoRegister
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {
+
 				OCLogDebug(@"Auth session returned with callbackURL=%@, error=%@", OCLogPrivate(callbackURL), error);
 
 				// Handle authentication session result
@@ -217,29 +218,13 @@ OCAuthenticationMethodAutoRegister
 
 			// Create and start authentication session on main thread
 			BOOL authSessionDidStart;
+			id authSession = nil;
 
-			if (@available(iOS 12, *))
-			{
-				ASWebAuthenticationSession *webAuthenticationSession;
+			OCLogDebug(@"Starting auth session with URL %@", authorizationRequestURL);
 
-				webAuthenticationSession = [[ASWebAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
+			authSessionDidStart = [self.class startAuthenticationSession:&authSession forURL:authorizationRequestURL scheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
 
-				self->authenticationSession = webAuthenticationSession;
-
-				// Start authentication session
-				authSessionDidStart = [webAuthenticationSession start];
-			}
-			else
-			{
-				SFAuthenticationSession *authenticationSession;
-
-				authenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
-
-				self->authenticationSession = authenticationSession;
-
-				// Start authentication session
-				authSessionDidStart = [authenticationSession start];
-			}
+			self->authenticationSession = authSession;
 
 			OCLogDebug(@"Started (%d) auth session %@", authSessionDidStart, self->authenticationSession);
 		});
@@ -248,6 +233,36 @@ OCAuthenticationMethodAutoRegister
 	{
 		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodIdentifierOAuth2, nil);
 	}
+}
+
++ (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
+{
+	BOOL authSessionDidStart;
+
+	if (@available(iOS 12, *))
+	{
+		ASWebAuthenticationSession *webAuthenticationSession;
+
+		webAuthenticationSession = [[ASWebAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme completionHandler:oauth2CompletionHandler];
+
+		*authenticationSession = webAuthenticationSession;
+
+		// Start authentication session
+		authSessionDidStart = [webAuthenticationSession start];
+	}
+	else
+	{
+		SFAuthenticationSession *sfAuthenticationSession;
+
+		sfAuthenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme completionHandler:oauth2CompletionHandler];
+
+		*authenticationSession = sfAuthenticationSession;
+
+		// Start authentication session
+		authSessionDidStart = [sfAuthenticationSession start];
+	}
+
+	return (authSessionDidStart);
 }
 
 #pragma mark - Authentication Secret Caching

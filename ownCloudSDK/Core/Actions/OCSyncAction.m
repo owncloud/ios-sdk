@@ -28,6 +28,9 @@
 	{
 		_localItem = item;
 		_archivedServerItem = ((item.remoteItem != nil) ? item.remoteItem : item);
+
+		_localizedDescription = NSStringFromClass([self class]);
+		_actionEventType = OCEventTypeNone;
 	}
 
 	return (self);

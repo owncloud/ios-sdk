@@ -68,7 +68,7 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 
 #pragma mark - Result, cancel and progress handling
 @property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
-@property(strong) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
+@property(strong,nonatomic) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
 #pragma - Instantiation
 - (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;

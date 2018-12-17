@@ -31,6 +31,9 @@
 		self.identifier = OCSyncActionIdentifierDownload;
 
 		self.options = options;
+
+		self.actionEventType = OCEventTypeDownload;
+		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 	}
 
 	return (self);

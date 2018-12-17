@@ -46,6 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Ephermal properties
 @property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
 
+#pragma mark - User-facing
+@property(strong,nullable,nonatomic) NSString *localizedDescription; //!< Localized description of the sync action
+@property(assign,nonatomic) OCEventType actionEventType; //!< Event type best describing this sync action
+
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item;
 

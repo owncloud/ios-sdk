@@ -31,6 +31,24 @@
 		self.targetParentItem = targetParentItem;
 
 		self.isRename = isRename;
+
+		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
+		{
+			self.actionEventType = OCEventTypeCopy;
+			self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, targetParentItem.name];
+		}
+		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
+		{
+			self.actionEventType = OCEventTypeMove;
+			if ([item.parentFileID isEqualToString:targetParentItem.fileID])
+			{
+				self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, targetName];
+			}
+			else
+			{
+				self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, targetParentItem.name];
+			}
+		}
 	}
 
 	return (self);

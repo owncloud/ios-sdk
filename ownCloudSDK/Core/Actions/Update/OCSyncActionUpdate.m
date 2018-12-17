@@ -27,6 +27,9 @@
 		self.identifier = OCSyncActionIdentifierUpdate;
 
 		self.updateProperties = properties;
+
+		self.actionEventType = OCEventTypeUpdate;
+		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
 	}
 
 	return (self);
