@@ -2,7 +2,6 @@
 
 ## Introduction
 
-
 This project aims to create a new, modern ownCloud iOS SDK.
 
 ## Architecture
