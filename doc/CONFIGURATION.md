@@ -41,6 +41,9 @@ This document provides an overview over the available sections and variables.
 	- `connection-minimum-server-version`:  The minimum server version required.
 		- type: string
 		- default: `9.0`
+	- `allow-background-url-sessions`: Allow the use of background URL sessions.
+		- type: boolean
+		- default: `true`
 
 ## Core
 
@@ -50,6 +53,39 @@ This document provides an overview over the available sections and variables.
 	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `["*"]` turns on thumbnail loading for all items.
 		- type: array
 		- default: `["*"]`
+
+## Logging
+
+- **Section ID**: `log`
+
+- **Variables**:
+	- `log-level`: Log level. `0` for `debug`, `1` for `info`, `2` for `warning`, `3` for `error`, `4` for `off`,
+		- type: number
+		- default: `4` (`off`)
+	- `log-privacy-mask`: Controls whether certain objects in log statements should be masked for privacy. 
+		- type: boolean
+		- default: `false`
+	- `log-enabled-components`: List of enabled logging system components. 
+		- type: array
+		- default: `["writer.stderr", "writer.file", "option.log-requests-and-responses"]`
+	- `log-synchronous`: Controls whether log messages should be written synchronously (which can impact performance) or asynchronously (which can loose messages in case of a crash). 
+		- type: boolean
+		- default: `true`
+	- `log-only-tags`: If set, omits all log messages not tagged with tags in this array.
+		- type: array
+		- default: none
+	- `log-omit-tags`: If set, omits all log messages tagged with tags in this array.
+		- type: array
+		- default: none
+	- `log-only-matching`: If set, only logs messages containing at least one of the exact terms in this array.
+		- type: array
+		- default: none
+	- `log-omit-matching`: If set, omits logs messages containing any of the exact terms in this array.
+		- type: array
+		- default: none
+	- `log-blank-filtered-messages`: Controls whether filtered out messages should still be logged, but with the message replaced with `-`. 
+		- type: boolean
+		- default: `false`
 
 ## OAuth2
 

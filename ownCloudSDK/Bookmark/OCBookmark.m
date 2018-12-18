@@ -200,6 +200,24 @@
 	// _authenticationData is not stored in the bookmark
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	NSData *authData = self.authenticationData;
+
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
+			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
+			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
+			((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
+			((_certificate!=nil) ? [@", certificate: " stringByAppendingString:_certificate.description] : @""),
+			((_certificateModificationDate!=nil) ? [@", certificateModificationDate: " stringByAppendingString:_certificateModificationDate.description] : @""),
+			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
+			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
+			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
+		]);
+}
+
 #pragma mark - Copying
 - (id)copyWithZone:(NSZone *)zone
 {

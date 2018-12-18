@@ -43,7 +43,7 @@
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath;
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors;
 - (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
 
 @end

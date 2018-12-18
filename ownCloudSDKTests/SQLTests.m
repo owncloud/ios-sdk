@@ -39,7 +39,7 @@
 	{
 		[sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
 			[db executeQuery:[OCSQLiteQuery query:@"CREATE TABLE t1(a, b PRIMARY KEY)" withNamedParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-				NSLog(@"Create table error: %@", error);
+				OCLog(@"Create table error: %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -47,7 +47,7 @@
 			}]];
 
 			[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO t1 (a,b) VALUES (:hello, :world)" withNamedParameters:@{ @"hello" : @"Hallo", @"world" : @"Welt" } resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-				NSLog(@"Insert error: %@", error);
+				OCLog(@"Insert error: %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -57,7 +57,7 @@
 			}]];
 
 			[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO t1 (a,b) VALUES (:hello, :world)" withNamedParameters:@{ @"hello" : @"Bonjour", @"world" : @"Monde" } resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-				NSLog(@"Insert error: %@", error);
+				OCLog(@"Insert error: %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -67,7 +67,7 @@
 			}]];
 
 			[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO t1 (a,b) VALUES (:hello, :world)" withNamedParameters:@{ @"hello" : @"¡Hola!", @"world" : @"el mundo" } resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-				NSLog(@"Insert error: %@", error);
+				OCLog(@"Insert error: %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -80,7 +80,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==1), @"Returned 1 row");
@@ -94,7 +94,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==3), @"Returned 3 rows");
@@ -131,7 +131,7 @@
 					XCTAssert([[db lastInsertRowID] isEqual:@(3)], @"Insert Row ID is 3");
 				}],
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -142,7 +142,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==1), @"Returned 1 row");
@@ -156,7 +156,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==3), @"Returned 3 rows");
@@ -198,7 +198,7 @@
 
 				return (nil);
 			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				XCTAssert((error==nil), @"No error");
 
@@ -209,7 +209,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(I) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==1), @"Returned 1 row");
@@ -223,7 +223,7 @@
 				NSUInteger returnedRows;
 
 				returnedRows = [resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line(II) %lu: %@", (unsigned long)line, rowDictionary);
 				} error:NULL];
 
 				XCTAssert((returnedRows==3), @"Returned 3 rows");
@@ -255,14 +255,14 @@
 				[OCSQLiteQuery query:@"CREATE TABLE t1(modifiedDate REAL, name PRIMARY KEY)" resultHandler:nil],
 				[OCSQLiteQuery query:@"INSERT INTO t1 (modifiedDate,name) VALUES (:modifiedDate, :name)" withNamedParameters:@{ @"modifiedDate" : dateYesterday, @"name" : @"24 hours ago" } resultHandler:nil],
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 			}]];
 
 			[db executeQuery:[OCSQLiteQuery query:@"SELECT * FROM t1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 				[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-					NSLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
+					OCLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
 
-					NSLog(@"Date recovered from database: %f (vs %f)", ((NSDate *)rowDictionary[@"modifiedDate"]).timeIntervalSinceReferenceDate, dateYesterday.timeIntervalSinceReferenceDate);
+					OCLog(@"Date recovered from database: %f (vs %f)", ((NSDate *)rowDictionary[@"modifiedDate"]).timeIntervalSinceReferenceDate, dateYesterday.timeIntervalSinceReferenceDate);
 
 					XCTAssert((fabs([((NSDate *)rowDictionary[@"modifiedDate"]) timeIntervalSinceDate:dateYesterday]) < 0.001), @"Date recovered from database");
 
@@ -290,22 +290,22 @@
 					@"number" : @(1.23),
 					@"name" : @"one dot two three"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==1, @"Row ID is 1");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(2.34),
 					@"name" : @"two dot three four"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==2, @"Row ID is 2");
 				}]
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				[db executeQuery:[OCSQLiteQuery query:@"SELECT * FROM t1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 					[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-						NSLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
+						OCLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
 
 						if (line == 1) { [expectTwoRows fulfill]; }
 					} error:NULL];
@@ -338,7 +338,7 @@
 					@"number" : @(1),
 					@"name" : @"one"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==1, @"Row ID is 1");
 				}],
 
@@ -347,7 +347,7 @@
 					@"number" : @(2),
 					@"name" : @"two"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==2, @"Row ID is 2");
 				}],
 
@@ -357,22 +357,22 @@
 				} inTable:@"t1" withRowValues:@{
 					@"name" : @"_TWO_"
 				} completionHandler:^(OCSQLiteDB *db, NSError *error) {
-					NSLog(@"Updated row with error: %@", error);
+					OCLog(@"Updated row with error: %@", error);
 				}],
 
 				// Update row 1 (by row ID)
 				[OCSQLiteQuery queryUpdatingRowWithID:@(1) inTable:@"t1" withRowValues:@{
 					@"name" : @"One"
 				} completionHandler:^(OCSQLiteDB *db, NSError *error) {
-					NSLog(@"Updated row with error: %@", error);
+					OCLog(@"Updated row with error: %@", error);
 				}],
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				[db executeQuery:[OCSQLiteQuery query:@"SELECT * FROM t1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 					[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
 
-						NSLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
+						OCLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
 
 						switch (line)
 						{
@@ -416,44 +416,44 @@
 					@"number" : @(1),
 					@"name" : @"one"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==1, @"Row ID is 1");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(2),
 					@"name" : @"two"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==2, @"Row ID is 2");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(3),
 					@"name" : @"three"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==3, @"Row ID is 3");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(4),
 					@"name" : @"four"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==4, @"Row ID is 4");
 				}],
 				[OCSQLiteQuery queryDeletingRowWithID:@(2) fromTable:@"t1" completionHandler:^(OCSQLiteDB *db, NSError *error) {
-					NSLog(@"Deleted row with error: %@", error);
+					OCLog(@"Deleted row with error: %@", error);
 					XCTAssert(error==nil, @"No error deleting row");
 				}],
 				[OCSQLiteQuery queryDeletingRowsWhere:@{ @"number" : @(4) } fromTable:@"t1" completionHandler:^(OCSQLiteDB *db, NSError *error) {
-					NSLog(@"Deleted row with error: %@", error);
+					OCLog(@"Deleted row with error: %@", error);
 					XCTAssert(error==nil, @"No error deleting row");
 				}]
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				[db executeQuery:[OCSQLiteQuery query:@"SELECT * FROM t1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 					[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-						NSLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
+						OCLog(@"Line %lu: %@", (unsigned long)line, rowDictionary);
 
 						if (line == 1)
 						{
@@ -491,28 +491,28 @@
 					@"number" : @(1),
 					@"name" : @"one"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==1, @"Row ID is 1");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(2),
 					@"name" : @"two"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==2, @"Row ID is 2");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(3),
 					@"name" : @"three"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==3, @"Row ID is 3");
 				}],
 				[OCSQLiteQuery queryInsertingIntoTable:@"t1" rowValues:@{
 					@"number" : @(4),
 					@"name" : @"four"
 				} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
-					NSLog(@"Inserted row with ID: %@", rowID);
+					OCLog(@"Inserted row with ID: %@", rowID);
 					XCTAssert(rowID.integerValue==4, @"Row ID is 4");
 				}],
 				[OCSQLiteQuery querySelectingColumns:@[@"name"] fromTable:@"t1" where:@{ @"number" : @(4) } resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
@@ -532,7 +532,7 @@
 					} error:nil];
 				}]
 			] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				NSLog(@"Transaction finished with %@", error);
+				OCLog(@"Transaction finished with %@", error);
 
 				XCTAssert((error==nil), @"Transaction finished without errors");
 
@@ -584,7 +584,7 @@
 								[expectMatchingDefinition fulfill];
 							}
 
-							NSLog(@"%@", rowDictionary);
+							OCLog(@"%@", rowDictionary);
 						} error:nil];
 					}]];
 				}];
@@ -632,7 +632,7 @@
 								[expectMatchingDefinition fulfill];
 							}
 
-							NSLog(@"%@", rowDictionary);
+							OCLog(@"%@", rowDictionary);
 						} error:nil];
 					}]];
 				}];

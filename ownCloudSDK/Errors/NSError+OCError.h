@@ -46,6 +46,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerBadRedirection,	//!< Server redirection to bad/invalid URL
 	OCErrorServerVersionNotSupported,    //!< This server version is not supported.
 	OCErrorServerNoSupportedAuthMethods, //!< This server doesn't offer any supported auth methods
+	OCErrorServerInMaintenanceMode,	//!< Server is in maintenance mode
 
 	OCErrorCertificateInvalid,	//!< The certificate is invalid or contains errors
 	OCErrorCertificateMissing,	//!< No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)
@@ -57,7 +58,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemNotFound, //!< The targeted item has not been found.
 	OCErrorItemDestinationNotFound, //!< The destination item has not been found.
 	OCErrorItemChanged, //!< The targeted item has changed.
-	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permisssions
+	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permissions
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
 

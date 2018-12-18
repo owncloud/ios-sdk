@@ -36,7 +36,7 @@
 
 		XCTAssert([[OCChecksum checksumFromHeaderString:validHeaderString] isEqual:computedChecksum]);
 
-		NSLog(@"Computed checksum: %@", computedChecksum.headerString);
+		OCLog(@"Computed checksum: %@", computedChecksum.headerString);
 
 		[computeExpectation fulfill];
 
@@ -48,7 +48,7 @@
 			XCTAssert([actualChecksum.checksum isEqual:fakeCertSHA1Checksum]);
 			XCTAssert([actualChecksum.algorithmIdentifier isEqual:OCChecksumAlgorithmIdentifierSHA1]);
 
-			NSLog(@"Actual checksum: %@", computedChecksum.headerString);
+			OCLog(@"Actual checksum: %@", computedChecksum.headerString);
 
 			[verifiedExpectation fulfill];
 		}];

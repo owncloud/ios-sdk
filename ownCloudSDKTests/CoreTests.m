@@ -8,9 +8,10 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCHostSimulator.h"
+#import <ownCloudMocking/ownCloudMocking.h>
 #import "OCCore+Internal.h"
 #import "TestTools.h"
+#import "XCTestCase+Tagging.h"
 
 #import "OCTestTarget.h"
 
@@ -23,18 +24,7 @@
 
 @implementation CoreTests
 
-- (void)setUp
-{
-	[super setUp];
-	// Put setup code here. This method is called before the invocation of each test method in the class.
-}
-
-- (void)tearDown
-{
-	// Put teardown code here. This method is called after the invocation of each test method in the class.
-	[super tearDown];
-}
-
+#pragma mark - Tests
 - (void)testStartStopCoreAndEraseVault
 {
 	OCBookmark *bookmark = nil;
@@ -81,7 +71,7 @@
 
 		[coreStartedExpectation fulfill];
 
-		NSLog(@"Vault location: %@", core.vault.rootURL);
+		OCLog(@"Vault location: %@", core.vault.rootURL);
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
@@ -110,35 +100,35 @@
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
-		NSLog(@"Vault location: %@", core.vault.rootURL);
+		OCLog(@"Vault location: %@", core.vault.rootURL);
 
 		query = [OCQuery queryForPath:@"/"];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 				if (changeset != nil)
 				{
-					NSLog(@"============================================");
-					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"============================================");
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								NSLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryPath);
 							break;
 						}
 					}];
@@ -179,28 +169,28 @@
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
-									NSLog(@"============================================");
-									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"============================================");
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												NSLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryPath);
 											break;
 										}
 									}];
@@ -276,7 +266,7 @@
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
-		NSLog(@"Vault location: %@", core.vault.rootURL);
+		OCLog(@"Vault location: %@", core.vault.rootURL);
 
 		query = [OCQuery queryForPath:@"/"];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
@@ -286,7 +276,7 @@
 					didDisruptOnce = YES;
 					
 					[core.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-						NSLog(@"Increasing the counter while fetching is in progress from %@ => %@", previousCounterValue, newCounterValue);
+						OCLog(@"Increasing the counter while fetching is in progress from %@ => %@", previousCounterValue, newCounterValue);
 
 						return (nil);
 					} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
@@ -296,28 +286,28 @@
 
 				if (changeset != nil)
 				{
-					NSLog(@"============================================");
-					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"============================================");
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								NSLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryPath);
 							break;
 						}
 					}];
@@ -342,28 +332,28 @@
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
-									NSLog(@"============================================");
-									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"============================================");
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												NSLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryPath);
 											break;
 										}
 									}];
@@ -435,35 +425,35 @@
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
-		NSLog(@"Vault location: %@", core.vault.rootURL);
+		OCLog(@"Vault location: %@", core.vault.rootURL);
 
 		query = [OCQuery queryForPath:@"/"];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 				if (changeset != nil)
 				{
-					NSLog(@"============================================");
-					NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"============================================");
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-					NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								NSLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								NSLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryPath, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								NSLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryPath);
 							break;
 						}
 					}];
@@ -488,28 +478,28 @@
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
-									NSLog(@"============================================");
-									NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"============================================");
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
-									NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												NSLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												NSLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												NSLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryPath, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												NSLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryPath);
 											break;
 										}
 									}];
@@ -531,7 +521,7 @@
 										dispatch_async(dispatch_get_main_queue(), ^{
 											[core stopQuery:query];
 
-											NSLog(@"================ ###### CUTTING OFF NETWORK ###### ================");
+											OCLog(@"================ ###### CUTTING OFF NETWORK ###### ================");
 											core.connection.hostSimulator = hostSimulator; // the connection will now get host not found for every request
 
 											[core startQuery:query];
@@ -616,19 +606,19 @@
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
-		NSLog(@"Vault location: %@", core.vault.rootURL);
+		OCLog(@"Vault location: %@", core.vault.rootURL);
 
 		query = [OCQuery queryForPath:@"/Photos/"];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 
-			NSLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+			OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
 
 			if (query.state == OCQueryStateIdle)
 			{
 				[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 					if (changeset != nil)
 					{
-						NSLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+						OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
 
 						for (OCItem *item in changeset.queryResult)
 						{
@@ -740,7 +730,7 @@
 
 - (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue
 {
-	NSLog(@"Core: %@ Error: %@ Issue: %@", core, error, issue);
+	OCLog(@"Core: %@ Error: %@ Issue: %@", core, error, issue);
 	if (coreErrorHandler != nil)
 	{
 		coreErrorHandler(core, error, issue);
@@ -765,9 +755,10 @@
 	core.delegate = self;
 
 	__weak CoreTests *weakSelf = self;
+	NSArray *tags = [weakSelf logTags];
 
 	coreErrorHandler = ^(OCCore *core, NSError *error, OCConnectionIssue *issue) {
-		NSLog(@"######### Handle error: %@, issue: %@", error, issue);
+		OCRLog(tags, @"######### Handle error: %@, issue: %@", error, issue);
 
 		if (coreErrorExpectation != nil)
 		{
@@ -779,7 +770,7 @@
 			// Stop core
 			[core stopWithCompletionHandler:^(id sender, NSError *error) {
 				_XCTPrimitiveAssertTrue(weakSelf, (error==nil), @"Stopped without error");
-				NSLog(@"Stopped with error: %@", error);
+				OCRLog(tags, @"Stopped with error: %@", error);
 
 				[coreStoppedExpectation fulfill];
 			}];
@@ -788,7 +779,7 @@
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
-		NSLog(@"Core: %@ Error: %@", core, error);
+		OCLog(@"Core: %@ Error: %@", core, error);
 
 		[coreStartedExpectation fulfill];
 	}];

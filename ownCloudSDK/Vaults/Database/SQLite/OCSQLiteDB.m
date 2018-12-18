@@ -695,9 +695,20 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 {
 	int64_t previousMemoryLimit = sqlite3_soft_heap_limit64(memoryLimit);
 
-	OCLogDebug(@"[SQL] Changed memory limit from %lld to %lld bytes", previousMemoryLimit, memoryLimit);
+	OCLogDebug(@"Changed memory limit from %lld to %lld bytes", previousMemoryLimit, memoryLimit);
 
 	return (previousMemoryLimit);
+}
+
+#pragma mark - Log tags
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"SQL"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"SQL"]);
 }
 
 @end

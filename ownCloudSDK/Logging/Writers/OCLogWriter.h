@@ -18,26 +18,22 @@
 
 #import <Foundation/Foundation.h>
 #import "OCLogger.h"
+#import "OCLogComponent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCLogWriterIdentifier NS_TYPED_EXTENSIBLE_ENUM;
-
 typedef void(^OCLogWriteHandler)(NSString *message);
 
-@interface OCLogWriter : NSObject
+@interface OCLogWriter : OCLogComponent
 {
 	BOOL _isOpen;
-	BOOL _enabled;
 
 	OCLogWriteHandler _writeHandler;
 }
 
-@property(strong,readonly,nonatomic) OCLogWriterIdentifier identifier;
 @property(strong,readonly,nonatomic) NSString *name;
 
 @property(readonly) BOOL isOpen;
-@property(assign,nonatomic) BOOL enabled;
 
 @property(copy) OCLogWriteHandler writeHandler;
 
@@ -46,11 +42,11 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 - (nullable NSError *)open;	//!< Opens the log for writing
 - (nullable NSError *)close;	//!< Closes the log
 
-- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)message; //!< By default composes the parameters and calls -appendMessage:
+- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)message; //!< By default composes the parameters and calls -appendMessage:
 - (void)appendMessage:(NSString *)message; //!< Called by the default implementation of -appendMessageWithLogLevel:functionName:file:line:message:
 
 @end
 
-extern OCLogWriterIdentifier OCLogWriterIdentifierStandardError;
+extern OCLogComponentIdentifier OCLogComponentIdentifierWriterStandardError;
 
 NS_ASSUME_NONNULL_END

@@ -76,7 +76,7 @@
 {
 	OCItem *item;
 
-	OCLogDebug(@"SE: record %@ enters download scheduling", syncContext.syncRecord);
+	OCLogDebug(@"record %@ enters download scheduling", syncContext.syncRecord);
 
 	if ((item = self.archivedServerItem) != nil)
 	{
@@ -84,7 +84,7 @@
 		NSError *error = nil;
 		OCItem *latestVersionOfItem;
 
-		OCLogDebug(@"SE: record %@ download: retrieve latest version from cache", syncContext.syncRecord);
+		OCLogDebug(@"record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
 		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
 		{
@@ -94,7 +94,7 @@
 				// Ask user to choose between keeping modifications or overwriting with server version
 				OCConnectionIssue *issue;
 
-				OCLogDebug(@"SE: record %@ download: latest version was locally modified", syncContext.syncRecord);
+				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
 				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"\"%@\" has been modified locally") localizedDescription:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") choices:@[
 						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Overwrite modified file") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
@@ -129,7 +129,7 @@
 												[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ latestItem ] refreshPaths:nil newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
 											}
 
-											OCLogDebug(@"SE: deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
+											OCLogDebug(@"deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
 										}
 									}
 								}
@@ -146,7 +146,7 @@
 
 				[syncContext addIssue:issue];
 
-				OCLogDebug(@"SE: record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
+				OCLogDebug(@"record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
 
 				// Prevent scheduling of download
 				return (NO);
@@ -162,17 +162,17 @@
 		NSURL *temporaryDirectoryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]  URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
 		NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:item.name];
 
-		OCLogDebug(@"SE: record %@ download: setting up directory", syncContext.syncRecord);
+		OCLogDebug(@"record %@ download: setting up directory", syncContext.syncRecord);
 
 		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
-		OCLogDebug(@"SE: record %@ download: initiating download", syncContext.syncRecord);
+		OCLogDebug(@"record %@ download: initiating download", syncContext.syncRecord);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
-			OCLogDebug(@"SE: record %@ download: download initiated with progress %@", syncContext.syncRecord, progress);
+			OCLogDebug(@"record %@ download: download initiated with progress %@", syncContext.syncRecord, progress);
 
 			[syncContext.syncRecord addProgress:progress];
 

@@ -70,7 +70,7 @@
 
 					if ((statusCodeString = [value substringWithRange:NSMakeRange(9,3)]) != nil)
 					{
-						*convertedValue = [OCHTTPStatus HTTPStatusWithCode:statusCodeString.integerValue];
+						*convertedValue = [[OCHTTPStatus alloc] initWithCode:statusCodeString.integerValue];
 					}
 				}
 			}
@@ -211,19 +211,21 @@
 		if (_stack.count > 1)
 		{
 			OCXMLParserElementValueConverter valueConverter;
-		
+
 			if ((valueConverter = _valueConverterByElementName[_elementPath.lastObject]) != nil)
 			{
-				id convertedValue = nil;
-				NSError *error;
-				
-				if ((error = valueConverter(elementName, elementContents, namespaceURI, _elementAttributes.lastObject, &convertedValue)) != nil)
-				{
-					[_errors addObject:error];
-				}
-				else
-				{
-					elementContents = convertedValue;
+				@autoreleasepool {
+					id convertedValue = nil;
+					NSError *error;
+					
+					if ((error = valueConverter(elementName, elementContents, namespaceURI, _elementAttributes.lastObject, &convertedValue)) != nil)
+					{
+						[_errors addObject:error];
+					}
+					else
+					{
+						elementContents = convertedValue;
+					}
 				}
 			}
 		

@@ -131,4 +131,15 @@
 {
 }
 
+#pragma mark - Log tags
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"SyncAction"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"SyncAction", [NSStringFromClass([self class]) substringFromIndex:12]]);
+}
+
 @end

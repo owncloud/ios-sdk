@@ -9,7 +9,7 @@
 #import <XCTest/XCTest.h>
 
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCHostSimulator.h"
+#import <ownCloudMocking/ownCloudMocking.h>
 #import "OCTestTarget.h"
 
 @interface HostSimulatorTests : XCTestCase
@@ -45,9 +45,9 @@
 	connection.hostSimulator = hostSimulator;
 
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
-		NSLog(@"Issues: %@", issue.issues);
-		NSLog(@"SuggestedURL: %@", suggestedURL);
-		NSLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
+		OCLog(@"Issues: %@", issue.issues);
+		OCLog(@"SuggestedURL: %@", suggestedURL);
+		OCLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
 
 		completionHandler(url, bookmark, issue, supportedMethods, preferredAuthenticationMethods);
 

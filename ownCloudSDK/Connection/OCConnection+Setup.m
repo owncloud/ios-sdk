@@ -227,10 +227,19 @@
 			else
 			{
 				NSString *serverVersion;
+				NSNumber *maintenanceMode;
 
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
 				{
 					error = [self supportsServerVersion:serverVersion longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict]];
+				}
+
+				if ((jsonDict!=nil) && ((maintenanceMode = jsonDict[@"maintenance"]) != nil))
+				{
+					if (maintenanceMode.boolValue)
+					{
+						error = OCError(OCErrorServerInMaintenanceMode);
+					}
 				}
 
 				if ((error == nil) && (redirectionURL != nil))

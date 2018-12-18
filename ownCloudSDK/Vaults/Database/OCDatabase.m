@@ -221,11 +221,39 @@
 
 - (void)_completeRetrievalWithResultSet:(OCSQLiteResultSet *)resultSet completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSMutableArray <NSDictionary<NSString *, id<NSObject>> *> *resultDicts = [NSMutableArray new];
+	NSMutableArray <OCItem *> *items = [NSMutableArray new];
 	NSError *returnError = nil;
+	__block OCSyncAnchor syncAnchor = nil;
 
-	[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-		[resultDicts addObject:rowDictionary];
+	[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *resultDict, BOOL *stop) {
+		NSData *itemData;
+		OCSyncAnchor itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"];
+
+		if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
+		{
+			OCItem *item;
+
+			if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
+			{
+				[items addObject:item];
+				item.databaseID = resultDict[@"mdID"];
+			}
+		}
+
+		if (itemSyncAnchor != nil)
+		{
+			if (syncAnchor != nil)
+			{
+				if (syncAnchor.integerValue < itemSyncAnchor.integerValue)
+				{
+					syncAnchor = itemSyncAnchor;
+				}
+			}
+			else
+			{
+				syncAnchor = itemSyncAnchor;
+			}
+		}
 	} error:&returnError];
 
 	if (returnError != nil)
@@ -234,44 +262,7 @@
 	}
 	else
 	{
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-			NSMutableArray <OCItem *> *items = [NSMutableArray new];
-			OCSyncAnchor syncAnchor = nil;
-
-			for (NSDictionary<NSString *, id<NSObject>> *resultDict in resultDicts)
-			{
-				NSData *itemData;
-				OCSyncAnchor itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"];
-
-				if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
-				{
-					OCItem *item;
-
-					if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
-					{
-						[items addObject:item];
-						item.databaseID = resultDict[@"mdID"];
-					}
-				}
-
-				if (itemSyncAnchor != nil)
-				{
-					if (syncAnchor != nil)
-					{
-						if (syncAnchor.integerValue < itemSyncAnchor.integerValue)
-						{
-							syncAnchor = itemSyncAnchor;
-						}
-					}
-					else
-					{
-						syncAnchor = itemSyncAnchor;
-					}
-				}
-			}
-
-			completionHandler(self, nil, syncAnchor, items);
-		});
+		completionHandler(self, nil, syncAnchor, items);
 	}
 }
 
@@ -821,6 +812,17 @@
 			completionHandler(error, ((NSDictionary *)transaction.userInfo)[@"old"], ((NSDictionary *)transaction.userInfo)[@"new"]);
 		}
 	}]];
+}
+
+#pragma mark - Log tags
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"DB"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"DB"]);
 }
 
 @end

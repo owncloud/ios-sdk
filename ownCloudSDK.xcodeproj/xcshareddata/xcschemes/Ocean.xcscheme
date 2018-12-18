@@ -38,6 +38,11 @@
                BlueprintName = "ownCloudSDKTests"
                ReferencedContainer = "container:ownCloudSDK.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "OCDetailedPerformanceTestCase">
+               </Test>
+            </SkippedTests>
          </TestableReference>
          <TestableReference
             skipped = "NO">

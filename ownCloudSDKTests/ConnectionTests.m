@@ -57,7 +57,7 @@
 	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
 		[expectAnswer fulfill];
 
-		NSLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
+		OCLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
 		
 		if ((request.responseHTTPStatus.isSuccess) && ([request.responseBodyAsString containsString:@"/mac/"]))
 		{
@@ -79,9 +79,9 @@
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
-		NSLog(@"Issues: %@", issue.issues);
-		NSLog(@"SuggestedURL: %@", suggestedURL);
-		NSLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
+		OCLog(@"Issues: %@", issue.issues);
+		OCLog(@"SuggestedURL: %@", suggestedURL);
+		OCLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
 		
 		completionHandler(url, bookmark, issue, supportedMethods, preferredAuthenticationMethods);
 		
@@ -345,7 +345,7 @@
 										
 										// -- At this point, we have a bookmark that can be used to log into an ownCloud server --
 
-										NSLog(@"Done getting bookmark..");
+										OCLog(@"Done getting bookmark..");
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
@@ -360,7 +360,7 @@
 
 											[self->newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
 
-												NSLog(@"Done connecting: %@ %@", error, issue);
+												OCLog(@"Done connecting: %@ %@", error, issue);
 
 												connectionAction(error, issue, self->newConnection);
 											}];
@@ -369,7 +369,7 @@
 									else
 									{
 										// Failure
-										NSLog(@"Could not get token (error: %@)", error);
+										OCLog(@"Could not get token (error: %@)", error);
 									}
 									
 								}
@@ -410,7 +410,8 @@
 
 - (void)testConnectMinimumServerVersion
 {
-	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connect called back"];
+	XCTestExpectation *expectPrepare = [self expectationWithDescription:@"Prepare called back"];
 
 	// General version compare tests
 	XCTAssert([@"10.0"  compareVersionWith:@"10.0"]==NSOrderedSame, @"Same digit count 1");
@@ -424,17 +425,50 @@
 	// Connection version compare tests
 	[[OCClassSettings sharedSettings] addSource:self];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
-		// Testing just the connect here
+	// Test detection during preparation
+	{
+		OCConnection *connection;
+		OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org"]];
 
-		XCTAssert((error!=nil), @"Error: %@", error);
-		XCTAssert((issue!=nil), @"Issue: %@", issue);
-		XCTAssert((connection!=nil), @"Connection");
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+		{
+			[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+		 	{
+				OCLog(@"Issue: %@", issue);
 
-		NSLog(@"Error: %@ Issue: %@", error, issue);
+		 		XCTAssert((issue.type == OCConnectionIssueTypeGroup));
+		 		XCTAssert((issue.issues.count == 2));
+		 		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count == 1));
+		 		XCTAssert(([[issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].firstObject.error isOCErrorWithCode:OCErrorServerVersionNotSupported]));
 
-		[expectConnect fulfill];
-	}];
+		 		[expectPrepare fulfill];
+		 	}];
+		}
+	}
+
+	// Test detection with existing bookmarks
+	{
+		OCConnection *connection;
+		OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org"]];
+
+		bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+		bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
+
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+		{
+			[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+				// Testing just the connect here
+
+				XCTAssert((error!=nil), @"Error: %@", error);
+				XCTAssert((issue!=nil), @"Issue: %@", issue);
+				XCTAssert((connection!=nil), @"Connection");
+
+				OCLog(@"Error: %@ Issue: %@", error, issue);
+
+				[expectConnect fulfill];
+			}];
+		}
+	}
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
@@ -472,7 +506,7 @@
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
 	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
-		NSLog(@"User: %@", connection.loggedInUser.userName);
+		OCLog(@"User: %@", connection.loggedInUser.userName);
 
 		XCTAssert((error==nil), @"No error");
 		XCTAssert((issue==nil), @"No issue");
@@ -483,7 +517,7 @@
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
 			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				NSLog(@"Items at root: %@", items);
+				OCLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
 				XCTAssert((items.count>0), @"Items were found at root");
@@ -521,7 +555,7 @@
 	[OCEvent registerEventHandler:self forIdentifier:@"test"];
 
 	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodIdentifierBasicAuth preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
-		NSLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
+		OCLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
 
 		XCTAssert((error==nil), @"No error: %@", error);
 		XCTAssert((issue==nil), @"No issue: %@", issue);
@@ -532,7 +566,7 @@
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
 			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				NSLog(@"Items at /Photos: %@", items);
+				OCLog(@"Items at /Photos: %@", items);
 
 				for (OCItem *item in items)
 				{
@@ -545,7 +579,7 @@
 						    				userInfo:nil
 						    				ephermalUserInfo:@{
 						    					@"completionHandler" : ^(OCEvent *event, id sender){
-						    						NSLog(@"Event: %@ Error: %@ Thumbnail Size: %@ Bytes: %lu Sender: %@", event, event.error, NSStringFromCGSize(((OCItemThumbnail *)event.result).image.size), ((OCItemThumbnail *)event.result).data.length, sender);
+						    						OCLog(@"Event: %@ Error: %@ Thumbnail Size: %@ Bytes: %lu Sender: %@", event, event.error, NSStringFromCGSize(((OCItemThumbnail *)event.result).image.size), ((OCItemThumbnail *)event.result).data.length, sender);
 
 						    						thumbnailByteCount += ((OCItemThumbnail *)event.result).data.length;
 
@@ -594,7 +628,7 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	NSLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
+	OCLog(@"Average thumbnail byte size: %lu", (thumbnailByteCount/((receivedThumbnails!=0)?receivedThumbnails:1)));
 }
 
 - (void)testConnectAndDownloadFile
@@ -621,7 +655,7 @@
 		if (error == nil)
 		{
 			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				NSLog(@"Items at /Photos: %@", items);
+				OCLog(@"Items at /Photos: %@", items);
 				OCItem *downloadItem = nil;
 
 				for (OCItem *item in items)
@@ -640,10 +674,10 @@
 						{
 							[expectFileDownload fulfill];
 
-							NSLog(@"File downloaded: %@ (%@)", event.file.url, event.file.checksum.headerString);
+							OCLog(@"File downloaded: %@ (%@)", event.file.url, event.file.checksum.headerString);
 
 							[event.file.checksum verifyForFile:event.file.url completionHandler:^(NSError *error, BOOL isValid, OCChecksum *actualChecksum) {
-								NSLog(@"File checksum verified: error=%@, isValid=%d, actualChecksum=%@", error, isValid, actualChecksum);
+								OCLog(@"File checksum verified: error=%@, isValid=%d, actualChecksum=%@", error, isValid, actualChecksum);
 
 								XCTAssert(error==nil);
 								XCTAssert(isValid==YES);
@@ -680,7 +714,7 @@
 {
 	if ([keyPath isEqualToString:@"fractionCompleted"])
 	{
-		NSLog(@"Fraction of %@: %f", object, ((NSProgress *)object).fractionCompleted);
+		OCLog(@"Fraction of %@: %f", object, ((NSProgress *)object).fractionCompleted);
 	}
 }
 
@@ -707,7 +741,7 @@
 		if (error == nil)
 		{
 			[connection retrieveItemListAtPath:@"/Photos" depth:1 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-				NSLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+				OCLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 				XCTAssert(event.result!=nil);
 				XCTAssert([event.result isKindOfClass:[NSArray class]]);
@@ -752,7 +786,7 @@
 		if (error == nil)
 		{
 			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				NSLog(@"Items at /: %@", items);
+				OCLog(@"Items at /: %@", items);
 				OCItem *rootItem = nil;
 
 				for (OCItem *item in items)
@@ -770,7 +804,7 @@
 					NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
 
 					uploadProgress = [connection uploadFileFromURL:uploadFileURL withName:uploadName to:rootItem replacingItem:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-						NSLog(@"File uploaded: %@ error = %@", event.result, event.error);
+						OCLog(@"File uploaded: %@ error = %@", event.result, event.error);
 
 						XCTAssert(event.result!=nil);
 						XCTAssert(event.error==nil);
@@ -778,7 +812,7 @@
 						[expectFileUpload fulfill];
 
 						[connection deleteItem:event.result requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-							NSLog(@"File deleted with error = %@", event.error);
+							OCLog(@"File deleted with error = %@", event.error);
 
 							XCTAssert(event.error==nil);
 
@@ -811,7 +845,7 @@
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
 	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
-		NSLog(@"User: %@", connection.loggedInUser.userName);
+		OCLog(@"User: %@", connection.loggedInUser.userName);
 
 		XCTAssert((error==nil), @"No error");
 		XCTAssert((issue==nil), @"No issue");
@@ -822,7 +856,7 @@
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
 			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-				NSLog(@"Items at root: %@", items);
+				OCLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
 				XCTAssert((items.count>0), @"Items were found at root");
@@ -841,7 +875,7 @@
 						[connection updateItem:item properties:propertiesToUpdate options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = event.result;
 
-							NSLog(@"Update item result event: %@, result: %@", event, statusByPropertyName);
+							OCLog(@"Update item result event: %@, result: %@", event, statusByPropertyName);
 
 							for (OCItemPropertyName propertyName in propertiesToUpdate)
 							{
@@ -896,7 +930,7 @@
 				for (NSUInteger i=0; i < scheduleCount; i++)
 				{
 					[connection createFolder:[NSString stringWithFormat:@"test-%lu-%f", (unsigned long)i, NSDate.timeIntervalSinceReferenceDate] inside:rootFolder options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-						NSLog(@"Create folder: error=%@, result=%@", event.error, event.result);
+						OCLog(@"Create folder: error=%@, result=%@", event.error, event.result);
 
 						@synchronized(self)
 						{
@@ -909,7 +943,7 @@
 						}
 
 						[connection deleteItem:(OCItem *)event.result requireMatch:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-							NSLog(@"Delete folder: error=%@, result=%@", event.error, event.result);
+							OCLog(@"Delete folder: error=%@, result=%@", event.error, event.result);
 
 							@synchronized(self)
 							{
@@ -922,14 +956,14 @@
 							}
 
 							[connection retrieveItemListAtPath:@"/" depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-								NSLog(@"Items at /: %@, Error: %@", items, error);
+								OCLog(@"Items at /: %@, Error: %@", items, error);
 
 								XCTAssert(items.count > 0);
 								XCTAssert(items.firstObject.eTag != nil);
 							}];
 
 							[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-								NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+								OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 								XCTAssert(event.result!=nil);
 								XCTAssert([event.result isKindOfClass:[NSArray class]]);
@@ -943,7 +977,7 @@
 					} userInfo:nil ephermalUserInfo:nil]];
 
 					[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-						NSLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
+						OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 						XCTAssert(event.result!=nil);
 						XCTAssert([event.result isKindOfClass:[NSArray class]]);
@@ -965,7 +999,7 @@
 					} userInfo:nil ephermalUserInfo:nil]];
 
 					[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-						NSLog(@"Items at /: %@, Error: %@", items, error);
+						OCLog(@"Items at /: %@, Error: %@", items, error);
 
 						XCTAssert(items.count > 0);
 						XCTAssert(items.firstObject.eTag != nil);

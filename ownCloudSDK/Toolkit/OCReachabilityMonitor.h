@@ -35,6 +35,8 @@
 
 - (instancetype)initWithHostname:(NSString *)hostname;
 
+- (void)setEnabled:(BOOL)enabled withCompletionHandler:(dispatch_block_t)completionHandler;
+
 @end
 
 extern NSNotificationName OCReachabilityMonitorAvailabilityChangedNotification;

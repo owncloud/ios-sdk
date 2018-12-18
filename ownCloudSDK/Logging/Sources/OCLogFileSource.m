@@ -91,7 +91,7 @@
 									}
 								}
 
-								[logger rawAppendLogLevel:OCLogLevelInfo functionName:nil file:sourceName line:0 logMessage:logMessage threadID:threadID timestamp:timestamp];
+								[logger rawAppendLogLevel:OCLogLevelInfo functionName:nil file:sourceName line:0 tags:@[name] logMessage:logMessage threadID:threadID timestamp:timestamp];
 							}
 						}
 					}

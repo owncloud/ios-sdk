@@ -26,6 +26,11 @@
 @synthesize enabled = _enabled;
 @synthesize available = _available;
 
++ (OCRunLoopThread *)runLoopThread
+{
+	return ([OCRunLoopThread runLoopThreadNamed:@"Reachability Monitor"]);
+}
+
 - (instancetype)initWithHostname:(NSString *)hostname
 {
 	if ((self = [super init]) != nil)
@@ -44,7 +49,7 @@
 	{
 		SCNetworkReachabilitySetCallback(reachabilityRef, NULL, NULL);
 
-		[[OCRunLoopThread runLoopThreadNamed:@"Reachability Monitor"] dispatchBlockToRunLoopAsync:^{
+		[OCReachabilityMonitor.runLoopThread dispatchBlockToRunLoopAsync:^{
 			[OCReachabilityMonitor releaseReachabilityRef:reachabilityRef];
 		}];
 	}
@@ -54,8 +59,18 @@
 
 - (void)setEnabled:(BOOL)enabled
 {
-	[[OCRunLoopThread runLoopThreadNamed:@"Reachability Monitor"] dispatchBlockToRunLoopAsync:^{
+	[self setEnabled:enabled withCompletionHandler:nil];
+}
+
+- (void)setEnabled:(BOOL)enabled withCompletionHandler:(dispatch_block_t)completionHandler
+{
+	[OCReachabilityMonitor.runLoopThread dispatchBlockToRunLoopAsync:^{
 		[self _setEnabled:enabled];
+
+		if (completionHandler != nil)
+		{
+			completionHandler();
+		}
 	}];
 }
 

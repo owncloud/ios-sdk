@@ -24,11 +24,17 @@
 
 + (instancetype)HTTPStatusWithCode:(OCHTTPStatusCode)code
 {
-	OCHTTPStatus *httpStatus = [self new];
-	
-	httpStatus.code = code;
-	
-	return (httpStatus);
+	return ([[self alloc] initWithCode:code]);
+}
+
+- (instancetype)initWithCode:(OCHTTPStatusCode)code
+{
+	if ((self = [super init]) != nil)
+	{
+		self.code = code;
+	}
+
+	return (self);
 }
 
 - (BOOL)isSuccess

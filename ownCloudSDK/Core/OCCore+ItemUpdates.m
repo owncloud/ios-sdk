@@ -164,13 +164,57 @@
 	// Update queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (postflightAction!=nil) || (queryPostProcessor!=nil))
 	{
+		NSArray <OCItem *> *theRemovedItems = removedItems;
+
 		[self beginActivity:@"Item Updates - update queries"];
 
 		[self queueBlock:^{
-			OCCoreItemList *addedItemList   = ((addedItems.count>0)   ? [OCCoreItemList itemListWithItems:addedItems]   : nil);
-			OCCoreItemList *removedItemList = ((removedItems.count>0) ? [OCCoreItemList itemListWithItems:removedItems] : nil);
-			OCCoreItemList *updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
+			OCCoreItemList *addedItemList   = nil;
+			OCCoreItemList *removedItemList = nil;
+			OCCoreItemList *updatedItemList = nil;
+			NSArray <OCItem *> *removedItems = theRemovedItems;
 			__block NSMutableArray <OCItem *> *addedUpdatedRemovedItems = nil;
+			NSMutableArray <OCItem *> *relocatedItems = nil;
+
+			// Support for relocated items
+			for (OCItem *updatedItem in updatedItems)
+			{
+				// Item has previous path
+				if (updatedItem.previousPath != nil)
+				{
+					// Has the parent folder changed?
+					if (![updatedItem.path.stringByDeletingLastPathComponent isEqual:updatedItem.previousPath.stringByDeletingLastPathComponent])
+					{
+						OCItem *reMovedItem;
+
+						// Make a decoupled copy of the item, replace its path and add it to relocatedItems
+						if ((reMovedItem = [OCItem itemFromSerializedData:updatedItem.serializedData]) != nil)
+						{
+							reMovedItem.path = updatedItem.previousPath;
+							reMovedItem.removed = YES;
+
+							if (relocatedItems == nil) { relocatedItems = [NSMutableArray new]; }
+							[relocatedItems addObject:reMovedItem];
+						}
+					}
+				}
+			}
+
+			if (relocatedItems != nil)
+			{
+				// Add any specially prepared relocatedItems to the list of removedItems
+				if (removedItems != nil)
+				{
+					[relocatedItems addObjectsFromArray:removedItems];
+				}
+
+				removedItems = relocatedItems;
+			}
+
+			// Populate item lists
+			addedItemList   = ((addedItems.count>0)   ? [OCCoreItemList itemListWithItems:addedItems]   : nil);
+			removedItemList = ((removedItems.count>0) ? [OCCoreItemList itemListWithItems:removedItems] : nil);
+			updatedItemList = ((updatedItems.count>0) ? [OCCoreItemList itemListWithItems:updatedItems] : nil);
 
 			void (^BuildAddedUpdatedRemovedItemList)(void) = ^{
 				if (addedUpdatedRemovedItems==nil)

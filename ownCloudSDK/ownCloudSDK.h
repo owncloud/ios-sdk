@@ -32,6 +32,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSError+OCError.h>
 #import <ownCloudSDK/OCHTTPStatus.h>
 #import <ownCloudSDK/NSError+OCHTTPStatus.h>
+#import <ownCloudSDK/NSError+OCDAVError.h>
 
 #import <ownCloudSDK/OCAppIdentity.h>
 
@@ -47,6 +48,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCore+ItemList.h>
 #import <ownCloudSDK/OCCore+ItemUpdates.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
+
+#import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>
 
 #import <ownCloudSDK/OCBookmark.h>
 
@@ -98,8 +101,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCXMLParser.h>
 #import <ownCloudSDK/OCXMLParserNode.h>
 
-#import <ownCloudSDK/OCReachabilityMonitor.h>
-
 #import <ownCloudSDK/OCCache.h>
 
 #import <ownCloudSDK/OCCoreManager.h>
@@ -116,8 +117,11 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCKeyValueStore.h>
 
 #import <ownCloudSDK/OCLogger.h>
+#import <ownCloudSDK/OCLogComponent.h>
+#import <ownCloudSDK/OCLogToggle.h>
 #import <ownCloudSDK/OCLogWriter.h>
 #import <ownCloudSDK/OCLogFileWriter.h>
+#import <ownCloudSDK/OCLogTag.h>
 
 #import <ownCloudSDK/OCExtensionTypes.h>
 #import <ownCloudSDK/OCExtensionManager.h>

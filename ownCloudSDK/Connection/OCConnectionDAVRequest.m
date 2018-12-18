@@ -70,7 +70,7 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
 	NSData *responseData = nil;
@@ -104,7 +104,7 @@
 					nil];
 				}
 
-				[parser addObjectCreationClasses:@[ [OCItem class] ]];
+				[parser addObjectCreationClasses:@[ [OCItem class], [NSError class] ]];
 
 				if ([parser parse])
 				{
@@ -115,10 +115,19 @@
 						responseItems = _parseResultItems = parser.parsedObjects;
 					}
 				}
+
+				if (parser.errors.count > 0)
+				{
+					OCLogDebug(@"DAV Error(s): %@", parser.errors);
+					if (errors != NULL)
+					{
+						*errors = parser.errors;
+					}
+				}
 			}
 		}
 	}
-	
+
 	return (responseItems);
 }
 

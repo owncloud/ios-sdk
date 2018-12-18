@@ -46,6 +46,7 @@
 	{
 		self.userName = [decoder decodeObjectOfClass:[NSString class] forKey:@"userName"];
 		self.displayName = [decoder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
+		self.emailAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"emailAddress"];
 		self.avatarData = [decoder decodeObjectOfClass:[NSData class] forKey:@"avatarData"];
 	}
 	
@@ -56,6 +57,7 @@
 {
 	[coder encodeObject:self.userName forKey:@"userName"];
 	[coder encodeObject:self.displayName forKey:@"displayName"];
+	[coder encodeObject:self.emailAddress forKey:@"emailAddress"];
 	[coder encodeObject:self.avatarData forKey:@"avatarData"];
 }
 

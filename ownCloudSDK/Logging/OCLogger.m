@@ -23,6 +23,7 @@
 #import "OCLogFileSource.h"
 #import "OCAppIdentity.h"
 #import "OCIPNotificationCenter.h"
+#import "OCMacros.h"
 #import <pthread/pthread.h>
 
 static OCLogLevel sOCLogLevel;
@@ -49,7 +50,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 		sharedLogger = [OCLogger new];
 
-		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"stderr" logger:sharedLogger]) != nil)
+		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"OS" logger:sharedLogger]) != nil)
 		{
 			__weak OCLogFileSource *weakStdErrLogger = stdErrLogger;
 
@@ -68,6 +69,96 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		}
 
 		[sharedLogger addWriter:[OCLogFileWriter new]];
+
+		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogRequestsAndResponses localizedName:OCLocalizedString(@"Log HTTP requests and responses", nil)]];
+
+		NSSet<NSString *> *(^ConvertTagArrayToTagSet)(NSArray *tags) = ^NSSet<NSString *> *(NSArray<NSString *> *tags) {
+			if ((tags==nil) || ([tags isKindOfClass:[NSArray class]] && (tags.count == 0)))
+			{
+				return (nil);
+			}
+
+			return ([[NSSet alloc] initWithArray:tags]);
+		};
+		NSSet<NSString *> *onlyTagsSet = nil, *omitTagsSet = nil, *onlyMatchingSet = nil, *omitMatchingSet = nil;
+		BOOL blankFilteredMessages = ((NSNumber *)[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogBlankFilteredMessages]).boolValue;
+
+		onlyTagsSet = ConvertTagArrayToTagSet([self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogOnlyTags]);
+		omitTagsSet = ConvertTagArrayToTagSet([self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogOmitTags]);
+		onlyMatchingSet = ConvertTagArrayToTagSet([self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogOnlyMatching]);
+		omitMatchingSet = ConvertTagArrayToTagSet([self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogOmitMatching]);
+
+		if ((onlyTagsSet != nil) || (omitTagsSet != nil) || (onlyMatchingSet != nil) || (omitMatchingSet != nil))
+		{
+			[sharedLogger addFilter:^BOOL(OCLogger * _Nonnull logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> ** _Nullable pTags, NSString *__autoreleasing *pLogMessage, uint64_t threadID, NSDate * _Nonnull timestamp) {
+				NSSet<OCLogTagName> *tagSet = (((pTags!=NULL) && (*pTags != nil)) ? [[NSSet alloc] initWithArray:*pTags] : nil);
+				BOOL allowMessage = YES;
+
+				if (omitTagsSet != nil)
+				{
+					// Omit messages tagged with tags in omitTagsSet
+					if ([omitTagsSet intersectsSet:tagSet])
+					{
+						allowMessage = NO;
+					}
+				}
+
+				if ((allowMessage==YES) && (omitMatchingSet != nil))
+				{
+					// Omit messages containing any of the exact terms in omitMatchingSet
+					for (NSString *term in omitMatchingSet)
+					{
+						if ([*pLogMessage containsString:term])
+						{
+							allowMessage = NO;
+							break;
+						}
+					}
+				}
+
+				if ((allowMessage==YES) && (onlyTagsSet != nil))
+				{
+					if (tagSet==nil)
+					{
+						// Omit messages without tags
+						allowMessage = NO;
+					}
+					else if (![tagSet intersectsSet:onlyTagsSet])
+					{
+						// Only log messages if tagSet contains any of the tags in onlyTagsSet
+						allowMessage = NO;
+					}
+				}
+
+				if ((allowMessage==YES) && (onlyMatchingSet != nil))
+				{
+					BOOL containsAtLeastOne = YES;
+
+					for (NSString *term in onlyMatchingSet)
+					{
+						if ([*pLogMessage containsString:term])
+						{
+							containsAtLeastOne = YES;
+							break;
+						}
+					}
+
+					if (!containsAtLeastOne)
+					{
+						// Only log messages if they contain one or more of the exact terms in onlyMatchingSet
+						allowMessage = NO;
+					}
+				}
+
+				if (!allowMessage && blankFilteredMessages)
+				{
+					*pLogMessage = @"-";
+					allowMessage = YES;
+				}
+
+				return (allowMessage);
+			}];
+		}
 	});
 	
 	return (sharedLogger);
@@ -84,10 +175,11 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	if ([identifier isEqual:OCClassSettingsIdentifierLog])
 	{
 		return (@{
-			OCClassSettingsKeyLogLevel		: @(OCLogLevelOff),
-			OCClassSettingsKeyLogPrivacyMask	: @(NO),
-			OCClassSettingsKeyLogEnabledWriters	: @[ OCLogWriterIdentifierStandardError, OCLogWriterIdentifierFile ],
-			OCClassSettingsKeyLogSynchronousLogging : @(NO)
+			OCClassSettingsKeyLogLevel		   : @(OCLogLevelOff),
+			OCClassSettingsKeyLogPrivacyMask	   : @(NO),
+			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
+			OCClassSettingsKeyLogSynchronousLogging    : @(YES),
+			OCClassSettingsKeyLogBlankFilteredMessages : @(NO)
 		});
 	}
 
@@ -192,6 +284,9 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 		_sources = [NSMutableArray new];
 
+		_togglesByIdentifier = [NSMutableDictionary new];
+		_toggles = [NSMutableArray new];
+
 		dispatch_async(dispatch_get_main_queue(), ^{
 			// Determine main thread ID
 			if (pthread_main_np() != 0)
@@ -226,19 +321,19 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 }
 
 #pragma mark - Logging
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString, ...
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
 	if (logLevel >= OCLogger.logLevel)
 	{
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel functionName:functionName file:file line:line message:formatString arguments:args];
+		[self appendLogLevel:logLevel functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)formatString arguments:(va_list)args
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
 	if (logLevel >= OCLogger.logLevel)
 	{
@@ -259,29 +354,37 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		timestamp = [NSDate date];
 		logMessage = [[NSString alloc] initWithFormat:formatString arguments:args];
 
-		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line logMessage:logMessage threadID:threadID timestamp:timestamp];
+		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
 	}
 }
 
-- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
+- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
 {
 	if (OCLogger.synchronousLoggingEnabled)
 	{
 		@synchronized(self)
 		{
-			[self _rawAppendLogLevel:logLevel functionName:functionName file:file line:line logMessage:logMessage threadID:threadID timestamp:timestamp];
+			[self _rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
 		}
 	}
 	else
 	{
 		dispatch_async(_writerQueue, ^{
-			[self _rawAppendLogLevel:logLevel functionName:functionName file:file line:line logMessage:logMessage threadID:threadID timestamp:timestamp];
+			[self _rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
 		});
 	}
 }
 
-- (void)_rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
+- (void)_rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
 {
+	if (_filter != nil)
+	{
+		if (!_filter(self, logLevel, functionName, file, line, &tags, &logMessage, threadID, timestamp))
+		{
+			return;
+		}
+	}
+
 	for (OCLogWriter *writer in self->_writers)
 	{
 		if ((sOCLogLevel != OCLogLevelOff) && writer.enabled)
@@ -298,7 +401,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 			if (writer.isOpen)
 			{
-				[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line message:logMessage];
+				[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:logMessage];
 			}
 		}
 		else
@@ -354,6 +457,33 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	}
 }
 
+#pragma mark - Filters
+- (void)addFilter:(OCLogFilter)filter
+{
+	if (filter == nil) { return; }
+
+	filter = [filter copy];
+
+	@synchronized(self)
+	{
+		if (_filter != nil)
+		{
+			OCLogFilter previousFilter = _filter;
+			OCLogFilter newFilter = filter;
+
+			filter = [^BOOL(OCLogger * _Nonnull logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> ** _Nullable pTags, NSString *__autoreleasing *pLogMessage, uint64_t threadID, NSDate * _Nonnull timestamp) {
+				if (previousFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp))
+				{
+					return newFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp);
+				}
+				return (NO);
+			} copy];
+		}
+
+		_filter = filter;
+	}
+}
+
 #pragma mark - Writers
 - (void)addWriter:(OCLogWriter *)logWriter
 {
@@ -378,7 +508,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	return ([NSArray arrayWithArray:_writers]);
 }
 
-- (nullable OCLogWriter *)writerWithIdentifier:(OCLogWriterIdentifier)identifier
+- (nullable OCLogWriter *)writerWithIdentifier:(OCLogComponentIdentifier)identifier
 {
 	for (OCLogWriter *writer in _writers)
 	{
@@ -423,13 +553,50 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	}
 }
 
+#pragma mark - Toggles
+- (void)addToggle:(OCLogToggle *)logToggle
+{
+	if ((logToggle!=nil) && (logToggle.identifier != nil))
+	{
+		@synchronized(self)
+		{
+			if (_togglesByIdentifier[logToggle.identifier] == nil)
+			{
+				_togglesByIdentifier[logToggle.identifier] = logToggle;
+				[_toggles addObject:logToggle];
+			}
+		}
+	}
+}
+
+- (NSArray<OCLogToggle *> *)toggles
+{
+	@synchronized(self)
+	{
+		return ([NSArray arrayWithArray:_toggles]);
+	}
+}
+
+- (BOOL)isToggleEnabled:(OCLogComponentIdentifier)toggleIdentifier
+{
+	@synchronized(self)
+	{
+		return (_togglesByIdentifier[toggleIdentifier].enabled);
+	}
+}
+
 @end
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
 
 OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log-level";
 OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log-privacy-mask";
-OCClassSettingsKey OCClassSettingsKeyLogEnabledWriters = @"log-enabled-writers";
+OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"log-enabled-components";
 OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"log-synchronous";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"log-only-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
+OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
+OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

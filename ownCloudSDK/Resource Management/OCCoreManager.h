@@ -21,7 +21,7 @@
 
 typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_block_t completionHandler); //!< Block performing an operation while no OCCore uses the bookmark. Call completionHandler when done.
 
-@interface OCCoreManager : NSObject
+@interface OCCoreManager : NSObject <OCLogTagging>
 {
 	NSMutableDictionary <NSUUID *, OCCore *> *_coresByUUID;
 	NSMutableDictionary <NSUUID *, NSNumber *> *_requestCountByUUID;

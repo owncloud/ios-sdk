@@ -23,26 +23,11 @@
 @implementation OCLogWriter
 
 @synthesize isOpen = _isOpen;
-@synthesize enabled = _enabled;
 @synthesize writeHandler = _writeHandler;
-
-- (instancetype)init
-{
-	if ((self = [super init]) != nil)
-	{
-		[self determineEnabled];
-
-		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:[self _enabledNotificationName] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogWriter * _Nonnull logWriter, OCIPCNotificationName  _Nonnull notificationName) {
-			[logWriter determineEnabled];
-		}];
-	}
-
-	return (self);
-}
 
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler
 {
-	if ((self = [self init]) != nil)
+	if ((self = [super initWithIdentifier:OCLogComponentIdentifierWriterStandardError]) != nil)
 	{
 		self.writeHandler = writeHandler;
 	}
@@ -50,52 +35,9 @@
 	return (self);
 }
 
-- (void)dealloc
-{
-	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:[self _enabledNotificationName]];
-}
-
-- (OCLogWriterIdentifier)identifier
-{
-	return (OCLogWriterIdentifierStandardError);
-}
-
 - (NSString *)name
 {
 	return (OCLocalized(@"Standard error output"));
-}
-
-- (OCIPCNotificationName)_enabledNotificationName
-{
-	return ([@"org.owncloud.log-writer-enabled:" stringByAppendingString:self.identifier]);
-}
-
-- (NSString *)_enabledUserDefaultsKey
-{
-	return ([@"logwriter-enabled:" stringByAppendingString:self.identifier]);
-}
-
-- (void)determineEnabled
-{
-	NSNumber *enabledNumber;
-
-	if ((enabledNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:[self _enabledUserDefaultsKey]]) != nil)
-	{
-		_enabled = enabledNumber.boolValue;
-	}
-	else
-	{
-		_enabled = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogEnabledWriters] containsObject:self.identifier];
-	}
-}
-
-- (void)setEnabled:(BOOL)enabled
-{
-	_enabled = enabled;
-
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:enabled forKey:[self _enabledUserDefaultsKey]];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self _enabledNotificationName] ignoreSelf:YES];
 }
 
 - (NSError *)open
@@ -110,10 +52,9 @@
 	return (nil);
 }
 
-- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line message:(NSString *)message
+- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)message
 {
-	NSString *logLevelName = nil;
-	NSString *timestampString = nil;
+	NSString *logLevelName = nil, *timestampString = nil, *leadingTags = nil, *trailingTags = nil;
 
 	static NSString *processName;
 	static NSDateFormatter *dateFormatter;
@@ -149,9 +90,28 @@
 		break;
 	}
 
+	if ((tags != nil) && (tags.count > 0))
+	{
+		if (tags.count < 3)
+		{
+			leadingTags = [NSString stringWithFormat:@"[%@] ", [tags componentsJoinedByString:@", "]];
+			trailingTags = @"";
+		}
+		else
+		{
+			leadingTags = [NSString stringWithFormat:@"[%@, …] ", [[tags subarrayWithRange:NSMakeRange(0, 2)] componentsJoinedByString:@", "]];
+			trailingTags = [NSString stringWithFormat:@" [… %@]", [[tags subarrayWithRange:NSMakeRange(2, tags.count-2)] componentsJoinedByString:@", "]];
+		}
+	}
+	else
+	{
+		leadingTags = @"";
+		trailingTags = @"";
+	}
+
 	timestampString = [dateFormatter stringFromDate:date];
 
-	[self appendMessage:[NSString stringWithFormat:@"%@ %@[%d%@%06llu] [%@] | %@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, message, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
+	[self appendMessage:[NSString stringWithFormat:@"%@ %@[%d%@%06llu] [%@] | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
 }
 
 - (void)appendMessage:(NSString *)message
@@ -164,4 +124,4 @@
 
 @end
 
-OCLogWriterIdentifier OCLogWriterIdentifierStandardError = @"stderr";
+OCLogComponentIdentifier OCLogComponentIdentifierWriterStandardError = @"writer.stderr";
