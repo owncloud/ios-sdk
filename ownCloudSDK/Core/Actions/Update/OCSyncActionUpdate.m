@@ -134,10 +134,10 @@
 			if (!updateStatus.isSuccess)
 			{
 				// Property couldn't be updated successfully
-				[syncContext addIssue:[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
+				[syncContext addIssue:[OCIssue issueForMultipleChoicesWithLocalizedTitle:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
 									 localizedDescription:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
 									 choices: @[
-									 	[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+									 	[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 											// Drop sync record (also restores previous metadata)
 											[self.core descheduleSyncRecord:syncRecord invokeResultHandler:NO withParameter:nil resultHandlerError:nil];
 										}]

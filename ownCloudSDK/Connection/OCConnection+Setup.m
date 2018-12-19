@@ -23,7 +23,7 @@
 @implementation OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	/*
 		Setup preparation steps overview:
@@ -47,15 +47,15 @@
 	});
 }
 
-- (void)_prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)_prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
-	NSMutableArray <OCConnectionIssue *> *issues = [NSMutableArray new];
+	NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 	NSMutableSet <OCCertificate *> *certificatesUsedInIssues = [NSMutableSet new];
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
 
 	// Tools
-	void (^AddIssue)(OCConnectionIssue *issue) = ^(OCConnectionIssue *issue) {
+	void (^AddIssue)(OCIssue *issue) = ^(OCIssue *issue) {
 		@synchronized(self)
 		{
 			if (issue.certificate != nil)
@@ -73,10 +73,10 @@
 	};
 
 	void (^AddRedirectionIssue)(NSURL *fromURL, NSURL *toURL) = ^(NSURL *fromURL, NSURL *toURL){
-		OCConnectionIssue *issue;
+		OCIssue *issue;
 		
-		issue = [OCConnectionIssue issueForRedirectionFromURL:fromURL toSuggestedURL:toURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-			if (decision == OCConnectionIssueDecisionApprove)
+		issue = [OCIssue issueForRedirectionFromURL:fromURL toSuggestedURL:toURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+			if (decision == OCIssueDecisionApprove)
 			{
 				if (self->_bookmark.originURL == nil)
 				{
@@ -89,7 +89,7 @@
 
 		if ([[self class] isAlternativeBaseURL:toURL safeUpgradeForPreviousBaseURL:fromURL])
 		{
-			issue.level = OCConnectionIssueLevelInformal;
+			issue.level = OCIssueLevelInformal;
 		}
 
 		AddIssue(issue);
@@ -109,11 +109,11 @@
 					// Validation failed. Use error where available.
 					if (certificateValidationError != nil)
 					{
-						AddIssue([OCConnectionIssue issueForError:certificateValidationError level:OCConnectionIssueLevelError issueHandler:nil]);
+						AddIssue([OCIssue issueForError:certificateValidationError level:OCIssueLevelError issueHandler:nil]);
 					}
 					else
 					{
-						AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelError issueHandler:nil]);
+						AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelError issueHandler:nil]);
 					}
 
 					proceedHandler(NO, nil);
@@ -122,15 +122,15 @@
 				case OCCertificateValidationResultNone:
 				case OCCertificateValidationResultReject:
 					// User rejected this certificate previously, so do not proceed
-					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelError issueHandler:nil]);
+					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelError issueHandler:nil]);
 
 					proceedHandler(NO, nil);
 				break;
 
 				case OCCertificateValidationResultPromptUser: {
 					// Record issue to prompt user and proceed
-					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-						if (decision == OCConnectionIssueDecisionApprove)
+					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+						if (decision == OCIssueDecisionApprove)
 						{
 							certificate.userAccepted = YES;
 
@@ -143,8 +143,8 @@
 				case OCCertificateValidationResultUserAccepted:
 				case OCCertificateValidationResultPassed:
 					// Record certificate to show it and to save it to the bookmark
-					AddIssue([OCConnectionIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelInformal issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-						if (decision == OCConnectionIssueDecisionApprove)
+					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelInformal issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+						if (decision == OCIssueDecisionApprove)
 						{
 							self->_bookmark.certificate = certificate;
 							self->_bookmark.certificateModificationDate = [NSDate date];
@@ -285,7 +285,7 @@
 		if ((lastURLTried!=nil) && ([lastURLTried isEqual:url]))
 		{
 			// No new URLs to try. Detection failed.
-			AddIssue([OCConnectionIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCConnectionIssueLevelError issueHandler:nil]);
+			AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 			break;
 		}
 
@@ -322,7 +322,7 @@
 							if ((error = MakeRequest(rootURL, &rootURLRequest)) != nil)
 							{
 								// Network Error
-								AddIssue([OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+								AddIssue([OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 								completed = YES;
 							}
 							else
@@ -346,7 +346,7 @@
 						else
 						{
 							// This is just not an ownCloud server
-							AddIssue([OCConnectionIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCConnectionIssueLevelError issueHandler:nil]);
+							AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 							completed = YES;
 						}
 					}
@@ -360,7 +360,7 @@
 			else
 			{
 				// Network Error
-				AddIssue([OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+				AddIssue([OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 				completed = YES;
 			}
 		}
@@ -394,7 +394,7 @@
 		if (requestCount > maxRequestCount)
 		{
 			// Too many redirects
-			AddIssue([OCConnectionIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCConnectionIssueLevelError issueHandler:nil]);
+			AddIssue([OCIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCIssueLevelError issueHandler:nil]);
 			completed = YES;
 		}
 		
@@ -442,20 +442,20 @@
 						}
 						else
 						{
-							AddIssue([OCConnectionIssue issueForError:supportedAuthError level:OCConnectionIssueLevelError issueHandler:nil]);
+							AddIssue([OCIssue issueForError:supportedAuthError level:OCIssueLevelError issueHandler:nil]);
 						}
 					}
 
 					if (supportedMethodIdentifiers.count == 0)
 					{
-						AddIssue([OCConnectionIssue issueForError:[NSError errorWithDomain:OCErrorDomain code:OCErrorServerNoSupportedAuthMethods userInfo:@{
-							NSLocalizedDescriptionKey : OCLocalizedString(@"Server doesn't seem to support any authentication method supported by this app.", @"") }] level:OCConnectionIssueLevelError issueHandler:nil]);
+						AddIssue([OCIssue issueForError:[NSError errorWithDomain:OCErrorDomain code:OCErrorServerNoSupportedAuthMethods userInfo:@{
+							NSLocalizedDescriptionKey : OCLocalizedString(@"Server doesn't seem to support any authentication method supported by this app.", @"") }] level:OCIssueLevelError issueHandler:nil]);
 					}
 
 					if (requestCount > maxRequestCount)
 					{
 						// Too many redirects
-						AddIssue([OCConnectionIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCConnectionIssueLevelError issueHandler:nil]);
+						AddIssue([OCIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCIssueLevelError issueHandler:nil]);
 						successURL = nil;
 					}
 					
@@ -466,7 +466,7 @@
 			}
 		}
 
-		completionHandler([OCConnectionIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:supportedMethodIdentifiers]);
+		completionHandler([OCIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:supportedMethodIdentifiers]);
 	}
 }
 

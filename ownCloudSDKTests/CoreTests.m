@@ -17,7 +17,7 @@
 
 @interface CoreTests : XCTestCase <OCCoreDelegate>
 {
-	void (^coreErrorHandler)(OCCore *core, NSError *error, OCConnectionIssue *issue);
+	void (^coreErrorHandler)(OCCore *core, NSError *error, OCIssue *issue);
 }
 
 @end
@@ -728,7 +728,7 @@
 	}];
 }
 
-- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue
+- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCIssue *)issue
 {
 	OCLog(@"Core: %@ Error: %@ Issue: %@", core, error, issue);
 	if (coreErrorHandler != nil)
@@ -757,7 +757,7 @@
 	__weak CoreTests *weakSelf = self;
 	NSArray *tags = [weakSelf logTags];
 
-	coreErrorHandler = ^(OCCore *core, NSError *error, OCConnectionIssue *issue) {
+	coreErrorHandler = ^(OCCore *core, NSError *error, OCIssue *issue) {
 		OCRLog(tags, @"######### Handle error: %@, issue: %@", error, issue);
 
 		if (coreErrorExpectation != nil)

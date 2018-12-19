@@ -71,7 +71,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorRunningOperation //!< A running operation prevents execution
 };
 
-@class OCConnectionIssue;
+@class OCIssue;
 
 @interface NSError (OCError)
 
@@ -86,8 +86,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 - (NSDictionary *)ocErrorInfoDictionary;
 
 #pragma mark - Embedding issues
-- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue;
-- (OCConnectionIssue *)embeddedIssue;
+- (NSError *)errorByEmbeddingIssue:(OCIssue *)issue;
+- (OCIssue *)embeddedIssue;
 
 @end
 

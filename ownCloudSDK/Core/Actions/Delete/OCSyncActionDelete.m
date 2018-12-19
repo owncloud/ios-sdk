@@ -107,20 +107,20 @@
 			case OCErrorItemChanged:
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
-				OCConnectionIssue *issue;
+				OCIssue *issue;
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
 				syncRecord.allowsRescheduling = YES;
 
-				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Drop sync record
 							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeDestructive label:OCLocalizedString(@"Delete",@"") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeDestructive label:OCLocalizedString(@"Delete",@"") handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Reschedule sync record with match requirement turned off
 							[self.core rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
 								self.requireMatch = NO;
@@ -138,13 +138,13 @@
 			case OCErrorItemOperationForbidden:
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
-				OCConnectionIssue *issue;
+				OCIssue *issue;
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), self.localItem.path.lastPathComponent];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), self.localItem.path.lastPathComponent];
 
-				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Drop sync record
 							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
@@ -172,13 +172,13 @@
 
 				// => inform the user
 				{
-					OCConnectionIssue *issue;
+					OCIssue *issue;
 
 					NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), self.localItem.path.lastPathComponent];
 					NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), self.localItem.path.lastPathComponent];
 
-					issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
-							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:nil],
+					issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+							[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:nil],
 						] completionHandler:nil];
 
 					[syncContext addIssue:issue];

@@ -47,7 +47,7 @@
 	return (syncContext);
 }
 
-+ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues
++ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCIssue *> *)issues
 {
 	OCSyncContext *syncContext = [OCSyncContext new];
 
@@ -58,7 +58,7 @@
 	return (syncContext);
 }
 
-- (void)addIssue:(OCConnectionIssue *)issue
+- (void)addIssue:(OCIssue *)issue
 {
 	if (issue == nil) { return; }
 

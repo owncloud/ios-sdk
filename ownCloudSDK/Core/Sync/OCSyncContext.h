@@ -35,7 +35,7 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 
 // Result Handler properties
 @property(strong) OCEvent *event; //!< Event to handle [Result Handler]
-@property(strong) NSMutableArray <OCConnectionIssue *> *issues; //!< Any issues that should be relayed to the user [Result Handler]
+@property(strong) NSMutableArray <OCIssue *> *issues; //!< Any issues that should be relayed to the user [Result Handler]
 
 // Item changes properties
 @property(assign) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
@@ -51,8 +51,8 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 + (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord;
 + (instancetype)schedulerContextWithSyncRecord:(OCSyncRecord *)syncRecord;
 + (instancetype)descheduleContextWithSyncRecord:(OCSyncRecord *)syncRecord;
-+ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCConnectionIssue *> *)issues;
++ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCIssue *> *)issues;
 
-- (void)addIssue:(OCConnectionIssue *)issue;
+- (void)addIssue:(OCIssue *)issue;
 
 @end

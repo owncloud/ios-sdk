@@ -230,7 +230,7 @@
 	return ([self.domain isEqual:OCErrorDomain] && (self.code == errorCode));
 }
 
-- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue
+- (NSError *)errorByEmbeddingIssue:(OCIssue *)issue
 {
 	NSMutableDictionary *userInfo = nil;
 	
@@ -250,7 +250,7 @@
 	return ([NSError errorWithDomain:self.domain code:self.code userInfo:userInfo]);
 }
 
-- (OCConnectionIssue *)embeddedIssue
+- (OCIssue *)embeddedIssue
 {
 	return (self.userInfo[OCErrorIssueKey]);
 }

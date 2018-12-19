@@ -326,7 +326,7 @@
 
 			[self beginActivity:@"Connection connect"];
 
-			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+			[self.connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)

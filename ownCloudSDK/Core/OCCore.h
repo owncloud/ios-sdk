@@ -94,7 +94,7 @@ typedef NSString* OCCoreOption;
 #pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
 
-- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue;
+- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCIssue *)issue;
 
 @end
 

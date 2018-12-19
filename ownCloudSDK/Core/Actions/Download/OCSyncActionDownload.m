@@ -95,12 +95,12 @@
 			if (latestVersionOfItem.locallyModified)
 			{
 				// Ask user to choose between keeping modifications or overwriting with server version
-				OCConnectionIssue *issue;
+				OCIssue *issue;
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"\"%@\" has been modified locally") localizedDescription:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") choices:@[
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Overwrite modified file") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"\"%@\" has been modified locally") localizedDescription:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") choices:@[
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeRegular label:OCLocalized(@"Overwrite modified file") handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Delete local representation and reschedule download
 							[self.core rescheduleSyncRecord:syncContext.syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
 								OCItem *latestItem;
@@ -141,7 +141,7 @@
 							}];
 						}],
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Keep local modifications and drop sync record
 							[self.core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
@@ -229,18 +229,18 @@
 			if (!checksumIsValid)
 			{
 				// Checksum of downloaded file is not valid => bring up issue
-				OCConnectionIssue *issue;
+				OCIssue *issue;
 
 				useDownloadedFile = NO;
 
-				issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"Invalid checksum") localizedDescription:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") choices:@[
+				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"Invalid checksum") localizedDescription:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") choices:@[
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeRegular label:OCLocalized(@"Retry") handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeRegular label:OCLocalized(@"Retry") handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Reschedule sync record
 							[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 						}],
 
-						[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 							// Drop sync record
 							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 						}],
@@ -260,13 +260,13 @@
 				// The case where a download is initiated when a locally modified version exists is caught in download scheduling
 				if (latestVersionOfItem.locallyModified)
 				{
-					OCConnectionIssue *issue;
+					OCIssue *issue;
 
 					useDownloadedFile = NO;
 
-					issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"File modified locally") localizedDescription:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] choices:@[
+					issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:OCLocalized(@"File modified locally") localizedDescription:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] choices:@[
 
-							[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+							[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 								// Drop sync record
 								[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
 							}],

@@ -48,7 +48,7 @@
 @interface OCCore (SyncPrivate)
 
 #pragma mark - Sync issues utilities
-- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
+- (OCIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
 - (BOOL)_isConnectivityError:(NSError *)error;
 
 #pragma mark - Sync enqueue utilities

@@ -392,7 +392,7 @@
 		OCLogDebug(@"processing sync records");
 
 		[self.vault.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *dbError, NSArray<OCSyncRecord *> *syncRecords) {
-			NSMutableArray <OCConnectionIssue *> *issues = [NSMutableArray new];
+			NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 
 			if (dbError != nil)
 			{
@@ -527,7 +527,7 @@
 		__block OCSyncRecord *syncRecord = nil;
 		OCSyncRecordID syncRecordID;
 		BOOL syncRecordActionCompleted = NO;
-		NSMutableArray <OCConnectionIssue *> *issues = [NSMutableArray new];
+		NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 
 		// Fetch sync record
 		if ((syncRecordID = event.userInfo[@"syncRecordID"]) != nil)
@@ -623,9 +623,9 @@
 }
 
 #pragma mark - Sync issues utilities
-- (OCConnectionIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (OCIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
 {
-	OCConnectionIssue *issue;
+	OCIssue *issue;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 
 	issue = [self _issueForCancellationAndDeschedulingSyncRecord:syncRecord title:title description:description invokeResultHandler:invokeResultHandler resultHandlerError:resultHandlerError];
@@ -635,13 +635,13 @@
 	return (issue);
 }
 
-- (OCConnectionIssue *)_issueForCancellationAndDeschedulingSyncRecord:(OCSyncRecord *)syncRecord title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (OCIssue *)_issueForCancellationAndDeschedulingSyncRecord:(OCSyncRecord *)syncRecord title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
 {
-	OCConnectionIssue *issue;
+	OCIssue *issue;
 
-	issue =	[OCConnectionIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
+	issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
 
-			[OCConnectionIssueChoice choiceWithType:OCConnectionIssueChoiceTypeCancel label:nil handler:^(OCConnectionIssue *issue, OCConnectionIssueChoice *choice) {
+			[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
 				// Drop sync record
 				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:nil resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
 			}],
@@ -651,7 +651,7 @@
 	return (issue);
 }
 
-- (NSError *)_handleIssues:(NSArray <OCConnectionIssue *> *)issues forSyncRecord:(OCSyncRecord *)syncRecord syncStep:(NSString *)syncStepName priorActionSuccess:(BOOL)actionSuccess error:(NSError *)startError
+- (NSError *)_handleIssues:(NSArray <OCIssue *> *)issues forSyncRecord:(OCSyncRecord *)syncRecord syncStep:(NSString *)syncStepName priorActionSuccess:(BOOL)actionSuccess error:(NSError *)startError
 {
 	__block NSError *error = startError;
 
@@ -684,7 +684,7 @@
 			}
 
 			// Relay issues
-			for (OCConnectionIssue *issue in issues)
+			for (OCIssue *issue in issues)
 			{
 				[self.delegate core:self handleError:error issue:issue];
 			}
@@ -709,7 +709,7 @@
 				else
 				{
 					// Cancel operation
-					for (OCConnectionIssue *issue in issues)
+					for (OCIssue *issue in issues)
 					{
 						[issue cancel];
 					}

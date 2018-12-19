@@ -1,5 +1,5 @@
 //
-//  OCConnectionIssueChoice.m
+//  OCIssueChoice.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 15.06.18.
@@ -16,32 +16,32 @@
  *
  */
 
-#import "OCConnectionIssueChoice.h"
+#import "OCIssueChoice.h"
 #import "OCMacros.h"
 
-@implementation OCConnectionIssueChoice
+@implementation OCIssueChoice
 
-+ (instancetype)choiceWithType:(OCConnectionIssueChoiceType)type identifier:(NSString *)identifier label:(NSString *)label userInfo:(id<NSObject>)userInfo handler:(OCConnectionIssueChoiceHandler)handler
++ (instancetype)choiceWithType:(OCIssueChoiceType)type identifier:(NSString *)identifier label:(NSString *)label userInfo:(id<NSObject>)userInfo handler:(OCIssueChoiceHandler)handler
 {
-	OCConnectionIssueChoice *choice = [OCConnectionIssueChoice new];
+	OCIssueChoice *choice = [OCIssueChoice new];
 
 	if (label == nil)
 	{
 		switch (type)
 		{
-			case OCConnectionIssueChoiceTypeCancel:
+			case OCIssueChoiceTypeCancel:
 				label = OCLocalizedString(@"Cancel", @"");
 			break;
 
-			case OCConnectionIssueChoiceTypeDefault:
+			case OCIssueChoiceTypeDefault:
 				label = OCLocalizedString(@"OK", @"");
 			break;
 
-			case OCConnectionIssueChoiceTypeDestructive:
+			case OCIssueChoiceTypeDestructive:
 				label = OCLocalizedString(@"Proceed", @"");
 			break;
 
-			case OCConnectionIssueChoiceTypeRegular:
+			case OCIssueChoiceTypeRegular:
 			break;
 		}
 	}
@@ -55,7 +55,7 @@
 	return (choice);
 }
 
-+ (instancetype)choiceWithType:(OCConnectionIssueChoiceType)type label:(NSString *)label handler:(OCConnectionIssueChoiceHandler)handler;
++ (instancetype)choiceWithType:(OCIssueChoiceType)type label:(NSString *)label handler:(OCIssueChoiceHandler)handler;
 {
 	return ([self choiceWithType:type identifier:nil label:label userInfo:nil handler:handler]);
 }

@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Scheduling and result handling
 - (BOOL)scheduleWithContext:(OCSyncContext *)syncContext;	//!< Schedules network request(s) for an action. Return YES if scheduling worked. Return NO and possibly an error in OCCoreSyncContext.error if not.
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext; //!< Handles the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCConnectionIssue(s) to OCCoreSyncContext.issues where appropriate.
+- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext; //!< Handles the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCIssue(s) to OCCoreSyncContext.issues where appropriate.
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

@@ -24,7 +24,7 @@
 #import "OCShare.h"
 #import "OCClassSettings.h"
 #import "OCCertificate.h"
-#import "OCConnectionIssue.h"
+#import "OCIssue.h"
 #import "OCChecksum.h"
 #import "OCLogTag.h"
 
@@ -123,7 +123,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL;
 
 #pragma mark - Connect & Disconnect
-- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
@@ -167,7 +167,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @interface OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCConnectionIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
 
 @end
 

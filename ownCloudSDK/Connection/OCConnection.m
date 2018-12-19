@@ -26,7 +26,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCConnectionDAVRequest.h"
-#import "OCConnectionIssue.h"
+#import "OCIssue.h"
 #import "OCLogger.h"
 #import "OCItem.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
@@ -254,8 +254,8 @@
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
 				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-					if (decision == OCConnectionIssueDecisionApprove)
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+					if (decision == OCIssueDecisionApprove)
 					{
 						if (changeUserAccepted)
 						{
@@ -290,7 +290,7 @@
 }
 
 #pragma mark - Connect & Disconnect
-- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCIssue *issue))completionHandler
 {
 	/*
 		Follow the https://github.com/owncloud/administration/tree/master/redirectServer playbook:
@@ -322,7 +322,7 @@
 
 		self.state = OCConnectionStateConnecting;
 
-		completionHandler = ^(NSError *error, OCConnectionIssue *issue) {
+		completionHandler = ^(NSError *error, OCIssue *issue) {
 			if ((error != nil) && (issue != nil))
 			{
 				self.state = OCConnectionStateDisconnected;
@@ -349,7 +349,7 @@
 						// Redirection
 						NSURL *responseRedirectURL;
 						NSError *error = nil;
-						OCConnectionIssue *issue = nil;
+						OCIssue *issue = nil;
 
 						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
 						{
@@ -358,8 +358,8 @@
 							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
 							{
 								// Create an issue if the redirectURL replicates the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-									if (decision == OCConnectionIssueDecisionApprove)
+								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+									if (decision == OCIssueDecisionApprove)
 									{
 										self->_bookmark.url = alternativeBaseURL;
 									}
@@ -368,8 +368,8 @@
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
-								issue.level = OCConnectionIssueLevelError;
+								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
+								issue.level = OCIssueLevelError;
 
 								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 							}
@@ -396,11 +396,11 @@
 				if (error != nil)
 				{
 					// An error occured
-					OCConnectionIssue *issue = error.embeddedIssue;
+					OCIssue *issue = error.embeddedIssue;
 
 					if (issue == nil)
 					{
-						issue = [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil];
+						issue = [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil];
 					}
 
 					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
@@ -426,7 +426,7 @@
 					if (serverStatus == nil)
 					{
 						// JSON decode error
-						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
+						completionHandler(jsonError, [OCIssue issueForError:jsonError level:OCIssueLevelError issueHandler:nil]);
 					}
 					else
 					{
@@ -438,7 +438,7 @@
 
 						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion longVersion:self.serverLongProductVersionString]) != nil)
 						{
-							completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
+							completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 
 							return;
 						}
@@ -450,7 +450,7 @@
 							{
 								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
 
-								completionHandler(maintenanceModeError, [OCConnectionIssue issueForError:maintenanceModeError level:OCConnectionIssueLevelError issueHandler:nil]);
+								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
 								return;
 							}
@@ -459,7 +459,7 @@
 						// Authenticate connection
 						connectProgress.localizedDescription = OCLocalizedString(@"Authenticating…", @"");
 
-						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCIssue *authConnIssue) {
 							if ((authConnError!=nil) || (authConnIssue!=nil))
 							{
 								// Error or issue
@@ -492,7 +492,7 @@
 
 											if (error!=nil)
 											{
-												completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 											}
 											else
 											{
@@ -519,7 +519,7 @@
 	{
 		// Return error
 		NSError *error = OCError(OCErrorAuthorizationNoMethodData);
-		completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+		completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 	}
 
 	return (nil);
@@ -593,7 +593,7 @@
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		// Deauthenticate the connection
-		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCIssue *authConnIssue) {
 			self.state = OCConnectionStateDisconnected;
 
 			self->_serverStatus = nil;
