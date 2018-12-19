@@ -93,7 +93,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		NSString *authorizationHeaderValue;
 		
-		if ((authorizationHeaderValue = authSecret[OA2BearerString]) != nil)
+		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
 		{
 			[request setValue:authorizationHeaderValue forHeaderField:@"Authorization"];
 		}
@@ -285,7 +285,7 @@ OCAuthenticationMethodAutoRegister
 	
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
-		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)authSecret[OA2ExpirationDate]) timeIntervalSinceNow];
+		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
 
 		// Get a new token up to 2 minutes before the old one expires
 		if (timeLeftUntilExpiration < 120)
@@ -318,7 +318,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		NSString *refreshToken;
 
-		if ((refreshToken = authSecret[OA2RefreshToken]) != nil)
+		if ((refreshToken = [authSecret valueForKeyPath:OA2RefreshToken]) != nil)
 		{
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 

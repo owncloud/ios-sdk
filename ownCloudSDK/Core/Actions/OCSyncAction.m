@@ -145,4 +145,10 @@
 	return (@[@"SyncAction", [NSStringFromClass([self class]) substringFromIndex:12]]);
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, self.localizedDescription]);
+}
+
 @end

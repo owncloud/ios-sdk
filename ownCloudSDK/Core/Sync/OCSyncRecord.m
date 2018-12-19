@@ -168,11 +168,6 @@
 	_progress = progress;
 	if (progress!=nil)
 	{
-		if ((progress.localizedDescription == nil) || (progress.localizedDescription.length == 0))
-		{
-			progress.localizedDescription = _action.localizedDescription;
-		}
-
 		if (progress.eventType == OCEventTypeNone)
 		{
 			progress.eventType = _action.actionEventType;
