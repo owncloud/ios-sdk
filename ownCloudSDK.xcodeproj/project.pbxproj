@@ -978,6 +978,17 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		DC19BFC621CA67B1007C20D1 /* Issues */ = {
+			isa = PBXGroup;
+			children = (
+				DCEEB2F4204802CF00189B9A /* OCIssue.m */,
+				DCEEB2F3204802CF00189B9A /* OCIssue.h */,
+				DC4A2C5D20D4608100A47260 /* OCIssueChoice.m */,
+				DC4A2C5C20D4608100A47260 /* OCIssueChoice.h */,
+			);
+			path = Issues;
+			sourceTree = "<group>";
+		};
 		DC1D4D3420DBD557005A3DFC /* File Handling */ = {
 			isa = PBXGroup;
 			children = (
@@ -1379,10 +1390,6 @@
 				DCC8F9E52028556500EB6701 /* OCConnection.m */,
 				DCC8F9E42028556500EB6701 /* OCConnection.h */,
 				DC85570A204FEA5E00189B9A /* Categories */,
-				DCEEB2F4204802CF00189B9A /* OCIssue.m */,
-				DCEEB2F3204802CF00189B9A /* OCIssue.h */,
-				DC4A2C5D20D4608100A47260 /* OCIssueChoice.m */,
-				DC4A2C5C20D4608100A47260 /* OCIssueChoice.h */,
 				DCC8FA142029EB9400EB6701 /* OCConnectionRequest.m */,
 				DCC8FA132029EB9400EB6701 /* OCConnectionRequest.h */,
 				DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */,
@@ -1700,6 +1707,7 @@
 				DC855706204FEA0A00189B9A /* Bookmark */,
 				DC855707204FEA1500189B9A /* Authentication */,
 				DC855708204FEA3400189B9A /* Connection */,
+				DC19BFC621CA67B1007C20D1 /* Issues */,
 				DC1D4D3420DBD557005A3DFC /* File Handling */,
 				DC85570D204FEAC500189B9A /* Events */,
 				DC85570E204FEAE900189B9A /* Vaults */,
