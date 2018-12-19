@@ -70,6 +70,23 @@
 	return (YES);
 }
 
+#pragma mark - Issue handling
+- (OCIssue *)issueForSyncIssue:(OCSyncIssue *)syncIssue withContext:(OCSyncContext *)syncContext
+{
+	return (nil);
+}
+
+- (void)handleIssue:(OCSyncIssue *)issue choice:(OCSyncIssueChoice *)choice withContext:(OCSyncContext *)syncContext
+{
+	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierRetry])
+	{
+	}
+
+	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierCancel])
+	{
+	}
+}
+
 #pragma mark - Properties
 - (NSData *)_archivedServerItemData
 {

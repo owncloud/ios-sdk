@@ -20,6 +20,7 @@
 #import "OCCore.h"
 
 @class OCSyncContext;
+@class OCSyncIssue;
 
 typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *parameterSet);
 
@@ -36,6 +37,7 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 // Result Handler properties
 @property(strong) OCEvent *event; //!< Event to handle [Result Handler]
 @property(strong) NSMutableArray <OCIssue *> *issues; //!< Any issues that should be relayed to the user [Result Handler]
+@property(strong) OCSyncIssue *issue; //!< Sync issues that should be relayed to the user [Result Handler]
 
 // Item changes properties
 @property(assign) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
@@ -54,5 +56,6 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 + (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCIssue *> *)issues;
 
 - (void)addIssue:(OCIssue *)issue;
+- (void)addSyncIssue:(OCSyncIssue *)syncIssue;
 
 @end

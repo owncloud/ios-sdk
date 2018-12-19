@@ -17,6 +17,8 @@
  */
 
 #import "OCSyncContext.h"
+#import "OCLogger.h"
+#import "OCSyncRecord.h"
 
 @implementation OCSyncContext
 
@@ -70,6 +72,20 @@
 	{
 		[self.issues addObject:issue];
 	}
+}
+
+- (void)addSyncIssue:(OCSyncIssue *)syncIssue
+{
+	if (syncIssue == nil) { return; }
+
+	if (self.issue != nil)
+	{
+		OCLogWarning(@"!! Dropping issue %@ and replacing it with %@", self.issue, syncIssue);
+	}
+
+	self.issue = syncIssue;
+
+	self.syncRecord.issue = syncIssue;
 }
 
 @end

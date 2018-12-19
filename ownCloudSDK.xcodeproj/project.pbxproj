@@ -60,6 +60,10 @@
 		DC188994218B031600CFB3F9 /* OCLogSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DC188992218B031600CFB3F9 /* OCLogSource.m */; };
 		DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DC188995218B09CC00CFB3F9 /* OCLogFileSource.h */; };
 		DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DC188996218B09CC00CFB3F9 /* OCLogFileSource.m */; };
+		DC19BFCA21CA6B91007C20D1 /* OCSyncIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFC821CA6B91007C20D1 /* OCSyncIssue.h */; };
+		DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFC921CA6B91007C20D1 /* OCSyncIssue.m */; };
+		DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */; };
+		DC19BFD321CA6C15007C20D1 /* OCSyncIssueChoice.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };
 		DC1D4D3F20DC2281005A3DFC /* OCRetainer.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -519,6 +523,10 @@
 		DC188992218B031600CFB3F9 /* OCLogSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogSource.m; sourceTree = "<group>"; };
 		DC188995218B09CC00CFB3F9 /* OCLogFileSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileSource.h; sourceTree = "<group>"; };
 		DC188996218B09CC00CFB3F9 /* OCLogFileSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileSource.m; sourceTree = "<group>"; };
+		DC19BFC821CA6B91007C20D1 /* OCSyncIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncIssue.h; sourceTree = "<group>"; };
+		DC19BFC921CA6B91007C20D1 /* OCSyncIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncIssue.m; sourceTree = "<group>"; };
+		DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncIssueChoice.h; sourceTree = "<group>"; };
+		DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncIssueChoice.m; sourceTree = "<group>"; };
 		DC1D4D3520DBD58E005A3DFC /* OCFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFile.h; sourceTree = "<group>"; };
 		DC1D4D3620DBD58E005A3DFC /* OCFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCFile.m; sourceTree = "<group>"; };
 		DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRetainer.h; sourceTree = "<group>"; };
@@ -989,6 +997,17 @@
 			path = Issues;
 			sourceTree = "<group>";
 		};
+		DC19BFC721CA6B4E007C20D1 /* Issue */ = {
+			isa = PBXGroup;
+			children = (
+				DC19BFC921CA6B91007C20D1 /* OCSyncIssue.m */,
+				DC19BFC821CA6B91007C20D1 /* OCSyncIssue.h */,
+				DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */,
+				DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */,
+			);
+			path = Issue;
+			sourceTree = "<group>";
+		};
 		DC1D4D3420DBD557005A3DFC /* File Handling */ = {
 			isa = PBXGroup;
 			children = (
@@ -1333,6 +1352,7 @@
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
 				DC2D646221C3D60900EB26FD /* Thumbnails */,
 				DC855704204FE9E900189B9A /* Activity */,
+				DC19BFC721CA6B4E007C20D1 /* Issue */,
 				DC855705204FE9F100189B9A /* Sync */,
 			);
 			path = Core;
@@ -1864,6 +1884,7 @@
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
+				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
@@ -1950,6 +1971,7 @@
 				DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
+				DC19BFCA21CA6B91007C20D1 /* OCSyncIssue.h in Headers */,
 				DC708CE8214135FE00FE43CA /* OCSyncActionUpload.h in Headers */,
 				DCB0A45921B7F76800FAC4E9 /* NSError+OCDAVError.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
@@ -2348,6 +2370,7 @@
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DC2D701921CA633100EB26FD /* OCSyncRecordStatus.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
@@ -2368,6 +2391,7 @@
 				DC00DB1E219B120300C82737 /* OCConnectionDAVMultistatusResponse.m in Sources */,
 				DC02835C209098D7005B6334 /* OCImage.m in Sources */,
 				DC708CCF2141306100FE43CA /* OCSyncActionCopyMove.m in Sources */,
+				DC19BFD321CA6C15007C20D1 /* OCSyncIssueChoice.m in Sources */,
 				DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */,
 				DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */,
 				DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */,

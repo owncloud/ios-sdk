@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCIssue.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef void(^OCIssueChoiceHandler)(OCIssue *issue, OCIssueChoice *choice);
 
 typedef NS_ENUM(NSInteger,OCIssueChoiceType)
@@ -33,15 +35,17 @@ typedef NS_ENUM(NSInteger,OCIssueChoiceType)
 
 @property(assign) OCIssueChoiceType type;
 
-@property(strong) NSString *identifier;
+@property(strong,nullable) NSString *identifier;
 
-@property(strong) NSString *label;
-@property(copy) OCIssueChoiceHandler choiceHandler;
+@property(strong,nullable) NSString *label;
+@property(copy,nullable) OCIssueChoiceHandler choiceHandler;
 
-@property(strong) id<NSObject> userInfo;
+@property(strong,nullable) id<NSObject> userInfo;
 
-+ (instancetype)choiceWithType:(OCIssueChoiceType)type identifier:(NSString *)identifier label:(NSString *)label userInfo:(id<NSObject>)userInfo handler:(OCIssueChoiceHandler)handler;
++ (instancetype)choiceWithType:(OCIssueChoiceType)type identifier:(nullable NSString *)identifier label:(nullable NSString *)label userInfo:(nullable id<NSObject>)userInfo handler:(nullable OCIssueChoiceHandler)handler;
 
-+ (instancetype)choiceWithType:(OCIssueChoiceType)type label:(NSString *)label handler:(OCIssueChoiceHandler)handler;
++ (instancetype)choiceWithType:(OCIssueChoiceType)type label:(nullable NSString *)label handler:(nullable OCIssueChoiceHandler)handler;
 
 @end
+
+NS_ASSUME_NONNULL_END

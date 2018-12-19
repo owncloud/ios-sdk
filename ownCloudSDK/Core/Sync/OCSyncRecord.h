@@ -22,6 +22,8 @@
 #import "OCTypes.h"
 #import "OCCore.h"
 
+@class OCSyncIssue;
+
 typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 {
 	OCSyncRecordStatePending,   //!< Sync record pending processing by the sync engine
@@ -65,6 +67,9 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 @property(readonly,nonatomic) BOOL blockedByDifferentCopyOfThisProcess; //!< If state==OCSyncRecordStateAwaitingUserInteraction, checks if blockedByBundleIdentifier and blockedByPID match the calling process.
 
 @property(assign) BOOL allowsRescheduling; //!< If YES, the record may be rescheduled if state==OCSyncRecordStateAwaitingUserInteraction.
+
+#pragma mark - Issue handling
+@property(strong) OCSyncIssue *issue; //!< Pending issue the user needs to react to
 
 #pragma mark - Result, cancel and progress handling
 @property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)

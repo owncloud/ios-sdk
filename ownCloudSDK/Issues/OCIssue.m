@@ -243,18 +243,38 @@
 #pragma mark - Multiple choice
 - (void)selectChoice:(OCIssueChoice *)choice
 {
-	[self willChangeValueForKey:@"selectedChoice"];
-	_selectedChoice = choice;
-	[self didChangeValueForKey:@"selectedChoice"];
+	BOOL madeDecision = NO;
 
-	if (choice.choiceHandler != nil)
+	@synchronized(self)
 	{
-		choice.choiceHandler(self, choice);
+		if (!_decisionMade)
+		{
+			[self willChangeValueForKey:@"selectedChoice"];
+
+			_decisionMade = YES;
+			_selectedChoice = choice;
+			madeDecision = YES;
+
+			[self didChangeValueForKey:@"selectedChoice"];
+		}
 	}
 
-	if (_issueHandler != nil)
+	if (madeDecision)
 	{
-		_issueHandler(self, OCIssueDecisionNone);
+		if (choice.choiceHandler != nil)
+		{
+			choice.choiceHandler(self, choice);
+		}
+
+		if (_issueHandler != nil)
+		{
+			_issueHandler(self, OCIssueDecisionNone);
+		}
+
+		if (_parentIssue != nil)
+		{
+			[_parentIssue _childIssueMadeDecision:self];
+		}
 	}
 }
 
@@ -314,9 +334,13 @@
 	{
 		if (!_decisionMade)
 		{
+			[self willChangeValueForKey:@"decision"];
+
 			_decisionMade = YES;
 			_decision = decision;
 			madeDecision = YES;
+
+			[self didChangeValueForKey:@"decision"];
 		}
 	}
 	
