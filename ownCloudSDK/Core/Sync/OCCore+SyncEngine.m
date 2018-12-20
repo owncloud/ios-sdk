@@ -518,115 +518,177 @@
 	}];
 }
 
-#pragma mark - Sync event handling
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
+#pragma mark - Sync record operation
+- (void)performOnSyncRecordID:(OCSyncRecordID)syncRecordID operation:(NSError *(^)(NSError *error, OCSyncRecord *record))operation completionHandler:(void(^)(NSError *error))completionHandler
 {
-	[self beginActivity:@"handle sync event"];
+	[self beginActivity:@"perform sync record operation"];
 
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *error = nil;
 		__block OCSyncRecord *syncRecord = nil;
-		OCSyncRecordID syncRecordID;
-		BOOL syncRecordActionCompleted = NO;
-		NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 
 		// Fetch sync record
-		if ((syncRecordID = event.userInfo[@"syncRecordID"]) != nil)
+		if (syncRecordID != nil)
 		{
-			OCLogDebug(@"handling sync event %@", OCLogPrivate(event));
-
 			[self.vault.database retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *retrieveError, OCSyncRecord *retrievedSyncRecord) {
 				syncRecord = retrievedSyncRecord;
 				error = retrieveError;
 			}];
 
-			OCLogDebug(@"record %@ received an event %@", OCLogPrivate(syncRecord), OCLogPrivate(event));
+			OCLogDebug(@"performing operation on record %@", OCLogPrivate(syncRecord));
 
 			if (error != nil)
 			{
-				OCLogWarning(@"could not fetch sync record for ID %@ because of error %@. Dropping event %@ from %@ unhandled.", syncRecordID, error, event, sender);
-				return(error);
+				OCLogWarning(@"could not fetch sync record for ID %@ because of error %@.", syncRecordID, error);
 			}
-
-			if (syncRecord == nil)
+			else if (syncRecord == nil)
 			{
-				OCLogWarning(@"could not fetch sync record for ID %@. Dropping event %@ from %@ unhandled.", syncRecordID, error, event, sender);
-				return (nil);
+				OCLogWarning(@"could not fetch sync record for ID %@.", syncRecordID, error);
+				error = OCError(OCErrorSyncRecordNotFound);
 			}
 		}
 
-		// Handle event for sync record
-		if ((syncRecord != nil) && (syncRecord.action != nil))
-		{
-			OCSyncAction *syncAction = nil;
-			OCSyncContext *syncContext = nil;
-
-			// Dispatch to result handlers
-			if ((syncAction = syncRecord.action) != nil)
-			{
-				syncAction.core = self;
-
-				syncContext = [OCSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
-
-				OCLogDebug(@"record %@ enters event handling %@", OCLogPrivate(syncRecord), OCLogPrivate(event));
-
-				syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
-
-				error = syncContext.error;
-			}
-
-			OCLogDebug(@"record %@ passed event handling: syncAction=%@, syncRecordActionCompleted=%d, error=%@", OCLogPrivate(syncRecord), syncAction, syncRecordActionCompleted, error);
-
-			// Handle result handler return values
-			if (syncRecordActionCompleted)
-			{
-				// Sync record action completed
-				if (error != nil)
-				{
-					OCLogWarning(@"record %@ will be removed despite error: %@", syncRecord, error);
-				}
-
-				// - Indicate "done" to progress object
-				syncRecord.progress.totalUnitCount = 1;
-				syncRecord.progress.completedUnitCount = 1;
-
-				// - Remove sync record from database
-				[self.vault.database removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *deleteError) {
-					error = deleteError;
-				}];
-
-				// - Perform updates for added/changed/removed items and refresh paths
-				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
-
-				OCLogDebug(@"record %@ returned from event handling post-processing with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.error);
-			}
-
-			// Handle issues
-			error = [self _handleIssues:issues forSyncRecord:syncRecord syncStep:@"event handling" priorActionSuccess:syncRecordActionCompleted error:error];
-		}
-		else
-		{
-			OCLogWarning(@"Unhandled sync event %@ from %@", OCLogPrivate(event), sender);
-		}
+		// Perform operation on sync record
+		error = operation(error, syncRecord);
 
 		return (error);
 	} completionHandler:^(NSError *error) {
-		if (error != nil)
+		OCLogError(@"finished sync record operation with error=%@", error);
+
+		if (completionHandler != nil)
 		{
-			OCLogError(@"Sync Engine: error processing event %@ from %@: %@", OCLogPrivate(event), sender, error);
+			completionHandler(error);
 		}
 
 		// Trigger handling of any remaining sync records
 		[self setNeedsToProcessSyncRecords];
 
-		[self endActivity:@"handle sync event"];
+		[self endActivity:@"perform sync record operation"];
 	}];
+}
+
+#pragma mark - Sync event handling
+- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
+{
+	OCSyncRecordID recordID;
+
+	if ((recordID = event.userInfo[@"syncRecordID"]) != nil)
+	{
+		[self beginActivity:@"handle sync event"];
+
+		[self performOnSyncRecordID:event.userInfo[@"syncRecordID"] operation:^NSError *(NSError *error, OCSyncRecord *syncRecord) {
+			// Skip on errors
+			if (error != nil) { return(error); }
+
+			// Handle event for sync record
+			if ((syncRecord != nil) && (syncRecord.action != nil))
+			{
+				__block NSError *error = nil;
+				__block OCSyncRecord *syncRecord = nil;
+				BOOL syncRecordActionCompleted = NO;
+				NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
+				OCSyncAction *syncAction = nil;
+				OCSyncContext *syncContext = nil;
+
+				// Dispatch to result handlers
+				if ((syncAction = syncRecord.action) != nil)
+				{
+					syncAction.core = self;
+
+					syncContext = [OCSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
+
+					OCLogDebug(@"record %@ enters event handling %@", OCLogPrivate(syncRecord), OCLogPrivate(event));
+
+					syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
+
+					error = syncContext.error;
+				}
+
+				OCLogDebug(@"record %@ passed event handling: syncAction=%@, syncRecordActionCompleted=%d, error=%@", OCLogPrivate(syncRecord), syncAction, syncRecordActionCompleted, error);
+
+				// Handle result handler return values
+				if (syncRecordActionCompleted)
+				{
+					// Sync record action completed
+					if (error != nil)
+					{
+						OCLogWarning(@"record %@ will be removed despite error: %@", syncRecord, error);
+					}
+
+					// - Indicate "done" to progress object
+					syncRecord.progress.totalUnitCount = 1;
+					syncRecord.progress.completedUnitCount = 1;
+
+					// - Remove sync record from database
+					[self.vault.database removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *deleteError) {
+						error = deleteError;
+					}];
+
+					// - Perform updates for added/changed/removed items and refresh paths
+					[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
+
+					OCLogDebug(@"record %@ returned from event handling post-processing with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.error);
+				}
+
+				// Handle issues
+				error = [self _handleIssues:issues forSyncRecord:syncRecord syncStep:@"event handling" priorActionSuccess:syncRecordActionCompleted error:error];
+			}
+			else
+			{
+				OCLogWarning(@"Unhandled sync event %@ from %@", OCLogPrivate(event), sender);
+			}
+
+			return (error);
+		} completionHandler:^(NSError *error) {
+			[self endActivity:@"handle sync event"];
+		}];
+	}
+	else
+	{
+		OCLogError(@"Can't handle event %@ due to missing recordID", event);
+	}
 }
 
 #pragma mark - Sync issue handling
 - (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
 {
+	OCSyncRecordID syncRecordID;
 
+	if ((syncRecordID = issue.syncRecordID) != nil)
+	{
+		[self beginActivity:@"resolve sync issue"];
+
+		[self performOnSyncRecordID:syncRecordID operation:^NSError *(NSError *error, OCSyncRecord *syncRecord) {
+			// Skip on errors
+			if (error != nil) { return(error); }
+
+			// Resolve sync issue
+			if ((syncRecord != nil) && (syncRecord.action != nil))
+			{
+				OCSyncAction *syncAction = nil;
+				OCSyncContext *syncContext = nil;
+
+				// Tell action to resolve issue
+				if ((syncAction = syncRecord.action) != nil)
+				{
+					syncAction.core = self;
+
+					if ((syncContext = [OCSyncContext issueResolutionContextWith:syncRecord]) != nil)
+					{
+						[syncAction resolveIssue:issue withChoice:choice context:syncContext];
+					}
+				}
+			}
+
+			return (error);
+		} completionHandler:^(NSError *error) {
+			[self endActivity:@"resolve sync issue"];
+		}];
+	}
+	else
+	{
+		OCLogError(@"Can't resolve issue %@ with choice %@ due to missing recordID", issue, choice);
+	}
 }
 
 #pragma mark - Sync issues utilities

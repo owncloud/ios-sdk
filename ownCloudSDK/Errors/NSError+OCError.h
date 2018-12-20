@@ -62,13 +62,17 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
 
+	OCErrorSyncRecordNotFound, //!< The referenced sync record could not be found.
+
 	OCErrorNewerVersionExists, //!< A newer version already exists
 
 	OCErrorCancelled, //!< The operation was cancelled
 
 	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information
 
-	OCErrorRunningOperation //!< A running operation prevents execution
+	OCErrorRunningOperation, //!< A running operation prevents execution
+
+	OCErrorInvalidProcess //!< Invalid process.
 };
 
 @class OCIssue;

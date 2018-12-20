@@ -25,13 +25,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCSyncIssue;
+@class OCBlockingReason;
 
 typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 {
 	OCSyncRecordStatePending,   //!< Sync record pending processing by the sync engine
 	OCSyncRecordStateScheduled, //!< Sync record's action has been scheduled and awaits the result and processing
 //	OCSyncRecordStateProcessResult, //!< Sync record's action is processing the result
-	OCSyncRecordStateAwaitingUserInteraction //!< Sync record's action waits for user interaction
+	OCSyncRecordStateAwaitingUserInteraction, //!< Sync record's action waits for user interaction
+	OCSyncRecordStateBlocked    //!< Sync record execution is ongoing but blocked due to .blockingReason
 };
 
 @interface OCSyncRecord : NSObject <NSSecureCoding>
@@ -44,8 +46,12 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 
 	OCSyncRecordState _state;
 	NSDate *_inProgressSince;
+
+	OCBlockingReason *_blockingReason;
+
 	NSString *_blockedByBundleIdentifier;
 	NSNumber *_blockedByPID;
+
 	BOOL _allowsRescheduling;
 
 	OCSyncIssue *_issue;
@@ -65,6 +71,8 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 @property(assign,nonatomic) OCSyncRecordState state; //!< Current processing state
 
 @property(strong,nullable) NSDate *inProgressSince; //!< Time since which the action is being executed
+
+@property(strong,nullable) OCBlockingReason *blockingReason; //!< If state==OCSyncRecordStateBlocked, the reason for the blockade.
 
 @property(strong,nullable) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
 @property(strong,nullable) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.

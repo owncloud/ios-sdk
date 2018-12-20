@@ -60,6 +60,15 @@
 	return (syncContext);
 }
 
++ (instancetype)issueResolutionContextWith:(OCSyncRecord *)syncRecord
+{
+	OCSyncContext *syncContext = [OCSyncContext new];
+
+	syncContext.syncRecord = syncRecord;
+
+	return (syncContext);
+}
+
 - (void)addIssue:(OCIssue *)issue
 {
 	if (issue == nil) { return; }

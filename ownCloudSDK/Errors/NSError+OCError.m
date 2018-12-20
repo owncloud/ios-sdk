@@ -192,6 +192,14 @@
 			case OCErrorRunningOperation:
 				unlocalizedString = @"A running operation prevents execution.";
 			break;
+
+			case OCErrorSyncRecordNotFound:
+				unlocalizedString = @"Sync record not found.";
+			break;
+
+			case OCErrorInvalidProcess:
+				unlocalizedString = @"Invalid process.";
+			break;
 		}
 	}
 	

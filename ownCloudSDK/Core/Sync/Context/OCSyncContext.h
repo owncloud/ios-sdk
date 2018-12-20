@@ -54,6 +54,7 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 + (instancetype)schedulerContextWithSyncRecord:(OCSyncRecord *)syncRecord;
 + (instancetype)descheduleContextWithSyncRecord:(OCSyncRecord *)syncRecord;
 + (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCIssue *> *)issues;
++ (instancetype)issueResolutionContextWith:(OCSyncRecord *)syncRecord;
 
 - (void)addIssue:(OCIssue *)issue;
 - (void)addSyncIssue:(OCSyncIssue *)syncIssue;
