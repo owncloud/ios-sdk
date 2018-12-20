@@ -58,4 +58,6 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 - (void)addIssue:(OCIssue *)issue;
 - (void)addSyncIssue:(OCSyncIssue *)syncIssue;
 
+- (void)resolvedSyncIssue:(OCSyncIssue *)syncIssue;
+
 @end

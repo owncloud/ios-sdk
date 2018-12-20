@@ -20,6 +20,9 @@
 #import "OCSyncRecord.h"
 
 @class OCSyncContext;
+@class OCSyncIssueChoice;
+
+typedef void(^OCCoreSyncIssueResolutionResultHandler)(BOOL resolved);
 
 @interface OCCore (SyncEngine)
 
@@ -30,6 +33,9 @@
 - (OCItem *)retrieveLatestVersionOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError;
 
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler;
+
+#pragma mark - Sync Issue handling
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler;
 
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler;

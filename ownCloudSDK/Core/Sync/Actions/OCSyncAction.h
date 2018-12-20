@@ -68,8 +68,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)handleResultWithContext:(OCSyncContext *)syncContext; //!< Handles the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCIssue(s) to OCCoreSyncContext.issues where appropriate.
 
 #pragma mark - Issue handling
-- (OCIssue *)issueForSyncIssue:(OCSyncIssue *)syncIssue withContext:(OCSyncContext *)syncContext; //!< Creates an ephermal OCIssue from a persistable OCSyncIssue
-- (void)handleIssue:(OCSyncIssue *)issue choice:(OCSyncIssueChoice *)choice withContext:(OCSyncContext *)syncContext; //!< Handle user choice to an issue.
+- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext;
+- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+
+- (BOOL)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return YES if the issue has been resolved, NO if it hasn't.
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

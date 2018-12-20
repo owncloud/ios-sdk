@@ -71,20 +71,49 @@
 }
 
 #pragma mark - Issue handling
-- (OCIssue *)issueForSyncIssue:(OCSyncIssue *)syncIssue withContext:(OCSyncContext *)syncContext
+- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext
 {
-	return (nil);
+	[syncContext addSyncIssue:issue];
 }
 
-- (void)handleIssue:(OCSyncIssue *)issue choice:(OCSyncIssueChoice *)choice withContext:(OCSyncContext *)syncContext
+- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
+{
+	OCSyncIssue *syncIssue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:level title:title description:description metaData:metaData choices:choices];
+
+	[self throwIssue:syncIssue inContext:syncContext];
+
+	return (syncIssue);
+}
+
+- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+{
+	return ([self throwIssueInContext:syncContext level:OCIssueLevelWarning title:title description:description metaData:metaData choices:choices]);
+}
+
+- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
+{
+	return ([self throwIssueInContext:syncContext level:OCIssueLevelError title:title description:description metaData:metaData choices:choices]);
+}
+
+- (BOOL)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
 {
 	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierRetry])
 	{
+		[syncContext resolvedSyncIssue:issue];
+		[_core rescheduleSyncRecord:syncContext.syncRecord withUpdates:nil];
+
+		return (YES);
 	}
 
 	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierCancel])
 	{
+		[syncContext resolvedSyncIssue:issue];
+		[_core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
+
+		return (YES);
 	}
+
+	return (NO);
 }
 
 #pragma mark - Properties

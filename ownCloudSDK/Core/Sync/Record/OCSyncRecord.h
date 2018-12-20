@@ -22,6 +22,8 @@
 #import "OCTypes.h"
 #import "OCCore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class OCSyncIssue;
 
 typedef NS_ENUM(NSUInteger, OCSyncRecordState)
@@ -46,11 +48,13 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 	NSNumber *_blockedByPID;
 	BOOL _allowsRescheduling;
 
+	OCSyncIssue *_issue;
+
 	OCCoreActionResultHandler _resultHandler;
 }
 
 #pragma mark - Database ID
-@property(strong) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
+@property(strong,nullable) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
 
 #pragma mark - Action Definition
 @property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action
@@ -60,20 +64,20 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 #pragma mark - Scheduling and processing tracking
 @property(assign,nonatomic) OCSyncRecordState state; //!< Current processing state
 
-@property(strong) NSDate *inProgressSince; //!< Time since which the action is being executed
+@property(strong,nullable) NSDate *inProgressSince; //!< Time since which the action is being executed
 
-@property(strong) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
-@property(strong) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.
+@property(strong,nullable) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
+@property(strong,nullable) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.
 @property(readonly,nonatomic) BOOL blockedByDifferentCopyOfThisProcess; //!< If state==OCSyncRecordStateAwaitingUserInteraction, checks if blockedByBundleIdentifier and blockedByPID match the calling process.
 
 @property(assign) BOOL allowsRescheduling; //!< If YES, the record may be rescheduled if state==OCSyncRecordStateAwaitingUserInteraction.
 
 #pragma mark - Issue handling
-@property(strong) OCSyncIssue *issue; //!< Pending issue the user needs to react to
+@property(strong,nullable,nonatomic) OCSyncIssue *issue; //!< Pending issue the user needs to react to
 
 #pragma mark - Result, cancel and progress handling
-@property(copy) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
-@property(strong,nonatomic) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
+@property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
+@property(strong,nonatomic,nullable) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
 #pragma - Instantiation
 - (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
@@ -95,3 +99,5 @@ extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;
 extern OCSyncActionIdentifier OCSyncActionIdentifierDownload;
 extern OCSyncActionIdentifier OCSyncActionIdentifierUpload;
 extern OCSyncActionIdentifier OCSyncActionIdentifierUpdate;
+
+NS_ASSUME_NONNULL_END

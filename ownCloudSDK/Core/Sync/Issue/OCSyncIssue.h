@@ -19,10 +19,15 @@
 #import <Foundation/Foundation.h>
 #import "OCIssue.h"
 #import "OCSyncIssueChoice.h"
+#import "OCTypes.h"
+
+@class OCSyncRecord;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSyncIssue : NSObject <NSSecureCoding>
+
+@property(strong,nullable) OCSyncRecordID syncRecordID;
 
 @property(readonly,strong) NSDate *creationDate;
 @property(readonly,strong) NSUUID *uuid;
@@ -32,12 +37,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
 
+@property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
+
 @property(strong) NSArray <OCSyncIssueChoice *> *choices;
 
-+ (instancetype)issueWithLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices;
-
-+ (instancetype)warningIssueWithTitle:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices;
-+ (instancetype)errorIssueWithTitle:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices;
++ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
 @end
 

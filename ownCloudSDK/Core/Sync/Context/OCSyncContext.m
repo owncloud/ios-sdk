@@ -88,4 +88,9 @@
 	self.syncRecord.issue = syncIssue;
 }
 
+- (void)resolvedSyncIssue:(OCSyncIssue *)syncIssue
+{
+	self.syncRecord.issue = nil;
+}
+
 @end

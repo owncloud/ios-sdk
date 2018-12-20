@@ -168,6 +168,7 @@
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *blockError = nil;
 
+		// Add sync record to database (=> ensures it is persisted and has a recordID)
 		[self.vault.database addSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
 			blockError = error;
 		}];
@@ -620,6 +621,12 @@
 
 		[self endActivity:@"handle sync event"];
 	}];
+}
+
+#pragma mark - Sync issue handling
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
+{
+
 }
 
 #pragma mark - Sync issues utilities

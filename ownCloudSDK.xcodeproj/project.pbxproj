@@ -64,6 +64,8 @@
 		DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFC921CA6B91007C20D1 /* OCSyncIssue.m */; };
 		DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */; };
 		DC19BFD321CA6C15007C20D1 /* OCSyncIssueChoice.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */; };
+		DC19BFDE21CB99D1007C20D1 /* OCIssue+SyncIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFDC21CB99D1007C20D1 /* OCIssue+SyncIssue.h */; };
+		DC19BFDF21CB99D1007C20D1 /* OCIssue+SyncIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFDD21CB99D1007C20D1 /* OCIssue+SyncIssue.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };
 		DC1D4D3F20DC2281005A3DFC /* OCRetainer.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -527,6 +529,8 @@
 		DC19BFC921CA6B91007C20D1 /* OCSyncIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncIssue.m; sourceTree = "<group>"; };
 		DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncIssueChoice.h; sourceTree = "<group>"; };
 		DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncIssueChoice.m; sourceTree = "<group>"; };
+		DC19BFDC21CB99D1007C20D1 /* OCIssue+SyncIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCIssue+SyncIssue.h"; sourceTree = "<group>"; };
+		DC19BFDD21CB99D1007C20D1 /* OCIssue+SyncIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCIssue+SyncIssue.m"; sourceTree = "<group>"; };
 		DC1D4D3520DBD58E005A3DFC /* OCFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFile.h; sourceTree = "<group>"; };
 		DC1D4D3620DBD58E005A3DFC /* OCFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCFile.m; sourceTree = "<group>"; };
 		DC1D4D3D20DC2281005A3DFC /* OCRetainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRetainer.h; sourceTree = "<group>"; };
@@ -1004,8 +1008,43 @@
 				DC19BFC821CA6B91007C20D1 /* OCSyncIssue.h */,
 				DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */,
 				DC19BFD021CA6C15007C20D1 /* OCSyncIssueChoice.h */,
+				DC19BFDD21CB99D1007C20D1 /* OCIssue+SyncIssue.m */,
+				DC19BFDC21CB99D1007C20D1 /* OCIssue+SyncIssue.h */,
 			);
 			path = Issue;
+			sourceTree = "<group>";
+		};
+		DC19BFE021CB9F3E007C20D1 /* Context */ = {
+			isa = PBXGroup;
+			children = (
+				DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */,
+				DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */,
+			);
+			path = Context;
+			sourceTree = "<group>";
+		};
+		DC19BFE121CB9F4F007C20D1 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				DC0364FA20AAD75700F62732 /* OCCore+SyncEngine.m */,
+				DC0364F920AAD75700F62732 /* OCCore+SyncEngine.h */,
+				DC19BFE021CB9F3E007C20D1 /* Context */,
+				DC54396620D51138002BF291 /* Actions */,
+				DC19BFC721CA6B4E007C20D1 /* Issue */,
+				DC855705204FE9F100189B9A /* Record */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
+		DC19BFE221CB9FAC007C20D1 /* FileProvider */ = {
+			isa = PBXGroup;
+			children = (
+				DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */,
+				DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */,
+				DCA91F2E21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m */,
+				DCA91F2D21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h */,
+			);
+			path = FileProvider;
 			sourceTree = "<group>";
 		};
 		DC1D4D3420DBD557005A3DFC /* File Handling */ = {
@@ -1165,8 +1204,6 @@
 			children = (
 				DCDA307021412A0100DB61A9 /* OCSyncAction.m */,
 				DCDA306F21412A0100DB61A9 /* OCSyncAction.h */,
-				DCA91F2E21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m */,
-				DCA91F2D21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h */,
 				DC708CD02141306B00FE43CA /* CopyMove */,
 				DC708CD1214131C200FE43CA /* CreateFolder */,
 				DC708CD2214131D600FE43CA /* Delete */,
@@ -1340,20 +1377,15 @@
 			children = (
 				DCC8F9D8202854FB00EB6701 /* OCCore.m */,
 				DCC8F9D7202854FB00EB6701 /* OCCore.h */,
-				DC27A19F20CBE8BD008ACB6C /* OCCore+FileProvider.m */,
-				DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */,
-				DC0364FA20AAD75700F62732 /* OCCore+SyncEngine.m */,
-				DC0364F920AAD75700F62732 /* OCCore+SyncEngine.h */,
 				DC3422812180765900705508 /* OCCore+ItemUpdates.m */,
 				DC3422802180765900705508 /* OCCore+ItemUpdates.h */,
 				DC5A203320750BEE0083DB7D /* OCCore+Internal.h */,
 				DCB0A46121B9227400FAC4E9 /* Connection Status */,
-				DC54396620D51138002BF291 /* Actions */,
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
 				DC2D646221C3D60900EB26FD /* Thumbnails */,
+				DC19BFE221CB9FAC007C20D1 /* FileProvider */,
+				DC19BFE121CB9F4F007C20D1 /* Sync */,
 				DC855704204FE9E900189B9A /* Activity */,
-				DC19BFC721CA6B4E007C20D1 /* Issue */,
-				DC855705204FE9F100189B9A /* Sync */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -1367,17 +1399,15 @@
 			path = Activity;
 			sourceTree = "<group>";
 		};
-		DC855705204FE9F100189B9A /* Sync */ = {
+		DC855705204FE9F100189B9A /* Record */ = {
 			isa = PBXGroup;
 			children = (
 				DCC8FA24202B259D00EB6701 /* OCSyncRecord.m */,
 				DCC8FA23202B259D00EB6701 /* OCSyncRecord.h */,
 				DC2D701721CA633100EB26FD /* OCSyncRecordStatus.m */,
 				DC2D701621CA633000EB26FD /* OCSyncRecordStatus.h */,
-				DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */,
-				DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */,
 			);
-			path = Sync;
+			path = Record;
 			sourceTree = "<group>";
 		};
 		DC855706204FEA0A00189B9A /* Bookmark */ = {
@@ -1952,6 +1982,7 @@
 				DC4AFAB0206A8C1D00189B9A /* OCSQLiteStatement.h in Headers */,
 				DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */,
 				DC0364FB20AAD75700F62732 /* OCCore+SyncEngine.h in Headers */,
+				DC19BFDE21CB99D1007C20D1 /* OCIssue+SyncIssue.h in Headers */,
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
@@ -2434,6 +2465,7 @@
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
 				DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */,
+				DC19BFDF21CB99D1007C20D1 /* OCIssue+SyncIssue.m in Sources */,
 				DC1D4D4020DC2281005A3DFC /* OCRetainer.m in Sources */,
 				DCC8FA162029EB9400EB6701 /* OCConnectionRequest.m in Sources */,
 			);

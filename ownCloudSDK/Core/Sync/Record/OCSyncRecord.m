@@ -19,6 +19,7 @@
 #import "OCSyncRecord.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCSyncAction.h"
+#import "OCSyncIssue.h"
 
 @implementation OCSyncRecord
 
@@ -117,6 +118,22 @@
 			[_progress addChild:progress withPendingUnitCount:200];
 		}
 	}
+}
+
+#pragma mark - Issue handling
+- (OCSyncIssue *)issue
+{
+	// Make sure the issue carries the ID of the sync record
+	_issue.syncRecordID = self.recordID;
+
+	return (_issue);
+}
+
+- (void)setIssue:(OCSyncIssue *)issue
+{
+	// Make sure the issue carries the ID of the sync record
+	issue.syncRecordID = self.recordID;
+	_issue = issue;
 }
 
 #pragma mark - Secure Coding

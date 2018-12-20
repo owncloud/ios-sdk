@@ -17,29 +17,23 @@
  */
 
 #import "OCSyncIssue.h"
+#import "OCSyncRecord.h"
 
 @implementation OCSyncIssue
 
-+ (instancetype)issueWithLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices
++ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
 {
 	OCSyncIssue *issue = [self new];
+
+	issue->_syncRecordID = syncRecord.recordID;
 
 	issue.level = level;
 	issue.localizedTitle = title;
 	issue.localizedDescription = description;
+	issue.metaData = metaData;
 	issue.choices = choices;
 
 	return (issue);
-}
-
-+ (instancetype)warningIssueWithTitle:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices
-{
-	return ([self issueWithLevel:OCIssueLevelWarning title:title description:description choices:choices]);
-}
-
-+ (instancetype)errorIssueWithTitle:(NSString *)title description:(nullable NSString *)description choices:(NSArray <OCSyncIssueChoice *> *)choices
-{
-	return ([self issueWithLevel:OCIssueLevelError title:title description:description choices:choices]);
 }
 
 - (instancetype)init
@@ -63,13 +57,16 @@
 {
 	if ((self = [self init]) != nil)
 	{
+		_syncRecordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"syncRecordID"];
+
 		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 
 		_level = [decoder decodeIntegerForKey:@"level"];
 		_localizedTitle = [decoder decodeObjectOfClass:[NSString class] forKey:@"title"];
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"desc"];
-		_choices = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"choices"];
+		_metaData = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"metaData"];
+		_choices = [decoder decodeObjectOfClass:[NSArray class] forKey:@"choices"];
 	}
 
 	return (self);
@@ -77,12 +74,15 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeObject:_syncRecordID forKey:@"syncRecordID"];
+
 	[coder encodeObject:_uuid forKey:@"uuid"];
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
 
 	[coder encodeInteger:_level forKey:@"level"];
 	[coder encodeObject:_localizedTitle forKey:@"title"];
 	[coder encodeObject:_localizedDescription forKey:@"desc"];
+	[coder encodeObject:_metaData forKey:@"metaData"];
 	[coder encodeObject:_choices forKey:@"choices"];
 }
 
