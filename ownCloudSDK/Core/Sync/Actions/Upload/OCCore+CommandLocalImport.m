@@ -129,7 +129,7 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] allowsRescheduling:NO resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] resultHandler:resultHandler]);
 }
 
 @end

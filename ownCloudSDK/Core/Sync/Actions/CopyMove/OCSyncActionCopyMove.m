@@ -55,7 +55,7 @@
 }
 
 #pragma mark - Action implementation
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	if ((self.localItem != nil) && (self.targetParentItem != nil) && (self.targetName != nil))
 	{
@@ -70,28 +70,27 @@
 			progress = [self.core.connection moveItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
 		}
 
-		if (progress != nil)
-		{
-			[syncContext.syncRecord addProgress:progress];
+		[syncContext.syncRecord addProgress:progress];
 
-			return (YES);
-		}
+		// Transition to processing
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+		// Wait for result
+		return (OCCoreSyncInstructionStop);
 	}
 
-	return (NO);
+	// Remove record as its action is not sufficiently specified
+	return (OCCoreSyncInstructionDeleteLast);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
-	BOOL canDeleteSyncRecord = NO;
+	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	BOOL isCopy = [syncContext.syncRecord.actionIdentifier isEqual:OCSyncActionIdentifierCopy];
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, nil);
-	}
+	[syncContext completeWithError:event.error core:self.core item:(OCItem *)event.result parameter:nil];
 
 	if ((event.error == nil) && (event.result != nil))
 	{
@@ -117,7 +116,9 @@
 			}
 		}
 
-		canDeleteSyncRecord = YES;
+		// Action complete and can be removed
+		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
 	else if (event.error.isOCError)
 	{
@@ -217,16 +218,19 @@
 
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription invokeResultHandler:NO resultHandlerError:nil];
+			// Create issue for cancellation for any errors
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 		}
 	}
 	else if (event.error != nil)
 	{
 		// Reschedule for all other errors
 		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
+		resultInstruction = OCCoreSyncInstructionStop;
 	}
 
-	return (canDeleteSyncRecord);
+	return (resultInstruction);
 }
 
 #pragma mark - NSCoding

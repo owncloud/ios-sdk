@@ -1,5 +1,5 @@
 //
-//  OCBlockingReasonPendingRequest.h
+//  OCWaitConditionPendingRequest.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 20.12.18.
@@ -16,17 +16,17 @@
  *
  */
 
-#import "OCBlockingReason.h"
+#import "OCWaitCondition.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCBlockingReasonPendingRequest : OCBlockingReason
+@interface OCWaitConditionPendingRequest : OCWaitCondition
 
 // TODO: Implement blocking reason to check if a request was lost. Find way to distinguish this from finished requests. Could use X-Request-IDs and a cache of completed RequestIDs. Or some novel state tracking SQLite table in a re-engineered OCConnectionQueue.
 
 @end
 
-extern OCBlockingReasonOption OCBlockingReasonOptionResponseReceived; //!< BOOL: response has been received
-extern OCBlockingReasonOption OCBlockingReasonOptionRequestID; //!< X-Request-ID of the pending request
+extern OCWaitConditionOption OCWaitConditionOptionResponseReceived; //!< BOOL: response has been received
+extern OCWaitConditionOption OCWaitConditionOptionRequestID; //!< X-Request-ID of the pending request
 
 NS_ASSUME_NONNULL_END

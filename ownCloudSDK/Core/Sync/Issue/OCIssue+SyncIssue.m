@@ -24,7 +24,6 @@
 {
 	OCIssue *issue;
 	NSMutableArray <OCIssueChoice *> *choices = [NSMutableArray new];
-	__weak OCCore *weakCore = core;
 
 	for (OCSyncIssueChoice *syncChoice in syncIssue.choices)
 	{
@@ -41,7 +40,7 @@
 	issue = [OCIssue issueForMultipleChoicesWithLocalizedTitle:syncIssue.localizedTitle localizedDescription:syncIssue.localizedDescription choices:choices completionHandler:^(OCIssue *issue, OCIssueDecision decision) {
 		OCSyncIssueChoice *syncChoice = (OCSyncIssueChoice *)issue.selectedChoice.userInfo;
 
-		[weakCore resolveSyncIssue:syncIssue withChoice:syncChoice completionHandler:nil];
+		resolutionResultHandler(syncChoice);
 	}];
 
 	return (issue);

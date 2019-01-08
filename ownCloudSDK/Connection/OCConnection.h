@@ -163,6 +163,17 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+#pragma mark - JOBS
+@interface OCConnection (Jobs)
+
+- (OCConnectionJobID)startNewJobWithRequest:(OCConnectionRequest *)request; //!< Starts a new job with the provided request
+- (void)addRequest:(OCConnectionRequest *)request toJob:(OCConnectionJobID)jobID; //!< Adds another request to the job
+- (void)completedRequest:(OCConnectionRequest *)request forJob:(OCConnectionJobID)jobID; //!< Marks a request as completed for the job
+
+- (BOOL)jobExists:(OCConnectionJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
+
+@end
+
 #pragma mark - SETUP
 @interface OCConnection (Setup)
 

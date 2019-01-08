@@ -1,5 +1,5 @@
 //
-//  OCBlockingReasonPendingUserInteraction.h
+//  OCWaitConditionPendingUserInteraction.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 20.12.18.
@@ -16,27 +16,27 @@
  *
  */
 
-#import "OCBlockingReason.h"
+#import "OCWaitCondition.h"
 #import "OCProcessSession.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /*
-	OCBlockingReasonPendingUserInteraction:
-	- resolves without error if its userInteractionIdentifier is not contained in the OCBlockingReasonOptionPendingUserInteractionIdentifiers list.
+	OCWaitConditionPendingUserInteraction:
+	- resolves without error if its userInteractionIdentifier is not contained in the OCWaitConditionOptionPendingUserInteractionIdentifiers list.
 	- resolves with an OCErrorInvalidProcess error if processSession is no longer valid.
 	- does not resolve in all other cases.
 */
 
-@interface OCBlockingReasonPendingUserInteraction : OCBlockingReason
+@interface OCWaitConditionPendingUserInteraction : OCWaitCondition
 
-@property(strong) id<NSSecureCoding> userInteractionIdentifier;
+@property(strong) id<NSObject,NSSecureCoding> userInteractionIdentifier;
 @property(strong) OCProcessSession *processSession;
 
-+ (instancetype)blockingPendingUserInteractionWithIdentifier:(id<NSSecureCoding>)userInteractionIdentifier inProcessSession:(OCProcessSession *)processSession;
++ (instancetype)waitForUserInteractionWithIdentifier:(id<NSObject,NSSecureCoding>)userInteractionIdentifier inProcessSession:(OCProcessSession *)processSession;
 
 @end
 
-extern OCBlockingReasonOption OCBlockingReasonOptionPendingUserInteractionIdentifiers; //!< Array of identifiers of pending user interactions.
+extern OCWaitConditionOption OCWaitConditionOptionPendingUserInteractionIdentifiers; //!< Array of identifiers of pending user interactions.
 
 NS_ASSUME_NONNULL_END

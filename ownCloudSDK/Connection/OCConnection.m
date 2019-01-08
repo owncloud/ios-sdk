@@ -1703,7 +1703,7 @@
 	{
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item.itemVersionIdentifier,	@"itemVersionIdentifier",
+			item.itemVersionIdentifier,	OCEventUserInfoKeyItemVersionIdentifier,
 			[NSValue valueWithCGSize:size],	@"maximumSize",
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
@@ -1750,7 +1750,7 @@
 			if (request.responseHTTPStatus.isSuccess)
 			{
 				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
-				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[@"itemVersionIdentifier"];
+				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
 				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
 
 				thumbnail.mimeType = request.response.allHeaderFields[@"Content-Type"];

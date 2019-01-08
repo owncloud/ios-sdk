@@ -20,6 +20,8 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCSyncAction.h"
 #import "OCSyncIssue.h"
+#import "OCProcessManager.h"
+#import "OCWaitConditionIssue.h"
 
 @implementation OCSyncRecord
 
@@ -31,12 +33,6 @@
 
 @synthesize state = _state;
 @synthesize inProgressSince = _inProgressSince;
-
-@synthesize blockedByBundleIdentifier = _blockedByBundleIdentifier;
-@synthesize blockedByPID = _blockedByPID;
-@dynamic blockedByDifferentCopyOfThisProcess;
-
-@synthesize allowsRescheduling = _allowsRescheduling;
 
 @synthesize resultHandler = _resultHandler;
 @synthesize progress = _progress;
@@ -61,32 +57,12 @@
 #pragma mark - Properties
 - (void)setState:(OCSyncRecordState)state
 {
+	if ((_state == OCSyncRecordStateProcessing) && (state != OCSyncRecordStateProcessing))
+	{
+		self.waitConditions = nil;
+	}
+
 	_state = state;
-
-	if (state == OCSyncRecordStateAwaitingUserInteraction)
-	{
-		self.blockedByBundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
-		self.blockedByPID = @(getpid());
-	}
-	else
-	{
-		self.blockedByBundleIdentifier = nil;
-		self.blockedByPID = nil;
-	}
-}
-
-- (BOOL)blockedByDifferentCopyOfThisProcess
-{
-	if (_state == OCSyncRecordStateAwaitingUserInteraction)
-	{
-		if (([self.blockedByBundleIdentifier isEqual:[[NSBundle mainBundle] bundleIdentifier]] &&
-		    (![self.blockedByPID isEqual:@(getpid())])))
-		{
-			return (YES);
-		}
-	}
-
-	return (NO);
 }
 
 #pragma mark - Serialization
@@ -120,20 +96,126 @@
 	}
 }
 
-#pragma mark - Issue handling
-- (OCSyncIssue *)issue
+#pragma mark - Adding / Removing wait conditions
+- (void)addWaitCondition:(OCWaitCondition *)waitCondition
 {
-	// Make sure the issue carries the ID of the sync record
-	_issue.syncRecordID = self.recordID;
+	@synchronized(self)
+	{
+		NSMutableArray *waitConditions = (_waitConditions != nil) ? [[NSMutableArray alloc] initWithArray:_waitConditions] : [NSMutableArray new];
 
-	return (_issue);
+		[waitConditions addObject:waitCondition];
+
+		self.waitConditions = waitConditions;
+	}
 }
 
-- (void)setIssue:(OCSyncIssue *)issue
+- (void)removeWaitCondition:(OCWaitCondition *)waitCondition
 {
-	// Make sure the issue carries the ID of the sync record
-	issue.syncRecordID = self.recordID;
-	_issue = issue;
+	@synchronized(self)
+	{
+		if (self.waitConditions != nil)
+		{
+			NSMutableArray *waitConditions = [[NSMutableArray alloc] initWithArray:_waitConditions];
+
+			[waitConditions removeObject:waitCondition];
+
+			if (waitConditions.count == 0)
+			{
+				waitConditions = nil;
+			}
+
+			self.waitConditions = waitConditions;
+		}
+	}
+}
+
+- (OCWaitCondition *)waitConditionForUUID:(NSUUID *)uuid
+{
+	@synchronized(self)
+	{
+		for (OCWaitCondition *waitCondition in _waitConditions)
+		{
+			if ([waitCondition.uuid isEqual:uuid])
+			{
+				return (waitCondition);
+			}
+		}
+	}
+
+	return (nil);
+}
+
+#pragma mark - Issues
+//- (void)addIssue:(OCSyncIssue *)syncIssue;
+//{
+//	// Make sure the issue carries the ID of the sync record
+//	syncIssue.syncRecordID = self.recordID;
+//
+//	[self addWaitCondition:[OCWaitConditionIssue waitForIssueResolution:syncIssue inState:self.state]];
+//}
+//
+//- (void)removeIssue:(OCSyncIssue *)syncIssue
+//{
+//	@synchronized(self)
+//	{
+//		if (self.waitConditions != nil)
+//		{
+//			NSMutableArray *waitConditions = [[NSMutableArray alloc] initWithArray:_waitConditions];
+//
+//			// Remove any existing wait condition waiting for the completion of this issue
+//			for (OCWaitCondition *waitCondition in self.waitConditions)
+//			{
+//				if ([waitCondition isKindOfClass:[OCWaitConditionIssue class]])
+//				{
+//					OCWaitConditionIssue *issueWaitCondition = (OCWaitConditionIssue *)waitCondition;
+//
+//					if ([issueWaitCondition.issue.uuid isEqual:syncIssue.uuid])
+//					{
+//						[waitConditions removeObjectIdenticalTo:waitCondition];
+//					}
+//				}
+//			}
+//
+//			self.waitConditions = waitConditions;
+//		}
+//	}
+//}
+
+#pragma mark - State
+- (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions
+{
+	if (_state != state)
+	{
+		switch (state)
+		{
+			case OCSyncRecordStateProcessing:
+				self.inProgressSince = [NSDate date];
+			break;
+
+			case OCSyncRecordStateCompleted:
+				// Indicate "done" to progress object
+				self.progress.totalUnitCount = 1;
+				self.progress.completedUnitCount = 1;
+			break;
+
+			default:
+			break;
+		}
+	}
+
+	self.state = state;
+	self.waitConditions = waitConditions;
+}
+
+- (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter
+{
+	OCLogDebug(@"Sync record %@ completed with error=%@ item=%@ parameter=%@, resultHandler=%d", OCLogPrivate(self), OCLogPrivate(error), OCLogPrivate(item), OCLogPrivate(parameter), (_resultHandler!=nil));
+
+	if (_resultHandler != nil)
+	{
+		_resultHandler(error, core, item, parameter);
+		_resultHandler = nil;
+	}
 }
 
 #pragma mark - Secure Coding
@@ -155,9 +237,8 @@
 
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
-		_blockedByBundleIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"blockedByBundleIdentifier"];
-		_blockedByPID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"blockedByPID"];
-		_allowsRescheduling = [decoder decodeBoolForKey:@"allowsRescheduling"];
+
+		_waitConditions = [decoder decodeObjectOfClass:[NSArray class] forKey:@"waitConditions"];
 	}
 	
 	return (self);
@@ -174,9 +255,8 @@
 
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
-	[coder encodeObject:_blockedByBundleIdentifier forKey:@"blockedByBundleIdentifier"];
-	[coder encodeObject:_blockedByPID forKey:@"blockedByPID"];
-	[coder encodeBool:_allowsRescheduling forKey:@"allowsRescheduling"];
+
+	[coder encodeObject:_waitConditions forKey:@"waitConditions"];
 }
 
 #pragma mark - Progress setup
@@ -195,9 +275,13 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, allowsRescheduling: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _allowsRescheduling, _action]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _action]);
 }
 
+- (NSString *)privacyMaskedDescription
+{
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, OCLogPrivate(_action)]);
+}
 
 @end
 

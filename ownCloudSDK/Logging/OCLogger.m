@@ -430,7 +430,13 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			
 			return ([NSError errorWithDomain:error.domain code:error.code userInfo:nil]);
 		}
-	
+
+		// Condense other types
+		if ([object conformsToProtocol:@protocol(OCLogPrivacyMasking)])
+		{
+			return ([(id <OCLogPrivacyMasking>)object privacyMaskedDescription]);
+		}
+
 		// Return «private» for all other objects that should be privacy masked
 		return (@"«private»");
 	}

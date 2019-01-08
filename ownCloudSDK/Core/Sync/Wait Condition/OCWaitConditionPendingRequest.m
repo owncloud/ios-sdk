@@ -1,5 +1,5 @@
 //
-//  OCBlockingReasonPendingRequest.m
+//  OCWaitConditionPendingRequest.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 20.12.18.
@@ -16,8 +16,8 @@
  *
  */
 
-#import "OCBlockingReasonPendingRequest.h"
+#import "OCWaitConditionPendingRequest.h"
 
-@implementation OCBlockingReasonPendingRequest
+@implementation OCWaitConditionPendingRequest
 
 @end

@@ -82,7 +82,7 @@
 					stop = YES;
 				}
 			}
-		}while([self nextRow:&error] && !stop);
+		}while(!stop && [self nextRow:&error]);
 	}
 
 	if (outError != NULL)

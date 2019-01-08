@@ -225,9 +225,9 @@
 									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
 										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
 										@"scale" : @(scale),
-										@"itemVersionIdentifier" : item.itemVersionIdentifier,
+										OCEventUserInfoKeyItemVersionIdentifier : item.itemVersionIdentifier,
 										@"specID" : item.thumbnailSpecID,
-										@"item" : item,
+										OCEventUserInfoKeyItem : item,
 									} ephermalUserInfo:@{
 										@"requestID" : requestID
 									}];
@@ -279,8 +279,8 @@
 		OCItemThumbnail *thumbnail = event.result;
 		// CGSize requestedMaximumSize = ((NSValue *)event.userInfo[@"requestedMaximumSize"]).CGSizeValue;
 		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
-		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[@"itemVersionIdentifier"];
-		OCItem *item = event.userInfo[@"item"];
+		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
+		OCItem *item = event.userInfo[OCEventUserInfoKeyItem];
 		NSString *specID = event.userInfo[@"specID"];
 		NSString *requestID = event.ephermalUserInfo[@"requestID"];
 

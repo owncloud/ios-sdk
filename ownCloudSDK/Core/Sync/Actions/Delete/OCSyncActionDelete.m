@@ -63,7 +63,7 @@
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
 
@@ -74,87 +74,90 @@
 		if ((progress = [self.core.connection deleteItem:item requireMatch:self.requireMatch resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			[syncContext.syncRecord addProgress:progress];
+		}
 
-			return (YES);
+		// Transition to processing
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+		// Wait for result
+		return (OCCoreSyncInstructionStop);
+	}
+
+	// Remove record as its action is not sufficiently specified
+	return (OCCoreSyncInstructionDeleteLast);
+}
+
+- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
+{
+	NSError *resolutionError = nil;
+
+	if ((resolutionError = [super resolveIssue:issue withChoice:choice context:syncContext]) != nil)
+	{
+		if (![resolutionError isOCErrorWithCode:OCErrorFeatureNotImplemented])
+		{
+			return (resolutionError);
+		}
+
+		if ([choice.identifier isEqual:@"forceDelete"])
+		{
+			// Reschedule sync record with match requirement turned off
+			[self.core rescheduleSyncRecord:syncContext.syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
+				self.requireMatch = NO;
+
+				return (nil);
+			}];
+
+			resolutionError = nil;
 		}
 	}
 
-	return (NO);
+	return (resolutionError);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
-	BOOL canDeleteSyncRecord = NO;
+	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self.core, self.localItem, event.result);
-	}
+	[syncContext completeWithError:event.error core:self.core item:self.localItem parameter:event.result];
 
 	if ((event.error == nil) && (event.result != nil))
 	{
 		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 		syncContext.removedItems = @[ self.localItem ];
 
-		canDeleteSyncRecord = YES;
+		// Action complete and can be removed
+		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
 	else if (event.error.isOCError)
 	{
+		OCSyncIssue *issue = nil;
+		NSString *title=nil, *description=nil;
+
 		switch (event.error.code)
 		{
 			case OCErrorItemChanged:
 			{
 				// The item that was supposed to be deleted changed on the server => prompt user
-				OCIssue *issue;
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
-				syncRecord.allowsRescheduling = YES;
+				issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
+						// Drop sync record
+						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
 
-				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
-
-						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
-							// Drop sync record
-							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
-						}],
-
-						[OCIssueChoice choiceWithType:OCIssueChoiceTypeDestructive label:OCLocalizedString(@"Delete",@"") handler:^(OCIssue *issue, OCIssueChoice *choice) {
-							// Reschedule sync record with match requirement turned off
-							[self.core rescheduleSyncRecord:syncRecord withUpdates:^NSError *(OCSyncRecord *record) {
-								self.requireMatch = NO;
-
-								return (nil);
-							}];
-						}]
-
-					] completionHandler:nil];
-
-				[syncContext addIssue:issue];
+						// Reschedule sync record with match requirement turned off
+						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"forceDelete" label:OCLocalizedString(@"Delete",@"") metaData:nil]
+					]];
 			}
 			break;
 
 			case OCErrorItemOperationForbidden:
-			{
 				// The item that was supposed to be deleted changed on the server => prompt user
-				OCIssue *issue;
-				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), self.localItem.path.lastPathComponent];
-				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), self.localItem.path.lastPathComponent];
-
-				issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
-
-						[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
-							// Drop sync record
-							[self.core descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
-						}],
-
-					] completionHandler:nil];
-
-				[syncContext addIssue:issue];
-
-				canDeleteSyncRecord = YES;
-			}
+				title = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be deleted",nil), self.localItem.path.lastPathComponent];
+				description = [NSString stringWithFormat:OCLocalizedString(@"Please check if you have sufficient permissions to delete %@.",nil), self.localItem.path.lastPathComponent];
 			break;
 
 			case OCErrorItemNotFound:
@@ -171,41 +174,47 @@
 				}
 
 				// => inform the user
-				{
-					OCIssue *issue;
-
-					NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), self.localItem.path.lastPathComponent];
-					NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), self.localItem.path.lastPathComponent];
-
-					issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
-							[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:nil],
-						] completionHandler:nil];
-
-					[syncContext addIssue:issue];
-				}
-
-				canDeleteSyncRecord = YES;
+				title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), self.localItem.path.lastPathComponent];
+				description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), self.localItem.path.lastPathComponent];
 			break;
 
 			default:
+				// Create issue for cancellation for any other errors
+				title = [NSString stringWithFormat:OCLocalizedString(@"Error deleting %@", nil), self.localItem.name];
+				description = event.error.localizedDescription;
 			break;
+		}
+
+		if ((issue==nil) && (title!=nil))
+		{
+			issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
+					// Drop sync record
+					[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+				]];
+		}
+
+		if (issue != nil)
+		{
+			[syncContext addSyncIssue:issue];
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 		}
 	}
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 
 		// Reschedule for all other errors
 		/*
-			// TODO: Return issue for unknown errors (other than instead of blindly rescheduling
+			// TODO: Return issue for unknown errors (other than instead of blindly rescheduling)
 
 			https://demo.owncloud.org/remote.php/dav/files/demo/Photos/: didCompleteWithError=Error Domain=NSURLErrorDomain Code=-1009 "The Internet connection appears to be offline." UserInfo={NSUnderlyingError=0x1c4653470 {Error Domain=kCFErrorDomainCFNetwork Code=-1009 "(null)" UserInfo={_kCFStreamErrorCodeKey=50, _kCFStreamErrorDomainKey=1}}, NSErrorFailingURLStringKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, NSErrorFailingURLKey=https://demo.owncloud.org/remote.php/dav/files/demo/Photos/, _kCFStreamErrorDomainKey=1, _kCFStreamErrorCodeKey=50, NSLocalizedDescription=The Internet connection appears to be offline.} [OCConnectionQueue.m:506|FULL]
 		*/
-		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
+		// [self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 	}
 
-	return (canDeleteSyncRecord);
+	return (resultInstruction);
 }
 
 #pragma mark - NSCoding

@@ -93,7 +93,7 @@
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCPath remoteFileName;
 	OCItem *parentItem, *uploadItem;
@@ -167,20 +167,24 @@
 								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 			{
 				[syncContext.syncRecord addProgress:progress];
-
-				return (YES);
 			}
+
+			// Transition to processing
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+			// Wait for result
+			return (OCCoreSyncInstructionStop);
 		}
 	}
 
-	return (NO);
+	// Remove record as its action is not sufficiently specified
+	return (OCCoreSyncInstructionDeleteLast);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
-	OCSyncRecord *syncRecord = syncContext.syncRecord;
-	BOOL canDeleteSyncRecord = NO;
+	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 
 	if ((event.error == nil) && (event.result != nil))
 	{
@@ -296,22 +300,22 @@
 			OCLogWarning(@"Upload completion failed retrieving placeholder item");
 		}
 
-		canDeleteSyncRecord = YES;
+		// Action complete and can be removed
+		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
 
-	if (syncRecord.resultHandler != nil)
-	{
-		// Call resultHandler (and give file provider a chance to attach an uploadingError
-		syncRecord.resultHandler(event.error, self.core, (OCItem *)event.result, self.localItem);
-	}
+	// Call resultHandler (and give file provider a chance to attach an uploadingError
+	[syncContext completeWithError:event.error core:self.core item:(OCItem *)event.result parameter:self.localItem];
 
 	if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 
-	return (canDeleteSyncRecord);
+	return (resultInstruction);
 }
 
 #pragma mark - NSCoding

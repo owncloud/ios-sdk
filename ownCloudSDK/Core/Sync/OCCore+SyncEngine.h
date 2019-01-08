@@ -18,11 +18,11 @@
 
 #import "OCCore.h"
 #import "OCSyncRecord.h"
+#import "OCSyncIssueChoice.h"
 
 @class OCSyncContext;
-@class OCSyncIssueChoice;
 
-typedef void(^OCCoreSyncIssueResolutionResultHandler)(BOOL resolved);
+typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
 
 @interface OCCore (SyncEngine)
 
@@ -35,7 +35,7 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(BOOL resolved);
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError *(^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))completionHandler;
 
 #pragma mark - Sync Issue handling
-- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler;
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler;
 
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler;
@@ -47,21 +47,27 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(BOOL resolved);
 
 - (void)submitSyncRecord:(OCSyncRecord *)record;
 - (void)rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates;
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError;
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter;
 
 @end
 
 @interface OCCore (SyncPrivate)
 
 #pragma mark - Sync issues utilities
-- (OCIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError;
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact;
 - (BOOL)_isConnectivityError:(NSError *)error;
 
 #pragma mark - Sync enqueue utilities
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action allowsRescheduling:(BOOL)allowsRescheduling resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo;
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord;
 
+#pragma mark - Sync record scheduling
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter;
+- (NSError *)_rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates;
+
 @end
+
+extern OCEventUserInfoKey OCEventUserInfoKeySyncRecordID;

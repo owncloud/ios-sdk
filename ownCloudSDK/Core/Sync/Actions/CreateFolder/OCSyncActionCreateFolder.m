@@ -70,7 +70,7 @@
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	OCPath folderName;
 	OCItem *parentItem;
@@ -83,19 +83,23 @@
 		if ((progress = [self.core.connection createFolder:folderName inside:parentItem options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			[syncContext.syncRecord addProgress:progress];
-
-			return (YES);
 		}
+
+		// Transition to processing
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+		// Wait for result
+		return (OCCoreSyncInstructionStop);
 	}
 
-	return (NO);
+	// Remove record as its action is not sufficiently specified
+	return (OCCoreSyncInstructionDeleteLast);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
-	OCSyncRecord *syncRecord = syncContext.syncRecord;
-	BOOL canDeleteSyncRecord = NO;
+	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	OCItem *newItem = nil;
 
 	if ((event.error == nil) && ((newItem = event.result) != nil))
@@ -113,20 +117,20 @@
 
 		syncContext.addedItems = @[ newItem ];
 
-		canDeleteSyncRecord = YES;
+		// Action complete and can be removed
+		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self.core, newItem, nil);
-	}
+	[syncContext completeWithError:event.error core:self.core item:newItem parameter:nil];
 
-	return (canDeleteSyncRecord);
+	return (resultInstruction);
 }
 
 #pragma mark - NSCoding

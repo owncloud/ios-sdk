@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncAction.h"
+#import "OCWaitCondition.h"
 #import <objc/runtime.h>
 
 @implementation OCSyncAction
@@ -60,60 +61,131 @@
 }
 
 #pragma mark - Scheduling and result handling
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
-	return (YES);
+	[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+	return (OCCoreSyncInstructionStop);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
-	return (YES);
+	return (OCCoreSyncInstructionDeleteLast);
+}
+
+- (OCCoreSyncInstruction)handleEventWithContext:(OCSyncContext *)syncContext
+{
+	OCEvent *event;
+
+	if ((event = syncContext.event) != nil)
+	{
+		NSUUID *waitConditionUUID;
+		OCWaitCondition *waitCondition;
+		BOOL handled = NO;
+
+		// Check for wait condition
+		NSDictionary<OCWaitConditionOption,id> *options = @{
+			OCWaitConditionOptionCore : self,
+			OCWaitConditionOptionSyncRecord : syncContext.syncRecord,
+			OCWaitConditionOptionSyncContext : syncContext
+		};
+
+		if ((waitConditionUUID = event.userInfo[OCEventUserInfoKeyWaitConditionUUID]) == nil)
+		{
+			// If no specific wait condition was specified, see if a wait condition can handle the event
+			for (OCWaitCondition *waitCondition in syncContext.syncRecord.waitConditions)
+			{
+				// See if wait condition can handle event
+				handled = [waitCondition handleEvent:event withOptions:options sender:self];
+
+ 				if (handled) { break; }
+			}
+		}
+
+		// Handle event
+		if (!handled)
+		{
+			if (waitConditionUUID != nil)
+			{
+				// Pass to specific wait condition
+				if ((waitCondition = [syncContext.syncRecord waitConditionForUUID:waitConditionUUID]) != nil)
+				{
+					[waitCondition handleEvent:event withOptions:options sender:self];
+				}
+			}
+			else
+			{
+				// Pass to result handler
+				OCCoreSyncInstruction instruction;
+
+				instruction = [self handleResultWithContext:syncContext];
+
+				return (instruction);
+			}
+		}
+	}
+
+	return (OCCoreSyncInstructionNone);
+}
+
+#pragma mark - Cancellation handling
+- (OCCoreSyncInstruction)cancelWithContext:(OCSyncContext *)syncContext
+{
+	[self.core _descheduleSyncRecord:syncContext.syncRecord completeWithError:syncContext.error parameter:nil];
+
+	syncContext.error = nil;
+
+	return (OCCoreSyncInstructionProcessNext);
+}
+
+#pragma mark - Wait condition failure handling
+- (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext
+{
+	return (NO);
 }
 
 #pragma mark - Issue handling
-- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext
-{
-	[syncContext addSyncIssue:issue];
-}
+//- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext
+//{
+//	[syncContext addSyncIssue:issue];
+//}
+//
+//- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
+//{
+//	OCSyncIssue *syncIssue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:level title:title description:description metaData:metaData choices:choices];
+//
+//	[self throwIssue:syncIssue inContext:syncContext];
+//
+//	return (syncIssue);
+//}
+//
+//- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+//{
+//	return ([self throwIssueInContext:syncContext level:OCIssueLevelWarning title:title description:description metaData:metaData choices:choices]);
+//}
+//
+//- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
+//{
+//	return ([self throwIssueInContext:syncContext level:OCIssueLevelError title:title description:description metaData:metaData choices:choices]);
+//}
 
-- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
-{
-	OCSyncIssue *syncIssue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:level title:title description:description metaData:metaData choices:choices];
-
-	[self throwIssue:syncIssue inContext:syncContext];
-
-	return (syncIssue);
-}
-
-- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-{
-	return ([self throwIssueInContext:syncContext level:OCIssueLevelWarning title:title description:description metaData:metaData choices:choices]);
-}
-
-- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
-{
-	return ([self throwIssueInContext:syncContext level:OCIssueLevelError title:title description:description metaData:metaData choices:choices]);
-}
-
-- (BOOL)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
+- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
 {
 	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierRetry])
 	{
-		[syncContext resolvedSyncIssue:issue];
 		[_core rescheduleSyncRecord:syncContext.syncRecord withUpdates:nil];
 
-		return (YES);
+		return (nil);
 	}
 
 	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierCancel])
 	{
-		[syncContext resolvedSyncIssue:issue];
-		[_core descheduleSyncRecord:syncContext.syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
+		[_core descheduleSyncRecord:syncContext.syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
 
-		return (YES);
+		return (nil);
 	}
 
-	return (NO);
+	return (OCError(OCErrorFeatureNotImplemented));
 }
 
 #pragma mark - Properties
@@ -195,6 +267,11 @@
 - (NSString *)description
 {
 	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, self.localizedDescription]);
+}
+
+- (NSString *)privacyMaskedDescription
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, OCLogPrivate(self.localizedDescription)]);
 }
 
 @end

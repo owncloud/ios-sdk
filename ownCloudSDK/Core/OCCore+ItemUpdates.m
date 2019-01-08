@@ -29,17 +29,17 @@
 @implementation OCCore (ItemUpdates)
 
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
-			removedItems:(nullable NSArray<OCItem *> *)removedItems
-			updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-			refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
-		       newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
-		     preflightAction:(nullable void(^)(dispatch_block_t completionHandler))preflightAction
-		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
-		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
+		       removedItems:(nullable NSArray<OCItem *> *)removedItems
+		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
+		       refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
+		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
+		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
+		 queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
 {
 	// Discard empty updates
 	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshPaths.count == 0) &&
-	     (preflightAction == nil) && (postflightAction == nil) && (queryPostProcessor == nil))
+	     (beforeQueryUpdatesAction == nil) && (afterQueryUpdatesAction == nil) && (queryPostProcessor == nil))
 	{
 		return;
 	}
@@ -52,7 +52,7 @@
 	{
 		// Make sure updates are wrapped into -incrementSyncAnchorWithProtectedBlock
 		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor preflightAction:preflightAction postflightAction:postflightAction queryPostProcessor:queryPostProcessor];
+			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor];
 
 			return ((NSError *)nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
@@ -94,7 +94,7 @@
 	}
 
 	// Update metaData table and queries
-	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (preflightAction!=nil))
+	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (beforeQueryUpdatesAction!=nil))
 	{
 		__block NSError *databaseError = nil;
 
@@ -126,11 +126,11 @@
 			}
 
 			// Run preflight action
-			if (preflightAction != nil)
+			if (beforeQueryUpdatesAction != nil)
 			{
 				OCWaitWillStartTask(cacheUpdatesGroup);
 
-				preflightAction(^{
+				beforeQueryUpdatesAction(^{
 					OCWaitDidFinishTask(cacheUpdatesGroup);
 				});
 			}
@@ -162,7 +162,7 @@
 	}
 
 	// Update queries
-	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (postflightAction!=nil) || (queryPostProcessor!=nil))
+	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (afterQueryUpdatesAction!=nil) || (queryPostProcessor!=nil))
 	{
 		NSArray <OCItem *> *theRemovedItems = removedItems;
 
@@ -462,9 +462,9 @@
 			}
 
 			// Run postflight action
-			if (postflightAction != nil)
+			if (afterQueryUpdatesAction != nil)
 			{
-				postflightAction(^{
+				afterQueryUpdatesAction(^{
 					[self endActivity:@"Item Updates - update queries"];
 				});
 			}

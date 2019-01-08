@@ -55,7 +55,7 @@
 }
 
 #pragma mark - SELECT query builder
-+ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy limit:(NSString *)limit resultHandler:(OCSQLiteDBResultHandler)resultHandler
 {
 	OCSQLiteQuery *query = nil;
 	NSMutableArray *parameters=nil;
@@ -65,7 +65,7 @@
 	// Build WHERE-string
 	whereString = [self _buildWhereStringForMatchPairs:matchValues parameters:&parameters];
 
-	sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@%@", ((columnNames!=nil)?[columnNames componentsJoinedByString:@","]:@"*"), tableName, whereString, ((orderBy!=nil) ? [@" ORDER BY " stringByAppendingString:orderBy] : @"")];
+	sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@%@%@", ((columnNames!=nil)?[columnNames componentsJoinedByString:@","]:@"*"), tableName, whereString, ((orderBy!=nil) ? [@" ORDER BY " stringByAppendingString:orderBy] : @""), ((limit!=nil) ? [@" LIMIT " stringByAppendingString:limit] : @"")];
 
 	query = [self new];
 	query.sqlQuery = sqlQuery;
@@ -75,9 +75,14 @@
 	return (query);
 }
 
++ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler
+{
+	return ([self querySelectingColumns:columnNames fromTable:tableName where:matchValues orderBy:orderBy limit:nil resultHandler:resultHandler]);
+}
+
 + (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler
 {
-	return ([self querySelectingColumns:columnNames fromTable:tableName where:matchValues orderBy:nil resultHandler:resultHandler]);
+	return ([self querySelectingColumns:columnNames fromTable:tableName where:matchValues orderBy:nil limit:nil resultHandler:resultHandler]);
 }
 
 #pragma mark - INSERT query builder

@@ -95,11 +95,13 @@
 		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 		// Restore archived latest version
+		self.archivedItemVersion.databaseID = self.localItem.databaseID;
+
 		syncContext.updatedItems = @[ self.archivedItemVersion ];
 	}
 }
 
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
 	if ((self.localItem != nil) && (self.updateProperties != nil))
 	{
@@ -109,23 +111,22 @@
 		{
 			[syncContext.syncRecord addProgress:progress];
 
-			return (YES);
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
 		}
 	}
 
-	return (NO);
+	return (OCCoreSyncInstructionStop);
 }
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
 {
 	OCEvent *event = syncContext.event;
-	OCSyncRecord *syncRecord = syncContext.syncRecord;
-	__block BOOL canDeleteSyncRecord = NO;
+	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	OCConnectionPropertyUpdateResult propertyUpdateResult = nil;
 
 	if ((event.error == nil) && ((propertyUpdateResult = event.result) != nil))
 	{
-		canDeleteSyncRecord = YES;
+		__block BOOL allChangesSuccessful = YES;
 		syncContext.updatedItems = @[ self.localItem ];
 
 		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
@@ -134,35 +135,44 @@
 			if (!updateStatus.isSuccess)
 			{
 				// Property couldn't be updated successfully
-				[syncContext addIssue:[OCIssue issueForMultipleChoicesWithLocalizedTitle:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
-									 localizedDescription:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
-									 choices: @[
-									 	[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
-											// Drop sync record (also restores previous metadata)
-											[self.core descheduleSyncRecord:syncRecord invokeResultHandler:NO withParameter:nil resultHandlerError:nil];
-										}]
-									 ]
-									 completionHandler:nil
-							]
+				[syncContext addSyncIssue:[OCSyncIssue issueForSyncRecord:syncContext.syncRecord
+										    level:OCIssueLevelError
+										    title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
+									      description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
+										 metaData:nil
+										  choices:@[
+												// Drop sync record (also restores previous metadata)
+										  		[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+											   ]
+							  ]
 				];
 
 				// Prevent removal of sync record, so it's still around for descheduling
-				canDeleteSyncRecord = NO;
+				allChangesSuccessful = NO;
 			}
 		}];
+
+		if (allChangesSuccessful)
+		{
+			[syncContext completeWithError:event.error core:self.core item:self.localItem parameter:propertyUpdateResult];
+
+			// Action complete and can be removed
+			[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+			resultInstruction = OCCoreSyncInstructionDeleteLast;
+		}
+		else
+		{
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait conditions
+		}
 	}
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] invokeResultHandler:NO resultHandlerError:nil];
+		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 
-	if (syncRecord.resultHandler != nil)
-	{
-		syncRecord.resultHandler(event.error, self.core, self.localItem, propertyUpdateResult);
-	}
-
-	return (canDeleteSyncRecord);
+	return (resultInstruction);
 }
 
 #pragma mark - NSCoding

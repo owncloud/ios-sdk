@@ -59,6 +59,7 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumb
 	NSUInteger _savepointCounter;
 
 	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
+	NSHashTable<OCSQLiteStatement *> *_liveStatements;
 
 	sqlite3 *_db;
 }
@@ -72,6 +73,8 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumb
 @property(readonly,nonatomic) sqlite3 *sqlite3DB;
 
 @property(readonly,nonatomic) BOOL opened;
+
+@property(readonly,nonatomic) BOOL isOnSQLiteThread;
 
 #pragma mark - Init
 - (instancetype)initWithURL:(NSURL *)sqliteDatabaseFileURL;

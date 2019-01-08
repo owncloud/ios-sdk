@@ -18,10 +18,11 @@
 
 #import "OCSyncIssue.h"
 #import "OCSyncRecord.h"
+#import "OCWaitConditionIssue.h"
 
 @implementation OCSyncIssue
 
-+ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
++ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
 {
 	OCSyncIssue *issue = [self new];
 
@@ -45,6 +46,11 @@
 	}
 
 	return (self);
+}
+
+- (OCWaitConditionIssue *)makeWaitCondition
+{
+	return ([OCWaitConditionIssue waitForIssueResolution:self]);
 }
 
 #pragma mark - En-/Decoding
@@ -85,5 +91,7 @@
 	[coder encodeObject:_metaData forKey:@"metaData"];
 	[coder encodeObject:_choices forKey:@"choices"];
 }
+
+OCEventUserInfoKey OCEventUserInfoKeySyncIssue = @"syncIssue";
 
 @end

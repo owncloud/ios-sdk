@@ -42,8 +42,8 @@ typedef NS_ENUM(NSInteger,OCSyncIssueChoiceImpact)
 + (instancetype)choiceOfType:(OCIssueChoiceType)type impact:(OCSyncIssueChoiceImpact)impact identifier:(OCSyncIssueChoiceIdentifier)identifier label:(NSString *)label metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
 
 + (instancetype)okChoice;
-+ (instancetype)retryChoice;
-+ (instancetype)cancelChoiceWithImpact:(OCSyncIssueChoiceImpact)impact;
++ (instancetype)retryChoice; //!< The OCSyncAction default implementation reschedules the record.
++ (instancetype)cancelChoiceWithImpact:(OCSyncIssueChoiceImpact)impact; //!< The OCSyncAction default implementation deschedules the record.
 
 @end
 

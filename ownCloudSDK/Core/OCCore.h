@@ -152,6 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableDictionary <OCFileID, NSMutableArray<NSProgress *> *> *_progressByFileID;
 
+	NSMutableDictionary <OCSyncRecordID, NSMutableArray <OCEvent *> *> *_eventsBySyncRecordID;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 

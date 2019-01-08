@@ -30,6 +30,10 @@
 #import "OCCore+ItemList.h"
 #import "NSString+OCFormatting.h"
 #import "OCCore+ItemUpdates.h"
+#import "OCIssue+SyncIssue.h"
+#import "OCWaitCondition.h"
+#import "OCWaitConditionPendingUserInteraction.h"
+#import "OCProcessManager.h"
 
 @implementation OCCore (SyncEngine)
 
@@ -141,7 +145,7 @@
 }
 
 #pragma mark - Sync Record Scheduling
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action allowsRescheduling:(BOOL)allowsRescheduling resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
@@ -153,7 +157,6 @@
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
 
 		syncRecord.progress = progress;
-		syncRecord.allowsRescheduling = allowsRescheduling;
 
 		[self submitSyncRecord:syncRecord];
 	}
@@ -182,49 +185,44 @@
 
 			if ((syncAction = record.action) != nil)
 			{
-				syncAction.core = self;
+				OCSyncContext *syncContext;
 
-				if ([syncAction implements:@selector(preflightWithContext:)])
+				OCLogDebug(@"record %@ enters preflight", record);
+
+				if ((syncContext = [OCSyncContext preflightContextWithSyncRecord:record]) != nil)
 				{
-					OCSyncContext *syncContext;
+					// Run pre-flight
+					blockError = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+						if ([syncAction implements:@selector(preflightWithContext:)])
+						{
+							[action preflightWithContext:syncContext];
+						}
 
-					OCLogDebug(@"record %@ enters preflight", record);
+						if (syncContext.error == nil)
+						{
+							// Pre-flight successful, so this can progress to ready
+							[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
+						}
 
-					if ((syncContext = [OCSyncContext preflightContextWithSyncRecord:record]) != nil)
-					{
-						// Run pre-flight
-						[syncAction preflightWithContext:syncContext];
+						return (syncContext.error);
+					}];
 
-						OCLogDebug(@"record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
-
-						// Perform any preflight-triggered updates
-						[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:^(dispatch_block_t completionHandler){
-							if (syncContext.removeRecords != nil)
-							{
-								[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
-							}
-
-							if (syncContext.updateStoredSyncRecordAfterItemUpdates)
-							{
-								[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
-							}
-
-							completionHandler();
-						} postflightAction:nil queryPostProcessor:nil];
-
-						// Tunnel error outside
-						blockError = syncContext.error;
-					}
+					OCLogDebug(@"record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 				}
+			}
+			else
+			{
+				// Records needs to contain an action
+				blockError = OCError(OCErrorInsufficientParameters);
 			}
 		}
 
 		return (blockError);
 	} completionHandler:^(NSError *error) {
+		OCLogDebug(@"record %@ completed preflight with error=%@", record, error);
+
 		if (error != nil)
 		{
-			OCLogDebug(@"record %@ returned from preflight with error=%@ - removing record", record, error);
-
 			// Error during pre-flight
 			if (record.recordID != nil)
 			{
@@ -232,12 +230,8 @@
 				[self.vault.database removeSyncRecords:@[ record ] completionHandler:nil];
 			}
 
-			if (record.resultHandler != nil)
-			{
-				// Call result handler
-				record.resultHandler(error, self, record.action.localItem, record);
-				record.resultHandler = nil;
-			}
+			// Call result handler
+			[record completeWithError:error core:self item:record.action.localItem parameter:record];
 		}
 
 		[self setNeedsToProcessSyncRecords];
@@ -257,12 +251,13 @@
 
 	if (error == nil)
 	{
-		syncRecord.inProgressSince = nil;
-		syncRecord.state = OCSyncRecordStatePending;
+		[syncRecord transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
 
 		[self.vault.database updateSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *updateError) {
 			error = updateError;
 		}];
+
+		[self setNeedsToProcessSyncRecords];
 	}
 
 	return (error);
@@ -282,14 +277,14 @@
 	}];
 }
 
-- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
 {
 	__block NSError *error = nil;
 	OCSyncAction *syncAction;
 
 	if (syncRecord==nil) { return(OCError(OCErrorInsufficientParameters)); }
 
-	OCLogDebug(@"descheduling record %@ (invokeResultHandler=%d, error=%@)", syncRecord, invokeResultHandler, resultHandlerError);
+	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
 
 	[self.vault.database removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
 		error = removeError;
@@ -313,30 +308,26 @@
 				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 				// Perform any descheduler-triggered updates
-				[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
+				[self performSyncContextActions:syncContext];
 
 				error = syncContext.error;
 			}
 		}
 	}
 
-	if (invokeResultHandler)
-	{
-		if (syncRecord.resultHandler != nil)
-		{
-			syncRecord.resultHandler(resultHandlerError, self, syncRecord.action.localItem, parameter);
-		}
-	}
+	[syncRecord completeWithError:completionError core:self item:syncRecord.action.localItem parameter:parameter];
+
+	[self setNeedsToProcessSyncRecords];
 
 	return (error);
 }
 
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord invokeResultHandler:(BOOL)invokeResultHandler withParameter:(id)parameter resultHandlerError:(NSError *)resultHandlerError
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
 {
 	if (syncRecord==nil) { return; }
 
 	[self performProtectedSyncBlock:^NSError *{
-		return ([self _descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:parameter resultHandlerError:resultHandlerError]);
+		return ([self _descheduleSyncRecord:syncRecord completeWithError:completionError parameter:parameter]);
 	} completionHandler:^(NSError *error) {
 		if (error != nil)
 		{
@@ -345,7 +336,7 @@
 	}];
 }
 
-#pragma mark - Sync Engine Processing
+#pragma mark - Sync Engine Processing Optimization
 - (void)setNeedsToProcessSyncRecords
 {
 	OCLogDebug(@"setNeedsToProcessSyncRecords");
@@ -355,15 +346,13 @@
 		_needsToProcessSyncRecords = YES;
 	}
 
-	[self _processSyncRecordsIfNeeded];
+	[self processSyncRecordsIfNeeded];
 }
 
-- (void)_processSyncRecordsIfNeeded
+- (void)processSyncRecordsIfNeeded
 {
 	[self queueBlock:^{
-		BOOL needsToProcessSyncRecords;
-
-		OCLogDebug(@"_processSyncRecordsIfNeeded");
+		BOOL needsToProcessSyncRecords = NO;
 
 		if (self.connectionStatus == OCCoreConnectionStatusOnline)
 		{
@@ -373,144 +362,105 @@
 				self->_needsToProcessSyncRecords = NO;
 			}
 
+			OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
+
 			if (needsToProcessSyncRecords)
 			{
-				[self _processSyncRecords];
+				[self processSyncRecords];
 			}
+		}
+		else
+		{
+			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
 		}
 	}];
 }
 
-- (void)_processSyncRecords
+#pragma mark - Sync Engine Processing
+- (void)processSyncRecords
 {
 	[self beginActivity:@"process sync records"];
 
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *error = nil;
-		__block BOOL couldSchedule = NO;
-		__block OCSyncRecord *scheduleSyncRecord = nil;
+		__block BOOL stopProcessing = NO;
+		__block OCSyncRecordID lastSyncRecordID = nil;
 
 		OCLogDebug(@"processing sync records");
 
-		[self.vault.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *dbError, NSArray<OCSyncRecord *> *syncRecords) {
-			NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
+		while (!stopProcessing)
+		{
+			// Fetch next sync record
+			[self.database retrieveSyncRecordAfterID:lastSyncRecordID completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncRecord *syncRecord) {
+				OCCoreSyncInstruction nextInstruction;
 
-			if (dbError != nil)
-			{
-				error = dbError;
-				return;
-			}
-
-			for (OCSyncRecord *syncRecord in syncRecords)
-			{
-				NSError *scheduleError = nil;
-
-				OCLogDebug(@"record %@ enters processing", syncRecord);
-
-				// Remove cancelled sync records
-				if (syncRecord.progress.cancelled)
+				if (syncRecord == nil)
 				{
-					OCLogDebug(@"record %@ has been cancelled - removing", syncRecord);
-
-					// Deschedule & call resultHandler
-					[self _descheduleSyncRecord:syncRecord invokeResultHandler:YES withParameter:nil resultHandlerError:OCError(OCErrorCancelled)];
-					continue;
+					// There's no next sync record => we're done
+					stopProcessing = YES;
+					return;
 				}
 
-				// Handle sync records that are already in processing
-				if (syncRecord.inProgressSince != nil)
+				if (dbError != nil)
 				{
-					if (syncRecord.blockedByDifferentCopyOfThisProcess && syncRecord.allowsRescheduling)
-					{
-						OCLogDebug(@"record %@ in progress since %@ detected as hung - rescheduling", syncRecord, syncRecord.inProgressSince);
-
-						// Unblock (and process hereafter) record hung in waiting for a user interaction in another copy of the same app (i.e. happens if this app crashed or was terminated)
-						[self _rescheduleSyncRecord:syncRecord withUpdates:nil];
-					}
-					else
-					{
-						// Wait until that sync record has finished processing
-						OCLogDebug(@"record %@ in progress since %@ - waiting for its completion", syncRecord, syncRecord.inProgressSince);
-						break;
-					}
+					error = dbError;
+					stopProcessing = YES;
+					return;
 				}
 
-				// Skip sync records without an ID
-				if (syncRecord.recordID == nil)
+				// Process sync record
+				nextInstruction = [self processSyncRecord:syncRecord error:&error];
+
+				// Perform sync record result instruction
+				switch (nextInstruction)
 				{
-					OCLogWarning(@"skipping sync record without recordID: %@", OCLogPrivate(syncRecord));
-					continue;
+					case OCCoreSyncInstructionNone:
+						// Invalid instruction here
+						OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
+
+						stopProcessing = YES;
+
+						return;
+					break;
+
+					case OCCoreSyncInstructionStop:
+						// Stop processing
+						stopProcessing = YES;
+						return;
+					break;
+
+					case OCCoreSyncInstructionRepeatLast:
+						// Repeat processing of record
+						return;
+					break;
+
+					case OCCoreSyncInstructionDeleteLast:
+						// Delete record
+						[db removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+							if (dbError != nil)
+							{
+								error = dbError;
+								stopProcessing = YES;
+							}
+						}];
+
+						// Process next
+						lastSyncRecordID = syncRecord.recordID;
+					break;
+
+					case OCCoreSyncInstructionProcessNext:
+						// Process next
+						lastSyncRecordID = syncRecord.recordID;
+					break;
 				}
 
-				// Schedule actions
+				// Log error
+				if (error != nil)
 				{
-					OCSyncAction *syncAction;
-
-					if ((syncAction = syncRecord.action) != nil)
-					{
-						syncAction.core = self;
-
-						// Schedule the record using the route for its sync action
-						OCSyncContext *syncContext = [OCSyncContext schedulerContextWithSyncRecord:syncRecord];
-
-						scheduleSyncRecord = syncRecord;
-
-						OCLogDebug(@"record %@ will be scheduled", OCLogPrivate(syncRecord));
-
-						couldSchedule = [syncAction scheduleWithContext:syncContext];
-
-						if (syncContext.issues.count != 0)
-						{
-							[issues addObjectsFromArray:syncContext.issues];
-						}
-
-						scheduleError = syncContext.error;
-
-						OCLogDebug(@"record %@ scheduled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(scheduleError));
-					}
-					else
-					{
-						// No route for scheduling this sync record => sync action not implementd
-						scheduleError = OCError(OCErrorFeatureNotImplemented);
-					}
+					OCLogError(@"Error processing sync records: %@", error);
 				}
-
-				OCLogDebug(@"record %@ couldSchedule=%d with error %@", OCLogPrivate(syncRecord), couldSchedule, OCLogPrivate(scheduleError));
-
-				// Update database if scheduling was successful
-				if (couldSchedule)
-				{
-					syncRecord.inProgressSince = [NSDate date];
-					syncRecord.state = OCSyncRecordStateScheduled;
-
-					OCLogDebug(@"record %@ updated in database", OCLogPrivate(syncRecord));
-
-					[db updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
-						error = dbError;
-					}];
-				}
-
-				if (scheduleError != nil)
-				{
-					OCLogError(@"error scheduling %@: %@", OCLogPrivate(syncRecord), scheduleError);
-					error = scheduleError;
-
-					if (!couldSchedule && (issues.count == 0))
-					{
-						// The sync record failed scheduling with an error, but provides no issue to dismiss it
-						// [_] create issue for sync scheduling error that allows dismissing the actionIdentifier
-						//     [issues addObject:[self _issueForCancellationAndDeschedulingSyncRecord:syncRecord title:[NSString stringWithFormat:OCLocalized(@"Sync actionIdentifier %@ failed"), syncRecord.actionIdentifier] description:error.localizedDescription]];
-						// [x] let Sync Engine retry the next time it is called, make sure all actions create issues if needed
-					}
-				}
-
-				// Don't schedule more than one record at a time, don't run later records ahead of time if the first unscheduled one failed scheduling
-				break;
-			}
-
-			// Handle issues
-			error = [self _handleIssues:issues forSyncRecord:scheduleSyncRecord syncStep:@"scheduling" priorActionSuccess:couldSchedule error:error];
-		}];
+			}];
+		};
 
 		return (error);
 	} completionHandler:^(NSError *error) {
@@ -518,272 +468,484 @@
 	}];
 }
 
-#pragma mark - Sync record operation
-- (void)performOnSyncRecordID:(OCSyncRecordID)syncRecordID operation:(NSError *(^)(NSError *error, OCSyncRecord *record))operation completionHandler:(void(^)(NSError *error))completionHandler
+- (BOOL)processWaitRecordsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
 {
-	[self beginActivity:@"perform sync record operation"];
+	__block BOOL canContinue = YES;
+	__block NSError *error = nil;
 
-	[self performProtectedSyncBlock:^NSError *{
-		__block NSError *error = nil;
-		__block OCSyncRecord *syncRecord = nil;
+	if (syncRecord.waitConditions.count > 0)
+	{
+		NSArray <OCWaitCondition *> *waitConditions;
 
-		// Fetch sync record
-		if (syncRecordID != nil)
+		if (((waitConditions = syncRecord.waitConditions) != nil) && (waitConditions.count > 0))
 		{
-			[self.vault.database retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *retrieveError, OCSyncRecord *retrievedSyncRecord) {
-				syncRecord = retrievedSyncRecord;
-				error = retrieveError;
+			// Evaluate waiting conditions
+			__block BOOL repeatEvaluation = NO;
+			__block BOOL updateSyncRecordInDB = NO;
+
+			do
+			{
+				canContinue = YES;
+
+				if (repeatEvaluation)
+				{
+					waitConditions = syncRecord.waitConditions;
+					repeatEvaluation = NO;
+				}
+
+				[waitConditions enumerateObjectsUsingBlock:^(OCWaitCondition * _Nonnull waitCondition, NSUInteger idx, BOOL * _Nonnull stop) {
+					NSDictionary<OCWaitConditionOption, id> *options;
+					__block OCWaitConditionState waitConditionState = OCWaitConditionStateWait;
+					__block NSError *waitConditionError = nil;
+
+					options = @{
+						OCWaitConditionOptionCore 				: self,
+						OCWaitConditionOptionSyncRecord 			: syncRecord
+					};
+
+					OCSyncExec(waitResolution, {
+						[waitCondition evaluateWithOptions:options completionHandler:^(OCWaitConditionState state, BOOL conditionUpdated, NSError * _Nullable error) {
+							waitConditionState = state;
+							waitConditionError = error;
+
+							OCSyncExecDone(waitResolution);
+						}];
+					});
+
+					switch (waitConditionState)
+					{
+						case OCWaitConditionStateWait:
+							// Continue to wait
+							// + continue evaluating the wait conditions (because any may have failed)
+
+							canContinue = NO;
+						break;
+
+						case OCWaitConditionStateProceed:
+							// The wait condition no longer blocks and can be removed
+							[syncRecord removeWaitCondition:waitCondition];
+							updateSyncRecordInDB = YES;
+						break;
+
+						case OCWaitConditionStateFail:
+							// Ask action to recover from wait condition failure
+							{
+								OCSyncContext *syncContext;
+								__block BOOL couldRecover = NO;
+
+								if ((syncContext = [OCSyncContext waitConditionRecoveryContextWith:syncRecord]) != nil)
+								{
+									error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+										if ((couldRecover = [action recoverFromWaitCondition:waitCondition failedWithError:waitConditionError context:syncContext]) == NO)
+										{
+											OCLogError(@"Recovery from waitCondition=%@ failed for syncRecord=%@", waitCondition, syncRecord);
+										}
+
+										return (waitConditionError);
+									}];
+								}
+								else
+								{
+									canContinue = NO;
+								}
+
+								// Wait condition failure => stop evaluation of the remaining ones
+								*stop = YES;
+								canContinue = NO;
+
+								// Wait condition failure => repeat evaluation if the sync action could recover from it
+								repeatEvaluation = couldRecover;
+
+								updateSyncRecordInDB = YES;
+							}
+						break;
+					}
+
+					OCLogDebug(@"evaluated wait condition %@ with state=%d, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
+				}];
+
+				if (updateSyncRecordInDB)
+				{
+					[self.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+						error = dbError;
+					}];
+				}
+			} while (repeatEvaluation);
+		}
+	}
+
+	return (canContinue);
+}
+
+- (OCCoreSyncInstruction)processSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
+{
+	__block NSError *error = nil;
+	__block OCCoreSyncInstruction doNext = OCCoreSyncInstructionProcessNext;
+
+	OCLogDebug(@"processing sync record %@", OCLogPrivate(syncRecord));
+
+	// Setup action
+	syncRecord.action.core = self;
+
+	// Process sync record cancellation
+	if (syncRecord.progress.cancelled)
+	{
+		OCSyncAction *syncAction;
+
+		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
+
+		if ((syncAction = syncRecord.action) != nil)
+		{
+			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
+
+			OCLogDebug(@"record %@ will be cancelled", OCLogPrivate(syncRecord));
+
+			syncContext.error = OCError(OCErrorCancelled); // consumed by -cancelWithContext:
+
+			error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+				doNext = [action cancelWithContext:syncContext];
+				return(nil);
 			}];
 
-			OCLogDebug(@"performing operation on record %@", OCLogPrivate(syncRecord));
-
-			if (error != nil)
-			{
-				OCLogWarning(@"could not fetch sync record for ID %@ because of error %@.", syncRecordID, error);
-			}
-			else if (syncRecord == nil)
-			{
-				OCLogWarning(@"could not fetch sync record for ID %@.", syncRecordID, error);
-				error = OCError(OCErrorSyncRecordNotFound);
-			}
+			OCLogDebug(@"record %@ cancelled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(syncContext.error));
 		}
-
-		// Perform operation on sync record
-		error = operation(error, syncRecord);
-
-		return (error);
-	} completionHandler:^(NSError *error) {
-		OCLogError(@"finished sync record operation with error=%@", error);
-
-		if (completionHandler != nil)
+		else
 		{
-			completionHandler(error);
+			// Deschedule & call resultHandler
+			[self _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
 		}
 
-		// Trigger handling of any remaining sync records
-		[self setNeedsToProcessSyncRecords];
+		return (doNext);
+	}
 
-		[self endActivity:@"perform sync record operation"];
-	}];
+	// Skip sync records without an ID (should never happen, actually)
+	if (syncRecord.recordID == nil)
+	{
+		OCLogWarning(@"skipping sync record without recordID: %@", OCLogPrivate(syncRecord));
+		return (OCCoreSyncInstructionProcessNext);
+	}
+
+	// Deliver pending events
+	NSMutableArray <OCEvent *> *queuedEvents = nil;
+
+	@synchronized(self)
+	{
+		if ((queuedEvents = _eventsBySyncRecordID[syncRecord.recordID]) != nil)
+		{
+			[_eventsBySyncRecordID removeObjectForKey:syncRecord.recordID];
+		}
+	}
+
+	if (queuedEvents != nil)
+	{
+		OCCoreSyncInstruction eventInstruction = OCCoreSyncInstructionNone;
+
+		for (OCEvent *event in queuedEvents)
+		{
+			// Process event
+			OCSyncContext *syncContext;
+
+			if ((syncContext = [OCSyncContext eventHandlingContextWith:syncRecord event:event]) != nil)
+			{
+				__block OCCoreSyncInstruction instruction = OCCoreSyncInstructionNone;
+				NSError *eventHandlingError = nil;
+
+				OCLogDebug(@"record %@ handling event %@", syncRecord, event);
+
+				eventHandlingError = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+					instruction = [action handleEventWithContext:syncContext];
+					return (syncContext.error);
+				}];
+
+				if (instruction != OCCoreSyncInstructionNone)
+				{
+					if (eventInstruction != OCCoreSyncInstructionNone)
+					{
+						OCLogDebug(@"event instruction %d overwritten with %d by later event=%@", eventInstruction, instruction, event);
+					}
+
+					eventInstruction = instruction;
+				}
+			}
+		}
+
+		if (eventInstruction != OCCoreSyncInstructionNone)
+		{
+			// Return here
+			return (eventInstruction);
+		}
+	}
+
+	// Process sync record's wait conditions
+	if (![self processWaitRecordsOfSyncRecord:syncRecord error:outError])
+	{
+		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
+
+		// Stop processing
+		return (OCCoreSyncInstructionStop);
+	}
+
+	// Process sync record
+	switch (syncRecord.state)
+	{
+		case OCSyncRecordStatePending:
+			// Sync record has not yet passed preflight => continue with next syncRecord
+			// (this, actually should never happen, as a sync record is either updated to OCSyncRecordStateReady if preflight succeeds -
+			//  or removed completely in the same transaction that it was added in if preflight fails)
+			OCLogWarning(@"Sync Engine encountered pending syncRecord=%@, which actually should never happen", syncRecord);
+
+			return (OCCoreSyncInstructionProcessNext);
+		break;
+
+		case OCSyncRecordStateReady: {
+			// Sync record is ready to be scheduled
+			OCSyncAction *syncAction;
+			__block OCCoreSyncInstruction scheduleInstruction = OCCoreSyncInstructionNone;
+			NSError *scheduleError = nil;
+
+			if ((syncAction = syncRecord.action) != nil)
+			{
+				// Schedule the record using the route for its sync action
+				OCSyncContext *syncContext = [OCSyncContext schedulerContextWithSyncRecord:syncRecord];
+
+//				NSArray <OCWaitCondition *> *previousWaitConditions = (syncRecord.waitConditions!=nil) ? [NSArray arrayWithArray:syncRecord.waitConditions] : nil;
+
+				OCLogDebug(@"record %@ will be scheduled", OCLogPrivate(syncRecord));
+
+				scheduleError = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+					scheduleInstruction = [syncAction scheduleWithContext:syncContext];
+
+					return (syncContext.error);
+				}];
+
+//				if ((syncRecord.state == OCSyncRecordStateProcessing) && 	// Sync Record transitioned from Ready to Processing
+//				    (scheduleInstruction == OCCoreSyncInstructionStop) &&	// Typically expected schedule instruction on successful scheduling
+//				    (syncRecord.waitConditions.count > 0))			// Sync Record contains wait conditions
+
+				if (syncRecord.waitConditions.count > 0)			// Sync Record contains wait conditions
+				{
+					// Make sure updates are saved and wait conditions are then processed at least once
+					[self setNeedsToProcessSyncRecords];
+				}
+
+				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%d, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
+			}
+			else
+			{
+				// No action for this sync record
+				scheduleError = OCError(OCErrorInsufficientParameters);
+				scheduleInstruction = OCCoreSyncInstructionProcessNext;
+
+				OCLogDebug(@"record %@ not scheduled due to error=%@", OCLogPrivate(syncRecord), OCLogPrivate(scheduleError));
+			}
+
+			if (scheduleError != nil)
+			{
+				OCLogError(@"error scheduling %@: %@", OCLogPrivate(syncRecord), scheduleError);
+				error = scheduleError;
+			}
+
+			doNext = scheduleInstruction;
+		}
+		break;
+
+		case OCSyncRecordStateProcessing:
+			// Handle sync records that are already in processing
+
+			// Wait until that sync record has finished processing
+			OCLogDebug(@"record %@ in progress since %@: waiting for completion", OCLogPrivate(syncRecord), syncRecord.inProgressSince);
+
+			// Stop processing
+			doNext = OCCoreSyncInstructionStop;
+		break;
+
+		case OCSyncRecordStateCompleted:
+			// Sync record has completed => continue with next syncRecord
+			OCLogWarning(@"record %@ has completed and will be removed: %@", syncRecord);
+
+			doNext = OCCoreSyncInstructionDeleteLast;
+		break;
+
+		case OCSyncRecordStateFailed:
+			// Sync record has failed => continue with next syncRecord
+			doNext = OCCoreSyncInstructionProcessNext;
+		break;
+	}
+
+	// Return error
+	if (error != nil)
+	{
+		*outError = error;
+	}
+
+	return (doNext);
 }
+
+- (NSError *)processWithContext:(OCSyncContext *)context block:(NSError *(^)(OCSyncAction *action))block
+{
+	// Sync record is ready to be scheduled
+	OCSyncAction *syncAction;
+	NSError *error = nil;
+
+	if ((syncAction = context.syncRecord.action) != nil)
+	{
+		syncAction.core = self;
+
+		error = block(syncAction);
+
+		[self handleSyncRecord:context.syncRecord error:context.error];
+		[self performSyncContextActions:context];
+	}
+	else
+	{
+		// No action for this sync record
+		error = OCError(OCErrorInsufficientParameters);
+	}
+
+	return (error);
+}
+
+#pragma mark - Sync context handling
+- (void)performSyncContextActions:(OCSyncContext *)syncContext
+{
+	OCCoreItemUpdateAction beforeQueryUpdateAction = nil;
+
+	if ((syncContext.removeRecords != nil) || (syncContext.updateStoredSyncRecordAfterItemUpdates))
+	{
+		beforeQueryUpdateAction = ^(dispatch_block_t completionHandler){
+			if (syncContext.removeRecords != nil)
+			{
+				[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+			}
+
+			if (syncContext.updateStoredSyncRecordAfterItemUpdates)
+			{
+				[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
+			}
+
+			completionHandler();
+		};
+	}
+
+	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil];
+}
+
+
+#pragma mark - Sync record operation
+//- (void)performOnSyncRecordID:(OCSyncRecordID)syncRecordID operation:(NSError *(^)(NSError *error, OCSyncRecord *record))operation completionHandler:(void(^)(NSError *error))completionHandler
+//{
+//	[self beginActivity:@"perform sync record operation"];
+//
+//	[self performProtectedSyncBlock:^NSError *{
+//		__block NSError *error = nil;
+//		__block OCSyncRecord *syncRecord = nil;
+//
+//		// Fetch sync record
+//		if (syncRecordID != nil)
+//		{
+//			[self.vault.database retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *retrieveError, OCSyncRecord *retrievedSyncRecord) {
+//				syncRecord = retrievedSyncRecord;
+//				error = retrieveError;
+//			}];
+//
+//			OCLogDebug(@"performing operation on record %@", OCLogPrivate(syncRecord));
+//
+//			if (error != nil)
+//			{
+//				OCLogWarning(@"could not fetch sync record for ID %@ because of error %@.", syncRecordID, error);
+//			}
+//			else if (syncRecord == nil)
+//			{
+//				OCLogWarning(@"could not fetch sync record for ID %@.", syncRecordID, error);
+//				error = OCError(OCErrorSyncRecordNotFound);
+//			}
+//		}
+//
+//		// Perform operation on sync record
+//		error = operation(error, syncRecord);
+//
+//		return (error);
+//	} completionHandler:^(NSError *error) {
+//		OCLogError(@"finished sync record operation with error=%@", error);
+//
+//		if (completionHandler != nil)
+//		{
+//			completionHandler(error);
+//		}
+//
+//		// Trigger handling of any remaining sync records
+//		[self setNeedsToProcessSyncRecords];
+//
+//		[self endActivity:@"perform sync record operation"];
+//	}];
+//}
 
 #pragma mark - Sync event handling
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
 {
 	OCSyncRecordID recordID;
 
-	if ((recordID = event.userInfo[@"syncRecordID"]) != nil)
+	if ((recordID = event.userInfo[OCEventUserInfoKeySyncRecordID]) != nil)
 	{
-		[self beginActivity:@"handle sync event"];
+		@synchronized(self)
+		{
+			NSMutableArray <OCEvent *> *eventsForRecord;
 
-		[self performOnSyncRecordID:event.userInfo[@"syncRecordID"] operation:^NSError *(NSError *error, OCSyncRecord *syncRecord) {
-			// Skip on errors
-			if (error != nil) { return(error); }
-
-			// Handle event for sync record
-			if ((syncRecord != nil) && (syncRecord.action != nil))
+			if ((eventsForRecord = _eventsBySyncRecordID[recordID]) == nil)
 			{
-				__block NSError *error = nil;
-				__block OCSyncRecord *syncRecord = nil;
-				BOOL syncRecordActionCompleted = NO;
-				NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
-				OCSyncAction *syncAction = nil;
-				OCSyncContext *syncContext = nil;
-
-				// Dispatch to result handlers
-				if ((syncAction = syncRecord.action) != nil)
-				{
-					syncAction.core = self;
-
-					syncContext = [OCSyncContext resultHandlerContextWith:syncRecord event:event issues:issues];
-
-					OCLogDebug(@"record %@ enters event handling %@", OCLogPrivate(syncRecord), OCLogPrivate(event));
-
-					syncRecordActionCompleted = [syncAction handleResultWithContext:syncContext];
-
-					error = syncContext.error;
-				}
-
-				OCLogDebug(@"record %@ passed event handling: syncAction=%@, syncRecordActionCompleted=%d, error=%@", OCLogPrivate(syncRecord), syncAction, syncRecordActionCompleted, error);
-
-				// Handle result handler return values
-				if (syncRecordActionCompleted)
-				{
-					// Sync record action completed
-					if (error != nil)
-					{
-						OCLogWarning(@"record %@ will be removed despite error: %@", syncRecord, error);
-					}
-
-					// - Indicate "done" to progress object
-					syncRecord.progress.totalUnitCount = 1;
-					syncRecord.progress.completedUnitCount = 1;
-
-					// - Remove sync record from database
-					[self.vault.database removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *deleteError) {
-						error = deleteError;
-					}];
-
-					// - Perform updates for added/changed/removed items and refresh paths
-					[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil preflightAction:nil postflightAction:nil queryPostProcessor:nil];
-
-					OCLogDebug(@"record %@ returned from event handling post-processing with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.error);
-				}
-
-				// Handle issues
-				error = [self _handleIssues:issues forSyncRecord:syncRecord syncStep:@"event handling" priorActionSuccess:syncRecordActionCompleted error:error];
-			}
-			else
-			{
-				OCLogWarning(@"Unhandled sync event %@ from %@", OCLogPrivate(event), sender);
+				eventsForRecord = [NSMutableArray new];
+				_eventsBySyncRecordID[recordID] = eventsForRecord;
 			}
 
-			return (error);
-		} completionHandler:^(NSError *error) {
-			[self endActivity:@"handle sync event"];
-		}];
+			[eventsForRecord addObject:event];
+		}
+
+		[self setNeedsToProcessSyncRecords];
 	}
 	else
 	{
-		OCLogError(@"Can't handle event %@ due to missing recordID", event);
+		OCLogError(@"Can't handle event %@ from sender %@ due to missing recordID", event, sender);
 	}
 }
 
 #pragma mark - Sync issue handling
-- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
 {
-	OCSyncRecordID syncRecordID;
-
-	if ((syncRecordID = issue.syncRecordID) != nil)
+	if (userInfo == nil)
 	{
-		[self beginActivity:@"resolve sync issue"];
-
-		[self performOnSyncRecordID:syncRecordID operation:^NSError *(NSError *error, OCSyncRecord *syncRecord) {
-			// Skip on errors
-			if (error != nil) { return(error); }
-
-			// Resolve sync issue
-			if ((syncRecord != nil) && (syncRecord.action != nil))
-			{
-				OCSyncAction *syncAction = nil;
-				OCSyncContext *syncContext = nil;
-
-				// Tell action to resolve issue
-				if ((syncAction = syncRecord.action) != nil)
-				{
-					syncAction.core = self;
-
-					if ((syncContext = [OCSyncContext issueResolutionContextWith:syncRecord]) != nil)
-					{
-						[syncAction resolveIssue:issue withChoice:choice context:syncContext];
-					}
-				}
-			}
-
-			return (error);
-		} completionHandler:^(NSError *error) {
-			[self endActivity:@"resolve sync issue"];
-		}];
+		userInfo = @{ OCEventUserInfoKeySyncIssue : issue };
 	}
 	else
 	{
-		OCLogError(@"Can't resolve issue %@ with choice %@ due to missing recordID", issue, choice);
+		userInfo = [[NSMutableDictionary alloc] initWithDictionary:userInfo];
+		((NSMutableDictionary *)userInfo)[OCEventUserInfoKeySyncIssue] = issue;
 	}
+
+	[self handleEvent:[OCEvent eventWithType:OCEventTypeIssueResponse userInfo:userInfo ephermalUserInfo:nil result:choice] sender:self];
 }
 
 #pragma mark - Sync issues utilities
-- (OCIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact
 {
-	OCIssue *issue;
+	OCSyncIssue *issue;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 
-	issue = [self _issueForCancellationAndDeschedulingSyncRecord:syncRecord title:title description:description invokeResultHandler:invokeResultHandler resultHandlerError:resultHandlerError];
+	issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
+		[OCSyncIssueChoice cancelChoiceWithImpact:impact]
+	]];
 
-	[syncContext addIssue:issue];
-
-	return (issue);
-}
-
-- (OCIssue *)_issueForCancellationAndDeschedulingSyncRecord:(OCSyncRecord *)syncRecord title:(NSString *)title description:(NSString *)description invokeResultHandler:(BOOL)invokeResultHandler resultHandlerError:(NSError *)resultHandlerError
-{
-	OCIssue *issue;
-
-	issue =	[OCIssue issueForMultipleChoicesWithLocalizedTitle:title localizedDescription:description choices:@[
-
-			[OCIssueChoice choiceWithType:OCIssueChoiceTypeCancel label:nil handler:^(OCIssue *issue, OCIssueChoice *choice) {
-				// Drop sync record
-				[self descheduleSyncRecord:syncRecord invokeResultHandler:invokeResultHandler withParameter:nil resultHandlerError:(resultHandlerError != nil) ? resultHandlerError : (invokeResultHandler ? OCError(OCErrorCancelled) : nil)];
-			}],
-
-		] completionHandler:nil];
+	[syncContext addSyncIssue:issue];
 
 	return (issue);
 }
 
-- (NSError *)_handleIssues:(NSArray <OCIssue *> *)issues forSyncRecord:(OCSyncRecord *)syncRecord syncStep:(NSString *)syncStepName priorActionSuccess:(BOOL)actionSuccess error:(NSError *)startError
+- (NSError *)handleSyncRecord:(OCSyncRecord *)syncRecord error:(NSError *)error
 {
-	__block NSError *error = startError;
-
-	// Handle issues
-	if (issues.count > 0)
+	if (error != nil)
 	{
-		OCLogDebug(@"record %@, %@ reported issues: %@", OCLogPrivate(syncRecord), syncStepName, issues);
-
 		if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
 		{
-			// Mark the state as awaiting user interaction
-			syncRecord.state = OCSyncRecordStateAwaitingUserInteraction;
-
-			if (syncRecord.inProgressSince == nil)
-			{
-				// Mark sync record as in-progress (important when coming from scheduling and scheduling didn't succeed but created issues. Otherwise will loop forever.)
-				syncRecord.inProgressSince = [NSDate new];
-			}
-
-			[self.vault.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *updateError) {
-				if (updateError != nil)
-				{
-					error = updateError;
-				}
-			}];
-
-			if (actionSuccess)
-			{
-				OCLogWarning(@"record %@, %@ reported the issues despite success: %@", OCLogPrivate(syncRecord), syncStepName, issues);
-			}
-
-			// Relay issues
-			for (OCIssue *issue in issues)
-			{
-				[self.delegate core:self handleError:error issue:issue];
-			}
-		}
-		else
-		{
-			if (!actionSuccess)
-			{
-				OCLogDebug(@"record %@, %@ success=%d, allowsRescheduling=%d", OCLogPrivate(syncRecord), syncStepName, actionSuccess, syncRecord.allowsRescheduling);
-
-				// Delegate can't handle it, so check if we can reschedule it right away
-				if (syncRecord.allowsRescheduling)
-				{
-					// Reschedule
-					NSError *rescheduleError;
-
-					if ((rescheduleError = [self _rescheduleSyncRecord:syncRecord withUpdates:nil]) != nil)
-					{
-						error = rescheduleError;
-					}
-				}
-				else
-				{
-					// Cancel operation
-					for (OCIssue *issue in issues)
-					{
-						[issue cancel];
-					}
-				}
-			}
+			[self.delegate core:self handleError:error issue:nil];
 		}
 	}
 
@@ -810,7 +972,7 @@
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo
 {
-	NSDictionary *syncRecordUserInfo = @{ @"syncRecordID" : syncRecord.recordID };
+	NSDictionary *syncRecordUserInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecord.recordID };
 
 	if (userInfo != nil)
 	{
@@ -850,3 +1012,6 @@
 }
 
 @end
+
+OCEventUserInfoKey OCEventUserInfoKeySyncRecordID = @"syncRecordID";
+

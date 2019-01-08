@@ -21,22 +21,23 @@
 #import "OCItem.h"
 #import "OCTypes.h"
 #import "OCCore.h"
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCSyncIssue;
-@class OCBlockingReason;
+@class OCWaitCondition;
 
-typedef NS_ENUM(NSUInteger, OCSyncRecordState)
+typedef NS_ENUM(NSInteger, OCSyncRecordState)
 {
-	OCSyncRecordStatePending,   //!< Sync record pending processing by the sync engine
-	OCSyncRecordStateScheduled, //!< Sync record's action has been scheduled and awaits the result and processing
-//	OCSyncRecordStateProcessResult, //!< Sync record's action is processing the result
-	OCSyncRecordStateAwaitingUserInteraction, //!< Sync record's action waits for user interaction
-	OCSyncRecordStateBlocked    //!< Sync record execution is ongoing but blocked due to .blockingReason
+	OCSyncRecordStatePending,    //!< Sync record is new and has not yet passed preflight
+	OCSyncRecordStateReady,      //!< Sync record has passed preflight and is now ready to be processed
+	OCSyncRecordStateProcessing, //!< Sync record's action has been scheduled and is processing. Actions can optionally provide a OCWaitCondition to detect failures and allow recovery.
+	OCSyncRecordStateCompleted,  //!< Sync record's action has completed and the sync record can be removed
+	OCSyncRecordStateFailed	     //!< Sync record's action failed unrecoverably
 };
 
-@interface OCSyncRecord : NSObject <NSSecureCoding>
+@interface OCSyncRecord : NSObject <NSSecureCoding, OCLogPrivacyMasking>
 {
 	OCSyncRecordID _recordID;
 
@@ -47,14 +48,9 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 	OCSyncRecordState _state;
 	NSDate *_inProgressSince;
 
-	OCBlockingReason *_blockingReason;
+	NSArray <OCWaitCondition *> *_waitConditions;
 
-	NSString *_blockedByBundleIdentifier;
-	NSNumber *_blockedByPID;
-
-	BOOL _allowsRescheduling;
-
-	OCSyncIssue *_issue;
+	NSMutableArray <OCWaitCondition *> *_newWaitConditions;
 
 	OCCoreActionResultHandler _resultHandler;
 }
@@ -68,33 +64,39 @@ typedef NS_ENUM(NSUInteger, OCSyncRecordState)
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
 
 #pragma mark - Scheduling and processing tracking
-@property(assign,nonatomic) OCSyncRecordState state; //!< Current processing state
+@property(readonly,nonatomic) OCSyncRecordState state; //!< Current processing state
 
 @property(strong,nullable) NSDate *inProgressSince; //!< Time since which the action is being executed
 
-@property(strong,nullable) OCBlockingReason *blockingReason; //!< If state==OCSyncRecordStateBlocked, the reason for the blockade.
-
-@property(strong,nullable) NSString *blockedByBundleIdentifier; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the bundle identifier of the app responsible for it.
-@property(strong,nullable) NSNumber *blockedByPID; //!< If state==OCSyncRecordStateAwaitingUserInteraction, the PID of the app responsible for it.
-@property(readonly,nonatomic) BOOL blockedByDifferentCopyOfThisProcess; //!< If state==OCSyncRecordStateAwaitingUserInteraction, checks if blockedByBundleIdentifier and blockedByPID match the calling process.
-
-@property(assign) BOOL allowsRescheduling; //!< If YES, the record may be rescheduled if state==OCSyncRecordStateAwaitingUserInteraction.
-
-#pragma mark - Issue handling
-@property(strong,nullable,nonatomic) OCSyncIssue *issue; //!< Pending issue the user needs to react to
+@property(strong,nullable) NSArray <OCWaitCondition *> *waitConditions; //!< If state==OCSyncRecordStateProcessing, the conditions that need to be fulfilled before proceeding.
 
 #pragma mark - Result, cancel and progress handling
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 @property(strong,nonatomic,nullable) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
-#pragma - Instantiation
+#pragma mark - Instantiation
 - (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
 
-#pragma - Serialization / Deserialization
+#pragma mark - Serialization / Deserialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
 - (NSData *)serializedData;
 
-#pragma - Progress convenience method
+#pragma mark - Adding / Removing wait conditions
+- (void)addWaitCondition:(OCWaitCondition *)waitCondition;
+- (void)removeWaitCondition:(OCWaitCondition *)waitCondition;
+
+- (OCWaitCondition *)waitConditionForUUID:(NSUUID *)uuid;
+
+#pragma mark - Issues
+//- (void)addIssue:(OCSyncIssue *)syncIssue;
+//- (void)removeIssue:(OCSyncIssue *)syncIssue;
+
+#pragma mark - State
+- (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions; //!< Transitions the sync record to a particular state (can be identical with the current one) while replacing the waitConditions with the provided ones. You're responsible from updating the record in the database.
+
+- (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter; //!< Calls the resultHandler and subsequently drops it. You're responsible from updating the record in the database.
+
+#pragma mark - Progress convenience method
 - (void)addProgress:(NSProgress *)progress;
 
 @end

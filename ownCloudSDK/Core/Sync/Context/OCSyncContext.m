@@ -19,6 +19,15 @@
 #import "OCSyncContext.h"
 #import "OCLogger.h"
 #import "OCSyncRecord.h"
+#import "OCSyncIssue.h"
+#import "OCWaitConditionIssue.h"
+
+@interface OCSyncContext ()
+{
+	BOOL _canHandleErrors;
+}
+
+@end
 
 @implementation OCSyncContext
 
@@ -27,6 +36,7 @@
 	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
+	syncContext->_canHandleErrors = YES;
 
 	return (syncContext);
 }
@@ -49,18 +59,17 @@
 	return (syncContext);
 }
 
-+ (instancetype)resultHandlerContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event issues:(NSMutableArray <OCIssue *> *)issues
++ (instancetype)eventHandlingContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event
 {
 	OCSyncContext *syncContext = [OCSyncContext new];
 
 	syncContext.syncRecord = syncRecord;
 	syncContext.event = event;
-	syncContext.issues = issues;
 
 	return (syncContext);
 }
 
-+ (instancetype)issueResolutionContextWith:(OCSyncRecord *)syncRecord
++ (instancetype)waitConditionRecoveryContextWith:(OCSyncRecord *)syncRecord
 {
 	OCSyncContext *syncContext = [OCSyncContext new];
 
@@ -69,17 +78,16 @@
 	return (syncContext);
 }
 
-- (void)addIssue:(OCIssue *)issue
+- (void)addWaitCondition:(OCWaitCondition *)waitCondition
 {
-	if (issue == nil) { return; }
+	@synchronized(self)
+	{
+		if (_queuedWaitConditions == nil)
+		{
+			_queuedWaitConditions = [NSMutableArray new];
+		}
 
-	if (self.issues == nil)
-	{
-		self.issues = [[NSMutableArray alloc] initWithObjects:issue, nil];
-	}
-	else
-	{
-		[self.issues addObject:issue];
+		[_queuedWaitConditions addObject:waitCondition];
 	}
 }
 
@@ -87,19 +95,45 @@
 {
 	if (syncIssue == nil) { return; }
 
-	if (self.issue != nil)
-	{
-		OCLogWarning(@"!! Dropping issue %@ and replacing it with %@", self.issue, syncIssue);
-	}
-
-	self.issue = syncIssue;
-
-	self.syncRecord.issue = syncIssue;
+	[self addWaitCondition:[syncIssue makeWaitCondition]];
 }
 
-- (void)resolvedSyncIssue:(OCSyncIssue *)syncIssue
+#pragma mark - State
+- (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions
 {
-	self.syncRecord.issue = nil;
+	@synchronized(self)
+	{
+		if ((waitConditions != nil) && (_queuedWaitConditions != nil) && (_queuedWaitConditions != waitConditions))
+		{
+			[_queuedWaitConditions addObjectsFromArray:waitConditions];
+			waitConditions = _queuedWaitConditions;
+			_queuedWaitConditions = nil;
+		}
+		else if ((waitConditions == nil) && (_queuedWaitConditions.count > 0))
+		{
+			waitConditions = _queuedWaitConditions;
+			_queuedWaitConditions = nil;
+		}
+	}
+
+	[_syncRecord transitionToState:state withWaitConditions:waitConditions];
+	_updateStoredSyncRecordAfterItemUpdates = YES;
+}
+
+- (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter
+{
+	[_syncRecord completeWithError:error core:core item:item parameter:parameter];
+	_updateStoredSyncRecordAfterItemUpdates = YES;
+}
+
+- (void)setError:(NSError *)error
+{
+	_error = error;
+
+	if (!_canHandleErrors)
+	{
+		OCLogError(@"Error set to sync context that doesn't handle them: error=%@", error);
+	}
 }
 
 @end

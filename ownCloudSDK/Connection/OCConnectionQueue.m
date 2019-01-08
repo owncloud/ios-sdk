@@ -524,7 +524,8 @@
 		if (impFunction != NULL)
 		{
 			impFunction(_connection, request.resultHandlerAction, request, error);
-		}	}
+		}
+	}
 	else
 	{
 		if (request.ephermalResultHandler != nil)

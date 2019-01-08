@@ -20,8 +20,10 @@
 #import "OCIssue.h"
 #import "OCSyncIssueChoice.h"
 #import "OCTypes.h"
+#import "OCEvent.h"
 
 @class OCSyncRecord;
+@class OCWaitConditionIssue;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,8 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) NSArray <OCSyncIssueChoice *> *choices;
 
-+ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
++ (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+
+- (OCWaitConditionIssue *)makeWaitCondition; //!< Makes a wait condition wrapping the issue
 
 @end
+
+extern OCEventUserInfoKey OCEventUserInfoKeySyncIssue;
 
 NS_ASSUME_NONNULL_END

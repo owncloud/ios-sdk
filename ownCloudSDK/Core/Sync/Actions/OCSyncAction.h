@@ -23,12 +23,23 @@
 #import "OCTypes.h"
 #import "OCLogTag.h"
 #import "OCSyncIssue.h"
+#import "OCWaitCondition.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCSyncContext;
 
-@interface OCSyncAction : NSObject <NSSecureCoding, OCLogTagging>
+typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
+{
+	OCCoreSyncInstructionNone,		//!< No instruction (can be used to continue execution - or stop and perform an instruction)
+
+	OCCoreSyncInstructionStop,		//!< Stop processing
+	OCCoreSyncInstructionRepeatLast,	//!< Repeat last processing
+	OCCoreSyncInstructionDeleteLast,	//!< Delete last processed and process next
+	OCCoreSyncInstructionProcessNext	//!< Process next
+};
+
+@interface OCSyncAction : NSObject <NSSecureCoding, OCLogTagging, OCLogPrivacyMasking>
 {
 	OCItem *_archivedServerItem;
 	NSData *_archivedServerItemData;
@@ -62,18 +73,27 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)descheduleWithContext:(OCSyncContext *)syncContext;	//!< Performs cleanup at the time a sync record is being descheduled.
 
-#pragma mark - Scheduling and result handling
-- (BOOL)scheduleWithContext:(OCSyncContext *)syncContext;	//!< Schedules network request(s) for an action. Return YES if scheduling worked. Return NO and possibly an error in OCCoreSyncContext.error if not.
+#pragma mark - Scheduling
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext;	//!< Schedules network request(s) for an action. Return YES if scheduling worked. Return NO and possibly an error in OCCoreSyncContext.error if not.
 
-- (BOOL)handleResultWithContext:(OCSyncContext *)syncContext; //!< Handles the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCIssue(s) to OCCoreSyncContext.issues where appropriate.
+#pragma mark - Event handling
+- (OCCoreSyncInstruction)handleEventWithContext:(OCSyncContext *)syncContext; 	//!< Entry point for processing events. Routing to -handleResultWithContext: and the sync record's OCWaitConditions as needed.
+
+- (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext;	//!< Handles the result of an action (usually following receiving an OCEvent). Return YES if the action succeeded and the sync record has been made obsolete by it (=> can be removed). Return NO if the action has not yet completed or succeeded and add OCIssue(s) to OCCoreSyncContext.issues where appropriate.
+
+#pragma mark - Cancellation handling
+- (OCCoreSyncInstruction)cancelWithContext:(OCSyncContext *)syncContext; //!< Called when the action is cancelled. Deschedules the record by default.
+
+#pragma mark - Wait condition failure recovery
+- (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext; //!< Handles recovery from failed wait conditions. Returns YES if the Sync Engine should proceed processing (skipping removed/descheduled sync records, rerunning updated waitConditions and calling -scheduleWithContext: otherwise).
 
 #pragma mark - Issue handling
-- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext;
-- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+//- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext;
+//- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+//- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+//- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
-- (BOOL)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return YES if the issue has been resolved, NO if it hasn't.
+- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.
