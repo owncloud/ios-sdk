@@ -94,7 +94,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 				NSSet<OCLogTagName> *tagSet = (((pTags!=NULL) && (*pTags != nil)) ? [[NSSet alloc] initWithArray:*pTags] : nil);
 				BOOL allowMessage = YES;
 
-				if (omitTagsSet != nil)
+				if ((omitTagsSet != nil) && (tagSet != nil))
 				{
 					// Omit messages tagged with tags in omitTagsSet
 					if ([omitTagsSet intersectsSet:tagSet])

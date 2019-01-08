@@ -145,31 +145,7 @@
 }
 
 #pragma mark - Issue handling
-//- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext
-//{
-//	[syncContext addSyncIssue:issue];
-//}
-//
-//- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
-//{
-//	OCSyncIssue *syncIssue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:level title:title description:description metaData:metaData choices:choices];
-//
-//	[self throwIssue:syncIssue inContext:syncContext];
-//
-//	return (syncIssue);
-//}
-//
-//- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-//{
-//	return ([self throwIssueInContext:syncContext level:OCIssueLevelWarning title:title description:description metaData:metaData choices:choices]);
-//}
-//
-//- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
-//{
-//	return ([self throwIssueInContext:syncContext level:OCIssueLevelError title:title description:description metaData:metaData choices:choices]);
-//}
-
-- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
+- (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
 {
 	if ([choice.identifier isEqual:OCSyncIssueChoiceIdentifierRetry])
 	{

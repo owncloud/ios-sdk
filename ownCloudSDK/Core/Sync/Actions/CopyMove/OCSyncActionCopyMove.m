@@ -70,7 +70,10 @@
 			progress = [self.core.connection moveItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
 		}
 
-		[syncContext.syncRecord addProgress:progress];
+		if (progress != nil)
+		{
+			[syncContext.syncRecord addProgress:progress];
+		}
 
 		// Transition to processing
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];

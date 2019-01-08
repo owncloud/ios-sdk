@@ -81,15 +81,11 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
 - (NSData *)serializedData;
 
-#pragma mark - Adding / Removing wait conditions
+#pragma mark - Wait conditions
 - (void)addWaitCondition:(OCWaitCondition *)waitCondition;
 - (void)removeWaitCondition:(OCWaitCondition *)waitCondition;
 
-- (OCWaitCondition *)waitConditionForUUID:(NSUUID *)uuid;
-
-#pragma mark - Issues
-//- (void)addIssue:(OCSyncIssue *)syncIssue;
-//- (void)removeIssue:(OCSyncIssue *)syncIssue;
+- (nullable OCWaitCondition *)waitConditionForUUID:(NSUUID *)uuid;
 
 #pragma mark - State
 - (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions; //!< Transitions the sync record to a particular state (can be identical with the current one) while replacing the waitConditions with the provided ones. You're responsible from updating the record in the database.

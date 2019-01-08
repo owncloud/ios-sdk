@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)pingSession:(OCProcessSession *)session withTimeout:(NSTimeInterval)timeout completionHandler:(void(^)(BOOL responded, OCProcessSession *latestSession))completionHandler;
 
 #pragma mark - System boot time
-+ (NSNumber *)bootTimestamp;
++ (nullable NSNumber *)bootTimestamp;
 
 @end
 

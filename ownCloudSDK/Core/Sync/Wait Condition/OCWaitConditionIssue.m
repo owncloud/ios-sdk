@@ -57,8 +57,8 @@
 
 	if (promptUser)
 	{
-		OCCore *core = options[OCWaitConditionOptionCore];
-		OCSyncRecord *syncRecord = options[OCWaitConditionOptionSyncRecord];
+		OCCore *core = nil;
+		OCSyncRecord *syncRecord = nil;
 
 		if (((core = options[OCWaitConditionOptionCore]) != nil) &&
 		    ((syncRecord = options[OCWaitConditionOptionSyncRecord]) != nil)
@@ -162,11 +162,11 @@
 		    ((syncContext = options[OCWaitConditionOptionSyncContext]) != nil)
 		   )
 		{
-			BOOL issueResolved;
+			NSError *resolutionError = nil;
 
-			issueResolved = [syncRecord.action resolveIssue:_issue withChoice:syncIssueChoice context:syncContext];
+			resolutionError = [syncRecord.action resolveIssue:_issue withChoice:syncIssueChoice context:syncContext];
 
-			if (issueResolved)
+			if (resolutionError == nil)
 			{
 				[syncRecord removeWaitCondition:self];
 				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
@@ -174,7 +174,7 @@
 			else
 			{
 				// Issue resolution failed, mark sync record as failed
-				OCLogError(@"syncAction=%@ could not resolve issue=%@ with choice=%@. Marking as failed syncRecord=%@", syncRecord.action, syncIssue, syncIssueChoice, syncRecord);
+				OCLogError(@"syncAction=%@ could not resolve issue=%@ with choice=%@ due to error=%@. Marking as failed syncRecord=%@", syncRecord.action, syncIssue, syncIssueChoice, resolutionError, syncRecord);
 
 				[syncContext transitionToState:OCSyncRecordStateFailed withWaitConditions:nil];
 			}

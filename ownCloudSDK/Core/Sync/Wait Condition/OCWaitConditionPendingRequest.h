@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCWaitConditionPendingRequest : OCWaitCondition
 
-// TODO: Implement blocking reason to check if a request was lost. Find way to distinguish this from finished requests. Could use X-Request-IDs and a cache of completed RequestIDs. Or some novel state tracking SQLite table in a re-engineered OCConnectionQueue.
+// TODO: Implement wait condition to check if a request was lost. Find way to distinguish this from finished requests. Could use X-Request-IDs and a cache of completed RequestIDs. Or some novel state tracking SQLite table in a re-engineered OCConnectionQueue.
 
 @end
 

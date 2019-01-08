@@ -88,12 +88,7 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext; //!< Handles recovery from failed wait conditions. Returns YES if the Sync Engine should proceed processing (skipping removed/descheduled sync records, rerunning updated waitConditions and calling -scheduleWithContext: otherwise).
 
 #pragma mark - Issue handling
-//- (void)throwIssue:(OCSyncIssue *)issue inContext:(OCSyncContext *)syncContext;
-//- (OCSyncIssue *)throwIssueInContext:(OCSyncContext *)syncContext level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-//- (OCSyncIssue *)throwWarningIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-//- (OCSyncIssue *)throwErrorIssueInContext:(OCSyncContext *)syncContext title:(NSString *)title description:(nullable NSString *)description metaData:(NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
-
-- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
+- (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

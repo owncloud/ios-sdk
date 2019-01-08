@@ -32,7 +32,6 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCIssue+SyncIssue.h"
 #import "OCWaitCondition.h"
-#import "OCWaitConditionPendingUserInteraction.h"
 #import "OCProcessManager.h"
 
 @implementation OCCore (SyncEngine)
@@ -351,6 +350,8 @@
 
 - (void)processSyncRecordsIfNeeded
 {
+	[self beginActivity:@"process sync records if needed"];
+
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
 
@@ -373,6 +374,8 @@
 		{
 			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
 		}
+
+		[self endActivity:@"process sync records if needed"];
 	}];
 }
 
@@ -464,6 +467,12 @@
 
 		return (error);
 	} completionHandler:^(NSError *error) {
+		// Ensure outstanding events are delivered
+		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
+		{
+			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
+		}
+
 		[self endActivity:@"process sync records"];
 	}];
 }
@@ -657,6 +666,8 @@
 					return (syncContext.error);
 				}];
 
+				OCLogDebug(@"record %@ finished handling event %@ with error=%@", syncRecord, event, eventHandlingError);
+
 				if (instruction != OCCoreSyncInstructionNone)
 				{
 					if (eventInstruction != OCCoreSyncInstructionNone)
@@ -708,8 +719,6 @@
 				// Schedule the record using the route for its sync action
 				OCSyncContext *syncContext = [OCSyncContext schedulerContextWithSyncRecord:syncRecord];
 
-//				NSArray <OCWaitCondition *> *previousWaitConditions = (syncRecord.waitConditions!=nil) ? [NSArray arrayWithArray:syncRecord.waitConditions] : nil;
-
 				OCLogDebug(@"record %@ will be scheduled", OCLogPrivate(syncRecord));
 
 				scheduleError = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
@@ -718,11 +727,7 @@
 					return (syncContext.error);
 				}];
 
-//				if ((syncRecord.state == OCSyncRecordStateProcessing) && 	// Sync Record transitioned from Ready to Processing
-//				    (scheduleInstruction == OCCoreSyncInstructionStop) &&	// Typically expected schedule instruction on successful scheduling
-//				    (syncRecord.waitConditions.count > 0))			// Sync Record contains wait conditions
-
-				if (syncRecord.waitConditions.count > 0)			// Sync Record contains wait conditions
+				if (syncRecord.waitConditions.count > 0) // Sync Record contains wait conditions
 				{
 					// Make sure updates are saved and wait conditions are then processed at least once
 					[self setNeedsToProcessSyncRecords];
@@ -773,7 +778,7 @@
 	}
 
 	// Return error
-	if (error != nil)
+	if ((error != nil) && (outError != NULL))
 	{
 		*outError = error;
 	}
@@ -829,56 +834,6 @@
 
 	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil];
 }
-
-
-#pragma mark - Sync record operation
-//- (void)performOnSyncRecordID:(OCSyncRecordID)syncRecordID operation:(NSError *(^)(NSError *error, OCSyncRecord *record))operation completionHandler:(void(^)(NSError *error))completionHandler
-//{
-//	[self beginActivity:@"perform sync record operation"];
-//
-//	[self performProtectedSyncBlock:^NSError *{
-//		__block NSError *error = nil;
-//		__block OCSyncRecord *syncRecord = nil;
-//
-//		// Fetch sync record
-//		if (syncRecordID != nil)
-//		{
-//			[self.vault.database retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *retrieveError, OCSyncRecord *retrievedSyncRecord) {
-//				syncRecord = retrievedSyncRecord;
-//				error = retrieveError;
-//			}];
-//
-//			OCLogDebug(@"performing operation on record %@", OCLogPrivate(syncRecord));
-//
-//			if (error != nil)
-//			{
-//				OCLogWarning(@"could not fetch sync record for ID %@ because of error %@.", syncRecordID, error);
-//			}
-//			else if (syncRecord == nil)
-//			{
-//				OCLogWarning(@"could not fetch sync record for ID %@.", syncRecordID, error);
-//				error = OCError(OCErrorSyncRecordNotFound);
-//			}
-//		}
-//
-//		// Perform operation on sync record
-//		error = operation(error, syncRecord);
-//
-//		return (error);
-//	} completionHandler:^(NSError *error) {
-//		OCLogError(@"finished sync record operation with error=%@", error);
-//
-//		if (completionHandler != nil)
-//		{
-//			completionHandler(error);
-//		}
-//
-//		// Trigger handling of any remaining sync records
-//		[self setNeedsToProcessSyncRecords];
-//
-//		[self endActivity:@"perform sync record operation"];
-//	}];
-//}
 
 #pragma mark - Sync event handling
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender

@@ -145,42 +145,6 @@
 	return (nil);
 }
 
-#pragma mark - Issues
-//- (void)addIssue:(OCSyncIssue *)syncIssue;
-//{
-//	// Make sure the issue carries the ID of the sync record
-//	syncIssue.syncRecordID = self.recordID;
-//
-//	[self addWaitCondition:[OCWaitConditionIssue waitForIssueResolution:syncIssue inState:self.state]];
-//}
-//
-//- (void)removeIssue:(OCSyncIssue *)syncIssue
-//{
-//	@synchronized(self)
-//	{
-//		if (self.waitConditions != nil)
-//		{
-//			NSMutableArray *waitConditions = [[NSMutableArray alloc] initWithArray:_waitConditions];
-//
-//			// Remove any existing wait condition waiting for the completion of this issue
-//			for (OCWaitCondition *waitCondition in self.waitConditions)
-//			{
-//				if ([waitCondition isKindOfClass:[OCWaitConditionIssue class]])
-//				{
-//					OCWaitConditionIssue *issueWaitCondition = (OCWaitConditionIssue *)waitCondition;
-//
-//					if ([issueWaitCondition.issue.uuid isEqual:syncIssue.uuid])
-//					{
-//						[waitConditions removeObjectIdenticalTo:waitCondition];
-//					}
-//				}
-//			}
-//
-//			self.waitConditions = waitConditions;
-//		}
-//	}
-//}
-
 #pragma mark - State
 - (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions
 {

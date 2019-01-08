@@ -24,8 +24,6 @@
 @class OCSyncIssue;
 @class OCWaitCondition;
 
-typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *parameterSet);
-
 @interface OCSyncContext : NSObject
 
 // Shared properties (Scheduler + Result Handler)
@@ -47,8 +45,6 @@ typedef void(^OCCoreSyncContextCompletionHandler)(OCCore *core, OCSyncContext *p
 @property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries
 
 @property(assign) BOOL updateStoredSyncRecordAfterItemUpdates; //!< After processing newItems, removedItems, updatedItems (but not refreshPaths), send .syncRecord to the database for updating (NO by default)
-
-// @property(copy) OCCoreSyncContextCompletionHandler completionHandler; //!< Completion handler to be called after processing newItems, removedItems, updatedItems (but not refreshPaths - use a temporary OCQuery if you need the result of these)
 
 // Wait condition collection
 @property(strong) NSMutableArray <OCWaitCondition *> *queuedWaitConditions;
