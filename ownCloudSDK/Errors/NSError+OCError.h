@@ -61,6 +61,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permissions
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
+	OCErrorItemNotAvailableOffline, //!< This item is not available offline
 
 	OCErrorSyncRecordNotFound, //!< The referenced sync record could not be found.
 

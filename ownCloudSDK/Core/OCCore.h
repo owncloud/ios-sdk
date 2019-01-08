@@ -89,7 +89,7 @@ typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
-typedef NSString* OCCoreOption;
+typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 #pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
@@ -274,3 +274,4 @@ extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
 
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
+extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.

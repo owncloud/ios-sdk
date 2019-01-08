@@ -24,7 +24,7 @@
 @implementation OCSyncActionDownload
 
 #pragma mark - Initializer
-- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options
+- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
@@ -43,6 +43,7 @@
 - (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	OCItem *item;
+	BOOL returnImmediately = ((NSNumber *)self.options[OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable]).boolValue;
 
 	if ((item = self.localItem) != nil)
 	{
@@ -54,8 +55,17 @@
 
 			[syncContext completeWithError:nil core:self.core item:item parameter:[item fileWithCore:self.core]];
 		}
+		else if (returnImmediately && (self.core.connectionStatus != OCCoreConnectionStatusOnline))
+		{
+			// Item not available and asked to return immediately
+
+			syncContext.removeRecords = @[ syncContext.syncRecord ];
+
+			[syncContext completeWithError:OCError(OCErrorItemNotAvailableOffline) core:self.core item:item parameter:nil];
+		}
 		else
 		{
+			// Download item
 			[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
 			syncContext.updatedItems = @[ item ];

@@ -181,6 +181,10 @@
 				unlocalizedString = @"There already is an item at the destination of this action.";
 			break;
 
+			case OCErrorItemNotAvailableOffline:
+				unlocalizedString = @"Item not available offline.";
+			break;
+
 			case OCErrorCancelled:
 				unlocalizedString = @"The operation was cancelled.";
 			break;

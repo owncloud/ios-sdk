@@ -20,8 +20,8 @@
 
 @interface OCSyncActionDownload : OCSyncAction
 
-@property(strong) NSDictionary *options;
+@property(strong) NSDictionary<OCCoreOption,id> *options;
 
-- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary *)options;
+- (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options;
 
 @end
