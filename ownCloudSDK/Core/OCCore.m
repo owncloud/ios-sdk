@@ -342,9 +342,12 @@
 					}
 
 					// Relay error and issues to delegate
-					if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					if ((error != nil) || (issue != nil))
 					{
-						[self->_delegate core:self handleError:error issue:issue];
+						if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
+						{
+							[self->_delegate core:self handleError:error issue:issue];
+						}
 					}
 
 					dispatch_resume(self->_connectivityQueue);
