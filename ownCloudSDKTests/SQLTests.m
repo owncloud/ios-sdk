@@ -107,6 +107,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteTransactionsWithQueries
@@ -169,6 +175,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteTransactionsWithBlocks
@@ -236,6 +248,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 // TODO: Add tests for nested transactions
@@ -273,6 +291,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteQueryConstructionInsert
@@ -319,6 +343,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteQueryConstructionInsertAndUpdate
@@ -399,6 +429,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteQueryConstructionInsertAndDelete
@@ -473,6 +509,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteQueryConstructionInsertAndSelect
@@ -542,6 +584,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteTableUpgrade
@@ -593,6 +641,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 - (void)testSQLiteTableCreation
@@ -641,6 +695,12 @@
 	}
 
 	[self waitForExpectationsWithTimeout:5 handler:NULL];
+
+	OCSyncExec(waitSQL, {
+		[sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			OCSyncExecDone(waitSQL);
+		}];
+	});
 }
 
 @end

@@ -34,6 +34,7 @@
 + (instancetype)query:(NSString *)sqlQuery resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 
 #pragma mark - SELECT query builder
++ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy limit:(NSString *)limit resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 + (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 + (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 

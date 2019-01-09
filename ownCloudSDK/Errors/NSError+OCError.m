@@ -69,7 +69,7 @@
 				unlocalizedString = @"Authorization failed because data was missing from the secret data for the authentication method.";
 			break;
 
-			case OCErrroAuthorizationCancelled:
+			case OCErrorAuthorizationCancelled:
 				unlocalizedString = @"Authorization was cancelled by the user.";
 			break;
 
@@ -181,6 +181,10 @@
 				unlocalizedString = @"There already is an item at the destination of this action.";
 			break;
 
+			case OCErrorItemNotAvailableOffline:
+				unlocalizedString = @"Item not available offline.";
+			break;
+
 			case OCErrorCancelled:
 				unlocalizedString = @"The operation was cancelled.";
 			break;
@@ -191,6 +195,14 @@
 
 			case OCErrorRunningOperation:
 				unlocalizedString = @"A running operation prevents execution.";
+			break;
+
+			case OCErrorSyncRecordNotFound:
+				unlocalizedString = @"Sync record not found.";
+			break;
+
+			case OCErrorInvalidProcess:
+				unlocalizedString = @"Invalid process.";
 			break;
 		}
 	}
@@ -230,7 +242,7 @@
 	return ([self.domain isEqual:OCErrorDomain] && (self.code == errorCode));
 }
 
-- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue
+- (NSError *)errorByEmbeddingIssue:(OCIssue *)issue
 {
 	NSMutableDictionary *userInfo = nil;
 	
@@ -250,7 +262,7 @@
 	return ([NSError errorWithDomain:self.domain code:self.code userInfo:userInfo]);
 }
 
-- (OCConnectionIssue *)embeddedIssue
+- (OCIssue *)embeddedIssue
 {
 	return (self.userInfo[OCErrorIssueKey]);
 }

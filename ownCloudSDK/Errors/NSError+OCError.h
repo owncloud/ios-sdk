@@ -27,7 +27,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorAuthorizationRedirect, 		//!< Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL. The userInfo of the error contains the alternative server URL as value for the key OCAuthorizationMethodAlternativeServerURLKey
 	OCErrorAuthorizationNoMethodData, 	//!< Authorization failed because no secret data was set for the authentication method
 	OCErrorAuthorizationMissingData, 	//!< Authorization failed because data was missing from the secret data for the authentication method
-	OCErrroAuthorizationCancelled,		//!< Authorization was cancelled by the user
+	OCErrorAuthorizationCancelled,		//!< Authorization was cancelled by the user
 
 	OCErrorRequestURLSessionTaskConstructionFailed, //!< Construction of URL Session Task failed
 	OCErrorRequestCancelled, 			//!< Request was cancelled
@@ -61,6 +61,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemInsufficientPermissions, //!< The action couldn't be performed on the targeted item because the client lacks permissions
 	OCErrorItemOperationForbidden, //!< The operation on the targeted item is not allowed
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
+	OCErrorItemNotAvailableOffline, //!< This item is not available offline
+
+	OCErrorSyncRecordNotFound, //!< The referenced sync record could not be found.
 
 	OCErrorNewerVersionExists, //!< A newer version already exists
 
@@ -68,10 +71,12 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorOutdatedCache, //!< An operation failed due to outdated cache information
 
-	OCErrorRunningOperation //!< A running operation prevents execution
+	OCErrorRunningOperation, //!< A running operation prevents execution
+
+	OCErrorInvalidProcess //!< Invalid process.
 };
 
-@class OCConnectionIssue;
+@class OCIssue;
 
 @interface NSError (OCError)
 
@@ -86,8 +91,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 - (NSDictionary *)ocErrorInfoDictionary;
 
 #pragma mark - Embedding issues
-- (NSError *)errorByEmbeddingIssue:(OCConnectionIssue *)issue;
-- (OCConnectionIssue *)embeddedIssue;
+- (NSError *)errorByEmbeddingIssue:(OCIssue *)issue;
+- (OCIssue *)embeddedIssue;
 
 @end
 

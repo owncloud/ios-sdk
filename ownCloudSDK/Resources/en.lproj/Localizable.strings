@@ -193,6 +193,9 @@
 // OCErrorItemAlreadyExists
 "There already is an item at the destination of this action." = "There already is an item at the destination of this action.";
 
+// OCErrorItemNotAvailableOffline
+"Item not available offline." = "Item not available offline.";
+
 // OCErrorCancelled
 "The operation was cancelled." = "The operation was cancelled.";
 

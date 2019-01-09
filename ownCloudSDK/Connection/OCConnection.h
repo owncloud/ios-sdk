@@ -24,7 +24,7 @@
 #import "OCShare.h"
 #import "OCClassSettings.h"
 #import "OCCertificate.h"
-#import "OCConnectionIssue.h"
+#import "OCIssue.h"
 #import "OCChecksum.h"
 #import "OCLogTag.h"
 
@@ -45,11 +45,19 @@ typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
+typedef NSString* OCConnectionSignalID NS_TYPED_ENUM;
+
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
 	OCConnectionStateDisconnected,
 	OCConnectionStateConnecting,
 	OCConnectionStateConnected
+};
+
+typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
+{
+	OCConnectionRequestInstructionDeliver,		//!< Deliver the request as usual
+	OCConnectionRequestInstructionReschedule	//!< Stop processing of request and reschedule it
 };
 
 @protocol OCConnectionDelegate <NSObject>
@@ -60,6 +68,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 - (void)connectionChangedState:(OCConnection *)connection;
+
+- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest defaultsTo:(OCConnectionRequestInstruction)defaulInstruction;
 
 @end
 
@@ -95,6 +105,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 	NSDictionary<NSString *, id> *_serverStatus;
 
+	NSMutableSet<OCConnectionSignalID> *_signals;
+	NSSet<OCConnectionSignalID> *_actionSignals;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -112,6 +125,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
 @property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
 
+@property(strong,readonly,nonatomic) NSSet<OCConnectionQueue *> *allQueues; //!< A set of all queues used by the connection
+
+@property(strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
+
 @property(assign,nonatomic) OCConnectionState state;
 
 @property(weak) id <OCConnectionDelegate> delegate;
@@ -123,7 +140,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL;
 
 #pragma mark - Connect & Disconnect
-- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler;
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
@@ -161,13 +178,36 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)resumeBackgroundSessions;
 - (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
+#pragma mark - Rescheduling support
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest;
+
+@end
+
+#pragma mark - SIGNALS
+@interface OCConnection (Signals)
+- (void)setSignal:(OCConnectionSignalID)signal on:(BOOL)on;
+- (void)updateSignalsWith:(NSSet <OCConnectionSignalID> *)allSignals;
+
+- (BOOL)isSignalOn:(OCConnectionSignalID)signal;
+- (BOOL)meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals;
+@end
+
+#pragma mark - JOBS
+@interface OCConnection (Jobs)
+
+- (OCConnectionJobID)startNewJobWithRequest:(OCConnectionRequest *)request; //!< Starts a new job with the provided request
+- (void)addRequest:(OCConnectionRequest *)request toJob:(OCConnectionJobID)jobID; //!< Adds another request to the job
+- (void)completedRequest:(OCConnectionRequest *)request forJob:(OCConnectionJobID)jobID; //!< Marks a request as completed for the job
+
+- (BOOL)jobExists:(OCConnectionJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
+
 @end
 
 #pragma mark - SETUP
 @interface OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCConnectionIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
 
 @end
 

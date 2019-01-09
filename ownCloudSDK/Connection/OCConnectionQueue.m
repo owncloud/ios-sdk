@@ -188,6 +188,8 @@
 					}
 				}];
 			}
+
+			NSMutableSet <OCConnectionRequestGroupID> *pendingGroupIDs = nil;
 		
 			for (OCConnectionRequest *queuedRequest in queuedRequests)
 			{
@@ -200,6 +202,22 @@
 					{
 						// Make sure to only schedule this request if no other request from this group is running
 						scheduleRequest = ![_runningRequestsGroupIDs containsObject:queuedRequest.groupID];
+
+						// Make sure no other request in this group is still pending
+						scheduleRequest = scheduleRequest && ((pendingGroupIDs == nil) || ((pendingGroupIDs != nil) && ![pendingGroupIDs containsObject:queuedRequest.groupID]));
+					}
+
+					if (scheduleRequest && (queuedRequest.requiredSignals != nil))
+					{
+						// Make sure requests meet the required signals before scheduling them
+						scheduleRequest = [_connection meetsSignalRequirements:queuedRequest.requiredSignals];
+
+						// Mark group as pending when one is specified and the request should not yet be scheduled
+						if (!scheduleRequest && (queuedRequest.groupID!=nil))
+						{
+							if (pendingGroupIDs == nil) { pendingGroupIDs = [NSMutableSet new]; }
+							[pendingGroupIDs addObject:queuedRequest.groupID];
+						}
 					}
 					
 					if (scheduleRequest && !queuedRequest.skipAuthorization)
@@ -378,8 +396,11 @@
 	}
 
 	// Log request
-	NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
-	OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
+	if (OCLogger.logLevel <= OCLogLevelDebug)
+	{
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
+	}
 
 	if (error != nil)
 	{
@@ -446,6 +467,8 @@
 
 - (void)_handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error scheduleQueuedRequests:(BOOL)scheduleQueuedRequests
 {
+	BOOL reschedulingAllowed = scheduleQueuedRequests;
+
 	if (request==nil) { return; }
 
 	// Check if this request should have a responseCertificate ..
@@ -512,24 +535,39 @@
 	}
 
 	// Log response
-	NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
-	OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.headerFields[@"X-Request-ID"], ((error != nil) ? error : @"-"), request.responseDescription);
-
-	// Deliver Finished Request
-	if ((_connection!=nil) && (request.resultHandlerAction != NULL))
+	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		// Below is identical to [_connection performSelector:request.resultHandlerAction withObject:request withObject:error], but in an ARC-friendly manner.
-		void (*impFunction)(id, SEL, OCConnectionRequest *, NSError *) = (void *)[_connection methodForSelector:request.resultHandlerAction];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.headerFields[@"X-Request-ID"], ((error != nil) ? error : @"-"), request.responseDescription);
+	}
 
-		if (impFunction != NULL)
-		{
-			impFunction(_connection, request.resultHandlerAction, request, error);
-		}	}
-	else
+	// Determine request instruction
+	OCConnectionRequestInstruction requestInstruction = OCConnectionRequestInstructionDeliver;
+
+	if ((_connection!=nil) && reschedulingAllowed)
 	{
-		if (request.ephermalResultHandler != nil)
+		requestInstruction = [_connection instructionForFinishedRequest:request];
+	}
+
+	if (requestInstruction == OCConnectionRequestInstructionDeliver)
+	{
+		// Deliver Finished Request
+		if ((_connection!=nil) && (request.resultHandlerAction != NULL))
 		{
-			request.ephermalResultHandler(request, error);
+			// Below is identical to [_connection performSelector:request.resultHandlerAction withObject:request withObject:error], but in an ARC-friendly manner.
+			void (*impFunction)(id, SEL, OCConnectionRequest *, NSError *) = (void *)[_connection methodForSelector:request.resultHandlerAction];
+
+			if (impFunction != NULL)
+			{
+				impFunction(_connection, request.resultHandlerAction, request, error);
+			}
+		}
+		else
+		{
+			if (request.ephermalResultHandler != nil)
+			{
+				request.ephermalResultHandler(request, error);
+			}
 		}
 	}
 
@@ -549,6 +587,8 @@
 			{
 				OCLogDebug(@"Removing request %@ with taskIdentifier <%@>", OCLogPrivate(request.url), request.urlSessionTaskIdentifier);
 				[_runningRequestsByTaskIdentifier removeObjectForKey:request.urlSessionTaskIdentifier];
+
+				request.urlSessionTaskIdentifier = nil;
 			}
 		}
 	}
@@ -557,6 +597,21 @@
 	if (request.downloadRequest && request.downloadedFileIsTemporary && (request.downloadedFileURL!=nil))
 	{
 		[[NSFileManager defaultManager] removeItemAtURL:request.downloadedFileURL error:nil];
+		request.downloadedFileURL = nil;
+	}
+
+	// Reschedule request if instructed so
+	if ((requestInstruction == OCConnectionRequestInstructionReschedule) && reschedulingAllowed)
+	{
+		[request scrubForRescheduling];
+
+		if (scheduleQueuedRequests)
+		{
+			@synchronized(self)
+			{
+				[_queuedRequests insertObject:request atIndex:0];
+			}
+		}
 	}
 
 	// Continue with scheduling
@@ -815,7 +870,7 @@
 #pragma mark - Log tags
 + (nonnull NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CQ"]);
+	return (@[@"CONNQ"]);
 }
 
 - (nonnull NSArray<OCLogTagName> *)logTags
@@ -828,7 +883,22 @@
 		{
 			if (_cachedLogTags == nil)
 			{
-				_cachedLogTags = [NSArray arrayWithObjects:@"CQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+				_cachedLogTags = [NSArray arrayWithObjects:@"CONNQ", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+
+				if ((_connection.bookmark != nil) && !OCLogger.maskPrivateData)
+				{
+					NSString *hostTag, *userTag;
+
+					if ((hostTag = OCLogTagTypedID(@"Host", _connection.bookmark.url.host)) != nil)
+					{
+						_cachedLogTags = [_cachedLogTags arrayByAddingObject:hostTag];
+					}
+
+					if ((userTag = OCLogTagTypedID(@"User", _connection.bookmark.userName)) != nil)
+					{
+						_cachedLogTags = [_cachedLogTags arrayByAddingObject:userTag];
+					}
+				}
 			}
 		}
 	}

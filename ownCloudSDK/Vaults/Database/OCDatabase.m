@@ -726,6 +726,26 @@
 	}]];
 }
 
+- (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
+		@"recordID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:recordID apply:(recordID!=nil)]
+	} orderBy:@"recordID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block OCSyncRecord *syncRecord = nil;
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			syncRecord = [self _syncRecordFromRowDictionary:rowDictionary];
+			*stop = YES;
+		} error:&iterationError];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncRecord);
+		}
+	}]];
+}
+
 #pragma mark - Integrity / Synchronization primitives
 - (void)retrieveValueForCounter:(OCDatabaseCounterIdentifier)counterIdentifier completionHandler:(void(^)(NSError *error, NSNumber *counterValue))completionHandler
 {

@@ -68,7 +68,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
-- (void)_runPreparationTestsForURL:(NSURL *)url completionHandler:(void(^)(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)_runPreparationTestsForURL:(NSURL *)url completionHandler:(void(^)(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	XCTestExpectation *expectAnswer = [self expectationWithDescription:@"Received reply"];
 
@@ -78,7 +78,7 @@
 	
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
-	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		OCLog(@"Issues: %@", issue.issues);
 		OCLog(@"SuggestedURL: %@", suggestedURL);
 		OCLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
@@ -93,11 +93,11 @@
 
 - (void)testSetupPreparationSuccess
 {
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
 		[issue approve];
 		
@@ -109,11 +109,11 @@
 {
 	// "Typo" in URL
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://nosuch.owncloud/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://nosuch.owncloud/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==1), @"1 error");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==1), @"1 error");
 
-		XCTAssert([issue.issues lastObject].type==OCConnectionIssueTypeError, @"Is error issue");
+		XCTAssert([issue.issues lastObject].type==OCIssueTypeError, @"Is error issue");
 		XCTAssert(![[issue.issues lastObject].error isOCErrorWithCode:OCErrorServerDetectionFailed], @"Is not OCErrorServerDetectionFailed error");
 
 		[issue approve];
@@ -126,11 +126,11 @@
 {
 	// URL doesn't point to ownCloud instance
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://owncloud.com/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://owncloud.com/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==2, @"2 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==1), @"1 error");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==1), @"1 error");
 
-		XCTAssert([issue.issues lastObject].type==OCConnectionIssueTypeError, @"Is error issue");
+		XCTAssert([issue.issues lastObject].type==OCIssueTypeError, @"Is error issue");
 		XCTAssert([[issue.issues lastObject].error isOCErrorWithCode:OCErrorServerDetectionFailed], @"Is OCErrorServerDetectionFailed error");
 
 		[issue approve];
@@ -143,15 +143,15 @@
 {
 	// http://demo.owncloud.org/ => https://demo.owncloud.org/
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"http://demo.owncloud.org/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==2, @"2 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==0), @"0 errors");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==0), @"0 errors");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[1].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[1].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[1].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[1].level == OCIssueLevelInformal), @"Issue level is informal");
 		XCTAssert([issue.issues[1].originalURL isEqual:url], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org:443/"]], @"Redirect suggestedURL is correct");
 
@@ -168,18 +168,18 @@
 {
 	// https://goo.gl/dh6yW5 => https://demo.owncloud.org/
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://goo.gl/dh6yW5"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://goo.gl/dh6yW5"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==3, @"3 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==0), @"0 errors");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==0), @"0 errors");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[1].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[1].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[1].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[1].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[2].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[2].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[2].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[2].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[2].originalURL isEqual:url], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[2].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
 
@@ -195,23 +195,23 @@
 {
 	// http://bit.ly/2GTa2wD => https://goo.gl/dh6yW5 => https://demo.owncloud.org/
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==4, @"4 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==0), @"0 errors");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==0), @"0 errors");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[1].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[1].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[1].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[1].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[1].originalURL isEqual:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"]], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect suggestedURL is correct");
 
-		XCTAssert((issue.issues[2].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[2].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[2].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[2].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[3].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[3].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[3].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[3].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[3].originalURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[3].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
 
@@ -227,31 +227,31 @@
 {
 	// https://t.co/JTo2XnbS5G => http://bit.ly/2GTa2wD => https://goo.gl/dh6yW5 => https://demo.owncloud.org/
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==6, @"6 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==0), @"0 errors");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==0), @"0 errors");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[1].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[1].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[1].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[1].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[1].originalURL isEqual:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"]], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"]], @"Redirect suggestedURL is correct");
 
-		XCTAssert((issue.issues[2].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[2].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[2].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[2].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[3].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[3].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[3].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[3].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[3].originalURL isEqual:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"]], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[3].suggestedURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect suggestedURL is correct");
 
-		XCTAssert((issue.issues[4].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[4].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[4].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[4].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[5].type == OCConnectionIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[5].level == OCConnectionIssueLevelWarning), @"Issue level is warning");
+		XCTAssert((issue.issues[5].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[5].level == OCIssueLevelWarning), @"Issue level is warning");
 		XCTAssert([issue.issues[5].originalURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect originalURL is correct");
 		XCTAssert([issue.issues[5].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
 
@@ -267,16 +267,16 @@
 {
 	// demo.owncloud.org is hosted on betty.owncloud.com
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://betty.owncloud.com/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://betty.owncloud.com/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==2, @"2 issues");
-		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count==1), @"1 error");
+		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==1), @"1 error");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[1].type == OCConnectionIssueTypeError), @"Detection failed");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[1].type == OCIssueTypeError), @"Detection failed");
 	}];
 }
 
-- (void)_testConnectWithUserEnteredURLString:(NSString *)userEnteredURLString useAuthMethod:(OCAuthenticationMethodIdentifier)useAuthMethod preConnectAction:(void(^)(OCConnection *connection))preConnectAction connectAction:(void(^)(NSError *error, OCConnectionIssue *issue, OCConnection *connection))connectionAction
+- (void)_testConnectWithUserEnteredURLString:(NSString *)userEnteredURLString useAuthMethod:(OCAuthenticationMethodIdentifier)useAuthMethod preConnectAction:(void(^)(OCConnection *connection))preConnectAction connectAction:(void(^)(NSError *error, OCIssue *issue, OCConnection *connection))connectionAction
 {
 	// NSString *userEnteredURLString = @"https://admin:admin@demo.owncloud.org"; // URL string retrieved from a text field, as entered by the user.
 	// UIViewController *topViewController; // View controller to use as parent for presenting view controllers needed for authentication
@@ -290,11 +290,11 @@
 	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 	{
 		// Prepare for setup
-		[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
 		 {
 			 // Check for warnings and errors
-			 NSArray <OCConnectionIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError];
-			 NSArray <OCConnectionIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelWarning];
+			 NSArray <OCIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError];
+			 NSArray <OCIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelWarning];
 			 BOOL proceedWithAuthentication = YES;
 			 
 			 if (errorIssues.count > 0)
@@ -358,7 +358,7 @@
 
 											// newConnection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-											[self->newConnection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+											[self->newConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 
 												OCLog(@"Done connecting: %@ %@", error, issue);
 
@@ -383,7 +383,7 @@
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
 		// Testing just the connect here
 
 		XCTAssert((error==nil), @"No error");
@@ -432,14 +432,14 @@
 
 		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 		{
-			[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+			[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
 		 	{
 				OCLog(@"Issue: %@", issue);
 
-		 		XCTAssert((issue.type == OCConnectionIssueTypeGroup));
+		 		XCTAssert((issue.type == OCIssueTypeGroup));
 		 		XCTAssert((issue.issues.count == 2));
-		 		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].count == 1));
-		 		XCTAssert(([[issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError].firstObject.error isOCErrorWithCode:OCErrorServerVersionNotSupported]));
+		 		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count == 1));
+		 		XCTAssert(([[issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].firstObject.error isOCErrorWithCode:OCErrorServerVersionNotSupported]));
 
 		 		[expectPrepare fulfill];
 		 	}];
@@ -456,7 +456,7 @@
 
 		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
 		{
-			[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+			[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 				// Testing just the connect here
 
 				XCTAssert((error!=nil), @"Error: %@", error);
@@ -487,7 +487,7 @@
 
 		connection.bookmark.certificate = [OCCertificate certificateWithCertificateData:fakeCertData hostName:@"demo.owncloud.org"];
 
-	} connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	} connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
 		// Testing just the connect here
 
 		XCTAssert((error!=nil), @"Error");
@@ -505,7 +505,7 @@
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
 		OCLog(@"User: %@", connection.loggedInUser.userName);
 
 		XCTAssert((error==nil), @"No error");
@@ -554,7 +554,7 @@
 
 	[OCEvent registerEventHandler:self forIdentifier:@"test"];
 
-	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodIdentifierBasicAuth preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodIdentifierBasicAuth preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
 		OCLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
 
 		XCTAssert((error==nil), @"No error: %@", error);
@@ -648,7 +648,7 @@
 
 	XCTAssert(connection!=nil);
 
-	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
@@ -732,7 +732,7 @@
 
 	XCTAssert(connection!=nil);
 
-	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
@@ -779,7 +779,7 @@
 
 	XCTAssert(connection!=nil);
 
-	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
@@ -844,7 +844,7 @@
 	XCTestExpectation *expectFavorite = [self expectationWithDescription:@"Received favorite response"];
 	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
 
-	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCConnectionIssue *issue, OCConnection *connection) {
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
 		OCLog(@"User: %@", connection.loggedInUser.userName);
 
 		XCTAssert((error==nil), @"No error");
@@ -916,7 +916,7 @@
 
 	XCTAssert(connection!=nil);
 
-	[connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 

@@ -26,11 +26,11 @@ bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:
 if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 {
     // Prepare for setup
-    [connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
+    [connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
      {
          // Check for warnings and errors
-         NSArray <OCConnectionIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelError];
-         NSArray <OCConnectionIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCConnectionIssueLevelWarning];
+         NSArray <OCIssue *> *errorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError];
+         NSArray <OCIssue *> *warningAndErrorIssues = [issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelWarning];
          BOOL proceedWithAuthentication = YES;
 
          if (errorIssues.count > 0)

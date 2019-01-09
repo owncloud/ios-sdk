@@ -26,7 +26,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCConnectionDAVRequest.h"
-#import "OCConnectionIssue.h"
+#import "OCIssue.h"
 #import "OCLogger.h"
 #import "OCItem.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
@@ -57,11 +57,15 @@
 @synthesize uploadQueue = _uploadQueue;
 @synthesize downloadQueue = _downloadQueue;
 
+@synthesize actionSignals = _actionSignals;
+
 @synthesize state = _state;
 
 @synthesize delegate = _delegate;
 
 @synthesize hostSimulator = _hostSimulator;
+
+@dynamic allQueues;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -136,6 +140,7 @@
 		_uploadQueue = _downloadQueue;
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
+		_signals = [NSMutableSet new];
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
@@ -152,6 +157,27 @@
 	{
 		[_downloadQueue invalidateAndCancelWithCompletionHandler:nil];
 	}
+}
+
+#pragma mark - Queues
+- (NSSet<OCConnectionQueue *> *)allQueues
+{
+	NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+
+	if (self->_uploadQueue != nil)
+	{
+		[connectionQueues addObject:self->_uploadQueue];
+	}
+	if (self->_downloadQueue != nil)
+	{
+		[connectionQueues addObject:self->_downloadQueue];
+	}
+	if (self->_commandQueue != nil)
+	{
+		[connectionQueues addObject:self->_commandQueue];
+	}
+
+	return (connectionQueues);
 }
 
 #pragma mark - State
@@ -254,8 +280,8 @@
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
 				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCConnectionIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCConnectionIssueLevelWarning issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-					if (decision == OCConnectionIssueDecisionApprove)
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+					if (decision == OCIssueDecisionApprove)
 					{
 						if (changeUserAccepted)
 						{
@@ -290,7 +316,7 @@
 }
 
 #pragma mark - Connect & Disconnect
-- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCConnectionIssue *issue))completionHandler
+- (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCIssue *issue))completionHandler
 {
 	/*
 		Follow the https://github.com/owncloud/administration/tree/master/redirectServer playbook:
@@ -322,7 +348,7 @@
 
 		self.state = OCConnectionStateConnecting;
 
-		completionHandler = ^(NSError *error, OCConnectionIssue *issue) {
+		completionHandler = ^(NSError *error, OCIssue *issue) {
 			if ((error != nil) && (issue != nil))
 			{
 				self.state = OCConnectionStateDisconnected;
@@ -349,7 +375,7 @@
 						// Redirection
 						NSURL *responseRedirectURL;
 						NSError *error = nil;
-						OCConnectionIssue *issue = nil;
+						OCIssue *issue = nil;
 
 						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
 						{
@@ -358,8 +384,8 @@
 							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
 							{
 								// Create an issue if the redirectURL replicates the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCConnectionIssue *issue, OCConnectionIssueDecision decision) {
-									if (decision == OCConnectionIssueDecisionApprove)
+								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+									if (decision == OCIssueDecisionApprove)
 									{
 										self->_bookmark.url = alternativeBaseURL;
 									}
@@ -368,8 +394,8 @@
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCConnectionIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
-								issue.level = OCConnectionIssueLevelError;
+								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
+								issue.level = OCIssueLevelError;
 
 								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 							}
@@ -396,11 +422,11 @@
 				if (error != nil)
 				{
 					// An error occured
-					OCConnectionIssue *issue = error.embeddedIssue;
+					OCIssue *issue = error.embeddedIssue;
 
 					if (issue == nil)
 					{
-						issue = [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil];
+						issue = [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil];
 					}
 
 					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
@@ -426,7 +452,7 @@
 					if (serverStatus == nil)
 					{
 						// JSON decode error
-						completionHandler(jsonError, [OCConnectionIssue issueForError:jsonError level:OCConnectionIssueLevelError issueHandler:nil]);
+						completionHandler(jsonError, [OCIssue issueForError:jsonError level:OCIssueLevelError issueHandler:nil]);
 					}
 					else
 					{
@@ -438,7 +464,7 @@
 
 						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion longVersion:self.serverLongProductVersionString]) != nil)
 						{
-							completionHandler(minimumVersionError, [OCConnectionIssue issueForError:minimumVersionError level:OCConnectionIssueLevelError issueHandler:nil]);
+							completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 
 							return;
 						}
@@ -450,7 +476,7 @@
 							{
 								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
 
-								completionHandler(maintenanceModeError, [OCConnectionIssue issueForError:maintenanceModeError level:OCConnectionIssueLevelError issueHandler:nil]);
+								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
 								return;
 							}
@@ -459,7 +485,7 @@
 						// Authenticate connection
 						connectProgress.localizedDescription = OCLocalizedString(@"Authenticating…", @"");
 
-						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+						[authMethod authenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCIssue *authConnIssue) {
 							if ((authConnError!=nil) || (authConnIssue!=nil))
 							{
 								// Error or issue
@@ -492,7 +518,7 @@
 
 											if (error!=nil)
 											{
-												completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 											}
 											else
 											{
@@ -519,7 +545,7 @@
 	{
 		// Return error
 		NSError *error = OCError(OCErrorAuthorizationNoMethodData);
-		completionHandler(error, [OCConnectionIssue issueForError:error level:OCConnectionIssueLevelError issueHandler:nil]);
+		completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 	}
 
 	return (nil);
@@ -538,12 +564,10 @@
 	{
 		dispatch_block_t invalidationCompletionHandler = ^{
 			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
-			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+			NSMutableSet<OCConnectionQueue *> *connectionQueues = nil;
 
 			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
-			[connectionQueues addObject:self->_uploadQueue];
-			[connectionQueues addObject:self->_downloadQueue];
-			[connectionQueues addObject:self->_commandQueue];
+			connectionQueues = [[NSMutableSet alloc] initWithSet:self.allQueues];
 
 			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
 			{
@@ -593,7 +617,7 @@
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		// Deauthenticate the connection
-		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCConnectionIssue *authConnIssue) {
+		[authMethod deauthenticateConnection:self withCompletionHandler:^(NSError *authConnError, OCIssue *authConnIssue) {
 			self.state = OCConnectionStateDisconnected;
 
 			self->_serverStatus = nil;
@@ -749,6 +773,7 @@
 
 	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
+		davRequest.requiredSignals = self.actionSignals;
 		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 		davRequest.userInfo = @{
 			@"path" : path,
@@ -759,7 +784,6 @@
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
-		davRequest.downloadedFileIsTemporary = YES;
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -925,6 +949,7 @@
 		}
 
 		// Set meta data for handling
+		request.requiredSignals = self.actionSignals;
 		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
 		request.userInfo = @{
 			@"sourceURL" : sourceURL,
@@ -1030,6 +1055,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:downloadURL];
 
 		request.method = OCConnectionRequestMethodGET;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDownloadItemResult:error:);
 		request.userInfo = @{
@@ -1038,7 +1064,6 @@
 		request.eventTarget = eventTarget;
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
-		request.downloadedFileIsTemporary = (targetURL == nil);
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
@@ -1179,6 +1204,7 @@
 
 			if ((patchRequest = [OCConnectionDAVRequest proppatchRequestWithURL:itemURL content:contentNodes]) != nil)
 			{
+				patchRequest.requiredSignals = self.actionSignals;
 				patchRequest.resultHandlerAction = @selector(_handleUpdateItemResult:error:);
 				patchRequest.userInfo = @{
 					@"item" : item,
@@ -1286,6 +1312,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:createFolderURL];
 
 		request.method = OCConnectionRequestMethodMKCOL;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleCreateFolderResult:error:);
 		request.userInfo = @{
@@ -1415,6 +1442,7 @@
 			OCConnectionRequest *request = [OCConnectionRequest requestWithURL:sourceItemURL];
 
 			request.method = requestMethod;
+			request.requiredSignals = self.actionSignals;
 
 			request.resultHandlerAction = @selector(_handleCopyMoveItemResult:error:);
 			request.eventTarget = eventTarget;
@@ -1539,6 +1567,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:deleteItemURL];
 
 		request.method = OCConnectionRequestMethodDELETE;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
@@ -1701,9 +1730,10 @@
 
 	if (request != nil)
 	{
+		request.requiredSignals = self.actionSignals;
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-			item.itemVersionIdentifier,	@"itemVersionIdentifier",
+			item.itemVersionIdentifier,	OCEventUserInfoKeyItemVersionIdentifier,
 			[NSValue valueWithCGSize:size],	@"maximumSize",
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
@@ -1750,7 +1780,7 @@
 			if (request.responseHTTPStatus.isSuccess)
 			{
 				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
-				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[@"itemVersionIdentifier"];
+				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
 				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
 
 				thumbnail.mimeType = request.response.allHeaderFields[@"Content-Type"];
@@ -1883,15 +1913,28 @@
 	}
 }
 
+#pragma mark - Rescheduling support
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest
+{
+	OCConnectionRequestInstruction instruction = OCConnectionRequestInstructionDeliver;
+
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:defaultsTo:)])
+	{
+		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest defaultsTo:instruction];
+	}
+
+	return (instruction);
+}
+
 #pragma mark - Log tags
 + (NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CN"]);
+	return (@[@"CONN"]);
 }
 
 - (NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"CN"]);
+	return (@[@"CONN"]);
 }
 
 @end

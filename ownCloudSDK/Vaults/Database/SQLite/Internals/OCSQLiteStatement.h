@@ -48,4 +48,7 @@
 #pragma mark - Resetting
 - (void)reset;
 
+#pragma mark - Release
+- (void)releaseSQLObjects;
+
 @end

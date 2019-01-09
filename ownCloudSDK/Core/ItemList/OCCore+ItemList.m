@@ -342,15 +342,15 @@
 						     updatedItems:changedCacheItems
 						     refreshPaths:nil
 						    newSyncAnchor:newSyncAnchor
-						  preflightAction:^(dispatch_block_t  _Nonnull completionHandler) {
-						  			// Called AFTER the database has been updated, but before UPDATING queries
-									OCWaitDidFinishTask(cacheUpdateGroup);
-									completionHandler();
-						 		  }
-						 postflightAction:^(dispatch_block_t  _Nonnull completionHandler) {
-									[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath taskRootItem:taskRootItem targetRemoved:targetRemoved];
-									completionHandler();
-								  }
+					       beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
+							// Called AFTER the database has been updated, but before UPDATING queries
+							OCWaitDidFinishTask(cacheUpdateGroup);
+							completionHandler();
+					       }
+						afterQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
+							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath taskRootItem:taskRootItem targetRemoved:targetRemoved];
+							completionHandler();
+						}
 					       queryPostProcessor:nil
 				];
 			}

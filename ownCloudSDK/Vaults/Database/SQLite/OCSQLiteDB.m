@@ -17,6 +17,7 @@
  */
 
 #import "OCSQLiteDB.h"
+#import "OCSQLiteDB+Internal.h"
 #import "OCLogger.h"
 #import "OCSQLiteStatement.h"
 #import "OCSQLiteTransaction.h"
@@ -60,6 +61,8 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 	{
 		_maxBusyRetryTimeInterval = 2.0;
 
+		_liveStatements = [NSHashTable weakObjectsHashTable];
+
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
 		#endif /* TARGET_OS_IOS */
@@ -87,6 +90,7 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 	if (self.opened)
 	{
 		OCLogWarning(@"OCSQLiteDB still open on deallocation for %@ - force closing", _databaseURL);
+
 		[self _close]; // Force-close on deallocation
 	}
 
@@ -236,6 +240,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	if (_db != NULL)
 	{
 		int sqErr = SQLITE_OK;
+
+		[self releaseAllLiveStatementResources];
 
 		do
 		{

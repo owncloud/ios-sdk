@@ -161,7 +161,7 @@
 {
 	OCCoreConnectionStatus oldStatus = _connectionStatus;
 	OCCoreConnectionStatusSignal oldSignal = _connectionStatusSignals;
-	BOOL reattemptConnect = NO, reloadQueries = NO;
+	BOOL reattemptConnect = NO, reloadQueries = NO, updateOnlineConnectionSignal = NO;
 
 	// Property changes
 	if (newStatus != _connectionStatus)
@@ -206,16 +206,27 @@
 		reattemptConnect = YES;
 	}
 
-	// - In case
+	// - Reload queries when coming back online
 	if ((newStatus != oldStatus) && (newStatus == OCCoreConnectionStatusOnline))
 	{
 		reloadQueries = YES;
 	}
 
+	// - Update connection signals on "online" status changes
+	if ((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline))
+	{
+		updateOnlineConnectionSignal = YES;
+	}
+
 	// Internal updates
-	if (reattemptConnect || reloadQueries)
+	if (reattemptConnect || reloadQueries || updateOnlineConnectionSignal)
 	{
 		[self queueBlock:^{
+			if (updateOnlineConnectionSignal)
+			{
+				[self->_connection setSignal:OCConnectionSignalIDCoreOnline on:(self->_connectionStatus == OCCoreConnectionStatusOnline)];
+			}
+
 			if (reattemptConnect)
 			{
 				if ((self->_state == OCCoreStateStarting) && (self->_connection.state != OCConnectionStateConnecting))
@@ -254,8 +265,23 @@
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
 }
 
+- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest defaultsTo:(OCConnectionRequestInstruction)defaulInstruction
+{
+	if (finishedRequest.responseHTTPStatus.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	{
+		[self reportResponseIndicatingMaintenanceMode];
+
+		if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+		{
+			return (OCConnectionRequestInstructionReschedule);
+		}
+	}
+
+	return (defaulInstruction);
+}
+
 #pragma mark - Reporting
-- (void)reportReponseIndicatingMaintenanceMode
+- (void)reportResponseIndicatingMaintenanceMode
 {
 	[_maintenanceModeStatusSignalProvider reportReponseIndicatingMaintenanceMode];
 }

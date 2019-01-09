@@ -82,6 +82,19 @@
 	return ([[self alloc] initForEventTarget:eventTarget type:eventType attributes:attributes]);
 }
 
++ (instancetype)eventWithType:(OCEventType)eventType userInfo:(NSDictionary<OCEventUserInfoKey,id> *)userInfo ephermalUserInfo:(NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(id)result
+{
+	OCEvent *event;
+
+	event = [OCEvent new];
+	event->_eventType = eventType;
+	event->_userInfo = userInfo;
+	event->_ephermalUserInfo = ephermalUserInfo;
+	event.result = result;
+
+	return (event);
+}
+
 - (instancetype)initForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes
 {
 	if ((self = [super init]) != nil)
@@ -99,3 +112,6 @@
 
 
 @end
+
+OCEventUserInfoKey OCEventUserInfoKeyItem = @"item";
+OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier = @"itemVersionIdentifier";

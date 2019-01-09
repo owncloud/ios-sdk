@@ -270,6 +270,17 @@
 	return (error);
 }
 
+#pragma mark - Log tagging
++ (NSArray<OCLogTagName> *)logTags
+{
+	return ([NSArray arrayWithObjects:@"AUTH", [[self.identifier componentsSeparatedByString:@"."].lastObject capitalizedString], nil]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return ([[self class] logTags]);
+}
+
 @end
 
 OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey = @"username";

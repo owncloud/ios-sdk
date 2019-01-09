@@ -100,7 +100,10 @@
 					if (sourceImage == nil)
 					{
 						sourceImage = [self decodeImage]; // Don't cache the decoded image to save memory
+					}
 
+					if (sourceImage != nil)
+					{
 						if ((returnImage = [sourceImage scaledImageFittingInSize:requestedMaximumSizeInPoints scale:scale]) != nil)
 						{
 							@synchronized(self)

@@ -16,7 +16,7 @@
  *
  */
 
-#import <ownCloudSDK/ownCloudSDK.h>
+#import "OCItem.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
