@@ -181,6 +181,9 @@
 		BOOL useDownloadedFile = YES;
 		OCItem *latestVersionOfItem = nil;
 
+		// Using archivedServerItem for item, which can sometimes differ from localItem, so make sure to carry info over
+		[item prepareToReplace:self.localItem];
+
 		// Validate checksum of downloaded file
 		if (useDownloadedFile)
 		{

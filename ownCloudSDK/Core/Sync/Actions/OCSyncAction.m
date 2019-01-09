@@ -84,7 +84,7 @@
 		BOOL handled = NO;
 
 		// Check for wait condition
-		NSDictionary<OCWaitConditionOption,id> *options = @{
+		OCWaitConditionOptions options = @{
 			OCWaitConditionOptionCore : self,
 			OCWaitConditionOptionSyncRecord : syncContext.syncRecord,
 			OCWaitConditionOptionSyncContext : syncContext

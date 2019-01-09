@@ -45,11 +45,19 @@ typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
+typedef NSString* OCConnectionSignalID NS_TYPED_ENUM;
+
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
 	OCConnectionStateDisconnected,
 	OCConnectionStateConnecting,
 	OCConnectionStateConnected
+};
+
+typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
+{
+	OCConnectionRequestInstructionDeliver,		//!< Deliver the request as usual
+	OCConnectionRequestInstructionReschedule	//!< Stop processing of request and reschedule it
 };
 
 @protocol OCConnectionDelegate <NSObject>
@@ -60,6 +68,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 - (void)connectionChangedState:(OCConnection *)connection;
+
+- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest defaultsTo:(OCConnectionRequestInstruction)defaulInstruction;
 
 @end
 
@@ -95,6 +105,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 	NSDictionary<NSString *, id> *_serverStatus;
 
+	NSMutableSet<OCConnectionSignalID> *_signals;
+	NSSet<OCConnectionSignalID> *_actionSignals;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -111,6 +124,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
 @property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
+
+@property(strong,readonly,nonatomic) NSSet<OCConnectionQueue *> *allQueues; //!< A set of all queues used by the connection
+
+@property(strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
 
 @property(assign,nonatomic) OCConnectionState state;
 
@@ -161,6 +178,18 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)resumeBackgroundSessions;
 - (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
+#pragma mark - Rescheduling support
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest;
+
+@end
+
+#pragma mark - SIGNALS
+@interface OCConnection (Signals)
+- (void)setSignal:(OCConnectionSignalID)signal on:(BOOL)on;
+- (void)updateSignalsWith:(NSSet <OCConnectionSignalID> *)allSignals;
+
+- (BOOL)isSignalOn:(OCConnectionSignalID)signal;
+- (BOOL)meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals;
 @end
 
 #pragma mark - JOBS

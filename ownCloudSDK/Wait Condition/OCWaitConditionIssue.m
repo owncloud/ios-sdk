@@ -6,6 +6,16 @@
 //  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2019, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import "OCWaitConditionIssue.h"
 #import "OCProcessManager.h"
 #import "OCCore.h"
@@ -30,7 +40,7 @@
 	return (waitCondition);
 }
 
-- (void)evaluateWithOptions:(NSDictionary<OCWaitConditionOption,id> *)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler
+- (void)evaluateWithOptions:(OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler
 {
 	BOOL promptUser = NO;
 
@@ -141,7 +151,7 @@
 }
 
 #pragma mark - Event handling
-- (BOOL)handleEvent:(OCEvent *)event withOptions:(NSDictionary<OCWaitConditionOption,id> *)options sender:(id)sender
+- (BOOL)handleEvent:(OCEvent *)event withOptions:(OCWaitConditionOptions)options sender:(id)sender
 {
 	if (event.eventType == OCEventTypeIssueResponse)
 	{

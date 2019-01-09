@@ -70,7 +70,7 @@
 		DC19BFEA21CBACB0007C20D1 /* OCProcessSession.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFE821CBACB0007C20D1 /* OCProcessSession.m */; };
 		DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEB21CBACBC007C20D1 /* OCProcessManager.h */; };
 		DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */; };
-		DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */; };
+		DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFF221CBE28B007C20D1 /* OCWaitCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */; };
 		DC19BFFE21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFFC21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h */; };
 		DC19BFFF21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFFD21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m */; };
@@ -168,6 +168,7 @@
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
 		DC5A20312074E8890083DB7D /* CoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A20302074E8890083DB7D /* CoreTests.m */; };
 		DC5A203420750BEE0083DB7D /* OCCore+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A203320750BEE0083DB7D /* OCCore+Internal.h */; };
+		DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */; };
 		DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */; };
 		DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */; };
 		DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */; };
@@ -637,6 +638,7 @@
 		DC5A20302074E8890083DB7D /* CoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreTests.m; sourceTree = "<group>"; };
 		DC5A20322074F9020083DB7D /* Ocean.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ocean.entitlements; sourceTree = SOURCE_ROOT; };
 		DC5A203320750BEE0083DB7D /* OCCore+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+Internal.h"; sourceTree = "<group>"; };
+		DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Signals.m"; sourceTree = "<group>"; };
 		DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCThumbnail.h"; sourceTree = "<group>"; };
 		DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCThumbnail.m"; sourceTree = "<group>"; };
 		DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+OCDateParser.h"; sourceTree = "<group>"; };
@@ -1058,7 +1060,6 @@
 				DC855705204FE9F100189B9A /* Record */,
 				DC54396620D51138002BF291 /* Actions */,
 				DC19BFC721CA6B4E007C20D1 /* Issue */,
-				DC19BFF321CBE293007C20D1 /* Wait Condition */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -1501,6 +1502,7 @@
 			children = (
 				DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */,
 				DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */,
+				DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */,
 				DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */,
 				DC30947220542FA500189B9A /* OCConnection+Users.m */,
 				DC24F8E321E2411E00C9119C /* OCConnection+Jobs.m */,
@@ -1805,6 +1807,7 @@
 				DC85570D204FEAC500189B9A /* Events */,
 				DC85570E204FEAE900189B9A /* Vaults */,
 				DC855702204FE9CA00189B9A /* Core */,
+				DC19BFF321CBE293007C20D1 /* Wait Condition */,
 				DC855710204FEB1500189B9A /* Query */,
 				DC855711204FEB5200189B9A /* Item */,
 				DC855712204FEB6B00189B9A /* Share */,
@@ -2524,6 +2527,7 @@
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
+				DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */,
 				DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */,
 				DC19BFDF21CB99D1007C20D1 /* OCIssue+SyncIssue.m in Sources */,
 				DC1D4D4020DC2281005A3DFC /* OCRetainer.m in Sources */,

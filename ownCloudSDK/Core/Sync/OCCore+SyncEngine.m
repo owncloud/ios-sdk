@@ -503,7 +503,7 @@
 				}
 
 				[waitConditions enumerateObjectsUsingBlock:^(OCWaitCondition * _Nonnull waitCondition, NSUInteger idx, BOOL * _Nonnull stop) {
-					NSDictionary<OCWaitConditionOption, id> *options;
+					OCWaitConditionOptions options;
 					__block OCWaitConditionState waitConditionState = OCWaitConditionStateWait;
 					__block NSError *waitConditionError = nil;
 

@@ -33,13 +33,13 @@
 }
 
 #pragma mark - Evaluation
-- (void)evaluateWithOptions:(nullable NSDictionary<OCWaitConditionOption, id> *)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler
+- (void)evaluateWithOptions:(nullable OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler
 {
 	completionHandler(OCWaitConditionStateProceed, NO, nil);
 }
 
 #pragma mark - Event handling
-- (BOOL)handleEvent:(OCEvent *)event withOptions:(NSDictionary<OCWaitConditionOption,id> *)options sender:(id)sender
+- (BOOL)handleEvent:(OCEvent *)event withOptions:(OCWaitConditionOptions)options sender:(id)sender
 {
 	return (NO);
 }

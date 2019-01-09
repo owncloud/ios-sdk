@@ -122,7 +122,7 @@
 						{
 							if (error.davError == OCDAVErrorServiceUnavailable)
 							{
-								[self->_core reportReponseIndicatingMaintenanceMode];
+								[self->_core reportResponseIndicatingMaintenanceMode];
 							}
 						}
 

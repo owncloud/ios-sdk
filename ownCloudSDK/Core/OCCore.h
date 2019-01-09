@@ -273,5 +273,7 @@ extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
 
+extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
+
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.

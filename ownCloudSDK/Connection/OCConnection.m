@@ -57,11 +57,15 @@
 @synthesize uploadQueue = _uploadQueue;
 @synthesize downloadQueue = _downloadQueue;
 
+@synthesize actionSignals = _actionSignals;
+
 @synthesize state = _state;
 
 @synthesize delegate = _delegate;
 
 @synthesize hostSimulator = _hostSimulator;
+
+@dynamic allQueues;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -136,6 +140,7 @@
 		_uploadQueue = _downloadQueue;
 		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
+		_signals = [NSMutableSet new];
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 	}
 	
@@ -152,6 +157,27 @@
 	{
 		[_downloadQueue invalidateAndCancelWithCompletionHandler:nil];
 	}
+}
+
+#pragma mark - Queues
+- (NSSet<OCConnectionQueue *> *)allQueues
+{
+	NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+
+	if (self->_uploadQueue != nil)
+	{
+		[connectionQueues addObject:self->_uploadQueue];
+	}
+	if (self->_downloadQueue != nil)
+	{
+		[connectionQueues addObject:self->_downloadQueue];
+	}
+	if (self->_commandQueue != nil)
+	{
+		[connectionQueues addObject:self->_commandQueue];
+	}
+
+	return (connectionQueues);
 }
 
 #pragma mark - State
@@ -538,12 +564,10 @@
 	{
 		dispatch_block_t invalidationCompletionHandler = ^{
 			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
-			NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+			NSMutableSet<OCConnectionQueue *> *connectionQueues = nil;
 
 			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
-			[connectionQueues addObject:self->_uploadQueue];
-			[connectionQueues addObject:self->_downloadQueue];
-			[connectionQueues addObject:self->_commandQueue];
+			connectionQueues = [[NSMutableSet alloc] initWithSet:self.allQueues];
 
 			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
 			{
@@ -749,6 +773,7 @@
 
 	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
+		davRequest.requiredSignals = self.actionSignals;
 		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 		davRequest.userInfo = @{
 			@"path" : path,
@@ -759,7 +784,6 @@
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
-		davRequest.downloadedFileIsTemporary = YES;
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -925,6 +949,7 @@
 		}
 
 		// Set meta data for handling
+		request.requiredSignals = self.actionSignals;
 		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
 		request.userInfo = @{
 			@"sourceURL" : sourceURL,
@@ -1030,6 +1055,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:downloadURL];
 
 		request.method = OCConnectionRequestMethodGET;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDownloadItemResult:error:);
 		request.userInfo = @{
@@ -1038,7 +1064,6 @@
 		request.eventTarget = eventTarget;
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
-		request.downloadedFileIsTemporary = (targetURL == nil);
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
@@ -1179,6 +1204,7 @@
 
 			if ((patchRequest = [OCConnectionDAVRequest proppatchRequestWithURL:itemURL content:contentNodes]) != nil)
 			{
+				patchRequest.requiredSignals = self.actionSignals;
 				patchRequest.resultHandlerAction = @selector(_handleUpdateItemResult:error:);
 				patchRequest.userInfo = @{
 					@"item" : item,
@@ -1286,6 +1312,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:createFolderURL];
 
 		request.method = OCConnectionRequestMethodMKCOL;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleCreateFolderResult:error:);
 		request.userInfo = @{
@@ -1415,6 +1442,7 @@
 			OCConnectionRequest *request = [OCConnectionRequest requestWithURL:sourceItemURL];
 
 			request.method = requestMethod;
+			request.requiredSignals = self.actionSignals;
 
 			request.resultHandlerAction = @selector(_handleCopyMoveItemResult:error:);
 			request.eventTarget = eventTarget;
@@ -1539,6 +1567,7 @@
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:deleteItemURL];
 
 		request.method = OCConnectionRequestMethodDELETE;
+		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
@@ -1701,6 +1730,7 @@
 
 	if (request != nil)
 	{
+		request.requiredSignals = self.actionSignals;
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
 			item.itemVersionIdentifier,	OCEventUserInfoKeyItemVersionIdentifier,
@@ -1881,6 +1911,19 @@
 
 		[resumedBackgroundConnectionQueue finishTasksAndInvalidateWithCompletionHandler:nil];
 	}
+}
+
+#pragma mark - Rescheduling support
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest
+{
+	OCConnectionRequestInstruction instruction = OCConnectionRequestInstructionDeliver;
+
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:defaultsTo:)])
+	{
+		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest defaultsTo:instruction];
+	}
+
+	return (instruction);
 }
 
 #pragma mark - Log tags

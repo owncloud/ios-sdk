@@ -64,6 +64,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCConnectionDAVMultistatusResponse.h>
 
+#import <ownCloudSDK/OCWaitCondition.h>
+
 #import <ownCloudSDK/OCEvent.h>
 #import <ownCloudSDK/OCEventTarget.h>
 

@@ -17,7 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCSyncRecord.h"
+#import "OCEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,6 +29,7 @@ typedef NS_ENUM(NSInteger, OCWaitConditionState)
 };
 
 typedef NSString* OCWaitConditionOption;
+typedef NSDictionary<OCWaitConditionOption,id>* OCWaitConditionOptions;
 typedef void(^OCWaitConditionEvaluationResultHandler)(OCWaitConditionState state, BOOL conditionUpdated, NSError * _Nullable error);
 
 @interface OCWaitCondition : NSObject <NSSecureCoding>
@@ -38,9 +39,9 @@ typedef void(^OCWaitConditionEvaluationResultHandler)(OCWaitConditionState state
 
 @property(strong,readonly) NSUUID *uuid;
 
-- (void)evaluateWithOptions:(nullable NSDictionary<OCWaitConditionOption, id> *)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler; //!< Evaluate the condition. Returns the outcome as state + error info.
+- (void)evaluateWithOptions:(nullable OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler; //!< Evaluate the condition. Returns the outcome as state + error info.
 
-- (BOOL)handleEvent:(OCEvent *)event withOptions:(NSDictionary<OCWaitConditionOption,id> *)options sender:(id)sender; //!< Handle OCEvent directed at this condition. Return NO if the waitCondition did not handle the event, YES if it did.
+- (BOOL)handleEvent:(OCEvent *)event withOptions:(OCWaitConditionOptions)options sender:(id)sender; //!< Handle OCEvent directed at this condition. Return NO if the waitCondition did not handle the event, YES if it did.
 
 @end
 

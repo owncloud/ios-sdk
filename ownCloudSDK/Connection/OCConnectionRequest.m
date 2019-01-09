@@ -39,6 +39,7 @@
 @synthesize bodyURL = _bodyURL;
 
 @synthesize earliestBeginDate = _earliestBeginDate;
+@synthesize requiredSignals = _requiredSignals;
 
 @synthesize resultHandlerAction = _resultHandlerAction;
 @synthesize ephermalResultHandler = _ephermalResultHandler;
@@ -240,6 +241,22 @@
 	}
 
 	return (urlRequest);
+}
+
+- (void)scrubForRescheduling
+{
+	_responseHTTPStatus = nil;
+	_injectedResponse = nil;
+	_responseBodyData = nil;
+	_responseCertificate = nil;
+
+	if (_downloadedFileIsTemporary)
+	{
+		_downloadedFileURL = nil;
+	}
+
+	_urlSessionTask = nil;
+	_urlSessionTaskIdentifier = nil;
 }
 
 #pragma mark - Cancel support
@@ -508,6 +525,7 @@
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
+		self.requiredSignals    = [decoder decodeObjectOfClass:[NSSet class] forKey:@"requiredSignals"];
 
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
 		self.userInfo	 	= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
@@ -540,6 +558,7 @@
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
+	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];

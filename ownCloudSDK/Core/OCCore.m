@@ -140,6 +140,7 @@
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, nil];
 		_connection.delegate = self;
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
@@ -883,6 +884,8 @@ OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-ava
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
+
+OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
