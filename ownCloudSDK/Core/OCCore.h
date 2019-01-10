@@ -121,8 +121,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	OCCoreConnectionStatus _connectionStatus;
 	OCCoreConnectionStatusSignal _connectionStatusSignals;
+	NSString *_connectionStatusShortDescription;
 	NSMutableArray <OCCoreConnectionStatusSignalProvider *> *_connectionStatusSignalProviders;
-	OCCoreReachabilityConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor
+
+	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
 	OCCoreMaintenanceModeStatusSignalProvider *_maintenanceModeStatusSignalProvider; // Processes reports of maintenance mode repsonses and performs status.php polls for status changes
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
@@ -169,6 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals
+@property(readonly,strong,nullable) NSString *connectionStatusShortDescription; //!< Short description of the current connection status.
 
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 

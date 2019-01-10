@@ -238,6 +238,9 @@
 		DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8913632092088600028999 /* NSString+OCVersionCompare.m */; };
 		DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC971BEF20D15D4400428EF1 /* OCSQLiteQueryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC971BED20D15D4400428EF1 /* OCSQLiteQueryCondition.m */; };
+		DC98BDF521E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */; };
+		DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */; };
+		DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC98BDF721E73EFF003B5658 /* Network.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		DCA8923020F5F13F00AEFF98 /* ownCloudMocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; };
 		DCA8923720F5F13F00AEFF98 /* ownCloudMockingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8923620F5F13F00AEFF98 /* ownCloudMockingTests.m */; };
 		DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8922920F5F13F00AEFF98 /* ownCloudMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -719,6 +722,9 @@
 		DC8913632092088600028999 /* NSString+OCVersionCompare.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCVersionCompare.m"; sourceTree = "<group>"; };
 		DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteQueryCondition.h; sourceTree = "<group>"; };
 		DC971BED20D15D4400428EF1 /* OCSQLiteQueryCondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteQueryCondition.m; sourceTree = "<group>"; };
+		DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreNetworkPathMonitorSignalProvider.h; sourceTree = "<group>"; };
+		DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreNetworkPathMonitorSignalProvider.m; sourceTree = "<group>"; };
+		DC98BDF721E73EFF003B5658 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		DCA8921320F5E9D100AEFF98 /* OCMockManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMockManager.h; sourceTree = "<group>"; };
 		DCA8921420F5E9D100AEFF98 /* OCMockManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMockManager.m; sourceTree = "<group>"; };
 		DCA8921720F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+OCMocking.h"; sourceTree = "<group>"; };
@@ -899,6 +905,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */,
 				DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */,
 				DCC8FA082029BB1200EB6701 /* libsqlite3.tbd in Frameworks */,
 			);
@@ -1666,6 +1673,35 @@
 			path = Parsing;
 			sourceTree = "<group>";
 		};
+		DC98BDF021E73E36003B5658 /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */,
+				DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */,
+				DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */,
+				DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */,
+			);
+			path = Reachability;
+			sourceTree = "<group>";
+		};
+		DC98BDF121E73E4B003B5658 /* Maintenance Mode */ = {
+			isa = PBXGroup;
+			children = (
+				DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */,
+				DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */,
+			);
+			path = "Maintenance Mode";
+			sourceTree = "<group>";
+		};
+		DC98BDF221E73EB0003B5658 /* Network Path Monitor */ = {
+			isa = PBXGroup;
+			children = (
+				DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */,
+				DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */,
+			);
+			path = "Network Path Monitor";
+			sourceTree = "<group>";
+		};
 		DCA8921B20F5ECF900AEFF98 /* Mocking Targets */ = {
 			isa = PBXGroup;
 			children = (
@@ -1740,10 +1776,9 @@
 				DCB0A45D21B828F400FAC4E9 /* OCCore+ConnectionStatus.h */,
 				DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */,
 				DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */,
-				DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */,
-				DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */,
-				DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */,
-				DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */,
+				DC98BDF221E73EB0003B5658 /* Network Path Monitor */,
+				DC98BDF021E73E36003B5658 /* Reachability */,
+				DC98BDF121E73E4B003B5658 /* Maintenance Mode */,
 			);
 			path = "Connection Status";
 			sourceTree = "<group>";
@@ -1861,6 +1896,7 @@
 		DCC8FA062029BB1100EB6701 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DC98BDF721E73EFF003B5658 /* Network.framework */,
 				DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */,
 				DCA8922020F5EFBB00AEFF98 /* libobjc.tbd */,
 				DCC8FA072029BB1200EB6701 /* libsqlite3.tbd */,
@@ -1887,8 +1923,6 @@
 				DCEA7D952093556600F25223 /* OCCache.h */,
 				DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */,
 				DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */,
-				DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */,
-				DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */,
 				DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */,
 				DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */,
 				DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */,
@@ -2041,6 +2075,7 @@
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
+				DC98BDF521E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */,
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
@@ -2415,6 +2450,7 @@
 				DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
+				DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */,
 				DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
 				DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */,

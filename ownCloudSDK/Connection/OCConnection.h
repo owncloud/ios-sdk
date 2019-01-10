@@ -27,6 +27,7 @@
 #import "OCIssue.h"
 #import "OCChecksum.h"
 #import "OCLogTag.h"
+#import "OCIPNotificationCenter.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -112,6 +113,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 }
 
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
+@property(class,assign,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used.
 
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
@@ -287,10 +289,13 @@ extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array
 extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
+extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
+
+extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 
 #import "OCClassSettings.h"
 

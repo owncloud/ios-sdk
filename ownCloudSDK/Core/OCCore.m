@@ -34,6 +34,7 @@
 #import "OCChecksumAlgorithmSHA1.h"
 #import "OCIPNotificationCenter.h"
 #import "OCCoreReachabilityConnectionStatusSignalProvider.h"
+#import "OCCoreNetworkPathMonitorSignalProvider.h"
 #import "OCCoreMaintenanceModeStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
@@ -61,6 +62,7 @@
 
 @synthesize connectionStatus = _connectionStatus;
 @synthesize connectionStatusSignals = _connectionStatusSignals;
+@synthesize connectionStatusShortDescription = _connectionStatusShortDescription;
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
@@ -145,7 +147,14 @@
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
-		_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+		if (@available(iOS 12, *))
+		{
+			_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+		}
+		else
+		{
+			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+		}
 		_maintenanceModeStatusSignalProvider = [OCCoreMaintenanceModeStatusSignalProvider new];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 

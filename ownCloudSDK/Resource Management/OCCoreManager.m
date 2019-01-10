@@ -124,7 +124,7 @@
 				{
 					returnCore = core;
 
-					if (core.state != OCCoreStateRunning)
+					if ((core.state != OCCoreStateRunning) && (core.state != OCCoreStateStarting))
 					{
 						OCLog(@"starting core for bookmark %@", bookmark);
 

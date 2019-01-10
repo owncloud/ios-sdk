@@ -21,6 +21,7 @@
 #import "OCLogger.h"
 #import "OCCore+SyncEngine.h"
 #import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCMacros.h"
 
 @implementation OCCore (ConnectionStatus)
 
@@ -64,6 +65,7 @@
 {
 	OCCoreConnectionStatus computedConnectionStatus = OCCoreConnectionStatusOffline;
 	OCCoreConnectionStatusSignal computedSignal = 0;
+	NSString *shortStatusDescription = nil;
 
 	// Compute new signal mask
 	@synchronized ([OCCoreConnectionStatusSignalProvider class])
@@ -85,6 +87,11 @@
 					{
 						case OCCoreConnectionStatusSignalStateFalse:
 							stateFalse++;
+
+							if (shortStatusDescription==nil)
+							{
+								shortStatusDescription = signalProvider.shortDescription;
+							}
 						break;
 
 						case OCCoreConnectionStatusSignalStateTrue:
@@ -94,6 +101,11 @@
 						case OCCoreConnectionStatusSignalStateForceFalse:
 							stateFalse++;
 							stateForceFalse++;
+
+							if (shortStatusDescription==nil)
+							{
+								shortStatusDescription = signalProvider.shortDescription;
+							}
 						break;
 
 						case OCCoreConnectionStatusSignalStateForceTrue:
@@ -151,6 +163,31 @@
 			// All tests passed => status is online
 			computedConnectionStatus = OCCoreConnectionStatusOnline;
 		} while(false);
+	}
+
+	if (shortStatusDescription == nil)
+	{
+		switch (computedConnectionStatus)
+		{
+			case OCCoreConnectionStatusOffline:
+				shortStatusDescription = OCLocalized(@"Offline");
+			break;
+
+			case OCCoreConnectionStatusUnavailable:
+				shortStatusDescription = OCLocalized(@"Server down for maintenance");
+			break;
+
+			case OCCoreConnectionStatusOnline:
+				shortStatusDescription = OCLocalized(@"Online");
+			break;
+		}
+	}
+
+	if ((shortStatusDescription != nil) && ![shortStatusDescription isEqual:_connectionStatusShortDescription])
+	{
+		[self willChangeValueForKey:@"connectionStatusShortDescription"];
+		_connectionStatusShortDescription = shortStatusDescription;
+		[self didChangeValueForKey:@"connectionStatusShortDescription"];
 	}
 
 	[self updateConnectionStatus:computedConnectionStatus withSignal:computedSignal];

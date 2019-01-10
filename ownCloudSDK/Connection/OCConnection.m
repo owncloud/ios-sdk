@@ -35,6 +35,7 @@
 #import "NSDate+OCDateParser.h"
 #import "OCEvent.h"
 #import "NSProgress+OCEvent.h"
+#import "OCAppIdentity.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -86,13 +87,33 @@
 		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"9.0",
-		OCConnectionAllowBackgroundURLSessions		: @(YES)
+		OCConnectionAllowBackgroundURLSessions		: @(YES),
+		OCConnectionAllowCellular				: @(YES)
 	});
 }
 
 + (BOOL)backgroundURLSessionsAllowed
 {
 	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowBackgroundURLSessions] boolValue]);
+}
+
++ (BOOL)allowCellular
+{
+	NSNumber *allowCellularNumber;
+
+	if ((allowCellularNumber =[OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCConnectionAllowCellular]) == nil)
+	{
+		allowCellularNumber = [self classSettingForOCClassSettingsKey:OCConnectionAllowCellular];
+	}
+
+	return ([allowCellularNumber boolValue]);
+}
+
++ (void)setAllowCellular:(BOOL)allowCellular
+{
+	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:allowCellular forKey:OCConnectionAllowCellular];
+
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameConnectionSettingsChanged ignoreSelf:NO];
 }
 
 #pragma mark - Init
@@ -1952,7 +1973,10 @@ OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-all
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
+OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
+
+OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
