@@ -417,7 +417,7 @@
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:self.responseBodyEncoding]);
+			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:NSUTF8StringEncoding]);
 		}
 
 		return ([NSString stringWithFormat:@"[Contents from %@]", url.path]);
@@ -427,7 +427,7 @@
 	{
 		if (readableContent)
 		{
-			return (self.responseBodyAsString);
+			return ([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
 		}
 
 		return ([NSString stringWithFormat:@"[%lu bytes of %@ data]", (unsigned long)data.length, contentType]);
