@@ -873,7 +873,7 @@
 						item.lastModified = [NSDate dateWithTimeIntervalSinceNow:-(24*60*60*7)];
 
 						[connection updateItem:item properties:propertiesToUpdate options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = event.result;
+							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = OCTypedCast(event.result, NSDictionary);
 
 							OCLog(@"Update item result event: %@, result: %@", event, statusByPropertyName);
 

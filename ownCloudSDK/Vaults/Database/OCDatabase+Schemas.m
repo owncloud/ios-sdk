@@ -42,6 +42,7 @@
 	[self addOrUpdateThumbnailsSchema];
 
 	[self addOrUpdateSyncJournalSchema];
+	[self addOrUpdateEvents];
 }
 
 - (void)addOrUpdateMetaDataSchema
@@ -321,22 +322,21 @@
 	];
 }
 
-- (void)addOrUpdateSyncEvents
+- (void)addOrUpdateEvents
 {
 	/*** Sync Events ***/
 
 	// Version 1
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
-		schemaWithTableName:OCDatabaseTableNameSyncEvents
+		schemaWithTableName:OCDatabaseTableNameEvents
 		version:1
 		creationQueries:@[
 			/*
 				eventID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
 				recordID : INTEGER		- ID of sync record this event refers to
-				uuid : TEXT			- UUID of the event
 				eventData : BLOB		- archived OCEvent data
 			*/
-			@"CREATE TABLE syncEvents (eventID INTEGER PRIMARY KEY, recordID INTEGER NOT NULL, uuid TEXT NOT NULL, eventData BLOB NOT NULL)",
+			@"CREATE TABLE events (eventID INTEGER PRIMARY KEY, recordID INTEGER NOT NULL, eventData BLOB NOT NULL)",
 		]
 		openStatements:nil
 		upgradeMigrator:nil]
@@ -460,5 +460,5 @@ OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
 OCDatabaseTableName OCDatabaseTableNameConnectionRequests = @"requests";
-OCDatabaseTableName OCDatabaseTableNameSyncEvents = @"syncEvents";
+OCDatabaseTableName OCDatabaseTableNameEvents = @"events";
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";

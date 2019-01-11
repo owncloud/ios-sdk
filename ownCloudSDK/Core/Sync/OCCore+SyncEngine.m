@@ -467,11 +467,11 @@
 
 		return (error);
 	} completionHandler:^(NSError *error) {
-		// Ensure outstanding events are delivered
-		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
-		{
-			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
-		}
+//		// Ensure outstanding events are delivered
+//		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
+//		{
+//			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
+//		}
 
 		[self endActivity:@"process sync records"];
 	}];
@@ -635,21 +635,12 @@
 	}
 
 	// Deliver pending events
-	NSMutableArray <OCEvent *> *queuedEvents = nil;
-
-	@synchronized(self)
-	{
-		if ((queuedEvents = _eventsBySyncRecordID[syncRecord.recordID]) != nil)
-		{
-			[_eventsBySyncRecordID removeObjectForKey:syncRecord.recordID];
-		}
-	}
-
-	if (queuedEvents != nil)
 	{
 		OCCoreSyncInstruction eventInstruction = OCCoreSyncInstructionNone;
+		OCEvent *event = nil;
+		OCSyncRecordID syncRecordID = syncRecord.recordID;
 
-		for (OCEvent *event in queuedEvents)
+		while ((event = [self.database nextEventForSyncRecordID:syncRecordID]) != nil)
 		{
 			// Process event
 			OCSyncContext *syncContext;
@@ -678,6 +669,8 @@
 					eventInstruction = instruction;
 				}
 			}
+
+			[self.database removeEvent:event];
 		}
 
 		if (eventInstruction != OCCoreSyncInstructionNone)
@@ -840,22 +833,11 @@
 {
 	OCSyncRecordID recordID;
 
-	if ((recordID = event.userInfo[OCEventUserInfoKeySyncRecordID]) != nil)
+	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
-		@synchronized(self)
-		{
-			NSMutableArray <OCEvent *> *eventsForRecord;
-
-			if ((eventsForRecord = _eventsBySyncRecordID[recordID]) == nil)
-			{
-				eventsForRecord = [NSMutableArray new];
-				_eventsBySyncRecordID[recordID] = eventsForRecord;
-			}
-
-			[eventsForRecord addObject:event];
-		}
-
-		[self setNeedsToProcessSyncRecords];
+		[self.database queueEvent:event forSyncRecordID:recordID completionHandler:^(OCDatabase *db, NSError *error) {
+			[self setNeedsToProcessSyncRecords];
+		}];
 	}
 	else
 	{

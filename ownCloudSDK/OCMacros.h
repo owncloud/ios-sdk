@@ -36,4 +36,6 @@
 				OCWaitForCompletion(label)
 #define OCSyncExecDone(label)	OCWaitDidFinishTask(label)
 
+#define OCTypedCast(var,className) ([var isKindOfClass:[className class]] ? ((className *)var) : nil)
+
 #endif /* OCMacros_h */

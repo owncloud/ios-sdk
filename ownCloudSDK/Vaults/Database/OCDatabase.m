@@ -58,6 +58,7 @@
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
+		_eventsByDatabaseID = [NSMutableDictionary new];
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
@@ -744,6 +745,102 @@
 			completionHandler(self, iterationError, syncRecord);
 		}
 	}]];
+}
+
+#pragma mark - Event interface
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *eventData = [event serializedData];
+
+	if ((eventData != nil) && (syncRecordID!=nil))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameEvents rowValues:@{
+			@"recordID" 		: syncRecordID,
+			@"eventData"		: eventData
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			event.databaseID = rowID;
+
+			self->_eventsByDatabaseID[rowID] = event;
+
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not serialize event=%@ to eventData=%@ or missing recordID=%@", event, eventData, syncRecordID);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID
+{
+	__block OCEvent *event = nil;
+
+	if (!self.sqlDB.isOnSQLiteThread)
+	{
+		OCLogError(@"%@ may only be called on the SQLite thread. Returning nil.", @(__PRETTY_FUNCTION__));
+		return (nil);
+	}
+
+	// Requests the oldest available event for the OCSyncRecordID.
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
+		@"recordID" 	: recordID
+	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			NSNumber *databaseID;
+
+			if ((databaseID = OCTypedCast(rowDictionary[@"eventID"], NSNumber) ) != nil)
+			{
+				if ((event = [self->_eventsByDatabaseID objectForKey:databaseID]) == nil)
+				{
+					event = [OCEvent eventFromSerializedData:(NSData *)rowDictionary[@"eventData"]];
+				}
+
+				event.databaseID = rowDictionary[@"eventID"];
+			}
+
+			*stop = YES;
+		} error:&iterationError];
+	}]];
+
+	return (event);
+}
+
+- (NSError *)removeEvent:(OCEvent *)event
+{
+	__block NSError *error = nil;
+
+	if (!self.sqlDB.isOnSQLiteThread)
+	{
+		OCLogError(@"%@ may only be called on the SQLite thread.", @(__PRETTY_FUNCTION__));
+		return (OCError(OCErrorInternal));
+	}
+
+	// Deletes the row for the OCEvent from the database.
+	if (event.databaseID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:event.databaseID fromTable:OCDatabaseTableNameEvents completionHandler:^(OCSQLiteDB *db, NSError *dbError) {
+			NSNumber *databaseID;
+
+			if ((databaseID = event.databaseID) != nil)
+			{
+				[self->_eventsByDatabaseID removeObjectForKey:databaseID];
+
+				event.databaseID = nil;
+			}
+
+			error = dbError;
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", @(__PRETTY_FUNCTION__));
+		error = OCError(OCErrorInsufficientParameters);
+	}
+
+	return (error);
 }
 
 #pragma mark - Integrity / Synchronization primitives

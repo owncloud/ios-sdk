@@ -49,7 +49,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCHTTPStatus : NSObject <NSCopying>
+@interface OCHTTPStatus : NSObject <NSCopying, NSSecureCoding>
 {
 	OCHTTPStatusCode _code;
 }

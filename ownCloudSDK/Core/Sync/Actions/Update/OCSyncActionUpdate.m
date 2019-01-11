@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncActionUpdate.h"
+#import "OCMacros.h"
 
 @implementation OCSyncActionUpdate
 
@@ -124,7 +125,7 @@
 	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	OCConnectionPropertyUpdateResult propertyUpdateResult = nil;
 
-	if ((event.error == nil) && ((propertyUpdateResult = event.result) != nil))
+	if ((event.error == nil) && ((propertyUpdateResult = OCTypedCast(event.result, NSDictionary)) != nil))
 	{
 		__block BOOL allChangesSuccessful = YES;
 		syncContext.updatedItems = @[ self.localItem ];

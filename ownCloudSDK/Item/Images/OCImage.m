@@ -156,4 +156,29 @@
 	return (imageAlreadyLoaded);
 }
 
+#pragma mark - Secure Coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_url    	forKey:@"url"];
+	[coder encodeObject:_data    	forKey:@"data"];
+	[coder encodeObject:_mimeType   forKey:@"mimeType"];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [self init]) != nil)
+	{
+		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+		_data = [decoder decodeObjectOfClass:[NSData class] forKey:@"data"];
+		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+	}
+
+	return (self);
+}
+
 @end

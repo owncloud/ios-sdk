@@ -18,6 +18,7 @@
 
 #import "OCEvent.h"
 #import "OCEventTarget.h"
+#import "OCLogger.h"
 
 @implementation OCEvent
 
@@ -26,8 +27,6 @@
 @synthesize userInfo = _userInfo;
 @synthesize ephermalUserInfo = _ephermalUserInfo;
 
-@synthesize attributes = _attributes;
-
 @synthesize path = _path;
 @synthesize depth = _depth;
 
@@ -35,6 +34,8 @@
 @synthesize data = _data;
 @synthesize error = _error;
 @synthesize result = _result;
+
+@synthesize databaseID = _databaseID;
 
 + (NSMutableDictionary <OCEventHandlerIdentifier, id <OCEventHandler>> *)_eventHandlerDictionary
 {
@@ -103,13 +104,76 @@
 
 		_userInfo = eventTarget.userInfo;
 		_ephermalUserInfo = eventTarget.ephermalUserInfo;
-
-		_attributes = attributes;
 	}
 
 	return(self);
 }
 
+
+#pragma mark - Serialization tools
++ (instancetype)eventFromSerializedData:(NSData *)serializedData
+{
+	if (serializedData != nil)
+	{
+		return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+	}
+
+	return (nil);
+}
+
+- (NSData *)serializedData
+{
+	NSData *serializedData = nil;
+
+	@try {
+		serializedData = ([NSKeyedArchiver archivedDataWithRootObject:self]);
+	}
+	@catch (NSException *exception) {
+		OCLogError(@"Error serializing event=%@ with exception=%@", self, exception);
+	}
+
+	return (serializedData);
+}
+
+#pragma mark - Secure coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_eventType = [decoder decodeIntegerForKey:@"eventType"];
+		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+
+		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_depth = [decoder decodeIntegerForKey:@"depth"];
+
+		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+		_data = [decoder decodeObjectOfClass:[NSString class] forKey:@"data"];
+		_error = [decoder decodeObjectOfClass:[NSError class] forKey:@"error"];
+		_result = [decoder decodeObjectOfClass:[NSObject class] forKey:@"result"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:_eventType forKey:@"eventType"];
+
+	[coder encodeObject:_userInfo forKey:@"userInfo"];
+
+	[coder encodeObject:_path forKey:@"path"];
+	[coder encodeInteger:_depth forKey:@"depth"];
+
+	[coder encodeObject:_mimeType forKey:@"mimeType"];
+	[coder encodeObject:_data forKey:@"data"];
+	[coder encodeObject:_error forKey:@"error"];
+	[coder encodeObject:_result forKey:@"result"];
+}
 
 @end
 

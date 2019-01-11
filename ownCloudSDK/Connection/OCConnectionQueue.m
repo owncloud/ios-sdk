@@ -60,6 +60,9 @@
 		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier];
 
 		sessionConfiguration.sharedContainerIdentifier = [OCAppIdentity sharedAppIdentity].appGroupIdentifier;
+		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
+		sessionConfiguration.URLCache = nil; // Do not cache responses
+		sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
 
 		_connection = connection;
 
@@ -86,6 +89,7 @@
 		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
 		sessionConfiguration.URLCache = nil; // Do not cache responses
+		sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
 
 		_connection = connection;
 

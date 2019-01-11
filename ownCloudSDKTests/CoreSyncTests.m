@@ -411,6 +411,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -547,6 +548,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -675,6 +677,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -899,6 +902,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -1166,6 +1170,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -1313,6 +1318,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -1436,6 +1442,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {

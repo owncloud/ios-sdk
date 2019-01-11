@@ -129,8 +129,6 @@
 
 		_progressByFileID = [NSMutableDictionary new];
 
-		_eventsBySyncRecordID = [NSMutableDictionary new];
-
 		_thumbnailCache = [OCCache new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);

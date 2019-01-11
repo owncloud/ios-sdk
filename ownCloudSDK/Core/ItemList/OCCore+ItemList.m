@@ -641,7 +641,7 @@
 				cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:NO error:&error syncAnchor:NULL];
 
 				[itemListTask.cachedSet updateWithError:error items:cacheItems];
-				[itemListTask.retrievedSet updateWithError:event.error items:event.result];
+				[itemListTask.retrievedSet updateWithError:event.error items:OCTypedCast(event.result, NSArray)];
 
 				// Find new folders and folders with changes
 				for (OCItem *item in items)
