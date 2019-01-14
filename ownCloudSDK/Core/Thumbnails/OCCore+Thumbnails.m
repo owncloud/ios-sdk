@@ -280,7 +280,7 @@
 		// CGSize requestedMaximumSize = ((NSValue *)event.userInfo[@"requestedMaximumSize"]).CGSizeValue;
 		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
 		OCItemVersionIdentifier *itemVersionIdentifier = OCTypedCast(event.userInfo[OCEventUserInfoKeyItemVersionIdentifier], OCItemVersionIdentifier);
-		OCItem *item = event.userInfo[OCEventUserInfoKeyItem];
+		OCItem *item = OCTypedCast(event.userInfo[OCEventUserInfoKeyItem], OCItem);
 		NSString *specID = OCTypedCast(event.userInfo[@"specID"], NSString);
 		NSString *requestID = OCTypedCast(event.ephermalUserInfo[@"requestID"], NSString);
 

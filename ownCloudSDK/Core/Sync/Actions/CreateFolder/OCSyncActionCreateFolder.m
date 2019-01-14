@@ -102,7 +102,7 @@
 	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	OCItem *newItem = nil;
 
-	if ((event.error == nil) && ((newItem = event.result) != nil))
+	if ((event.error == nil) && ((newItem = OCTypedCast(event.result, OCItem)) != nil))
 	{
 		OCItem *placeholderItem;
 
@@ -113,6 +113,7 @@
 			syncContext.removedItems = @[ placeholderItem ];
 		}
 
+		newItem.previousPlaceholderFileID = placeholderItem.fileID;
 		newItem.parentFileID = placeholderItem.parentFileID;
 
 		syncContext.addedItems = @[ newItem ];

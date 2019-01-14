@@ -69,7 +69,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
 };
 
-@interface OCItem : NSObject <NSSecureCoding>
+@interface OCItem : NSObject <NSSecureCoding, NSCopying>
 {
 	OCItemVersionIdentifier *_versionIdentifier;
 
@@ -93,7 +93,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
 @property(strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
-@property(assign) BOOL locallyModified; //!< YES if the file at .localURL was created or modified locally. NO if the file at .localURL was downloaded from the server and not modified since.
+@property(assign) BOOL locallyModified; //!< YES if the file at .localRelativePath was created or modified locally. NO if the file at .localRelativePath was downloaded from the server and not modified since.
 @property(strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
 
 @property(strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
@@ -102,6 +102,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 @property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
 @property(strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
+@property(strong) OCFileID previousPlaceholderFileID; //!< FileID of placeholder that was replaced by this item for giving hints to the Sync Engine, so it can inform subsequent sync actions depending on the replaced placeholder (dynamic/ephermal)
 
 @property(strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
@@ -137,6 +138,8 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 
 - (void)prepareToReplace:(OCItem *)item;
+- (void)copyFilesystemMetadataFrom:(OCItem *)item;
+- (void)copyMetadataFrom:(OCItem *)item except:(NSSet <OCItemPropertyName> *)exceptProperties;
 
 #pragma mark - Local attribute access
 - (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;

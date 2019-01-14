@@ -766,6 +766,57 @@
 	return (error);
 }
 
+- (NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata
+{
+	NSURL *fromItemParentURL = [self localParentDirectoryURLForItem:fromItem];
+	NSURL *toItemParentURL = [self localParentDirectoryURLForItem:toItem];
+	NSError *error = nil;
+
+	if ((fromItemParentURL != nil) && (toItemParentURL != nil))
+	{
+		// Move parent directory as needed
+		if (![fromItemParentURL isEqual:toItemParentURL])
+		{
+			if (![[NSFileManager defaultManager] moveItemAtURL:fromItemParentURL toURL:toItemParentURL error:&error])
+			{
+				OCLogError(@"Item parent directory %@ could not be renamed to %@, error=%@", OCLogPrivate(fromItemParentURL), OCLogPrivate(toItemParentURL), error);
+				return (error);
+			}
+		}
+
+		// Rename local file as needed
+		if (fromItem.localRelativePath != nil)
+		{
+			NSString *fromName = fromItem.localRelativePath.lastPathComponent;
+			NSString *toName = toItem.name;
+
+			if ((fromName != nil) && (toName != nil) && (![fromName isEqual:toName]))
+			{
+				NSURL *fromLocalFileURL = [toItemParentURL URLByAppendingPathComponent:fromName];
+				NSURL *toLocalFileURL = [toItemParentURL URLByAppendingPathComponent:toName];
+
+				if (![[NSFileManager defaultManager] moveItemAtURL:fromLocalFileURL toURL:toLocalFileURL error:&error])
+				{
+					OCLogError(@"Item file %@ could not be moved to %@, error=%@", OCLogPrivate(fromLocalFileURL), OCLogPrivate(toLocalFileURL), error);
+					return (error);
+				}
+				else if (adjustLocalMetadata)
+				{
+					toItem.locallyModified = fromItem.locallyModified;
+					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
+					toItem.localRelativePath = [_vault relativePathForItem:toItem];
+				}
+			}
+		}
+	}
+	else
+	{
+		error = OCError(OCErrorInsufficientParameters);
+	}
+
+	return (error);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {

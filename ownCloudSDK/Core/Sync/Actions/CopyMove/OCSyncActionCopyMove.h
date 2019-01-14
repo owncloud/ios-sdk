@@ -18,13 +18,19 @@
 
 #import "OCSyncAction.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSyncActionCopyMove : OCSyncAction
 
 @property(strong) NSString *targetName;
 @property(strong) OCItem *targetParentItem;
+
+@property(strong) OCItem *processingItem;
 
 @property(assign) BOOL isRename;
 
 - (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename;
 
 @end
+
+NS_ASSUME_NONNULL_END

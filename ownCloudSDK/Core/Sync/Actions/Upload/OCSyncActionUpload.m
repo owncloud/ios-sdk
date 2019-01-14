@@ -218,6 +218,8 @@
 						uploadItemURL = _uploadCopyFileURL;
 					}
 
+					// TODO: use new placeholder -> item transition API (-[OCCore renameDirectoryFromItem:forItem:adjustLocalMetadata:])
+
 					// Move file from placeholder to uploaded item URL
 					if ([[NSFileManager defaultManager] moveItemAtURL:uploadItemURL toURL:uploadedItemURL error:&error])
 					{
@@ -230,6 +232,8 @@
 
 						uploadedItem.localCopyVersionIdentifier = uploadItem.itemVersionIdentifier;
 						uploadedItem.parentFileID = uploadItem.parentFileID;
+
+						uploadedItem.previousPlaceholderFileID = uploadedItem.fileID;
 
 						// Update uploaded item with local relative path
 						syncContext.addedItems = @[ uploadedItem ];

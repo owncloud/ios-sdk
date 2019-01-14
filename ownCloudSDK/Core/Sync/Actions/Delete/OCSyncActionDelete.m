@@ -127,6 +127,9 @@
 		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 		syncContext.removedItems = @[ self.localItem ];
 
+		// Remove file locally
+		[self.core deleteDirectoryForItem:self.localItem];
+
 		// Action complete and can be removed
 		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
 		resultInstruction = OCCoreSyncInstructionDeleteLast;
