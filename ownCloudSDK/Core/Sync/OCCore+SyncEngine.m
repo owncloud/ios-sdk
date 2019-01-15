@@ -34,7 +34,31 @@
 #import "OCWaitCondition.h"
 #import "OCProcessManager.h"
 
+OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
+
 @implementation OCCore (SyncEngine)
+
+#pragma mark - Setup & shutdown
+- (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerForProcessSession:(OCProcessSession *)processSession
+{
+	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
+}
+
+- (void)setupSyncEngine
+{
+	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:notificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core setNeedsToProcessSyncRecords];
+	}];
+}
+
+- (void)shutdownSyncEngine
+{
+	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:notificationName];
+}
 
 #pragma mark - Sync Anchor
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError *error, OCSyncAnchor latestSyncAnchor))completionHandler
@@ -603,6 +627,27 @@
 
 	// Setup action
 	syncRecord.action.core = self;
+
+	// Check originating process session
+	if (syncRecord.originProcessSession != nil)
+	{
+		OCProcessSession *processSession = syncRecord.originProcessSession;
+		BOOL doProcess = YES;
+
+		// Only perform processSession validity check if bundleIDs differ
+		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
+		{
+			// Don't process sync records originating from other processes that are running
+			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
+		}
+
+		if (!doProcess)
+		{
+			// Stop processing and notify other process to start processing the sync record queue
+			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession] ignoreSelf:YES];
+			return (OCCoreSyncInstructionStop);
+		}
+	}
 
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)

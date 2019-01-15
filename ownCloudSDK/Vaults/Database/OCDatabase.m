@@ -827,13 +827,10 @@
 		BOOL doProcess = YES;
 
 		// Only perform processSession validity check if bundleIDs differ
-		if (![processSession.bundleIdentifier isEqual:OCProcessManager.sharedProcessManager.processSession.bundleIdentifier])
+		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
 		{
-			// Get the latest session for this process
-			processSession = [OCProcessManager.sharedProcessManager findLatestSessionForProcessOf:processSession];
-			
 			// Don't process events originating from other processes that are running
-			doProcess = ![OCProcessManager.sharedProcessManager isSessionValid:processSession usingThoroughChecks:YES];
+			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
 		}
 
 		if (!doProcess)

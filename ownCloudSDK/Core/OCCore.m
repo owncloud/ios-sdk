@@ -230,6 +230,9 @@
 			// Proceed with connecting - or stop
 			if (startError == nil)
 			{
+				// Setup sync engine
+				[self setupSyncEngine];
+
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
@@ -272,8 +275,15 @@
 				// Stop..
 				stopGroup = dispatch_group_create();
 
+				// Shut down Sync Engine
+				[weakSelf shutdownSyncEngine];
+
 				// Close connection
-				self->_attemptConnect = NO;
+				OCCore *strongSelf;
+				if ((strongSelf = weakSelf) != nil)
+				{
+					strongSelf->_attemptConnect = NO;
+				}
 
 				dispatch_group_enter(stopGroup);
 
