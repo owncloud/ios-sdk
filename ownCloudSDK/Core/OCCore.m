@@ -38,6 +38,7 @@
 #import "OCCoreMaintenanceModeStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
+#import "OCCore+ItemUpdates.h"
 
 @interface OCCore ()
 {
@@ -528,14 +529,54 @@
 	OCSyncAnchor latestSyncAnchor = nil;
 	NSError *error = nil;
 
+	OCTLogDebug(@[@"IPC"], @"Checking for changes by other processes and updating queries..");
+
 	if ((latestSyncAnchor = [self retrieveLatestSyncAnchorWithError:&error]) != nil)
 	{
 		if (![lastKnownSyncAnchor isEqual:latestSyncAnchor])
 		{
-			// Sync anchor changed, so there may be changes
+			OCTLogDebug(@[@"IPC"], @"Sync anchors differ (%@ < %@)", lastKnownSyncAnchor, latestSyncAnchor);
 
+			// Sync anchor changed, so there may be changes => replay any you can find
+			_latestSyncAnchor = lastKnownSyncAnchor;
+			[self _replayChangesSinceSyncAnchor:lastKnownSyncAnchor];
+		}
+		else
+		{
+			OCTLogDebug(@[@"IPC"], @"Sync anchors unchanged (%@ == %@)", lastKnownSyncAnchor, latestSyncAnchor);
 		}
 	}
+	else
+	{
+		OCTLogDebug(@[@"IPC"], @"Could not retrieve latst sync anchor.");
+	}
+}
+
+- (void)_replayChangesSinceSyncAnchor:(OCSyncAnchor)fromSyncAnchor
+{
+	[self.database retrieveCacheItemsUpdatedSinceSyncAnchor:fromSyncAnchor foldersOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+		NSMutableArray <OCItem *> *addedOrUpdatedItems = [NSMutableArray new];
+		NSMutableArray <OCItem *> *removedItems = [NSMutableArray new];
+
+		for (OCItem *item in items)
+		{
+			if (item.removed)
+			{
+				[removedItems addObject:item];
+			}
+			else
+			{
+				[addedOrUpdatedItems addObject:item];
+			}
+		}
+
+		OCTLogDebug(@[@"Replay"], @"Found removedItems=%@, addedOrUpdatedItems=%@ since fromSyncAnchor=%@", removedItems, addedOrUpdatedItems, fromSyncAnchor);
+
+		if ((addedOrUpdatedItems.count > 0) || (removedItems.count > 0))
+		{
+			[self performUpdatesForAddedItems:nil removedItems:removedItems updatedItems:addedOrUpdatedItems refreshPaths:nil newSyncAnchor:syncAnchor beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:YES];
+		}
+	}];
 }
 
 #pragma mark - ## Commands

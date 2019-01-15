@@ -293,9 +293,14 @@
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *parentPath = path;
 	NSString *sqlQueryString = nil;
 	NSArray *parameters = nil;
+
+	if (path == nil)
+	{
+		completionHandler(self, OCError(OCErrorInsufficientParameters), nil, nil);
+		return;
+	}
 
 	if (itemOnly)
 	{
@@ -304,8 +309,8 @@
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=? OR path=?) AND removed=0";
-		parameters = @[parentPath, parentPath, path];
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=?) AND removed=0";
+		parameters = @[path, path];
 	}
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {

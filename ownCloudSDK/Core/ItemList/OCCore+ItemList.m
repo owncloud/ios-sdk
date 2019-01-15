@@ -352,6 +352,7 @@
 							completionHandler();
 						}
 					       queryPostProcessor:nil
+    					             skipDatabase:NO
 				];
 			}
 			else
@@ -609,20 +610,25 @@
 				OCItem *cacheItem = nil;
 				OCItem *remoteItem = items.firstObject;
 
-				if ((cacheItem = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL].firstObject) != nil)
+				NSArray<OCItem*> *cacheItems;
+
+				if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 				{
-					if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
+					if ((cacheItem = cacheItems.firstObject) != nil)
 					{
-						// Folder's etag or fileID differ -> fetch full update for this folder
-						OCEventTarget *eventTarget;
+						if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
+						{
+							// Folder's etag or fileID differ -> fetch full update for this folder
+							OCEventTarget *eventTarget;
 
-						eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+							eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
 
-						[self.connection retrieveItemListAtPath:event.path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
-					}
-					else
-					{
-						// No changes. We're done.
+							[self.connection retrieveItemListAtPath:event.path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
+						}
+						else
+						{
+							// No changes. We're done.
+						}
 					}
 				}
 			}

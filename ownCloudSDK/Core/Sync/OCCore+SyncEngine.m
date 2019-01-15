@@ -96,6 +96,14 @@
 //	OCLogDebug(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
 
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+		// Check for expected latestSyncAnchor
+		if (![previousCounterValue isEqual:self->_latestSyncAnchor])
+		{
+			// => changes have been happening outside this process => replay to update queries
+			self->_latestSyncAnchor = previousCounterValue;
+			[self _replayChangesSinceSyncAnchor:self->_latestSyncAnchor];
+		}
+
 		if (protectedBlock != nil)
 		{
 			return (protectedBlock(previousCounterValue, newCounterValue));
@@ -825,7 +833,7 @@
 		};
 	}
 
-	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil];
+	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 }
 
 #pragma mark - Sync event handling
