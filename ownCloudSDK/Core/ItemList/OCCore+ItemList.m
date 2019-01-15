@@ -610,7 +610,7 @@
 				OCItem *cacheItem = nil;
 				OCItem *remoteItem = items.firstObject;
 
-				NSArray<OCItem*> *cacheItems;
+				NSArray<OCItem*> *cacheItems = nil;
 
 				if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 				{

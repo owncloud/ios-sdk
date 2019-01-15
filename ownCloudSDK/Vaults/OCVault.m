@@ -37,6 +37,13 @@
 
 @synthesize database = _database;
 
++ (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark
+{
+	NSURL *vaultRootURL = [self rootURLForUUID:bookmark.uuid];
+
+	return ([[NSFileManager defaultManager] fileExistsAtPath:vaultRootURL.path]);
+}
+
 #pragma mark - Init
 - (instancetype)init
 {
@@ -53,11 +60,16 @@
 	return (self);
 }
 
++ (NSURL *)rootURLForUUID:(NSUUID *)uuid
+{
+	return [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathVaults] URLByAppendingPathComponent:[OCVault rootPathRelativeToGroupContainerForVaultUUID:uuid]];
+}
+
 - (NSURL *)rootURL
 {
 	if (_rootURL == nil)
 	{
-		_rootURL = [[[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathVaults] URLByAppendingPathComponent:[OCVault rootPathRelativeToGroupContainerForVaultUUID:_uuid]];
+		_rootURL = [[self class] rootURLForUUID:_uuid];
 	}
 	
 	return (_rootURL);
