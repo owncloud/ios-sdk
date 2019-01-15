@@ -19,6 +19,7 @@
 #import "OCConnectionRequest.h"
 #import "OCConnectionQueue.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "OCLogger.h"
 
 @implementation OCConnectionRequest
 
@@ -249,6 +250,22 @@
 	_injectedResponse = nil;
 	_responseBodyData = nil;
 	_responseCertificate = nil;
+
+	if (_downloadRequest)
+	{
+		if (_downloadedFileURL != nil)
+		{
+			// Delete existing file in download location
+			if ([[NSFileManager defaultManager] fileExistsAtPath:_downloadedFileURL.path])
+			{
+				NSError *error = nil;
+
+				[[NSFileManager defaultManager] removeItemAtURL:_downloadedFileURL error:&error];
+
+				OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+			}
+		}
+	}
 
 	if (_downloadedFileIsTemporary)
 	{
