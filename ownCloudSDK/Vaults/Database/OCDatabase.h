@@ -103,7 +103,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 #pragma mark - Event interface
 - (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
-- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)syncRecordID; //!< Requests the oldest available event for the OCSyncRecordID.
+- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)syncRecordID afterEventID:(OCDatabaseID)eventID; //!< Requests the oldest available event for the OCSyncRecordID.
 - (NSError *)removeEvent:(OCEvent *)event; //!< Deletes the row for the OCEvent from the database.
 
 #pragma mark - Integrity / Synchronization primitives

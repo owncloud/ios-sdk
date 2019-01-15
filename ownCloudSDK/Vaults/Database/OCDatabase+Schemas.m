@@ -341,6 +341,36 @@
 		openStatements:nil
 		upgradeMigrator:nil]
 	];
+
+	// Version 2
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameEvents
+		version:2
+		creationQueries:@[
+			/*
+				eventID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
+				recordID : INTEGER		- ID of sync record this event refers to
+				processSession : BLOB		- process session the event was added from
+				eventData : BLOB		- archived OCEvent data
+			*/
+			@"CREATE TABLE events (eventID INTEGER PRIMARY KEY, recordID INTEGER NOT NULL, processSession BLOB NOT NULL, eventData BLOB NOT NULL)",
+		]
+		openStatements:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 2
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE events ADD COLUMN processSession BLOB" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
+	];
 }
 
 - (void)addOrUpdateThumbnailsSchema

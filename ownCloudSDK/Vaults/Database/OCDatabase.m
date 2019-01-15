@@ -28,6 +28,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCSyncAction.h"
+#import "OCProcessManager.h"
 
 @interface OCDatabase ()
 {
@@ -759,8 +760,11 @@
 
 	if ((eventData != nil) && (syncRecordID!=nil))
 	{
+		NSData *processSessionData = OCProcessManager.sharedProcessManager.processSession.serializedData;
+
 		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameEvents rowValues:@{
 			@"recordID" 		: syncRecordID,
+			@"processSession"	: (processSessionData!=nil) ? processSessionData : [NSData new],
 			@"eventData"		: eventData
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			event.databaseID = rowID;
@@ -777,9 +781,10 @@
 	}
 }
 
-- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID
+- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID afterEventID:(OCDatabaseID)afterEventID
 {
 	__block OCEvent *event = nil;
+	__block OCProcessSession *processSession = nil;
 
 	if (!self.sqlDB.isOnSQLiteThread)
 	{
@@ -789,12 +794,19 @@
 
 	// Requests the oldest available event for the OCSyncRecordID.
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
-		@"recordID" 	: recordID
+		@"recordID" 	: recordID,
+		@"eventID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:afterEventID apply:(afterEventID!=nil)]
 	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *iterationError = error;
 
 		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
 			NSNumber *databaseID;
+			NSData *processSessionData = OCTypedCast(rowDictionary[@"processSession"], NSData);
+
+			if ((processSessionData != nil) && (processSessionData.length > 0))
+			{
+				processSession = [OCProcessSession processSessionFromSerializedData:processSessionData];
+			}
 
 			if ((databaseID = OCTypedCast(rowDictionary[@"eventID"], NSNumber) ) != nil)
 			{
@@ -809,6 +821,27 @@
 			*stop = YES;
 		} error:&iterationError];
 	}]];
+
+	if ((processSession != nil) && (event != nil))
+	{
+		BOOL doProcess = YES;
+
+		// Only perform processSession validity check if bundleIDs differ
+		if (![processSession.bundleIdentifier isEqual:OCProcessManager.sharedProcessManager.processSession.bundleIdentifier])
+		{
+			// Get the latest session for this process
+			processSession = [OCProcessManager.sharedProcessManager findLatestSessionForProcessOf:processSession];
+			
+			// Don't process events originating from other processes that are running
+			doProcess = ![OCProcessManager.sharedProcessManager isSessionValid:processSession usingThoroughChecks:YES];
+		}
+
+		if (!doProcess)
+		{
+			// Skip this event
+			return ([self nextEventForSyncRecordID:recordID afterEventID:event.databaseID]);
+		}
+	}
 
 	return (event);
 }

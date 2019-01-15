@@ -338,6 +338,23 @@
 	[ping sendPing];
 }
 
+#pragma mark - Finding latest
+- (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)otherSession
+{
+	@synchronized(self)
+	{
+		for (OCProcessSession *session in _sessions)
+		{
+			if ([otherSession.bundleIdentifier isEqual:session.bundleIdentifier])
+			{
+				return (session);
+			}
+		}
+	}
+
+	return (otherSession);
+}
+
 #pragma mark - System boot time
 + (NSNumber *)bootTimestamp
 {

@@ -648,7 +648,7 @@
 		OCEvent *event = nil;
 		OCSyncRecordID syncRecordID = syncRecord.recordID;
 
-		while ((event = [self.database nextEventForSyncRecordID:syncRecordID]) != nil)
+		while ((event = [self.database nextEventForSyncRecordID:syncRecordID afterEventID:nil]) != nil)
 		{
 			// Process event
 			OCSyncContext *syncContext;

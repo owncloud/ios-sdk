@@ -18,6 +18,7 @@
 
 #import "OCProcessManager.h"
 #import "OCProcessSession.h"
+#import "OCLogger.h"
 
 @implementation OCProcessSession
 
@@ -67,6 +68,31 @@
 	[coder encodeObject:_lastActive forKey:@"lastActive"];
 	[coder encodeObject:_bootTimestamp forKey:@"bootTimestamp"];
 	[coder encodeInteger:_processType forKey:@"processType"];
+}
+
+#pragma mark - Serialization tools
++ (instancetype)processSessionFromSerializedData:(NSData *)serializedData
+{
+	if (serializedData != nil)
+	{
+		return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+	}
+
+	return (nil);
+}
+
+- (nullable NSData *)serializedData
+{
+	NSData *serializedData = nil;
+
+	@try {
+		serializedData = ([NSKeyedArchiver archivedDataWithRootObject:self]);
+	}
+	@catch (NSException *exception) {
+		OCLogError(@"Error serializing processSession=%@ with exception=%@", self, exception);
+	}
+
+	return (serializedData);
 }
 
 #pragma mark - Description

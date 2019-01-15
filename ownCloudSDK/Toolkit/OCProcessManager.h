@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)processWillTerminate; //!< Signal that this process is about to terminate
 
 - (BOOL)isSessionValid:(OCProcessSession *)session usingThoroughChecks:(BOOL)thoroughChecks;
+- (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)session;
 
 - (void)pingSession:(OCProcessSession *)session withTimeout:(NSTimeInterval)timeout completionHandler:(void(^)(BOOL responded, OCProcessSession *latestSession))completionHandler;
 

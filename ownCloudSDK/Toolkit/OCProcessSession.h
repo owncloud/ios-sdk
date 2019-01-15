@@ -36,6 +36,10 @@ typedef NS_ENUM(NSInteger, OCProcessType)
 
 - (instancetype)initForProcess;
 
+#pragma mark - Serialization tools
++ (instancetype)processSessionFromSerializedData:(NSData *)serializedData;
+- (nullable NSData *)serializedData;
+
 @end
 
 NS_ASSUME_NONNULL_END
