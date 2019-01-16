@@ -159,6 +159,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 				return (allowMessage);
 			}];
 		}
+
+		OCIPNotificationCenter.loggingEnabled = YES;
 	});
 	
 	return (sharedLogger);
@@ -299,6 +301,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			}
 		});
 
+		// Register log settings listener
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameLogSettingsChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogger * _Nonnull logger, OCIPCNotificationName  _Nonnull notificationName) {
 			sOCLogLevelInitialized = NO;
 			sOCLogMaskPrivateDataInitialized = NO;

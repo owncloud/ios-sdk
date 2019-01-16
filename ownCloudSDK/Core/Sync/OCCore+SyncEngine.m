@@ -100,6 +100,8 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	__block OCItem *latestItem = nil;
 
 	OCSyncExec(databaseRetrieval, {
+		[self beginActivity:@"Retrieve latest version of item"];
+
 		[self.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			if (outError != NULL)
 			{
@@ -109,6 +111,8 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 			latestItem = items[0];
 
 			OCSyncExecDone(databaseRetrieval);
+
+			[self endActivity:@"Retrieve latest version of item"];
 		}];
 	});
 
@@ -888,8 +892,12 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
+		[self beginActivity:@"Queuing sync event"];
+
 		[self.database queueEvent:event forSyncRecordID:recordID completionHandler:^(OCDatabase *db, NSError *error) {
 			[self setNeedsToProcessSyncRecords];
+
+			[self endActivity:@"Queuing sync event"];
 		}];
 	}
 	else

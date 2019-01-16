@@ -21,6 +21,8 @@
 
 #import "NSData+OCHash.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 {
 	OCCertificateValidationResultNone,
@@ -55,15 +57,15 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 	NSData *_sha256FingerPrint;
 }
 
-@property(strong,readonly) NSString *hostName;	//!< Hostname to validate the certificate against
+@property(nullable,strong,readonly) NSString *hostName;	//!< Hostname to validate the certificate against
 
-@property(strong,nonatomic) NSData *certificateData;   //!< X.509 representation of the certificate
+@property(nullable,strong,nonatomic) NSData *certificateData;   //!< X.509 representation of the certificate
 
 @property(assign,nonatomic) BOOL userAccepted; //!< Whether a certificate is saved as accepted by the user in +[OCCertificate userAcceptedCertificates] - or not.
-@property(strong,readonly) NSDate *userAcceptedDate; //!< The date the user accepted the OCCertificate.
+@property(nullable,strong,readonly) NSDate *userAcceptedDate; //!< The date the user accepted the OCCertificate.
 
 #pragma mark - User accepted certificates
-@property(strong,readonly,class,nonatomic) NSArray <OCCertificate *> *userAcceptedCertificates; //!< Collection of all certificates accepted by users.
+@property(nullable,strong,readonly,class,nonatomic) NSArray <OCCertificate *> *userAcceptedCertificates; //!< Collection of all certificates accepted by users.
 
 #pragma mark - Initializers
 + (instancetype)certificateWithCertificateRef:(SecCertificateRef)certificateRef hostName:(NSString *)hostName;
@@ -75,24 +77,26 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 - (instancetype)initWithCertificateTrustRef:(SecTrustRef)trustRef hostName:(NSString *)hostName;
 
 #pragma mark - Setters / Getters (CF objects)
-- (SecCertificateRef)certificateRef;
-- (void)setCertificateRef:(SecCertificateRef)certificateRef;
+- (nullable SecCertificateRef)certificateRef;
+- (void)setCertificateRef:(nullable SecCertificateRef)certificateRef;
 
-- (SecTrustRef)trustRef;
-- (void)setTrustRef:(SecTrustRef)trustRef;
+- (nullable SecTrustRef)trustRef;
+- (void)setTrustRef:(nullable SecTrustRef)trustRef;
 
 #pragma mark - Evaluation
 - (void)evaluateWithCompletionHandler:(void(^)(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error))completionHandler;
 
 #pragma mark - Public Key
-- (SecKeyRef)publicKey;
-- (NSData *)publicKeyDataWithError:(NSError **)error; //!< Returns public key embedded in certificate in PKCS#1 format (RSA keys) or ANSI X9.63 format (04 || X || Y [ || K]) (for elliptic curve keys)
+- (nullable SecKeyRef)publicKey;
+- (nullable NSData *)publicKeyDataWithError:(NSError **)error; //!< Returns public key embedded in certificate in PKCS#1 format (RSA keys) or ANSI X9.63 format (04 || X || Y [ || K]) (for elliptic curve keys)
 
 #pragma mark - Fingerprints
-- (NSData *)md5Fingerprint;
-- (NSData *)sha1Fingerprint;
-- (NSData *)sha256Fingerprint;
+- (nullable NSData *)md5Fingerprint;
+- (nullable NSData *)sha1Fingerprint;
+- (nullable NSData *)sha256Fingerprint;
 
 @end
 
 extern NSNotificationName OCCertificateUserAcceptanceDidChangeNotification;
+
+NS_ASSUME_NONNULL_END

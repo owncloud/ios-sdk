@@ -78,21 +78,23 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 @class OCIssue;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSError (OCError)
 
 + (instancetype)errorWithOCError:(OCError)errorCode;
 
-+ (instancetype)errorWithOCError:(OCError)errorCode userInfo:(NSDictionary<NSErrorUserInfoKey,id> *)userInfo;
++ (instancetype)errorWithOCError:(OCError)errorCode userInfo:(nullable NSDictionary<NSErrorUserInfoKey,id> *)userInfo;
 
 - (BOOL)isOCError;
 
 - (BOOL)isOCErrorWithCode:(OCError)errorCode;
 
-- (NSDictionary *)ocErrorInfoDictionary;
+- (nullable NSDictionary *)ocErrorInfoDictionary;
 
 #pragma mark - Embedding issues
 - (NSError *)errorByEmbeddingIssue:(OCIssue *)issue;
-- (OCIssue *)embeddedIssue;
+- (nullable OCIssue *)embeddedIssue;
 
 @end
 
@@ -106,6 +108,8 @@ extern NSErrorDomain OCErrorDomain;
 
 extern NSString *OCErrorInfoKey;
 extern NSString *OCErrorIssueKey;
+
+NS_ASSUME_NONNULL_END
 
 #define OCFRelease(obj) OCLogDebug(@"CFRelease %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRelease(obj);
 #define OCFRetain(obj) OCLogDebug(@"CFRetain %s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__); CFRetain(obj);

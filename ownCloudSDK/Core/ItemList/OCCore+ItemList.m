@@ -32,42 +32,127 @@
 @implementation OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (nullable OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path
+- (void)scheduleItemListTaskForPath:(OCPath)path forQuery:(BOOL)forQuery
+{
+	BOOL putInQueue = YES;
+
+	if (path != nil)
+	{
+		@synchronized(_queuedItemListTaskPaths)
+		{
+			if (forQuery)
+			{
+				putInQueue = NO;
+
+				for (OCCoreItemListTask *task in _scheduledItemListTasks)
+				{
+					if ([task.path isEqual:path])
+					{
+						putInQueue = YES;
+					}
+				}
+			}
+
+			if (putInQueue)
+			{
+				[_queuedItemListTaskPaths addObject:path];
+			}
+			else
+			{
+				[self _scheduleItemListTaskForPath:path];
+			}
+		}
+
+		if (putInQueue)
+		{
+			[self scheduleNextItemListTask];
+		}
+	}
+}
+
+- (void)scheduleNextItemListTask
+{
+	OCPath nextItemListTaskPath = nil;
+
+	@synchronized(_queuedItemListTaskPaths)
+	{
+		if (_scheduledItemListTasks.count == 0)
+		{
+			if ((nextItemListTaskPath = _queuedItemListTaskPaths.firstObject) != nil)
+			{
+				// Remove the path and any duplicates (effectively coalescating the tasks)
+				[_queuedItemListTaskPaths removeObject:nextItemListTaskPath];
+			}
+
+			if (nextItemListTaskPath != nil)
+			{
+				OCCoreItemListTask *task;
+
+				if ((task = [self _scheduleItemListTaskForPath:nextItemListTaskPath]) != nil)
+				{
+					[_scheduledItemListTasks addObject:task];
+				}
+			}
+		}
+	}
+}
+
+- (OCCoreItemListTask *)_scheduleItemListTaskForPath:(OCPath)path
 {
 	OCCoreItemListTask *task = nil;
 
 	if (path!=nil)
 	{
-		if ((task = _itemListTasksByPath[path]) == nil) // Don't start a new item list task if one is already running for the path
+		if (_itemListTasksByPath[path] != nil)
 		{
-			if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
+			// Don't start a new item list task if one is already running for the path
+			OCLogError(@"BUG! Another item list task is already running for %@", path);
+			return (nil);
+		}
+
+		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
+		{
+			_itemListTasksByPath[task.path] = task;
+
+			// Start item list task
+			if (task.syncAnchorAtStart == nil)
 			{
-				_itemListTasksByPath[task.path] = task;
+				task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
+					// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
+					[core handleUpdatedTask:task];
+				};
 
-				// Start item list task
-				if (task.syncAnchorAtStart == nil)
-				{
-					task.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
-						// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
-						[core handleUpdatedTask:task];
-					};
+				// Retrieve and store current sync anchor value
+				[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
+					task.syncAnchorAtStart = syncAnchor;
 
-					// Retrieve and store current sync anchor value
-					[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor syncAnchor) {
-						task.syncAnchorAtStart = syncAnchor;
-
-						[task update];
-					}];
-				}
-				else
-				{
 					[task update];
-				}
+				}];
+			}
+			else
+			{
+				[task update];
 			}
 		}
 	}
 
 	return (task);
+}
+
+- (void)_finishedItemListTask:(OCCoreItemListTask *)finishedTask
+{
+	if (finishedTask != nil)
+	{
+		@synchronized(_queuedItemListTaskPaths)
+		{
+			[_scheduledItemListTasks removeObject:finishedTask];
+
+			if (_scheduledItemListTasks.count == 0)
+			{
+				[self scheduleNextItemListTask];
+			}
+		}
+	}
 }
 
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task
@@ -337,10 +422,45 @@
 			if (queryState == OCQueryStateIdle)
 			{
 				// Fully merged => use for updating existing queries that have already gone through their complete, initial update
+				NSMutableArray <OCPath> *refreshPaths = nil;
+
+				if (self.automaticItemListUpdatesEnabled)
+				{
+					refreshPaths = [NSMutableArray new];
+
+					// Determine refreshPaths if automatic item list updates are enabled
+					for (OCItem *item in newItems)
+					{
+						if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
+						{
+							[refreshPaths addObject:item.path];
+						}
+					}
+
+					for (OCItem *item in changedCacheItems)
+					{
+						if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
+						{
+							OCItem *cacheItem = cacheItemsByFileID[item.fileID];
+
+							// Do not trigger refreshes if only the name changed (TODO: update database of items contained in folder on name changes)
+							if ((cacheItem==nil) || ((cacheItem != nil) && ![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier]))
+							{
+								[refreshPaths addObject:item.path];
+							}
+						}
+					}
+
+					if (refreshPaths.count == 0)
+					{
+						refreshPaths = nil;
+					}
+				}
+
 				[self performUpdatesForAddedItems:newItems
 						     removedItems:deletedCacheItems
 						     updatedItems:changedCacheItems
-						     refreshPaths:nil
+						     refreshPaths:refreshPaths
 						    newSyncAnchor:newSyncAnchor
 					       beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 							// Called AFTER the database has been updated, but before UPDATING queries
@@ -433,8 +553,20 @@
 			// Update non-idle queries
 			[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath taskRootItem:taskRootItem targetRemoved:targetRemoved];
 
+			if (removeTask)
+			{
+				[self _finishedItemListTask:task];
+			}
+
 			[self endActivity:@"item list task - update queries"];
 		}];
+	}
+	else
+	{
+		if (removeTask)
+		{
+			[self _finishedItemListTask:task];
+		}
 	}
 
 	// Handle next task in the chain (if any)
@@ -575,6 +707,11 @@
 	}
 }
 
+- (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob
+{
+	[_itemListTasksRequestQueue async:requestJob];
+}
+
 #pragma mark - Check for updates
 - (void)startCheckingForUpdates
 {
@@ -603,7 +740,7 @@
 		{
 			NSArray <OCItem *> *items = (NSArray <OCItem *> *)event.result;
 
-			// Root item change observation
+			// Single item change observation
 			if (event.depth == 0)
 			{
 				NSError *error = nil;
@@ -619,81 +756,13 @@
 						if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
 						{
 							// Folder's etag or fileID differ -> fetch full update for this folder
-							OCEventTarget *eventTarget;
-
-							eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
-
-							[self.connection retrieveItemListAtPath:event.path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
+							[self scheduleItemListTaskForPath:event.path forQuery:NO];
 						}
 						else
 						{
 							// No changes. We're done.
 						}
 					}
-				}
-			}
-
-			// File list traversal
-			if (event.depth == 1)
-			{
-				NSError *error = nil;
-				NSArray <OCItem *> *cacheItems;
-
-				NSMutableArray <OCPath> *pathsNeedingUpdates = [NSMutableArray new];
-
-				OCCoreItemListTask *itemListTask = [[OCCoreItemListTask alloc] initWithCore:self path:event.path];
-
-				itemListTask.syncAnchorAtStart = [self retrieveLatestSyncAnchorWithError:NULL];
-				cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:NO error:&error syncAnchor:NULL];
-
-				[itemListTask.cachedSet updateWithError:error items:cacheItems];
-				[itemListTask.retrievedSet updateWithError:event.error items:OCTypedCast(event.result, NSArray)];
-
-				// Find new folders and folders with changes
-				for (OCItem *item in items)
-				{
-					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil))
-					{
-						OCItem *cacheItem = itemListTask.cachedSet.itemsByPath[item.path];
-
-						if (cacheItem != nil)
-						{
-							if (![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier])
-							{
-								// Folder version differs -> fetch full list for that folder
-								[pathsNeedingUpdates addObject:item.path];
-							}
-						}
-						else
-						{
-							// New folder -> fetch full list for that folder
-							[pathsNeedingUpdates addObject:item.path];
-						}
-					}
-				}
-
-				// Update cache with new results
-				if (_itemListTasksByPath[itemListTask.path] != nil)
-				{
-					OCLogWarning(@"Concurrent item list tasks: %@ (background) vs %@ (queries)", itemListTask, _itemListTasksByPath[itemListTask.path]);
-				}
-
-				// Add a change handler in case another OCCoreItemListTask is already running for this path
-				itemListTask.changeHandler = ^(OCCore *core, OCCoreItemListTask *task) {
-					// Changehandler is executed wrapped into -queueBlock: so this is executed on the core's queue
-					[core handleUpdatedTask:task];
-				};
-
-				[self handleUpdatedTask:itemListTask];
-
-				// Trigger fetching file lists for updated/new folders
-				for (OCPath path in pathsNeedingUpdates)
-				{
-					OCEventTarget *eventTarget;
-
-					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
-
-					[self.connection retrieveItemListAtPath:path depth:1 notBefore:nil options:nil resultTarget:eventTarget];
 				}
 			}
 		}
@@ -716,7 +785,6 @@
 					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval]];
 				}
 			}
-
 		}
 	}
 }

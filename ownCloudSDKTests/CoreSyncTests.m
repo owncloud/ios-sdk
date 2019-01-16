@@ -238,6 +238,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -320,7 +321,7 @@
 						{
 							if (!item.removed)
 							{
-								if ((receivedMoveExpectation == nil) && (receivedCopyExpectation!=nil))
+								if ((receivedMoveExpectation == nil) && (receivedCopyExpectation!=nil) && (newFolderItem != nil))
 								{
 									[receivedCopyExpectation fulfill];
 									receivedCopyExpectation = nil;
@@ -1375,6 +1376,21 @@
 
 								XCTAssert(error==nil);
 								XCTAssert(file.url!=nil);
+
+								/* OCFile tests ***/
+								{
+									NSData *fileData = [NSKeyedArchiver archivedDataWithRootObject:file];
+									OCFile *recreatedFile = [NSKeyedUnarchiver unarchiveObjectWithData:fileData];
+
+									XCTAssert([recreatedFile.url isEqual:file.url]);
+									XCTAssert([recreatedFile.fileID isEqual:file.fileID]);
+									XCTAssert([recreatedFile.eTag isEqual:file.eTag]);
+									XCTAssert([recreatedFile.checksum isEqual:file.checksum]);
+									XCTAssert([recreatedFile.item.itemVersionIdentifier isEqual:file.item.itemVersionIdentifier]);
+
+									XCTAssert([OCFile supportsSecureCoding] == YES);
+								}
+								/*** OCFile tests */
 
 								if ((error == nil) && (file.url != nil))
 								{

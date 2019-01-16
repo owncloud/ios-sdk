@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCEvent.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCEventTarget : NSObject <NSSecureCoding>
 {
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
@@ -27,16 +29,18 @@
 	NSDictionary *_ephermalUserInfo;
 }
 
-@property(readonly) OCEventHandlerIdentifier eventHandlerIdentifier; //!< Identifies the event handler to target by identifier. Can be retrieved via +[OCEvent eventHandlerWithIdentifier:].
-@property(readonly) NSDictionary *userInfo; //!< "Permanent" storage for use by the sender. All contents must be serializable via NSSecureCoding.
-@property(readonly) NSDictionary *ephermalUserInfo; //!< "Ephermal" storage for use by the sender. Can contain any contents (including blocks), but sender shouldn't rely on getting it back. It will be lost f.ex. for requests on background sessions if the app is terminated before the request finishes.
+@property(nullable,readonly) OCEventHandlerIdentifier eventHandlerIdentifier; //!< Identifies the event handler to target by identifier. Can be retrieved via +[OCEvent eventHandlerWithIdentifier:].
+@property(nullable,readonly) NSDictionary *userInfo; //!< "Permanent" storage for use by the sender. All contents must be serializable via NSSecureCoding.
+@property(nullable,readonly) NSDictionary *ephermalUserInfo; //!< "Ephermal" storage for use by the sender. Can contain any contents (including blocks), but sender shouldn't rely on getting it back. It will be lost f.ex. for requests on background sessions if the app is terminated before the request finishes.
 
-+ (instancetype)eventTargetWithEventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo; //!< Creates a new event target using an event handler identifier, userInfo and ephermalUserInfo. See the property descriptions for more information on these.
++ (instancetype)eventTargetWithEventHandlerIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier userInfo:(nullable NSDictionary *)userInfo ephermalUserInfo:(nullable NSDictionary *)ephermalUserInfo; //!< Creates a new event target using an event handler identifier, userInfo and ephermalUserInfo. See the property descriptions for more information on these.
 
-+ (instancetype)eventTargetWithEphermalEventHandlerBlock:(OCEventHandlerBlock)eventHandlerBlock userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo; //!< Creates a new event target based on an ephermal handler block. Breaks if the app is saved and restored. Do not use unless absolutely necessary.
++ (instancetype)eventTargetWithEphermalEventHandlerBlock:(OCEventHandlerBlock)eventHandlerBlock userInfo:(nullable NSDictionary *)userInfo ephermalUserInfo:(nullable NSDictionary *)ephermalUserInfo; //!< Creates a new event target based on an ephermal handler block. Breaks if the app is saved and restored. Do not use unless absolutely necessary.
 
 - (void)handleEvent:(OCEvent *)event sender:(id)sender; //!< Resolves the eventHandlerIdentifier and sends the event to the resolved event handler. Subclasses can use different mechanisms (like f.ex. deliver the event to a block it keeps).
 
 - (void)handleError:(NSError *)error type:(OCEventType)type sender:(id)sender; //!< Convenience method that builds an OCEvent with the provided error and sends it to the event target.
 
 @end
+
+NS_ASSUME_NONNULL_END

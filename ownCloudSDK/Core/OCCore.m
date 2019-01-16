@@ -103,6 +103,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		__weak OCCore *weakSelf = self;
+
 		_bookmark = bookmark;
 
 		_automaticItemListUpdatesEnabled = YES;
@@ -127,6 +129,19 @@
 		_queries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
+		_queuedItemListTaskPaths = [NSMutableArray new];
+		_scheduledItemListTasks = [NSMutableArray new];
+		_itemListTasksRequestQueue = [OCAsyncSequentialQueue new];
+		_itemListTasksRequestQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
+			OCCore *strongSelf;
+
+			if ((strongSelf = weakSelf) != nil)
+			{
+				[strongSelf queueBlock:^{
+					job(completionHandler);
+				}];
+			}
+		};
 
 		_progressByFileID = [NSMutableDictionary new];
 
@@ -389,14 +404,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath];
+			[self scheduleItemListTaskForPath:query.queryPath forQuery:YES];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath]];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forQuery:YES];
 			}
 		}
 	}];
@@ -507,8 +522,8 @@
 
 - (void)startIPCObservation
 {
-	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		[(OCCore *)observer handleIPCChangeNotification];
+	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core handleIPCChangeNotification];
 	}];
 }
 
@@ -564,6 +579,8 @@
 
 - (void)_replayChangesSinceSyncAnchor:(OCSyncAnchor)fromSyncAnchor
 {
+	[self beginActivity:@"Replaying changes since sync anchor"];
+
 	[self.database retrieveCacheItemsUpdatedSinceSyncAnchor:fromSyncAnchor foldersOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		NSMutableArray <OCItem *> *addedOrUpdatedItems = [NSMutableArray new];
 		NSMutableArray <OCItem *> *removedItems = [NSMutableArray new];
@@ -586,6 +603,8 @@
 		{
 			[self performUpdatesForAddedItems:nil removedItems:removedItems updatedItems:addedOrUpdatedItems refreshPaths:nil newSyncAnchor:syncAnchor beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:YES];
 		}
+
+		[self endActivity:@"Replaying changes since sync anchor"];
 	}];
 }
 

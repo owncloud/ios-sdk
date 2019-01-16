@@ -26,9 +26,9 @@
 #import "OCShare.h"
 #import "OCCache.h"
 #import "OCDatabase.h"
-#import "OCRetainerCollection.h"
 #import "OCIPNotificationCenter.h"
 #import "OCLogTag.h"
+#import "OCAsyncSequentialQueue.h"
 
 @class OCCore;
 @class OCItem;
@@ -135,6 +135,10 @@ NS_ASSUME_NONNULL_BEGIN
 	OCSyncAnchor _latestSyncAnchor;
 
 	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
+	NSMutableArray <OCPath> *_queuedItemListTaskPaths;
+	NSMutableArray <OCCoreItemListTask*> *_scheduledItemListTasks;
+	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
+	BOOL _itemListTaskRunning;
 
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;

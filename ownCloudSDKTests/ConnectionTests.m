@@ -811,7 +811,7 @@
 
 						[expectFileUpload fulfill];
 
-						[connection deleteItem:event.result requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						[connection deleteItem:OCTypedCast(event.result, OCItem) requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 							OCLog(@"File deleted with error = %@", event.error);
 
 							XCTAssert(event.error==nil);

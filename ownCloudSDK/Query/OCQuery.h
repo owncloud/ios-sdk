@@ -41,8 +41,10 @@ typedef NS_OPTIONS(NSUInteger, OCQueryChangeSetRequestFlag)
 	OCQueryChangeSetRequestFlagOnlyResults = (1 << 0)  	//!< Return a changeset that only contains the queryResults array.
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef void(^OCQueryChangesAvailableNotificationHandler)(OCQuery *query);
-typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryChangeSet *changeset);
+typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryChangeSet * _Nullable changeset);
 
 @protocol OCQueryDelegate <NSObject>
 
@@ -80,33 +82,33 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 + (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; //!< Query for changed folders since (but not including) a particular sync anchor
 
 #pragma mark - Location
-@property(strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
-@property(strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
-@property(strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
+@property(nullable, strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
+@property(nullable, strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
+@property(nullable, strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query
 
 #pragma mark - Sorting
-@property(copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
+@property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
 
 #pragma mark - Filtering
-@property(strong) NSArray <id<OCQueryFilter>> *filters; //!< Filters to be applied on the query results
+@property(nullable,strong) NSArray <id<OCQueryFilter>> *filters; //!< Filters to be applied on the query results
 
 - (void)addFilter:(id<OCQueryFilter>)filter withIdentifier:(OCQueryFilterIdentifier)identifier;  //!< Adds a filter to the query.
-- (id<OCQueryFilter>)filterWithIdentifier:(OCQueryFilterIdentifier)identifier; //!< Retrieve a filter by its identifier.
+- (nullable id<OCQueryFilter>)filterWithIdentifier:(OCQueryFilterIdentifier)identifier; //!< Retrieve a filter by its identifier.
 - (void)updateFilter:(id<OCQueryFilter>)filter applyChanges:(void(^)(id<OCQueryFilter> filter))applyChangesBlock; //!< Apply changes to a filter
 - (void)removeFilter:(id<OCQueryFilter>)filter; //!< Remove a filter
 
 #pragma mark - Query results
-@property(strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
-@property(strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
+@property(nullable, strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
+@property(nullable, strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
 @property(assign,nonatomic) BOOL includeRootItem; //!< If YES, the rootItem is included in the queryResults and change sets. If NO, it's only exposed via .rootItem.
 
 #pragma mark - Change Sets
 @property(assign,nonatomic) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval
-@property(weak) id <OCQueryDelegate> delegate;	//!< Query Delegate that's informed about the availability of changes (optional)
-@property(copy) OCQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler; //!< Block that's called whenever changes are available (optional)
+@property(nullable, weak) id <OCQueryDelegate> delegate;	//!< Query Delegate that's informed about the availability of changes (optional)
+@property(nullable, copy) OCQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler; //!< Block that's called whenever changes are available (optional)
 
 - (void)requestChangeSetWithFlags:(OCQueryChangeSetRequestFlag)flags completionHandler:(OCQueryChangeSetRequestCompletionHandler)completionHandler; //!< Requests a changeset containing all changes since the last request. Pass in OCQueryChangeSetRequestFlagOnlyResults as flag of you're only interested in the queryResults array and don't need a detailed record of changes.
 
@@ -114,3 +116,5 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 
 extern NSNotificationName OCQueryDidChangeStateNotification; //!< Notification sent when a query's state has changed
 extern NSNotificationName OCQueryHasChangesAvailableNotification; //!< Notification sent when a query has changes available
+
+NS_ASSUME_NONNULL_END

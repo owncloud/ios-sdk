@@ -148,7 +148,9 @@
 
 			// Schedule the upload
 			OCItem *latestVersionOfLocalItem;
+			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
@@ -167,6 +169,8 @@
 								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 			{
 				[syncContext.syncRecord addProgress:progress];
+
+				[self.core registerProgress:progress forItem:self.localItem];
 			}
 
 			// Transition to processing

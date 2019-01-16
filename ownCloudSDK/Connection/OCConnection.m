@@ -725,8 +725,8 @@
 			// [OCXMLNode elementWithName:@"D:displayname"],
 			[OCXMLNode elementWithName:@"D:getcontenttype"],
 			[OCXMLNode elementWithName:@"D:getetag"],
-			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
 			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
@@ -746,44 +746,16 @@
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	OCConnectionDAVRequest *davRequest;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
-	NSProgress *progress = nil;
-
-	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
-	{
-		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-			NSArray <OCItem *> *items = nil;
-			NSArray <NSError *> *errors = nil;
-
-			items = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
-
-			if ((items.count == 0) && (errors.count > 0) && (error == nil))
+	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+			if (event.error != nil)
 			{
-				error = errors.firstObject;
+				completionHandler(event.error, nil);
 			}
-
-			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			else
 			{
-				error = request.responseHTTPStatus.error;
+				completionHandler(nil, OCTypedCast(event.result, NSArray));
 			}
-
-			completionHandler(error, items);
-		}];
-
-		progress = davRequest.progress;
-		progress.eventType = OCEventTypeRetrieveItemList;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
-	}
-	else
-	{
-		if (completionHandler != nil)
-		{
-			completionHandler(OCError(OCErrorInternal), nil);
-		}
-	}
-
-	return(progress);
+		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
@@ -794,7 +766,7 @@
 
 	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
-		davRequest.requiredSignals = self.actionSignals;
+		// davRequest.requiredSignals = self.actionSignals;
 		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 		davRequest.userInfo = @{
 			@"path" : path,
@@ -839,11 +811,17 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
 	{
+		if (error != nil)
+		{
+			event.error = error;
+		}
+
 		if (request.error != nil)
 		{
 			event.error = request.error;
 		}
-		else
+
+		if (event.error == nil)
 		{
 			NSURL *endpointURL = request.userInfo[@"endpointURL"];
 			NSArray <NSError *> *errors = nil;
@@ -872,7 +850,7 @@
 				break;
 			}
 
-			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			if ((event.error==nil) && !request.responseHTTPStatus.isSuccess)
 			{
 				event.error = request.responseHTTPStatus.error;
 			}
@@ -938,9 +916,16 @@
 
 		// Set modification date
 		NSDate *modDate = nil;
-		if ([sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+		if ((modDate = options[OCConnectionOptionLastModificationDateKey]) == nil)
 		{
-			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-Mtime"];
+			if (![sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+			{
+				modDate = nil;
+			}
+		}
+		if (modDate != nil)
+		{
+			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
 		}
 
 		// Compute and set checksum header
@@ -1860,7 +1845,6 @@
 
 		if (strictBookmarkCertificateEnforcement) // .. and the option is turned on
 		{
-
 			request.forceCertificateDecisionDelegation = YES;
 		}
 	}
@@ -1976,6 +1960,7 @@ OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-u
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
+OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 

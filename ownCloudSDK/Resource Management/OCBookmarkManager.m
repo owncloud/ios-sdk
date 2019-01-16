@@ -74,12 +74,23 @@
 				OCLogError(@"Error loading bookmarks: %@", OCLogPrivate(exception));
 			}
 
-			if (loadedBookmarks != nil)
+			@synchronized(self)
 			{
-				@synchronized(self)
+				if (loadedBookmarks != nil)
 				{
 					_bookmarks = loadedBookmarks;
 				}
+				else
+				{
+					[_bookmarks removeAllObjects];
+				}
+			}
+		}
+		else
+		{
+			@synchronized(self)
+			{
+				[_bookmarks removeAllObjects];
 			}
 		}
 	}

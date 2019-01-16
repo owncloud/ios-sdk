@@ -493,17 +493,20 @@
 	// - Fetch updated directory contents as needed
 	if (refreshPaths.count > 0)
 	{
-		for (OCPath path in refreshPaths)
-		{
-			OCPath refreshPath = path;
-
-			if (![refreshPath hasSuffix:@"/"])
+		// Ensure the sync anchor was updated following these updates before triggering a refresh
+		[self queueBlock:^{
+			for (OCPath path in refreshPaths)
 			{
-				refreshPath = [refreshPath stringByAppendingString:@"/"];
-			}
+				OCPath refreshPath = path;
 
-			[self scheduleItemListTaskForPath:refreshPath];
-		}
+				if (![refreshPath hasSuffix:@"/"])
+				{
+					refreshPath = [refreshPath stringByAppendingString:@"/"];
+				}
+
+				[self scheduleItemListTaskForPath:refreshPath forQuery:NO];
+			}
+		}];
 	}
 
 	[self endActivity:@"Perform item and query updates"];

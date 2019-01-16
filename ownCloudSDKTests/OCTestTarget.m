@@ -7,6 +7,7 @@
 //
 
 #import "OCTestTarget.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
 @implementation OCTestTarget
 
@@ -38,6 +39,28 @@
 + (NSString *)userPassword
 {
 	return (@"test");
+}
+
++ (OCBookmark *)userBookmark
+{
+	OCBookmark *bookmark;
+
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+
+	return (bookmark);
+}
+
++ (OCBookmark *)adminBookmark
+{
+	OCBookmark *bookmark;
+
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+
+	return (bookmark);
 }
 
 @end

@@ -265,7 +265,7 @@
 			resultItem = updatedItem;
 		}
 
-		// Action complete and can be removed
+		// Action complete
 		[syncContext completeWithError:event.error core:self.core item:resultItem parameter:nil];
 
 		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
@@ -367,6 +367,10 @@
 			break;
 		}
 
+		// Action complete
+		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
+		resultInstruction = OCCoreSyncInstructionStop;
+
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
 			// Create issue for cancellation for any errors
@@ -379,6 +383,9 @@
 		// Reschedule for all other errors
 		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 		resultInstruction = OCCoreSyncInstructionStop;
+
+		// Action complete
+		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
 	}
 
 	return (resultInstruction);

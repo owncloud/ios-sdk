@@ -53,6 +53,8 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 @class OCEventTarget;
 @class OCFile;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol OCEventHandler <NSObject>
 
 - (void)handleEvent:(OCEvent *)event sender:(id)sender;
@@ -81,37 +83,39 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
 
-@property(readonly) NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
-@property(readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
+@property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
+@property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
-@property(strong) OCPath path;		//!< Used by OCEventTypeRetrieveItemList.
+@property(nullable,strong) OCPath path;		//!< Used by OCEventTypeRetrieveItemList.
 @property(assign) NSUInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
 
-@property(strong) NSString *mimeType;
-@property(strong) NSData *data;
-@property(strong) OCFile *file;
+@property(nullable,strong) NSString *mimeType;
+@property(nullable,strong) NSData *data;
+@property(nullable,strong) OCFile *file;
 
-@property(strong) NSError *error;
-@property(strong) id<NSObject,NSSecureCoding> result;
+@property(nullable,strong) NSError *error;
+@property(nullable,strong) id<NSObject,NSSecureCoding> result;
 
-@property(strong) OCDatabaseID databaseID; //!< Used by OCDatabase to track an event. (ephermal)
+@property(nullable,strong) OCDatabaseID databaseID; //!< Used by OCDatabase to track an event. (ephermal)
 
 #pragma mark - Event handler registration / resolution
-+ (void)registerEventHandler:(id <OCEventHandler>)eventHandler forIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Registers an event handler for a particular name. Remove with a nil value for eventHandler.
++ (void)registerEventHandler:(nullable id <OCEventHandler>)eventHandler forIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Registers an event handler for a particular name. Remove with a nil value for eventHandler.
 + (void)unregisterEventHandlerForIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Unregister an event handler.
-+ (id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Retrieves the event handler stored for a particular identifier.
++ (nullable id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Retrieves the event handler stored for a particular identifier.
 
 #pragma mark - Creating events
-+ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
++ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(nullable NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
 
-+ (instancetype)eventWithType:(OCEventType)eventType userInfo:(NSDictionary<OCEventUserInfoKey,id<NSSecureCoding>> *)userInfo ephermalUserInfo:(NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(id)result; //!< Creates an event using of the specified type using the provided userInfo and ephermalUserInfo
++ (instancetype)eventWithType:(OCEventType)eventType userInfo:(nullable NSDictionary<OCEventUserInfoKey,id<NSSecureCoding>> *)userInfo ephermalUserInfo:(nullable NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(nullable id)result; //!< Creates an event using of the specified type using the provided userInfo and ephermalUserInfo
 
 #pragma mark - Serialization tools
-+ (instancetype)eventFromSerializedData:(NSData *)serializedData;
-- (NSData *)serializedData;
++ (nullable instancetype)eventFromSerializedData:(NSData *)serializedData;
+- (nullable NSData *)serializedData;
 
 @end
 
 extern OCEventUserInfoKey OCEventUserInfoKeyItem;
 extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
+
+NS_ASSUME_NONNULL_END
 
