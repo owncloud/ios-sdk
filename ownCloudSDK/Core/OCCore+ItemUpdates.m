@@ -165,6 +165,16 @@
 		OCWaitForCompletion(cacheUpdatesGroup);
 	}
 
+	if ((beforeQueryUpdatesAction!=nil) && skipDatabase)
+	{
+		// Run preflight action when database should be skipped and beforeQueryUpdatesAction did not yet run
+		OCSyncExec(waitForUpdates, {
+			beforeQueryUpdatesAction(^{
+				OCSyncExecDone(waitForUpdates);
+			});
+		});
+	}
+
 	// Update queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (afterQueryUpdatesAction!=nil) || (queryPostProcessor!=nil))
 	{

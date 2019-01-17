@@ -601,7 +601,49 @@
 
 		if ((addedOrUpdatedItems.count > 0) || (removedItems.count > 0))
 		{
-			[self performUpdatesForAddedItems:nil removedItems:removedItems updatedItems:addedOrUpdatedItems refreshPaths:nil newSyncAnchor:syncAnchor beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:YES];
+			OCCoreItemList *addedOrUpdatedItemsList = [OCCoreItemList itemListWithItems:addedOrUpdatedItems];
+
+			[self performUpdatesForAddedItems:nil
+			   	removedItems:removedItems
+				updatedItems:addedOrUpdatedItems
+				refreshPaths:nil
+				newSyncAnchor:syncAnchor
+				beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
+					// Find items that moved to a different path
+					for (OCQuery *query in self->_queries)
+					{
+						OCCoreItemList *queryItemList;
+
+						if ((queryItemList = [OCCoreItemList itemListWithItems:query.fullQueryResults]) != nil)
+						{
+							NSMutableSet <OCFileID> *sharedFileIDs = [[NSMutableSet alloc] initWithSet:addedOrUpdatedItemsList.itemFileIDsSet];
+							[sharedFileIDs intersectSet:queryItemList.itemFileIDsSet];
+
+							for (OCFileID sharedFileID in sharedFileIDs)
+							{
+								OCItem *queryItem = queryItemList.itemsByFileID[sharedFileID];
+								OCItem *newItem = addedOrUpdatedItemsList.itemsByFileID[sharedFileID];
+
+								if (![newItem.path.stringByDeletingLastPathComponent isEqual:queryItem.path.stringByDeletingLastPathComponent])
+								{
+									OCTLogDebug(@[@"Replay"], @"Found moved item (from=%@ to=%@)", queryItem.path, newItem.path);
+
+									newItem.previousPath = queryItem.path;
+								}
+								else
+								{
+									OCTLogDebug(@[@"Replay"], @"Found item didn't move (queryItem=%@ newItem=%@)", queryItem, newItem);
+								}
+							}
+						}
+					}
+
+					completionHandler();
+				}
+				afterQueryUpdates:nil
+				queryPostProcessor:nil
+				skipDatabase:YES
+			];
 		}
 
 		[self endActivity:@"Replaying changes since sync anchor"];
