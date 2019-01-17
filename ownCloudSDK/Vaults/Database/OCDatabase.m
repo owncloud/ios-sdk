@@ -237,7 +237,14 @@
 
 			if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
 			{
+				NSNumber *removed;
+
 				[items addObject:item];
+
+				if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
+				{
+					item.removed = removed.boolValue;
+				}
 				item.databaseID = resultDict[@"mdID"];
 			}
 		}
@@ -346,7 +353,7 @@
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE syncAnchor > ?";
+	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE syncAnchor > ?";
 
 	if (foldersOnly)
 	{

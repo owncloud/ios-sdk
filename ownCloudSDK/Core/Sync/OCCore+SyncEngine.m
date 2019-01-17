@@ -170,7 +170,11 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 			completionHandler(error);
 		}
 
-		[strongSelf postIPCChangeNotification];
+		// Transaction is not yet closed, so post IPC change notification only after changes have settled
+		[strongSelf.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
+			[strongSelf postIPCChangeNotification];
+			return(nil);
+		} completionHandler:nil];
 	}];
 }
 
