@@ -19,16 +19,6 @@
 
 @implementation CoreSyncTests
 
-- (void)setUp {
-    [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-}
-
-- (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
-}
-
 - (void)dumpMetaDataTableFromCore:(OCCore *)core withDescription:(NSString *)description rowHook:(void(^)(NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary))rowHook completionHandler:(dispatch_block_t)completionHandler
 {
 	[core.vault.database.sqlDB executeQuery:[OCSQLiteQuery query:[@"SELECT * FROM " stringByAppendingString:OCDatabaseTableNameMetaData] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
@@ -1571,6 +1561,107 @@
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 
+}
+
+- (void)testItemUpdates
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *favoriteSetExpectation = [self expectationWithDescription:@"Favorite set"];
+	XCTestExpectation *favoriteUnsetExpectation = [self expectationWithDescription:@"Favorite unset"];
+	XCTestExpectation *propFindReturnedExpectation = [self expectationWithDescription:@"PROPFIND returned"];
+	__block BOOL didFavorite = NO;
+
+	// Create core with bookmark
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCQuery *query;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		query = [OCQuery queryForPath:@"/"];
+		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
+				if (query.state == OCQueryStateIdle)
+				{
+					for (OCItem *item in changeset.queryResult)
+					{
+						OCLog(@"queryResult=%@", changeset.queryResult);
+
+						if ((item.type == OCItemTypeFile) && (!item.isFavorite.boolValue) && !didFavorite)
+						{
+							NSArray *propertiesToUpdate = @[ OCItemPropertyNameIsFavorite ];
+
+							didFavorite = YES;
+
+							item.isFavorite = @(YES);
+
+							[core updateItem:item properties:propertiesToUpdate options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName) {
+								OCLog(@"Update item=%@ result: error=%@, statusByPropertyName=%@", item, error, statusByPropertyName);
+
+								for (OCItemPropertyName propertyName in propertiesToUpdate)
+								{
+									XCTAssert(statusByPropertyName[propertyName].isSuccess);
+								}
+
+								[favoriteSetExpectation fulfill];
+
+								[core.connection retrieveItemListAtPath:item.path depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+									XCTAssert(items.count == 1);
+									XCTAssert(items.firstObject.isFavorite.boolValue);
+
+									[propFindReturnedExpectation fulfill];
+
+									item.isFavorite = @(NO);
+
+									[core updateItem:item properties:propertiesToUpdate options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+										OCLog(@"Update item=%@ result: error=%@, statusByPropertyName=%@", item, error, statusByPropertyName);
+
+										for (OCItemPropertyName propertyName in propertiesToUpdate)
+										{
+											XCTAssert(statusByPropertyName[propertyName].isSuccess);
+										}
+
+										[favoriteUnsetExpectation fulfill];
+
+										[core.connection retrieveItemListAtPath:item.path depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+											XCTAssert(items.count == 1);
+											XCTAssert(!items.firstObject.isFavorite.boolValue);
+
+											// Stop core
+											[core stopWithCompletionHandler:^(id sender, NSError *error) {
+												XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+												[coreStoppedExpectation fulfill];
+											}];
+										}];
+									}];
+								}];
+							}];
+							break;
+						}
+					}
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
 }
 
 @end

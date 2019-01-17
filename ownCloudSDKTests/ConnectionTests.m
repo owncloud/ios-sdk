@@ -899,6 +899,43 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testStatusRequest
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCConnection *connection;
+	XCTestExpectation *expectServerStatusResponse = [self expectationWithDescription:@"Received server status response"];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	XCTAssert(connection!=nil);
+
+	XCTAssert(connection.serverVersion == nil);
+	XCTAssert(connection.serverVersionString == nil);
+	XCTAssert(connection.serverEdition == nil);
+	XCTAssert(connection.serverProductName == nil);
+	XCTAssert(connection.serverLongProductVersionString == nil);
+
+	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+		XCTAssert(statusInfo!=nil);
+		XCTAssert(statusInfo[@"edition"]!=nil);
+		XCTAssert(statusInfo[@"installed"]!=nil);
+		XCTAssert(statusInfo[@"maintenance"]!=nil);
+		XCTAssert(statusInfo[@"needsDbUpgrade"]!=nil);
+		XCTAssert(statusInfo[@"productname"]!=nil);
+		XCTAssert(statusInfo[@"version"]!=nil);
+		XCTAssert(statusInfo[@"versionstring"]!=nil);
+
+		XCTAssert(connection.serverVersion != nil);
+		XCTAssert(connection.serverVersionString != nil);
+		XCTAssert(connection.serverEdition != nil);
+		XCTAssert(connection.serverProductName != nil);
+		XCTAssert(connection.serverLongProductVersionString != nil);
+
+		[expectServerStatusResponse fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:120 handler:nil];
+}
+
 - (void)_testPropFindZeroStresstest
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];

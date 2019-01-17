@@ -103,10 +103,11 @@
 
 	if (path!=nil)
 	{
-		if (_itemListTasksByPath[path] != nil)
+		if ((task = _itemListTasksByPath[path]) != nil)
 		{
 			// Don't start a new item list task if one is already running for the path
-			OCLogError(@"BUG! Another item list task is already running for %@", path);
+			// Instead, "handle" the running task again so that a new query is immediately updated
+			[self handleUpdatedTask:task];
 			return (nil);
 		}
 
@@ -726,6 +727,8 @@
 
 	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
 
+	[self beginActivity:@"Checking for updates in the background"];
+
 	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:nil resultTarget:eventTarget];
 }
 
@@ -787,6 +790,8 @@
 			}
 		}
 	}
+
+	[self endActivity:@"Checking for updates in the background"];
 }
 
 @end

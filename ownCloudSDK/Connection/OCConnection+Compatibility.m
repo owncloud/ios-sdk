@@ -51,6 +51,7 @@
 
 - (NSString *)serverLongProductVersionString
 {
+	if (_serverStatus == nil) { return (nil); }
 	return ([OCConnection serverLongProductVersionStringFromServerStatus:_serverStatus]);
 }
 
