@@ -725,7 +725,14 @@
 {
 	OCEventTarget *eventTarget;
 
-	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+	if (self.state != OCCoreStateRunning)
+	{
+		return;
+	}
+
+	[self beginActivity:@"Check for updates"];
+
+	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:@{ @"endActivity" : @(YES)  }];
 
 	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
 }
@@ -738,7 +745,7 @@
 	if (event.error == nil)
 	{
 		// Single item change observation
-		if ((event.result != nil) && (event.depth == 0))
+		if ((event.result != nil) && (event.depth == 0) && (self.state == OCCoreStateRunning))
 		{
 			NSArray <OCItem *> *items = (NSArray <OCItem *> *)event.result;
 			NSError *error = nil;
@@ -783,6 +790,12 @@
 				}
 			}
 		}
+	}
+
+	// End activity
+	if (event.ephermalUserInfo[@"endActivity"])
+	{
+		[self endActivity:@"Check for updates"];
 	}
 }
 

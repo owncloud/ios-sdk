@@ -31,6 +31,8 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 	NSMutableDictionary <NSUUID *, NSMutableArray<OCCoreManagerOfflineOperation> *> *_queuedOfflineOperationsByUUID;
 	NSMutableDictionary <NSUUID *, NSNumber *> *_runningOfflineOperationByUUID;
 
+	NSMutableDictionary <NSUUID *, dispatch_group_t> *_shutdownWaitGroupByUUID;
+
 	BOOL _postFileProviderNotifications;
 }
 

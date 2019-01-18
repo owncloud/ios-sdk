@@ -22,7 +22,7 @@
 	XCTestExpectation *core2Expectation = [self expectationWithDescription:@"expect core 2"];
 	XCTestExpectation *core1ReturnExpectation = [self expectationWithDescription:@"expect core 1 return"];
 	XCTestExpectation *core2ReturnExpectation = [self expectationWithDescription:@"expect core 2 return"];
-	XCTestExpectation *offlineOperationExpectation = [self expectationWithDescription:@"expect core 2 return"];
+	XCTestExpectation *offlineOperationExpectation = [self expectationWithDescription:@"expect offline operation to run"];
 	__block NSValue *core1Address = NULL, *core2Address = NULL;
 	__block __weak OCCore *core1 = nil;
 	__block __weak OCCore *core2 = nil;
@@ -77,6 +77,52 @@
 	XCTAssert(core1==nil);
 	XCTAssert(core2==nil);
 	XCTAssert([core1Address isEqual:core2Address]);
+}
+
+- (void)testConcurrentReturnAndRequest
+{
+	XCTestExpectation *offlineOperationExpectation = [self expectationWithDescription:@"expect offline operation to run"];
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	__block __weak OCCore *core1=nil, *core2=nil;
+	__block NSValue *core1Address = NULL, *core2Address = NULL;
+
+	@autoreleasepool {
+		core1 = [[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+			OCLog(@"Started core1=%@", core);
+			core1Address = [NSValue valueWithPointer:(__bridge const void *)core];
+
+			// Calling -returnCoreForBookmark/-requestCoreForBookmark: directly in the completionHandler of -requestCoreForBookmark: would dead-lock
+			dispatch_async(dispatch_get_main_queue(), ^{
+				@autoreleasepool {
+					[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+						OCLog(@"Returned core1");
+					}];
+
+					core2 = [[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+						OCLog(@"Started core2=%@", core);
+						core2Address = [NSValue valueWithPointer:(__bridge const void *)core];
+
+						[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+							OCLog(@"Returned core2");
+						}];
+
+						[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
+							dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+								[offlineOperationExpectation fulfill];
+								completionHandler();
+							});
+						} forBookmark:bookmark];
+					}];
+				};
+			});
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:30 handler:nil];
+
+	OCLog(@"core1=%p, core2=%p", core1Address.pointerValue, core2Address.pointerValue);
+
+	XCTAssert(![core1Address isEqual:core2Address]);
 }
 
 @end

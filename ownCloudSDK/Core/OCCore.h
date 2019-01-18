@@ -37,7 +37,6 @@
 @class OCIPNotificationCenter;
 
 @class OCCoreConnectionStatusSignalProvider;
-@class OCCoreReachabilityConnectionStatusSignalProvider;
 @class OCCoreMaintenanceModeStatusSignalProvider;
 
 #pragma mark - Types

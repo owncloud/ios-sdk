@@ -212,7 +212,11 @@
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
+	OCTLogDebug(@[@"START"], @"queuing start request in work queue");
+
 	[self queueBlock:^{
+		OCTLogDebug(@[@"START"], @"performing start request");
+
 		if (self->_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
@@ -275,74 +279,82 @@
 
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	[self queueBlock:^{
-		__block NSError *stopError = nil;
+	OCTLogDebug(@[@"STOP"], @"queuing stop request in connectivity queue");
 
-		if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
-		{
-			__weak OCCore *weakSelf = self;
+	[self queueConnectivityBlock:^{
+		OCTLogDebug(@[@"STOP"], @"queuing stop request in work queue");
 
-			[self _updateState:OCCoreStateStopping];
+		[self queueBlock:^{
+			__block NSError *stopError = nil;
 
-			// Cancel non-critical requests to speed up shutdown
-			[self->_connection cancelNonCriticalRequests];
+			OCTLogDebug(@[@"STOP"], @"performing stop request");
 
-			// Wait for running operations to finish
-			self->_runningActivitiesCompleteBlock = ^{
-				dispatch_group_t stopGroup = nil;
-
-				// Stop..
-				stopGroup = dispatch_group_create();
-
-				// Shut down Sync Engine
-				[weakSelf shutdownSyncEngine];
-
-				// Close connection
-				OCCore *strongSelf;
-				if ((strongSelf = weakSelf) != nil)
-				{
-					strongSelf->_attemptConnect = NO;
-				}
-
-				dispatch_group_enter(stopGroup);
-
-				[weakSelf.connection disconnectWithCompletionHandler:^{
-					dispatch_group_leave(stopGroup);
-				}];
-
-				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
-
-				// Close vault (incl. database)
-				dispatch_group_enter(stopGroup);
-
-				[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-					stopError = error;
-					dispatch_group_leave(stopGroup);
-				}];
-
-				dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
-
-				[weakSelf _updateState:OCCoreStateStopped];
-
-				if (completionHandler != nil)
-				{
-					completionHandler(weakSelf, stopError);
-				}
-			};
-
-			if (self->_runningActivities == 0)
+			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
 			{
-				if (self->_runningActivitiesCompleteBlock != nil)
+				__weak OCCore *weakSelf = self;
+
+				[self _updateState:OCCoreStateStopping];
+
+				// Cancel non-critical requests to speed up shutdown
+				[self->_connection cancelNonCriticalRequests];
+
+				// Wait for running operations to finish
+				self->_runningActivitiesCompleteBlock = ^{
+					dispatch_group_t stopGroup = nil;
+
+					// Stop..
+					stopGroup = dispatch_group_create();
+
+					// Shut down Sync Engine
+					[weakSelf shutdownSyncEngine];
+
+					// Close connection
+					OCCore *strongSelf;
+					if ((strongSelf = weakSelf) != nil)
+					{
+						strongSelf->_attemptConnect = NO;
+					}
+
+					dispatch_group_enter(stopGroup);
+
+					[weakSelf.connection disconnectWithCompletionHandler:^{
+						dispatch_group_leave(stopGroup);
+					}];
+
+					dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+
+					// Close vault (incl. database)
+					dispatch_group_enter(stopGroup);
+
+					[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+						stopError = error;
+						dispatch_group_leave(stopGroup);
+					}];
+
+					dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
+
+					[weakSelf _updateState:OCCoreStateStopped];
+
+					if (completionHandler != nil)
+					{
+						completionHandler(weakSelf, stopError);
+					}
+				};
+
+				if (self->_runningActivities == 0)
 				{
-					self->_runningActivitiesCompleteBlock();
-					self->_runningActivitiesCompleteBlock = nil;
+					if (self->_runningActivitiesCompleteBlock != nil)
+					{
+						self->_runningActivitiesCompleteBlock();
+						self->_runningActivitiesCompleteBlock = nil;
+					}
 				}
 			}
-		}
-		else if (completionHandler != nil)
-		{
-			completionHandler(self, stopError);
-		}
+			else if (completionHandler != nil)
+			{
+				completionHandler(self, stopError);
+			}
+		}];
 	}];
 }
 
@@ -996,7 +1008,9 @@
 - (void)beginActivity:(NSString *)description
 {
 	OCLogDebug(@"Beginning activity '%@' ..", description);
-	[self queueBlock:^{
+	
+	@synchronized(OCCore.class)
+	{
 		self->_runningActivities++;
 
 		if (self->_runningActivities == 1)
@@ -1010,27 +1024,37 @@
 		}
 
 		[self->_runningActivitiesStrings addObject:description];
-	}];
+	}
 }
 
 - (void)endActivity:(NSString *)description
 {
 	OCLogDebug(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
-		self->_runningActivities--;
+		BOOL allActivitiesEnded = NO;
 
-		NSUInteger oldestIndex;
-
-		if ((oldestIndex = [self->_runningActivitiesStrings indexOfObject:description]) != NSNotFound)
+		@synchronized(OCCore.class)
 		{
-			[self->_runningActivitiesStrings removeObjectAtIndex:oldestIndex];
-		}
-		else
-		{
-			OCLogError(@"ERROR! Over-ending activity - core may shutdown abruptly! Activity: %@", description);
+			self->_runningActivities--;
+
+			NSUInteger oldestIndex;
+
+			if ((oldestIndex = [self->_runningActivitiesStrings indexOfObject:description]) != NSNotFound)
+			{
+				[self->_runningActivitiesStrings removeObjectAtIndex:oldestIndex];
+			}
+			else
+			{
+				OCLogError(@"ERROR! Over-ending activity - core may shutdown abruptly! Activity: %@", description);
+			}
+
+			if (self->_runningActivities == 0)
+			{
+				allActivitiesEnded = YES;
+			}
 		}
 
-		if (self->_runningActivities == 0)
+		if (allActivitiesEnded)
 		{
 			dispatch_group_leave(self->_runningActivitiesGroup);
 
