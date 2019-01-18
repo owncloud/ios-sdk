@@ -205,9 +205,9 @@
 			[sourceItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 			sourceItem.previousPath = updatedItem.path;
-		}
 
-		syncContext.updatedItems = @[ sourceItem ];
+			syncContext.updatedItems = @[ sourceItem ];
+		}
 	}
 }
 
@@ -369,7 +369,6 @@
 
 		// Action complete
 		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
-		resultInstruction = OCCoreSyncInstructionStop;
 
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{

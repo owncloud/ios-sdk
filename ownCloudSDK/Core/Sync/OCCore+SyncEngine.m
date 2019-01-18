@@ -153,8 +153,6 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler
 {
-	__weak OCCore *weakSelf = self;
-
 	[self.vault.database increaseValueForCounter:OCCoreSyncJournalCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -163,18 +161,12 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-		OCCore *strongSelf = weakSelf;
-
 		if (completionHandler != nil)
 		{
 			completionHandler(error);
 		}
 
-		// Transaction is not yet closed, so post IPC change notification only after changes have settled
-		[strongSelf.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
-			[strongSelf postIPCChangeNotification];
-			return(nil);
-		} completionHandler:nil];
+		[self postIPCChangeNotification];
 	}];
 }
 

@@ -53,7 +53,7 @@
 	{
 		// Make sure updates are wrapped into -incrementSyncAnchorWithProtectedBlock
 		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor skipDatabase:NO];
+			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor skipDatabase:skipDatabase];
 
 			return ((NSError *)nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
@@ -517,6 +517,12 @@
 				[self scheduleItemListTaskForPath:refreshPath forQuery:NO];
 			}
 		}];
+	}
+
+	// Initiate an IPC change notification
+	if (!skipDatabase)
+	{
+		[self postIPCChangeNotification];
 	}
 
 	[self endActivity:@"Perform item and query updates"];

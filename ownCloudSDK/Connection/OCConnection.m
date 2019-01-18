@@ -662,6 +662,11 @@
 	}
 }
 
+- (void)cancelNonCriticalRequests
+{
+	[self.allQueues makeObjectsPerformSelector:@selector(cancelNonCriticalRequests)];
+}
+
 #pragma mark - Server Status
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
@@ -777,10 +782,16 @@
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
+		davRequest.priority = NSURLSessionTaskPriorityHigh;
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
 			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		if (options[OCConnectionOptionIsNonCriticalKey] != nil)
+		{
+			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
 		}
 
 		// Enqueue request
@@ -1218,6 +1229,7 @@
 					@"responseTagsByPropertyName" : responseTagsByPropertyName
 				};
 				patchRequest.eventTarget = eventTarget;
+				patchRequest.priority = NSURLSessionTaskPriorityHigh;
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
@@ -1327,6 +1339,7 @@
 			@"fullFolderPath" : fullFolderPath
 		};
 		request.eventTarget = eventTarget;
+		request.priority = NSURLSessionTaskPriorityHigh;
 
 		// Enqueue request
 		[self.commandQueue enqueueRequest:request];
@@ -1458,6 +1471,7 @@
 				@"newName" : newName,
 				@"eventType" : @(eventType)
 			};
+			request.priority = NSURLSessionTaskPriorityHigh;
 
 			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
 			[request setValue:@"infinity" forHeaderField:@"Depth"];
@@ -1577,6 +1591,7 @@
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
+		request.priority = NSURLSessionTaskPriorityHigh;
 
 		if (requireMatch && (item.eTag!=nil))
 		{
@@ -1703,7 +1718,7 @@
 			request = [OCConnectionRequest requestWithURL:url];
 
 			request.groupID = item.path.stringByDeletingLastPathComponent;
-			request.priority = NSURLSessionTaskPriorityLow;
+			request.priority = NSURLSessionTaskPriorityDefault;
 
 			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 				@(size.width).stringValue, 	@"x",
@@ -1961,6 +1976,7 @@ OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
+OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey = @"is-non-critical";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 

@@ -146,6 +146,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
+- (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests on all queues
+
 #pragma mark - Server Status
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
 
@@ -293,6 +295,7 @@ extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disal
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads
+extern OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey; // Request is non-critical
 extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 

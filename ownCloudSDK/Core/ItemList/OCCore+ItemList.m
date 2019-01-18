@@ -727,9 +727,7 @@
 
 	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
 
-	[self beginActivity:@"Checking for updates in the background"];
-
-	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:nil resultTarget:eventTarget];
+	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
@@ -739,32 +737,28 @@
 	// Handle result
 	if (event.error == nil)
 	{
-		if (event.result != nil)
+		// Single item change observation
+		if ((event.result != nil) && (event.depth == 0))
 		{
 			NSArray <OCItem *> *items = (NSArray <OCItem *> *)event.result;
+			NSError *error = nil;
+			OCItem *cacheItem = nil;
+			OCItem *remoteItem = items.firstObject;
 
-			// Single item change observation
-			if (event.depth == 0)
+			NSArray<OCItem*> *cacheItems = nil;
+
+			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{
-				NSError *error = nil;
-				OCItem *cacheItem = nil;
-				OCItem *remoteItem = items.firstObject;
-
-				NSArray<OCItem*> *cacheItems = nil;
-
-				if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
+				if ((cacheItem = cacheItems.firstObject) != nil)
 				{
-					if ((cacheItem = cacheItems.firstObject) != nil)
+					if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
 					{
-						if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
-						{
-							// Folder's etag or fileID differ -> fetch full update for this folder
-							[self scheduleItemListTaskForPath:event.path forQuery:NO];
-						}
-						else
-						{
-							// No changes. We're done.
-						}
+						// Folder's etag or fileID differ -> fetch full update for this folder
+						[self scheduleItemListTaskForPath:event.path forQuery:NO];
+					}
+					else
+					{
+						// No changes. We're done.
 					}
 				}
 			}
@@ -790,8 +784,6 @@
 			}
 		}
 	}
-
-	[self endActivity:@"Checking for updates in the background"];
 }
 
 @end

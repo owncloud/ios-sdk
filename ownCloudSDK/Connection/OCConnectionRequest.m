@@ -553,6 +553,8 @@
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 
+		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
+
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
 			self.resultHandlerAction = NSSelectorFromString(resultHandlerActionString);
@@ -585,6 +587,8 @@
 
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
+
+	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }

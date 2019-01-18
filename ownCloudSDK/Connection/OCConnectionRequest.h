@@ -132,6 +132,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 @property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
 @property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
 
+@property(assign) BOOL isNonCritial;			//!< Request that are marked non-critical are allowed to be cancelled to speed up shutting down the connection queue
+
 @property(readonly) BOOL cancelled;
 
 @property(strong) id systemActivity;

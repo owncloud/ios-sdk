@@ -23,12 +23,13 @@
 	XCTestExpectation *core1ReturnExpectation = [self expectationWithDescription:@"expect core 1 return"];
 	XCTestExpectation *core2ReturnExpectation = [self expectationWithDescription:@"expect core 2 return"];
 	XCTestExpectation *offlineOperationExpectation = [self expectationWithDescription:@"expect core 2 return"];
-	OCBookmark *bookmark = [OCTestTarget userBookmark];
 	__block NSValue *core1Address = NULL, *core2Address = NULL;
 	__block __weak OCCore *core1 = nil;
 	__block __weak OCCore *core2 = nil;
 
 	@autoreleasepool {
+		OCBookmark *bookmark = [OCTestTarget userBookmark];
+
 		XCTAssert(OCCoreManager.sharedCoreManager!=nil);
 
 		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
@@ -40,9 +41,11 @@
 
 			[core1Expectation fulfill];
 
-			[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
-				[core1ReturnExpectation fulfill];
-			}];
+			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+				[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+					[core1ReturnExpectation fulfill];
+				}];
+			});
 		}];
 
 		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
@@ -68,6 +71,8 @@
 
 		[self waitForExpectationsWithTimeout:10 handler:nil];
 	}
+
+	[[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]];
 
 	XCTAssert(core1==nil);
 	XCTAssert(core2==nil);

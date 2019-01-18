@@ -44,6 +44,7 @@
 {
 	dispatch_group_t _runningActivitiesGroup;
 	NSInteger _runningActivities;
+	NSMutableArray <NSString *> *_runningActivitiesStrings;
 	dispatch_block_t _runningActivitiesCompleteBlock;
 }
 
@@ -282,6 +283,9 @@
 			__weak OCCore *weakSelf = self;
 
 			[self _updateState:OCCoreStateStopping];
+
+			// Cancel non-critical requests to speed up shutdown
+			[self->_connection cancelNonCriticalRequests];
 
 			// Wait for running operations to finish
 			self->_runningActivitiesCompleteBlock = ^{
@@ -532,9 +536,35 @@
 	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
 }
 
-- (void)postIPCChangeNotification
+- (void)_postIPCChangeNotification
 {
 	[_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+}
+
+- (void)postIPCChangeNotification
+{
+	// Wait for database transaction to settle and current task on the queue to finish before posting the notification
+	@synchronized(OCIPNotificationCenter.class)
+	{
+		_pendingIPCChangeNotifications++;
+	}
+
+	[self beginActivity:@"Post IPC change notification"];
+	[self queueBlock:^{
+		// Transaction is not yet closed, so post IPC change notification only after changes have settled
+		[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
+			@synchronized(OCIPNotificationCenter.class)
+			{
+				if (self->_pendingIPCChangeNotifications != 0)
+				{
+					self->_pendingIPCChangeNotifications = 0;
+					[self _postIPCChangeNotification];
+				}
+			}
+			[self endActivity:@"Post IPC change notification"];
+			return(nil);
+		} completionHandler:nil];
+	}];
 }
 
 - (void)handleIPCChangeNotification
@@ -904,6 +934,7 @@
 
 			if ((fromName != nil) && (toName != nil) && (![fromName isEqual:toName]))
 			{
+				// Renamed
 				NSURL *fromLocalFileURL = [toItemParentURL URLByAppendingPathComponent:fromName];
 				NSURL *toLocalFileURL = [toItemParentURL URLByAppendingPathComponent:toName];
 
@@ -918,6 +949,13 @@
 					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 					toItem.localRelativePath = [_vault relativePathForItem:toItem];
 				}
+			}
+			else if (adjustLocalMetadata)
+			{
+				// Name unchanged
+				toItem.locallyModified = fromItem.locallyModified;
+				toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
+				toItem.localRelativePath = fromItem.localRelativePath;
 			}
 		}
 	}
@@ -964,7 +1002,14 @@
 		if (self->_runningActivities == 1)
 		{
 			dispatch_group_enter(self->_runningActivitiesGroup);
+
+			if (self->_runningActivitiesStrings == nil)
+			{
+				self->_runningActivitiesStrings = [NSMutableArray new];
+			}
 		}
+
+		[self->_runningActivitiesStrings addObject:description];
 	}];
 }
 
@@ -973,7 +1018,18 @@
 	OCLogDebug(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
 		self->_runningActivities--;
-		
+
+		NSUInteger oldestIndex;
+
+		if ((oldestIndex = [self->_runningActivitiesStrings indexOfObject:description]) != NSNotFound)
+		{
+			[self->_runningActivitiesStrings removeObjectAtIndex:oldestIndex];
+		}
+		else
+		{
+			OCLogError(@"ERROR! Over-ending activity - core may shutdown abruptly! Activity: %@", description);
+		}
+
 		if (self->_runningActivities == 0)
 		{
 			dispatch_group_leave(self->_runningActivitiesGroup);

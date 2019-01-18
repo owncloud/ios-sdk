@@ -148,6 +148,8 @@ NS_ASSUME_NONNULL_BEGIN
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
 
+	NSUInteger _pendingIPCChangeNotifications;
+
 	OCIPCNotificationName _ipNotificationName;
 	OCIPNotificationCenter *_ipNotificationCenter;
 
