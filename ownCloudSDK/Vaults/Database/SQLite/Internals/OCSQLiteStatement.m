@@ -19,6 +19,7 @@
 #import "OCSQLiteStatement.h"
 #import "OCSQLiteDB.h"
 #import "OCLogger.h"
+#import "OCSQLiteDB+Internal.h"
 
 @implementation OCSQLiteStatement
 
@@ -60,24 +61,47 @@
 	{
 		_sqlStatement = sqlStatement;
 		_database = database;
+
+		[_database startTrackingStatement:self];
 	}
 
 	return(self);
 }
 
-- (void)dealloc
+#pragma mark - Release
+- (void)releaseSQLObjects
 {
 	if (_sqlStatement != NULL)
 	{
-		sqlite3_finalize(_sqlStatement);
-		_sqlStatement = NULL;
+		if (_database.isOnSQLiteThread)
+		{
+			sqlite3_finalize(_sqlStatement);
+			_sqlStatement = NULL;
+		}
+		else
+		{
+			sqlite3_stmt *sqlStatement = _sqlStatement;
+			_sqlStatement = NULL;
+
+			[_database executeOperation:^NSError *(OCSQLiteDB *db) {
+				sqlite3_finalize(sqlStatement);
+				return (nil);
+			} completionHandler:nil];
+		}
 	}
+}
+
+- (void)dealloc
+{
+	[_database stopTrackingStatement:self];
+
+	[self releaseSQLObjects];
 }
 
 - (NSArray <NSString *> *)parameterNamesByIndex
 {
 	// Get parameter names in order
-	if (_parameterNamesByIndex == nil)
+	if ((_parameterNamesByIndex == nil) && (_sqlStatement != NULL))
 	{
 		int paramCnt, paramIdx;
 
@@ -108,69 +132,72 @@
 #pragma mark - Binding values
 - (void)bindParameterValue:(id)value atIndex:(int)paramIdx
 {
-	if (value != nil)
+	if (_sqlStatement != NULL)
 	{
-		if ([value isKindOfClass:[NSNumber class]])
+		if (value != nil)
 		{
-			// Numbers
-			NSNumber *number = value;
-			const char *objCType = number.objCType;
+			if ([value isKindOfClass:[NSNumber class]])
+			{
+				// Numbers
+				NSNumber *number = value;
+				const char *objCType = number.objCType;
 
-			// Double
-			if 	(strcmp(objCType, @encode(double))==0)			{ sqlite3_bind_double(_sqlStatement, paramIdx, number.doubleValue); }
-			else if (strcmp(objCType, @encode(float))==0)			{ sqlite3_bind_double(_sqlStatement, paramIdx, (double)number.floatValue); }
+				// Double
+				if 	(strcmp(objCType, @encode(double))==0)			{ sqlite3_bind_double(_sqlStatement, paramIdx, number.doubleValue); }
+				else if (strcmp(objCType, @encode(float))==0)			{ sqlite3_bind_double(_sqlStatement, paramIdx, (double)number.floatValue); }
 
-			// 64-Bit integer
-			else if (strcmp(objCType, @encode(unsigned int))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedIntValue); } // No unsigned int binding available => bind as 64 bit value to avoid overflow
-			else if (strcmp(objCType, @encode(long))==0)			{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.longValue); }
-			else if (strcmp(objCType, @encode(unsigned long))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedLongValue); }
-			else if (strcmp(objCType, @encode(long long))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, number.longLongValue); }
-			else if (strcmp(objCType, @encode(unsigned long long))==0) 	{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedLongLongValue); }
+				// 64-Bit integer
+				else if (strcmp(objCType, @encode(unsigned int))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedIntValue); } // No unsigned int binding available => bind as 64 bit value to avoid overflow
+				else if (strcmp(objCType, @encode(long))==0)			{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.longValue); }
+				else if (strcmp(objCType, @encode(unsigned long))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedLongValue); }
+				else if (strcmp(objCType, @encode(long long))==0)		{ sqlite3_bind_int64(_sqlStatement, paramIdx, number.longLongValue); }
+				else if (strcmp(objCType, @encode(unsigned long long))==0) 	{ sqlite3_bind_int64(_sqlStatement, paramIdx, (long long)number.unsignedLongLongValue); }
 
-			// 32-Bit integer
-			else if (strcmp(objCType, @encode(BOOL))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.boolValue); }
-			else if (strcmp(objCType, @encode(char))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.charValue); }
-			else if (strcmp(objCType, @encode(unsigned char))==0)		{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.unsignedCharValue); }
-			else if (strcmp(objCType, @encode(short))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.shortValue); }
-			else if (strcmp(objCType, @encode(unsigned short))==0)		{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.unsignedShortValue); }
-			else if (strcmp(objCType, @encode(int))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, number.intValue); }
+				// 32-Bit integer
+				else if (strcmp(objCType, @encode(BOOL))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.boolValue); }
+				else if (strcmp(objCType, @encode(char))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.charValue); }
+				else if (strcmp(objCType, @encode(unsigned char))==0)		{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.unsignedCharValue); }
+				else if (strcmp(objCType, @encode(short))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.shortValue); }
+				else if (strcmp(objCType, @encode(unsigned short))==0)		{ sqlite3_bind_int(_sqlStatement, paramIdx, (int)number.unsignedShortValue); }
+				else if (strcmp(objCType, @encode(int))==0) 			{ sqlite3_bind_int(_sqlStatement, paramIdx, number.intValue); }
 
-			// Anything else?!
-			else { sqlite3_bind_text(_sqlStatement, paramIdx, number.description.UTF8String, -1, SQLITE_STATIC); }
-		}
-		else if ([value isKindOfClass:[NSString class]])
-		{
-			// Strings
-			sqlite3_bind_text(_sqlStatement, paramIdx, ((NSString *)value).UTF8String, -1, SQLITE_STATIC);
-		}
-		else if ([value isKindOfClass:[NSDate class]])
-		{
-			// Dates
-			sqlite3_bind_double(_sqlStatement, paramIdx, ((NSDate *)value).timeIntervalSince1970);
-		}
-		else if ([value isKindOfClass:[NSData class]])
-		{
-			// Data
-			NSData *data = (NSData *)value;
-			const void *p_bytes = data.bytes;
+				// Anything else?!
+				else { sqlite3_bind_text(_sqlStatement, paramIdx, number.description.UTF8String, -1, SQLITE_STATIC); }
+			}
+			else if ([value isKindOfClass:[NSString class]])
+			{
+				// Strings
+				sqlite3_bind_text(_sqlStatement, paramIdx, ((NSString *)value).UTF8String, -1, SQLITE_STATIC);
+			}
+			else if ([value isKindOfClass:[NSDate class]])
+			{
+				// Dates
+				sqlite3_bind_double(_sqlStatement, paramIdx, ((NSDate *)value).timeIntervalSince1970);
+			}
+			else if ([value isKindOfClass:[NSData class]])
+			{
+				// Data
+				NSData *data = (NSData *)value;
+				const void *p_bytes = data.bytes;
 
-			sqlite3_bind_blob64(_sqlStatement, paramIdx, ((data.length>0) ? p_bytes : (const void *)&p_bytes), data.length, SQLITE_STATIC);
-		}
-		else if ([value isKindOfClass:[NSNull class]])
-		{
-			// Null
-			sqlite3_bind_null(_sqlStatement, paramIdx);
+				sqlite3_bind_blob64(_sqlStatement, paramIdx, ((data.length>0) ? p_bytes : (const void *)&p_bytes), data.length, SQLITE_STATIC);
+			}
+			else if ([value isKindOfClass:[NSNull class]])
+			{
+				// Null
+				sqlite3_bind_null(_sqlStatement, paramIdx);
+			}
+			else
+			{
+				// Anything else?!
+				sqlite3_bind_text(_sqlStatement, paramIdx, ((NSObject *)value).description.UTF8String, -1, SQLITE_STATIC);
+			}
 		}
 		else
 		{
-			// Anything else?!
-			sqlite3_bind_text(_sqlStatement, paramIdx, ((NSObject *)value).description.UTF8String, -1, SQLITE_STATIC);
+			// No value => NULL
+			sqlite3_bind_null(_sqlStatement, paramIdx);
 		}
-	}
-	else
-	{
-		// No value => NULL
-		sqlite3_bind_null(_sqlStatement, paramIdx);
 	}
 }
 
@@ -218,8 +245,11 @@
 #pragma mark - Resetting
 - (void)reset
 {
-	sqlite3_reset(_sqlStatement);
-	sqlite3_clear_bindings(_sqlStatement);
+	if (_sqlStatement != NULL)
+	{
+	 	sqlite3_reset(_sqlStatement);
+		sqlite3_clear_bindings(_sqlStatement);
+	}
 }
 
 @end

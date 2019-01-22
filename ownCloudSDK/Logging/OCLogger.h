@@ -41,6 +41,10 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 @class OCLogSource;
 @class OCLogWriter;
 
+@protocol OCLogPrivacyMasking <NSObject>
+- (NSString *)privacyMaskedDescription;
+@end
+
 @interface OCLogger : NSObject <OCClassSettingsSupport>
 {
 	BOOL _maskPrivateData;

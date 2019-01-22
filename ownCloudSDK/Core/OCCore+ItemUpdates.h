@@ -21,19 +21,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void(^OCCoreItemUpdateAction)(dispatch_block_t completionHandler);
+
 typedef void(^OCCoreItemUpdateQueryPostProcessor)(OCCore *core, OCQuery *query, OCCoreItemList *addedItemsList, OCCoreItemList *removedItemsList, OCCoreItemList *updatedItemsList);
 
 @interface OCCore (ItemUpdates)
 
 #pragma mark - Perform updates
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
-			removedItems:(nullable NSArray<OCItem *> *)removedItems
-			updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-			refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
-		       newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
-		     preflightAction:(nullable void(^)(dispatch_block_t completionHandler))preflightAction
-		    postflightAction:(nullable void(^)(dispatch_block_t completionHandler))postflightAction
-		  queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor;
+		       removedItems:(nullable NSArray<OCItem *> *)removedItems
+		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
+		       refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
+		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
+		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
+		 queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor;
 
 @end
 

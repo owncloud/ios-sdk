@@ -94,7 +94,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 				NSSet<OCLogTagName> *tagSet = (((pTags!=NULL) && (*pTags != nil)) ? [[NSSet alloc] initWithArray:*pTags] : nil);
 				BOOL allowMessage = YES;
 
-				if (omitTagsSet != nil)
+				if ((omitTagsSet != nil) && (tagSet != nil))
 				{
 					// Omit messages tagged with tags in omitTagsSet
 					if ([omitTagsSet intersectsSet:tagSet])
@@ -430,7 +430,13 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			
 			return ([NSError errorWithDomain:error.domain code:error.code userInfo:nil]);
 		}
-	
+
+		// Condense other types
+		if ([object conformsToProtocol:@protocol(OCLogPrivacyMasking)])
+		{
+			return ([(id <OCLogPrivacyMasking>)object privacyMaskedDescription]);
+		}
+
 		// Return «private» for all other objects that should be privacy masked
 		return (@"«private»");
 	}

@@ -40,4 +40,15 @@
 	[self setUserInfoObject:fileID forKey:@"_fileID"];
 }
 
+- (OCConnectionJobID)jobID;
+{
+	return (self.userInfo[@"_jobID"]);
+}
+
+- (void)setJobID:(OCConnectionJobID)jobID
+{
+	[self setUserInfoObject:jobID forKey:@"_jobID"];
+}
+
+
 @end

@@ -20,6 +20,7 @@
 #import "OCTypes.h"
 
 typedef NSString* OCEventHandlerIdentifier;
+typedef NSString* OCEventUserInfoKey NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSUInteger, OCEventType)
 {
@@ -42,7 +43,10 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	// Metadata
 	OCEventTypeRetrieveThumbnail,
 	OCEventTypeRetrieveItemList,
-	OCEventTypeUpdate
+	OCEventTypeUpdate,
+
+	// Issues
+	OCEventTypeIssueResponse
 };
 
 @class OCEvent;
@@ -61,8 +65,8 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 {
 	OCEventType _eventType;
 
-	NSDictionary *_userInfo;
-	NSDictionary *_ephermalUserInfo;
+	NSDictionary<OCEventUserInfoKey,id> *_userInfo;
+	NSDictionary<OCEventUserInfoKey,id> *_ephermalUserInfo;
 
 	NSDictionary *_attributes;
 
@@ -77,8 +81,8 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
 
-@property(readonly) NSDictionary *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
-@property(readonly) NSDictionary *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
+@property(readonly) NSDictionary<OCEventUserInfoKey,id> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
+@property(readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
 @property(strong) NSDictionary *attributes;	//!< Attributes of the event, describing what happened. (Catch-all in first draft, will be supplemented with additional object properties before implementation)
 
@@ -100,4 +104,10 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 #pragma mark - Creating events
 + (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
 
++ (instancetype)eventWithType:(OCEventType)eventType userInfo:(NSDictionary<OCEventUserInfoKey,id> *)userInfo ephermalUserInfo:(NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(id)result; //!< Creates an event using of the specified type using the provided userInfo and ephermalUserInfo
+
 @end
+
+extern OCEventUserInfoKey OCEventUserInfoKeyItem;
+extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
+

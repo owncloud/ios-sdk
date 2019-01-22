@@ -33,7 +33,7 @@
 	[super tearDown];
 }
 
-- (void)_runPreparationTestsForURL:(NSURL *)url completionHandler:(void(^)(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)_runPreparationTestsForURL:(NSURL *)url completionHandler:(void(^)(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	XCTestExpectation *expectAnswer = [self expectationWithDescription:@"Received reply"];
 
@@ -44,7 +44,7 @@
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	connection.hostSimulator = hostSimulator;
 
-	[connection prepareForSetupWithOptions:nil completionHandler:^(OCConnectionIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		OCLog(@"Issues: %@", issue.issues);
 		OCLog(@"SuggestedURL: %@", suggestedURL);
 		OCLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);
@@ -59,11 +59,11 @@
 
 - (void)testSimulatorMissingCertificate
 {
-	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeError), @"Issue is error issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelError), @"Issue level is error");
+		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
 
 		XCTAssert((issue.issues[0].error.code == OCErrorCertificateMissing), @"Error is that certificate is missing");
 	}];
@@ -71,11 +71,11 @@
 
 - (void)testSimulatorSimulatedNotFoundResponses
 {
-	[self _runPreparationTestsForURL:OCTestTarget.insecureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.insecureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeError), @"Issue is error issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelError), @"Issue level is error");
+		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
 
 		XCTAssert((issue.issues[0].error.code == OCErrorServerDetectionFailed), @"Error is that server couldn't be detected (thanks to simulated 404 responses)");
 	}];
@@ -100,11 +100,11 @@
 
 	};
 
-	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCConnectionIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==1, @"1 issue found");
 
-		XCTAssert((issue.issues[0].type == OCConnectionIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[0].level == OCConnectionIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
 		XCTAssert((preferredAuthenticationMethods.count == 2), @"2 preferred authentication methods");
 		XCTAssert([preferredAuthenticationMethods[0] isEqual:OCAuthenticationMethodIdentifierOAuth2], @"OAuth2 is first detected authentication method");

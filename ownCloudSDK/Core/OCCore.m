@@ -30,11 +30,13 @@
 #import "NSString+OCParentPath.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
-#import "OCItem+OCThumbnail.h"
+#import "OCCoreManager.h"
+#import "OCChecksumAlgorithmSHA1.h"
 #import "OCIPNotificationCenter.h"
 #import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 #import "OCCoreMaintenanceModeStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
+#import "OCCore+Thumbnails.h"
 
 @interface OCCore ()
 {
@@ -87,42 +89,6 @@
 	});
 }
 
-+ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType
-{
-	static dispatch_once_t onceToken;
-	static NSArray <NSString *> *supportedPrefixes;
-	static BOOL loadThumbnailsForAll=NO, loadThumbnailsForNone=NO;
-
-	dispatch_once(&onceToken, ^{
-		supportedPrefixes = [[[OCClassSettings sharedSettings] settingsForClass:[OCCore class]] objectForKey:OCCoreThumbnailAvailableForMIMETypePrefixes];
-
-		if (supportedPrefixes.count == 0)
-		{
-			loadThumbnailsForNone = YES;
-		}
-		else
-		{
-			if ([supportedPrefixes containsObject:@"*"])
-			{
-				loadThumbnailsForAll = YES;
-			}
-		}
-	});
-
-	if (loadThumbnailsForAll)  { return(YES); }
-	if (loadThumbnailsForNone) { return(NO);  }
-
-	for (NSString *prefix in supportedPrefixes)
-	{
-		if ([mimeType hasPrefix:prefix])
-		{
-			return (YES);
-		}
-	}
-
-	return (NO);
-}
-
 #pragma mark - Init
 - (instancetype)init
 {
@@ -161,6 +127,8 @@
 
 		_progressByFileID = [NSMutableDictionary new];
 
+		_eventsBySyncRecordID = [NSMutableDictionary new];
+
 		_thumbnailCache = [OCCache new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
@@ -172,6 +140,7 @@
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
+		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, nil];
 		_connection.delegate = self;
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
@@ -360,7 +329,7 @@
 
 			[self beginActivity:@"Connection connect"];
 
-			[self.connection connectWithCompletionHandler:^(NSError *error, OCConnectionIssue *issue) {
+			[self.connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)
@@ -374,9 +343,12 @@
 					}
 
 					// Relay error and issues to delegate
-					if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					if ((error != nil) || (issue != nil))
 					{
-						[self->_delegate core:self handleError:error issue:issue];
+						if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
+						{
+							[self->_delegate core:self handleError:error issue:issue];
+						}
 					}
 
 					dispatch_resume(self->_connectivityQueue);
@@ -573,215 +545,6 @@
 - (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
-}
-
-#pragma mark - Command: Retrieve Thumbnail
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
-{
-	NSProgress *progress = [NSProgress indeterminateProgress];
-	OCFileID fileID = item.fileID;
-	OCItemVersionIdentifier *versionIdentifier = item.itemVersionIdentifier;
-	NSString *specID = item.thumbnailSpecID;
-	CGSize requestedMaximumSizeInPixels;
-
-	retrieveHandler = [retrieveHandler copy];
-
-	if (scale == 0)
-	{
-		scale = UIScreen.mainScreen.scale;
-	}
-
-	requestedMaximumSizeInPixels = CGSizeMake(floor(requestedMaximumSizeInPoints.width * scale), floor(requestedMaximumSizeInPoints.height * scale));
-
-	progress.eventType = OCEventTypeRetrieveThumbnail;
-	progress.localizedDescription = OCLocalizedString(@"Retrieving thumbnail…", @"");
-
-	if (fileID != nil)
-	{
-		[self queueBlock:^{
-			OCItemThumbnail *thumbnail;
-			BOOL requestThumbnail = YES;
-
-			// Is there a thumbnail for this file in the cache?
-			if ((thumbnail = [self->_thumbnailCache objectForKey:item.fileID]) != nil)
-			{
-				// Yes! But is it the version we want?
-				if ([thumbnail.itemVersionIdentifier isEqual:item.itemVersionIdentifier] && [thumbnail.specID isEqual:item.thumbnailSpecID])
-				{
-					// Yes it is!
-					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
-					{
-						// The size is fine, too!
-						retrieveHandler(nil, self, item, thumbnail, NO, progress);
-
-						requestThumbnail = NO;
-					}
-					else
-					{
-						// The size isn't sufficient
-						retrieveHandler(nil, self, item, thumbnail, YES, progress);
-					}
-				}
-				else
-				{
-					// No it's not => remove outdated version from cache
-					[self->_thumbnailCache removeObjectForKey:item.fileID];
-
-					thumbnail = nil;
-				}
-			}
-
-			// Should a thumbnail be requested?
-			if (requestThumbnail)
-			{
-				if (!progress.cancelled)
-				{
-					// Thumbnail
-					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier specID:specID maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
-						OCItemThumbnail *cachedThumbnail = nil;
-
-						if (thumbnailData != nil)
-						{
-							// Create OCItemThumbnail from data returned from database
-							OCItemThumbnail *cachedThumbnail = [OCItemThumbnail new];
-
-							cachedThumbnail.maximumSizeInPixels = maxSize;
-							cachedThumbnail.mimeType = mimeType;
-							cachedThumbnail.data = thumbnailData;
-							cachedThumbnail.specID = specID;
-							cachedThumbnail.itemVersionIdentifier = versionIdentifier;
-
-							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
-							{
-								[self queueBlock:^{
-									[self->_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
-									retrieveHandler(nil, self, item, cachedThumbnail, NO, progress);
-								}];
-
-								return;
-							}
-						}
-
-						// Update the retrieveHandler with a thumbnail if it doesn't already have one
-						if ((thumbnail == nil) && (cachedThumbnail != nil))
-						{
-							retrieveHandler(nil, self, item, cachedThumbnail, YES, progress);
-						}
-
-						// Request a thumbnail from the server if the operation hasn't been cancelled yet.
-						if (!progress.cancelled)
-						{
-							NSString *requestID = [NSString stringWithFormat:@"%@:%@-%@-%fx%f", versionIdentifier.fileID, versionIdentifier.eTag, specID, requestedMaximumSizeInPixels.width, requestedMaximumSizeInPixels.height];
-
-							[self queueBlock:^{
-								BOOL sendRequest = YES;
-
-								// Queue retrieve handlers
-								NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue;
-
-								if ((retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID]) == nil)
-								{
-									retrieveHandlersQueue = [NSMutableArray new];
-
-									self->_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
-								}
-
-								if (retrieveHandlersQueue.count != 0)
-								{
-									// Another request is already pending
-									sendRequest = NO;
-								}
-
-								[retrieveHandlersQueue addObject:retrieveHandler];
-
-								if (sendRequest)
-								{
-									OCEventTarget *target;
-									NSProgress *retrieveProgress;
-
-									// Define result event target
-									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
-										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
-										@"scale" : @(scale),
-										@"itemVersionIdentifier" : item.itemVersionIdentifier,
-										@"specID" : item.thumbnailSpecID,
-										@"item" : item,
-									} ephermalUserInfo:@{
-										@"requestID" : requestID
-									}];
-
-									// Request thumbnail from connection
-									retrieveProgress = [self.connection retrieveThumbnailFor:item to:nil maximumSize:requestedMaximumSizeInPixels resultTarget:target];
-
-									if (retrieveProgress != nil) {
-										[progress addChild:retrieveProgress withPendingUnitCount:0];
-									}
-								}
-							}];
-						}
-						else
-						{
-							if (retrieveHandler != nil)
-							{
-								retrieveHandler(OCError(OCErrorRequestCancelled), self, item, nil, NO, progress);
-							}
-						}
-					}];
-				}
-				else
-				{
-					if (retrieveHandler != nil)
-					{
-						retrieveHandler(OCError(OCErrorRequestCancelled), self, item, nil, NO, progress);
-					}
-				}
-			}
-		}];
-	}
-
-	return(progress);
-}
-
-- (void)_handleRetrieveThumbnailEvent:(OCEvent *)event sender:(id)sender
-{
-	[self queueBlock:^{
-		OCItemThumbnail *thumbnail = event.result;
-		// CGSize requestedMaximumSize = ((NSValue *)event.userInfo[@"requestedMaximumSize"]).CGSizeValue;
-		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
-		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[@"itemVersionIdentifier"];
-		OCItem *item = event.userInfo[@"item"];
-		NSString *specID = event.userInfo[@"specID"];
-		NSString *requestID = event.ephermalUserInfo[@"requestID"];
-
-		if ((event.error == nil) && (event.result != nil))
-		{
-			// Update cache
-			[self->_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
-
-			// Store in database
-			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
-		}
-
-		// Call all retrieveHandlers
-		if (requestID != nil)
-		{
-			NSMutableArray <OCCoreThumbnailRetrieveHandler> *retrieveHandlersQueue = self->_pendingThumbnailRequests[requestID];
-
-			if (retrieveHandlersQueue != nil)
-			{
-				[self->_pendingThumbnailRequests removeObjectForKey:requestID];
-			}
-
-			item.thumbnail = thumbnail;
-
-			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-				for (OCCoreThumbnailRetrieveHandler retrieveHandler in retrieveHandlersQueue)
-				{
-					retrieveHandler(event.error, self, item, thumbnail, NO, nil);
-				}
-			});
-		}
-	}];
 }
 
 #pragma mark - Progress tracking
@@ -1122,5 +885,7 @@ OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-ava
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 
-OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
+OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 
+OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
+OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";

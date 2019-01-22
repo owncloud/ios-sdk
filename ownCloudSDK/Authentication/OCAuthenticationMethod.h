@@ -18,18 +18,19 @@
 
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
+#import "OCLogTag.h"
 
 @class OCConnection;
 @class OCConnectionRequest;
 @class OCConnectionQueue;
-@class OCConnectionIssue;
+@class OCIssue;
 
 typedef NSString* OCAuthenticationMethodIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!< NSString identifier for an authentication method, f.ex. "owncloud.oauth2" for OAuth2
 typedef NSString* OCAuthenticationMethodKey NS_TYPED_ENUM; //!< NSString key used in the options dictionary used to generate the authentication data for a bookmark.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions; //!< Dictionary with options used to generate the authentication data for a bookmark. F.ex. passwords or the view controller to attach own UI to.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodDetectionOptions; //!< Dictionary with options used to detect available authentication methods
 
-typedef void(^OCAuthenticationMethodAuthenticationCompletionHandler)(NSError *error, OCConnectionIssue *issue);
+typedef void(^OCAuthenticationMethodAuthenticationCompletionHandler)(NSError *error, OCIssue *issue);
 
 typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 {
@@ -37,7 +38,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
 };
 
-@interface OCAuthenticationMethod : NSObject
+@interface OCAuthenticationMethod : NSObject <OCLogTagging>
 {
 	@private
 	id _cachedAuthenticationSecret;

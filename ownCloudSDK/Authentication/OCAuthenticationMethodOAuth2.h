@@ -21,6 +21,8 @@
 
 @interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod <OCClassSettingsSupport>
 
++ (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to SFAuthenticationSession and ASWebAuthenticationSession.
+
 @end
 
 extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOAuth2;

@@ -81,6 +81,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 - (void)cancelRequest:(OCConnectionRequest *)request; //!< Cancels a request
 - (void)cancelRequestsWithGroupID:(OCConnectionRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests belonging to a certain group ID. Including running requests if NO is passed for queuedOnly.
 
+- (void)scheduleQueuedRequests; //!< Manually trigger a scheduling run
+
 #pragma mark - Result handling
 - (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error; //!< Submits a finished request to handling.
 

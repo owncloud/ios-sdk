@@ -83,7 +83,7 @@
 							}
 							else
 							{
-								XCTAssert((error!=nil), @"Authentication failed: %@", error);
+								XCTAssert((error!=nil), @"Authentication succeeded unexpectedly");
 								if (error!=nil)
 								{
 									OCLog(@"Failed as expected. Error: %@", error);
@@ -95,6 +95,9 @@
 							       	// Success! Save authentication data to bookmark.
 								bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
 							       	bookmark.authenticationData = authenticationData;
+
+							       	// Verify userName is accessible
+							       	XCTAssert([bookmark.userName isEqual:user], @"Username from bookmark (%@) doesn't match user used for creation (%@)", bookmark.name, user);
 								
 							       	// Request resource
 							       	OCConnectionRequest *request = nil;

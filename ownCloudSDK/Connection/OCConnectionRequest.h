@@ -59,6 +59,7 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 	NSInputStream *_bodyURLInputStream;
 
 	NSDate *_earliestBeginDate;
+	NSSet<OCConnectionSignalID> *_requiredSignals;
 
 	OCConnectionRequestResultHandlerAction _resultHandlerAction;
 	OCConnectionEphermalResultHandler _ephermalResultHandler;
@@ -108,6 +109,8 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
+@property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
+
 @property(assign) OCConnectionRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
@@ -124,7 +127,7 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 
 @property(assign) BOOL downloadRequest;			//!< If the request is for the download of a file and the response body should be written to a file.
 @property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.
-@property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (mostly if downloadedFileURL was set before starting the download).
+@property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (== if downloadedFileURL was set before starting the download).
 
 @property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
 @property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
@@ -141,6 +144,7 @@ typedef BOOL(^OCConnectionRequestObserver)(OCConnectionRequest *request, OCConne
 #pragma mark - Queue scheduling support
 - (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue; //!< Called directly before scheduling of a request begins.
 - (NSMutableURLRequest *)generateURLRequestForQueue:(OCConnectionQueue *)queue; //!< Returns an NSURLRequest for this request.
+- (void)scrubForRescheduling;
 
 #pragma mark - Cancel support
 - (void)cancel;

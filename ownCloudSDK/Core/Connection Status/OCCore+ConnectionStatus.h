@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)recomputeConnectionStatus;
 
 #pragma mark - Reporting
-- (void)reportReponseIndicatingMaintenanceMode;
+- (void)reportResponseIndicatingMaintenanceMode;
 
 @end
 

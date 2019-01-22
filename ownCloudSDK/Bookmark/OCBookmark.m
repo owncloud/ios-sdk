@@ -128,6 +128,22 @@
 	return (_userInfo);
 }
 
+#pragma mark - Convenience
+- (NSString *)userName
+{
+	if ((self.authenticationMethodIdentifier != nil) && (_authenticationData != nil))
+	{
+		Class authMethod;
+
+		if ((authMethod = [OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:self.authenticationMethodIdentifier]) != nil)
+		{
+			return ([authMethod userNameFromAuthenticationData:self.authenticationData]);
+		}
+	}
+
+	return (nil);
+}
+
 #pragma mark - Data replacement
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark
 {

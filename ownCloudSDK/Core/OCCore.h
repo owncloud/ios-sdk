@@ -89,12 +89,12 @@ typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
-typedef NSString* OCCoreOption;
+typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 #pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
 
-- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCConnectionIssue *)issue;
+- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCIssue *)issue;
 
 @end
 
@@ -152,6 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableDictionary <OCFileID, NSMutableArray<NSProgress *> *> *_progressByFileID;
 
+	NSMutableDictionary <OCSyncRecordID, NSMutableArray <OCEvent *> *> *_eventsBySyncRecordID;
+
 	__weak id <OCCoreDelegate> _delegate;
 }
 
@@ -196,9 +198,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)stopQuery:(OCQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
-+ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
-
 - (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
@@ -231,6 +230,11 @@ NS_ASSUME_NONNULL_BEGIN
 //- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
 //@end
+
+@interface OCCore (Thumbnails)
++ (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
+@end
 
 @interface OCCore (CommandDownload)
 - (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler;
@@ -269,4 +273,7 @@ extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
 
+extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
+
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
+extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
