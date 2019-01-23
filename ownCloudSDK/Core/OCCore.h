@@ -26,9 +26,9 @@
 #import "OCShare.h"
 #import "OCCache.h"
 #import "OCDatabase.h"
-#import "OCRetainerCollection.h"
 #import "OCIPNotificationCenter.h"
 #import "OCLogTag.h"
+#import "OCAsyncSequentialQueue.h"
 
 @class OCCore;
 @class OCItem;
@@ -37,7 +37,6 @@
 @class OCIPNotificationCenter;
 
 @class OCCoreConnectionStatusSignalProvider;
-@class OCCoreReachabilityConnectionStatusSignalProvider;
 @class OCCoreMaintenanceModeStatusSignalProvider;
 
 #pragma mark - Types
@@ -121,8 +120,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	OCCoreConnectionStatus _connectionStatus;
 	OCCoreConnectionStatusSignal _connectionStatusSignals;
+	NSString *_connectionStatusShortDescription;
 	NSMutableArray <OCCoreConnectionStatusSignalProvider *> *_connectionStatusSignalProviders;
-	OCCoreReachabilityConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor
+
+	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
 	OCCoreMaintenanceModeStatusSignalProvider *_maintenanceModeStatusSignalProvider; // Processes reports of maintenance mode repsonses and performs status.php polls for status changes
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
@@ -133,6 +134,10 @@ NS_ASSUME_NONNULL_BEGIN
 	OCSyncAnchor _latestSyncAnchor;
 
 	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
+	NSMutableArray <OCPath> *_queuedItemListTaskPaths;
+	NSMutableArray <OCCoreItemListTask*> *_scheduledItemListTasks;
+	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
+	BOOL _itemListTaskRunning;
 
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
@@ -141,6 +146,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
+
+	NSUInteger _pendingIPCChangeNotifications;
 
 	OCIPCNotificationName _ipNotificationName;
 	OCIPNotificationCenter *_ipNotificationCenter;
@@ -151,8 +158,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSDate *_lastScheduledItemListUpdateDate;
 
 	NSMutableDictionary <OCFileID, NSMutableArray<NSProgress *> *> *_progressByFileID;
-
-	NSMutableDictionary <OCSyncRecordID, NSMutableArray <OCEvent *> *> *_eventsBySyncRecordID;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -169,6 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals
+@property(readonly,strong,nullable) NSString *connectionStatusShortDescription; //!< Short description of the current connection status.
 
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
@@ -218,6 +224,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
+- (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
 
 @end
 

@@ -29,6 +29,7 @@
 @class OCItemVersionIdentifier;
 @class OCSyncRecord;
 @class OCFile;
+@class OCEvent;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
@@ -46,6 +47,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 	NSURL *_databaseURL;
 
 	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
+
+	NSMutableDictionary <OCDatabaseID, OCEvent *> *_eventsByDatabaseID;
 
 	NSUInteger _removedItemRetentionLength;
 
@@ -98,7 +101,10 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
-#pragma mark - Log interface
+#pragma mark - Event interface
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
+- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)syncRecordID afterEventID:(OCDatabaseID)eventID; //!< Requests the oldest available event for the OCSyncRecordID.
+- (NSError *)removeEvent:(OCEvent *)event; //!< Deletes the row for the OCEvent from the database.
 
 #pragma mark - Integrity / Synchronization primitives
 - (void)retrieveValueForCounter:(OCDatabaseCounterIdentifier)counterIdentifier completionHandler:(void(^)(NSError *error, NSNumber *counterValue))completionHandler;

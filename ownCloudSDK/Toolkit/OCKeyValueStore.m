@@ -54,7 +54,12 @@
 
 	if (data != nil)
 	{
-		[data writeToURL:url atomically:YES];
+		NSError *error = nil;
+
+		if (![data writeToURL:url options:NSDataWritingAtomic error:&error])
+		{
+			OCLogError(@"Error writing data for key=%@ from url=%@, error=%@", key, url, error);
+		}
 	}
 	else
 	{
@@ -74,7 +79,9 @@
 		{
 			retObj = [NSKeyedUnarchiver unarchiveObjectWithData:data];
 		}
-		@catch(NSException *exception) {}
+		@catch(NSException *exception) {
+			OCLogError(@"Error deserializing key=%@ : data=%@, exception=%@", key, data, exception);
+		}
 	}
 
 	return (retObj);
@@ -90,7 +97,9 @@
 		{
 			data = [NSKeyedArchiver archivedDataWithRootObject:object];
 		}
-		@catch(NSException *exception) {}
+		@catch(NSException *exception) {
+			OCLogError(@"Error serializing key=%@ : object=%@, exception=%@", key, object, exception);
+		}
 	}
 
 	[self _setData:data forKey:key];
@@ -123,6 +132,17 @@
 	[[NSFileManager defaultManager] removeItemAtURL:_rootURL error:&error];
 
 	return (error);
+}
+
+#pragma mark - Tagging
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[ @"KeyValueStore" ]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[ @"KeyValueStore" ]);
 }
 
 @end

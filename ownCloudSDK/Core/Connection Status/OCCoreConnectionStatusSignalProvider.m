@@ -59,6 +59,15 @@
 	}
 }
 
+- (void)setShortDescription:(NSString *)shortDescription
+{
+	if (![_shortDescription isEqual:shortDescription])
+	{
+		_shortDescription = shortDescription;
+		[self.core recomputeConnectionStatus];
+	}
+}
+
 #pragma mark - Events
 - (void)providerWillBeAdded
 {

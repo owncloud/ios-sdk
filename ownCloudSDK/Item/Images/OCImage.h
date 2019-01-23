@@ -18,7 +18,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface OCImage : NSObject
+@interface OCImage : NSObject <NSSecureCoding>
 {
 	NSURL *_url;
 	NSData *_data;

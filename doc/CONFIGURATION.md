@@ -44,6 +44,9 @@ This document provides an overview over the available sections and variables.
 	- `allow-background-url-sessions`: Allow the use of background URL sessions.
 		- type: boolean
 		- default: `true`
+	- `allow-cellular`: Allow the use of cellular connections.
+		- type: boolean
+		- default: `true`
 
 ## Core
 

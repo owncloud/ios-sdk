@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCCore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_block_t completionHandler); //!< Block performing an operation while no OCCore uses the bookmark. Call completionHandler when done.
 
 @interface OCCoreManager : NSObject <OCLogTagging>
@@ -28,6 +30,8 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 
 	NSMutableDictionary <NSUUID *, NSMutableArray<OCCoreManagerOfflineOperation> *> *_queuedOfflineOperationsByUUID;
 	NSMutableDictionary <NSUUID *, NSNumber *> *_runningOfflineOperationByUUID;
+
+	NSMutableDictionary <NSUUID *, dispatch_group_t> *_shutdownWaitGroupByUUID;
 
 	BOOL _postFileProviderNotifications;
 }
@@ -39,9 +43,9 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 @property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
 
 #pragma mark - Requesting and returning cores
-- (OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.
+- (nullable OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(nullable void (^)(OCCore * _Nullable core, NSError * _Nullable error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.
 
-- (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler; //!< Return the core for this bookmark. If all users have returned the core, it is stopped.
+- (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(nullable dispatch_block_t)completionHandler; //!< Return the core for this bookmark. If all users have returned the core, it is stopped.
 
 #pragma mark - Background session recovery
 - (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler; //!< Call this from -[UIApplicationDelegate application:handleEventsForBackgroundURLSession:completionHandler:].
@@ -50,3 +54,5 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 - (void)scheduleOfflineOperation:(OCCoreManagerOfflineOperation)offlineOperation forBookmark:(OCBookmark *)bookmark; //!< Schedules an offline operation on a bookmark. Executed only when no core is using the bookmark.
 
 @end
+
+NS_ASSUME_NONNULL_END

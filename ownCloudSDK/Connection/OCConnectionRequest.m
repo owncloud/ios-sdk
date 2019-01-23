@@ -19,6 +19,7 @@
 #import "OCConnectionRequest.h"
 #import "OCConnectionQueue.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
+#import "OCLogger.h"
 
 @implementation OCConnectionRequest
 
@@ -250,6 +251,22 @@
 	_responseBodyData = nil;
 	_responseCertificate = nil;
 
+	if (_downloadRequest)
+	{
+		if (_downloadedFileURL != nil)
+		{
+			// Delete existing file in download location
+			if ([[NSFileManager defaultManager] fileExistsAtPath:_downloadedFileURL.path])
+			{
+				NSError *error = nil;
+
+				[[NSFileManager defaultManager] removeItemAtURL:_downloadedFileURL error:&error];
+
+				OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+			}
+		}
+	}
+
 	if (_downloadedFileIsTemporary)
 	{
 		_downloadedFileURL = nil;
@@ -417,7 +434,7 @@
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:self.responseBodyEncoding]);
+			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:NSUTF8StringEncoding]);
 		}
 
 		return ([NSString stringWithFormat:@"[Contents from %@]", url.path]);
@@ -427,7 +444,7 @@
 	{
 		if (readableContent)
 		{
-			return (self.responseBodyAsString);
+			return ([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
 		}
 
 		return ([NSString stringWithFormat:@"[%lu bytes of %@ data]", (unsigned long)data.length, contentType]);
@@ -536,6 +553,8 @@
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 
+		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
+
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
 			self.resultHandlerAction = NSSelectorFromString(resultHandlerActionString);
@@ -568,6 +587,8 @@
 
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
+
+	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }

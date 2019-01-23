@@ -22,6 +22,8 @@
 @class OCIssue;
 @class OCIssueChoice;
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef NS_ENUM(NSUInteger, OCIssueLevel)
 {
 	OCIssueLevelInformal, //!< Issue that is purely informal and requires no user action
@@ -83,35 +85,35 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 @property(readonly,nonatomic) BOOL resolvable;
 
-@property(strong) NSString *localizedTitle;
-@property(strong) NSString *localizedDescription;
+@property(nullable,strong) NSString *localizedTitle;
+@property(nullable,strong) NSString *localizedDescription;
 
-@property(strong,readonly) OCCertificate *certificate;
+@property(nullable,strong,readonly) OCCertificate *certificate;
 @property(readonly) OCCertificateValidationResult certificateValidationResult;
-@property(strong,readonly) NSURL *certificateURL;
+@property(nullable,strong,readonly) NSURL *certificateURL;
 
-@property(strong,readonly) NSURL *originalURL;
-@property(strong,readonly) NSURL *suggestedURL;
+@property(nullable,strong,readonly) NSURL *originalURL;
+@property(nullable,strong,readonly) NSURL *suggestedURL;
 
-@property(strong,readonly) NSError *error;
+@property(nullable,strong,readonly) NSError *error;
 
 @property(readonly) OCIssueDecision decision;
-@property(copy,readonly) OCIssueHandler issueHandler;
+@property(nullable,copy,readonly) OCIssueHandler issueHandler;
 
-@property(strong,readonly) OCIssueChoice *selectedChoice;
-@property(strong,readonly) NSArray <OCIssueChoice *> *choices;
+@property(nullable,strong,readonly) OCIssueChoice *selectedChoice;
+@property(nullable,strong,readonly) NSArray <OCIssueChoice *> *choices;
 
-@property(strong,readonly) NSArray <OCIssue *> *issues;
+@property(nullable,strong,readonly) NSArray <OCIssue *> *issues;
 
-+ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler;
++ (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
-+ (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(OCIssueHandler)issueHandler;
++ (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(nullable OCIssueHandler)issueHandler;
 
-+ (instancetype)issueForError:(NSError *)error level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler;
++ (instancetype)issueForError:(NSError *)error level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
-+ (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCIssueChoice *> *)choices completionHandler:(OCIssueHandler)issueHandler;
++ (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCIssueChoice *> *)choices completionHandler:(nullable OCIssueHandler)issueHandler;
 
-+ (instancetype)issueForIssues:(NSArray <OCIssue *> *)issues completionHandler:(OCIssueHandler)completionHandler;
++ (instancetype)issueForIssues:(NSArray <OCIssue *> *)issues completionHandler:(nullable OCIssueHandler)completionHandler;
 
 #pragma mark - Adding issues
 - (void)addIssue:(OCIssue *)issue;
@@ -125,8 +127,10 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 - (void)cancel; //!< Searches for a choice of type Cancel and selects it.
 
 #pragma mark - Filtering
-- (NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
+- (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #import "OCIssueChoice.h"

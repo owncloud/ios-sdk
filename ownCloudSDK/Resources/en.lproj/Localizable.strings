@@ -24,6 +24,12 @@
 "Proceed" = "Proceed";
 "OK" = "OK";
 
+/* Connection status */
+"Offline" = "Offline";
+"Offline (no WiFi connection)" = "Offline (no WiFi connection)";
+"Server down for maintenance" = "Server down for maintenance";
+"Online" = "Online";
+
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
 "%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";

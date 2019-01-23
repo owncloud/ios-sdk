@@ -76,6 +76,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionQueueTrustAction)
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler;
 
+- (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests
+
 #pragma mark - Queue management
 - (void)enqueueRequest:(OCConnectionRequest *)request; //!< Adds a request to the queue
 - (void)cancelRequest:(OCConnectionRequest *)request; //!< Cancels a request

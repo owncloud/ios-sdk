@@ -37,6 +37,7 @@
 	return (self);
 }
 
+#pragma mark - Convenience accessors
 - (BOOL)isSuccess
 {
 	return ((_code >= 200) && (_code < 300));
@@ -52,6 +53,7 @@
 	return (_code >= 400);
 }
 
+#pragma mark - Error creation
 - (NSError *)error
 {
 	return ([NSError errorWithDomain:OCHTTPStatusErrorDomain code:_code userInfo:nil]);
@@ -72,11 +74,13 @@
 	return ([NSString stringWithFormat:@"<%@: %p, code: %lu>", NSStringFromClass(self.class), self, (unsigned long)_code]);
 }
 
+#pragma mark - Copying
 - (id)copyWithZone:(NSZone *)zone
 {
 	return ([[self class] HTTPStatusWithCode:_code]);
 }
 
+#pragma mark - Hash & equality
 - (NSUInteger)hash
 {
 	return ([[self class] hash] ^ _code);
@@ -90,6 +94,27 @@
 	}
 
 	return (NO);
+}
+
+#pragma mark - Secure coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_code = [decoder decodeIntegerForKey:@"code"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:_code forKey:@"code"];
 }
 
 @end

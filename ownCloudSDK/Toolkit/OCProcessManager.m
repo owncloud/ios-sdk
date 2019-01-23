@@ -331,11 +331,47 @@
 	return (NO);
 }
 
+#pragma mark - Ping
 - (void)pingSession:(OCProcessSession *)session withTimeout:(NSTimeInterval)timeout completionHandler:(void(^)(BOOL responded, OCProcessSession *latestSession))completionHandler
 {
 	OCProcessPing *ping = [[OCProcessPing alloc] initWithSession:session timeout:timeout completionHandler:completionHandler];
 
 	[ping sendPing];
+}
+
+#pragma mark - Session identity
+- (BOOL)isSessionWithCurrentProcessBundleIdentifier:(OCProcessSession *)session
+{
+	// Returns YES if the session describes a process with the same bundle identifier as the current process
+	return ([session.bundleIdentifier isEqual:_processSession.bundleIdentifier]);
+}
+
+- (BOOL)isAnyInstanceOfSessionProcessRunning:(OCProcessSession *)session
+{
+	// Returns YES if *a* copy of the process described in the session is currently running (it doesn't have to be the instance described in the session)
+
+	// Get the latest session for this process
+	session = [self findLatestSessionForProcessOf:session];
+
+	// Return if that session is running
+	return ([self isSessionValid:session usingThoroughChecks:YES]);
+}
+
+#pragma mark - Finding latest
+- (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)otherSession
+{
+	@synchronized(self)
+	{
+		for (OCProcessSession *session in _sessions)
+		{
+			if ([otherSession.bundleIdentifier isEqual:session.bundleIdentifier])
+			{
+				return (session);
+			}
+		}
+	}
+
+	return (otherSession);
 }
 
 #pragma mark - System boot time

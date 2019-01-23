@@ -28,6 +28,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCSyncAction.h"
+#import "OCProcessManager.h"
 
 @interface OCDatabase ()
 {
@@ -58,6 +59,7 @@
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
+		_eventsByDatabaseID = [NSMutableDictionary new];
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
@@ -235,7 +237,14 @@
 
 			if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
 			{
+				NSNumber *removed;
+
 				[items addObject:item];
+
+				if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
+				{
+					item.removed = removed.boolValue;
+				}
 				item.databaseID = resultDict[@"mdID"];
 			}
 		}
@@ -292,9 +301,14 @@
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *parentPath = path;
 	NSString *sqlQueryString = nil;
 	NSArray *parameters = nil;
+
+	if (path == nil)
+	{
+		completionHandler(self, OCError(OCErrorInsufficientParameters), nil, nil);
+		return;
+	}
 
 	if (itemOnly)
 	{
@@ -303,8 +317,8 @@
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=? OR path=?) AND removed=0";
-		parameters = @[parentPath, parentPath, path];
+		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=?) AND removed=0";
+		parameters = @[path, path];
 	}
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
@@ -339,7 +353,7 @@
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE syncAnchor > ?";
+	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE syncAnchor > ?";
 
 	if (foldersOnly)
 	{
@@ -744,6 +758,131 @@
 			completionHandler(self, iterationError, syncRecord);
 		}
 	}]];
+}
+
+#pragma mark - Event interface
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *eventData = [event serializedData];
+
+	if ((eventData != nil) && (syncRecordID!=nil))
+	{
+		NSData *processSessionData = OCProcessManager.sharedProcessManager.processSession.serializedData;
+
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameEvents rowValues:@{
+			@"recordID" 		: syncRecordID,
+			@"processSession"	: (processSessionData!=nil) ? processSessionData : [NSData new],
+			@"eventData"		: eventData
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			event.databaseID = rowID;
+
+			self->_eventsByDatabaseID[rowID] = event;
+
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not serialize event=%@ to eventData=%@ or missing recordID=%@", event, eventData, syncRecordID);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID afterEventID:(OCDatabaseID)afterEventID
+{
+	__block OCEvent *event = nil;
+	__block OCProcessSession *processSession = nil;
+
+	if (!self.sqlDB.isOnSQLiteThread)
+	{
+		OCLogError(@"%@ may only be called on the SQLite thread. Returning nil.", @(__PRETTY_FUNCTION__));
+		return (nil);
+	}
+
+	// Requests the oldest available event for the OCSyncRecordID.
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
+		@"recordID" 	: recordID,
+		@"eventID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:afterEventID apply:(afterEventID!=nil)]
+	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			NSNumber *databaseID;
+			NSData *processSessionData = OCTypedCast(rowDictionary[@"processSession"], NSData);
+
+			if ((processSessionData != nil) && (processSessionData.length > 0))
+			{
+				processSession = [OCProcessSession processSessionFromSerializedData:processSessionData];
+			}
+
+			if ((databaseID = OCTypedCast(rowDictionary[@"eventID"], NSNumber) ) != nil)
+			{
+				if ((event = [self->_eventsByDatabaseID objectForKey:databaseID]) == nil)
+				{
+					event = [OCEvent eventFromSerializedData:(NSData *)rowDictionary[@"eventData"]];
+				}
+
+				event.databaseID = rowDictionary[@"eventID"];
+			}
+
+			*stop = YES;
+		} error:&iterationError];
+	}]];
+
+	if ((processSession != nil) && (event != nil))
+	{
+		BOOL doProcess = YES;
+
+		// Only perform processSession validity check if bundleIDs differ
+		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
+		{
+			// Don't process events originating from other processes that are running
+			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
+		}
+
+		if (!doProcess)
+		{
+			// Skip this event
+			return ([self nextEventForSyncRecordID:recordID afterEventID:event.databaseID]);
+		}
+	}
+
+	return (event);
+}
+
+- (NSError *)removeEvent:(OCEvent *)event
+{
+	__block NSError *error = nil;
+
+	if (!self.sqlDB.isOnSQLiteThread)
+	{
+		OCLogError(@"%@ may only be called on the SQLite thread.", @(__PRETTY_FUNCTION__));
+		return (OCError(OCErrorInternal));
+	}
+
+	// Deletes the row for the OCEvent from the database.
+	if (event.databaseID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:event.databaseID fromTable:OCDatabaseTableNameEvents completionHandler:^(OCSQLiteDB *db, NSError *dbError) {
+			NSNumber *databaseID;
+
+			if ((databaseID = event.databaseID) != nil)
+			{
+				[self->_eventsByDatabaseID removeObjectForKey:databaseID];
+
+				event.databaseID = nil;
+			}
+
+			error = dbError;
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", @(__PRETTY_FUNCTION__));
+		error = OCError(OCErrorInsufficientParameters);
+	}
+
+	return (error);
 }
 
 #pragma mark - Integrity / Synchronization primitives

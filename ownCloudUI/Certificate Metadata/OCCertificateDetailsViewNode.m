@@ -265,6 +265,8 @@
 
 					validationCompletionHandler(sections);
 				}];
+
+				validationCompletionHandler = nil;
 			}
 		}
 	}

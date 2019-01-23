@@ -32,6 +32,7 @@
 	NSData *fakeCertData = [NSData dataWithContentsOfURL:fakeCertURL];
 	NSError *parseError;
 	NSDictionary *metaData;
+	XCTestExpectation *viewNodesReceivedExpectation = [self expectationWithDescription:@"expect view nodes"];
 
 	OCCertificate *certificate = [OCCertificate certificateWithCertificateData:fakeCertData hostName:@"demo.owncloud.org"];
 
@@ -39,6 +40,17 @@
 	XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:@"demo.owncloud.org"], @"Common name is correct");
 
 	OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
+
+	[certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *nodes) {
+		OCLog(@"DetailsViewNodes: %@", nodes);
+
+		XCTAssert(nodes!=nil);
+		XCTAssert(nodes.count==7);
+
+		[viewNodesReceivedExpectation fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:5 handler:nil];
 }
 
 - (void)testCertificateMetaDataParsingFromWeb

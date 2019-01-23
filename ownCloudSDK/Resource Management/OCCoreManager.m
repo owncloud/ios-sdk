@@ -50,6 +50,8 @@
 
 		_queuedOfflineOperationsByUUID = [NSMutableDictionary new];
 		_runningOfflineOperationByUUID = [NSMutableDictionary new];
+
+		_shutdownWaitGroupByUUID = [NSMutableDictionary new];
 	}
 
 	return(self);
@@ -83,6 +85,19 @@
 			if (requestCount.integerValue == 1)
 			{
 				OCCore *core;
+				dispatch_group_t shutdownWaitGroup = nil;
+
+				@synchronized(_shutdownWaitGroupByUUID)
+				{
+					shutdownWaitGroup = _shutdownWaitGroupByUUID[bookmark.uuid];
+				}
+
+				if (shutdownWaitGroup != nil)
+				{
+					OCLog(@"waiting for previous core for %@ to complete shutdown", bookmark);
+					dispatch_group_wait(shutdownWaitGroup, DISPATCH_TIME_FOREVER);
+					OCLog(@"previous core for %@ has completed shutdown", bookmark);
+				}
 
 				OCLog(@"creating core for bookmark %@", bookmark);
 
@@ -124,7 +139,7 @@
 				{
 					returnCore = core;
 
-					if (core.state != OCCoreStateRunning)
+					if ((core.state != OCCoreStateRunning) && (core.state != OCCoreStateStarting))
 					{
 						OCLog(@"starting core for bookmark %@", bookmark);
 
@@ -177,12 +192,47 @@
 
 			if ((core = _coresByUUID[bookmark.uuid]) != nil)
 			{
+				// Set up waitgroup for core shutdown
+				dispatch_group_t shutdownWaitGroup;
+
+				@synchronized(_shutdownWaitGroupByUUID)
+				{
+					// Create / add waitgroup for UUID
+					if ((shutdownWaitGroup = _shutdownWaitGroupByUUID[bookmark.uuid]) == nil)
+					{
+						if ((shutdownWaitGroup = dispatch_group_create()) != nil)
+						{
+							_shutdownWaitGroupByUUID[bookmark.uuid] = shutdownWaitGroup;
+						}
+					}
+
+					if (shutdownWaitGroup != nil)
+					{
+						// Lock waitgroup
+						dispatch_group_enter(shutdownWaitGroup);
+					}
+				}
+
+				// Remove core from LUT
 				[_coresByUUID removeObjectForKey:bookmark.uuid];
 
 				OCLog(@"stopping core for bookmark %@", bookmark);
 
+				// Stop core
 				[core stopWithCompletionHandler:^(id sender, NSError *error) {
 					[core unregisterEventHandler];
+
+					@synchronized(self->_shutdownWaitGroupByUUID)
+					{
+						// Remove waitgroup for UUID
+						if (self->_shutdownWaitGroupByUUID[bookmark.uuid] == shutdownWaitGroup)
+						{
+							self->_shutdownWaitGroupByUUID[bookmark.uuid] = nil;
+						}
+
+						// Unlock waitgroup
+						dispatch_group_leave(shutdownWaitGroup);
+					}
 
 					OCLog(@"core stopped for bookmark %@", bookmark);
 

@@ -279,10 +279,10 @@
 		OCItemThumbnail *thumbnail = event.result;
 		// CGSize requestedMaximumSize = ((NSValue *)event.userInfo[@"requestedMaximumSize"]).CGSizeValue;
 		// CGFloat scale = ((NSNumber *)event.userInfo[@"scale"]).doubleValue;
-		OCItemVersionIdentifier *itemVersionIdentifier = event.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
-		OCItem *item = event.userInfo[OCEventUserInfoKeyItem];
-		NSString *specID = event.userInfo[@"specID"];
-		NSString *requestID = event.ephermalUserInfo[@"requestID"];
+		OCItemVersionIdentifier *itemVersionIdentifier = OCTypedCast(event.userInfo[OCEventUserInfoKeyItemVersionIdentifier], OCItemVersionIdentifier);
+		OCItem *item = OCTypedCast(event.userInfo[OCEventUserInfoKeyItem], OCItem);
+		NSString *specID = OCTypedCast(event.userInfo[@"specID"], NSString);
+		NSString *requestID = OCTypedCast(event.ephermalUserInfo[@"requestID"], NSString);
 
 		OCLogDebug(@"Received thumbnail from server for %@, specID=%@, requestID=%@", item.path, specID, requestID);
 

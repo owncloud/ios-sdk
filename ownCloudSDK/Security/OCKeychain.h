@@ -18,6 +18,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCKeychain : NSObject
 {
 	NSString *_accessGroupIdentifier;
@@ -26,7 +28,9 @@
 - (instancetype)initWithAccessGroupIdentifier:(NSString *)accessGroupIdentifier;
 
 - (NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path;
-- (NSError *)writeData:(NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
-- (NSError *)removeKeychainItemForAccount:(NSString *)account path:(NSString *)path;
+- (nullable NSError *)writeData:(nullable NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
+- (nullable NSError *)removeKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 
 @end
+
+NS_ASSUME_NONNULL_END

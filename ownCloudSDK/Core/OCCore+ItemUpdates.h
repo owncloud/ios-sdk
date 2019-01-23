@@ -35,7 +35,8 @@ typedef void(^OCCoreItemUpdateQueryPostProcessor)(OCCore *core, OCQuery *query, 
 		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
-		 queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor;
+		 queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
+		       skipDatabase:(BOOL)skipDatabase;
 
 @end
 

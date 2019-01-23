@@ -24,6 +24,8 @@
 #import "OCLogger.h"
 #import "NSError+OCDAVError.h"
 #import "OCCore+ConnectionStatus.h"
+#import "OCCore+ItemList.h"
+#import "OCMacros.h"
 
 @implementation OCCoreItemListTask
 
@@ -73,28 +75,46 @@
 
 		_cachedSet.state = OCCoreItemListStateStarted;
 
-		[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
-			[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-				self->_syncAnchorAtStart = [self->_core retrieveLatestSyncAnchorWithError:NULL];
-
-				[self->_cachedSet updateWithError:error items:items];
-
-				if ((self->_cachedSet.state == OCCoreItemListStateSuccess) || (self->_cachedSet.state == OCCoreItemListStateFailed))
-				{
-					if (self.changeHandler != nil)
-					{
-						self.changeHandler(self->_core, self);
-					}
-					else
-					{
-						OCLogWarning(@"OCCoreItemListTask: no changeHandler specified");
-					}
-				}
-
-				[self->_core endActivity:@"update cache set"];
-			}];
+		[self _cacheUpdateInline:NO notifyChange:YES completionHandler:^{
+			[self->_core endActivity:@"update cache set"];
 		}];
 	}
+}
+
+- (void)_cacheUpdateInline:(BOOL)doInline notifyChange:(BOOL)notifyChange completionHandler:(dispatch_block_t)completionHandler
+{
+	[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+		OCSyncAnchor latestAnchorAtRetrieval = [self->_core retrieveLatestSyncAnchorWithError:NULL];
+
+		dispatch_block_t workBlock = ^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+			self->_syncAnchorAtStart = latestAnchorAtRetrieval;
+
+			[self->_cachedSet updateWithError:error items:items];
+
+			if (notifyChange && ((self->_cachedSet.state == OCCoreItemListStateSuccess) || (self->_cachedSet.state == OCCoreItemListStateFailed)))
+			{
+				if (self.changeHandler != nil)
+				{
+					self.changeHandler(self->_core, self);
+				}
+				else
+				{
+					OCLogWarning(@"OCCoreItemListTask: no changeHandler specified");
+				}
+			}
+
+			completionHandler();
+		};
+
+		if (doInline)
+		{
+			workBlock();
+		}
+		else
+		{
+			[self->_core queueBlock:workBlock];
+		}
+	}];
 }
 
 - (void)forceUpdateRetrievedSet
@@ -115,56 +135,74 @@
 
 		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
 			[self->_core queueConnectivityBlock:^{
-				[self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-						// Check for maintenance mode errors
-						if ((error==nil) || (error.isDAVException))
-						{
-							if (error.davError == OCDAVErrorServiceUnavailable)
+				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
+					[self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+						[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];
+
+							if ((latestSyncAnchor != nil) && (![latestSyncAnchor isEqualToNumber:self.syncAnchorAtStart]))
 							{
-								[self->_core reportResponseIndicatingMaintenanceMode];
+								OCTLogDebug(@[@"ItemListTask"], @"Sync anchor changed before task finished: latestSyncAnchor=%@ != task.syncAnchorAtStart=%@, path=%@ -> updating inline", latestSyncAnchor, self.syncAnchorAtStart, self.path);
+
+								// Cache set is outdated - update now to avoid unnecessary requests
+								OCSyncExec(inlineUpdate, {
+									[self _cacheUpdateInline:YES notifyChange:NO completionHandler:^{
+										OCSyncExecDone(inlineUpdate);
+									}];
+								});
 							}
-						}
 
-						// Update
-						[self->_retrievedSet updateWithError:error items:items];
-
-						if (self->_retrievedSet.state == OCCoreItemListStateSuccess)
-						{
-							// Update all items with root item
-							if (self.path != nil)
+							// Check for maintenance mode errors
+							if ((error==nil) || (error.isDAVException))
 							{
-								OCItem *rootItem;
-
-								if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
+								if (error.davError == OCDAVErrorServiceUnavailable)
 								{
-									if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
-									{
-										for (OCItem *item in items)
-										{
-											if (item != rootItem)
-											{
-												item.parentFileID = rootItem.fileID;
-											}
-										}
-									}
-
-									if (rootItem.parentFileID == nil)
-									{
-										rootItem.parentFileID = parentDirectoryItem.fileID;
-									}
+									[self->_core reportResponseIndicatingMaintenanceMode];
 								}
 							}
 
-							self.changeHandler(self->_core, self);
-						}
+							// Update
+							[self->_retrievedSet updateWithError:error items:items];
 
-						if (self->_retrievedSet.state == OCCoreItemListStateFailed)
-						{
-							self.changeHandler(self->_core, self);
-						}
+							if (self->_retrievedSet.state == OCCoreItemListStateSuccess)
+							{
+								// Update all items with root item
+								if (self.path != nil)
+								{
+									OCItem *rootItem;
 
-						[self->_core endActivity:@"update retrieved set"];
+									if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
+									{
+										if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
+										{
+											for (OCItem *item in items)
+											{
+												if (item != rootItem)
+												{
+													item.parentFileID = rootItem.fileID;
+												}
+											}
+										}
+
+										if (rootItem.parentFileID == nil)
+										{
+											rootItem.parentFileID = parentDirectoryItem.fileID;
+										}
+									}
+								}
+
+								self.changeHandler(self->_core, self);
+							}
+
+							if (self->_retrievedSet.state == OCCoreItemListStateFailed)
+							{
+								self.changeHandler(self->_core, self);
+							}
+
+							[self->_core endActivity:@"update retrieved set"];
+
+							completionHandler();
+						}];
 					}];
 				}];
 			}];

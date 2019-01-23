@@ -26,6 +26,7 @@
 @implementation OCSyncRecord
 
 @synthesize recordID = _recordID;
+@synthesize originProcessSession = _originProcessSession;
 
 @synthesize actionIdentifier = _actionIdentifier;
 @synthesize action = _action;
@@ -42,6 +43,8 @@
 {
 	if ((self = [self init]) != nil)
 	{
+		_originProcessSession = OCProcessManager.sharedProcessManager.processSession;
+
 		_action = action;
 		_actionIdentifier = action.identifier;
 		_timestamp = [NSDate date];
@@ -194,6 +197,8 @@
 	{
 		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
 
+		_originProcessSession = [decoder decodeObjectOfClass:[OCProcessSession class] forKey:@"originProcessSession"];
+
 		_actionIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"actionID"];
 		_action = [decoder decodeObjectOfClass:[OCSyncRecord class] forKey:@"action"];
 
@@ -211,6 +216,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_recordID forKey:@"recordID"];
+
+	[coder encodeObject:_originProcessSession forKey:@"originProcessSession"];
 
 	[coder encodeObject:_actionIdentifier forKey:@"actionID"];
 	[coder encodeObject:_action forKey:@"action"];

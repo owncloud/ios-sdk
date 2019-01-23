@@ -26,6 +26,10 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 
 @interface OCCore (SyncEngine)
 
+#pragma mark - Setup & shutdown
+- (void)setupSyncEngine;
+- (void)shutdownSyncEngine;
+
 #pragma mark - Sync Anchor
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError *error, OCSyncAnchor latestSyncAnchor))completionHandler;
 - (OCSyncAnchor)retrieveLatestSyncAnchorWithError:(NSError * __autoreleasing *)outError;

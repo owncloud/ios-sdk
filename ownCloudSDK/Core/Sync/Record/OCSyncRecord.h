@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class OCSyncIssue;
 @class OCWaitCondition;
+@class OCProcessSession;
 
 typedef NS_ENUM(NSInteger, OCSyncRecordState)
 {
@@ -40,6 +41,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @interface OCSyncRecord : NSObject <NSSecureCoding, OCLogPrivacyMasking>
 {
 	OCSyncRecordID _recordID;
+	OCProcessSession *_originProcessSession;
 
 	OCSyncActionIdentifier _actionIdentifier;
 	OCSyncAction *_action;
@@ -57,6 +59,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 #pragma mark - Database ID
 @property(strong,nullable) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
+@property(strong,readonly) OCProcessSession *originProcessSession; //!< The process session that this sync record originated in
 
 #pragma mark - Action Definition
 @property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action

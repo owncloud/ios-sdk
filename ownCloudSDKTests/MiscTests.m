@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
+#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 
 @interface MiscTests : XCTestCase
 
@@ -23,7 +24,10 @@
 		// Input					  // Expected
 		@"https://demo.owncloud.org/index.php"  	: @"https://demo.owncloud.org/",
 		@"https://demo.owncloud.org/index.php/apps/"  	: @"https://demo.owncloud.org/",
+		@"https://demo.owncloud.org/index.php/apps//"  	: @"https://demo.owncloud.org/",
 		@"https://demo.owncloud.org" 			: @"https://demo.owncloud.org/",
+		@"https://demo.owncloud.org//" 			: @"https://demo.owncloud.org/",
+		@"https://demo.owncloud.org///" 		: @"https://demo.owncloud.org/",
 		@"HTTP://demo.owncloud.org" 			: @"http://demo.owncloud.org/",
 		@"HTTPS://demo.owncloud.org" 			: @"https://demo.owncloud.org/",
 		@"Https://demo.owncloud.org" 			: @"https://demo.owncloud.org/",
@@ -424,4 +428,115 @@
 	[self waitForExpectations:@[ darwinMessageSentExpectation, observerExpectation, secondObserverExpectation ] timeout:3 enforceOrder:YES];
 }
 
+#pragma mark - OCAsyncSequentialQueue
+- (void)testAsyncSequentialQueue
+{
+	OCAsyncSequentialQueue *sequentialQueue = [OCAsyncSequentialQueue new];
+	__block NSUInteger executedJobCount = 0;
+	__block NSUInteger executedCompletionHandlerCount = 0;
+	__block XCTestExpectation *completionHandlerCalledTwiceExpectation = [self expectationWithDescription:@"Called completionHandler second time"];
+	OCAsyncSequentialQueueExecutor executor = sequentialQueue.executor;
+
+	// Sync executor
+	sequentialQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
+		executedJobCount++;
+		job(^{
+			executedCompletionHandlerCount++;
+			completionHandler();
+		});
+	};
+
+	// Block 1
+	[sequentialQueue async:^(dispatch_block_t  _Nonnull completionHandler) {
+		XCTAssert(executedJobCount==1);
+		completionHandler();
+	}];
+
+	// Async executor
+	sequentialQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
+		executedJobCount++;
+		executor(job, ^{
+			executedCompletionHandlerCount++;
+			completionHandler();
+		});
+	};
+
+	// Block 2
+	[sequentialQueue async:^(dispatch_block_t  _Nonnull completionHandler) {
+		XCTAssert(executedJobCount==2);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			completionHandler();
+		});
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			// Call second time => shouldn't do anything. But if it does, will call block 4 and fail the test
+			completionHandler();
+
+			[completionHandlerCalledTwiceExpectation fulfill];
+		});
+	}];
+
+	// Block 3
+	[sequentialQueue async:^(dispatch_block_t  _Nonnull completionHandler) {
+		XCTAssert(executedJobCount==3);
+	}];
+
+	// Block 4
+	[sequentialQueue async:^(dispatch_block_t  _Nonnull completionHandler) {
+		XCTFail("Third job lacks completionHandler, so this block should not be called!");
+	}];
+
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+
+	XCTAssert(executedJobCount==3);
+	XCTAssert(executedJobCount==executedCompletionHandlerCount);
+}
+
+#pragma mark - Legacy Reachability
+- (void)testReachabilityInvalidHost
+{
+	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
+
+	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"non-existant.topleveldomain"];
+
+	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
+
+	[reachabilityStatusProvider providerWillBeAdded];
+	[reachabilityStatusProvider providerWasAdded];
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
+
+		[timeoutExpectation fulfill];
+	});
+
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+
+	[reachabilityStatusProvider providerWillBeRemoved];
+	[reachabilityStatusProvider providerWasRemoved];
+}
+
+- (void)testReachabilityValidHost
+{
+	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
+
+	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"www.owncloud.com"];
+
+	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
+
+	[reachabilityStatusProvider providerWillBeAdded];
+	[reachabilityStatusProvider providerWasAdded];
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateTrue);
+
+		[timeoutExpectation fulfill];
+	});
+
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+
+	[reachabilityStatusProvider providerWillBeRemoved];
+	[reachabilityStatusProvider providerWasRemoved];
+}
 @end

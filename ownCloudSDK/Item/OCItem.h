@@ -69,7 +69,9 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
 };
 
-@interface OCItem : NSObject <NSSecureCoding>
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCItem : NSObject <NSSecureCoding, NSCopying>
 {
 	OCItemVersionIdentifier *_versionIdentifier;
 
@@ -83,71 +85,74 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
 
-@property(strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
+@property(nullable,strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
 
 @property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
-@property(strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
+@property(nullable,strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
-@property(strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
-@property(assign) BOOL locallyModified; //!< YES if the file at .localURL was created or modified locally. NO if the file at .localURL was downloaded from the server and not modified since.
-@property(strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
+@property(nullable,strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
+@property(assign) BOOL locallyModified; //!< YES if the file at .localRelativePath was created or modified locally. NO if the file at .localRelativePath was downloaded from the server and not modified since.
+@property(nullable,strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
 
-@property(strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
+@property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
-@property(strong) OCPath path; //!< Path of the item on the server relative to root
-@property(readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
+@property(nullable,strong) OCPath path; //!< Path of the item on the server relative to root
+@property(nullable,readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
-@property(strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
+@property(nullable,strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
+@property(nullable,strong) OCFileID previousPlaceholderFileID; //!< FileID of placeholder that was replaced by this item for giving hints to the Sync Engine, so it can inform subsequent sync actions depending on the replaced placeholder (dynamic/ephermal)
 
-@property(strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
-@property(strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
-@property(strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
-@property(readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
+@property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
+@property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
+@property(nullable,strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
+@property(nullable,readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
-@property(strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
+@property(nullable,strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
 @property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
 
-@property(strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
+@property(nullable,strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
-@property(strong) NSDate *creationDate; //!< Date of creation
-@property(strong) NSDate *lastModified; //!< Date of last modification
+@property(nullable,strong) NSDate *creationDate; //!< Date of creation
+@property(nullable,strong) NSDate *lastModified; //!< Date of last modification
 
-@property(strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
+@property(nullable,strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
 
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
-@property(strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
+@property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
-@property(strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
+@property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
 
-@property(strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+@property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 
-+ (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
++ (nullable NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
 
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 
 - (void)prepareToReplace:(OCItem *)item;
+- (void)copyFilesystemMetadataFrom:(OCItem *)item;
+- (void)copyMetadataFrom:(OCItem *)item except:(nullable NSSet <OCItemPropertyName> *)exceptProperties;
 
 #pragma mark - Local attribute access
-- (id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;
-- (void)setValue:(id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
+- (nullable id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;
+- (void)setValue:(nullable id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
 
 #pragma mark - File tools
-- (OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
+- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
 
 #pragma mark - Serialization tools
-+ (instancetype)itemFromSerializedData:(NSData *)serializedData;
-- (NSData *)serializedData;
++ (nullable instancetype)itemFromSerializedData:(NSData *)serializedData;
+- (nullable NSData *)serializedData;
 
 @end
 
@@ -160,3 +165,5 @@ extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag 
 extern OCItemPropertyName OCItemPropertyNameLastModified;
 extern OCItemPropertyName OCItemPropertyNameIsFavorite;
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
+
+NS_ASSUME_NONNULL_END

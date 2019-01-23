@@ -36,8 +36,9 @@
 */
 
 #import <Foundation/Foundation.h>
+#import "OCLogger.h"
 
-@interface OCKeyValueStore : NSObject
+@interface OCKeyValueStore : NSObject <OCLogTagging>
 {
 	NSURL *_rootURL;
 }

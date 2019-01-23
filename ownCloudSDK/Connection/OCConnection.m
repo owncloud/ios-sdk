@@ -35,6 +35,7 @@
 #import "NSDate+OCDateParser.h"
 #import "OCEvent.h"
 #import "NSProgress+OCEvent.h"
+#import "OCAppIdentity.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -86,13 +87,33 @@
 		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"9.0",
-		OCConnectionAllowBackgroundURLSessions		: @(YES)
+		OCConnectionAllowBackgroundURLSessions		: @(YES),
+		OCConnectionAllowCellular				: @(YES)
 	});
 }
 
 + (BOOL)backgroundURLSessionsAllowed
 {
 	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowBackgroundURLSessions] boolValue]);
+}
+
++ (BOOL)allowCellular
+{
+	NSNumber *allowCellularNumber;
+
+	if ((allowCellularNumber =[OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCConnectionAllowCellular]) == nil)
+	{
+		allowCellularNumber = [self classSettingForOCClassSettingsKey:OCConnectionAllowCellular];
+	}
+
+	return ([allowCellularNumber boolValue]);
+}
+
++ (void)setAllowCellular:(BOOL)allowCellular
+{
+	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:allowCellular forKey:OCConnectionAllowCellular];
+
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameConnectionSettingsChanged ignoreSelf:NO];
 }
 
 #pragma mark - Init
@@ -641,6 +662,11 @@
 	}
 }
 
+- (void)cancelNonCriticalRequests
+{
+	[self.allQueues makeObjectsPerformSelector:@selector(cancelNonCriticalRequests)];
+}
+
 #pragma mark - Server Status
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
@@ -704,8 +730,8 @@
 			// [OCXMLNode elementWithName:@"D:displayname"],
 			[OCXMLNode elementWithName:@"D:getcontenttype"],
 			[OCXMLNode elementWithName:@"D:getetag"],
-			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
 			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
 			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
@@ -725,44 +751,16 @@
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	OCConnectionDAVRequest *davRequest;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
-	NSProgress *progress = nil;
-
-	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
-	{
-		[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-			NSArray <OCItem *> *items = nil;
-			NSArray <NSError *> *errors = nil;
-
-			items = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
-
-			if ((items.count == 0) && (errors.count > 0) && (error == nil))
+	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+			if (event.error != nil)
 			{
-				error = errors.firstObject;
+				completionHandler(event.error, nil);
 			}
-
-			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			else
 			{
-				error = request.responseHTTPStatus.error;
+				completionHandler(nil, OCTypedCast(event.result, NSArray));
 			}
-
-			completionHandler(error, items);
-		}];
-
-		progress = davRequest.progress;
-		progress.eventType = OCEventTypeRetrieveItemList;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
-	}
-	else
-	{
-		if (completionHandler != nil)
-		{
-			completionHandler(OCError(OCErrorInternal), nil);
-		}
-	}
-
-	return(progress);
+		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
@@ -773,7 +771,7 @@
 
 	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 	{
-		davRequest.requiredSignals = self.actionSignals;
+		// davRequest.requiredSignals = self.actionSignals;
 		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 		davRequest.userInfo = @{
 			@"path" : path,
@@ -784,10 +782,16 @@
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
+		davRequest.priority = NSURLSessionTaskPriorityHigh;
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
 			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+		}
+
+		if (options[OCConnectionOptionIsNonCriticalKey] != nil)
+		{
+			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
 		}
 
 		// Enqueue request
@@ -818,11 +822,17 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
 	{
+		if (error != nil)
+		{
+			event.error = error;
+		}
+
 		if (request.error != nil)
 		{
 			event.error = request.error;
 		}
-		else
+
+		if (event.error == nil)
 		{
 			NSURL *endpointURL = request.userInfo[@"endpointURL"];
 			NSArray <NSError *> *errors = nil;
@@ -851,7 +861,7 @@
 				break;
 			}
 
-			if ((error==nil) && !request.responseHTTPStatus.isSuccess)
+			if ((event.error==nil) && !request.responseHTTPStatus.isSuccess)
 			{
 				event.error = request.responseHTTPStatus.error;
 			}
@@ -917,9 +927,16 @@
 
 		// Set modification date
 		NSDate *modDate = nil;
-		if ([sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+		if ((modDate = options[OCConnectionOptionLastModificationDateKey]) == nil)
 		{
-			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-Mtime"];
+			if (![sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+			{
+				modDate = nil;
+			}
+		}
+		if (modDate != nil)
+		{
+			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
 		}
 
 		// Compute and set checksum header
@@ -1212,6 +1229,7 @@
 					@"responseTagsByPropertyName" : responseTagsByPropertyName
 				};
 				patchRequest.eventTarget = eventTarget;
+				patchRequest.priority = NSURLSessionTaskPriorityHigh;
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
@@ -1321,6 +1339,7 @@
 			@"fullFolderPath" : fullFolderPath
 		};
 		request.eventTarget = eventTarget;
+		request.priority = NSURLSessionTaskPriorityHigh;
 
 		// Enqueue request
 		[self.commandQueue enqueueRequest:request];
@@ -1452,6 +1471,7 @@
 				@"newName" : newName,
 				@"eventType" : @(eventType)
 			};
+			request.priority = NSURLSessionTaskPriorityHigh;
 
 			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
 			[request setValue:@"infinity" forHeaderField:@"Depth"];
@@ -1571,6 +1591,7 @@
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
+		request.priority = NSURLSessionTaskPriorityHigh;
 
 		if (requireMatch && (item.eTag!=nil))
 		{
@@ -1697,7 +1718,7 @@
 			request = [OCConnectionRequest requestWithURL:url];
 
 			request.groupID = item.path.stringByDeletingLastPathComponent;
-			request.priority = NSURLSessionTaskPriorityLow;
+			request.priority = NSURLSessionTaskPriorityDefault;
 
 			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 				@(size.width).stringValue, 	@"x",
@@ -1839,7 +1860,6 @@
 
 		if (strictBookmarkCertificateEnforcement) // .. and the option is turned on
 		{
-
 			request.forceCertificateDecisionDelegation = YES;
 		}
 	}
@@ -1952,7 +1972,12 @@ OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-all
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
+OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
+OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
+OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey = @"is-non-critical";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
+
+OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";

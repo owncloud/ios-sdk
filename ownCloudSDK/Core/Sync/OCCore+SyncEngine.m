@@ -34,7 +34,31 @@
 #import "OCWaitCondition.h"
 #import "OCProcessManager.h"
 
+OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
+
 @implementation OCCore (SyncEngine)
+
+#pragma mark - Setup & shutdown
+- (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerForProcessSession:(OCProcessSession *)processSession
+{
+	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
+}
+
+- (void)setupSyncEngine
+{
+	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:notificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core setNeedsToProcessSyncRecords];
+	}];
+}
+
+- (void)shutdownSyncEngine
+{
+	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:notificationName];
+}
 
 #pragma mark - Sync Anchor
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError *error, OCSyncAnchor latestSyncAnchor))completionHandler
@@ -76,6 +100,8 @@
 	__block OCItem *latestItem = nil;
 
 	OCSyncExec(databaseRetrieval, {
+		[self beginActivity:@"Retrieve latest version of item"];
+
 		[self.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			if (outError != NULL)
 			{
@@ -85,6 +111,8 @@
 			latestItem = items[0];
 
 			OCSyncExecDone(databaseRetrieval);
+
+			[self endActivity:@"Retrieve latest version of item"];
 		}];
 	});
 
@@ -96,6 +124,14 @@
 //	OCLogDebug(@"-incrementSyncAnchorWithProtectedBlock callstack: %@", [NSThread callStackSymbols]);
 
 	[self.vault.database increaseValueForCounter:OCCoreSyncAnchorCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
+		// Check for expected latestSyncAnchor
+		if (![previousCounterValue isEqual:self->_latestSyncAnchor])
+		{
+			// => changes have been happening outside this process => replay to update queries
+			self->_latestSyncAnchor = previousCounterValue;
+			[self _replayChangesSinceSyncAnchor:self->_latestSyncAnchor];
+		}
+
 		if (protectedBlock != nil)
 		{
 			return (protectedBlock(previousCounterValue, newCounterValue));
@@ -117,8 +153,6 @@
 #pragma mark - Sync Engine
 - (void)performProtectedSyncBlock:(NSError *(^)(void))protectedBlock completionHandler:(void(^)(NSError *))completionHandler
 {
-	__weak OCCore *weakSelf = self;
-
 	[self.vault.database increaseValueForCounter:OCCoreSyncJournalCounter withProtectedBlock:^NSError *(NSNumber *previousCounterValue, NSNumber *newCounterValue) {
 		if (protectedBlock != nil)
 		{
@@ -127,14 +161,12 @@
 
 		return (nil);
 	} completionHandler:^(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue) {
-		OCCore *strongSelf = weakSelf;
-
 		if (completionHandler != nil)
 		{
 			completionHandler(error);
 		}
 
-		[strongSelf postIPCChangeNotification];
+		[self postIPCChangeNotification];
 	}];
 }
 
@@ -467,11 +499,11 @@
 
 		return (error);
 	} completionHandler:^(NSError *error) {
-		// Ensure outstanding events are delivered
-		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
-		{
-			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
-		}
+//		// Ensure outstanding events are delivered
+//		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
+//		{
+//			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
+//		}
 
 		[self endActivity:@"process sync records"];
 	}];
@@ -596,6 +628,27 @@
 	// Setup action
 	syncRecord.action.core = self;
 
+	// Check originating process session
+	if (syncRecord.originProcessSession != nil)
+	{
+		OCProcessSession *processSession = syncRecord.originProcessSession;
+		BOOL doProcess = YES;
+
+		// Only perform processSession validity check if bundleIDs differ
+		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
+		{
+			// Don't process sync records originating from other processes that are running
+			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
+		}
+
+		if (!doProcess)
+		{
+			// Stop processing and notify other process to start processing the sync record queue
+			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession] ignoreSelf:YES];
+			return (OCCoreSyncInstructionStop);
+		}
+	}
+
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)
 	{
@@ -635,21 +688,12 @@
 	}
 
 	// Deliver pending events
-	NSMutableArray <OCEvent *> *queuedEvents = nil;
-
-	@synchronized(self)
-	{
-		if ((queuedEvents = _eventsBySyncRecordID[syncRecord.recordID]) != nil)
-		{
-			[_eventsBySyncRecordID removeObjectForKey:syncRecord.recordID];
-		}
-	}
-
-	if (queuedEvents != nil)
 	{
 		OCCoreSyncInstruction eventInstruction = OCCoreSyncInstructionNone;
+		OCEvent *event = nil;
+		OCSyncRecordID syncRecordID = syncRecord.recordID;
 
-		for (OCEvent *event in queuedEvents)
+		while ((event = [self.database nextEventForSyncRecordID:syncRecordID afterEventID:nil]) != nil)
 		{
 			// Process event
 			OCSyncContext *syncContext;
@@ -678,6 +722,8 @@
 					eventInstruction = instruction;
 				}
 			}
+
+			[self.database removeEvent:event];
 		}
 
 		if (eventInstruction != OCCoreSyncInstructionNone)
@@ -832,7 +878,7 @@
 		};
 	}
 
-	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil];
+	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 }
 
 #pragma mark - Sync event handling
@@ -840,22 +886,15 @@
 {
 	OCSyncRecordID recordID;
 
-	if ((recordID = event.userInfo[OCEventUserInfoKeySyncRecordID]) != nil)
+	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
-		@synchronized(self)
-		{
-			NSMutableArray <OCEvent *> *eventsForRecord;
+		[self beginActivity:@"Queuing sync event"];
 
-			if ((eventsForRecord = _eventsBySyncRecordID[recordID]) == nil)
-			{
-				eventsForRecord = [NSMutableArray new];
-				_eventsBySyncRecordID[recordID] = eventsForRecord;
-			}
+		[self.database queueEvent:event forSyncRecordID:recordID completionHandler:^(OCDatabase *db, NSError *error) {
+			[self setNeedsToProcessSyncRecords];
 
-			[eventsForRecord addObject:event];
-		}
-
-		[self setNeedsToProcessSyncRecords];
+			[self endActivity:@"Queuing sync event"];
+		}];
 	}
 	else
 	{
