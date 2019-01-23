@@ -46,11 +46,11 @@
 }
 
 #pragma mark - Fileprovider tools
-- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler
+- (void)retrieveItemFromDatabaseForLocalID:(OCLocalID)localID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler
 {
 	[self queueBlock:^{
 		OCSyncExec(cacheItemRetrieval, {
-			[self.vault.database retrieveCacheItemForFileID:fileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			[self.vault.database retrieveCacheItemForLocalID:localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 				completionHandler(error, syncAnchor, item);
 
 				OCSyncExecDone(cacheItemRetrieval);
@@ -58,6 +58,7 @@
 		});
 	}];
 }
+
 
 #pragma mark - File provider manager
 - (NSFileProviderManager *)fileProviderManager
@@ -86,8 +87,8 @@
 {
 	if (self.postFileProviderNotifications)
 	{
-		NSMutableSet <OCFileID> *changedDirectoriesFileIDs = [NSMutableSet new];
-		OCFileID rootDirectoryFileID = nil;
+		NSMutableSet <OCLocalID> *changedDirectoriesLocalIDs = [NSMutableSet new];
+		OCLocalID rootDirectoryLocalID = nil;
 		BOOL addRoot = NO;
 
 		// Coalesce IDs
@@ -96,9 +97,9 @@
 			switch (item.type)
 			{
 				case OCItemTypeFile:
-					if (item.parentFileID != nil)
+					if (item.parentLocalID != nil)
 					{
-						[changedDirectoriesFileIDs addObject:item.parentFileID];
+						[changedDirectoriesLocalIDs addObject:item.parentLocalID];
 					}
 					else if ([item.path.parentPath isEqual:@"/"])
 					{
@@ -109,45 +110,45 @@
 				case OCItemTypeCollection:
 					if ([item.path isEqual:@"/"])
 					{
-						rootDirectoryFileID = item.fileID;
+						rootDirectoryLocalID = item.localID;
 						addRoot = YES;
 					}
 					else
 					{
-						if (item.parentFileID != nil)
+						if (item.parentLocalID != nil)
 						{
-							[changedDirectoriesFileIDs addObject:item.parentFileID];
+							[changedDirectoriesLocalIDs addObject:item.parentLocalID];
 						}
 
-						if (item.fileID != nil)
+						if (item.localID != nil)
 						{
-							[changedDirectoriesFileIDs addObject:item.fileID];
+							[changedDirectoriesLocalIDs addObject:item.localID];
 						}
 					}
 
 				break;
 			}
 
-			if ((rootDirectoryFileID==nil) && [item.path.parentPath isEqual:@"/"] && (item.parentFileID!=nil))
+			if ((rootDirectoryLocalID==nil) && [item.path.parentPath isEqual:@"/"] && (item.parentLocalID!=nil))
 			{
-				rootDirectoryFileID = item.parentFileID;
+				rootDirectoryLocalID = item.parentLocalID;
 			}
 		}
 
-		// Remove root directory fileID
-		if (rootDirectoryFileID != nil)
+		// Remove root directory localID
+		if (rootDirectoryLocalID != nil)
 		{
-			if ([changedDirectoriesFileIDs containsObject:rootDirectoryFileID])
+			if ([changedDirectoriesLocalIDs containsObject:rootDirectoryLocalID])
 			{
-				[changedDirectoriesFileIDs removeObject:rootDirectoryFileID];
+				[changedDirectoriesLocalIDs removeObject:rootDirectoryLocalID];
 				addRoot = YES;
 			}
 		}
 
-		// Add root directory fileID
+		// Add root directory localID
 		if (addRoot)
 		{
-			[changedDirectoriesFileIDs addObject:NSFileProviderRootContainerItemIdentifier];
+			[changedDirectoriesLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
 		}
 
 		// Signal NSFileProviderManager
@@ -156,43 +157,43 @@
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSFileProviderManager *fileProviderManager = [NSFileProviderManager managerForDomain:self->_vault.fileProviderDomain];
 
-				for (OCFileID changedDirectoryFileID in changedDirectoriesFileIDs)
+				for (OCLocalID changedDirectoryLocalID in changedDirectoriesLocalIDs)
 				{
-					OCLogDebug(@"Signaling changes to file provider manager %@ for item file ID %@", fileProviderManager, OCLogPrivate(changedDirectoryFileID));
+					OCLogDebug(@"Signaling changes to file provider manager %@ for item localID=%@", fileProviderManager, OCLogPrivate(changedDirectoryLocalID));
 
-					[self signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID];
+					[self signalEnumeratorForContainerItemIdentifier:changedDirectoryLocalID];
 				}
 			});
 		}
 	}
 }
 
-- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
+- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID
 {
 	@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
 	{
-		NSNumber *currentSignalCount = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID];
+		NSNumber *currentSignalCount = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID];
 
 		if (currentSignalCount == nil)
 		{
 			// The only/first signal for this right now => schedule right away
 
-			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(1);
+			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID] = @(1);
 
-			[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+			[self _scheduleSignalForContainerItemIdentifier:changedDirectoryLocalID];
 		}
 		else
 		{
 			// Another signal hasn't completed yet, so increase the counter and wait for the scheduled signal to complete
 			// (at which point, another signal will be triggered)
-			OCLogDebug(@"Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryFileID);
+			OCLogDebug(@"Skipped signaling %@ for changes as another signal hasn't completed yet", changedDirectoryLocalID);
 
-			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue + 1);
+			_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID] = @(_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID].integerValue + 1);
 		}
 	}
 }
 
-- (void)_scheduleSignalForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID
+- (void)_scheduleSignalForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID
 {
 	NSTimeInterval minimumSignalInterval = 0.2; // effectively throttle FP container update notifications to at most once per [minimumSignalInterval]
 
@@ -203,30 +204,30 @@
 		{
 			@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
 			{
-				NSInteger signalCountAtStart = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+				NSInteger signalCountAtStart = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID].integerValue;
 
-				OCLogDebug(@"Signaling %@ for changes..", changedDirectoryFileID);
+				OCLogDebug(@"Signaling %@ for changes..", changedDirectoryLocalID);
 
-				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryFileID completionHandler:^(NSError * _Nullable error) {
-					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryFileID, error);
+				[fileProviderManager signalEnumeratorForContainerItemIdentifier:changedDirectoryLocalID completionHandler:^(NSError * _Nullable error) {
+					OCLogDebug(@"Signaling %@ for changes ended with error %@", changedDirectoryLocalID, error);
 
 					dispatch_async(dispatch_get_main_queue(), ^{
 						@synchronized(self->_fileProviderSignalCountByContainerItemIdentifiersLock)
 						{
-							NSInteger signalCountAtEnd = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID].integerValue;
+							NSInteger signalCountAtEnd = self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID].integerValue;
 							NSInteger remainingSignalCount = signalCountAtEnd - signalCountAtStart;
 
 							if (remainingSignalCount > 0)
 							{
 								// There were signals after initiating the last signal => schedule another signal
-								self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryFileID] = @(remainingSignalCount);
+								self->_fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID] = @(remainingSignalCount);
 
-								[self _scheduleSignalForContainerItemIdentifier:changedDirectoryFileID];
+								[self _scheduleSignalForContainerItemIdentifier:changedDirectoryLocalID];
 							}
 							else
 							{
 								// The last signal was sent after the last signal was requested => remove from dict
-								[self->_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryFileID];
+								[self->_fileProviderSignalCountByContainerItemIdentifiers removeObjectForKey:changedDirectoryLocalID];
 							}
 						}
 					});
@@ -235,7 +236,7 @@
 		}
 		else
 		{
-			OCLogDebug(@"Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryFileID);
+			OCLogDebug(@"Signaling %@ for changes failed because the file provider manager couldn't be found.", changedDirectoryLocalID);
 		}
 
 	});

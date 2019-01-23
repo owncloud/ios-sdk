@@ -170,9 +170,20 @@
 								if (self.path != nil)
 								{
 									OCItem *rootItem;
+									OCItem *cachedRootItem;
 
 									if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
 									{
+										if ((cachedRootItem = self->_cachedSet.itemsByFileID[rootItem.fileID]) == nil)
+										{
+											cachedRootItem = self->_cachedSet.itemsByPath[self.path];
+										}
+
+										if (cachedRootItem != nil)
+										{
+											rootItem.localID = cachedRootItem.localID;
+										}
+
 										if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
 										{
 											for (OCItem *item in items)
@@ -180,6 +191,7 @@
 												if (item != rootItem)
 												{
 													item.parentFileID = rootItem.fileID;
+													item.parentLocalID = rootItem.localID;
 												}
 											}
 										}
@@ -187,6 +199,11 @@
 										if (rootItem.parentFileID == nil)
 										{
 											rootItem.parentFileID = parentDirectoryItem.fileID;
+										}
+
+										if (parentDirectoryItem.parentLocalID == nil)
+										{
+											rootItem.parentLocalID = parentDirectoryItem.localID;
 										}
 									}
 								}

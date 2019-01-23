@@ -164,7 +164,6 @@
 	BOOL targetRemoved = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 	__block NSMutableArray <OCItem *> *queryResultsChangedItems = nil;
-	OCItem *taskRootItem = nil;
 	NSString *taskPath = task.path;
 	__block OCSyncAnchor querySyncAnchor = nil;
 	OCCoreItemListTask *nextTask = nil;
@@ -266,8 +265,8 @@
 		// Perform merge
 		OCCoreItemList *cacheSet = task.cachedSet;
 		OCCoreItemList *retrievedSet = task.retrievedSet;
-		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByFileID = cacheSet.itemsByFileID;
-		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByFileID = retrievedSet.itemsByFileID;
+		NSMutableDictionary <OCFileID, OCItem *> *cacheItemsByFileID = cacheSet.itemsByFileID;
+		NSMutableDictionary <OCFileID, OCItem *> *retrievedItemsByFileID = retrievedSet.itemsByFileID;
 		NSMutableDictionary <OCPath, OCItem *> *cacheItemsByPath = cacheSet.itemsByPath;
 		NSMutableDictionary <OCPath, OCItem *> *retrievedItemsByPath = retrievedSet.itemsByPath;
 
@@ -345,6 +344,7 @@
 					   )
 					{
 						// Preserve local item, but merge in info on latest server version
+						retrievedItem.localID = cacheItem.localID;
 						cacheItem.remoteItem = retrievedItem;
 
 						// Return updated cached version
@@ -469,7 +469,7 @@
 							completionHandler();
 					       }
 						afterQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
-							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath taskRootItem:taskRootItem targetRemoved:targetRemoved];
+							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
 							completionHandler();
 						}
 					       queryPostProcessor:nil
@@ -552,7 +552,7 @@
 
 		[self queueBlock:^{
 			// Update non-idle queries
-			[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath taskRootItem:taskRootItem targetRemoved:targetRemoved];
+			[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
 
 			if (removeTask)
 			{
@@ -579,9 +579,11 @@
 	[self endActivity:@"item list task"];
 }
 
-- (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task taskPath:(NSString *)taskPath taskRootItem:(OCItem *)taskRootItem targetRemoved:(BOOL)targetRemoved {
+- (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task taskPath:(NSString *)taskPath targetRemoved:(BOOL)targetRemoved
+{
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
 	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
+	OCItem *taskRootItem = nil;
 	OCQueryState setQueryState = queryState;
 	// NSString *parentTaskPath = [taskPath parentPath];
 

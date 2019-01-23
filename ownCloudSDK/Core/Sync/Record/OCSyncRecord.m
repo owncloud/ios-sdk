@@ -68,6 +68,11 @@
 	_state = state;
 }
 
+- (OCLocalID)localID
+{
+	return (self.action.localItem.localID);
+}
+
 #pragma mark - Serialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData
 {

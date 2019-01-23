@@ -1381,6 +1381,7 @@
 					OCItem *newFolderItem = items.firstObject;
 
 					newFolderItem.parentFileID = parentItem.fileID;
+					newFolderItem.parentLocalID = parentItem.localID;
 
 					if (error == nil)
 					{
@@ -1524,6 +1525,7 @@
 					OCItem *newItem = items.firstObject;
 
 					newItem.parentFileID = parentItem.fileID;
+					newItem.parentLocalID  = parentItem.localID;
 
 					if (error == nil)
 					{

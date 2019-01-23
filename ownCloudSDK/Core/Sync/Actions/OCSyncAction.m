@@ -138,6 +138,17 @@
 	return (OCCoreSyncInstructionProcessNext);
 }
 
+#pragma mark - Offline coalescation
+- (NSError *)updatePreviousSyncRecord:(OCSyncRecord *)syncRecord context:(OCSyncContext *)syncContext
+{
+	return (OCError(OCErrorFeatureNotImplemented));
+}
+
+- (NSError *)updateActionWith:(OCItem *(^)(OCSyncContext *syncContext, OCSyncAction *syncAction, OCItem *item))actionUpdater context:(OCSyncContext *)syncContext
+{
+	return (OCError(OCErrorFeatureNotImplemented));
+}
+
 #pragma mark - Wait condition failure handling
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext
 {

@@ -39,6 +39,8 @@ typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSE
 typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
+typedef NSArray<OCItem *> *(^OCDatabaseItemFilter)(NSArray <OCItem *> *items);
+
 typedef NSString* OCDatabaseTableName NS_TYPED_ENUM;
 typedef NSString* OCDatabaseCounterIdentifier;
 
@@ -52,12 +54,16 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 	NSUInteger _removedItemRetentionLength;
 
+	OCDatabaseItemFilter _itemFilter;
+
 	OCSQLiteDB *_sqlDB;
 }
 
 @property(strong) NSURL *databaseURL;
 
 @property(assign) NSUInteger removedItemRetentionLength;
+
+@property(copy) OCDatabaseItemFilter itemFilter;
 
 @property(strong) OCSQLiteDB *sqlDB;
 
@@ -76,6 +82,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
+- (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;

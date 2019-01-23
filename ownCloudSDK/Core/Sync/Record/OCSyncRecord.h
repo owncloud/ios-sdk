@@ -65,6 +65,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action
 @property(strong) OCSyncAction *action; //!< The sync action
 @property(readonly) NSDate *timestamp; //!< Time the action was triggered
+@property(readonly,nonatomic,nullable) OCLocalID localID; //!< The localID of the item targeted by the action
 
 #pragma mark - Scheduling and processing tracking
 @property(readonly,nonatomic) OCSyncRecordState state; //!< Current processing state

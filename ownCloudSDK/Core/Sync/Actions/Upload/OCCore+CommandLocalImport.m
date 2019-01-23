@@ -45,6 +45,7 @@
 	// Create placeholder item and fill fields required by -[NSFileProviderExtension importDocumentAtURL:toParentItemIdentifier:completionHandler:] completion handler
 	placeholderItem = [OCItem placeholderItemOfType:OCItemTypeFile];
 
+	placeholderItem.parentLocalID = parentItem.localID;
 	placeholderItem.parentFileID = parentItem.fileID;
 	placeholderItem.path = [parentItem.path stringByAppendingPathComponent:newFileName];
 

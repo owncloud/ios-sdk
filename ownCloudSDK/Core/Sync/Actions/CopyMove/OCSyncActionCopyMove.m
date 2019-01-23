@@ -72,6 +72,7 @@
 
 			// Set path and parent folder
 			placeholderItem.parentFileID = self.targetParentItem.fileID;
+			placeholderItem.parentLocalID = self.targetParentItem.localID;
 			placeholderItem.path = targetPath;
 
 			// Copy actual file if it exists locally
@@ -138,6 +139,8 @@
 			// Update location info
 			updatedItem.parentFileID = self.targetParentItem.fileID;
 			updatedItem.path = targetPath;
+
+			updatedItem.parentLocalID = self.targetParentItem.localID;
 
 			// Save to processingItem
 			self.processingItem = updatedItem;
@@ -251,10 +254,12 @@
 		else
 		{
 			OCItem *updatedItem = OCTypedCast(event.result, OCItem);
+			OCFileID updatedParentLocalID = updatedItem.parentLocalID;
 
 			[sourceItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 			[updatedItem prepareToReplace:self.localItem];
+			updatedItem.parentLocalID = updatedParentLocalID;
 
 			[self.core renameDirectoryFromItem:self.localItem forItem:updatedItem adjustLocalMetadata:YES];
 

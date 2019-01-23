@@ -34,6 +34,7 @@
 		if ((placeholderItem = [OCItem placeholderItemOfType:OCItemTypeCollection]) != nil)
 		{
 			placeholderItem.parentFileID = parentItem.fileID;
+			placeholderItem.parentLocalID = parentItem.localID;
 			placeholderItem.path = [parentItem.path stringByAppendingPathComponent:folderName];
 			placeholderItem.lastModified = [NSDate date];
 
@@ -110,11 +111,16 @@
 		{
 			[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
 
+			newItem.previousPlaceholderFileID = placeholderItem.fileID;
+			newItem.parentFileID = placeholderItem.parentFileID;
+
+			newItem.localID = placeholderItem.localID;
+			newItem.parentLocalID = placeholderItem.parentLocalID;
+
+			placeholderItem.localID = nil;
+
 			syncContext.removedItems = @[ placeholderItem ];
 		}
-
-		newItem.previousPlaceholderFileID = placeholderItem.fileID;
-		newItem.parentFileID = placeholderItem.parentFileID;
 
 		syncContext.addedItems = @[ newItem ];
 

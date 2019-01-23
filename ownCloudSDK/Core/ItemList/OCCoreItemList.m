@@ -141,6 +141,43 @@
 	return (_itemFileIDsSet);
 }
 
+- (NSMutableDictionary<OCLocalID,OCItem *> *)itemsByLocalID
+{
+	if (_itemsByLocalID == nil)
+	{
+		_itemsByLocalID = [NSMutableDictionary new];
+
+		for (OCItem *item in self.items)
+		{
+			if (item.localID != nil)
+			{
+				_itemsByLocalID[item.localID] = item;
+			}
+		}
+	}
+
+	return (_itemsByLocalID);
+}
+
+- (NSSet<OCLocalID> *)itemLocalIDsSet
+{
+	if (_itemLocalIDsSet == nil)
+	{
+		NSArray<OCPath> *itemLocalIDs;
+
+		if ((itemLocalIDs = [self.itemsByLocalID allKeys]) != nil)
+		{
+			_itemLocalIDsSet = [[NSSet alloc] initWithArray:itemLocalIDs];
+		}
+		else
+		{
+			_itemLocalIDsSet = [NSSet new];
+		}
+	}
+
+	return (_itemLocalIDsSet);
+}
+
 - (NSMutableDictionary<OCPath,NSMutableArray<OCItem *> *> *)itemsByParentPaths
 {
 	if (_itemsByParentPaths == nil)

@@ -345,11 +345,12 @@
 							{
 								OCItem *updatedRootItem = nil;
 
-								if (updatedItemList.itemsByParentPaths[query.queryPath].count > 0)
+								GetUpdatedFullResultsReady();
+
+								if ((updatedItemList.itemsByParentPaths[query.queryPath].count > 0) || // path match
+								    ([updatedItemList.itemLocalIDsSet intersectsSet:updatedFullQueryResultsItemList.itemLocalIDsSet])) // Contained localID match
 								{
 									// Items were updated
-									GetUpdatedFullResultsReady();
-
 									for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
 									{
 										if (!query.includeRootItem && [item.path isEqual:query.queryPath])
@@ -360,14 +361,19 @@
 
 										if (item.path != nil)
 										{
-											OCItem *removeItem;
+											OCItem *reMoveItem = nil;
 
-											if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
+											if ((reMoveItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) == nil)
+											{
+												reMoveItem = updatedFullQueryResultsItemList.itemsByLocalID[item.localID];
+											}
+
+											if (reMoveItem != nil)
 											{
 												NSUInteger replaceAtIndex;
 
 												// Replace if found
-												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:removeItem]) != NSNotFound)
+												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:reMoveItem]) != NSNotFound)
 												{
 													[updatedFullQueryResults removeObjectAtIndex:replaceAtIndex];
 													[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
