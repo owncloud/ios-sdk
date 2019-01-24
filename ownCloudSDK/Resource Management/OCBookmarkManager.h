@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray<OCBookmark *> *_bookmarks;
 }
 
-@property(strong) NSMutableArray<OCBookmark *> *bookmarks;
+@property(strong) NSArray<OCBookmark *> *bookmarks;
 @property(readonly,nonatomic) NSURL *bookmarkStoreURL;
 
 #pragma mark - Shared instance
