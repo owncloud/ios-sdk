@@ -17,8 +17,21 @@
  */
 
 #import "OCIPNotificationCenter.h"
+#import "OCLogger.h"
+
+static BOOL sOCIPNotificationCenterLoggingEnabled = NO;
 
 @implementation OCIPNotificationCenter
+
++ (BOOL)loggingEnabled
+{
+	return (sOCIPNotificationCenterLoggingEnabled);
+}
+
++ (void)setLoggingEnabled:(BOOL)loggingEnabled
+{
+	sOCIPNotificationCenterLoggingEnabled = loggingEnabled;
+}
 
 #pragma mark - Init / Dealloc / Singleton
 + (OCIPNotificationCenter *)sharedNotificationCenter
@@ -81,6 +94,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 #pragma mark - Add/Remove notification observers
 - (void)addObserver:(id)observer forName:(OCIPCNotificationName)name withHandler:(OCIPNotificationHandler)handler
 {
+	if (OCIPNotificationCenter.loggingEnabled)
+	{
+		OCLogDebug(@"Adding observer=%@ for '%@'", OCLogPrivate(observer), name);
+	}
+
 	@synchronized(self)
 	{
 		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
@@ -102,6 +120,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 - (void)removeObserver:(id)observer forName:(OCIPCNotificationName)name
 {
+	if (OCIPNotificationCenter.loggingEnabled)
+	{
+		OCLogDebug(@"Removing observer=%@ for '%@'", OCLogPrivate(observer), name);
+	}
+
 	@synchronized(self)
 	{
 		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
@@ -125,6 +148,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 - (void)removeAllObserversForName:(OCIPCNotificationName)name
 {
+	if (OCIPNotificationCenter.loggingEnabled)
+	{
+		OCLogDebug(@"Removing all observers for '%@'", name);
+	}
+
 	@synchronized(self)
 	{
 		[_handlersByObserverByNotificationName removeObjectForKey:name];
@@ -135,6 +163,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 #pragma mark - Deliver notifications
 - (void)deliverNotificationForName:(OCIPCNotificationName)name
 {
+	if (OCIPNotificationCenter.loggingEnabled)
+	{
+		OCLogDebug(@"Received notification '%@'", name);
+	}
+
 	@synchronized(self)
 	{
 		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
@@ -160,6 +193,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 			[handlersByObserver enumerateKeysAndObjectsUsingBlock:^(NSValue * _Nonnull observerValue, OCIPNotificationHandler  _Nonnull notificationHandler, BOOL * _Nonnull stop) {
 				id observer = [observerValue nonretainedObjectValue];
 
+				if (OCIPNotificationCenter.loggingEnabled)
+				{
+					OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
+				}
+
 				notificationHandler(self, observer, name);
 			}];
 		}
@@ -169,6 +207,11 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 #pragma mark - Post notifications
 - (void)postNotificationForName:(OCIPCNotificationName)name ignoreSelf:(BOOL)ignoreSelf
 {
+	if (OCIPNotificationCenter.loggingEnabled)
+	{
+		OCLogDebug(@"Posting notification '%@' (ignoreSelf=%d)", name, ignoreSelf);
+	}
+
 	@synchronized (self)
 	{
 		NSNumber *existingIgnoreCount =  _ignoreCountsByNotificationName[name];
@@ -180,6 +223,24 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 		CFNotificationCenterPostNotification(_darwinNotificationCenter, (__bridge CFNotificationName)name, NULL, NULL, false);
 	}
+}
+
+@end
+
+#pragma mark - Log tagging
+@interface OCIPNotificationCenter (LogTagging) <OCLogTagging>
+@end
+
+@implementation OCIPNotificationCenter (LogTagging)
+
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"IPNC"]);
+}
+
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"IPNC"]);
 }
 
 @end

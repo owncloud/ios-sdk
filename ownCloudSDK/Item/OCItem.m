@@ -364,6 +364,63 @@
 	}
 }
 
+- (void)copyFilesystemMetadataFrom:(OCItem *)item
+{
+	self.permissions = item.permissions;
+	self.size = item.size;
+	self.creationDate = item.creationDate;
+	self.lastModified = item.lastModified;
+}
+
+- (void)copyMetadataFrom:(OCItem *)item except:(NSSet <OCItemPropertyName> *)exceptProperties
+{
+	#define CloneMetadata(propertyName) if (![exceptProperties containsObject:propertyName]) \
+	{ \
+		[self setValue:[item valueForKeyPath:propertyName] forKeyPath:propertyName]; \
+	}
+
+	CloneMetadata(@"type");
+
+	CloneMetadata(@"mimeType");
+
+	CloneMetadata(@"status");
+
+	CloneMetadata(@"removed");
+
+	CloneMetadata(@"permissions");
+
+	CloneMetadata(@"localRelativePath");
+	CloneMetadata(@"locallyModified");
+	CloneMetadata(@"localCopyVersionIdentifier");
+
+	CloneMetadata(@"remoteItem");
+
+	CloneMetadata(@"path");
+	CloneMetadata(@"previousPath");
+
+	CloneMetadata(@"parentFileID");
+	CloneMetadata(@"fileID");
+	CloneMetadata(@"eTag");
+
+	CloneMetadata(@"localAttributes");
+	CloneMetadata(@"localAttributesLastModified");
+
+	CloneMetadata(@"activeSyncRecordIDs");
+	CloneMetadata(@"syncActivity");
+
+	CloneMetadata(@"size");
+	CloneMetadata(@"creationDate");
+	CloneMetadata(@"lastModified");
+
+	CloneMetadata(@"isFavorite");
+
+	CloneMetadata(@"thumbnail");
+
+	CloneMetadata(@"shares");
+
+	CloneMetadata(@"databaseID");
+}
+
 #pragma mark - File tools
 - (OCFile *)fileWithCore:(OCCore *)core
 {
@@ -387,6 +444,12 @@
 - (NSString *)description
 {
 	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, (_removed ? @", removed" : @"")]);
+}
+
+#pragma mark - Copying
+- (id)copyWithZone:(nullable NSZone *)zone
+{
+	return ([[self class] itemFromSerializedData:self.serializedData]);
 }
 
 @end

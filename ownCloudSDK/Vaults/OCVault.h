@@ -23,6 +23,8 @@
 @class OCDatabase;
 @class OCItem;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCVault : NSObject
 {
 	NSUUID *_uuid;
@@ -39,34 +41,39 @@
 
 @property(strong) NSUUID *uuid; //!< ID of the vault. Typically the same as the uuid of the OCBookmark it corresponds to.
 
-@property(readonly,nonatomic) OCDatabase *database; //!< The vault's database.
+@property(nullable,readonly,nonatomic) OCDatabase *database; //!< The vault's database.
 
-@property(readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
-@property(readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
-@property(readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
-@property(readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
+@property(nullable,readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
+@property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
+@property(nullable,readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
+@property(nullable,readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
 
-@property(readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
+@property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
+
++ (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
 #pragma mark - Operations
-- (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Opens the vault and its components
-- (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Closes the vault and its components
+- (void)openWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Opens the vault and its components
+- (void)closeWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
-- (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
+- (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
-- (NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
-- (NSString *)relativePathForItem:(OCItem *)item;
+- (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+- (nullable NSString *)relativePathForItem:(OCItem *)item;
 
-+ (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
++ (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
 
-+ (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
++ (nullable NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
 
 @end
 
 extern NSString *OCVaultPathVaults;
 extern NSString *OCVaultPathConnectionData;
+
+NS_ASSUME_NONNULL_END
+

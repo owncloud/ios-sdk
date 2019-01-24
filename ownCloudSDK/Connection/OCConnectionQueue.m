@@ -60,6 +60,9 @@
 		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier];
 
 		sessionConfiguration.sharedContainerIdentifier = [OCAppIdentity sharedAppIdentity].appGroupIdentifier;
+		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
+		sessionConfiguration.URLCache = nil; // Do not cache responses
+		sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
 
 		_connection = connection;
 
@@ -86,6 +89,7 @@
 		NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
 		sessionConfiguration.URLCache = nil; // Do not cache responses
+		sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
 
 		_connection = connection;
 
@@ -115,6 +119,10 @@
 
 	_invalidationCompletionHandler = completionHandler;
 
+	// Find and cancel non-critical requests
+	[self cancelNonCriticalRequests];
+
+	// Finish and invalidate remaining tasks in session
 	[_urlSession finishTasksAndInvalidate];
 }
 
@@ -125,6 +133,29 @@
 	_invalidationCompletionHandler = completionHandler;
 
 	[_urlSession invalidateAndCancel];
+}
+
+- (void)cancelNonCriticalRequests
+{
+	NSMutableArray <OCConnectionRequest *> *cancelRequests = [NSMutableArray new];
+
+	// Find and cancel non-critical requests
+	@synchronized(self)
+	{
+		for (OCConnectionRequest *runningRequest in _runningRequests)
+		{
+			if (runningRequest.isNonCritial)
+			{
+				[cancelRequests addObject:runningRequest];
+			}
+		}
+	}
+
+	for (OCConnectionRequest *cancelRequest in cancelRequests)
+	{
+		OCLogDebug(@"Cancelling non-critical request=%@ to speed up connection queue shutdown", cancelRequest);
+		[cancelRequest cancel];
+	}
 }
 
 #pragma mark - Queue management
@@ -249,7 +280,7 @@
 
 	// Remove request from queue
 	[_queuedRequests removeObject:request];
-	
+
 	if (request.cancelled)
 	{
 		// This request has been cancelled
@@ -398,7 +429,7 @@
 	// Log request
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
 	}
 
@@ -537,7 +568,7 @@
 	// Log response
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), nil];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.headerFields[@"X-Request-ID"], ((error != nil) ? error : @"-"), request.responseDescription);
 	}
 
@@ -649,7 +680,7 @@
 
 			if (request == nil)
 			{
-				OCLogError(@"could not find request for task %@ (%@) %p %p", OCLogPrivate(task), OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
+				OCLogError(@"could not find request for task=%@, taskIdentifier=<%lu>, url=%@, %p %p", OCLogPrivate(task), task.taskIdentifier, OCLogPrivate(task.currentRequest.URL), self, _runningRequestsByTaskIdentifier);
 			}
 		}
 	}
@@ -676,7 +707,7 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error
 {
 	// OCLogDebug(@"DID COMPLETE: task=%@ error=%@", task, error);
-	OCLogDebug(@"%@ [taskIdentifier=%lu]: didCompleteWithError=%@", task.currentRequest.URL, task.taskIdentifier, error);
+	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: didCompleteWithError=%@", task.currentRequest.URL, task.taskIdentifier, error);
 
 	[self handleFinishedRequest:[self requestForTask:task] error:error];
 }
@@ -1026,6 +1057,8 @@
 #pragma mark - State management
 - (void)saveState
 {
+	OCLogDebug(@"Saving state to %@", _persistentStore);
+
 	if (_persistentStore != nil)
 	{
 		@synchronized(self)
@@ -1041,12 +1074,18 @@
 			};
 
 			_persistentStore[@"state"] = state;
+
+			OCLogDebug(@"Saving state=%@", state);
 		}
 	}
+
+	OCLogDebug(@"Done saving state to %@", _persistentStore);
 }
 
 - (void)restoreState
 {
+	OCLogDebug(@"Restoring state from %@", _persistentStore);
+
 	if (_persistentStore != nil)
 	{
 		@synchronized(self)
@@ -1055,6 +1094,8 @@
 
 			if ((state = _persistentStore[@"state"]) != nil)
 			{
+				OCLogDebug(@"Restoring from state=%@", state);
+
 				_queuedRequests = state[@"queuedRequests"];
 
 				_runningRequests = state[@"runningRequests"];
@@ -1065,6 +1106,8 @@
 			}
 		}
 	}
+
+	OCLogDebug(@"Restored state from %@", _persistentStore);
 }
 
 - (void)updateStateWithURLSession

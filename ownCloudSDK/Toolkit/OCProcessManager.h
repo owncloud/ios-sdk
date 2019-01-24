@@ -32,7 +32,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)processDidFinishLaunching; //!< Signal that this process has finished launching
 - (void)processWillTerminate; //!< Signal that this process is about to terminate
 
-- (BOOL)isSessionValid:(OCProcessSession *)session usingThoroughChecks:(BOOL)thoroughChecks;
+- (BOOL)isSessionValid:(OCProcessSession *)session usingThoroughChecks:(BOOL)thoroughChecks; //!< Returns YES if the process described by the session is still running
+
+- (BOOL)isSessionWithCurrentProcessBundleIdentifier:(OCProcessSession *)session; //!< Returns YES if the session describes a process with the same bundle identifier as the current process
+- (BOOL)isAnyInstanceOfSessionProcessRunning:(OCProcessSession *)session; //!< Returns YES if *a* copy of the process described in the session is currently running (it doesn't have to be the instance described in the session)
+
+- (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)session; //!< Returns the latest OCProcessSession with the same bundleIdentifier. If none was found, returns the session that was passed in.
 
 - (void)pingSession:(OCProcessSession *)session withTimeout:(NSTimeInterval)timeout completionHandler:(void(^)(BOOL responded, OCProcessSession *latestSession))completionHandler;
 

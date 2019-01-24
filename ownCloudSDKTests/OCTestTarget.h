@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class OCBookmark;
+
 @interface OCTestTarget : NSObject
 
 @property(strong,readonly,nonnull,class) NSURL *secureTargetURL;
@@ -18,5 +20,8 @@
 
 @property(strong,readonly,nonnull,class) NSString *userLogin;
 @property(strong,readonly,nonnull,class) NSString *userPassword;
+
++ (OCBookmark *)adminBookmark;
++ (OCBookmark *)userBookmark;
 
 @end

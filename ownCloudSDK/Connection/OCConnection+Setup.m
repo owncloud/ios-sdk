@@ -256,6 +256,14 @@
 				}
 			}
 		}
+		else
+		{
+			// Treat non-network-related errors as JSON decoding failure and therefore as server detection failure
+			if ([error.domain isEqualToString:NSCocoaErrorDomain])
+			{
+				error = OCError(OCErrorServerDetectionFailed);
+			}
+		}
 		
 		if (outRequest != NULL)
 		{

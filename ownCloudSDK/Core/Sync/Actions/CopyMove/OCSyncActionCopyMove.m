@@ -55,35 +55,160 @@
 }
 
 #pragma mark - Action implementation
-- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
+- (void)preflightWithContext:(OCSyncContext *)syncContext
 {
 	if ((self.localItem != nil) && (self.targetParentItem != nil) && (self.targetName != nil))
 	{
-		NSProgress *progress;
+		// Perform pre-flight
+		OCItem *sourceItem = self.localItem;
+		OCPath targetPath = [self.targetParentItem.path stringByAppendingPathComponent:self.targetName];
 
 		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
 		{
-			progress = [self.core.connection copyItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
+			OCItem *placeholderItem = [OCItem placeholderItemOfType:sourceItem.type];
+
+			// Copy filesystem metadata from existing item
+			[placeholderItem copyFilesystemMetadataFrom:sourceItem];
+
+			// Set path and parent folder
+			placeholderItem.parentFileID = self.targetParentItem.fileID;
+			placeholderItem.path = targetPath;
+
+			// Copy actual file if it exists locally
+			if (sourceItem.localRelativePath != nil)
+			{
+				NSError *error;
+				NSURL *sourceURL, *destinationURL;
+
+				if ((error = [self.core createDirectoryForItem:placeholderItem]) != nil)
+				{
+					syncContext.error = error;
+					return;
+				}
+
+				sourceURL = [self.core localURLForItem:sourceItem];
+				destinationURL = [self.core localURLForItem:placeholderItem];
+
+				if ((sourceURL != nil) && (destinationURL != nil))
+				{
+					// Copy file
+					if (![[NSFileManager defaultManager] copyItemAtURL:sourceURL toURL:destinationURL error:&error])
+					{
+						// Return error if it fails
+						syncContext.error = error;
+
+						// Clean up
+						error = [self.core deleteDirectoryForItem:placeholderItem];
+						return;
+					}
+				}
+				else
+				{
+					// Something went awfully wrong internally
+					syncContext.error = OCError(OCErrorInternal);
+					return;
+				}
+			}
+
+			// Add sync record to placeholder
+			[placeholderItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
+
+			// Save to processingItem
+			self.processingItem = placeholderItem;
+
+			// Add placeholder
+			syncContext.addedItems = @[ placeholderItem ];
+
+			// Update item
+			syncContext.updatedItems = @[ sourceItem ];
 		}
 		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
 		{
-			progress = [self.core.connection moveItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
+			OCItem *updatedItem;
+
+			// Add sync record reference to source item
+			[sourceItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
+
+			// Make a copy
+			updatedItem = [sourceItem copy];
+
+			// Provide previous path for correct query updates
+			updatedItem.previousPath = sourceItem.path;
+
+			// Update location info
+			updatedItem.parentFileID = self.targetParentItem.fileID;
+			updatedItem.path = targetPath;
+
+			// Save to processingItem
+			self.processingItem = updatedItem;
+
+			// Update
+			syncContext.updatedItems = @[ updatedItem ];
 		}
 
-		if (progress != nil)
-		{
-			[syncContext.syncRecord addProgress:progress];
-		}
+		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated placeHolderItem (now with databaseID) will be stored in the database and can later be used to remove the placeHolderItem again.
+	}
+	else
+	{
+		// Return error to remove record as its action is not sufficiently specified
+		syncContext.error = OCError(OCErrorInsufficientParameters);
+	}
+}
 
-		// Transition to processing
-		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+- (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
+{
+	NSProgress *progress;
 
-		// Wait for result
-		return (OCCoreSyncInstructionStop);
+	if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
+	{
+		progress = [self.core.connection copyItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
+	}
+	else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
+	{
+		progress = [self.core.connection moveItem:self.localItem to:self.targetParentItem withName:self.targetName options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]];
 	}
 
-	// Remove record as its action is not sufficiently specified
-	return (OCCoreSyncInstructionDeleteLast);
+	if (progress != nil)
+	{
+		[syncContext.syncRecord addProgress:progress];
+	}
+
+	// Transition to processing
+	[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil];
+
+	// Wait for result
+	return (OCCoreSyncInstructionStop);
+}
+
+- (void)descheduleWithContext:(OCSyncContext *)syncContext
+{
+	if (self.processingItem != nil)
+	{
+		OCItem *sourceItem = self.localItem;
+
+		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
+		{
+			OCItem *placeholderItem = self.processingItem;
+
+			// Remove sync record reference from placeholder item
+			[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
+
+			syncContext.removedItems = @[ placeholderItem ];
+
+			[self.core deleteDirectoryForItem:placeholderItem];
+		}
+		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
+		{
+			OCItem *updatedItem = self.processingItem;
+
+			// Remove sync record reference from source item
+			[sourceItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
+
+			sourceItem.previousPath = updatedItem.path;
+
+			syncContext.updatedItems = @[ sourceItem ];
+		}
+	}
 }
 
 - (OCCoreSyncInstruction)handleResultWithContext:(OCSyncContext *)syncContext
@@ -93,33 +218,56 @@
 	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 	BOOL isCopy = [syncContext.syncRecord.actionIdentifier isEqual:OCSyncActionIdentifierCopy];
 
-	[syncContext completeWithError:event.error core:self.core item:(OCItem *)event.result parameter:nil];
-
 	if ((event.error == nil) && (event.result != nil))
 	{
+		OCItem *sourceItem = self.localItem;
+		OCItem *resultItem = nil;
+
 		if (isCopy)
 		{
-			syncContext.addedItems = @[ event.result ];
+			OCItem *placeholderItem;
+			OCItem *newItem = OCTypedCast(event.result, OCItem);
+
+			if ((placeholderItem = self.processingItem) != nil)
+			{
+				[placeholderItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
+
+				[newItem prepareToReplace:placeholderItem];
+
+				newItem.previousPlaceholderFileID = placeholderItem.fileID;
+
+				[self.core renameDirectoryFromItem:sourceItem forItem:newItem adjustLocalMetadata:YES];
+
+				syncContext.removedItems = @[ placeholderItem ];
+				syncContext.addedItems = @[ newItem ];
+			}
+			else
+			{
+				syncContext.addedItems = @[ newItem ];
+			}
+
+			resultItem = newItem;
 		}
 		else
 		{
-			if (self.localItem!=nil)
-			{
-				OCItem *resultItem = event.result;
+			OCItem *updatedItem = OCTypedCast(event.result, OCItem);
 
-				[resultItem prepareToReplace:self.localItem];
+			[sourceItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
-				resultItem.locallyModified = self.localItem.locallyModified;
-				resultItem.localRelativePath = self.localItem.localRelativePath;
-				resultItem.localCopyVersionIdentifier = self.localItem.localCopyVersionIdentifier;
+			[updatedItem prepareToReplace:self.localItem];
 
-				resultItem.previousPath = self.localItem.path; // Indicate this item has been moved (to allow efficient handling of relocations to another parent directory)
+			[self.core renameDirectoryFromItem:self.localItem forItem:updatedItem adjustLocalMetadata:YES];
 
-				syncContext.updatedItems = @[ resultItem ];
-			}
+			updatedItem.previousPath = self.localItem.path; // Indicate this item has been moved (to allow efficient handling of relocations to another parent directory)
+
+			syncContext.updatedItems = @[ updatedItem ];
+
+			resultItem = updatedItem;
 		}
 
-		// Action complete and can be removed
+		// Action complete
+		[syncContext completeWithError:event.error core:self.core item:resultItem parameter:nil];
+
 		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
 		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
@@ -219,6 +367,9 @@
 			break;
 		}
 
+		// Action complete
+		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
+
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
 			// Create issue for cancellation for any errors
@@ -231,6 +382,9 @@
 		// Reschedule for all other errors
 		[self.core rescheduleSyncRecord:syncRecord withUpdates:nil];
 		resultInstruction = OCCoreSyncInstructionStop;
+
+		// Action complete
+		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
 	}
 
 	return (resultInstruction);
@@ -242,6 +396,8 @@
 	_targetName = [decoder decodeObjectOfClass:[NSString class] forKey:@"targetName"];
 	_targetParentItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"targetParentItem"];
 
+	_processingItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"processingItem"];
+
 	_isRename = [decoder decodeBoolForKey:@"isRename"];
 }
 
@@ -249,6 +405,8 @@
 {
 	[coder encodeObject:_targetName forKey:@"targetName"];
 	[coder encodeObject:_targetParentItem forKey:@"targetParentItem"];
+
+	[coder encodeObject:_processingItem forKey:@"processingItem"];
 
 	[coder encodeBool:_isRename forKey:@"isRename"];
 }

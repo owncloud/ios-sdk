@@ -29,7 +29,14 @@
 	
 	// Remove whitespace and newline characters from both ends
 	urlString = [urlString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
+
+	// Remove multiple trailing slashes
+	while ([urlString hasSuffix:@"//"])
+	{
+		// Remove last character
+		urlString = [urlString substringWithRange:NSMakeRange(0, urlString.length-1)];
+	};
+
 	// Remove trailing /index.php
 	if (([urlString hasSuffix:@"/index.php"]) && (range = [urlString rangeOfString:@"/index.php"]).location != NSNotFound)
 	{

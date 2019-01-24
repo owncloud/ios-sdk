@@ -29,11 +29,14 @@
 #define OCWaitWillStartTask(label)	dispatch_group_enter(label)
 #define OCWaitDidFinishTask(label)	dispatch_group_leave(label)
 #define OCWaitForCompletion(label)	dispatch_group_wait(label, DISPATCH_TIME_FOREVER)
+#define OCWaitForCompletionWithTimeout(label,timeout)	dispatch_group_wait(label, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)))
 
 // Macros to simplify the use of async APIs in a synchronous fashion
 #define OCSyncExec(label,code)	OCWaitInitAndStartTask(label); \
 				code \
 				OCWaitForCompletion(label)
 #define OCSyncExecDone(label)	OCWaitDidFinishTask(label)
+
+#define OCTypedCast(var,className) ([var isKindOfClass:[className class]] ? ((className *)var) : nil)
 
 #endif /* OCMacros_h */

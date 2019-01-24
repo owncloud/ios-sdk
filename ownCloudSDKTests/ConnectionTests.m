@@ -811,7 +811,7 @@
 
 						[expectFileUpload fulfill];
 
-						[connection deleteItem:event.result requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+						[connection deleteItem:OCTypedCast(event.result, OCItem) requireMatch:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 							OCLog(@"File deleted with error = %@", event.error);
 
 							XCTAssert(event.error==nil);
@@ -873,7 +873,7 @@
 						item.lastModified = [NSDate dateWithTimeIntervalSinceNow:-(24*60*60*7)];
 
 						[connection updateItem:item properties:propertiesToUpdate options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
-							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = event.result;
+							NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName = OCTypedCast(event.result, NSDictionary);
 
 							OCLog(@"Update item result event: %@, result: %@", event, statusByPropertyName);
 
@@ -897,6 +897,43 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testStatusRequest
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCConnection *connection;
+	XCTestExpectation *expectServerStatusResponse = [self expectationWithDescription:@"Received server status response"];
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	XCTAssert(connection!=nil);
+
+	XCTAssert(connection.serverVersion == nil);
+	XCTAssert(connection.serverVersionString == nil);
+	XCTAssert(connection.serverEdition == nil);
+	XCTAssert(connection.serverProductName == nil);
+	XCTAssert(connection.serverLongProductVersionString == nil);
+
+	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+		XCTAssert(statusInfo!=nil);
+		XCTAssert(statusInfo[@"edition"]!=nil);
+		XCTAssert(statusInfo[@"installed"]!=nil);
+		XCTAssert(statusInfo[@"maintenance"]!=nil);
+		XCTAssert(statusInfo[@"needsDbUpgrade"]!=nil);
+		XCTAssert(statusInfo[@"productname"]!=nil);
+		XCTAssert(statusInfo[@"version"]!=nil);
+		XCTAssert(statusInfo[@"versionstring"]!=nil);
+
+		XCTAssert(connection.serverVersion != nil);
+		XCTAssert(connection.serverVersionString != nil);
+		XCTAssert(connection.serverEdition != nil);
+		XCTAssert(connection.serverProductName != nil);
+		XCTAssert(connection.serverLongProductVersionString != nil);
+
+		[expectServerStatusResponse fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)_testPropFindZeroStresstest

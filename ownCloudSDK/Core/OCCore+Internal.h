@@ -42,5 +42,6 @@
 #pragma mark - Inter-Process change notification/handling
 - (void)postIPCChangeNotification;
 - (void)_checkForChangesByOtherProcessesAndUpdateQueries;
+- (void)_replayChangesSinceSyncAnchor:(OCSyncAnchor)fromSyncAnchor;
 
 @end

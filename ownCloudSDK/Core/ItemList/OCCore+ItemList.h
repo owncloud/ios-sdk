@@ -23,8 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (nullable OCCoreItemListTask *)scheduleItemListTaskForPath:(OCPath)path;
+- (void)scheduleItemListTaskForPath:(OCPath)path forQuery:(BOOL)forQuery;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
+
+- (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob;
 
 #pragma mark - Check for updates
 - (void)startCheckingForUpdates; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.

@@ -33,6 +33,8 @@ typedef void(^OCIPNotificationHandler)(OCIPNotificationCenter *notificationCente
 	NSMutableDictionary <OCIPCNotificationName, NSNumber *> *_ignoreCountsByNotificationName;
 }
 
+@property(class,assign) BOOL loggingEnabled;
+
 @property(strong,nonatomic,readonly,class) OCIPNotificationCenter *sharedNotificationCenter;
 
 #pragma mark - Add/Remove notification observers

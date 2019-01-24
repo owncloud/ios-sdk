@@ -20,7 +20,7 @@
 #import "OCTypes.h"
 #import "OCItemVersionIdentifier.h"
 
-@interface OCItemThumbnail : OCImage
+@interface OCItemThumbnail : OCImage <NSSecureCoding>
 {
 	CGSize _maximumSizeInPixels;
 

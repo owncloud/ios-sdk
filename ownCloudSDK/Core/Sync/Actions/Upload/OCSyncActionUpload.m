@@ -148,7 +148,9 @@
 
 			// Schedule the upload
 			OCItem *latestVersionOfLocalItem;
+			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
@@ -167,6 +169,8 @@
 								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 			{
 				[syncContext.syncRecord addProgress:progress];
+
+				[self.core registerProgress:progress forItem:self.localItem];
 			}
 
 			// Transition to processing
@@ -218,6 +222,8 @@
 						uploadItemURL = _uploadCopyFileURL;
 					}
 
+					// TODO: use new placeholder -> item transition API (-[OCCore renameDirectoryFromItem:forItem:adjustLocalMetadata:])
+
 					// Move file from placeholder to uploaded item URL
 					if ([[NSFileManager defaultManager] moveItemAtURL:uploadItemURL toURL:uploadedItemURL error:&error])
 					{
@@ -230,6 +236,8 @@
 
 						uploadedItem.localCopyVersionIdentifier = uploadItem.itemVersionIdentifier;
 						uploadedItem.parentFileID = uploadItem.parentFileID;
+
+						uploadedItem.previousPlaceholderFileID = uploadedItem.fileID;
 
 						// Update uploaded item with local relative path
 						syncContext.addedItems = @[ uploadedItem ];

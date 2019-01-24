@@ -35,6 +35,7 @@ typedef OCCoreConnectionStatusSignalState(^OCCoreConnectionStatusSignalStateProv
 @property(nullable,weak) OCCore *core;
 @property(readonly) OCCoreConnectionStatusSignal signal;
 @property(assign,nonatomic) OCCoreConnectionStatusSignalState state;
+@property(strong,nonatomic,nullable) NSString *shortDescription; //!< An optional short description describing the state.
 
 #pragma mark - Init
 - (instancetype)initWithSignal:(OCCoreConnectionStatusSignal)signal initialState:(OCCoreConnectionStatusSignalState)initialState stateProvider:(nullable OCCoreConnectionStatusSignalStateProvider)stateProvider;

@@ -36,6 +36,7 @@
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
 		 queryPostProcessor:(nullable OCCoreItemUpdateQueryPostProcessor)queryPostProcessor
+		       skipDatabase:(BOOL)skipDatabase
 {
 	// Discard empty updates
 	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshPaths.count == 0) &&
@@ -52,7 +53,7 @@
 	{
 		// Make sure updates are wrapped into -incrementSyncAnchorWithProtectedBlock
 		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor];
+			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor skipDatabase:skipDatabase];
 
 			return ((NSError *)nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
@@ -101,49 +102,52 @@
 		OCWaitInit(cacheUpdatesGroup);
 
 		// Update metaData table with changes from the parameter set
-		OCWaitWillStartTask(cacheUpdatesGroup);
+		if (!skipDatabase)
+		{
+			OCWaitWillStartTask(cacheUpdatesGroup);
 
-		[self.database performBatchUpdates:^(OCDatabase *database){
-			if (removedItems.count > 0)
-			{
-				[self.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { databaseError = error; }
-				}];
-			}
+			[self.database performBatchUpdates:^(OCDatabase *database){
+				if (removedItems.count > 0)
+				{
+					[self.database removeCacheItems:removedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
 
-			if (addedItems.count > 0)
-			{
-				[self.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { databaseError = error; }
-				}];
-			}
+				if (addedItems.count > 0)
+				{
+					[self.database addCacheItems:addedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
 
-			if (updatedItems.count > 0)
-			{
-				[self.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil) { databaseError = error; }
-				}];
-			}
+				if (updatedItems.count > 0)
+				{
+					[self.database updateCacheItems:updatedItems syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil) { databaseError = error; }
+					}];
+				}
 
-			// Run preflight action
-			if (beforeQueryUpdatesAction != nil)
-			{
-				OCWaitWillStartTask(cacheUpdatesGroup);
+				// Run preflight action
+				if (beforeQueryUpdatesAction != nil)
+				{
+					OCWaitWillStartTask(cacheUpdatesGroup);
 
-				beforeQueryUpdatesAction(^{
-					OCWaitDidFinishTask(cacheUpdatesGroup);
-				});
-			}
+					beforeQueryUpdatesAction(^{
+						OCWaitDidFinishTask(cacheUpdatesGroup);
+					});
+				}
 
-			return ((NSError *)nil);
-		} completionHandler:^(OCDatabase *db, NSError *error) {
-			if (error != nil)
-			{
-				OCLogError(@"IU: error updating metaData database after sync engine result handler pass: %@", error);
-			}
+				return ((NSError *)nil);
+			} completionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil)
+				{
+					OCLogError(@"IU: error updating metaData database after sync engine result handler pass: %@", error);
+				}
 
-			OCWaitDidFinishTask(cacheUpdatesGroup);
-		}];
+				OCWaitDidFinishTask(cacheUpdatesGroup);
+			}];
+		}
 
 		// In parallel: remove thumbnails from in-memory cache for removed items
 		OCWaitWillStartTask(cacheUpdatesGroup);
@@ -159,6 +163,16 @@
 
 		// Wait for updates to complete
 		OCWaitForCompletion(cacheUpdatesGroup);
+	}
+
+	if ((beforeQueryUpdatesAction!=nil) && skipDatabase)
+	{
+		// Run preflight action when database should be skipped and beforeQueryUpdatesAction did not yet run
+		OCSyncExec(waitForUpdates, {
+			beforeQueryUpdatesAction(^{
+				OCSyncExecDone(waitForUpdates);
+			});
+		});
 	}
 
 	// Update queries
@@ -474,7 +488,7 @@
 			}
 
 			// Signal file provider
-			if (self.postFileProviderNotifications)
+			if (self.postFileProviderNotifications && !skipDatabase)
 			{
 				BuildAddedUpdatedRemovedItemList();
 
@@ -489,17 +503,26 @@
 	// - Fetch updated directory contents as needed
 	if (refreshPaths.count > 0)
 	{
-		for (OCPath path in refreshPaths)
-		{
-			OCPath refreshPath = path;
-
-			if (![refreshPath hasSuffix:@"/"])
+		// Ensure the sync anchor was updated following these updates before triggering a refresh
+		[self queueBlock:^{
+			for (OCPath path in refreshPaths)
 			{
-				refreshPath = [refreshPath stringByAppendingString:@"/"];
-			}
+				OCPath refreshPath = path;
 
-			[self scheduleItemListTaskForPath:refreshPath];
-		}
+				if (![refreshPath hasSuffix:@"/"])
+				{
+					refreshPath = [refreshPath stringByAppendingString:@"/"];
+				}
+
+				[self scheduleItemListTaskForPath:refreshPath forQuery:NO];
+			}
+		}];
+	}
+
+	// Initiate an IPC change notification
+	if (!skipDatabase)
+	{
+		[self postIPCChangeNotification];
 	}
 
 	[self endActivity:@"Perform item and query updates"];

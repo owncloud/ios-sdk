@@ -90,7 +90,7 @@
 			OCWaitConditionOptionSyncContext : syncContext
 		};
 
-		if ((waitConditionUUID = event.userInfo[OCEventUserInfoKeyWaitConditionUUID]) == nil)
+		if ((waitConditionUUID = OCTypedCast(event.userInfo[OCEventUserInfoKeyWaitConditionUUID], NSUUID)) == nil)
 		{
 			// If no specific wait condition was specified, see if a wait condition can handle the event
 			for (OCWaitCondition *waitCondition in syncContext.syncRecord.waitConditions)

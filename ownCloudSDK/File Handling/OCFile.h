@@ -20,7 +20,8 @@
 #import "OCChecksum.h"
 #import "OCItem.h"
 #import "OCTypes.h"
-#import "OCRetainerCollection.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface OCFile : NSObject <NSSecureCoding>
 {
@@ -34,11 +35,13 @@
 	OCChecksum *_checksum;
 }
 
-@property(strong) OCFileID fileID;
-@property(strong) OCFileETag eTag;
+@property(nullable,strong) OCFileID fileID;
+@property(nullable,strong) OCFileETag eTag;
 
-@property(strong) OCItem *item;
-@property(strong) NSURL *url;
-@property(strong) OCChecksum *checksum;
+@property(nullable,strong) OCItem *item;
+@property(nullable,strong) NSURL *url;
+@property(nullable,strong) OCChecksum *checksum;
 
 @end
+
+NS_ASSUME_NONNULL_END

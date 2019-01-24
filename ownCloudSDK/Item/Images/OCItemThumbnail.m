@@ -25,17 +25,6 @@
 
 @synthesize specID = _specID;
 
-#pragma mark - Init & Dealloc
-- (instancetype)init
-{
-	if ((self = [super init]) != nil)
-	{
-		_imageByRequestedMaximumSize = [NSMutableDictionary dictionary];
-	}
-
-	return(self);
-}
-
 - (BOOL)requestImageForSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image))completionHandler
 {
 	CGSize requestedMaximumSizeInPixels;
@@ -52,6 +41,11 @@
 
 	@synchronized(self)
 	{
+		if (_imageByRequestedMaximumSize == nil)
+		{
+			_imageByRequestedMaximumSize = [NSMutableDictionary new];
+		}
+
 		existingImage = [_imageByRequestedMaximumSize objectForKey:requestedMaximumSizeInPixelsValue];
 	}
 
@@ -139,6 +133,33 @@
 - (BOOL)canProvideForMaximumSizeInPixels:(CGSize)maximumSizeInPixels
 {
 	return ((maximumSizeInPixels.width <= _maximumSizeInPixels.width) && (maximumSizeInPixels.height <= _maximumSizeInPixels.height));
+}
+
+#pragma mark - Secure Coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[super encodeWithCoder:coder];
+
+	[coder encodeCGSize:_maximumSizeInPixels 	forKey:@"maximumSizeInPixels"];
+	[coder encodeObject:_itemVersionIdentifier    	forKey:@"itemVersionIdentifier"];
+	[coder encodeObject:_specID   			forKey:@"specID"];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super initWithCoder:decoder]) != nil)
+	{
+		_maximumSizeInPixels = [decoder decodeCGSizeForKey:@"maximumSizeInPixels"];
+		_itemVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"itemVersionIdentifier"];
+		_specID = [decoder decodeObjectOfClass:[NSString class] forKey:@"specID"];
+	}
+
+	return (self);
 }
 
 @end

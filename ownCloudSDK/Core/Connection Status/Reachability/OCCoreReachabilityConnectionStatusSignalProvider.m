@@ -60,9 +60,9 @@
 	{
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:OCReachabilityMonitorAvailabilityChangedNotification object:_reachabilityMonitor];
 
-		OCSyncExec(waitForReachabilityMonitorStartupCompletion, {
+		OCSyncExec(waitForReachabilityMonitorShutdownCompletion, {
 			[_reachabilityMonitor setEnabled:NO withCompletionHandler:^{
-				OCSyncExecDone(waitForReachabilityMonitorStartupCompletion);
+				OCSyncExecDone(waitForReachabilityMonitorShutdownCompletion);
 			}];
 		});
 

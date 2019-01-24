@@ -40,6 +40,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	core.stateChangedHandler = ^(OCCore *core) {
 		if (core.state == OCCoreStateRunning)
@@ -92,6 +93,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -258,6 +260,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -417,6 +420,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -598,6 +602,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
@@ -752,6 +757,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
 	core.delegate = self;
 
 	__weak CoreTests *weakSelf = self;
@@ -790,6 +796,198 @@
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
+}
+
+- (void)testOverlappingQueries
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCQuery *queryOne = [OCQuery queryForPath:@"/"];
+	OCQuery *queryTwo = [OCQuery queryForPath:@"/"];
+	__block XCTestExpectation *initialPopulationReceivedExpectation = [self expectationWithDescription:@"Initial database population"];
+	__block XCTestExpectation *coreReturnedExpectation = [self expectationWithDescription:@"Core returned"];
+	__block XCTestExpectation *queryOneItemsReceivedExpectation = [self expectationWithDescription:@"Query 1 idle"];
+	__block XCTestExpectation *queryTwoItemsReceivedExpectation = [self expectationWithDescription:@"Query 2 idle"];
+	__block XCTestExpectation *vaultErasedExpectation = [self expectationWithDescription:@"Vault erased"];
+
+	__block NSArray <OCItem *> *itemsOne = nil;
+	__block NSArray <OCItem *> *itemsTwo = nil;
+
+	__block NSTimeInterval queryOneTimestampStarted = 0;
+	__block NSTimeInterval queryOneTimestampCache = 0;
+	__block NSTimeInterval queryOneTimestampIdle = 0;
+
+	__block NSTimeInterval queryTwoTimestampStarted = 0;
+	__block NSTimeInterval queryTwoTimestampCache = 0;
+	__block NSTimeInterval queryTwoTimestampIdle = 0;
+
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+		__weak OCCore *weakCore = core;
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			// Wait for population of cache
+			if ((query.state == OCQueryStateIdle) && (initialPopulationReceivedExpectation!=nil))
+			{
+				[initialPopulationReceivedExpectation fulfill];
+				initialPopulationReceivedExpectation = nil;
+
+				// Start other queries
+				queryOne.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+					if ((query.state == OCQueryStateWaitingForServerReply) && (queryOneTimestampStarted ==0))
+					{
+						[weakCore startQuery:queryTwo];
+						queryOneTimestampStarted = [NSDate timeIntervalSinceReferenceDate];
+					}
+
+					if (query.state == OCQueryStateContentsFromCache)
+					{
+						queryOneTimestampCache = [NSDate timeIntervalSinceReferenceDate];
+					}
+
+					if (query.state == OCQueryStateIdle)
+					{
+						[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {
+							itemsOne = changeset.queryResult;
+							queryOneTimestampIdle = [NSDate timeIntervalSinceReferenceDate];
+
+							[queryOneItemsReceivedExpectation fulfill];
+							queryOneItemsReceivedExpectation = nil;
+						}];
+					}
+				};
+
+				queryTwo.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+					if (query.state == OCQueryStateWaitingForServerReply)
+					{
+						queryTwoTimestampStarted = [NSDate timeIntervalSinceReferenceDate];
+					}
+
+					if (query.state == OCQueryStateContentsFromCache)
+					{
+						queryTwoTimestampCache = [NSDate timeIntervalSinceReferenceDate];
+					}
+
+					if (query.state == OCQueryStateIdle)
+					{
+						[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {
+							itemsTwo = changeset.queryResult;
+							queryTwoTimestampIdle = [NSDate timeIntervalSinceReferenceDate];
+
+							if (queryTwoItemsReceivedExpectation != nil)
+							{
+								[queryTwoItemsReceivedExpectation fulfill];
+								queryTwoItemsReceivedExpectation = nil;
+
+								[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+									[coreReturnedExpectation fulfill];
+								}];
+							}
+						}];
+					}
+				};
+
+				[core startQuery:queryOne];
+			}
+		};
+
+		[core startQuery:query];
+	}];
+
+	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
+		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			[vaultErasedExpectation fulfill];
+		}];
+	} forBookmark:bookmark];
+
+	[self waitForExpectationsWithTimeout:20 handler:nil];
+
+	OCLog(@"Waiting for reply: one=%f two=%f delta=%f", queryOneTimestampStarted, 	queryTwoTimestampStarted, 	(queryTwoTimestampStarted-queryOneTimestampStarted));
+	OCLog(@"Cache contents:    one=%f two=%f delta=%f", queryOneTimestampCache, 	queryTwoTimestampCache, 	(queryTwoTimestampCache-queryOneTimestampCache));
+	OCLog(@"Idle: 	  	   one=%f two=%f delta=%f", queryOneTimestampIdle, 	queryTwoTimestampIdle, 		(queryTwoTimestampIdle-queryOneTimestampIdle));
+	OCLog(@"Results: one=%@, two=%@", itemsOne, itemsTwo);
+}
+
+- (void)testQueryFilter
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	__block XCTestExpectation *initialPopulationReceivedExpectation = [self expectationWithDescription:@"Initial database population"];
+	__block XCTestExpectation *receivedFilteredQuerySet = [self expectationWithDescription:@"Received filtered query set"];
+	__block XCTestExpectation *receivedUnfilteredQuerySet = [self expectationWithDescription:@"Received unfiltered query set"];
+	__block XCTestExpectation *coreReturnedExpectation = [self expectationWithDescription:@"Core returned"];
+	__block XCTestExpectation *vaultErasedExpectation = [self expectationWithDescription:@"Vault erased"];
+	__block OCItem *onlyItem = nil;
+
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+
+		core.automaticItemListUpdatesEnabled = NO;
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if (query.state == OCQueryStateIdle)
+			{
+				[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {
+					OCLog(@"Received queryResult=%@", changeset.queryResult);
+
+					if (initialPopulationReceivedExpectation != nil)
+					{
+						if (onlyItem == nil)
+						{
+							if ((onlyItem = changeset.queryResult.firstObject) != nil)
+							{
+								[initialPopulationReceivedExpectation fulfill];
+								initialPopulationReceivedExpectation = nil;
+
+								[query addFilter:[OCQueryFilter filterWithHandler:^BOOL(OCQuery *query, OCQueryFilter *filter, OCItem *item) {
+									return ([item.itemVersionIdentifier isEqual:onlyItem.itemVersionIdentifier]);
+								}] withIdentifier:@"filter1"];
+							}
+						}
+					}
+					else
+					{
+						if ([query filterWithIdentifier:@"filter1"] != nil)
+						{
+							if ((changeset.queryResult.count == 1) && ([changeset.queryResult.firstObject.itemVersionIdentifier isEqual:onlyItem.itemVersionIdentifier]))
+							{
+								if (receivedFilteredQuerySet != nil)
+								{
+									[receivedFilteredQuerySet fulfill];
+									receivedFilteredQuerySet = nil;
+
+									[query removeFilter:[query filterWithIdentifier:@"filter1"]];
+								}
+							}
+						}
+						else
+						{
+							if (changeset.queryResult.count > 1)
+							{
+								if (receivedUnfilteredQuerySet != nil)
+								{
+									[receivedUnfilteredQuerySet fulfill];
+									receivedUnfilteredQuerySet = nil;
+
+									[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
+										[coreReturnedExpectation fulfill];
+									}];
+								}
+							}
+						}
+					}
+				}];
+			}
+		};
+
+		[core startQuery:query];
+	}];
+
+	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
+		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			[vaultErasedExpectation fulfill];
+		}];
+	} forBookmark:bookmark];
+
+	[self waitForExpectationsWithTimeout:20 handler:nil];
 }
 
 @end
