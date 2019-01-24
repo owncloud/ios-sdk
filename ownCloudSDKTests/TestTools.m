@@ -8,6 +8,7 @@
 
 #import "TestTools.h"
 #import "OCMacros.h"
+#import "OCItem+OCItemCreationDebugging.h"
 
 @implementation OCVault (TestTools)
 
@@ -79,7 +80,7 @@
 
 						if (savedLocalID != nil)
 						{
-							XCTAssert([savedLocalID isEqualToString:localID], @"***> localID not matching expected localID: fileID=%@, localID=%@, expectedLocalID=%@, item=%@", fileID, localID, savedLocalID, item);
+							XCTAssert([savedLocalID isEqualToString:localID], @"***> localID not matching expected localID: fileID=%@, localID=%@, expectedLocalID=%@, item=%@ via %@", fileID, localID, savedLocalID, item, item.creationHistory);
 						}
 						else
 						{

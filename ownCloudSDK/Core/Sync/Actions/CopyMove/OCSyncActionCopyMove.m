@@ -63,6 +63,15 @@
 		OCItem *sourceItem = self.localItem;
 		OCPath targetPath = [self.targetParentItem.path stringByAppendingPathComponent:self.targetName];
 
+		if (sourceItem.type == OCItemTypeCollection)
+		{
+			// Ensure directory paths end with a slash
+			if (![targetPath hasSuffix:@"/"])
+			{
+				targetPath = [targetPath stringByAppendingString:@"/"];
+			}
+		}
+
 		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
 		{
 			OCItem *placeholderItem = [OCItem placeholderItemOfType:sourceItem.type];
@@ -119,9 +128,6 @@
 
 			// Add placeholder
 			syncContext.addedItems = @[ placeholderItem ];
-
-			// Update item
-			syncContext.updatedItems = @[ sourceItem ];
 		}
 		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
 		{
@@ -137,10 +143,9 @@
 			updatedItem.previousPath = sourceItem.path;
 
 			// Update location info
+			updatedItem.parentLocalID = self.targetParentItem.localID;
 			updatedItem.parentFileID = self.targetParentItem.fileID;
 			updatedItem.path = targetPath;
-
-			updatedItem.parentLocalID = self.targetParentItem.localID;
 
 			// Save to processingItem
 			self.processingItem = updatedItem;
@@ -241,8 +246,7 @@
 
 				[self.core renameDirectoryFromItem:sourceItem forItem:newItem adjustLocalMetadata:YES];
 
-				syncContext.removedItems = @[ placeholderItem ];
-				syncContext.addedItems = @[ newItem ];
+				syncContext.updatedItems = @[ newItem ];
 			}
 			else
 			{

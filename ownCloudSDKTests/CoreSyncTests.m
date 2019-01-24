@@ -12,12 +12,23 @@
 #import "OCCore+Internal.h"
 #import "TestTools.h"
 #import "OCTestTarget.h"
+#import "OCItem+OCItemCreationDebugging.h"
 
 @interface CoreSyncTests : XCTestCase
 
 @end
 
 @implementation CoreSyncTests
+
+- (void)setUp
+{
+	OCItem.creationHistoryEnabled = YES;
+}
+
+- (void)tearDown
+{
+	OCItem.creationHistoryEnabled = NO;
+}
 
 - (void)dumpMetaDataTableFromCore:(OCCore *)core withDescription:(NSString *)description rowHook:(void(^)(NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary))rowHook completionHandler:(dispatch_block_t)completionHandler
 {

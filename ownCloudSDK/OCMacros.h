@@ -32,10 +32,11 @@
 #define OCWaitForCompletionWithTimeout(label,timeout)	dispatch_group_wait(label, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)))
 
 // Macros to simplify the use of async APIs in a synchronous fashion
-#define OCSyncExec(label,code)	OCWaitInitAndStartTask(label); \
+#define OCSyncExec(label,code)	dispatch_semaphore_t label = dispatch_semaphore_create(0); \
 				code \
-				OCWaitForCompletion(label)
-#define OCSyncExecDone(label)	OCWaitDidFinishTask(label)
+				dispatch_semaphore_wait(label, DISPATCH_TIME_FOREVER)
+
+#define OCSyncExecDone(label)	dispatch_semaphore_signal(label)
 
 #define OCTypedCast(var,className) ([var isKindOfClass:[className class]] ? ((className *)var) : nil)
 
