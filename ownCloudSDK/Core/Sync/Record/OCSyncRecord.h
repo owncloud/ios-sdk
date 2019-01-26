@@ -22,6 +22,7 @@
 #import "OCTypes.h"
 #import "OCCore.h"
 #import "OCLogger.h"
+#import "OCActivity.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -38,10 +39,12 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 	OCSyncRecordStateFailed	     //!< Sync record's action failed unrecoverably
 };
 
-@interface OCSyncRecord : NSObject <NSSecureCoding, OCLogPrivacyMasking>
+@interface OCSyncRecord : NSObject <NSSecureCoding, OCLogPrivacyMasking, OCActivitySource>
 {
 	OCSyncRecordID _recordID;
 	OCProcessSession *_originProcessSession;
+
+	OCActivityIdentifier _activityIdentifier;
 
 	OCSyncActionIdentifier _actionIdentifier;
 	OCSyncAction *_action;

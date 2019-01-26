@@ -84,6 +84,31 @@
 
 		if (importFileOperationSuccessful)
 		{
+			// Check for and apply transformations
+			OCCoreImportTransformation transformation;
+
+			if ((transformation = options[OCCoreOptionImportTransformation]) != nil)
+			{
+				NSError *transformationError;
+
+				OCLogDebug(@"Transforming transformation on item %@", OCLogPrivate(placeholderItem));
+
+				if ((transformationError = transformation(placeholderOutputURL)) == nil)
+				{
+					OCLogDebug(@"Transformation succeeded on item %@", OCLogPrivate(placeholderItem));
+					[placeholderItem updateMetadataFromFileURL:placeholderOutputURL];
+				}
+				else
+				{
+					OCLogDebug(@"Transformation failed with error=%@ on item %@", transformationError, OCLogPrivate(placeholderItem));
+					error = transformationError;
+					importFileOperationSuccessful = NO;
+				}
+			}
+		}
+
+		if (importFileOperationSuccessful)
+		{
 			placeholderItem.localRelativePath = [self.vault relativePathForItem:placeholderItem];
 			placeholderItem.localCopyVersionIdentifier = nil;
 			placeholderItem.locallyModified = YES; // Since this file exists local-only, it's "a local modification". Also prevents pruning before upload finishes.

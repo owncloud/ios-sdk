@@ -66,6 +66,8 @@
 @synthesize connectionStatusSignals = _connectionStatusSignals;
 @synthesize connectionStatusShortDescription = _connectionStatusShortDescription;
 
+@synthesize activityManager = _activityManager;
+
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
 @synthesize latestSyncAnchor = _latestSyncAnchor;
@@ -145,6 +147,8 @@
 		};
 
 		_progressByFileID = [NSMutableDictionary new];
+
+		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 
 		_thumbnailCache = [OCCache new];
 
@@ -1138,4 +1142,5 @@ OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
+OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
