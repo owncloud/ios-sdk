@@ -47,6 +47,16 @@
 	return (activity);
 }
 
+- (instancetype)initWithIdentifier:(OCActivityIdentifier)identifier
+{
+	if ((self = [super init]) != nil)
+	{
+		_identifier = identifier;
+	}
+
+	return (self);
+}
+
 - (void)cancel
 {
 	if (_isCancellable)

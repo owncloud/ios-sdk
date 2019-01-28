@@ -21,9 +21,9 @@
 
 @implementation OCSyncRecordActivity
 
-- (instancetype)initWithSyncRecord:(OCSyncRecord *)syncRecord
+- (instancetype)initWithSyncRecord:(OCSyncRecord *)syncRecord identifier:(OCActivityIdentifier)identifier
 {
-	if ((self = [super init]) != nil)
+	if ((self = [super initWithIdentifier:identifier]) != nil)
 	{
 		_recordID = syncRecord.recordID;
 		_type = syncRecord.action.actionEventType;
@@ -47,21 +47,35 @@
 		switch (_recordState)
 		{
 			case OCSyncRecordStatePending:
-			break;
-
 			case OCSyncRecordStateReady:
+				self.state = OCActivityStatePending;
+				self.localizedStatusMessage = OCLocalized(@"Pending");
 			break;
 
 			case OCSyncRecordStateProcessing:
-			break;
-
 			case OCSyncRecordStateCompleted:
+				self.state = OCActivityStateRunning;
+				self.localizedStatusMessage = OCLocalized(@"Running");
 			break;
 
 			case OCSyncRecordStateFailed:
+				self.state = OCActivityStateFailed;
+				self.localizedStatusMessage = OCLocalized(@"Failed");
 			break;
 		}
 	}
 }
 
 @end
+
+@implementation OCActivityUpdate (OCSyncRecord)
+
+- (instancetype)withRecordState:(OCSyncRecordState)recordState
+{
+	_updatesByKeyPath[@"recordState"] = @(recordState);
+
+	return (self);
+}
+
+@end
+

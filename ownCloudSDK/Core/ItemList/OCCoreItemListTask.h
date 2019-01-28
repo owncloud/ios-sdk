@@ -20,6 +20,7 @@
 #import "OCTypes.h"
 #import "OCItem.h"
 #import "OCCoreItemList.h"
+#import "OCActivity.h"
 
 @class OCCore;
 @class OCCoreItemListTask;
@@ -32,7 +33,7 @@ typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 
 typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask *task);
 
-@interface OCCoreItemListTask : NSObject
+@interface OCCoreItemListTask : NSObject <OCActivitySource>
 
 @property(weak) OCCore *core;
 @property(strong) OCPath path;

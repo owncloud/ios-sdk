@@ -115,6 +115,8 @@
 		{
 			_itemListTasksByPath[task.path] = task;
 
+			[self.activityManager update:[OCActivityUpdate publishingActivityFor:task]];
+
 			// Start item list task
 			if (task.syncAnchorAtStart == nil)
 			{
@@ -153,6 +155,8 @@
 				[self scheduleNextItemListTask];
 			}
 		}
+
+		[self.activityManager update:[OCActivityUpdate unpublishActivityFor:finishedTask]];
 	}
 }
 
@@ -726,7 +730,6 @@
 - (void)_checkForUpdatesNotBefore:(NSDate *)notBefore
 {
 	OCEventTarget *eventTarget;
-	OCActivityIdentifier activityIdentifier = [@"CheckForUpdates." stringByAppendingString:NSUUID.UUID.UUIDString];
 
 	if (self.state != OCCoreStateRunning)
 	{
@@ -735,17 +738,13 @@
 
 	[self beginActivity:@"Check for updates"];
 
-	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{ @"activityIdentifier" : activityIdentifier } ephermalUserInfo:@{ @"endActivity" : @(YES)  }];
-
-	[self.activityManager update:[OCActivityUpdate publishingActivity:[OCActivity withIdentifier:activityIdentifier description:@"Scanning for changes.." statusMessage:nil ranking:0]]];
+	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:@{ @"endActivity" : @(YES)  }];
 
 	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
 {
-	OCActivityIdentifier activityIdentifier = (OCActivityIdentifier)event.userInfo[@"activityIdentifier"];
-
 	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%d, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
 
 	// Handle result
@@ -777,12 +776,6 @@
 				}
 			}
 		}
-	}
-
-	// Update activity
-	if (activityIdentifier != nil)
-	{
-		[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:activityIdentifier]];
 	}
 
 	// Schedule next

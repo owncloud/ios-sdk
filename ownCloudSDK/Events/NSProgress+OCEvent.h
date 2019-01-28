@@ -27,6 +27,9 @@
 - (OCFileID)fileID;
 - (void)setFileID:(OCFileID)fileID;
 
+- (OCLocalID)localID;
+- (void)setLocalID:(OCLocalID)localID;
+
 - (OCConnectionJobID)jobID;
 - (void)setJobID:(OCConnectionJobID)jobID;
 

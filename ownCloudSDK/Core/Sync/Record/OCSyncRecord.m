@@ -249,7 +249,7 @@
 
 - (OCActivity *)provideActivity
 {
-	return ([[OCSyncRecordActivity alloc] initWithSyncRecord:self]);
+	return ([[OCSyncRecordActivity alloc] initWithSyncRecord:self identifier:self.activityIdentifier]);
 }
 
 #pragma mark - Progress setup

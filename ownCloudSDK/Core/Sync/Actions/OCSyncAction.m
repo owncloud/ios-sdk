@@ -211,6 +211,8 @@
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
 	[coder encodeObject:_parameters forKey:@"parameters"];
 
+	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
+
 	[self encodeActionData:coder];
 }
 
@@ -224,6 +226,8 @@
 		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
+
+		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
 
 		[self decodeActionData:decoder];
 	}

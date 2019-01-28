@@ -29,6 +29,11 @@ typedef NS_ENUM(NSUInteger,OCActivityUpdateType)
 };
 
 @interface OCActivityUpdate : NSObject
+{
+	OCActivityUpdateType _type;
+	OCActivityIdentifier _identifier;
+	NSMutableDictionary <NSString *, id<NSObject>> *_updatesByKeyPath;
+}
 
 @property(readonly) OCActivityUpdateType type; //!< The type of activity
 

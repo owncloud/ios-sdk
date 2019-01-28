@@ -18,15 +18,6 @@
 
 #import "OCActivityUpdate.h"
 
-@interface OCActivityUpdate ()
-{
-	OCActivityUpdateType _type;
-	OCActivityIdentifier _identifier;
-	NSMutableDictionary <NSString *, id<NSObject>> *_updatesByKeyPath;
-}
-
-@end
-
 @implementation OCActivityUpdate
 
 @synthesize type = _type;

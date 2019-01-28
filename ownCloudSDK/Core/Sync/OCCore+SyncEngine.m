@@ -33,6 +33,7 @@
 #import "OCIssue+SyncIssue.h"
 #import "OCWaitCondition.h"
 #import "OCProcessManager.h"
+#import "OCSyncRecordActivity.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 
@@ -51,6 +52,8 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:notificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core setNeedsToProcessSyncRecords];
 	}];
+
+	[self publishInitialSyncRecordActivities];
 }
 
 - (void)shutdownSyncEngine
@@ -184,6 +187,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	if (action != nil)
 	{
 		progress = [NSProgress indeterminateProgress];
+		progress.cancellable = YES;
 
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
 
@@ -203,7 +207,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 		__block NSError *blockError = nil;
 
 		// Add sync record to database (=> ensures it is persisted and has a recordID)
-		[self.vault.database addSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
+		[self addSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
 			blockError = error;
 		}];
 
@@ -258,7 +262,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 			if (record.recordID != nil)
 			{
 				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
-				[self.vault.database removeSyncRecords:@[ record ] completionHandler:nil];
+				[self removeSyncRecords:@[ record ] completionHandler:nil];
 			}
 
 			// Call result handler
@@ -284,7 +288,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	{
 		[syncRecord transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
 
-		[self.vault.database updateSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *updateError) {
+		[self updateSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *updateError) {
 			error = updateError;
 		}];
 
@@ -317,7 +321,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
 
-	[self.vault.database removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
+	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
 		error = removeError;
 	}];
 
@@ -471,7 +475,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 					case OCCoreSyncInstructionDeleteLast:
 						// Delete record
-						[db removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+						[self removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
 							if (dbError != nil)
 							{
 								error = dbError;
@@ -607,7 +611,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 				if (updateSyncRecordInDB)
 				{
-					[self.database updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+					[self updateSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
 						error = dbError;
 					}];
 				}
@@ -866,12 +870,12 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 		beforeQueryUpdateAction = ^(dispatch_block_t completionHandler){
 			if (syncContext.removeRecords != nil)
 			{
-				[self.vault.database removeSyncRecords:syncContext.removeRecords completionHandler:nil];
+				[self removeSyncRecords:syncContext.removeRecords completionHandler:nil];
 			}
 
 			if (syncContext.updateStoredSyncRecordAfterItemUpdates)
 			{
-				[self.vault.database updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
+				[self updateSyncRecords:@[ syncContext.syncRecord ] completionHandler:nil];
 			}
 
 			completionHandler();
@@ -983,6 +987,48 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord
 {
 	return ([self _eventTargetWithSyncRecord:syncRecord userInfo:nil ephermal:nil]);
+}
+
+#pragma mark - Sync record persistence
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	[self.database addSyncRecords:syncRecords completionHandler:completionHandler];
+
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+		[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+	}
+}
+
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+{
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+ 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:syncRecord.progress]];
+	}
+
+	[self.database updateSyncRecords:syncRecords completionHandler:completionHandler];
+}
+
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+{
+	for (OCSyncRecord *syncRecord in syncRecords)
+	{
+ 		[self.activityManager update:[OCActivityUpdate unpublishActivityFor:syncRecord]];
+	}
+
+	[self.database removeSyncRecords:syncRecords completionHandler:completionHandler];
+}
+
+- (void)publishInitialSyncRecordActivities
+{
+	[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+		for (OCSyncRecord *syncRecord in syncRecords)
+		{
+			syncRecord.action.core = self;
+			[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+		}
+	}];
 }
 
 #pragma mark - Sync debugging

@@ -31,7 +31,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCEventType type;
 @property(assign,nonatomic) OCSyncRecordState recordState;
 
-- (instancetype)initWithSyncRecord:(OCSyncRecord *)syncRecord;
+- (instancetype)initWithSyncRecord:(OCSyncRecord *)syncRecord identifier:(OCActivityIdentifier)identifier;
+
+@end
+
+@interface OCActivityUpdate (OCSyncRecord)
+
+- (instancetype)withRecordState:(OCSyncRecordState)recordState;
 
 @end
 
