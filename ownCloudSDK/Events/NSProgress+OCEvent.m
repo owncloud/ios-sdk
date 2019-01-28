@@ -50,7 +50,7 @@
 	[self setUserInfoObject:localID forKey:@"_localID"];
 }
 
-- (OCConnectionJobID)jobID;
+- (OCConnectionJobID)jobID
 {
 	return (self.userInfo[@"_jobID"]);
 }

@@ -312,6 +312,9 @@
 					// Shut down Sync Engine
 					[weakSelf shutdownSyncEngine];
 
+					// Shut down progress
+					[weakSelf _shutdownProgressObservation];
+
 					// Close connection
 					OCCore *strongSelf;
 					if ((strongSelf = weakSelf) != nil)
@@ -730,11 +733,15 @@
 				startsHavingProgress = YES;
 			}
 
-			[progressObjects addObject:progress];
+			if ([progressObjects indexOfObjectIdenticalTo:progress] == NSNotFound)
+			{
+				[progressObjects addObject:progress];
 
-			[progress addObserver:self forKeyPath:@"isFinished" options:NSKeyValueObservingOptionInitial context:(__bridge void *)_progressByLocalID];
-			[progress addObserver:self forKeyPath:@"isCancelled" options:0 context:(__bridge void *)_progressByLocalID];
-			progress.localID = localID;
+				progress.localID = localID;
+
+				[progress addObserver:self forKeyPath:@"finished" options:NSKeyValueObservingOptionInitial context:(__bridge void *)_progressByLocalID];
+				[progress addObserver:self forKeyPath:@"cancelled" options:0 context:(__bridge void *)_progressByLocalID];
+			}
 		}
 	}
 
@@ -742,6 +749,8 @@
 	{
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemBeginsHavingProgress object:item.localID];
 	}
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemChangedProgress object:item.localID];
 }
 
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item
@@ -766,23 +775,44 @@
 
 			if ((progressObjects = _progressByLocalID[localID]) != nil)
 			{
-				[progressObjects removeObjectIdenticalTo:progress];
-
-				[progress removeObserver:self forKeyPath:@"isFinished" context:(__bridge void *)_progressByLocalID];
-				[progress removeObserver:self forKeyPath:@"isCancelled" context:(__bridge void *)_progressByLocalID];
-
-				if (progressObjects.count == 0)
+				if ([progressObjects indexOfObjectIdenticalTo:progress] != NSNotFound)
 				{
-					[_progressByLocalID removeObjectForKey:localID];
-					stopsHavingProgress = YES;
+					[progressObjects removeObjectIdenticalTo:progress];
+
+					[progress removeObserver:self forKeyPath:@"finished" context:(__bridge void *)_progressByLocalID];
+					[progress removeObserver:self forKeyPath:@"cancelled" context:(__bridge void *)_progressByLocalID];
+
+					if (progressObjects.count == 0)
+					{
+						[_progressByLocalID removeObjectForKey:localID];
+						stopsHavingProgress = YES;
+					}
 				}
 			}
 		}
 	}
 
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemChangedProgress object:localID];
+
 	if (stopsHavingProgress)
 	{
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemStopsHavingProgress object:localID];
+	}
+}
+
+- (void)_shutdownProgressObservation
+{
+	@synchronized(_progressByLocalID)
+	{
+		[_progressByLocalID enumerateKeysAndObjectsUsingBlock:^(OCFileID  _Nonnull key, NSMutableArray<NSProgress *> * _Nonnull progressObjects, BOOL * _Nonnull stop) {
+			for (NSProgress *progress in progressObjects)
+			{
+				[progress removeObserver:self forKeyPath:@"finished" context:(__bridge void *)self->_progressByLocalID];
+				[progress removeObserver:self forKeyPath:@"cancelled" context:(__bridge void *)self->_progressByLocalID];
+			}
+		}];
+
+		[_progressByLocalID removeAllObjects];
 	}
 }
 
@@ -1166,4 +1196,5 @@ OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
+NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";
 NSNotificationName OCCoreItemStopsHavingProgress = @"OCCoreItemStopsHavingProgress";

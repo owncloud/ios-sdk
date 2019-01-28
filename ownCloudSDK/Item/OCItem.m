@@ -25,6 +25,8 @@
 
 @implementation OCItem
 
+@dynamic cloudStatus;
+
 + (OCLocalID)generateNewLocalID
 {
 	return [[NSUUID new].UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
@@ -292,6 +294,33 @@
 		}
 
 		_localAttributesLastModified = NSDate.timeIntervalSinceReferenceDate;
+	}
+}
+
+#pragma mark - Cloud status
+- (OCItemCloudStatus)cloudStatus
+{
+	if (self.localRelativePath != nil)
+	{
+		if (self.locallyModified)
+		{
+			if (self.isPlaceholder)
+			{
+				return (OCItemCloudStatusLocalOnly);
+			}
+			else
+			{
+				return (OCItemCloudStatusLocallyModified);
+			}
+		}
+		else
+		{
+			return (OCItemCloudStatusLocalCopy);
+		}
+	}
+	else
+	{
+		return (OCItemCloudStatusCloudOnly);
 	}
 }
 

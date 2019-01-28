@@ -69,6 +69,14 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
 };
 
+typedef NS_ENUM(NSInteger, OCItemCloudStatus)
+{
+	OCItemCloudStatusCloudOnly, 		//!< Item is only stored remotely (no local copy)
+	OCItemCloudStatusLocalCopy,		//!< Item is a local copy of a file on the server
+	OCItemCloudStatusLocallyModified,	//!< Item is a modified copy of a file on the server
+	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
+};
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCItem : NSObject <NSSecureCoding, NSCopying>
@@ -88,6 +96,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
+
+@property(readonly,nonatomic) OCItemCloudStatus cloudStatus; //!< the cloud status of the item (computed using the item's metadata)
 
 @property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
 @property(nullable,strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)

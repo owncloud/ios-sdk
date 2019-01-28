@@ -163,7 +163,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _automaticItemListUpdatesEnabled;
 	NSDate *_lastScheduledItemListUpdateDate;
 
-	NSMutableDictionary <OCFileID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
+	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -295,4 +295,5 @@ extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransfor
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
+extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.
 extern NSNotificationName OCCoreItemStopsHavingProgress; //!< Notification sent when an item no longer has any progress. The object is the localID of the item.
