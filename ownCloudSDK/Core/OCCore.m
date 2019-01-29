@@ -777,10 +777,10 @@
 			{
 				if ([progressObjects indexOfObjectIdenticalTo:progress] != NSNotFound)
 				{
-					[progressObjects removeObjectIdenticalTo:progress];
-
 					[progress removeObserver:self forKeyPath:@"finished" context:(__bridge void *)_progressByLocalID];
 					[progress removeObserver:self forKeyPath:@"cancelled" context:(__bridge void *)_progressByLocalID];
+
+					[progressObjects removeObjectIdenticalTo:progress];
 
 					if (progressObjects.count == 0)
 					{
@@ -826,7 +826,9 @@
 
 			if ((progress.isFinished || progress.isCancelled) && (progress.localID != nil))
 			{
-				[self unregisterProgress:progress forLocalID:progress.localID];
+				[self queueBlock:^{
+					[self unregisterProgress:progress forLocalID:progress.localID];
+				}];
 			}
 		}
 	}
