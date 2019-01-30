@@ -1951,13 +1951,13 @@
 }
 
 #pragma mark - Rescheduling support
-- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error
 {
 	OCConnectionRequestInstruction instruction = OCConnectionRequestInstructionDeliver;
 
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:defaultsTo:)])
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:error:defaultsTo:)])
 	{
-		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest defaultsTo:instruction];
+		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest error:error defaultsTo:instruction];
 	}
 
 	return (instruction);

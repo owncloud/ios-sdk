@@ -499,6 +499,7 @@
 - (void)_handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error scheduleQueuedRequests:(BOOL)scheduleQueuedRequests
 {
 	BOOL reschedulingAllowed = scheduleQueuedRequests;
+	NSError *inError = error;
 
 	if (request==nil) { return; }
 
@@ -577,7 +578,7 @@
 
 	if ((_connection!=nil) && reschedulingAllowed)
 	{
-		requestInstruction = [_connection instructionForFinishedRequest:request];
+		requestInstruction = [_connection instructionForFinishedRequest:request error:inError];
 	}
 
 	if (requestInstruction == OCConnectionRequestInstructionDeliver)

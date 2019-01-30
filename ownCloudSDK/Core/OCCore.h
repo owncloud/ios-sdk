@@ -39,7 +39,7 @@
 @class OCIPNotificationCenter;
 
 @class OCCoreConnectionStatusSignalProvider;
-@class OCCoreMaintenanceModeStatusSignalProvider;
+@class OCCoreServerStatusSignalProvider;
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCCoreState)
@@ -128,7 +128,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray <OCCoreConnectionStatusSignalProvider *> *_connectionStatusSignalProviders;
 
 	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
-	OCCoreMaintenanceModeStatusSignalProvider *_maintenanceModeStatusSignalProvider; // Processes reports of maintenance mode repsonses and performs status.php polls for status changes
+	OCCoreServerStatusSignalProvider *_serverStatusSignalProvider; // Processes reports of connection refused and maintenance mode responses and performs status.php polls to detect the resolution of the issue
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
 	OCActivityManager *_activityManager;

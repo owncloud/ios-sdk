@@ -284,8 +284,8 @@
 		DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */; };
 		DCB0A46821B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */; };
 		DCB0A46921B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */; };
-		DCB0A46C21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */; };
-		DCB0A46D21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */; };
+		DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */; };
+		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */; };
 		DCC6563D20C979FB00110A97 /* TestTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6563C20C979FB00110A97 /* TestTools.m */; };
@@ -781,8 +781,8 @@
 		DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreReachabilityConnectionStatusSignalProvider.h; sourceTree = "<group>"; };
 		DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreReachabilityConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
-		DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreMaintenanceModeStatusSignalProvider.h; sourceTree = "<group>"; };
-		DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreMaintenanceModeStatusSignalProvider.m; sourceTree = "<group>"; };
+		DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreServerStatusSignalProvider.h; sourceTree = "<group>"; };
+		DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreServerStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Schemas.h"; sourceTree = "<group>"; };
 		DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Schemas.m"; sourceTree = "<group>"; };
 		DCC6563B20C979FB00110A97 /* TestTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTools.h; sourceTree = "<group>"; };
@@ -1705,13 +1705,13 @@
 			path = Reachability;
 			sourceTree = "<group>";
 		};
-		DC98BDF121E73E4B003B5658 /* Maintenance Mode */ = {
+		DC98BDF121E73E4B003B5658 /* Server */ = {
 			isa = PBXGroup;
 			children = (
-				DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */,
-				DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */,
+				DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */,
+				DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */,
 			);
-			path = "Maintenance Mode";
+			path = Server;
 			sourceTree = "<group>";
 		};
 		DC98BDF221E73EB0003B5658 /* Network Path Monitor */ = {
@@ -1799,7 +1799,7 @@
 				DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */,
 				DC98BDF221E73EB0003B5658 /* Network Path Monitor */,
 				DC98BDF021E73E36003B5658 /* Reachability */,
-				DC98BDF121E73E4B003B5658 /* Maintenance Mode */,
+				DC98BDF121E73E4B003B5658 /* Server */,
 			);
 			path = "Connection Status";
 			sourceTree = "<group>";
@@ -2038,7 +2038,7 @@
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
 				DC24F8E821E2B3EF00C9119C /* OCWaitConditionIssue.h in Headers */,
-				DCB0A46C21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h in Headers */,
+				DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */,
 				DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */,
 				DCEA7D972093556600F25223 /* OCCache.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
@@ -2457,7 +2457,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */,
-				DCB0A46D21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m in Sources */,
+				DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */,
 				DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */,
 				DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */,
 				DC4AFAB9206AE92F00189B9A /* OCSQLiteTransaction.m in Sources */,

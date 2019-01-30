@@ -20,7 +20,7 @@
 #import "OCCore+Internal.h"
 #import "OCLogger.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCCoreServerStatusSignalProvider.h"
 #import "OCMacros.h"
 
 @implementation OCCore (ConnectionStatus)
@@ -302,8 +302,22 @@
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
 }
 
-- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest defaultsTo:(OCConnectionRequestInstruction)defaulInstruction
+- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCConnectionRequestInstruction)defaultInstruction
 {
+	if (error != nil)
+	{
+//		if ([error.domain isEqual:(__bridge NSString *)kCFErrorDomainCFNetwork] && (error.code == kCFURLErrorCannotConnectToHost))
+		if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCannotConnectToHost))
+		{
+			[_serverStatusSignalProvider reportConnectionRefusedError];
+
+			if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+			{
+				return (OCConnectionRequestInstructionReschedule);
+			}
+		}
+	}
+
 	if (finishedRequest.responseHTTPStatus.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
 	{
 		[self reportResponseIndicatingMaintenanceMode];
@@ -314,13 +328,13 @@
 		}
 	}
 
-	return (defaulInstruction);
+	return (defaultInstruction);
 }
 
 #pragma mark - Reporting
 - (void)reportResponseIndicatingMaintenanceMode
 {
-	[_maintenanceModeStatusSignalProvider reportReponseIndicatingMaintenanceMode];
+	[_serverStatusSignalProvider reportResponseIndicatingMaintenanceMode];
 }
 
 @end

@@ -1,5 +1,5 @@
 //
-//  OCCoreMaintenanceModeStatusSignalProvider.h
+//  OCCoreServerStatusSignalProvider.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.12.18.
@@ -20,12 +20,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCoreMaintenanceModeStatusSignalProvider : OCCoreConnectionStatusSignalProvider
+@interface OCCoreServerStatusSignalProvider : OCCoreConnectionStatusSignalProvider
 {
 	NSTimer *_statusPollTimer;
 }
 
-- (void)reportReponseIndicatingMaintenanceMode;
+- (void)reportResponseIndicatingMaintenanceMode;
+
+- (void)reportConnectionRefusedError;
 
 @end
 

@@ -134,7 +134,7 @@
 {
 	if (updateNotification.object == nil) { return; }
 
-	@synchronized (self)
+	@synchronized(self)
 	{
 		if ([_bookmarks indexOfObjectIdenticalTo:updateNotification.object] != NSNotFound)
 		{

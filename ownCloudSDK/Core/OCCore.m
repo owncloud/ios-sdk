@@ -35,7 +35,7 @@
 #import "OCIPNotificationCenter.h"
 #import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 #import "OCCoreNetworkPathMonitorSignalProvider.h"
-#import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCCoreServerStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
 #import "OCCore+ItemUpdates.h"
@@ -174,11 +174,11 @@
 		{
 			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
 		}
-		_maintenanceModeStatusSignalProvider = [OCCoreMaintenanceModeStatusSignalProvider new];
+		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
-		[self addSignalProvider:_maintenanceModeStatusSignalProvider];
+		[self addSignalProvider:_serverStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
