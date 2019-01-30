@@ -187,7 +187,7 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	if (action != nil)
 	{
 		progress = [NSProgress indeterminateProgress];
-		progress.cancellable = YES;
+		progress.cancellable = NO;
 
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
 
@@ -420,6 +420,10 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 {
 	[self beginActivity:@"process sync records"];
 
+	OCWaitInitAndStartTask(processSyncRecords);
+
+	[self dumpSyncJournalWithTags:@[@"BeforeProc"]];
+
 	[self performProtectedSyncBlock:^NSError *{
 		__block NSError *error = nil;
 		__block BOOL stopProcessing = NO;
@@ -449,6 +453,10 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 				// Process sync record
 				nextInstruction = [self processSyncRecord:syncRecord error:&error];
+
+				OCLogDebug(@"Processing of sync record finished with nextInstruction=%d", nextInstruction);
+
+				[self dumpSyncJournalWithTags:@[@"PostProc"]];
 
 				// Perform sync record result instruction
 				switch (nextInstruction)
@@ -509,8 +517,14 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 //			OCLogWarning(@"Outstanding events after completing sync record processing while sync records need to be processed");
 //		}
 
+		OCWaitDidFinishTask(processSyncRecords);
+
 		[self endActivity:@"process sync records"];
 	}];
+
+	OCWaitForCompletion(processSyncRecords);
+
+	[self dumpSyncJournalWithTags:@[@"AfterProc"]];
 }
 
 - (BOOL)processWaitRecordsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
@@ -653,37 +667,6 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 		}
 	}
 
-	// Process sync record cancellation
-	if (syncRecord.progress.cancelled)
-	{
-		OCSyncAction *syncAction;
-
-		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
-
-		if ((syncAction = syncRecord.action) != nil)
-		{
-			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
-
-			OCLogDebug(@"record %@ will be cancelled", OCLogPrivate(syncRecord));
-
-			syncContext.error = OCError(OCErrorCancelled); // consumed by -cancelWithContext:
-
-			error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
-				doNext = [action cancelWithContext:syncContext];
-				return(nil);
-			}];
-
-			OCLogDebug(@"record %@ cancelled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(syncContext.error));
-		}
-		else
-		{
-			// Deschedule & call resultHandler
-			[self _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
-		}
-
-		return (doNext);
-	}
-
 	// Skip sync records without an ID (should never happen, actually)
 	if (syncRecord.recordID == nil)
 	{
@@ -735,6 +718,37 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 			// Return here
 			return (eventInstruction);
 		}
+	}
+
+	// Process sync record cancellation
+	if (syncRecord.progress.cancelled)
+	{
+		OCSyncAction *syncAction;
+
+		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
+
+		if ((syncAction = syncRecord.action) != nil)
+		{
+			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
+
+			OCLogDebug(@"record %@ will be cancelled", OCLogPrivate(syncRecord));
+
+			syncContext.error = OCError(OCErrorCancelled); // consumed by -cancelWithContext:
+
+			error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+				doNext = [action cancelWithContext:syncContext];
+				return(nil);
+			}];
+
+			OCLogDebug(@"record %@ cancelled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(syncContext.error));
+		}
+		else
+		{
+			// Deschedule & call resultHandler
+			[self _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
+		}
+
+		return (doNext);
 	}
 
 	// Process sync record's wait conditions
@@ -1032,23 +1046,26 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 }
 
 #pragma mark - Sync debugging
-- (void)dumpSyncJournal
+- (void)dumpSyncJournalWithTags:(NSArray <OCLogTagName> *)tags
 {
-	OCSyncExec(journalDump, {
-		[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-			OCLogDebug(@"Sync Journal Dump:");
-			OCLogDebug(@"==================");
+	if (OCLogger.logLevel <= OCLogLevelDebug)
+	{
+		OCSyncExec(journalDump, {
+			[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+				OCTLogDebug(tags, @"Sync Journal Dump:");
+				OCTLogDebug(tags, @"==================");
 
-			for (OCSyncRecord *record in syncRecords)
-			{
-				OCLogDebug(@"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
-								[record.actionIdentifier leftPaddedMinLength:20],
-								[[record.inProgressSince description] leftPaddedMinLength:20]);
-			}
+				for (OCSyncRecord *record in syncRecords)
+				{
+					OCTLogDebug(tags, @"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+										[record.actionIdentifier leftPaddedMinLength:20],
+										[[record.inProgressSince description] leftPaddedMinLength:20]);
+				}
 
-			OCSyncExecDone(journalDump);
-		}];
-	});
+				OCSyncExecDone(journalDump);
+			}];
+		});
+	}
 }
 
 @end
