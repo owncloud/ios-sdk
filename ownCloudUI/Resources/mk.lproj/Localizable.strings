@@ -1,0 +1,46 @@
+/* 
+  Localizable.strings
+  ownCloudSDK
+
+  Created by Felix Schwarz on 13.03.18.
+  Copyright © 2018 ownCloud GmbH. All rights reserved.
+*/
+
+/* OCCertificateViewController section titles */
+"Subject" = "Subject";
+"Issuer" = "Issuer";
+"Public Key" = "Public Key";
+"Extensions" = "Extensions";
+"Fingerprints" = "Fingerprints";
+
+"Validation Status" = "Validation Status";
+"Hostname" = "Hostname";
+"Validation Error" = "Validation Error";
+"User-rejected." = "User-rejected.";
+"Certificate has issues." = "Certificate has issues.";
+"User-accepted." = "User-accepted.";
+"No issues found." = "No issues found.";
+
+/* X.509 certificate fields */
+"businessCategory" = "Business category";
+"commonName" = "Common name";
+"countryName" = "Country";
+"jurisdictionCountryName" = "Jurisdiction country";
+"jurisdictionLocalityName" = "Jurisdiction locality";
+"jurisdictionStateOrProvinceName" = "Jurisdiction state or province";
+"localityName" = "Locality";
+"organizationName" = "Organization";
+"organizationalUnitName" = "Organization Unit";
+"stateOrProvinceName" = "State or province";
+
+"version" = "Version";
+"serialNumber" = "Serial Number";
+"signatureAlgorithm" = "Signature Algorithm";
+
+"validFrom" = "Valid from";
+"validUntil" = "Valid until";
+
+"keyBytes" = "Key bytes";
+"keyExponent" = "Key exponent";
+"keyInformation" = "Information";
+"keySizeInBits" = "Key size (bits)";
