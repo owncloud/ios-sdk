@@ -420,6 +420,89 @@
 				}
 			}];
 
+			// Preserve localID for remotely moved, known items
+			{
+				NSMutableIndexSet *removeItemsFromDeletedItemsIndexes = nil;
+				NSMutableIndexSet *removeItemsFromNewItemsIndexes = nil;
+
+				NSUInteger newItemIndex = 0;
+
+				for (OCItem *newItem in newItems)
+				{
+					__block OCItem *knownItem = nil;
+
+					[self.database retrieveCacheItemForFileID:newItem.fileID includingRemoved:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+						knownItem = item;
+						knownItem.removed = NO;
+					}];
+
+					if (knownItem != nil)
+					{
+						NSUInteger index = 0;
+
+						// Move over metaData
+						OCLocalID parentLocalID = newItem.parentLocalID;
+
+						[newItem prepareToReplace:knownItem];
+						newItem.parentLocalID = parentLocalID; // Make sure the new parent localID is used
+
+						newItem.locallyModified = knownItem.locallyModified; // Keep metadata on local copy
+						newItem.localRelativePath = knownItem.localRelativePath;
+						newItem.localCopyVersionIdentifier = knownItem.localCopyVersionIdentifier;
+
+						if (![knownItem.path isEqual:newItem.path])
+						{
+							// If paths aren't identical => pass along metadata
+							newItem.previousPath = knownItem.path;
+						}
+
+						// Remove from deletedCacheItems
+						for (OCItem *deletedItem in deletedCacheItems)
+						{
+							if ([deletedItem.databaseID isEqual:newItem.databaseID])
+							{
+								if (removeItemsFromDeletedItemsIndexes == nil)
+								{
+									removeItemsFromDeletedItemsIndexes = [[NSMutableIndexSet alloc] initWithIndex:index];
+								}
+								else
+								{
+									[removeItemsFromDeletedItemsIndexes addIndex:index];
+								}
+							}
+
+							index++;
+						}
+
+						// Remove from newItems
+						if (removeItemsFromNewItemsIndexes == nil)
+						{
+							removeItemsFromNewItemsIndexes = [[NSMutableIndexSet alloc] initWithIndex:newItemIndex];
+						}
+						else
+						{
+							[removeItemsFromNewItemsIndexes addIndex:newItemIndex];
+						}
+
+						// Add to updatedItems
+						[changedCacheItems addObject:newItem];
+					}
+
+					newItemIndex++;
+				}
+
+				// Commit changes
+				if (removeItemsFromDeletedItemsIndexes != nil)
+				{
+					[deletedCacheItems removeObjectsAtIndexes:removeItemsFromDeletedItemsIndexes];
+				}
+
+				if (removeItemsFromNewItemsIndexes != nil)
+				{
+					[newItems removeObjectsAtIndexes:removeItemsFromNewItemsIndexes];
+				}
+			}
+
 			// Export sync anchor value
 			querySyncAnchor = newSyncAnchor;
 

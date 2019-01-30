@@ -247,3 +247,4 @@
 @end
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
+NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

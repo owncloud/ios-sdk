@@ -311,6 +311,8 @@
 
 						self->_bookmark.certificate = request.responseCertificate;
 						self->_bookmark.certificateModificationDate = [NSDate date];
+
+						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
 					}
 				}]];
 			}

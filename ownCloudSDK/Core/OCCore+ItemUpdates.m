@@ -427,27 +427,36 @@
 						if (query.state == OCQueryStateIdle)
 						{
 							OCPath queryItemPath = query.queryItem.path;
-							OCItem *newQueryItem = nil;
+							OCLocalID queryItemLocalID = query.queryItem.localID;
+							OCItem *resultItem = nil;
 
 							if (addedItemList!=nil)
 							{
-								if ((newQueryItem = addedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+								}
+								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								{
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
 
 							if (updatedItemList!=nil)
 							{
-								if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+								}
+								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								{
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
 
 							if (removedItemList!=nil)
 							{
-								if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
 								{
 									query.fullQueryResults = [NSMutableArray new];
 									query.state = OCQueryStateTargetRemoved;
