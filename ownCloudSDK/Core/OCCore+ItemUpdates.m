@@ -424,7 +424,8 @@
 					if (query.queryItem != nil)
 					{
 						// Only update queries that have already gone through their complete, initial content update
-						if (query.state == OCQueryStateIdle)
+						if ((query.state == OCQueryStateIdle) ||
+						    (query.state == OCQueryStateTargetRemoved)) // An item could appear removed temporarily when it was moved on the server and the item has not yet been seen by the core in its new location
 						{
 							OCPath queryItemPath = query.queryItem.path;
 							OCLocalID queryItemLocalID = query.queryItem.localID;
@@ -434,10 +435,12 @@
 							{
 								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
 								{
+									query.state = OCQueryStateIdle;
 									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
+									query.state = OCQueryStateIdle;
 									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
@@ -446,10 +449,12 @@
 							{
 								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
+									query.state = OCQueryStateIdle;
 									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
+									query.state = OCQueryStateIdle;
 									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
@@ -458,8 +463,8 @@
 							{
 								if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
 								{
-									query.fullQueryResults = [NSMutableArray new];
 									query.state = OCQueryStateTargetRemoved;
+									query.fullQueryResults = [NSMutableArray new];
 								}
 							}
 						}
