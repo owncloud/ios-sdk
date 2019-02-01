@@ -12,12 +12,23 @@
 #import "OCCore+Internal.h"
 #import "TestTools.h"
 #import "OCTestTarget.h"
+#import "OCItem+OCItemCreationDebugging.h"
 
 @interface CoreSyncTests : XCTestCase
 
 @end
 
 @implementation CoreSyncTests
+
+- (void)setUp
+{
+	OCItem.creationHistoryEnabled = YES;
+}
+
+- (void)tearDown
+{
+	OCItem.creationHistoryEnabled = NO;
+}
 
 - (void)dumpMetaDataTableFromCore:(OCCore *)core withDescription:(NSString *)description rowHook:(void(^)(NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary))rowHook completionHandler:(dispatch_block_t)completionHandler
 {
@@ -393,6 +404,7 @@
 	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
 	XCTestExpectation *dirDeletionObservedExpectation = [self expectationWithDescription:@"Directory deletion observed"];
 	NSString *folderName = NSUUID.UUID.UUIDString;
+	__block OCLocalID localIDOnCreation=nil, localIDBeforeAction=nil, localIDAfterAction=nil;
 	__block BOOL _dirCreationObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
@@ -410,6 +422,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -454,11 +468,15 @@
 							XCTAssert(error==nil);
 							XCTAssert(item!=nil);
 
+							localIDBeforeAction = item.localID;
+
 							[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 								OCLog(@"------> Delete item result: error=%@ item=%@ parameter=%@", error, item, parameter);
 
 								XCTAssert(error==nil);
 								XCTAssert(item!=nil);
+
+								localIDAfterAction = item.localID;
 
 								[dirDeletedExpectation fulfill];
 							}];
@@ -474,6 +492,8 @@
 							{
 								if ([item.name isEqualToString:folderName])
 								{
+									localIDOnCreation = item.localID;
+								
 									[dirCreationObservedExpectation fulfill];
 									_dirCreationObserved = YES;
 								}
@@ -513,6 +533,12 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
+	XCTAssert(localIDOnCreation!=nil);
+	XCTAssert(localIDBeforeAction!=nil);
+	XCTAssert(localIDAfterAction!=nil);
+	XCTAssert([localIDOnCreation isEqual:localIDBeforeAction]);
+	XCTAssert([localIDOnCreation isEqual:localIDAfterAction]);
+
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
@@ -530,6 +556,7 @@
 	XCTestExpectation *dirCreationObservedExpectation = [self expectationWithDescription:@"Directory creation observed"];
 	XCTestExpectation *dirPlaceholderCreationObservedExpectation = [self expectationWithDescription:@"Directory placeholder creation observed"];
 	NSString *folderName = NSUUID.UUID.UUIDString;
+	__block OCLocalID localIDOnQueryPlaceholder = nil, localIDOnQueryActual=nil, localIDOnCreation=nil;
 	__block BOOL _dirCreationObserved = NO, _dirCreationPlaceholderObserved = NO;
 
 	// Create bookmark for demo.owncloud.org
@@ -547,6 +574,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -591,6 +620,8 @@
 							XCTAssert(error==nil);
 							XCTAssert(item!=nil);
 
+							localIDOnCreation = item.localID;
+
 							[dirCreatedExpectation fulfill];
 						}];
 					}
@@ -606,12 +637,16 @@
 									{
 										if (!_dirCreationPlaceholderObserved)
 										{
+											localIDOnQueryPlaceholder = item.localID;
+
 											[dirPlaceholderCreationObservedExpectation fulfill];
 											_dirCreationPlaceholderObserved = YES;
 										}
 									}
 									else
 									{
+										localIDOnQueryActual = item.localID;
+
 										[dirCreationObservedExpectation fulfill];
 										_dirCreationObserved = YES;
 									}
@@ -638,6 +673,12 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
+	XCTAssert(localIDOnCreation!=nil);
+	XCTAssert(localIDOnQueryPlaceholder!=nil);
+	XCTAssert(localIDOnQueryActual!=nil);
+	XCTAssert([localIDOnCreation isEqual:localIDOnQueryPlaceholder]);
+	XCTAssert([localIDOnCreation isEqual:localIDOnQueryActual]);
+
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
@@ -659,6 +700,9 @@
 	__block XCTestExpectation *targetRemovedStateChangeExpectation = [self expectationWithDescription:@"State changed to target removed"];
 	__block XCTestExpectation *fileCopiedNotificationExpectation = [self expectationWithDescription:@"File copied notification"];
 	__block XCTestExpectation *folderCopiedNotificationExpectation = [self expectationWithDescription:@"Folder copied notification"];
+	__block OCLocalID localIDQueryPlaceholderCopyFile=nil, localIDCopiedFile=nil, localIDQueryPlaceholderCopyFolder=nil, localIDCopiedFolder=nil;
+	__block OCLocalID localIDQueryPlaceholderCopyFileParent=nil, localIDCopiedFileParent=nil, localIDQueryPlaceholderCopyFolderParent=nil, localIDCopiedFolderParent=nil;
+	__block OCLocalID localIDParentFolderPlaceholderOnQuery=nil, localIDParentFolderCompleteOnQuery=nil, localIDParentFolderOnCompletion=nil, localIDParentFolderOnDeleteCompletion=nil;
 	NSString *folderName = NSUUID.UUID.UUIDString;
 
 	// Create bookmark for demo.owncloud.org
@@ -676,6 +720,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -735,6 +781,8 @@
 							XCTAssert(error==nil);
 							XCTAssert(item!=nil);
 
+							localIDParentFolderOnCompletion = item.localID;
+
 							[dirCreatedExpectation fulfill];
 
 							newFolderQuery = [OCQuery queryForPath:item.path];
@@ -774,12 +822,24 @@
 										{
 											if ([item.name isEqualToString:[copyFolderItem.name stringByAppendingString:@" copy"]])
 											{
+												if (item.isPlaceholder && (localIDQueryPlaceholderCopyFolder==nil))
+												{
+													localIDQueryPlaceholderCopyFolder = item.localID;
+													localIDQueryPlaceholderCopyFolderParent = item.parentLocalID;
+												}
+
 												[folderCopiedNotificationExpectation fulfill];
 												folderCopiedNotificationExpectation = nil;
 											}
 
 											if ([item.name isEqualToString:[copyFileItem.name stringByAppendingString:@" copy"]])
 											{
+												if (item.isPlaceholder && (localIDQueryPlaceholderCopyFile==nil))
+												{
+													localIDQueryPlaceholderCopyFile = item.localID;
+													localIDQueryPlaceholderCopyFileParent = item.parentLocalID;
+												}
+
 												[fileCopiedNotificationExpectation fulfill];
 												fileCopiedNotificationExpectation = nil;
 											}
@@ -809,6 +869,9 @@
 								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
 								XCTAssert([newItem.name isEqual:[copyFolderItem.name stringByAppendingString:@" copy"]]);
 
+								localIDCopiedFolder = newItem.localID;
+								localIDCopiedFolderParent = newItem.parentLocalID;
+
 								[folderCopiedExpectation fulfill];
 							}];
 
@@ -819,6 +882,9 @@
 								XCTAssert(newItem!=nil);
 								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
 								XCTAssert([newItem.name isEqual:[copyFileItem.name stringByAppendingString:@" copy"]]);
+
+								localIDCopiedFile = newItem.localID;
+								localIDCopiedFileParent = newItem.parentLocalID;
 
 								[fileCopiedExpectation fulfill];
 							}];
@@ -836,6 +902,8 @@
 								[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 									OCLog(@"Delete test folder: error=%@ item=%@", error, item);
 
+									localIDParentFolderOnDeleteCompletion = item.localID;
+
 									// Stop core
 									[core stopWithCompletionHandler:^(id sender, NSError *error) {
 										XCTAssert((error==nil), @"Stopped with error: %@", error);
@@ -846,6 +914,27 @@
 							}];
 						}];
 					}
+					else
+					{
+						for (OCItem *item in query.queryResults)
+						{
+							if (localIDParentFolderPlaceholderOnQuery == nil)
+							{
+								if ([item.name isEqual:folderName] && item.isPlaceholder)
+								{
+									localIDParentFolderPlaceholderOnQuery = item.localID;
+								}
+							}
+
+							if (localIDParentFolderCompleteOnQuery == nil)
+							{
+								if ([item.name isEqual:folderName] && !item.isPlaceholder)
+								{
+									localIDParentFolderCompleteOnQuery = item.localID;
+								}
+							}
+						}
+					}
 				}
 			}];
 		};
@@ -854,6 +943,18 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	XCTAssert([localIDQueryPlaceholderCopyFile isEqual:localIDCopiedFile]);
+	XCTAssert([localIDQueryPlaceholderCopyFolder isEqual:localIDCopiedFolder]);
+
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFileParent]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDQueryPlaceholderCopyFolderParent]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFolderParent]);
+
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderPlaceholderOnQuery]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderCompleteOnQuery]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnCompletion]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnDeleteCompletion]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
@@ -884,7 +985,10 @@
 	__block XCTestExpectation *folderReappearedExpectation = [self expectationWithDescription:@"Folder reappeared."];
 	NSString *folderName = NSUUID.UUID.UUIDString;
 	__block OCItem *moveFolderItem, *moveFileItem;
-
+	__block OCLocalID localIDFileInitial=nil, localIDFileAfterMove=nil, localIDFileMoveBack=nil, localIDFileQueryAfterMove=nil, localIDFileQueryMoveBack=nil;
+	__block OCLocalID localIDFolderInitial=nil, localIDFolderAfterMove=nil, localIDFolderMoveBack=nil, localIDFolderQueryAfterMove=nil, localIDFolderQueryMoveBack=nil;
+	__block OCLocalID localIDFileParentInitial=nil, localIDFolderParentInitial=nil, localIDRootInitial=nil, localIDFileParentMoveBack=nil, localIDFolderParentMoveBack=nil;
+	__block OCLocalID localIDTargetFolderInitial=nil, localIDFileParentAfterMove=nil, localIDFolderParentAfterMove=nil;
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -901,6 +1005,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -939,16 +1045,22 @@
 				{
 					if (!didCreateFolder)
 					{
+						localIDRootInitial = query.rootItem.localID;
+
 						for (OCItem *item in query.queryResults)
 						{
 							if (item.type == OCItemTypeFile)
 							{
 								moveFileItem = item;
+								localIDFileInitial = item.localID;
+								localIDFileParentInitial = item.parentLocalID;
 							}
 
 							if (item.type == OCItemTypeCollection)
 							{
 								moveFolderItem = item;
+								localIDFolderInitial = item.localID;
+								localIDFolderParentInitial = item.parentLocalID;
 							}
 						}
 
@@ -959,6 +1071,8 @@
 							XCTAssert(item!=nil);
 
 							[dirCreatedExpectation fulfill];
+
+							localIDTargetFolderInitial = item.localID;
 
 							newFolderQuery = [OCQuery queryForPath:item.path];
 							newFolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
@@ -999,12 +1113,30 @@
 											{
 												[folderCopiedNotificationExpectation fulfill];
 												folderCopiedNotificationExpectation = nil;
+
+												if (localIDFolderQueryAfterMove == nil)
+												{
+													localIDFolderQueryAfterMove = item.localID;
+												}
+												else
+												{
+													XCTAssert([localIDFolderQueryAfterMove isEqual:item.localID]);
+												}
 											}
 
 											if ([item.name isEqualToString:[moveFileItem.name stringByAppendingString:@" moved"]])
 											{
 												[fileCopiedNotificationExpectation fulfill];
 												fileCopiedNotificationExpectation = nil;
+
+												if (localIDFileQueryAfterMove == nil)
+												{
+													localIDFileQueryAfterMove = item.localID;
+												}
+												else
+												{
+													XCTAssert([localIDFileQueryAfterMove isEqual:item.localID]);
+												}
 											}
 										}
 									}
@@ -1026,6 +1158,11 @@
 								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
 								XCTAssert([newItem.name isEqual:[moveFolderItem.name stringByAppendingString:@" moved"]]);
 
+								localIDFolderAfterMove = newItem.localID;
+								localIDFolderParentAfterMove = newItem.parentLocalID;
+
+								XCTAssert([localIDTargetFolderInitial isEqual:localIDFolderParentAfterMove]);
+
 								[folderMovedExpectation fulfill];
 
 								[core moveItem:newItem to:query.rootItem withName:moveFolderItem.name options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
@@ -1035,6 +1172,9 @@
 									XCTAssert(newItem!=nil);
 									XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 									XCTAssert([newItem.name isEqual:moveFolderItem.name]);
+
+									localIDFolderMoveBack = newItem.localID;
+									localIDFolderParentMoveBack = newItem.parentLocalID;
 
 									[folderMovedBackExpectation fulfill];
 								}];
@@ -1048,6 +1188,11 @@
 								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
 								XCTAssert([newItem.name isEqual:[moveFileItem.name stringByAppendingString:@" moved"]]);
 
+								localIDFileAfterMove = newItem.localID;
+								localIDFileParentAfterMove = newItem.parentLocalID;
+
+								XCTAssert([localIDTargetFolderInitial isEqual:localIDFileParentAfterMove]);
+
 								[fileMovedExpectation fulfill];
 
 								[core moveItem:newItem to:query.rootItem withName:moveFileItem.name options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
@@ -1057,6 +1202,9 @@
 									XCTAssert(newItem!=nil);
 									XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 									XCTAssert([newItem.name isEqual:moveFileItem.name]);
+
+									localIDFileMoveBack = newItem.localID;
+									localIDFileParentMoveBack = newItem.parentLocalID;
 
 									[fileMovedBackExpectation fulfill];
 
@@ -1088,17 +1236,20 @@
 					else
 					{
 						BOOL hasSeenFolder=NO, hasSeenFile=NO;
+						OCItem *fileItem = nil, *folderItem = nil;
 
 						for (OCItem *item in query.queryResults)
 						{
 							if ([item.itemVersionIdentifier isEqual:moveFileItem.itemVersionIdentifier])
 							{
 								hasSeenFile = YES;
+								fileItem = item;
 							}
 
 							if ([item.itemVersionIdentifier isEqual:moveFolderItem.itemVersionIdentifier])
 							{
 								hasSeenFolder = YES;
+								folderItem = item;
 							}
 						}
 
@@ -1108,6 +1259,15 @@
 							{
 								[fileReappearedExpectation fulfill];
 								fileReappearedExpectation = nil;
+
+								if (localIDFileQueryMoveBack == nil)
+								{
+									localIDFileQueryMoveBack = fileItem.localID;
+								}
+								else
+								{
+									XCTAssert([localIDFileQueryMoveBack isEqual:fileItem.localID]);
+								}
 							}
 						}
 						else
@@ -1122,6 +1282,15 @@
 							{
 								[folderReappearedExpectation fulfill];
 								folderReappearedExpectation = nil;
+
+								if (localIDFolderQueryMoveBack == nil)
+								{
+									localIDFolderQueryMoveBack = folderItem.localID;
+								}
+								else
+								{
+									XCTAssert([localIDFolderQueryMoveBack isEqual:folderItem.localID]);
+								}
 							}
 						}
 						else
@@ -1138,6 +1307,25 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	XCTAssert([localIDFileInitial isEqual:localIDFileAfterMove]);
+	XCTAssert([localIDFileInitial isEqual:localIDFileMoveBack]);
+	XCTAssert([localIDFileInitial isEqual:localIDFileQueryAfterMove]);
+	XCTAssert([localIDFileInitial isEqual:localIDFileQueryMoveBack]);
+
+	XCTAssert([localIDFolderInitial isEqual:localIDFolderAfterMove]);
+	XCTAssert([localIDFolderInitial isEqual:localIDFolderMoveBack]);
+	XCTAssert([localIDFolderInitial isEqual:localIDFolderQueryAfterMove]);
+	XCTAssert([localIDFolderInitial isEqual:localIDFolderQueryMoveBack]);
+
+	XCTAssert([localIDFileParentInitial isEqual:localIDFolderParentInitial]);
+	XCTAssert([localIDFileParentInitial isEqual:localIDRootInitial]);
+	XCTAssert([localIDFileParentInitial isEqual:localIDFileParentMoveBack]);
+	XCTAssert([localIDFileParentInitial isEqual:localIDFolderParentMoveBack]);
+
+	XCTAssert([localIDTargetFolderInitial isEqual:localIDFileParentAfterMove]);
+	XCTAssert([localIDTargetFolderInitial isEqual:localIDFolderParentAfterMove]);
+	XCTAssert([localIDFileParentAfterMove isEqual:localIDFolderParentAfterMove]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
@@ -1169,6 +1357,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -1215,6 +1405,8 @@
 								NSString *modifiedName1 = [item.name stringByAppendingString:@"1"];
 								NSString *modifiedName2 = [item.name stringByAppendingString:@"2"];
 								NSString *modifiedName3 = [item.name stringByAppendingString:@"3"];
+								OCLocalID fileLocalID = item.localID;
+								OCLocalID fileLocalParentID = item.parentLocalID;
 
 								remainingRenames += 4;
 
@@ -1228,6 +1420,8 @@
 									XCTAssert(newItem!=nil);
 									XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 									XCTAssert([newItem.name isEqual:modifiedName1]);
+									XCTAssert([fileLocalID isEqual:newItem.localID]);
+									XCTAssert([fileLocalParentID isEqual:newItem.parentLocalID]);
 
 									[core renameItem:newItem to:modifiedName2 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 										OCLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName1, newItem.name, error, newItem);
@@ -1237,6 +1431,8 @@
 										XCTAssert(newItem!=nil);
 										XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 										XCTAssert([newItem.name isEqual:modifiedName2]);
+										XCTAssert([fileLocalID isEqual:newItem.localID]);
+										XCTAssert([fileLocalParentID isEqual:newItem.parentLocalID]);
 
 										[core renameItem:newItem to:modifiedName3 options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 											OCLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName2, newItem.name, error, newItem);
@@ -1246,6 +1442,8 @@
 											XCTAssert(newItem!=nil);
 											XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 											XCTAssert([newItem.name isEqual:modifiedName3]);
+											XCTAssert([fileLocalID isEqual:newItem.localID]);
+											XCTAssert([fileLocalParentID isEqual:newItem.parentLocalID]);
 
 											[core renameItem:newItem to:originalName options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 												OCLog(@"Renamed %@ -> %@: error=%@ item=%@", modifiedName3, newItem.name, error, newItem);
@@ -1255,6 +1453,8 @@
 												XCTAssert(newItem!=nil);
 												XCTAssert([newItem.parentFileID isEqual:query.rootItem.fileID]);
 												XCTAssert([newItem.name isEqual:originalName]);
+												XCTAssert([fileLocalID isEqual:newItem.localID]);
+												XCTAssert([fileLocalParentID isEqual:newItem.parentLocalID]);
 
 												if (remainingRenames == 0)
 												{
@@ -1300,6 +1500,8 @@
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 	XCTestExpectation *fileDownloadedExpectation = [self expectationWithDescription:@"File downloaded"];
+	__block OCLocalID localIDQueryBeforeDownload=nil, localIDAfterDownload=nil, localIDQueryAfterDownload=nil;
+	__block OCFileID downloadFileID = nil;
 	__block BOOL startedDownload = NO;
 
 	// Create bookmark for demo.owncloud.org
@@ -1317,6 +1519,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -1359,10 +1563,16 @@
 						{
 							startedDownload = YES;
 
+							localIDQueryBeforeDownload = item.localID;
+
+							downloadFileID = item.fileID;
+
 							[core downloadItem:item options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, OCFile *file) {
 								OCLog(@"Downloaded to %@ with error %@", file.url, error);
 
 								[fileDownloadedExpectation fulfill];
+
+								localIDAfterDownload = item.localID;
 
 								XCTAssert(error==nil);
 								XCTAssert(file.url!=nil);
@@ -1396,6 +1606,13 @@
 							}];
 							break;
 						}
+						else if (downloadFileID != nil)
+						{
+							if ([item.fileID isEqual:downloadFileID] && (item.localRelativePath != nil))
+							{
+								localIDQueryAfterDownload = item.localID;
+							}
+						}
 					}
 				}
 			}];
@@ -1405,6 +1622,9 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	XCTAssert([localIDQueryBeforeDownload isEqualToString:localIDAfterDownload]);
+	XCTAssert([localIDQueryBeforeDownload isEqualToString:localIDQueryAfterDownload]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
@@ -1425,6 +1645,8 @@
 	NSURL *uploadFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow" withExtension:@"png"];
 	NSURL *modifiedFileURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"rainbow-crystalized" withExtension:@"png"];
 	NSString *uploadName = [NSString stringWithFormat:@"rainbow-%f.png", NSDate.timeIntervalSinceReferenceDate];
+	__block OCLocalID localIDOnQueryPlaceholder = nil, localIDOnQueryActual=nil;
+	__block OCLocalID localIDUploadActionPlaceholder=nil, localIDUploadActionCompletion=nil, localIDUpdateActionPlaceholder=nil, localIDUpdateActionCompletion=nil;
 	__block BOOL startedUpload = NO;
 	OCChecksum *(^ComputeChecksumForURL)(NSURL *url) = ^(NSURL *url) {
 		__block OCChecksum *checksum = nil;
@@ -1456,6 +1678,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -1506,6 +1730,7 @@
 
 								OCLog(@"### Placeholder item: %@", item);
 
+								localIDUploadActionPlaceholder = item.localID;
 
 								[placeholderCreatedExpectation fulfill];
 							} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
@@ -1515,6 +1740,8 @@
 								XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:uploadFileChecksum]);
 
 								OCLog(@"### Uploaded item: %@", item);
+
+								localIDUploadActionCompletion = item.localID;
 
 								[fileUploadedExpectation fulfill];
 
@@ -1526,6 +1753,8 @@
 
 									OCLog(@"### Update \"placeholder\" item=%@ error=%@", item, error);
 
+									localIDUpdateActionPlaceholder = item.localID;
+
 									[modificationItemCreatedExpectation fulfill];
 								} resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 									XCTAssert(error==nil);
@@ -1534,6 +1763,8 @@
 									XCTAssert([ComputeChecksumForURL([core localURLForItem:item]) isEqual:modifiedFileChecksum]);
 
 									OCLog(@"### Uploaded updated item=%@, error=%@", item, error);
+
+									localIDUpdateActionCompletion = item.localID;
 
 									[updatedFileUploadedExpectation fulfill];
 
@@ -1546,6 +1777,24 @@
 								}];
 							}];
 						}
+						else
+						{
+							for (OCItem *item in changeset.queryResult)
+							{
+								if ([item.name isEqualToString:uploadName])
+								{
+									if (item.isPlaceholder && (localIDOnQueryPlaceholder==nil))
+									{
+										localIDOnQueryPlaceholder = item.localID;
+									}
+
+									if (!item.isPlaceholder && (localIDOnQueryActual==nil))
+									{
+										localIDOnQueryActual = item.localID;
+									}
+								}
+							}
+						}
 					}
 				}
 			}];
@@ -1555,6 +1804,12 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	XCTAssert([localIDOnQueryActual isEqual:localIDOnQueryPlaceholder]);
+	XCTAssert([localIDOnQueryActual isEqual:localIDUploadActionPlaceholder]);
+	XCTAssert([localIDOnQueryActual isEqual:localIDUploadActionCompletion]);
+	XCTAssert([localIDOnQueryActual isEqual:localIDUpdateActionPlaceholder]);
+	XCTAssert([localIDOnQueryActual isEqual:localIDUpdateActionCompletion]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
@@ -1573,6 +1828,7 @@
 	XCTestExpectation *favoriteUnsetExpectation = [self expectationWithDescription:@"Favorite unset"];
 	XCTestExpectation *propFindReturnedExpectation = [self expectationWithDescription:@"PROPFIND returned"];
 	__block BOOL didFavorite = NO;
+	__block OCLocalID localIDBeforeUpdate=nil, localIDAfterFirstUpdate=nil, localIDAfterSecondUpdate = nil;
 
 	// Create core with bookmark
 	core = [[OCCore alloc] initWithBookmark:bookmark];
@@ -1584,6 +1840,8 @@
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
+
+		core.database.itemFilter = self.databaseSanityCheckFilter;
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
@@ -1604,6 +1862,8 @@
 
 							item.isFavorite = @(YES);
 
+							localIDBeforeUpdate = item.localID;
+
 							[core updateItem:item properties:propertiesToUpdate options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, NSDictionary <OCItemPropertyName, OCHTTPStatus *> *statusByPropertyName) {
 								OCLog(@"Update item=%@ result: error=%@, statusByPropertyName=%@", item, error, statusByPropertyName);
 
@@ -1613,6 +1873,8 @@
 								}
 
 								[favoriteSetExpectation fulfill];
+
+								localIDAfterFirstUpdate = item.localID;
 
 								[core.connection retrieveItemListAtPath:item.path depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 									XCTAssert(items.count == 1);
@@ -1624,6 +1886,8 @@
 
 									[core updateItem:item properties:propertiesToUpdate options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 										OCLog(@"Update item=%@ result: error=%@, statusByPropertyName=%@", item, error, statusByPropertyName);
+
+										localIDAfterSecondUpdate = item.localID;
 
 										for (OCItemPropertyName propertyName in propertiesToUpdate)
 										{
@@ -1657,6 +1921,9 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	XCTAssert([localIDBeforeUpdate isEqual:localIDAfterFirstUpdate]);
+	XCTAssert([localIDBeforeUpdate isEqual:localIDAfterSecondUpdate]);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {

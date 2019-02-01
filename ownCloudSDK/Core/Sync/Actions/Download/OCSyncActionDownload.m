@@ -150,7 +150,7 @@
 
 			[syncContext.syncRecord addProgress:progress];
 
-			[self.core registerProgress:progress forItem:item];
+			[self.core registerProgress:syncContext.syncRecord.progress forItem:item];
 		}
 
 		// Transition to processing

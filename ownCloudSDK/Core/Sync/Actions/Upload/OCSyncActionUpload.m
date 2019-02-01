@@ -170,7 +170,7 @@
 			{
 				[syncContext.syncRecord addProgress:progress];
 
-				[self.core registerProgress:progress forItem:self.localItem];
+				[self.core registerProgress:syncContext.syncRecord.progress forItem:self.localItem];
 			}
 
 			// Transition to processing
@@ -193,119 +193,62 @@
 	if ((event.error == nil) && (event.result != nil))
 	{
 		OCItem *uploadItem;
+		OCItem *uploadedItem = (OCItem *)event.result;
 
 		if ((uploadItem = self.localItem) != nil)
 		{
-			OCItem *uploadedItem = (OCItem *)event.result;
-			NSURL *uploadedItemURL = nil, *uploadItemURL = nil;
+			// Transfer localID
+			uploadedItem.localID = uploadItem.localID;
+			uploadedItem.parentLocalID = uploadItem.parentLocalID;
 
+			// Propagte previousPlaceholderFileID
 			if (![uploadedItem.fileID isEqual:uploadItem.fileID])
 			{
-				// Uploaded item an upload item have different fileIDs (=> uploadItem could have been a placeholder)
-
-				// Move file from uploadItem to uploadedItem backing storage
-				if (((uploadItemURL = [self.core.vault localURLForItem:uploadItem]) != nil) &&
-				    ((uploadedItemURL = [self.core.vault localURLForItem:uploadedItem]) != nil))
-				{
-					NSError *error;
-					NSURL *placeholderItemContainerURL = [uploadItemURL URLByDeletingLastPathComponent];
-
-					// Create directory to house file for new item
-					if ((error = [self.core createDirectoryForItem:uploadedItem]) != nil)
-					{
-						OCLogError(@"Upload completion target directory creation failed for %@ with error %@", OCLogPrivate(uploadedItem), error);
-					}
-
-					// Use _uploadCopyFileURL as source if available
-					if (_uploadCopyFileURL != nil)
-					{
-						uploadItemURL = _uploadCopyFileURL;
-					}
-
-					// TODO: use new placeholder -> item transition API (-[OCCore renameDirectoryFromItem:forItem:adjustLocalMetadata:])
-
-					// Move file from placeholder to uploaded item URL
-					if ([[NSFileManager defaultManager] moveItemAtURL:uploadItemURL toURL:uploadedItemURL error:&error])
-					{
-						// => File move successful
-
-						// Update uploaded item with local relative path and remove the reference from placeholderItem
-						// - the locallyModified property is not mirrored to the uploadedItem as the file is now the same on the server
-						uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
-						uploadItem.localRelativePath = nil;
-
-						uploadedItem.localCopyVersionIdentifier = uploadItem.itemVersionIdentifier;
-						uploadedItem.parentFileID = uploadItem.parentFileID;
-
-						uploadedItem.previousPlaceholderFileID = uploadedItem.fileID;
-
-						// Update uploaded item with local relative path
-						syncContext.addedItems = @[ uploadedItem ];
-
-						// Remove placeholder item
-						syncContext.removedItems = @[ uploadItem ];
-
-						// Remove sync record from placeholder
-						[uploadItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
-
-						// Remove placeholder directory (may still contain a copy of the file after all) if no other sync records are active on it
-						if (uploadItem.activeSyncRecordIDs.count == 0)
-						{
-							[[NSFileManager defaultManager] removeItemAtURL:placeholderItemContainerURL error:&error];
-						}
-					}
-					else
-					{
-						// => Error moving placeholder item file to uploaded item file
-						OCLogWarning(@"Upload completion failed moving file of placeholder (%@) to final destination (%@): %@", OCLogPrivate(uploadItemURL), OCLogPrivate(uploadedItemURL), OCLogPrivate(error));
-					}
-				}
-				else
-				{
-					OCLogWarning(@"Upload completion failed retrieving placeholder and upload URLs");
-				}
+				uploadedItem.previousPlaceholderFileID = uploadItem.fileID;
 			}
-			else
+
+			// Prepare uploadedItem to replace uploadItem
+			[uploadedItem prepareToReplace:uploadItem];
+
+			// Update uploaded item with local relative path
+			uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
+
+			// Compute checksum to determine if the current main file of this file is identical to this upload action's version
+			OCSyncExec(checksumComputation, {
+				[OCChecksum computeForFile:[self.core localURLForItem:uploadedItem] checksumAlgorithm:self.importFileChecksum.algorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+					// Set locallyModified to NO if checksums match, YES if they don't
+					uploadedItem.locallyModified = ![self.importFileChecksum isEqual:computedChecksum];
+
+					OCSyncExecDone(checksumComputation);
+				}];
+			});
+
+			// Add version information if local and uploaded item version are identical
+			if (!uploadedItem.locallyModified)
 			{
-				// Upload from modified item complete!
+				uploadedItem.localCopyVersionIdentifier = uploadedItem.itemVersionIdentifier;
+			}
 
-				// Prepare uploadedItem to replace uploadItem
-				[uploadedItem prepareToReplace:uploadItem];
+			// Remove sync record from placeholder
+			[uploadedItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-				// Update uploaded item with local relative path
-				uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];
+			// Indicate item update
+			syncContext.updatedItems = @[ uploadedItem ];
 
-				// Compute checksum to determine if the current main file of this file is identical to this upload action's version
-				OCSyncExec(checksumComputation, {
-					[OCChecksum computeForFile:[self.core localURLForItem:uploadedItem] checksumAlgorithm:self.importFileChecksum.algorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
-						// Set locallyModified to NO if checksums match, YES if they don't
-						uploadedItem.locallyModified = ![self.importFileChecksum isEqual:computedChecksum];
+			// Update localItem
+			self.localItem = uploadedItem;
 
-						OCSyncExecDone(checksumComputation);
-					}];
-				});
+			// Remove temporary copy
+			if (_importFileIsTemporaryAlongsideCopy)
+			{
+				NSError *error;
 
-				// Remove sync record from placeholder
-				[uploadedItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
-
-				// Indicate item update
-				syncContext.updatedItems = @[ uploadedItem ];
-
-				// Update localItem
-				self.localItem = uploadedItem;
-
-				// Remove temporary copy
-				if (_importFileIsTemporaryAlongsideCopy)
-				{
-					NSError *error;
-
-					[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
-				}
+				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
 			}
 		}
 		else
 		{
-			OCLogWarning(@"Upload completion failed retrieving placeholder item");
+			OCLogWarning(@"Upload completion failed retrieving localItem/placeholder");
 		}
 
 		// Action complete and can be removed

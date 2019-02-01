@@ -25,14 +25,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(class,nonatomic,readonly) BOOL hostHasFileProvider;
 
 #pragma mark - Fileprovider tools
-- (void)retrieveItemFromDatabaseForFileID:(OCFileID)fileID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler;
+- (void)retrieveItemFromDatabaseForLocalID:(OCLocalID)localID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler;
 
 #pragma mark - File provider manager
 - (nullable NSFileProviderManager *)fileProviderManager;
 
 #pragma mark - Signal changes for items
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
-- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryFileID;
+- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID;
 
 @end
 

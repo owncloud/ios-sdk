@@ -1,5 +1,5 @@
 //
-//  OCCoreMaintenanceModeStatusSignalProvider.m
+//  OCCoreServerStatusSignalProvider.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.12.18.
@@ -16,9 +16,10 @@
  *
  */
 
-#import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCCoreServerStatusSignalProvider.h"
+#import "OCMacros.h"
 
-@implementation OCCoreMaintenanceModeStatusSignalProvider
+@implementation OCCoreServerStatusSignalProvider
 
 - (instancetype)init
 {
@@ -62,6 +63,7 @@
 			{
 				if (!maintenanceMode.boolValue)
 				{
+					self.shortDescription = nil;
 					self.state = OCCoreConnectionStatusSignalStateTrue;
 					[self setStatusPollTimerActive:NO];
 				}
@@ -70,11 +72,22 @@
 	}];
 }
 
-- (void)reportReponseIndicatingMaintenanceMode
+- (void)reportResponseIndicatingMaintenanceMode
 {
 	@synchronized(self)
 	{
 		self.state = OCCoreConnectionStatusSignalStateFalse;
+
+		[self setStatusPollTimerActive:YES];
+	}
+}
+
+- (void)reportConnectionRefusedError
+{
+	@synchronized(self)
+	{
+		self.state = OCCoreConnectionStatusSignalStateFalse;
+		self.shortDescription = OCLocalized(@"Connection refused");
 
 		[self setStatusPollTimerActive:YES];
 	}

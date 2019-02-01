@@ -35,7 +35,7 @@
 #import "OCIPNotificationCenter.h"
 #import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 #import "OCCoreNetworkPathMonitorSignalProvider.h"
-#import "OCCoreMaintenanceModeStatusSignalProvider.h"
+#import "OCCoreServerStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
 #import "OCCore+ItemUpdates.h"
@@ -65,6 +65,8 @@
 @synthesize connectionStatus = _connectionStatus;
 @synthesize connectionStatusSignals = _connectionStatusSignals;
 @synthesize connectionStatusShortDescription = _connectionStatusShortDescription;
+
+@synthesize activityManager = _activityManager;
 
 @synthesize eventHandlerIdentifier = _eventHandlerIdentifier;
 
@@ -144,7 +146,9 @@
 			}
 		};
 
-		_progressByFileID = [NSMutableDictionary new];
+		_progressByLocalID = [NSMutableDictionary new];
+
+		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 
 		_thumbnailCache = [OCCache new];
 
@@ -170,11 +174,11 @@
 		{
 			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
 		}
-		_maintenanceModeStatusSignalProvider = [OCCoreMaintenanceModeStatusSignalProvider new];
+		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
-		[self addSignalProvider:_maintenanceModeStatusSignalProvider];
+		[self addSignalProvider:_serverStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
@@ -307,6 +311,9 @@
 
 					// Shut down Sync Engine
 					[weakSelf shutdownSyncEngine];
+
+					// Shut down progress
+					[weakSelf _shutdownProgressObservation];
 
 					// Close connection
 					OCCore *strongSelf;
@@ -711,68 +718,117 @@
 #pragma mark - Progress tracking
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item
 {
-	OCFileID fileID;
+	OCLocalID localID;
+	BOOL startsHavingProgress = NO;
 
-	if ((fileID = item.fileID) != nil)
+	if ((localID = item.localID) != nil)
 	{
-		@synchronized(_progressByFileID)
+		@synchronized(_progressByLocalID)
 		{
 			NSMutableArray <NSProgress *> *progressObjects;
 
-			if ((progressObjects = _progressByFileID[fileID]) == nil)
+			if ((progressObjects = _progressByLocalID[localID]) == nil)
 			{
-				progressObjects = (_progressByFileID[fileID] = [NSMutableArray new]);
+				progressObjects = (_progressByLocalID[localID] = [NSMutableArray new]);
+				startsHavingProgress = YES;
 			}
 
-			[progressObjects addObject:progress];
+			if ([progressObjects indexOfObjectIdenticalTo:progress] == NSNotFound)
+			{
+				[progressObjects addObject:progress];
 
-			[progress addObserver:self forKeyPath:@"isFinished" options:NSKeyValueObservingOptionInitial context:(__bridge void *)_progressByFileID];
-			[progress addObserver:self forKeyPath:@"isCancelled" options:0 context:(__bridge void *)_progressByFileID];
-			progress.fileID = fileID;
+				progress.localID = localID;
+
+				[progress addObserver:self forKeyPath:@"finished" options:NSKeyValueObservingOptionInitial context:(__bridge void *)_progressByLocalID];
+				[progress addObserver:self forKeyPath:@"cancelled" options:0 context:(__bridge void *)_progressByLocalID];
+			}
 		}
 	}
+
+	if (startsHavingProgress)
+	{
+		[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemBeginsHavingProgress object:item.localID];
+	}
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemChangedProgress object:item.localID];
 }
 
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item
 {
-	OCFileID fileID;
+	OCLocalID localID;
 
-	if ((fileID = item.fileID) != nil)
+	if ((localID = item.localID) != nil)
 	{
-		[self unregisterProgress:progress forFileID:fileID];
+		[self unregisterProgress:progress forLocalID:localID];
 	}
 }
 
-- (void)unregisterProgress:(NSProgress *)progress forFileID:(OCFileID)fileID
+- (void)unregisterProgress:(NSProgress *)progress forLocalID:(OCLocalID)localID
 {
-	if (fileID != nil)
+	BOOL stopsHavingProgress = NO;
+
+	if (localID != nil)
 	{
-		@synchronized(_progressByFileID)
+		@synchronized(_progressByLocalID)
 		{
 			NSMutableArray <NSProgress *> *progressObjects;
 
-			if ((progressObjects = _progressByFileID[fileID]) != nil)
+			if ((progressObjects = _progressByLocalID[localID]) != nil)
 			{
-				[progressObjects removeObjectIdenticalTo:progress];
+				if ([progressObjects indexOfObjectIdenticalTo:progress] != NSNotFound)
+				{
+					[progress removeObserver:self forKeyPath:@"finished" context:(__bridge void *)_progressByLocalID];
+					[progress removeObserver:self forKeyPath:@"cancelled" context:(__bridge void *)_progressByLocalID];
 
-				[progress removeObserver:self forKeyPath:@"isFinished" context:(__bridge void *)_progressByFileID];
-				[progress removeObserver:self forKeyPath:@"isCancelled" context:(__bridge void *)_progressByFileID];
+					[progressObjects removeObjectIdenticalTo:progress];
+
+					if (progressObjects.count == 0)
+					{
+						[_progressByLocalID removeObjectForKey:localID];
+						stopsHavingProgress = YES;
+					}
+				}
 			}
 		}
+	}
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemChangedProgress object:localID];
+
+	if (stopsHavingProgress)
+	{
+		[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemStopsHavingProgress object:localID];
+	}
+}
+
+- (void)_shutdownProgressObservation
+{
+	@synchronized(_progressByLocalID)
+	{
+		[_progressByLocalID enumerateKeysAndObjectsUsingBlock:^(OCFileID  _Nonnull key, NSMutableArray<NSProgress *> * _Nonnull progressObjects, BOOL * _Nonnull stop) {
+			for (NSProgress *progress in progressObjects)
+			{
+				[progress removeObserver:self forKeyPath:@"finished" context:(__bridge void *)self->_progressByLocalID];
+				[progress removeObserver:self forKeyPath:@"cancelled" context:(__bridge void *)self->_progressByLocalID];
+			}
+		}];
+
+		[_progressByLocalID removeAllObjects];
 	}
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-	if (context == (__bridge void *)_progressByFileID)
+	if (context == (__bridge void *)_progressByLocalID)
 	{
 		if ([object isKindOfClass:[NSProgress class]])
 		{
 			NSProgress *progress = object;
 
-			if ((progress.isFinished || progress.isCancelled) && (progress.fileID != nil))
+			if ((progress.isFinished || progress.isCancelled) && (progress.localID != nil))
 			{
-				[self unregisterProgress:progress forFileID:progress.fileID];
+				[self queueBlock:^{
+					[self unregisterProgress:progress forLocalID:progress.localID];
+				}];
 			}
 		}
 	}
@@ -786,15 +842,15 @@
 {
 	NSMutableArray <NSProgress *> *resultProgressObjects = nil;
 
-	OCFileID fileID;
+	OCLocalID localID;
 
-	if ((fileID = item.fileID) != nil)
+	if ((localID = item.localID) != nil)
 	{
-		@synchronized(_progressByFileID)
+		@synchronized(_progressByLocalID)
 		{
 			NSMutableArray <NSProgress *> *progressObjects;
 
-			if ((progressObjects = _progressByFileID[fileID]) != nil)
+			if ((progressObjects = _progressByLocalID[localID]) != nil)
 			{
 				if (eventType == OCEventTypeNone)
 				{
@@ -1138,4 +1194,9 @@ OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
+OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
+
+NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
+NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";
+NSNotificationName OCCoreItemStopsHavingProgress = @"OCCoreItemStopsHavingProgress";

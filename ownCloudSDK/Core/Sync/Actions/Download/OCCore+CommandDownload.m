@@ -24,7 +24,13 @@
 #pragma mark - Command
 - (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] resultHandler:resultHandler]);
+	// Enqueue sync record
+	NSProgress *progress;
+
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] resultHandler:resultHandler];
+	progress.cancellable = YES;
+
+	return (progress);
 }
 
 @end

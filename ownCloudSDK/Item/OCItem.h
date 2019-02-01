@@ -69,6 +69,14 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
 };
 
+typedef NS_ENUM(NSInteger, OCItemCloudStatus)
+{
+	OCItemCloudStatusCloudOnly, 		//!< Item is only stored remotely (no local copy)
+	OCItemCloudStatusLocalCopy,		//!< Item is a local copy of a file on the server
+	OCItemCloudStatusLocallyModified,	//!< Item is a modified copy of a file on the server
+	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
+};
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCItem : NSObject <NSSecureCoding, NSCopying>
@@ -89,6 +97,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
 
+@property(readonly,nonatomic) OCItemCloudStatus cloudStatus; //!< the cloud status of the item (computed using the item's metadata)
+
 @property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
 @property(nullable,strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
 
@@ -105,6 +115,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
 @property(nullable,strong) OCFileID previousPlaceholderFileID; //!< FileID of placeholder that was replaced by this item for giving hints to the Sync Engine, so it can inform subsequent sync actions depending on the replaced placeholder (dynamic/ephermal)
+
+@property(nullable,strong) OCLocalID parentLocalID; //!< Unique local identifier of the parent folder (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
+@property(nullable,strong) OCLocalID localID; //!< Unique local identifier of the item (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
@@ -130,6 +143,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+
++ (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 

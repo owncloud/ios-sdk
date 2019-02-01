@@ -21,7 +21,9 @@
 
 typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
 
-typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files only)
+typedef NSString* OCLocalID; //!< Unique local identifier of the item (persists over lifetime of file, incl. across modifications and placeholder -> item transition).
+
+typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files and folders)
 typedef NSString* OCFileETag; //!< Identifier unique to a specific combination of contents and metadata. Can be used to detect changes. (files and folders)
 
 typedef NSString* OCLocalAttribute NS_TYPED_ENUM; //!< Identifier uniquely identifying a local attribute

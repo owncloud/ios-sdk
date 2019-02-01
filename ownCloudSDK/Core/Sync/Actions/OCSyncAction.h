@@ -84,6 +84,10 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 #pragma mark - Cancellation handling
 - (OCCoreSyncInstruction)cancelWithContext:(OCSyncContext *)syncContext; //!< Called when the action is cancelled. Deschedules the record by default.
 
+#pragma mark - Offline coalescation
+- (NSError *)updatePreviousSyncRecord:(OCSyncRecord *)syncRecord context:(OCSyncContext *)syncContext; //!< If implemented, is called by the Sync Engine if there's a previous action in the queue targeting the same item. (TODO)
+- (NSError *)updateActionWith:(OCItem *(^)(OCSyncContext *syncContext, OCSyncAction *syncAction, OCItem *item))actionUpdater context:(OCSyncContext *)syncContext; //!< Called when an action has not yet been scheduled and a subsequent action is queued on the same item. The actionUpdater block is provided by the subsequent action (TODO)
+
 #pragma mark - Wait condition failure recovery
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext; //!< Handles recovery from failed wait conditions. Returns YES if the Sync Engine should proceed processing (skipping removed/descheduled sync records, rerunning updated waitConditions and calling -scheduleWithContext: otherwise).
 

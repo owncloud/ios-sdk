@@ -311,6 +311,8 @@
 
 						self->_bookmark.certificate = request.responseCertificate;
 						self->_bookmark.certificateModificationDate = [NSDate date];
+
+						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
 					}
 				}]];
 			}
@@ -896,6 +898,13 @@
 		}
 	}
 
+	if (![[NSFileManager defaultManager] fileExistsAtPath:sourceURL.path])
+	{
+		[eventTarget handleError:OCError(OCErrorFileNotFound) type:OCEventTypeUpload sender:self];
+
+		return(nil);
+	}
+
 	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
 	{
 		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:uploadURL];
@@ -963,6 +972,12 @@
 		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
 		{
 			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
+		}
+
+		if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
+		{
+			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload sender:self];
+			return(nil);
 		}
 
 		// Set meta data for handling
@@ -1381,6 +1396,7 @@
 					OCItem *newFolderItem = items.firstObject;
 
 					newFolderItem.parentFileID = parentItem.fileID;
+					newFolderItem.parentLocalID = parentItem.localID;
 
 					if (error == nil)
 					{
@@ -1524,6 +1540,7 @@
 					OCItem *newItem = items.firstObject;
 
 					newItem.parentFileID = parentItem.fileID;
+					newItem.parentLocalID  = parentItem.localID;
 
 					if (error == nil)
 					{
@@ -1934,13 +1951,13 @@
 }
 
 #pragma mark - Rescheduling support
-- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error
 {
 	OCConnectionRequestInstruction instruction = OCConnectionRequestInstructionDeliver;
 
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:defaultsTo:)])
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:error:defaultsTo:)])
 	{
-		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest defaultsTo:instruction];
+		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest error:error defaultsTo:instruction];
 	}
 
 	return (instruction);

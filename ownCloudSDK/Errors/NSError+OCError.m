@@ -185,6 +185,10 @@
 				unlocalizedString = @"Item not available offline.";
 			break;
 
+			case OCErrorFileNotFound:
+				unlocalizedString = @"File not found.";
+			break;
+
 			case OCErrorCancelled:
 				unlocalizedString = @"The operation was cancelled.";
 			break;

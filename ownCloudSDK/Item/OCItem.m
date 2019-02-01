@@ -25,6 +25,13 @@
 
 @implementation OCItem
 
+@dynamic cloudStatus;
+
++ (OCLocalID)generateNewLocalID
+{
+	return [[NSUUID new].UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
+}
+
 #pragma mark - Placeholder
 + (instancetype)placeholderItemOfType:(OCItemType)type
 {
@@ -84,6 +91,9 @@
 
 	[coder encodeObject:_path 		forKey:@"path"];
 
+	[coder encodeObject:_parentLocalID 	forKey:@"parentLocalID"];
+	[coder encodeObject:_localID 		forKey:@"localID"];
+
 	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
@@ -113,6 +123,7 @@
 		[self _captureCallstack];
 
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
+		_localID = [OCItem generateNewLocalID];
 	}
 
 	return (self);
@@ -141,6 +152,9 @@
 		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
 
 		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+
+		_parentLocalID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentLocalID"];
+		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
 
 		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
@@ -283,6 +297,33 @@
 	}
 }
 
+#pragma mark - Cloud status
+- (OCItemCloudStatus)cloudStatus
+{
+	if (self.localRelativePath != nil)
+	{
+		if (self.locallyModified)
+		{
+			if (self.isPlaceholder)
+			{
+				return (OCItemCloudStatusLocalOnly);
+			}
+			else
+			{
+				return (OCItemCloudStatusLocallyModified);
+			}
+		}
+		else
+		{
+			return (OCItemCloudStatusLocalCopy);
+		}
+	}
+	else
+	{
+		return (OCItemCloudStatusCloudOnly);
+	}
+}
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
 {
@@ -355,6 +396,10 @@
 	{
 		self.parentFileID = item.parentFileID;
 	}
+
+	self.parentLocalID = item.parentLocalID;
+	self.localID = item.localID;
+	// Also set item.localID to nil here?!
 
 	// Make sure to use latest version of local attributes
 	if (self.localAttributesLastModified < item.localAttributesLastModified)
@@ -443,7 +488,7 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, (_removed ? @", removed" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, (_removed ? @", removed" : @"")]);
 }
 
 #pragma mark - Copying

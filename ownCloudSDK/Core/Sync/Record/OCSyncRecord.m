@@ -22,6 +22,7 @@
 #import "OCSyncIssue.h"
 #import "OCProcessManager.h"
 #import "OCWaitConditionIssue.h"
+#import "OCSyncRecordActivity.h"
 
 @implementation OCSyncRecord
 
@@ -66,6 +67,11 @@
 	}
 
 	_state = state;
+}
+
+- (OCLocalID)localID
+{
+	return (self.action.localItem.localID);
 }
 
 #pragma mark - Serialization
@@ -228,6 +234,22 @@
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
 
 	[coder encodeObject:_waitConditions forKey:@"waitConditions"];
+}
+
+#pragma mark - Activity Source
+- (OCActivityIdentifier)activityIdentifier
+{
+	if (_activityIdentifier == nil)
+	{
+		_activityIdentifier = [NSString stringWithFormat:@"syncRecord:%@", _recordID];
+	}
+
+	return (_activityIdentifier);
+}
+
+- (OCActivity *)provideActivity
+{
+	return ([[OCSyncRecordActivity alloc] initWithSyncRecord:self identifier:self.activityIdentifier]);
 }
 
 #pragma mark - Progress setup

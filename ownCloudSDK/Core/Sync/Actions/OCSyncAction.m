@@ -138,6 +138,17 @@
 	return (OCCoreSyncInstructionProcessNext);
 }
 
+#pragma mark - Offline coalescation
+- (NSError *)updatePreviousSyncRecord:(OCSyncRecord *)syncRecord context:(OCSyncContext *)syncContext
+{
+	return (OCError(OCErrorFeatureNotImplemented));
+}
+
+- (NSError *)updateActionWith:(OCItem *(^)(OCSyncContext *syncContext, OCSyncAction *syncAction, OCItem *item))actionUpdater context:(OCSyncContext *)syncContext
+{
+	return (OCError(OCErrorFeatureNotImplemented));
+}
+
 #pragma mark - Wait condition failure handling
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext
 {
@@ -200,6 +211,8 @@
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
 	[coder encodeObject:_parameters forKey:@"parameters"];
 
+	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
+
 	[self encodeActionData:coder];
 }
 
@@ -213,6 +226,8 @@
 		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
+
+		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
 
 		[self decodeActionData:decoder];
 	}

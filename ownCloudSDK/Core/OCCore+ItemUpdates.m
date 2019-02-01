@@ -345,11 +345,12 @@
 							{
 								OCItem *updatedRootItem = nil;
 
-								if (updatedItemList.itemsByParentPaths[query.queryPath].count > 0)
+								GetUpdatedFullResultsReady();
+
+								if ((updatedItemList.itemsByParentPaths[query.queryPath].count > 0) || // path match
+								    ([updatedItemList.itemLocalIDsSet intersectsSet:updatedFullQueryResultsItemList.itemLocalIDsSet])) // Contained localID match
 								{
 									// Items were updated
-									GetUpdatedFullResultsReady();
-
 									for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
 									{
 										if (!query.includeRootItem && [item.path isEqual:query.queryPath])
@@ -360,14 +361,19 @@
 
 										if (item.path != nil)
 										{
-											OCItem *removeItem;
+											OCItem *reMoveItem = nil;
 
-											if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
+											if ((reMoveItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) == nil)
+											{
+												reMoveItem = updatedFullQueryResultsItemList.itemsByLocalID[item.localID];
+											}
+
+											if (reMoveItem != nil)
 											{
 												NSUInteger replaceAtIndex;
 
 												// Replace if found
-												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:removeItem]) != NSNotFound)
+												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:reMoveItem]) != NSNotFound)
 												{
 													[updatedFullQueryResults removeObjectAtIndex:replaceAtIndex];
 													[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
@@ -418,33 +424,47 @@
 					if (query.queryItem != nil)
 					{
 						// Only update queries that have already gone through their complete, initial content update
-						if (query.state == OCQueryStateIdle)
+						if ((query.state == OCQueryStateIdle) ||
+						    (query.state == OCQueryStateTargetRemoved)) // An item could appear removed temporarily when it was moved on the server and the item has not yet been seen by the core in its new location
 						{
 							OCPath queryItemPath = query.queryItem.path;
-							OCItem *newQueryItem = nil;
+							OCLocalID queryItemLocalID = query.queryItem.localID;
+							OCItem *resultItem = nil;
 
 							if (addedItemList!=nil)
 							{
-								if ((newQueryItem = addedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+									query.state = OCQueryStateIdle;
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+								}
+								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								{
+									query.state = OCQueryStateIdle;
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
 
 							if (updatedItemList!=nil)
 							{
-								if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.fullQueryResults = [NSMutableArray arrayWithObject:newQueryItem];
+									query.state = OCQueryStateIdle;
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+								}
+								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								{
+									query.state = OCQueryStateIdle;
+									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
 								}
 							}
 
 							if (removedItemList!=nil)
 							{
-								if ((newQueryItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
 								{
-									query.fullQueryResults = [NSMutableArray new];
 									query.state = OCQueryStateTargetRemoved;
+									query.fullQueryResults = [NSMutableArray new];
 								}
 							}
 						}

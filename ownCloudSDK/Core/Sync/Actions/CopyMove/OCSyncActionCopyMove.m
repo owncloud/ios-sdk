@@ -63,6 +63,15 @@
 		OCItem *sourceItem = self.localItem;
 		OCPath targetPath = [self.targetParentItem.path stringByAppendingPathComponent:self.targetName];
 
+		if (sourceItem.type == OCItemTypeCollection)
+		{
+			// Ensure directory paths end with a slash
+			if (![targetPath hasSuffix:@"/"])
+			{
+				targetPath = [targetPath stringByAppendingString:@"/"];
+			}
+		}
+
 		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
 		{
 			OCItem *placeholderItem = [OCItem placeholderItemOfType:sourceItem.type];
@@ -72,6 +81,7 @@
 
 			// Set path and parent folder
 			placeholderItem.parentFileID = self.targetParentItem.fileID;
+			placeholderItem.parentLocalID = self.targetParentItem.localID;
 			placeholderItem.path = targetPath;
 
 			// Copy actual file if it exists locally
@@ -118,9 +128,6 @@
 
 			// Add placeholder
 			syncContext.addedItems = @[ placeholderItem ];
-
-			// Update item
-			syncContext.updatedItems = @[ sourceItem ];
 		}
 		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
 		{
@@ -136,6 +143,7 @@
 			updatedItem.previousPath = sourceItem.path;
 
 			// Update location info
+			updatedItem.parentLocalID = self.targetParentItem.localID;
 			updatedItem.parentFileID = self.targetParentItem.fileID;
 			updatedItem.path = targetPath;
 
@@ -238,8 +246,7 @@
 
 				[self.core renameDirectoryFromItem:sourceItem forItem:newItem adjustLocalMetadata:YES];
 
-				syncContext.removedItems = @[ placeholderItem ];
-				syncContext.addedItems = @[ newItem ];
+				syncContext.updatedItems = @[ newItem ];
 			}
 			else
 			{
@@ -251,10 +258,12 @@
 		else
 		{
 			OCItem *updatedItem = OCTypedCast(event.result, OCItem);
+			OCFileID updatedParentLocalID = updatedItem.parentLocalID;
 
 			[sourceItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 			[updatedItem prepareToReplace:self.localItem];
+			updatedItem.parentLocalID = updatedParentLocalID;
 
 			[self.core renameDirectoryFromItem:self.localItem forItem:updatedItem adjustLocalMetadata:YES];
 

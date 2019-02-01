@@ -63,6 +63,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemAlreadyExists, //!< There already is an item at the destination of this action
 	OCErrorItemNotAvailableOffline, //!< This item is not available offline
 
+	OCErrorFileNotFound, //!< The file was not found.
+
 	OCErrorSyncRecordNotFound, //!< The referenced sync record could not be found.
 
 	OCErrorNewerVersionExists, //!< A newer version already exists

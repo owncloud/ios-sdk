@@ -221,14 +221,14 @@
 #pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item
 {
-	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<localID>/<fileName> pattern.
 	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
 }
 
 - (NSString *)relativePathForItem:(OCItem *)item
 {
-	// Build the URL to where an item should be stored. Follow <filesRootURL>/<fileID>/<fileName> pattern.
-	return ([item.fileID stringByAppendingPathComponent:item.name]);
+	// Build the URL to where an item should be stored. Follow <filesRootURL>/<localID>/<fileName> pattern.
+	return ([item.localID stringByAppendingPathComponent:item.name]);
 }
 
 + (NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid

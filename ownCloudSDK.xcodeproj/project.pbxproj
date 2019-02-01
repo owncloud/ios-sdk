@@ -99,8 +99,6 @@
 		DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */; };
 		DC2D649C21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2D649D21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */; };
-		DC2D701821CA633100EB26FD /* OCSyncRecordStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D701621CA633000EB26FD /* OCSyncRecordStatus.h */; };
-		DC2D701921CA633100EB26FD /* OCSyncRecordStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2D701721CA633100EB26FD /* OCSyncRecordStatus.m */; };
 		DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2EF1B820ECBB7100BA2A3E /* OCKeyValueStore.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */; };
 		DC2EF1C020ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EF1BE20ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h */; };
@@ -167,7 +165,6 @@
 		DC594B1F21EFD7F900B882C4 /* BookmarkManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1E21EFD7F900B882C4 /* BookmarkManagerTests.m */; };
 		DC594B2021EFDF8700B882C4 /* OCConnection+Jobs.m in Sources */ = {isa = PBXBuildFile; fileRef = DC24F8E321E2411E00C9119C /* OCConnection+Jobs.m */; };
 		DC5A20312074E8890083DB7D /* CoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A20302074E8890083DB7D /* CoreTests.m */; };
-		DC5A203420750BEE0083DB7D /* OCCore+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5A203320750BEE0083DB7D /* OCCore+Internal.h */; };
 		DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */; };
 		DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */; };
 		DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */; };
@@ -220,6 +217,9 @@
 		DC7E0A89203732B3006111FA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A88203732B3006111FA /* main.m */; };
 		DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7E0A712036F60C006111FA /* BookmarkTests.m */; };
 		DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = DC812557210B548F00A9C037 /* OCTestTarget.m */; };
+		DC8245B321FB31E500775AB9 /* OCActivityManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8245B121FB31E500775AB9 /* OCActivityManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC8245B421FB31E500775AB9 /* OCActivityManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8245B221FB31E500775AB9 /* OCActivityManager.m */; };
+		DC8245BA21FB334200775AB9 /* OCCore+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8245B921FB334200775AB9 /* OCCore+Internal.h */; };
 		DC8556ED204DEA2900189B9A /* OCConnectionDAVRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8556EE204DEA2900189B9A /* OCConnectionDAVRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */; };
 		DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8556EF204DEB9200189B9A /* OCXMLNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -269,6 +269,12 @@
 		DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */; };
 		DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = DCADC0502072DE6600DB8E83 /* OCSQLiteMigration.h */; };
 		DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */; };
+		DCAEB06921FA617D0067E147 /* OCActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06721FA617D0067E147 /* OCActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB06821FA617D0067E147 /* OCActivity.m */; };
+		DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06B21FA63D80067E147 /* OCSyncRecordActivity.h */; };
+		DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB06C21FA63D80067E147 /* OCSyncRecordActivity.m */; };
+		DCAEB07121FA67060067E147 /* OCActivityUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06F21FA67060067E147 /* OCActivityUpdate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB07021FA67060067E147 /* OCActivityUpdate.m */; };
 		DCB0A45921B7F76800FAC4E9 /* NSError+OCDAVError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A45721B7F76800FAC4E9 /* NSError+OCDAVError.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A45821B7F76800FAC4E9 /* NSError+OCDAVError.m */; };
 		DCB0A45C21B813A000FAC4E9 /* ExtensionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A45B21B813A000FAC4E9 /* ExtensionTests.m */; };
@@ -278,8 +284,8 @@
 		DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */; };
 		DCB0A46821B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */; };
 		DCB0A46921B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */; };
-		DCB0A46C21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */; };
-		DCB0A46D21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */; };
+		DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */; };
+		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */; };
 		DCC6563D20C979FB00110A97 /* TestTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6563C20C979FB00110A97 /* TestTools.m */; };
@@ -609,8 +615,6 @@
 		DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+Thumbnails.h"; sourceTree = "<group>"; };
 		DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodOAuth2+OCMocking.h"; sourceTree = "<group>"; };
 		DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodOAuth2+OCMocking.m"; sourceTree = "<group>"; };
-		DC2D701621CA633000EB26FD /* OCSyncRecordStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncRecordStatus.h; sourceTree = "<group>"; };
-		DC2D701721CA633100EB26FD /* OCSyncRecordStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncRecordStatus.m; sourceTree = "<group>"; };
 		DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueStore.h; sourceTree = "<group>"; };
 		DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueStore.m; sourceTree = "<group>"; };
 		DC2EF1BE20ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCConnectionQueue+BackgroundSessionRecovery.h"; sourceTree = "<group>"; };
@@ -672,7 +676,6 @@
 		DC594B1E21EFD7F900B882C4 /* BookmarkManagerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkManagerTests.m; sourceTree = "<group>"; };
 		DC5A20302074E8890083DB7D /* CoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreTests.m; sourceTree = "<group>"; };
 		DC5A20322074F9020083DB7D /* Ocean.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ocean.entitlements; sourceTree = SOURCE_ROOT; };
-		DC5A203320750BEE0083DB7D /* OCCore+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+Internal.h"; sourceTree = "<group>"; };
 		DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Signals.m"; sourceTree = "<group>"; };
 		DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCThumbnail.h"; sourceTree = "<group>"; };
 		DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCThumbnail.m"; sourceTree = "<group>"; };
@@ -735,6 +738,9 @@
 		DC7E0A88203732B3006111FA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		DC812556210B548F00A9C037 /* OCTestTarget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCTestTarget.h; sourceTree = "<group>"; };
 		DC812557210B548F00A9C037 /* OCTestTarget.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCTestTarget.m; sourceTree = "<group>"; };
+		DC8245B121FB31E500775AB9 /* OCActivityManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCActivityManager.h; sourceTree = "<group>"; };
+		DC8245B221FB31E500775AB9 /* OCActivityManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCActivityManager.m; sourceTree = "<group>"; };
+		DC8245B921FB334200775AB9 /* OCCore+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+Internal.h"; sourceTree = "<group>"; };
 		DC8556EB204DEA2900189B9A /* OCConnectionDAVRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionDAVRequest.h; sourceTree = "<group>"; };
 		DC8556EC204DEA2900189B9A /* OCConnectionDAVRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionDAVRequest.m; sourceTree = "<group>"; };
 		DC8556EF204DEB9200189B9A /* OCXMLNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCXMLNode.h; sourceTree = "<group>"; };
@@ -788,6 +794,12 @@
 		DCADC04C2072D54200DB8E83 /* OCSQLiteTableSchema.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteTableSchema.m; sourceTree = "<group>"; };
 		DCADC0502072DE6600DB8E83 /* OCSQLiteMigration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteMigration.h; sourceTree = "<group>"; };
 		DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteMigration.m; sourceTree = "<group>"; };
+		DCAEB06721FA617D0067E147 /* OCActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCActivity.h; sourceTree = "<group>"; };
+		DCAEB06821FA617D0067E147 /* OCActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCActivity.m; sourceTree = "<group>"; };
+		DCAEB06B21FA63D80067E147 /* OCSyncRecordActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncRecordActivity.h; sourceTree = "<group>"; };
+		DCAEB06C21FA63D80067E147 /* OCSyncRecordActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncRecordActivity.m; sourceTree = "<group>"; };
+		DCAEB06F21FA67060067E147 /* OCActivityUpdate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCActivityUpdate.h; sourceTree = "<group>"; };
+		DCAEB07021FA67060067E147 /* OCActivityUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCActivityUpdate.m; sourceTree = "<group>"; };
 		DCB0A45721B7F76800FAC4E9 /* NSError+OCDAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCDAVError.h"; sourceTree = "<group>"; };
 		DCB0A45821B7F76800FAC4E9 /* NSError+OCDAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCDAVError.m"; sourceTree = "<group>"; };
 		DCB0A45B21B813A000FAC4E9 /* ExtensionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExtensionTests.m; sourceTree = "<group>"; };
@@ -797,8 +809,8 @@
 		DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreReachabilityConnectionStatusSignalProvider.h; sourceTree = "<group>"; };
 		DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreReachabilityConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
-		DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreMaintenanceModeStatusSignalProvider.h; sourceTree = "<group>"; };
-		DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreMaintenanceModeStatusSignalProvider.m; sourceTree = "<group>"; };
+		DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreServerStatusSignalProvider.h; sourceTree = "<group>"; };
+		DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreServerStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Schemas.h"; sourceTree = "<group>"; };
 		DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Schemas.m"; sourceTree = "<group>"; };
 		DCC6563B20C979FB00110A97 /* TestTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTools.h; sourceTree = "<group>"; };
@@ -1461,13 +1473,12 @@
 				DCC8F9D7202854FB00EB6701 /* OCCore.h */,
 				DC3422812180765900705508 /* OCCore+ItemUpdates.m */,
 				DC3422802180765900705508 /* OCCore+ItemUpdates.h */,
-				DC5A203320750BEE0083DB7D /* OCCore+Internal.h */,
+				DC8245B921FB334200775AB9 /* OCCore+Internal.h */,
 				DCB0A46121B9227400FAC4E9 /* Connection Status */,
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
 				DC2D646221C3D60900EB26FD /* Thumbnails */,
 				DC19BFE221CB9FAC007C20D1 /* FileProvider */,
 				DC19BFE121CB9F4F007C20D1 /* Sync */,
-				DC855704204FE9E900189B9A /* Activity */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -1475,8 +1486,14 @@
 		DC855704204FE9E900189B9A /* Activity */ = {
 			isa = PBXGroup;
 			children = (
-				DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */,
-				DC39DC57204215A800189B9A /* NSProgress+OCEvent.h */,
+				DC8245B221FB31E500775AB9 /* OCActivityManager.m */,
+				DC8245B121FB31E500775AB9 /* OCActivityManager.h */,
+				DCAEB06821FA617D0067E147 /* OCActivity.m */,
+				DCAEB06721FA617D0067E147 /* OCActivity.h */,
+				DCAEB07021FA67060067E147 /* OCActivityUpdate.m */,
+				DCAEB06F21FA67060067E147 /* OCActivityUpdate.h */,
+				DCAEB06C21FA63D80067E147 /* OCSyncRecordActivity.m */,
+				DCAEB06B21FA63D80067E147 /* OCSyncRecordActivity.h */,
 			);
 			path = Activity;
 			sourceTree = "<group>";
@@ -1486,8 +1503,6 @@
 			children = (
 				DCC8FA24202B259D00EB6701 /* OCSyncRecord.m */,
 				DCC8FA23202B259D00EB6701 /* OCSyncRecord.h */,
-				DC2D701721CA633100EB26FD /* OCSyncRecordStatus.m */,
-				DC2D701621CA633000EB26FD /* OCSyncRecordStatus.h */,
 			);
 			path = Record;
 			sourceTree = "<group>";
@@ -1557,6 +1572,8 @@
 				DCC8FA2D202B405F00EB6701 /* OCEvent.h */,
 				DCC8FA32202B443D00EB6701 /* OCEventTarget.m */,
 				DCC8FA31202B443D00EB6701 /* OCEventTarget.h */,
+				DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */,
+				DC39DC57204215A800189B9A /* NSProgress+OCEvent.h */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -1716,13 +1733,13 @@
 			path = Reachability;
 			sourceTree = "<group>";
 		};
-		DC98BDF121E73E4B003B5658 /* Maintenance Mode */ = {
+		DC98BDF121E73E4B003B5658 /* Server */ = {
 			isa = PBXGroup;
 			children = (
-				DCB0A46B21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m */,
-				DCB0A46A21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h */,
+				DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */,
+				DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */,
 			);
-			path = "Maintenance Mode";
+			path = Server;
 			sourceTree = "<group>";
 		};
 		DC98BDF221E73EB0003B5658 /* Network Path Monitor */ = {
@@ -1810,7 +1827,7 @@
 				DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */,
 				DC98BDF221E73EB0003B5658 /* Network Path Monitor */,
 				DC98BDF021E73E36003B5658 /* Reachability */,
-				DC98BDF121E73E4B003B5658 /* Maintenance Mode */,
+				DC98BDF121E73E4B003B5658 /* Server */,
 			);
 			path = "Connection Status";
 			sourceTree = "<group>";
@@ -1873,6 +1890,7 @@
 				DC1D4D3420DBD557005A3DFC /* File Handling */,
 				DC85570D204FEAC500189B9A /* Events */,
 				DC85570E204FEAE900189B9A /* Vaults */,
+				DC855704204FE9E900189B9A /* Activity */,
 				DC855702204FE9CA00189B9A /* Core */,
 				DC19BFF321CBE293007C20D1 /* Wait Condition */,
 				DC855710204FEB1500189B9A /* Query */,
@@ -2023,7 +2041,6 @@
 				DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */,
 				DC00DB1D219B120300C82737 /* OCConnectionDAVMultistatusResponse.h in Headers */,
 				DCC6567820CA696A00110A97 /* OCBookmarkManager.h in Headers */,
-				DC2D701821CA633100EB26FD /* OCSyncRecordStatus.h in Headers */,
 				DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */,
 				DC07C296212450DC00B815A4 /* OCExtensionLocation.h in Headers */,
 				DC446C85206B8DB500189B9A /* OCRunLoopThread.h in Headers */,
@@ -2049,7 +2066,8 @@
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
 				DC24F8E821E2B3EF00C9119C /* OCWaitConditionIssue.h in Headers */,
-				DCB0A46C21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.h in Headers */,
+				DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */,
+				DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */,
 				DCEA7D972093556600F25223 /* OCCache.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
 				DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */,
@@ -2074,11 +2092,13 @@
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
 				DC20DE4B21BFCBC20096000B /* OCLogComponent.h in Headers */,
 				DCADC0482072CDEA00DB8E83 /* OCCoreItemList.h in Headers */,
+				DC8245BA21FB334200775AB9 /* OCCore+Internal.h in Headers */,
 				DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */,
 				DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */,
 				DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */,
 				DC24F8F021E4F5BF00C9119C /* OCSQLiteDB+Internal.h in Headers */,
 				DC14CC4A21067320006DDA69 /* OCCore+ItemList.h in Headers */,
+				DCAEB07121FA67060067E147 /* OCActivityUpdate.h in Headers */,
 				DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */,
 				DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */,
 				DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */,
@@ -2130,14 +2150,15 @@
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
 				DC19BFCA21CA6B91007C20D1 /* OCSyncIssue.h in Headers */,
 				DC708CE8214135FE00FE43CA /* OCSyncActionUpload.h in Headers */,
+				DC8245B321FB31E500775AB9 /* OCActivityManager.h in Headers */,
 				DCB0A45921B7F76800FAC4E9 /* NSError+OCDAVError.h in Headers */,
+				DCAEB06921FA617D0067E147 /* OCActivity.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
-				DC5A203420750BEE0083DB7D /* OCCore+Internal.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
 				DCC8F9F22028559600EB6701 /* OCItem.h in Headers */,
 				DC708CDC214135C000FE43CA /* OCSyncActionCreateFolder.h in Headers */,
@@ -2478,11 +2499,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */,
-				DCB0A46D21B9355C00FAC4E9 /* OCCoreMaintenanceModeStatusSignalProvider.m in Sources */,
+				DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */,
 				DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */,
 				DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */,
 				DC4AFAB9206AE92F00189B9A /* OCSQLiteTransaction.m in Sources */,
 				DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */,
+				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
@@ -2499,6 +2521,7 @@
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */,
+				DC8245B421FB31E500775AB9 /* OCActivityManager.m in Sources */,
 				DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
 				DC85980820D8F5C000A433C6 /* OCCore+CommandCopyMove.m in Sources */,
@@ -2542,10 +2565,10 @@
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
+				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
-				DC2D701921CA633100EB26FD /* OCSyncRecordStatus.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
 				DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */,
@@ -2591,6 +2614,7 @@
 				DC19BFEA21CBACB0007C20D1 /* OCProcessSession.m in Sources */,
 				DC8556F7204F361100189B9A /* OCLogger.m in Sources */,
 				DC24F8E921E2B3EF00C9119C /* OCWaitConditionIssue.m in Sources */,
+				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
 				DCB0A46921B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m in Sources */,
 				DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */,
 				DCC6567920CA696A00110A97 /* OCBookmarkManager.m in Sources */,

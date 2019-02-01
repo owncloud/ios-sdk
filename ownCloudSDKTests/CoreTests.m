@@ -99,6 +99,8 @@
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
 
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
@@ -141,12 +143,16 @@
 						XCTAssert(query.rootItem!=nil); // Root item exists
 						XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
 						XCTAssert(query.rootItem.parentFileID==nil); // Root item has no parentFileID
+						XCTAssert(query.rootItem.localID!=nil); // Root item has localID
+						XCTAssert(query.rootItem.parentLocalID==nil); // Root item has no parentLocalID
 
 						for (OCItem *item in changeset.queryResult)
 						{
 							XCTAssert(item.fileID!=nil); // all items in the result have a file ID
 							XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
 							XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+							XCTAssert(item.parentLocalID!=nil); // all items in the result have a parent local ID
+							XCTAssert([item.parentLocalID isEqual:query.rootItem.localID]); // all items in result have the parentLocalID of their parent dir
 						}
 					}
 				}
@@ -203,14 +209,19 @@
 									// Verify parentFileID
 									XCTAssert(query.rootItem!=nil); // Root item exists
 									XCTAssert(query.rootItem.fileID!=nil); // Root item has fileID
-									XCTAssert(query.rootItem.parentFileID!=nil); // Root item has no parentFileID
+									XCTAssert(query.rootItem.parentFileID!=nil); // Root item has parentFileID
 									XCTAssert([query.rootItem.parentFileID isEqual:firstQueryRootItem.fileID]); // all items in result have the parentFileID of their parent dir
+									XCTAssert(query.rootItem.localID!=nil); // Root item has localID
+									XCTAssert(query.rootItem.parentLocalID!=nil); // Root item has parentLocalID
+									XCTAssert([query.rootItem.parentLocalID isEqual:firstQueryRootItem.localID]); // all items in result have the parentLocalID of their parent dir
 
 									for (OCItem *item in changeset.queryResult)
 									{
 										XCTAssert(item.fileID!=nil); // all items in the result have a file ID
 										XCTAssert(item.parentFileID!=nil); // all items in the result have a parent file ID
 										XCTAssert([item.parentFileID isEqual:query.rootItem.fileID]); // all items in result have the parentFileID of their parent dir
+										XCTAssert(item.parentLocalID!=nil); // all items in the result have a parent local ID
+										XCTAssert([item.parentLocalID isEqual:query.rootItem.localID]); // all items in result have the parentLocalID of their parent dir
 									}
 								}
 
@@ -265,6 +276,8 @@
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
@@ -425,6 +438,8 @@
 	// Start core
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
 
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
@@ -608,6 +623,8 @@
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCQuery *query;
 
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
 		XCTAssert((error==nil), @"Started with error: %@", error);
 		[coreStartedExpectation fulfill];
 
@@ -787,6 +804,8 @@
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		OCLog(@"Core: %@ Error: %@", core, error);
 
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
 		[coreStartedExpectation fulfill];
 	}];
 
@@ -823,6 +842,8 @@
 	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 		__weak OCCore *weakCore = core;
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
 
 		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 			// Wait for population of cache
@@ -920,6 +941,7 @@
 	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
 		core.automaticItemListUpdatesEnabled = NO;
 
 		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {

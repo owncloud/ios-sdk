@@ -202,6 +202,9 @@
 // OCErrorItemNotAvailableOffline
 "Item not available offline." = "Item not available offline.";
 
+// OCErrorFileNotFound:
+"File not found." = "File not found.";
+
 // OCErrorCancelled
 "The operation was cancelled." = "The operation was cancelled.";
 

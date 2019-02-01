@@ -26,6 +26,14 @@
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+ItemList.h"
 #import "OCMacros.h"
+#import "NSProgress+OCExtensions.h"
+
+@interface OCCoreItemListTask ()
+{
+	OCActivityIdentifier _activityIdentifier;
+}
+
+@end
 
 @implementation OCCoreItemListTask
 
@@ -136,7 +144,9 @@
 		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
 			[self->_core queueConnectivityBlock:^{
 				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
-					[self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					NSProgress *retrievalProgress;
+
+					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 						[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];
 
@@ -170,9 +180,20 @@
 								if (self.path != nil)
 								{
 									OCItem *rootItem;
+									OCItem *cachedRootItem;
 
 									if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
 									{
+										if ((cachedRootItem = self->_cachedSet.itemsByFileID[rootItem.fileID]) == nil)
+										{
+											cachedRootItem = self->_cachedSet.itemsByPath[self.path];
+										}
+
+										if (cachedRootItem != nil)
+										{
+											rootItem.localID = cachedRootItem.localID;
+										}
+
 										if ((rootItem.type == OCItemTypeCollection) && (items.count > 1))
 										{
 											for (OCItem *item in items)
@@ -180,6 +201,7 @@
 												if (item != rootItem)
 												{
 													item.parentFileID = rootItem.fileID;
+													item.parentLocalID = rootItem.localID;
 												}
 											}
 										}
@@ -187,6 +209,11 @@
 										if (rootItem.parentFileID == nil)
 										{
 											rootItem.parentFileID = parentDirectoryItem.fileID;
+										}
+
+										if (parentDirectoryItem.parentLocalID == nil)
+										{
+											rootItem.parentLocalID = parentDirectoryItem.localID;
 										}
 									}
 								}
@@ -204,6 +231,11 @@
 							completionHandler();
 						}];
 					}];
+
+					if (retrievalProgress != nil)
+					{
+						[self.core.activityManager update:[[OCActivityUpdate updatingActivityFor:self] withProgress:retrievalProgress]];
+					}
 				}];
 			}];
 		};
@@ -280,6 +312,26 @@
 	}
 
 	[_core endActivity:@"update unstarted sets"];
+}
+
+#pragma mark - Activity source
+- (OCActivityIdentifier)activityIdentifier
+{
+	if (_activityIdentifier == nil)
+	{
+		_activityIdentifier = [@"ItemListTask:" stringByAppendingString:NSUUID.UUID.UUIDString];
+	}
+
+	return (_activityIdentifier);
+}
+
+- (OCActivity *)provideActivity
+{
+	OCActivity *activity = [OCActivity withIdentifier:self.activityIdentifier description:[NSString stringWithFormat:@"Retrieving items for %@", self.path] statusMessage:nil ranking:0];
+
+	activity.progress = NSProgress.indeterminateProgress;
+
+	return (activity);
 }
 
 @end

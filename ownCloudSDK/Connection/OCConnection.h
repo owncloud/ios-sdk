@@ -70,7 +70,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 
 - (void)connectionChangedState:(OCConnection *)connection;
 
-- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest defaultsTo:(OCConnectionRequestInstruction)defaulInstruction;
+- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCConnectionRequestInstruction)defaultInstruction;
 
 @end
 
@@ -183,7 +183,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 - (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
 #pragma mark - Rescheduling support
-- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest;
+- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error;
 
 @end
 

@@ -45,6 +45,8 @@
 
 @synthesize removedItemRetentionLength = _removedItemRetentionLength;
 
+@synthesize itemFilter = _itemFilter;
+
 @synthesize sqlDB = _sqlDB;
 
 #pragma mark - Initialization
@@ -149,8 +151,23 @@
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 
+	if (_itemFilter != nil)
+	{
+		items = _itemFilter(items);
+	}
+
 	for (OCItem *item in items)
 	{
+		if (item.localID == nil)
+		{
+			OCLogDebug(@"Item added without localID: %@", item);
+		}
+
+		if ((item.parentLocalID == nil) && (![item.path isEqualToString:@"/"]))
+		{
+			OCLogDebug(@"Item added without parentLocalID: %@", item);
+		}
+
 		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
 			@"type" 		: @(item.type),
 			@"syncAnchor"		: syncAnchor,
@@ -161,6 +178,7 @@
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
 			@"fileID"		: item.fileID,
+			@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
 			@"itemData"		: [item serializedData]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
@@ -176,8 +194,23 @@
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 
+	if (_itemFilter != nil)
+	{
+		items = _itemFilter(items);
+	}
+
 	for (OCItem *item in items)
 	{
+		if ((item.localID == nil) && (!item.removed))
+		{
+			OCLogDebug(@"Item updated without localID: %@", item);
+		}
+
+		if ((item.parentLocalID == nil) && (![item.path isEqualToString:@"/"]))
+		{
+			OCLogDebug(@"Item updated without parentLocalID: %@", item);
+		}
+
 		if (item.databaseID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
@@ -190,6 +223,7 @@
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
 				@"fileID"		: item.fileID,
+				@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
 		}
@@ -207,6 +241,11 @@
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	// TODO: Update parent directories with new sync anchor value (not sure if necessary, as a change in eTag should also trigger an update of the parent directory sync anchor)
+
+	if (_itemFilter != nil)
+	{
+		items = _itemFilter(items);
+	}
 
 	for (OCItem *item in items)
 	{
@@ -275,7 +314,36 @@
 	}
 }
 
+- (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+{
+	if (localID == nil)
+	{
+		OCLogError(@"Retrieval of localID==nil failed");
+
+		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
+		return;
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE localID=? AND removed=0" withParameters:@[localID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (error != nil)
+		{
+			completionHandler(self, error, nil, nil);
+		}
+		else
+		{
+			[self _completeRetrievalWithResultSet:resultSet completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				completionHandler(db, error, syncAnchor, items.firstObject);
+			}];
+		}
+	}]];
+}
+
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+{
+	[self retrieveCacheItemForFileID:fileID includingRemoved:NO completionHandler:completionHandler];
+}
+
+- (void)retrieveCacheItemForFileID:(OCFileID)fileID includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
 	if (fileID == nil)
 	{
@@ -285,7 +353,7 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0" withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:(includingRemoved ? @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=?" : @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0") withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil, nil);
@@ -526,6 +594,7 @@
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
 				@"action"		: syncRecord.actionIdentifier,
 				@"path"			: path,
+				@"localID"		: syncRecord.localID,
 				@"recordData"		: [syncRecord serializedData]
 			} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 				syncRecord.recordID = rowID;
@@ -572,7 +641,8 @@
 		{
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
 				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
-				@"recordData"		: [syncRecord serializedData]
+				@"recordData"		: [syncRecord serializedData],
+				@"localID"		: syncRecord.localID
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				@synchronized(db)
 				{

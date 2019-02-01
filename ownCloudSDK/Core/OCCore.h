@@ -29,6 +29,8 @@
 #import "OCIPNotificationCenter.h"
 #import "OCLogTag.h"
 #import "OCAsyncSequentialQueue.h"
+#import "OCActivityManager.h"
+#import "OCActivityUpdate.h"
 
 @class OCCore;
 @class OCItem;
@@ -37,7 +39,7 @@
 @class OCIPNotificationCenter;
 
 @class OCCoreConnectionStatusSignalProvider;
-@class OCCoreMaintenanceModeStatusSignalProvider;
+@class OCCoreServerStatusSignalProvider;
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCCoreState)
@@ -88,6 +90,8 @@ typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
 typedef void(^OCCoreCompletionHandler)(NSError *error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef NSError *(^OCCoreImportTransformation)(NSURL *sourceURL);
+
 typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 #pragma mark - Delegate
@@ -124,8 +128,10 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray <OCCoreConnectionStatusSignalProvider *> *_connectionStatusSignalProviders;
 
 	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
-	OCCoreMaintenanceModeStatusSignalProvider *_maintenanceModeStatusSignalProvider; // Processes reports of maintenance mode repsonses and performs status.php polls for status changes
+	OCCoreServerStatusSignalProvider *_serverStatusSignalProvider; // Processes reports of connection refused and maintenance mode responses and performs status.php polls to detect the resolution of the issue
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
+
+	OCActivityManager *_activityManager;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 
@@ -157,7 +163,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _automaticItemListUpdatesEnabled;
 	NSDate *_lastScheduledItemListUpdateDate;
 
-	NSMutableDictionary <OCFileID, NSMutableArray<NSProgress *> *> *_progressByFileID;
+	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
 	__weak id <OCCoreDelegate> _delegate;
 }
@@ -175,6 +181,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals
 @property(readonly,strong,nullable) NSString *connectionStatusShortDescription; //!< Short description of the current connection status.
+
+@property(readonly,strong) OCActivityManager *activityManager;
 
 @property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
@@ -283,4 +291,9 @@ extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
 extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
 
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
+extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransformation] Transformation to be applied on local item before upload
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
+
+extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
+extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.
+extern NSNotificationName OCCoreItemStopsHavingProgress; //!< Notification sent when an item no longer has any progress. The object is the localID of the item.

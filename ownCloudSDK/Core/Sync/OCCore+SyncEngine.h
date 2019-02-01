@@ -72,6 +72,12 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 - (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter;
 - (NSError *)_rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates;
 
+#pragma mark - Sync record persistence
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)publishInitialSyncRecordActivities;
+
 @end
 
 extern OCEventUserInfoKey OCEventUserInfoKeySyncRecordID;

@@ -40,7 +40,17 @@
 	[self setUserInfoObject:fileID forKey:@"_fileID"];
 }
 
-- (OCConnectionJobID)jobID;
+- (OCLocalID)localID
+{
+	return (self.userInfo[@"_localID"]);
+}
+
+- (void)setLocalID:(OCLocalID)localID
+{
+	[self setUserInfoObject:localID forKey:@"_localID"];
+}
+
+- (OCConnectionJobID)jobID
 {
 	return (self.userInfo[@"_jobID"]);
 }

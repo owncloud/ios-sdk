@@ -130,7 +130,12 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:item parentItem:parentItem filename:item.name importFileURL:temporaryFileURL isTemporaryCopy:YES] resultHandler:resultHandler]);
+	NSProgress *progress;
+
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:item parentItem:parentItem filename:item.name importFileURL:temporaryFileURL isTemporaryCopy:YES] resultHandler:resultHandler];
+	progress.cancellable = YES;
+
+	return (progress);
 }
 
 @end

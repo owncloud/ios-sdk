@@ -88,6 +88,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCShare.h>
 #import <ownCloudSDK/OCUser.h>
 
+#import <ownCloudSDK/OCActivity.h>
+#import <ownCloudSDK/OCActivityManager.h>
+#import <ownCloudSDK/OCActivityUpdate.h>
+
 #import <ownCloudSDK/OCSyncRecord.h>
 
 #import <ownCloudSDK/NSURL+OCURLNormalization.h>

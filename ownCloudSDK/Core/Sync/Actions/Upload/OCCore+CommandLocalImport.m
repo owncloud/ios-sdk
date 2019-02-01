@@ -45,6 +45,7 @@
 	// Create placeholder item and fill fields required by -[NSFileProviderExtension importDocumentAtURL:toParentItemIdentifier:completionHandler:] completion handler
 	placeholderItem = [OCItem placeholderItemOfType:OCItemTypeFile];
 
+	placeholderItem.parentLocalID = parentItem.localID;
 	placeholderItem.parentFileID = parentItem.fileID;
 	placeholderItem.path = [parentItem.path stringByAppendingPathComponent:newFileName];
 
@@ -79,6 +80,31 @@
 		{
 			// Import by moving
 			importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+		}
+
+		if (importFileOperationSuccessful)
+		{
+			// Check for and apply transformations
+			OCCoreImportTransformation transformation;
+
+			if ((transformation = options[OCCoreOptionImportTransformation]) != nil)
+			{
+				NSError *transformationError;
+
+				OCLogDebug(@"Transforming transformation on item %@", OCLogPrivate(placeholderItem));
+
+				if ((transformationError = transformation(placeholderOutputURL)) == nil)
+				{
+					OCLogDebug(@"Transformation succeeded on item %@", OCLogPrivate(placeholderItem));
+					[placeholderItem updateMetadataFromFileURL:placeholderOutputURL];
+				}
+				else
+				{
+					OCLogDebug(@"Transformation failed with error=%@ on item %@", transformationError, OCLogPrivate(placeholderItem));
+					error = transformationError;
+					importFileOperationSuccessful = NO;
+				}
+			}
 		}
 
 		if (importFileOperationSuccessful)
@@ -129,7 +155,12 @@
 	}
 
 	// Enqueue sync record
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] resultHandler:resultHandler]);
+	NSProgress *progress;
+
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] resultHandler:resultHandler];
+	progress.cancellable = YES;
+
+	return (progress);
 }
 
 @end

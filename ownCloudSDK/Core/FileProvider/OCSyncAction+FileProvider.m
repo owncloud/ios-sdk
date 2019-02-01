@@ -46,12 +46,12 @@
 				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
 					if (event == OCConnectionRequestObserverEventTaskResume)
 					{
-						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.fileID completionHandler:^(NSError * _Nullable error) {
+						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
 							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
 
 							if (error != nil)
 							{
-								OCLogError(@"error registering %@ for %@: %@", request.urlSessionTask, item.fileID, error);
+								OCLogError(@"error registering %@ for %@: %@", request.urlSessionTask, item.localID, error);
 							}
 
 							// File provider detail: the task may not be started until after this completionHandler was called

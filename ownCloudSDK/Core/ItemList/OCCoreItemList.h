@@ -38,6 +38,9 @@ typedef NS_ENUM(NSUInteger, OCCoreItemListState)
 	NSMutableDictionary <OCFileID, OCItem *> *_itemsByFileID;
 	NSSet <OCFileID> *_itemFileIDsSet;
 
+	NSMutableDictionary <OCLocalID, OCItem *> *_itemsByLocalID;
+	NSSet <OCLocalID> *_itemLocalIDsSet;
+
 	NSMutableDictionary <OCPath, NSMutableArray<OCItem *> *> *_itemsByParentPaths;
 	NSSet <OCPath> *_itemParentPaths;
 
@@ -53,6 +56,9 @@ typedef NS_ENUM(NSUInteger, OCCoreItemListState)
 
 @property(readonly,strong,nonatomic) NSMutableDictionary <OCFileID, OCItem *> *itemsByFileID;
 @property(readonly,strong,nonatomic) NSSet <OCFileID> *itemFileIDsSet;
+
+@property(readonly,strong,nonatomic) NSMutableDictionary <OCLocalID, OCItem *> *itemsByLocalID;
+@property(readonly,strong,nonatomic) NSSet <OCLocalID> *itemLocalIDsSet;
 
 @property(readonly,strong,nonatomic) NSMutableDictionary <OCPath, NSMutableArray<OCItem *> *> *itemsByParentPaths;
 @property(readonly,strong,nonatomic) NSSet <OCPath> *itemParentPaths;

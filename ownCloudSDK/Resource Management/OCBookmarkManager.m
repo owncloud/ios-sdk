@@ -44,9 +44,16 @@
 	if ((self = [super init]) != nil)
 	{
 		_bookmarks = [NSMutableArray new];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleBookmarkUpdatedNotification:) name:OCBookmarkUpdatedNotification object:nil];
 	}
 
 	return(self);
+}
+
+- (void)dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkUpdatedNotification object:nil];
 }
 
 #pragma mark - Bookmark storage
@@ -121,6 +128,19 @@
 - (void)postChangeNotification
 {
 	[NSNotificationCenter.defaultCenter postNotificationName:OCBookmarkManagerListChanged object:nil];
+}
+
+- (void)handleBookmarkUpdatedNotification:(NSNotification *)updateNotification
+{
+	if (updateNotification.object == nil) { return; }
+
+	@synchronized(self)
+	{
+		if ([_bookmarks indexOfObjectIdenticalTo:updateNotification.object] != NSNotFound)
+		{
+			[self saveBookmarks];
+		}
+	}
 }
 
 #pragma mark - List mutations
