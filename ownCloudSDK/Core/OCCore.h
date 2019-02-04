@@ -132,6 +132,8 @@ NS_ASSUME_NONNULL_BEGIN
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
 	OCActivityManager *_activityManager;
+	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
+	BOOL _needsToBroadcastSyncRecordActivityUpdates;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 

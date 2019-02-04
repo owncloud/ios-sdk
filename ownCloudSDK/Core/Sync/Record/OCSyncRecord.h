@@ -81,6 +81,8 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 @property(strong,nonatomic,nullable) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
 
++ (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID;
+
 #pragma mark - Instantiation
 - (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
 

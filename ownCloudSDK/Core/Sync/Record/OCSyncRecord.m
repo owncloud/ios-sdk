@@ -237,11 +237,16 @@
 }
 
 #pragma mark - Activity Source
++ (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID
+{
+	return ([NSString stringWithFormat:@"syncRecord:%@", recordID]);
+}
+
 - (OCActivityIdentifier)activityIdentifier
 {
 	if (_activityIdentifier == nil)
 	{
-		_activityIdentifier = [NSString stringWithFormat:@"syncRecord:%@", _recordID];
+		_activityIdentifier = [OCSyncRecord activityIdentifierForSyncRecordID:_recordID];
 	}
 
 	return (_activityIdentifier);

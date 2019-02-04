@@ -154,6 +154,10 @@
 		DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4AFAB3206AE61400189B9A /* OCSQLiteQuery.m */; };
 		DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4AFAB6206AE92F00189B9A /* OCSQLiteTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4AFAB9206AE92F00189B9A /* OCSQLiteTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4AFAB7206AE92F00189B9A /* OCSQLiteTransaction.m */; };
+		DC4B116D2208306C0062BCDD /* OCConnectionPipeline.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B116B2208306C0062BCDD /* OCConnectionPipeline.h */; };
+		DC4B116E2208306C0062BCDD /* OCConnectionPipeline.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B116C2208306C0062BCDD /* OCConnectionPipeline.m */; };
+		DC4B1171220830F20062BCDD /* OCConnectionPipelineBackend.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B116F220830F20062BCDD /* OCConnectionPipelineBackend.h */; };
+		DC4B1172220830F20062BCDD /* OCConnectionPipelineBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B1170220830F20062BCDD /* OCConnectionPipelineBackend.m */; };
 		DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */; };
 		DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */; };
@@ -665,6 +669,10 @@
 		DC4AFAB3206AE61400189B9A /* OCSQLiteQuery.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteQuery.m; sourceTree = "<group>"; };
 		DC4AFAB6206AE92F00189B9A /* OCSQLiteTransaction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteTransaction.h; sourceTree = "<group>"; };
 		DC4AFAB7206AE92F00189B9A /* OCSQLiteTransaction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteTransaction.m; sourceTree = "<group>"; };
+		DC4B116B2208306C0062BCDD /* OCConnectionPipeline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionPipeline.h; sourceTree = "<group>"; };
+		DC4B116C2208306C0062BCDD /* OCConnectionPipeline.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionPipeline.m; sourceTree = "<group>"; };
+		DC4B116F220830F20062BCDD /* OCConnectionPipelineBackend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionPipelineBackend.h; sourceTree = "<group>"; };
+		DC4B1170220830F20062BCDD /* OCConnectionPipelineBackend.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionPipelineBackend.m; sourceTree = "<group>"; };
 		DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemVersionIdentifier.h; sourceTree = "<group>"; };
 		DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemVersionIdentifier.m; sourceTree = "<group>"; };
 		DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandDelete.m"; sourceTree = "<group>"; };
@@ -1545,6 +1553,10 @@
 				DC00DB1B219B120300C82737 /* OCConnectionDAVMultistatusResponse.h */,
 				DCC8FA28202B37B800EB6701 /* OCConnectionQueue.m */,
 				DCC8FA27202B37B800EB6701 /* OCConnectionQueue.h */,
+				DC4B116C2208306C0062BCDD /* OCConnectionPipeline.m */,
+				DC4B116B2208306C0062BCDD /* OCConnectionPipeline.h */,
+				DC4B1170220830F20062BCDD /* OCConnectionPipelineBackend.m */,
+				DC4B116F220830F20062BCDD /* OCConnectionPipelineBackend.h */,
 				DC2EF1BE20ED782400BA2A3E /* OCConnectionQueue+BackgroundSessionRecovery.h */,
 				DC39DC4F2041CA9B00189B9A /* OCConnection+OCConnectionQueue.h */,
 			);
@@ -2051,6 +2063,7 @@
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
+				DC4B1171220830F20062BCDD /* OCConnectionPipelineBackend.h in Headers */,
 				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
@@ -2119,6 +2132,7 @@
 				DCB0A46821B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h in Headers */,
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
+				DC4B116D2208306C0062BCDD /* OCConnectionPipeline.h in Headers */,
 				DCC8F9FB2028586900EB6701 /* OCAuthenticationMethod.h in Headers */,
 				DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */,
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
@@ -2506,6 +2520,7 @@
 				DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */,
 				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
+				DC4B1172220830F20062BCDD /* OCConnectionPipelineBackend.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
@@ -2520,6 +2535,7 @@
 				DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
+				DC4B116E2208306C0062BCDD /* OCConnectionPipeline.m in Sources */,
 				DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */,
 				DC8245B421FB31E500775AB9 /* OCActivityManager.m in Sources */,
 				DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */,

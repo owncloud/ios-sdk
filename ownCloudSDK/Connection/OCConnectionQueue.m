@@ -898,7 +898,6 @@
 	}
 }
 
-
 #pragma mark - Log tags
 + (nonnull NSArray<OCLogTagName> *)logTags
 {

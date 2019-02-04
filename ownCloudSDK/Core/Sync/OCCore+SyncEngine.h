@@ -76,7 +76,7 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-- (void)publishInitialSyncRecordActivities;
+- (void)updatePublishedSyncRecordActivities;
 
 @end
 

@@ -149,6 +149,7 @@
 		_progressByLocalID = [NSMutableDictionary new];
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
+		_publishedActivitySyncRecordIDs = [NSMutableSet new];
 
 		_thumbnailCache = [OCCache new];
 
