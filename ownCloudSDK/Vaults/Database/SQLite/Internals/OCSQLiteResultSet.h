@@ -22,6 +22,8 @@
 @class OCSQLiteStatement;
 @class OCSQLiteResultSet;
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef id(^OCSQLiteResultSetColumnFilter)(id object);
 typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString*, id<NSObject>> *rowDictionary, BOOL *stop);
 
@@ -43,3 +45,5 @@ typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUIntege
 - (NSUInteger)iterateUsing:(OCSQLiteResultSetIterator)iterator error:(NSError **)outError;
 
 @end
+
+NS_ASSUME_NONNULL_END

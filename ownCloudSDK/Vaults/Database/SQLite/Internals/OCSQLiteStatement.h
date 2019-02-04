@@ -21,6 +21,8 @@
 
 @class OCSQLiteDB;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSQLiteStatement : NSObject
 {
 	__weak OCSQLiteDB *_database;
@@ -52,3 +54,5 @@
 - (void)releaseSQLObjects;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -18,6 +18,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSQLiteQueryCondition : NSObject
 
 @property(strong) NSString *sqlOperator; //!< I.e. "!="
@@ -27,3 +29,5 @@
 + (instancetype)queryConditionWithOperator:(NSString *)sqlOperator value:(id)value apply:(BOOL)apply;
 
 @end
+
+NS_ASSUME_NONNULL_END

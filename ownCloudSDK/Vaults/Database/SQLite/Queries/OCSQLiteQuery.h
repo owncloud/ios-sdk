@@ -19,6 +19,8 @@
 #import <Foundation/Foundation.h>
 #import "OCSQLiteDB.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSQLiteQuery : NSObject
 
 @property(strong) NSString *sqlQuery;
@@ -29,24 +31,26 @@
 @property(copy) OCSQLiteDBResultHandler resultHandler;
 
 #pragma mark - Queries
-+ (instancetype)query:(NSString *)sqlQuery withParameters:(NSArray <id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler;
-+ (instancetype)query:(NSString *)sqlQuery withNamedParameters:(NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler;
-+ (instancetype)query:(NSString *)sqlQuery resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)query:(NSString *)sqlQuery withParameters:(nullable NSArray <id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)query:(NSString *)sqlQuery withNamedParameters:(nullable NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)query:(NSString *)sqlQuery resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
 
 #pragma mark - SELECT query builder
-+ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy limit:(NSString *)limit resultHandler:(OCSQLiteDBResultHandler)resultHandler;
-+ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler;
-+ (instancetype)querySelectingColumns:(NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)querySelectingColumns:(nullable NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(nullable NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(nullable NSString *)orderBy limit:(nullable NSString *)limit resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)querySelectingColumns:(nullable NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(nullable NSDictionary <NSString *, id<NSObject>> *)matchValues resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)querySelectingColumns:(nullable NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(nullable NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(nullable NSString *)orderBy resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 
 #pragma mark - INSERT query builder
-+ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler;
++ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(nullable OCSQLiteDBInsertionHandler)resultHandler;
 
 #pragma mark - UPDATE query builder
-+ (instancetype)queryUpdatingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues inTable:(NSString *)tableName withRowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
-+ (instancetype)queryUpdatingRowWithID:(NSNumber *)rowID inTable:(NSString *)tableName withRowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
++ (instancetype)queryUpdatingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues inTable:(NSString *)tableName withRowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
++ (instancetype)queryUpdatingRowWithID:(NSNumber *)rowID inTable:(NSString *)tableName withRowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 
 #pragma mark - DELETE query builder
-+ (instancetype)queryDeletingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues fromTable:(NSString *)tableName completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
-+ (instancetype)queryDeletingRowWithID:(NSNumber *)rowID fromTable:(NSString *)tableName completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
++ (instancetype)queryDeletingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues fromTable:(NSString *)tableName completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
++ (instancetype)queryDeletingRowWithID:(NSNumber *)rowID fromTable:(NSString *)tableName completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END

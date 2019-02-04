@@ -22,6 +22,8 @@
 @class OCSQLiteTableSchema;
 @class OCSQLiteDB;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSQLiteMigration : NSObject
 {
 	NSUInteger _appliedSchemas;
@@ -31,8 +33,10 @@
 
 @property(strong) NSMutableArray<OCSQLiteTableSchema *> *applicableSchemas;
 
-@property(strong) NSError *error;
+@property(nullable,strong) NSError *error;
 
-- (void)applySchemasToDatabase:(OCSQLiteDB *)database completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
+- (void)applySchemasToDatabase:(OCSQLiteDB *)database completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END
