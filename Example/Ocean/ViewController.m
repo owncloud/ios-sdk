@@ -47,11 +47,11 @@
 					self->bookmark.authenticationData = authenticationData;
 
 					// Request resource
-					OCConnectionRequest *request = nil;
-					request = [OCConnectionRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
+					OCHTTPRequest *request = nil;
+					request = [OCHTTPRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 					[request setValue:@"json" forParameter:@"format"];
 		
-					[self->connection sendRequest:request toQueue:self->connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+					[self->connection sendRequest:request toQueue:self->connection.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
 						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\nTask: %@\n\nResponse: %@\n\nBody: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString]];
 						
 						if (request.responseHTTPStatus.isSuccess)
@@ -76,10 +76,10 @@
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
 	{
 		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;
-		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];

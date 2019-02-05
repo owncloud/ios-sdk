@@ -16,21 +16,21 @@
  *
  */
 
-#import "OCConnectionDAVRequest.h"
+#import "OCHTTPDAVRequest.h"
 #import "OCItem.h"
 #import "OCXMLParser.h"
 #import "OCLogger.h"
-#import "OCConnectionDAVMultistatusResponse.h"
+#import "OCHTTPDAVMultistatusResponse.h"
 
-@implementation OCConnectionDAVRequest
+@implementation OCHTTPDAVRequest
 
 @synthesize xmlRequest = _xmlRequest;
 
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth
 {
-	OCConnectionDAVRequest *request = [OCConnectionDAVRequest requestWithURL:url];
+	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
 	
-	request.method = OCConnectionRequestMethodPROPFIND;
+	request.method = OCHTTPMethodPROPFIND;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
 		[OCXMLNode elementWithName:@"D:propfind" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:@[
 			[OCXMLNode elementWithName:@"D:prop"],
@@ -44,9 +44,9 @@
 
 + (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes
 {
-	OCConnectionDAVRequest *request = [OCConnectionDAVRequest requestWithURL:url];
+	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
 
-	request.method = OCConnectionRequestMethodPROPPATCH;
+	request.method = OCHTTPMethodPROPPATCH;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
 		[OCXMLNode elementWithName:@"D:propertyupdate" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:contentNodes]
 	];
@@ -131,9 +131,9 @@
 	return (responseItems);
 }
 
-- (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
+- (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
 {
-	NSMutableDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *responsesByPath = nil;
+	NSMutableDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *responsesByPath = nil;
 	NSData *responseData = nil;
 
 	if (self.downloadRequest)
@@ -165,7 +165,7 @@
 					nil];
 				}
 
-				[parser addObjectCreationClasses:@[ [OCConnectionDAVMultistatusResponse class] ]];
+				[parser addObjectCreationClasses:@[ [OCHTTPDAVMultistatusResponse class] ]];
 
 				if ([parser parse])
 				{
@@ -177,9 +177,9 @@
 
 						for (id parsedObject in parser.parsedObjects)
 						{
-							if ([parsedObject isKindOfClass:[OCConnectionDAVMultistatusResponse class]])
+							if ([parsedObject isKindOfClass:[OCHTTPDAVMultistatusResponse class]])
 							{
-								OCConnectionDAVMultistatusResponse *multiStatusResponse = (OCConnectionDAVMultistatusResponse *)parsedObject;
+								OCHTTPDAVMultistatusResponse *multiStatusResponse = (OCHTTPDAVMultistatusResponse *)parsedObject;
 
 								if (multiStatusResponse.path != nil)
 								{

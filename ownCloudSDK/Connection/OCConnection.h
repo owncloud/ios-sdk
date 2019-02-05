@@ -33,14 +33,14 @@
 @class OCAuthenticationMethod;
 @class OCItem;
 @class OCConnectionQueue;
-@class OCConnectionRequest;
+@class OCHTTPRequest;
 @class OCConnection;
 @class OCCertificate;
 @class OCHTTPStatus;
 
-typedef void(^OCConnectionEphermalResultHandler)(OCConnectionRequest *request, NSError *error);
+typedef void(^OCConnectionEphermalResultHandler)(OCHTTPRequest *request, NSError *error);
 typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *error);
-typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
+typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -55,10 +55,10 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCConnectionStateConnected
 };
 
-typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
+typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 {
-	OCConnectionRequestInstructionDeliver,		//!< Deliver the request as usual
-	OCConnectionRequestInstructionReschedule	//!< Stop processing of request and reschedule it
+	OCHTTPRequestInstructionDeliver,		//!< Deliver the request as usual
+	OCHTTPRequestInstructionReschedule	//!< Stop processing of request and reschedule it
 };
 
 @protocol OCConnectionDelegate <NSObject>
@@ -66,17 +66,17 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 @optional
 - (void)connection:(OCConnection *)connection handleError:(NSError *)error;
 
-- (void)connection:(OCConnection *)connection request:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+- (void)connection:(OCConnection *)connection request:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 - (void)connectionChangedState:(OCConnection *)connection;
 
-- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCConnectionRequestInstruction)defaultInstruction;
+- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
 @end
 
 @protocol OCConnectionHostSimulator <NSObject>
 
-- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCConnectionRequest *)request completionHandler:(void(^)(NSError *error))completionHandler;
+- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCHTTPRequest *)request completionHandler:(void(^)(NSError *error))completionHandler;
 
 @end
 
@@ -149,7 +149,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 - (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests on all queues
 
 #pragma mark - Server Status
-- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
+- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
 
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
@@ -173,17 +173,17 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 
 - (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)sendRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler;
+- (NSProgress *)sendRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler;
 
 #pragma mark - Sending requests synchronously
-- (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue;
+- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue;
 
 #pragma mark - Resume background sessions
 - (void)resumeBackgroundSessions;
 - (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
 
 #pragma mark - Rescheduling support
-- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error;
+- (OCHTTPRequestInstruction)instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error;
 
 @end
 
@@ -199,9 +199,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionRequestInstruction)
 #pragma mark - JOBS
 @interface OCConnection (Jobs)
 
-- (OCConnectionJobID)startNewJobWithRequest:(OCConnectionRequest *)request; //!< Starts a new job with the provided request
-- (void)addRequest:(OCConnectionRequest *)request toJob:(OCConnectionJobID)jobID; //!< Adds another request to the job
-- (void)completedRequest:(OCConnectionRequest *)request forJob:(OCConnectionJobID)jobID; //!< Marks a request as completed for the job
+- (OCConnectionJobID)startNewJobWithRequest:(OCHTTPRequest *)request; //!< Starts a new job with the provided request
+- (void)addRequest:(OCHTTPRequest *)request toJob:(OCConnectionJobID)jobID; //!< Adds another request to the job
+- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCConnectionJobID)jobID; //!< Marks a request as completed for the job
 
 - (BOOL)jobExists:(OCConnectionJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
 
@@ -303,4 +303,4 @@ extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!
 
 #import "OCClassSettings.h"
 
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"

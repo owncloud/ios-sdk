@@ -40,7 +40,7 @@
 	      with:@selector(ocm_ba_deauthenticateConnection:withCompletionHandler:)];
 }
 
-+ (void)ocm_ba_detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)ocm_ba_detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	OCMockAuthenticationMethodBasicAuthDetectAuthenticationMethodSupportForConnectionBlock mockBlock;
 

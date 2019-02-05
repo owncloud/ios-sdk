@@ -28,7 +28,7 @@
 	NSArray <Class> *authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses];
 	NSMutableSet <NSURL *> *detectionURLs = [NSMutableSet set];
 	NSMutableDictionary <NSString *, NSArray <NSURL *> *> *detectionURLsByMethod = [NSMutableDictionary dictionary];
-	NSMutableDictionary <NSURL *, OCConnectionRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
+	NSMutableDictionary <NSURL *, OCHTTPRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
 	
 	if (completionHandler==nil) { return; }
 	
@@ -78,13 +78,13 @@
 	
 	for (NSURL *detectionURL in detectionURLs)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:detectionURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
 		
 		request.skipAuthorization = YES;
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		
-		request.ephermalResultHandler = ^(OCConnectionRequest *request, NSError *error) {
+		request.ephermalResultHandler = ^(OCHTTPRequest *request, NSError *error) {
 			dispatch_group_leave(preloadCompletionGroup);
 		};
 		
@@ -106,12 +106,12 @@
 			
 			if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
 			{
-				NSMutableDictionary <NSURL *, OCConnectionRequest *> *resultsByURL = [NSMutableDictionary dictionary];
+				NSMutableDictionary <NSURL *, OCHTTPRequest *> *resultsByURL = [NSMutableDictionary dictionary];
 				
 				// Compile pre-load results
 				for (NSURL *detectionURL in detectionURLsByMethod[authMethodIdentifier])
 				{
-					OCConnectionRequest *request;
+					OCHTTPRequest *request;
 					
 					if ((request = [detectionRequestsByDetectionURL objectForKey:detectionURL]) != nil)
 					{
@@ -138,7 +138,7 @@
 			
 			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionURL.count > 0))
 			{
-				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCConnectionRequest *request, BOOL * _Nonnull stop) {
+				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCHTTPRequest *request, BOOL * _Nonnull stop) {
 					if (request.responseRedirectURL != nil)
 					{
 						NSURL *alternativeBaseURL;

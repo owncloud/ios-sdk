@@ -17,7 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 #import "OCKeyValueStore.h"
 #import "OCLogTag.h"
 
@@ -33,12 +33,12 @@
 	NSString *_urlSessionIdentifier;
 	BOOL _urlSessionInvalidated;
 
-	NSMutableArray<OCConnectionRequest *> *_queuedRequests;
+	NSMutableArray<OCHTTPRequest *> *_queuedRequests;
 
-	NSMutableArray<OCConnectionRequest *> *_runningRequests;
-	NSMutableSet<OCConnectionRequestGroupID> *_runningRequestsGroupIDs;
+	NSMutableArray<OCHTTPRequest *> *_runningRequests;
+	NSMutableSet<OCHTTPRequestGroupID> *_runningRequestsGroupIDs;
 	
-	NSMutableDictionary<NSNumber*, OCConnectionRequest *> *_runningRequestsByTaskIdentifier;
+	NSMutableDictionary<NSNumber*, OCHTTPRequest *> *_runningRequestsByTaskIdentifier;
 
 	NSMutableDictionary<NSString*, OCCertificate *> *_cachedCertificatesByHostnameAndPort;
 	
@@ -69,20 +69,20 @@
 - (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests
 
 #pragma mark - Queue management
-- (void)enqueueRequest:(OCConnectionRequest *)request; //!< Adds a request to the queue
-- (void)cancelRequest:(OCConnectionRequest *)request; //!< Cancels a request
-- (void)cancelRequestsWithGroupID:(OCConnectionRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests belonging to a certain group ID. Including running requests if NO is passed for queuedOnly.
+- (void)enqueueRequest:(OCHTTPRequest *)request; //!< Adds a request to the queue
+- (void)cancelRequest:(OCHTTPRequest *)request; //!< Cancels a request
+- (void)cancelRequestsWithGroupID:(OCHTTPRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests belonging to a certain group ID. Including running requests if NO is passed for queuedOnly.
 
 - (void)scheduleQueuedRequests; //!< Manually trigger a scheduling run
 
 #pragma mark - Result handling
-- (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error; //!< Submits a finished request to handling.
+- (void)handleFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error; //!< Submits a finished request to handling.
 
 #pragma mark - Request retrieval
-- (OCConnectionRequest *)requestForTask:(NSURLSessionTask *)task; //!< Uses the tasks's taskIdentifier to find the running request it belongs to. If the request has been restored (i.e. from a background NSURLSession) and doesn't have a task, the task is re-attached to the request.
+- (OCHTTPRequest *)requestForTask:(NSURLSessionTask *)task; //!< Uses the tasks's taskIdentifier to find the running request it belongs to. If the request has been restored (i.e. from a background NSURLSession) and doesn't have a task, the task is re-attached to the request.
 
 #pragma mark - Certificate Evaluation
-- (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+- (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCHTTPRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 @end
 

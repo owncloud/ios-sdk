@@ -1,5 +1,5 @@
 //
-//  OCConnectionDAVMultistatusResponse.m
+//  OCHTTPDAVMultistatusResponse.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 13.11.18.
@@ -16,10 +16,10 @@
  *
  */
 
-#import "OCConnectionDAVMultistatusResponse.h"
+#import "OCHTTPDAVMultistatusResponse.h"
 #import "OCXMLParserNode.h"
 
-@implementation OCConnectionDAVMultistatusResponse
+@implementation OCHTTPDAVMultistatusResponse
 
 #pragma mark - OCXMLObjectCreation conformance
 + (NSString *)xmlElementNameForObjectCreation
@@ -29,7 +29,7 @@
 
 + (instancetype)instanceFromNode:(OCXMLParserNode *)responseNode xmlParser:(OCXMLParser *)xmlParser
 {
-	OCConnectionDAVMultistatusResponse *response = nil;
+	OCHTTPDAVMultistatusResponse *response = nil;
 	NSMutableDictionary <OCHTTPStatus *, NSMutableDictionary <NSString *, id> *> *valueForPropByStatusCode = nil;
 
 	OCPath itemPath;
@@ -83,7 +83,7 @@
 			}];
 
 			// Compile response item
-			response = [[OCConnectionDAVMultistatusResponse alloc] initResponseForPath:itemPath withValuesForPropByStatusCode:valueForPropByStatusCode];
+			response = [[OCHTTPDAVMultistatusResponse alloc] initResponseForPath:itemPath withValuesForPropByStatusCode:valueForPropByStatusCode];
 		}
 	}
 

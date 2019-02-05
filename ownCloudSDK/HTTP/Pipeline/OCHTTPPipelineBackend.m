@@ -1,5 +1,5 @@
 //
-//  OCConnectionPipelineBackend.h
+//  OCHTTPPipelineBackend.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 04.02.19.
@@ -16,20 +16,27 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCBookmark.h"
-#import "OCSQLiteDB.h"
+#import "OCHTTPPipelineBackend.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation OCHTTPPipelineBackend
 
-@interface OCConnectionPipelineBackend : NSObject
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark sqlDB:(OCSQLiteDB *)sqlDB
 {
-	OCBookmark *_bookmark;
-	OCSQLiteDB *_sqlDB;
+	if ((self = [self init]) != nil)
+	{
+		_bookmark = bookmark;
+
+		if (sqlDB != nil)
+		{
+			_sqlDB = sqlDB;
+		}
+		else
+		{
+			_sqlDB = [[OCSQLiteDB alloc] initWithURL:nil];
+		}
+	}
+
+	return (self);
 }
 
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark sqlDB:(OCSQLiteDB *)sqlDB;
-
 @end
-
-NS_ASSUME_NONNULL_END

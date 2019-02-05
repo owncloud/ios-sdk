@@ -58,11 +58,11 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAuthenticationMethodOAuth2.h>
 
 #import <ownCloudSDK/OCConnection.h>
-#import <ownCloudSDK/OCConnectionRequest.h>
-#import <ownCloudSDK/OCConnectionDAVRequest.h>
+#import <ownCloudSDK/OCHTTPRequest.h>
+#import <ownCloudSDK/OCHTTPDAVRequest.h>
 #import <ownCloudSDK/OCConnectionQueue.h>
 
-#import <ownCloudSDK/OCConnectionDAVMultistatusResponse.h>
+#import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
 #import <ownCloudSDK/OCWaitCondition.h>
 

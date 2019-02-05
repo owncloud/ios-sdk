@@ -25,12 +25,12 @@
 #pragma mark - User info
 - (NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
-	OCConnectionRequest *request;
+	OCHTTPRequest *request;
 
-	request = [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
+	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
 	[request setValue:@"json" forParameter:@"format"];
 
-	[self sendRequest:request toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+	[self sendRequest:request toQueue:self.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
 		if (error != nil)
 		{
 			completionHandler(error, nil);

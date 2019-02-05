@@ -1,5 +1,5 @@
 //
-//  OCConnectionDAVRequest.h
+//  OCHTTPDAVRequest.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 05.03.18.
@@ -16,12 +16,12 @@
  *
  */
 
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 #import "OCXMLNode.h"
-#import "OCConnectionDAVMultistatusResponse.h"
+#import "OCHTTPDAVMultistatusResponse.h"
 #import "OCTypes.h"
 
-@interface OCConnectionDAVRequest : OCConnectionRequest <NSXMLParserDelegate>
+@interface OCHTTPDAVRequest : OCHTTPRequest <NSXMLParserDelegate>
 {
 	OCXMLNode *_xmlRequest;
 
@@ -31,7 +31,7 @@
 	NSError *_parseError;
 	
 	NSMutableArray <NSString *> *_parseTagPath;
-	NSMutableDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *_parsedResponsesByPath;
+	NSMutableDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *_parsedResponsesByPath;
 
 	NSString *_parseCurrentElement;
 }
@@ -44,6 +44,6 @@
 - (OCXMLNode *)xmlRequestPropAttribute;
 
 - (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors;
-- (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
+- (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
 
 @end

@@ -1,5 +1,5 @@
 //
-//  OCConnectionRequest.m
+//  OCHTTPRequest.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 06.02.18.
@@ -16,12 +16,12 @@
  *
  */
 
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 #import "OCConnectionQueue.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
 
-@implementation OCConnectionRequest
+@implementation OCHTTPRequest
 
 @synthesize urlSessionTask = _urlSessionTask;
 @synthesize progress = _progress;
@@ -72,9 +72,9 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		__weak OCConnectionRequest *weakSelf = self;
+		__weak OCHTTPRequest *weakSelf = self;
 		
-		self.method = OCConnectionRequestMethodGET;
+		self.method = OCHTTPMethodGET;
 	
 		self.headerFields = [NSMutableDictionary new];
 		self.parameters = [NSMutableDictionary new];
@@ -96,7 +96,7 @@
 
 + (instancetype)requestWithURL:(NSURL *)url
 {
-	OCConnectionRequest *request = [self new];
+	OCHTTPRequest *request = [self new];
 	
 	request.url = url;
 	
@@ -162,7 +162,7 @@
 	}
 }
 
-- (void)setPriority:(OCConnectionRequestPriority)priority
+- (void)setPriority:(OCHTTPRequestPriority)priority
 {
 	_priority = priority;
 
@@ -181,7 +181,7 @@
 	// Handle parameters and set effective URL
 	if (_parameters.count > 0)
 	{
-		if ([_method isEqual:OCConnectionRequestMethodPOST])
+		if ([_method isEqual:OCHTTPMethodPOST])
 		{
 			// POST Method: Generate body from parameters
 			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
@@ -595,17 +595,17 @@
 
 @end
 
-OCConnectionRequestMethod OCConnectionRequestMethodGET = @"GET";
-OCConnectionRequestMethod OCConnectionRequestMethodPOST = @"POST";
-OCConnectionRequestMethod OCConnectionRequestMethodHEAD = @"HEAD";
-OCConnectionRequestMethod OCConnectionRequestMethodPUT = @"PUT";
-OCConnectionRequestMethod OCConnectionRequestMethodDELETE = @"DELETE";
-OCConnectionRequestMethod OCConnectionRequestMethodMKCOL = @"MKCOL";
-OCConnectionRequestMethod OCConnectionRequestMethodOPTIONS = @"OPTIONS";
-OCConnectionRequestMethod OCConnectionRequestMethodMOVE = @"MOVE";
-OCConnectionRequestMethod OCConnectionRequestMethodCOPY = @"COPY";
-OCConnectionRequestMethod OCConnectionRequestMethodPROPFIND = @"PROPFIND";
-OCConnectionRequestMethod OCConnectionRequestMethodPROPPATCH = @"PROPPATCH";
-OCConnectionRequestMethod OCConnectionRequestMethodLOCK = @"LOCK";
-OCConnectionRequestMethod OCConnectionRequestMethodUNLOCK = @"UNLOCK";
+OCHTTPMethod OCHTTPMethodGET = @"GET";
+OCHTTPMethod OCHTTPMethodPOST = @"POST";
+OCHTTPMethod OCHTTPMethodHEAD = @"HEAD";
+OCHTTPMethod OCHTTPMethodPUT = @"PUT";
+OCHTTPMethod OCHTTPMethodDELETE = @"DELETE";
+OCHTTPMethod OCHTTPMethodMKCOL = @"MKCOL";
+OCHTTPMethod OCHTTPMethodOPTIONS = @"OPTIONS";
+OCHTTPMethod OCHTTPMethodMOVE = @"MOVE";
+OCHTTPMethod OCHTTPMethodCOPY = @"COPY";
+OCHTTPMethod OCHTTPMethodPROPFIND = @"PROPFIND";
+OCHTTPMethod OCHTTPMethodPROPPATCH = @"PROPPATCH";
+OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
+OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 

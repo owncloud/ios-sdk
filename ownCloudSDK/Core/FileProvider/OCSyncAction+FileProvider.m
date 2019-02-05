@@ -43,8 +43,8 @@
 
 				OCLogDebug(@"record %@ will register URLTask for %@", syncContext.syncRecord, item);
 
-				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
-					if (event == OCConnectionRequestObserverEventTaskResume)
+				OCHTTPRequestObserver observer = [^(OCHTTPRequest *request, OCHTTPRequestObserverEvent event) {
+					if (event == OCHTTPRequestObserverEventTaskResume)
 					{
 						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
 							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);

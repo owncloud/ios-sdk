@@ -739,7 +739,7 @@
 				groupID : TEXT		- ID of the OCConnectionQueue group this request belongs to (optional)
 				urlSessionID : TEXT	- ID of the URL Session this request belongs to
 				taskID : INTEGER	- URL Session Task ID of the request when scheduled, NULL otherwise (optional)
-				requestData : BLOB	- data of the serialized OCConnectionRequest
+				requestData : BLOB	- data of the serialized OCHTTPRequest
 			*/
 			@"CREATE TABLE requests (rqID INTEGER PRIMARY KEY AUTOINCREMENT, jobID TEXT, groupID TEXT, urlSessionID TEXT NOT NULL, taskID INTEGER, requestData BLOB NOT NULL)"
 		]

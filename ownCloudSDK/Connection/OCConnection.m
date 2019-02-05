@@ -20,12 +20,12 @@
 
 #import "OCConnection.h"
 #import "OCConnection+OCConnectionQueue.h"
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 #import "OCConnectionQueue+BackgroundSessionRecovery.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
-#import "OCConnectionDAVRequest.h"
+#import "OCHTTPDAVRequest.h"
 #import "OCIssue.h"
 #import "OCLogger.h"
 #import "OCItem.h"
@@ -228,7 +228,7 @@
 }
 
 #pragma mark - Prepare request
-- (OCConnectionRequest *)prepareRequest:(OCConnectionRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue
+- (OCHTTPRequest *)prepareRequest:(OCHTTPRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue
 {
 	// Insert X-Request-ID for tracing
 	if ([[self classSettingForOCClassSettingsKey:OCConnectionInsertXRequestTracingID] boolValue])
@@ -257,7 +257,7 @@
 }
 
 #pragma mark - Handle certificate challenges
-- (void)handleValidationOfRequest:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+- (void)handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
 	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
 	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
@@ -323,7 +323,7 @@
 }
 
 #pragma mark - Post process request after it finished
-- (NSError *)postProcessFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error
+- (NSError *)postProcessFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error
 {
 	if (!request.skipAuthorization)
 	{
@@ -363,7 +363,7 @@
 	if ((authMethod = self.authenticationMethod) != nil)
 	{
 		NSProgress *connectProgress = [NSProgress new];
-		OCConnectionRequest *statusRequest;
+		OCHTTPRequest *statusRequest;
 
 		// Set up progress
 		connectProgress.totalUnitCount = connectProgress.completedUnitCount = 0; // Indeterminate
@@ -383,7 +383,7 @@
 		// Reusable Completion Handler
 		OCConnectionEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCConnectionEphermalResultHandler) = ^(OCConnectionEphermalResultHandler resultHandler)
 		{
-			return ^(OCConnectionRequest *request, NSError *error){
+			return ^(OCHTTPRequest *request, NSError *error){
 				if (error == nil)
 				{
 					if (request.responseHTTPStatus.isSuccess)
@@ -460,11 +460,11 @@
 		};
 
 		// Check status
-		if ((statusRequest =  [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
 			statusRequest.skipAuthorization = YES;
 
-			[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
+			[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, NSError *error) {
 				if ((error == nil) && (request.responseHTTPStatus.isSuccess))
 				{
 					NSError *jsonError = nil;
@@ -517,9 +517,9 @@
 							else
 							{
 								// Connection authenticated. Now send an authenticated WebDAV request
-								OCConnectionDAVRequest *davRequest;
+								OCHTTPDAVRequest *davRequest;
 								
-								davRequest = [OCConnectionDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+								davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
 								
 								[davRequest.xmlRequestPropAttribute addChildren:@[
 									[OCXMLNode elementWithName:@"D:supported-method-set"],
@@ -527,7 +527,7 @@
 								
 								// OCLogDebug(@"%@", davRequest.xmlRequest.XMLString);
 
-								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCConnectionRequest *request, NSError *error) {
+								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, NSError *error) {
 									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
 									{
 										// DAV request executed successfully
@@ -670,15 +670,15 @@
 }
 
 #pragma mark - Server Status
-- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
+- (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
-	OCConnectionRequest *statusRequest;
+	OCHTTPRequest *statusRequest;
 
-	if ((statusRequest =  [OCConnectionRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+	if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
 		statusRequest.skipAuthorization = YES;
 
-		[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+		[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
 			if ((error == nil) && (request.responseHTTPStatus.isSuccess))
 			{
 				NSError *jsonError = nil;
@@ -707,9 +707,9 @@
 }
 
 #pragma mark - Metadata actions
-- (OCConnectionDAVRequest *)_propfindDAVRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
+- (OCHTTPDAVRequest *)_propfindDAVRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
-	OCConnectionDAVRequest *davRequest;
+	OCHTTPDAVRequest *davRequest;
 	NSURL *url = endpointURL;
 
 	if (endpointURL == nil)
@@ -722,7 +722,7 @@
 		url = [url URLByAppendingPathComponent:path];
 	}
 
-	if ((davRequest = [OCConnectionDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
+	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		[davRequest.xmlRequestPropAttribute addChildren:@[
 			[OCXMLNode elementWithName:@"D:resourcetype"],
@@ -767,7 +767,7 @@
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	OCConnectionDAVRequest *davRequest;
+	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
@@ -811,7 +811,7 @@
 	return(progress);
 }
 
-- (void)_handleRetrieveItemListAtPathResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleRetrieveItemListAtPathResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
@@ -842,7 +842,7 @@
 
 			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			items = [((OCConnectionDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
+			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
 
 			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{
@@ -907,9 +907,9 @@
 
 	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:uploadURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:uploadURL];
 
-		request.method = OCConnectionRequestMethodPUT;
+		request.method = OCHTTPMethodPUT;
 
 		// Set Content-Type
 		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
@@ -1013,7 +1013,7 @@
 	return(progress);
 }
 
-- (void)_handleUploadFileResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	if (request.responseHTTPStatus.isSuccess)
 	{
@@ -1084,9 +1084,9 @@
 
 	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:downloadURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:downloadURL];
 
-		request.method = OCConnectionRequestMethodGET;
+		request.method = OCHTTPMethodGET;
 		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDownloadItemResult:error:);
@@ -1119,7 +1119,7 @@
 	return(progress);
 }
 
-- (void)_handleDownloadItemResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleDownloadItemResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 
@@ -1232,9 +1232,9 @@
 
 		if (contentNodes.count > 0)
 		{
-			OCConnectionDAVRequest *patchRequest;
+			OCHTTPDAVRequest *patchRequest;
 
-			if ((patchRequest = [OCConnectionDAVRequest proppatchRequestWithURL:itemURL content:contentNodes]) != nil)
+			if ((patchRequest = [OCHTTPDAVRequest proppatchRequestWithURL:itemURL content:contentNodes]) != nil)
 			{
 				patchRequest.requiredSignals = self.actionSignals;
 				patchRequest.resultHandlerAction = @selector(_handleUpdateItemResult:error:);
@@ -1269,7 +1269,7 @@
 	return (progress);
 }
 
-- (void)_handleUpdateItemResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleUpdateItemResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
@@ -1284,12 +1284,12 @@
 		{
 			if (request.responseHTTPStatus.isSuccess)
 			{
-				NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *multistatusResponsesByPath;
+				NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *multistatusResponsesByPath;
 				NSDictionary <OCItemPropertyName, NSString *> *responseTagsByPropertyName = request.userInfo[@"responseTagsByPropertyName"];
 
-				if (((multistatusResponsesByPath = [((OCConnectionDAVRequest *)request) multistatusResponsesForBasePath:endpointURL.path]) != nil) && (responseTagsByPropertyName != nil))
+				if (((multistatusResponsesByPath = [((OCHTTPDAVRequest *)request) multistatusResponsesForBasePath:endpointURL.path]) != nil) && (responseTagsByPropertyName != nil))
 				{
-					OCConnectionDAVMultistatusResponse *multistatusResponse;
+					OCHTTPDAVMultistatusResponse *multistatusResponse;
 
 					OCLogDebug(@"Response parsed: %@", multistatusResponsesByPath);
 
@@ -1342,9 +1342,9 @@
 
 	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:fullFolderPath]) != nil)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:createFolderURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:createFolderURL];
 
-		request.method = OCConnectionRequestMethodMKCOL;
+		request.method = OCHTTPMethodMKCOL;
 		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleCreateFolderResult:error:);
@@ -1371,7 +1371,7 @@
 	return(progress);
 }
 
-- (void)_handleCreateFolderResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleCreateFolderResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 	BOOL postEvent = YES;
@@ -1434,7 +1434,7 @@
 {
 	NSProgress *progress;
 
-	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	if ((progress = [self _copyMoveMethod:OCHTTPMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
 		progress.eventType = OCEventTypeMove;
 
@@ -1455,7 +1455,7 @@
 {
 	NSProgress *progress;
 
-	if ((progress = [self _copyMoveMethod:OCConnectionRequestMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	if ((progress = [self _copyMoveMethod:OCHTTPMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
 		progress.eventType = OCEventTypeCopy;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
@@ -1464,7 +1464,7 @@
 	return (progress);
 }
 
-- (NSProgress *)_copyMoveMethod:(OCConnectionRequestMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)_copyMoveMethod:(OCHTTPMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	NSProgress *progress = nil;
 	NSURL *sourceItemURL, *destinationURL;
@@ -1474,7 +1474,7 @@
 	{
 		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
 		{
-			OCConnectionRequest *request = [OCConnectionRequest requestWithURL:sourceItemURL];
+			OCHTTPRequest *request = [OCHTTPRequest requestWithURL:sourceItemURL];
 
 			request.method = requestMethod;
 			request.requiredSignals = self.actionSignals;
@@ -1507,7 +1507,7 @@
 	return(progress);
 }
 
-- (void)_handleCopyMoveItemResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleCopyMoveItemResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 	BOOL postEvent = YES;
@@ -1601,9 +1601,9 @@
 
 	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:deleteItemURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:deleteItemURL];
 
-		request.method = OCConnectionRequestMethodDELETE;
+		request.method = OCHTTPMethodDELETE;
 		request.requiredSignals = self.actionSignals;
 
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
@@ -1634,7 +1634,7 @@
 	return(progress);
 }
 
-- (void)_handleDeleteItemResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleDeleteItemResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 
@@ -1714,7 +1714,7 @@
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget
 {
 	NSURL *url = nil;
-	OCConnectionRequest *request = nil;
+	OCHTTPRequest *request = nil;
 	NSError *error = nil;
 	NSProgress *progress = nil;
 
@@ -1732,7 +1732,7 @@
 			}
 
 			// Compose request
-			request = [OCConnectionRequest requestWithURL:url];
+			request = [OCHTTPRequest requestWithURL:url];
 
 			request.groupID = item.path.stringByDeletingLastPathComponent;
 			request.priority = NSURLSessionTaskPriorityDefault;
@@ -1753,7 +1753,7 @@
 			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
 
 			// Compose request
-			request = [OCConnectionRequest requestWithURL:url];
+			request = [OCHTTPRequest requestWithURL:url];
 			/*
 
 			// Not supported for OC < 10.0.9
@@ -1803,7 +1803,7 @@
 	return(progress);
 }
 
-- (void)_handleRetrieveThumbnailResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleRetrieveThumbnailResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
 
@@ -1865,7 +1865,7 @@
 }
 
 #pragma mark - Sending requests
-- (NSProgress *)sendRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler
+- (NSProgress *)sendRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler
 {
 	request.ephermalResultHandler = ephermalResultHandler;
 	request.resultHandlerAction = @selector(_handleSendRequestResult:error:);
@@ -1886,7 +1886,7 @@
 	return (request.progress);
 }
 
-- (void)_handleSendRequestResult:(OCConnectionRequest *)request error:(NSError *)error
+- (void)_handleSendRequestResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	if (request.ephermalResultHandler != nil)
 	{
@@ -1895,12 +1895,12 @@
 }
 
 #pragma mark - Sending requests synchronously
-- (NSError *)sendSynchronousRequest:(OCConnectionRequest *)request toQueue:(OCConnectionQueue *)queue
+- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue
 {
 	__block NSError *retError = nil;
 
 	OCSyncExec(requestCompletion, {
-		[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+		[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
 			retError = error;
 			OCSyncExecDone(requestCompletion);
 		}];
@@ -1951,9 +1951,9 @@
 }
 
 #pragma mark - Rescheduling support
-- (OCConnectionRequestInstruction)instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error
+- (OCHTTPRequestInstruction)instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error
 {
-	OCConnectionRequestInstruction instruction = OCConnectionRequestInstructionDeliver;
+	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
 
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:error:defaultsTo:)])
 	{

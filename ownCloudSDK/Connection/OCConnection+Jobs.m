@@ -31,17 +31,17 @@
 	  could not yet be handled by / used to update the SyncEngine.
 */
 
-- (OCConnectionJobID)startNewJobWithRequest:(OCConnectionRequest *)request
+- (OCConnectionJobID)startNewJobWithRequest:(OCHTTPRequest *)request
 {
 	return NSUUID.UUID.UUIDString;
 }
 
-- (void)addRequest:(OCConnectionRequest *)request toJob:(OCConnectionJobID)jobID
+- (void)addRequest:(OCHTTPRequest *)request toJob:(OCConnectionJobID)jobID
 {
 
 }
 
-- (void)completedRequest:(OCConnectionRequest *)request forJob:(OCConnectionJobID)jobID
+- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCConnectionJobID)jobID
 {
 
 }

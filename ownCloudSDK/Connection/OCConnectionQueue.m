@@ -137,12 +137,12 @@
 
 - (void)cancelNonCriticalRequests
 {
-	NSMutableArray <OCConnectionRequest *> *cancelRequests = [NSMutableArray new];
+	NSMutableArray <OCHTTPRequest *> *cancelRequests = [NSMutableArray new];
 
 	// Find and cancel non-critical requests
 	@synchronized(self)
 	{
-		for (OCConnectionRequest *runningRequest in _runningRequests)
+		for (OCHTTPRequest *runningRequest in _runningRequests)
 		{
 			if (runningRequest.isNonCritial)
 			{
@@ -151,7 +151,7 @@
 		}
 	}
 
-	for (OCConnectionRequest *cancelRequest in cancelRequests)
+	for (OCHTTPRequest *cancelRequest in cancelRequests)
 	{
 		OCLogDebug(@"Cancelling non-critical request=%@ to speed up connection queue shutdown", cancelRequest);
 		[cancelRequest cancel];
@@ -159,7 +159,7 @@
 }
 
 #pragma mark - Queue management
-- (void)enqueueRequest:(OCConnectionRequest *)request
+- (void)enqueueRequest:(OCHTTPRequest *)request
 {
 	@synchronized(self)
 	{
@@ -170,12 +170,12 @@
 	[self scheduleQueuedRequests];
 }
 
-- (void)cancelRequest:(OCConnectionRequest *)request
+- (void)cancelRequest:(OCHTTPRequest *)request
 {
 	[request cancel];
 }
 
-- (void)cancelRequestsWithGroupID:(OCConnectionRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly
+- (void)cancelRequestsWithGroupID:(OCHTTPRequestGroupID)groupID queuedOnly:(BOOL)queuedOnly
 {
 	// Stub implementation
 }
@@ -213,16 +213,16 @@
 					else
 					{
 						// Authentication is not available => end scheduled requests that need authentication with error
-						[self _finishQueuedRequestsWithError:error filter:^BOOL(OCConnectionRequest *request) {
+						[self _finishQueuedRequestsWithError:error filter:^BOOL(OCHTTPRequest *request) {
 							return (!request.skipAuthorization);
 						}];
 					}
 				}];
 			}
 
-			NSMutableSet <OCConnectionRequestGroupID> *pendingGroupIDs = nil;
+			NSMutableSet <OCHTTPRequestGroupID> *pendingGroupIDs = nil;
 		
-			for (OCConnectionRequest *queuedRequest in queuedRequests)
+			for (OCHTTPRequest *queuedRequest in queuedRequests)
 			{
 				if ((_maxConcurrentRequests==0) || (_runningRequests.count < _maxConcurrentRequests))
 				{
@@ -273,9 +273,9 @@
 	}
 }
 
-- (void)_scheduleRequest:(OCConnectionRequest *)scheduleRequest
+- (void)_scheduleRequest:(OCHTTPRequest *)scheduleRequest
 {
-	OCConnectionRequest *request = scheduleRequest;
+	OCHTTPRequest *request = scheduleRequest;
 	NSError *error = nil;
 
 	// Remove request from queue
@@ -400,7 +400,7 @@
 						// Notify request observer
 						if (request.requestObserver != nil)
 						{
-							resumeTask = !request.requestObserver(request, OCConnectionRequestObserverEventTaskResume);
+							resumeTask = !request.requestObserver(request, OCHTTPRequestObserverEventTaskResume);
 						}
 					}
 
@@ -444,15 +444,15 @@
 	[self saveState];
 }
 
-- (void)_prepareRequestForScheduling:(OCConnectionRequest *)request
+- (void)_prepareRequestForScheduling:(OCHTTPRequest *)request
 {
 	[request prepareForSchedulingInQueue:self];
 }
 
-- (void)_finishQueuedRequestsWithError:(NSError *)error filter:(BOOL(^)(OCConnectionRequest *request))requestFilter
+- (void)_finishQueuedRequestsWithError:(NSError *)error filter:(BOOL(^)(OCHTTPRequest *request))requestFilter
 {
 	[self _queueBlock:^{
-		NSMutableArray <OCConnectionRequest *> *finishRequests = nil;
+		NSMutableArray <OCHTTPRequest *> *finishRequests = nil;
 	
 		@synchronized(self)
 		{
@@ -460,7 +460,7 @@
 			{
 				if (requestFilter!=nil)
 				{
-					for (OCConnectionRequest *request in self->_queuedRequests)
+					for (OCHTTPRequest *request in self->_queuedRequests)
 					{
 						if (!requestFilter(request))
 						{
@@ -473,7 +473,7 @@
 			}
 		}
 		
-		for (OCConnectionRequest *request in finishRequests)
+		for (OCHTTPRequest *request in finishRequests)
 		{
 			[self _handleFinishedRequest:request error:error scheduleQueuedRequests:NO];
 		}
@@ -489,14 +489,14 @@
 }
 
 #pragma mark - Result handling
-- (void)handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error
+- (void)handleFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error
 {
 	[self _queueBlock:^{
 		[self _handleFinishedRequest:request error:error scheduleQueuedRequests:YES];
 	}];
 }
 
-- (void)_handleFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error scheduleQueuedRequests:(BOOL)scheduleQueuedRequests
+- (void)_handleFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error scheduleQueuedRequests:(BOOL)scheduleQueuedRequests
 {
 	BOOL reschedulingAllowed = scheduleQueuedRequests;
 	NSError *inError = error;
@@ -574,20 +574,20 @@
 	}
 
 	// Determine request instruction
-	OCConnectionRequestInstruction requestInstruction = OCConnectionRequestInstructionDeliver;
+	OCHTTPRequestInstruction requestInstruction = OCHTTPRequestInstructionDeliver;
 
 	if ((_connection!=nil) && reschedulingAllowed)
 	{
 		requestInstruction = [_connection instructionForFinishedRequest:request error:inError];
 	}
 
-	if (requestInstruction == OCConnectionRequestInstructionDeliver)
+	if (requestInstruction == OCHTTPRequestInstructionDeliver)
 	{
 		// Deliver Finished Request
 		if ((_connection!=nil) && (request.resultHandlerAction != NULL))
 		{
 			// Below is identical to [_connection performSelector:request.resultHandlerAction withObject:request withObject:error], but in an ARC-friendly manner.
-			void (*impFunction)(id, SEL, OCConnectionRequest *, NSError *) = (void *)[_connection methodForSelector:request.resultHandlerAction];
+			void (*impFunction)(id, SEL, OCHTTPRequest *, NSError *) = (void *)[_connection methodForSelector:request.resultHandlerAction];
 
 			if (impFunction != NULL)
 			{
@@ -633,7 +633,7 @@
 	}
 
 	// Reschedule request if instructed so
-	if ((requestInstruction == OCConnectionRequestInstructionReschedule) && reschedulingAllowed)
+	if ((requestInstruction == OCHTTPRequestInstructionReschedule) && reschedulingAllowed)
 	{
 		[request scrubForRescheduling];
 
@@ -664,9 +664,9 @@
 }
 
 #pragma mark - Request retrieval
-- (OCConnectionRequest *)requestForTask:(NSURLSessionTask *)task
+- (OCHTTPRequest *)requestForTask:(NSURLSessionTask *)task
 {
-	OCConnectionRequest *request = nil;
+	OCHTTPRequest *request = nil;
 	
 	if (task != nil)
 	{
@@ -691,7 +691,7 @@
 
 - (void)handleFinishedTask:(NSURLSessionTask *)task error:(NSError *)error
 {
-	OCConnectionRequest *request;
+	OCHTTPRequest *request;
 	
 	if ((request = [self requestForTask:task]) != nil)
 	{
@@ -716,7 +716,7 @@
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
 {
 	[self _queueBlock:^{
-		OCConnectionRequest *request = [self requestForTask:dataTask];
+		OCHTTPRequest *request = [self requestForTask:dataTask];
 		
 		if (!request.downloadRequest)
 		{
@@ -742,7 +742,7 @@
 
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
 {
-	OCConnectionRequest *request;
+	OCHTTPRequest *request;
 
 	if ((request = [self requestForTask:downloadTask]) != nil)
 	{
@@ -802,7 +802,7 @@
 	}
 }
 
-- (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCConnectionRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+- (void)evaluateCertificate:(OCCertificate *)certificate forRequest:(OCHTTPRequest *)request proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
 	[certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *validationError) {
 		[self _queueBlock:^{
@@ -847,7 +847,7 @@
 		{
 			// Handle server trust challenges
 			OCCertificate *certificate = [OCCertificate certificateWithTrustRef:serverTrust hostName:task.currentRequest.URL.host];
-			OCConnectionRequest *request = nil;
+			OCHTTPRequest *request = nil;
 			NSURL *requestURL = task.currentRequest.URL;
 			NSString *hostnameAndPort;
 
@@ -1116,12 +1116,12 @@
 		[self _queueBlock:^{
 			@synchronized(self)
 			{
-				NSMutableArray<OCConnectionRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:self->_runningRequests];
+				NSMutableArray<OCHTTPRequest *> *droppedRequests = [[NSMutableArray alloc] initWithArray:self->_runningRequests];
 
 				// Compare tasks against list of runningRequests
 				for (NSURLSessionTask *task in tasks)
 				{
-					OCConnectionRequest *runningRequest;
+					OCHTTPRequest *runningRequest;
 
 					if ((runningRequest = [self requestForTask:task]) != nil)
 					{
@@ -1131,7 +1131,7 @@
 				}
 
 				// Handle "running" requests dropped by the NSURLSession
-				for (OCConnectionRequest *droppedRequest in droppedRequests)
+				for (OCHTTPRequest *droppedRequest in droppedRequests)
 				{
 					// End with OCErrorRequestDroppedByURLSession
 					[self _handleFinishedRequest:droppedRequest error:OCError(OCErrorRequestDroppedByURLSession) scheduleQueuedRequests:NO];

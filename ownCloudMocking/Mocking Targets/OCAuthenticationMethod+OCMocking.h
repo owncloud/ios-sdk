@@ -22,7 +22,7 @@
 @interface OCAuthenticationMethod (OCMocking)
 
 // Counterparts of mockable methods
-+ (void)ocm_detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler;
++ (void)ocm_detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler;
 
 - (void)ocm_generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler;
 
@@ -33,7 +33,7 @@
 @end
 
 // Block and mock location for every mockable method
-typedef void(^OCMockAuthenticationMethodDetectAuthenticationMethodSupportForConnectionBlock)(OCConnection *connection, NSDictionary<NSURL *, OCConnectionRequest *> *serverResponses, OCAuthenticationMethodDetectionOptions options, void(^completionHandler)(OCAuthenticationMethodIdentifier identifier, BOOL supported));
+typedef void(^OCMockAuthenticationMethodDetectAuthenticationMethodSupportForConnectionBlock)(OCConnection *connection, NSDictionary<NSURL *, OCHTTPRequest *> *serverResponses, OCAuthenticationMethodDetectionOptions options, void(^completionHandler)(OCAuthenticationMethodIdentifier identifier, BOOL supported));
 extern OCMockLocation OCMockLocationAuthenticationMethodDetectAuthenticationMethodSupportForConnection;
 
 typedef void(^OCMockAuthenticationMethodGenerateBookmarkAuthenticiationDataWithConnectionBlock)(OCConnection *connection, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData));

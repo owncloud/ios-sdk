@@ -1,5 +1,5 @@
 //
-//  OCConnectionDAVMultistatusResponse.h
+//  OCHTTPDAVMultistatusResponse.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 13.11.18.
@@ -23,7 +23,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCConnectionDAVMultistatusResponse : NSObject <OCXMLObjectCreation>
+@interface OCHTTPDAVMultistatusResponse : NSObject <OCXMLObjectCreation>
 
 				  	// status code	   	// propName    // string value or NSNull.null
 @property(strong,readonly) NSDictionary <OCHTTPStatus *, NSDictionary <NSString *, id> *> *valueForPropByStatusCode;

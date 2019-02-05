@@ -19,13 +19,13 @@
 
 #import "OCHostSimulator.h"
 
-@interface OCConnectionRequest (OCHostSimulatorInjection)
+@interface OCHTTPRequest (OCHostSimulatorInjection)
 
 - (void)applySimulatorResponse:(OCHostSimulatorResponse *)response;
 
 @end
 
-@implementation OCConnectionRequest (OCHostSimulatorInjection)
+@implementation OCHTTPRequest (OCHostSimulatorInjection)
 
 - (void)applySimulatorResponse:(OCHostSimulatorResponse *)response
 {
@@ -55,7 +55,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		self.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		self.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 			// By default, answer all unroutable requests with 404 Not Found codes
 
 			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeNOT_FOUND headers:nil contentType:@"text/html" body:@"<html><body>Page not found</body></html>"]);
@@ -67,13 +67,13 @@
 	return(self);
 }
 
-- (void)_applyResponse:(OCHostSimulatorResponse *)response toRequest:(OCConnectionRequest *)request
+- (void)_applyResponse:(OCHostSimulatorResponse *)response toRequest:(OCHTTPRequest *)request
 {
 	[request applySimulatorResponse:response];
 	request.responseCertificate = self.certificate;
 }
 
-- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCConnectionRequest *)request completionHandler:(void(^)(NSError *error))completionHandler
+- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCHTTPRequest *)request completionHandler:(void(^)(NSError *error))completionHandler
 {
 	OCHostSimulatorResponse *response = nil;
 	BOOL handlesRequest = YES;

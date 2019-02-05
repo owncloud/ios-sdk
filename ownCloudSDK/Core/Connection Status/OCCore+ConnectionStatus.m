@@ -302,7 +302,7 @@
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
 }
 
-- (OCConnectionRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCConnectionRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCConnectionRequestInstruction)defaultInstruction
+- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
 {
 	if (error != nil)
 	{
@@ -313,7 +313,7 @@
 
 			if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{
-				return (OCConnectionRequestInstructionReschedule);
+				return (OCHTTPRequestInstructionReschedule);
 			}
 		}
 	}
@@ -324,7 +324,7 @@
 
 		if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 		{
-			return (OCConnectionRequestInstructionReschedule);
+			return (OCHTTPRequestInstructionReschedule);
 		}
 	}
 

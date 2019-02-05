@@ -21,12 +21,12 @@
 @interface OCConnection (OCConnectionQueue)
 
 #pragma mark - Prepare request
-- (OCConnectionRequest *)prepareRequest:(OCConnectionRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue;
+- (OCHTTPRequest *)prepareRequest:(OCHTTPRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue;
 
 #pragma mark - Handle certificate challenges
-- (void)handleValidationOfRequest:(OCConnectionRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+- (void)handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 #pragma mark - Post process request after it finished
-- (NSError *)postProcessFinishedRequest:(OCConnectionRequest *)request error:(NSError *)error;
+- (NSError *)postProcessFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error;
 
 @end

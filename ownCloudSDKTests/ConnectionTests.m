@@ -48,13 +48,13 @@
 
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://www.apple.com/"]];
 	OCConnection *connection;
-	OCConnectionRequest *request;
+	OCHTTPRequest *request;
 	
 	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
 	
-	request = [OCConnectionRequest requestWithURL:bookmark.url];
+	request = [OCHTTPRequest requestWithURL:bookmark.url];
 	
-	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
 		[expectAnswer fulfill];
 
 		OCLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
@@ -914,7 +914,7 @@
 	XCTAssert(connection.serverProductName == nil);
 	XCTAssert(connection.serverLongProductVersionString == nil);
 
-	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo) {
 		XCTAssert(statusInfo!=nil);
 		XCTAssert(statusInfo[@"edition"]!=nil);
 		XCTAssert(statusInfo[@"installed"]!=nil);

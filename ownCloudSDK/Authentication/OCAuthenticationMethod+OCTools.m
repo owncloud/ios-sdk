@@ -37,7 +37,7 @@
 	return(nil);
 }
 
-+ (void)detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	BOOL methodDetected = NO;
 
@@ -45,7 +45,7 @@
 	{
 		wwwAuthenticateMethod = [wwwAuthenticateMethod lowercaseString];
 	
-		for (OCConnectionRequest *detectionRequest in serverResponses.allValues)
+		for (OCHTTPRequest *detectionRequest in serverResponses.allValues)
 		{
 			NSString *wwwAuthenticateHeader;
 			
