@@ -158,6 +158,8 @@
 		DC4B116E2208306C0062BCDD /* OCConnectionPipeline.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B116C2208306C0062BCDD /* OCConnectionPipeline.m */; };
 		DC4B1171220830F20062BCDD /* OCConnectionPipelineBackend.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B116F220830F20062BCDD /* OCConnectionPipelineBackend.h */; };
 		DC4B1172220830F20062BCDD /* OCConnectionPipelineBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B1170220830F20062BCDD /* OCConnectionPipelineBackend.m */; };
+		DC4B11FE220996480062BCDD /* OCProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B11FC220996480062BCDD /* OCProgress.h */; };
+		DC4B11FF220996480062BCDD /* OCProgress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B11FD220996480062BCDD /* OCProgress.m */; };
 		DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */; };
 		DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */; };
@@ -673,6 +675,8 @@
 		DC4B116C2208306C0062BCDD /* OCConnectionPipeline.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionPipeline.m; sourceTree = "<group>"; };
 		DC4B116F220830F20062BCDD /* OCConnectionPipelineBackend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCConnectionPipelineBackend.h; sourceTree = "<group>"; };
 		DC4B1170220830F20062BCDD /* OCConnectionPipelineBackend.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCConnectionPipelineBackend.m; sourceTree = "<group>"; };
+		DC4B11FC220996480062BCDD /* OCProgress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCProgress.h; sourceTree = "<group>"; };
+		DC4B11FD220996480062BCDD /* OCProgress.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProgress.m; sourceTree = "<group>"; };
 		DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemVersionIdentifier.h; sourceTree = "<group>"; };
 		DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemVersionIdentifier.m; sourceTree = "<group>"; };
 		DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandDelete.m"; sourceTree = "<group>"; };
@@ -1301,6 +1305,15 @@
 			path = Queries;
 			sourceTree = "<group>";
 		};
+		DC4B11FB220996330062BCDD /* Progress */ = {
+			isa = PBXGroup;
+			children = (
+				DC4B11FD220996480062BCDD /* OCProgress.m */,
+				DC4B11FC220996480062BCDD /* OCProgress.h */,
+			);
+			path = Progress;
+			sourceTree = "<group>";
+		};
 		DC54396620D51138002BF291 /* Actions */ = {
 			isa = PBXGroup;
 			children = (
@@ -1898,6 +1911,7 @@
 				DC855706204FEA0A00189B9A /* Bookmark */,
 				DC855707204FEA1500189B9A /* Authentication */,
 				DC855708204FEA3400189B9A /* Connection */,
+				DC4B11FB220996330062BCDD /* Progress */,
 				DC19BFC621CA67B1007C20D1 /* Issues */,
 				DC1D4D3420DBD557005A3DFC /* File Handling */,
 				DC85570D204FEAC500189B9A /* Events */,
@@ -2172,6 +2186,7 @@
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
+				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
 				DCC8F9F22028559600EB6701 /* OCItem.h in Headers */,
@@ -2619,6 +2634,7 @@
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
+				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
