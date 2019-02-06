@@ -43,6 +43,6 @@ typedef NSString* OCSyncActionIdentifier NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
 typedef NSNumber* OCSyncRecordID;
 
-typedef NSString* OCConnectionJobID; //!< Identifier uniquely identifying a job a connection has been tasked with
+// typedef NSString* OCJobID; //!< Identifier uniquely identifying a job. Typically used as persistent ID across requests to track a job's connectivity status.
 
 #endif /* OCTypes_h */

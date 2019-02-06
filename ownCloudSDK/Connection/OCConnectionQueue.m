@@ -394,7 +394,10 @@
 								absoluteURLString = @"";
 							}
 
-							request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
+							if (request.earliestBeginDate == nil) // Don't create system activity for long-running requests
+							{
+								request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
+							}
 						}
 
 						// Notify request observer

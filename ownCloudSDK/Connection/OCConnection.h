@@ -57,7 +57,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 {
-	OCHTTPRequestInstructionDeliver,		//!< Deliver the request as usual
+	OCHTTPRequestInstructionDeliver,	//!< Deliver the request as usual
 	OCHTTPRequestInstructionReschedule	//!< Stop processing of request and reschedule it
 };
 
@@ -196,16 +196,16 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 - (BOOL)meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals;
 @end
 
-#pragma mark - JOBS
-@interface OCConnection (Jobs)
-
-- (OCConnectionJobID)startNewJobWithRequest:(OCHTTPRequest *)request; //!< Starts a new job with the provided request
-- (void)addRequest:(OCHTTPRequest *)request toJob:(OCConnectionJobID)jobID; //!< Adds another request to the job
-- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCConnectionJobID)jobID; //!< Marks a request as completed for the job
-
-- (BOOL)jobExists:(OCConnectionJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
-
-@end
+//#pragma mark - JOBS
+//@interface OCConnection (Jobs)
+//
+//- (OCJobID)startNewJobWithRequest:(OCHTTPRequest *)request; //!< Starts a new job with the provided request
+//- (void)addRequest:(OCHTTPRequest *)request toJob:(OCJobID)jobID; //!< Adds another request to the job
+//- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCJobID)jobID; //!< Marks a request as completed for the job
+//
+//- (BOOL)jobExists:(OCJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
+//
+//@end
 
 #pragma mark - SETUP
 @interface OCConnection (Setup)

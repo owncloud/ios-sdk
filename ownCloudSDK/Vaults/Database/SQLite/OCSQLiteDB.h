@@ -93,6 +93,7 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 - (void)executeQuery:(OCSQLiteQuery *)query; //!< Executes a query. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
 - (void)executeTransaction:(OCSQLiteTransaction *)query; //!< Executes a transaction. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
 - (void)executeOperation:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
+- (nullable NSError *)executeOperationSync:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock; //!< Executes a block in the internal context synchronously. WARNING: This call may block or deadlock. Use with caution!
 
 #pragma mark - Error handling
 - (nullable NSError *)lastError;

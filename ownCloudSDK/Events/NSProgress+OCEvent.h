@@ -29,8 +29,8 @@
 
 - (OCLocalID)localID;
 - (void)setLocalID:(OCLocalID)localID;
-
-- (OCConnectionJobID)jobID;
-- (void)setJobID:(OCConnectionJobID)jobID;
+//
+//- (OCJobID)jobID;
+//- (void)setJobID:(OCJobID)jobID;
 
 @end

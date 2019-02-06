@@ -30,25 +30,25 @@
 	- keep in mind that a non-existant JobID may occur in the event a request just finished successfully (removing the last request from the table), but the result
 	  could not yet be handled by / used to update the SyncEngine.
 */
-
-- (OCConnectionJobID)startNewJobWithRequest:(OCHTTPRequest *)request
-{
-	return NSUUID.UUID.UUIDString;
-}
-
-- (void)addRequest:(OCHTTPRequest *)request toJob:(OCConnectionJobID)jobID
-{
-
-}
-
-- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCConnectionJobID)jobID
-{
-
-}
-
-- (BOOL)jobExists:(OCConnectionJobID)jobID
-{
-	return (YES);
-}
-
+//
+//- (OCJobID)startNewJobWithRequest:(OCHTTPRequest *)request
+//{
+//	return NSUUID.UUID.UUIDString;
+//}
+//
+//- (void)addRequest:(OCHTTPRequest *)request toJob:(OCJobID)jobID
+//{
+//
+//}
+//
+//- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCJobID)jobID
+//{
+//
+//}
+//
+//- (BOOL)jobExists:(OCJobID)jobID
+//{
+//	return (YES);
+//}
+//
 @end

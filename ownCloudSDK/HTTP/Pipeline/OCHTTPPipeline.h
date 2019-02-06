@@ -18,29 +18,75 @@
 
 #import <Foundation/Foundation.h>
 #import "OCHTTPPipelineBackend.h"
+#import "OCConnection.h"
+#import "OCHostSimulator.h"
+#import "OCProgress.h"
 
-typedef NSUUID* OCConnectionPipelinePartitionIdentifier;
+@class OCHTTPPipeline;
+
+typedef NSString* OCHTTPPipelineID;
+typedef NSString* OCHTTPPipelinePartitionID;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol OCConnectionPipelinePartition <NSObject>
+@protocol OCHTTPPipelinePartitionHandler <NSObject>
 
-@property(strong,readonly) OCConnectionPipelinePartitionIdentifier partitionIdentifier;
+@property(strong,readonly) OCHTTPPipelinePartitionID partitionID; //!< The ID of the partition
+@property(nullable,strong,readonly) OCCertificate *certificate; //!< The certificate used by the partition.
+
+#pragma mark - Requirements
+- (void)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals;
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline canProvideAuthenticationForRequests:(void(^)(NSError *error, BOOL authenticationIsAvailable))availabilityHandler;
+
+#pragma mark - Scheduling
+- (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
+- (nullable id<OCConnectionHostSimulator>)pipeline:(OCHTTPPipeline *)pipeline hostSimulatorForRequest:(OCHTTPRequest *)request;
+- (nullable NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedRequest:(OCHTTPRequest *)request error:(nullable NSError *)error;
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(nullable NSError *)error;
+
+#pragma mark - Certificate validation
+- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 @end
 
-@interface OCHTTPPipeline : NSObject
+@interface OCHTTPPipeline : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate>
 {
-	NSURLSession *_session;
+	OCHTTPPipelineID _identifier;
+
+	NSURLSession *_urlSession;
+	NSString *_urlSessionIdentifier;
+
+	NSMutableDictionary <NSString*, NSURLSession*> *_attachedURLSessionsByIdentifier;
+
 	OCHTTPPipelineBackend *_backend;
 
-	NSMutableDictionary <OCConnectionPipelinePartitionIdentifier, id<OCConnectionPipelinePartition>> *_partitionsByIdentifier;
+	NSMutableDictionary <OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
 }
 
-- (void)sendRequest:(OCHTTPRequest *)request;
+@property(strong,readonly) OCHTTPPipelineID identifier;
+@property(strong,readonly) NSString *bundleIdentifier;
 
-- (void)addPartition:(id<OCConnectionPipelinePartition>)partition;
-- (void)removePartition:(id<OCConnectionPipelinePartition>)partition;
+@property(strong,nullable,readonly) NSString *urlSessionIdentifier;
+
+#pragma mark - Init
+- (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration;
+
+#pragma mark - Request handling
+- (void)enqueueRequest:(OCHTTPRequest *)request forPartitionID:(OCHTTPPipelinePartitionID)partitionID; //!< Enqueues a request
+- (void)cancelRequest:(OCHTTPRequest *)request; //!< Cancels a request
+- (void)cancelRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests for a partitionID (or only those in the queue if queuedOnly is YES)
+
+#pragma mark - Attach & detach partition handlers
+- (void)attachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler;
+
+- (void)detachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler;
+- (void)detachPartitionHandlerForPartitionID:(OCHTTPPipelinePartitionID)partitionID;
+
+#pragma mark - Shutdown
+- (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler;
+- (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler;
+
+- (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests
 
 @end
 

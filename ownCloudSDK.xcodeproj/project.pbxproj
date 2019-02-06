@@ -184,6 +184,13 @@
 		DC6CF8242195D7C90013B9F9 /* OCSyncActionUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CF8222195D7C90013B9F9 /* OCSyncActionUpdate.h */; };
 		DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */; };
 		DC6DB88221C26F4D00189B21 /* XCTestCase+Tagging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */; };
+		DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */; };
+		DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */; };
+		DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */; };
+		DC701478220AE696009D4FD9 /* OCHTTPPipelineTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DC701476220AE696009D4FD9 /* OCHTTPPipelineTask.m */; };
+		DC70147F220B0650009D4FD9 /* OCHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DC70147D220B0650009D4FD9 /* OCHTTPResponse.h */; };
+		DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC70147E220B0650009D4FD9 /* OCHTTPResponse.m */; };
+		DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = DC701482220B090B009D4FD9 /* OCHTTPTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CCC2141306100FE43CA /* OCSyncActionCopyMove.h */; };
 		DC708CCF2141306100FE43CA /* OCSyncActionCopyMove.m in Sources */ = {isa = PBXBuildFile; fileRef = DC708CCD2141306100FE43CA /* OCSyncActionCopyMove.m */; };
 		DC708CDC214135C000FE43CA /* OCSyncActionCreateFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = DC708CDA214135C000FE43CA /* OCSyncActionCreateFolder.h */; };
@@ -702,6 +709,13 @@
 		DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionUpdate.m; sourceTree = "<group>"; };
 		DC6DB88021C26F4D00189B21 /* XCTestCase+Tagging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XCTestCase+Tagging.h"; sourceTree = "<group>"; };
 		DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "XCTestCase+Tagging.m"; sourceTree = "<group>"; };
+		DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineManager.h; sourceTree = "<group>"; };
+		DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineManager.m; sourceTree = "<group>"; };
+		DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTask.h; sourceTree = "<group>"; };
+		DC701476220AE696009D4FD9 /* OCHTTPPipelineTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineTask.m; sourceTree = "<group>"; };
+		DC70147D220B0650009D4FD9 /* OCHTTPResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPResponse.h; sourceTree = "<group>"; };
+		DC70147E220B0650009D4FD9 /* OCHTTPResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPResponse.m; sourceTree = "<group>"; };
+		DC701482220B090B009D4FD9 /* OCHTTPTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPTypes.h; sourceTree = "<group>"; };
 		DC708CCC2141306100FE43CA /* OCSyncActionCopyMove.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionCopyMove.h; sourceTree = "<group>"; };
 		DC708CCD2141306100FE43CA /* OCSyncActionCopyMove.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionCopyMove.m; sourceTree = "<group>"; };
 		DC708CDA214135C000FE43CA /* OCSyncActionCreateFolder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionCreateFolder.h; sourceTree = "<group>"; };
@@ -1317,9 +1331,11 @@
 		DC4B12002209C24F0062BCDD /* HTTP */ = {
 			isa = PBXGroup;
 			children = (
+				DC701482220B090B009D4FD9 /* OCHTTPTypes.h */,
 				DC7014172209C570009D4FD9 /* Pipeline */,
 				DC7014192209C59D009D4FD9 /* Status */,
 				DC7014182209C57B009D4FD9 /* Request */,
+				DC701481220B0865009D4FD9 /* Response */,
 			);
 			path = HTTP;
 			sourceTree = "<group>";
@@ -1374,8 +1390,12 @@
 		DC7014172209C570009D4FD9 /* Pipeline */ = {
 			isa = PBXGroup;
 			children = (
+				DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */,
+				DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */,
 				DC4B116C2208306C0062BCDD /* OCHTTPPipeline.m */,
 				DC4B116B2208306C0062BCDD /* OCHTTPPipeline.h */,
+				DC701476220AE696009D4FD9 /* OCHTTPPipelineTask.m */,
+				DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */,
 				DC4B1170220830F20062BCDD /* OCHTTPPipelineBackend.m */,
 				DC4B116F220830F20062BCDD /* OCHTTPPipelineBackend.h */,
 			);
@@ -1404,6 +1424,15 @@
 				DC3C7FDF21A6EDE00064D193 /* NSError+OCHTTPStatus.h */,
 			);
 			path = Status;
+			sourceTree = "<group>";
+		};
+		DC701481220B0865009D4FD9 /* Response */ = {
+			isa = PBXGroup;
+			children = (
+				DC70147E220B0650009D4FD9 /* OCHTTPResponse.m */,
+				DC70147D220B0650009D4FD9 /* OCHTTPResponse.h */,
+			);
+			path = Response;
 			sourceTree = "<group>";
 		};
 		DC708CD02141306B00FE43CA /* CopyMove */ = {
@@ -2085,6 +2114,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */,
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
@@ -2116,6 +2146,7 @@
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCParentPath.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
+				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
@@ -2139,10 +2170,12 @@
 				DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */,
 				DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */,
 				DC07C29C2124526000B815A4 /* OCExtensionContext.h in Headers */,
+				DC70147F220B0650009D4FD9 /* OCHTTPResponse.h in Headers */,
 				DCC8F9F6202855A200EB6701 /* OCShare.h in Headers */,
 				DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */,
 				DCC8FA152029EB9400EB6701 /* OCHTTPRequest.h in Headers */,
 				DC39DC512041CA9B00189B9A /* OCConnection+OCConnectionQueue.h in Headers */,
+				DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */,
 				DC3C7FE121A6EDE00064D193 /* NSError+OCHTTPStatus.h in Headers */,
 				DC19BFE921CBACB0007C20D1 /* OCProcessSession.h in Headers */,
 				DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */,
@@ -2591,6 +2624,7 @@
 				DC708CE9214135FE00FE43CA /* OCSyncActionUpload.m in Sources */,
 				DCC8FA102029C6A400EB6701 /* OCQueryChangeSet.m in Sources */,
 				DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */,
+				DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,
 				DC07C297212450DC00B815A4 /* OCExtensionLocation.m in Sources */,
@@ -2646,6 +2680,7 @@
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
 				DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
+				DC701478220AE696009D4FD9 /* OCHTTPPipelineTask.m in Sources */,
 				DCEA7D982093556600F25223 /* OCCache.m in Sources */,
 				DC07C29D2124526000B815A4 /* OCExtensionContext.m in Sources */,
 				DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */,
@@ -2669,6 +2704,7 @@
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,
+				DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,

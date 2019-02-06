@@ -49,16 +49,16 @@
 {
 	[self setUserInfoObject:localID forKey:@"_localID"];
 }
-
-- (OCConnectionJobID)jobID
-{
-	return (self.userInfo[@"_jobID"]);
-}
-
-- (void)setJobID:(OCConnectionJobID)jobID
-{
-	[self setUserInfoObject:jobID forKey:@"_jobID"];
-}
+//
+//- (OCJobID)jobID
+//{
+//	return (self.userInfo[@"_jobID"]);
+//}
+//
+//- (void)setJobID:(OCJobID)jobID
+//{
+//	[self setUserInfoObject:jobID forKey:@"_jobID"];
+//}
 
 
 @end

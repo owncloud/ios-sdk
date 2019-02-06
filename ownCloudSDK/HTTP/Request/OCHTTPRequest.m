@@ -23,6 +23,8 @@
 
 @implementation OCHTTPRequest
 
+@synthesize identifier = _identifier;
+
 @synthesize urlSessionTask = _urlSessionTask;
 @synthesize progress = _progress;
 
@@ -73,7 +75,9 @@
 	if ((self = [super init]) != nil)
 	{
 		__weak OCHTTPRequest *weakSelf = self;
-		
+
+		_identifier = NSUUID.UUID.UUIDString;
+
 		self.method = OCHTTPMethodGET;
 	
 		self.headerFields = [NSMutableDictionary new];
@@ -531,6 +535,8 @@
 	{
 		NSString *resultHandlerActionString;
 
+		_identifier		= [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
+
 		self.bookmarkUUID	= [decoder decodeObjectOfClass:[NSUUID class] forKey:@"bookmarkUUID"];
 		self.urlSessionTaskIdentifier = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"urlSessionTaskIdentifier"];
 
@@ -566,6 +572,8 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeObject:_identifier 	forKey:@"identifier"];
+
 	[coder encodeObject:_bookmarkUUID	forKey:@"bookmarkUUID"];
 	[coder encodeObject:_urlSessionTaskIdentifier forKey:@"urlSessionTaskIdentifier"];
 

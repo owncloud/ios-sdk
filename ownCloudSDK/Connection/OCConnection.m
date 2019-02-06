@@ -286,7 +286,7 @@
 
 			if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
 			{
-				// strictBookmarkCertificateEnforcement => enfore bookmark certificate where available
+				// strictBookmarkCertificateEnforcement => enforce bookmark certificate where available
 				doProceed = fulfillsBookmarkRequirements;
 			}
 			else

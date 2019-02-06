@@ -20,15 +20,8 @@
 #import "OCEventTarget.h"
 #import "OCBookmark.h"
 #import "OCConnection.h"
-#import "OCHTTPStatus.h"
 #import "OCCertificate.h"
-
-typedef NSString* OCHTTPMethod NS_TYPED_ENUM;
-typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPHeaderFields;
-typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPRequestParameters;
-
-typedef float OCHTTPRequestPriority;
-typedef NSString* OCHTTPRequestGroupID;
+#import "OCHTTPTypes.h"
 
 typedef SEL OCHTTPRequestResultHandlerAction; //!< Selector following the format -handleResultForRequest:(OCHTTPRequest *)request error:(NSError *)error;
 
@@ -41,6 +34,8 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 
 @interface OCHTTPRequest : NSObject <NSSecureCoding>
 {
+	OCHTTPRequestID _identifier;
+
 	NSURLSessionTask *_urlSessionTask;
 	NSProgress *_progress;
 	
@@ -91,8 +86,10 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 	NSError *_error;
 }
 
+@property(strong,readonly) OCHTTPRequestID identifier; //!< Unique ID (auto-generated) for every request
+
 @property(strong) NSURLSessionTask *urlSessionTask;	//!< NSURLSessionTask used to perform the request [not serialized]
-@property(strong) NSProgress *progress;			//!< Progress object that tracks progress and provides cancellation ability/status [not serialized]
+@property(strong) NSProgress *progress;		//!< Progress object that tracks progress and provides cancellation ability/status [not serialized]
 
 @property(strong) NSNumber *urlSessionTaskIdentifier;	//!< Value of NSURLSessionTask.taskIdentifier
 
@@ -129,9 +126,6 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 @property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.
 @property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (== if downloadedFileURL was set before starting the download).
 
-@property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
-@property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
-
 @property(assign) BOOL isNonCritial;			//!< Request that are marked non-critical are allowed to be cancelled to speed up shutting down the connection queue
 
 @property(readonly) BOOL cancelled;
@@ -164,6 +158,8 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 
 #pragma mark - Response
 @property(strong,nonatomic) OCHTTPStatus *responseHTTPStatus; //!< HTTP Status delivered with response
+@property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
+@property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
 
 - (NSHTTPURLResponse *)response; //!< Convenience accessor for urlSessionTask.response
 

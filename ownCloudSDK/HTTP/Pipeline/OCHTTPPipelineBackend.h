@@ -19,16 +19,30 @@
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
 #import "OCSQLiteDB.h"
+#import "OCHTTPTypes.h"
+
+@class OCHTTPPipelineTask;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCHTTPPipelineBackend : NSObject
 {
-	OCBookmark *_bookmark;
 	OCSQLiteDB *_sqlDB;
+	BOOL isOpen;
 }
 
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark sqlDB:(OCSQLiteDB *)sqlDB;
+- (instancetype)initWithSQLDB:(nullable OCSQLiteDB *)sqlDB;
+
+#pragma mark - Open & Close
+- (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler;
+- (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler;
+
+#pragma mark - Task access
+- (NSError *)addPipelineTask:(OCHTTPPipelineTask *)task;
+- (NSError *)updatePipelineTask:(OCHTTPPipelineTask *)task;
+- (NSError *)removePipelineTask:(OCHTTPPipelineTask *)task;
+
+- (OCHTTPPipelineTask *)retrieveTaskForID:(OCHTTPPipelineTaskID)taskID error:(NSError **)outDBError;
 
 @end
 

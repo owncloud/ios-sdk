@@ -54,3 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#define OCSQLiteNullProtect(object) (((object)!=nil) ? (object) : NSNull.null)
+#define OCSQLiteNullResolved(object) ([(object) isKindOfClass:[NSNull class]] ? nil : (object))

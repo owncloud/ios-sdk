@@ -23,6 +23,7 @@
 #import "OCSQLiteTransaction.h"
 #import "OCSQLiteMigration.h"
 #import "OCSQLiteTableSchema.h"
+#import "OCMacros.h"
 
 #import "OCExtension+License.h"
 
@@ -503,6 +504,29 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			completionHandler(self,error);
 		}
 	}];
+}
+
+- (nullable NSError *)executeOperationSync:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock
+{
+	__block NSError *error = nil;
+
+	if ([self isOnSQLiteThread])
+	{
+		// On SQLite thread: execute right away
+		error = operationBlock(self);
+	}
+	else
+	{
+		// Not on SQLite thread: wait for operatoin to complete
+		OCSyncExec(waitForOperation, {
+			[self queueBlock:^{
+				error = operationBlock(self);
+				OCSyncExecDone(waitForOperation);
+			}];
+		});
+	}
+
+	return (error);
 }
 
 - (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
