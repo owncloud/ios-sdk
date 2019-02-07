@@ -38,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isAnyInstanceOfSessionProcessRunning:(OCProcessSession *)session; //!< Returns YES if *a* copy of the process described in the session is currently running (it doesn't have to be the instance described in the session)
 
 - (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)session; //!< Returns the latest OCProcessSession with the same bundleIdentifier. If none was found, returns the session that was passed in.
+- (nullable OCProcessSession *)findLatestSessionForProcessWithBundleIdentifier:(NSString *)bundleIdentifier; //!< Returns the first session found in .sessions to match the provided bundleIdentifier.
 
 - (void)pingSession:(OCProcessSession *)session withTimeout:(NSTimeInterval)timeout completionHandler:(void(^)(BOOL responded, OCProcessSession *latestSession))completionHandler;
 

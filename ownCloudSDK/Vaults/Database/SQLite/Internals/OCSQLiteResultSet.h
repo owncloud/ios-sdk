@@ -22,10 +22,12 @@
 @class OCSQLiteStatement;
 @class OCSQLiteResultSet;
 
+typedef NSDictionary<NSString*,id<NSObject>>* OCSQLiteRowDictionary;
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef id(^OCSQLiteResultSetColumnFilter)(id object);
-typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString*, id<NSObject>> *rowDictionary, BOOL *stop);
+typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUInteger line, OCSQLiteRowDictionary rowDictionary, BOOL *stop);
 
 @interface OCSQLiteResultSet : NSObject
 {
@@ -34,15 +36,17 @@ typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUIntege
 
 	NSArray<NSString *> *_columnNames;
 	NSMutableDictionary<NSNumber *, OCSQLiteResultSetColumnFilter> *filtersByColumnIndex;
+
+	BOOL _endOfResultSetReached;
 }
 
 @property(strong) OCSQLiteStatement *statement;
 
 - (instancetype)initWithStatement:(OCSQLiteStatement *)statement;
 
-- (BOOL)nextRow:(NSError **)error;
+- (NSUInteger)iterateUsing:(OCSQLiteResultSetIterator)iterator error:( NSError * _Nullable *)outError; //!< Iterate over the result set using an interator block
 
-- (NSUInteger)iterateUsing:(OCSQLiteResultSetIterator)iterator error:(NSError **)outError;
+- (OCSQLiteRowDictionary)nextRowDictionaryWithError:(NSError * _Nullable *)outError; //!< Retrieve the next row in the result set as a dictionary.
 
 @end
 

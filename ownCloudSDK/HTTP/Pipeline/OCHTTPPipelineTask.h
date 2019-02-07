@@ -21,13 +21,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, OCHTTPPipelineTaskState)
-{
-	OCHTTPPipelineTaskStatePending,
-	OCHTTPPipelineTaskStateInProcess,
-	OCHTTPPipelineTaskStateCompleted
-};
-
 @interface OCHTTPPipelineTask : NSObject
 {
 	OCHTTPRequest *_request;

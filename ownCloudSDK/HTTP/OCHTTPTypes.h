@@ -28,6 +28,13 @@ typedef NSString* OCHTTPRequestGroupID;
 
 typedef NSNumber* OCHTTPPipelineTaskID;
 
+typedef NS_ENUM(NSUInteger, OCHTTPPipelineTaskState)
+{
+	OCHTTPPipelineTaskStatePending,	//!< The task is pending scheduling in the NSURLSession
+	OCHTTPPipelineTaskStateRunning, //!< The task is being executed in the NSURLSession
+	OCHTTPPipelineTaskStateCompleted //!< The task was returned by the NSURLSession as completed
+};
+
 @class OCHTTPRequest;
 @class OCHTTPResponse;
 

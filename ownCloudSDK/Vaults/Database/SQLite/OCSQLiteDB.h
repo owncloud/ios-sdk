@@ -103,7 +103,7 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - Miscellaneous
 - (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.
-+ (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a memory limit on the 
++ (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a soft heap memory limit for SQLite
 
 @end
 

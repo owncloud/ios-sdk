@@ -21,6 +21,7 @@
 #import "OCSQLiteDB.h"
 #import "OCHTTPTypes.h"
 
+@class OCHTTPPipeline;
 @class OCHTTPPipelineTask;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -43,6 +44,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSError *)removePipelineTask:(OCHTTPPipelineTask *)task;
 
 - (OCHTTPPipelineTask *)retrieveTaskForID:(OCHTTPPipelineTaskID)taskID error:(NSError **)outDBError;
+- (OCHTTPPipelineTask *)retrieveTaskForPipeline:(OCHTTPPipeline *)pipeline URLSession:(NSURLSession *)urlSession task:(NSURLSessionTask *)urlSessionTask error:(NSError **)outDBError;
+
+- (NSError *)enumerateTasksForPipeline:(OCHTTPPipeline *)pipeline enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
+- (NSError *)enumerateTasksWhere:(nullable NSDictionary<NSString *,id<NSObject>> *)whereConditions orderBy:(nullable NSString *)orderBy limit:(nullable NSString *)limit enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
+
+- (NSNumber *)numberOfRequestsWithState:(OCHTTPPipelineTaskState)state inPipeline:(OCHTTPPipeline *)pipeline error:(NSError **)outDBError;
+
+#pragma mark - Execution on DB thread
+- (void)queueBlock:(dispatch_block_t)block;
 
 @end
 

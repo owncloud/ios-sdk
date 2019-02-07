@@ -40,7 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Scheduling
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
+
 - (nullable id<OCConnectionHostSimulator>)pipeline:(OCHTTPPipeline *)pipeline hostSimulatorForRequest:(OCHTTPRequest *)request;
+
 - (nullable NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedRequest:(OCHTTPRequest *)request error:(nullable NSError *)error;
 - (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(nullable NSError *)error;
 
@@ -51,20 +53,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCHTTPPipeline : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate>
 {
-	OCHTTPPipelineID _identifier;
-
 	NSURLSession *_urlSession;
-	NSString *_urlSessionIdentifier;
 
-	NSMutableDictionary <NSString*, NSURLSession*> *_attachedURLSessionsByIdentifier;
+	NSMutableDictionary<NSString*, NSURLSession*> *_attachedURLSessionsByIdentifier;
 
 	OCHTTPPipelineBackend *_backend;
 
-	NSMutableDictionary <OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
+	NSMutableDictionary<OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
+	NSMutableArray<OCHTTPPipelinePartitionID> *_attachedParititionHandlerIDs;
+
+	NSMutableArray<OCHTTPRequestGroupID> *_recentlyScheduledGroupIDs;
+
+	BOOL _needsScheduling;
 }
 
 @property(strong,readonly) OCHTTPPipelineID identifier;
 @property(strong,readonly) NSString *bundleIdentifier;
+
+@property(assign) NSUInteger maximumConcurrentRequests; //!< The maximum number of concurrently running requests. A value of 0 means no limit.
 
 @property(strong,nullable,readonly) NSString *urlSessionIdentifier;
 
@@ -77,10 +83,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)cancelRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests for a partitionID (or only those in the queue if queuedOnly is YES)
 
 #pragma mark - Attach & detach partition handlers
-- (void)attachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler;
+- (void)attachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler completionHandler:(nullable OCCompletionHandler)completionHandler;  //!< Attaches a partition handler to the pipeline. The partition handler will receive any outstanding responses.
 
-- (void)detachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler;
-- (void)detachPartitionHandlerForPartitionID:(OCHTTPPipelinePartitionID)partitionID;
+- (void)detachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler completionHandler:(nullable OCCompletionHandler)completionHandler;	//!< Detaches a partition handler from the pipeline. The pipeline guarantees that - once the completionHandler was called - no delegate calls will be performed anymore.
+- (void)detachPartitionHandlerForPartitionID:(OCHTTPPipelinePartitionID)partitionID completionHandler:(nullable OCCompletionHandler)completionHandler;	//!< Convenience method to detach a partition handler by its partitionID.
 
 #pragma mark - Shutdown
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler;

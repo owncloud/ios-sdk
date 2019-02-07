@@ -208,36 +208,30 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	}]);
 }
 
-- (OCHTTPPipelineTask *)retrieveTaskForID:(OCHTTPPipelineTaskID)taskID error:(NSError **)outDBError
+- (OCHTTPPipelineTask *)_retrieveTaskWhere:(nullable NSDictionary<NSString *,id<NSObject>> *)whereConditions error:(NSError **)outDBError
 {
 	NSError *dbError = nil;
 	__block OCHTTPPipelineTask *task = nil;
 
-	if (taskID == nil)
-	{
-		OCLogError(@"Attempt to retrieve task without taskID.");
-		return (nil);
-	}
-
 	dbError = [_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
 		__block NSError *retrieveError = nil;
 
-		[db executeQuery:[OCSQLiteQuery querySelectingColumns:nil fromTable:OCHTTPPipelineTasksTableName where:@{
-			@"taskID" : taskID
-		} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+		[db executeQuery:[OCSQLiteQuery querySelectingColumns:nil fromTable:OCHTTPPipelineTasksTableName where:whereConditions resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
 			retrieveError = error;
 
 			if (error == nil)
 			{
-				[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> * _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+				OCSQLiteRowDictionary rowDictionary;
+
+				if ((rowDictionary = [resultSet nextRowDictionaryWithError:&retrieveError]) != nil)
+				{
 					task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary];
-				} error:&retrieveError];
+				}
 			}
 		}]];
 
 		return (retrieveError);
 	}];
-
 
 	if (outDBError != NULL)
 	{
@@ -245,6 +239,107 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	}
 
 	return (task);
+}
+
+- (OCHTTPPipelineTask *)retrieveTaskForID:(OCHTTPPipelineTaskID)taskID error:(NSError **)outDBError
+{
+	if (taskID == nil)
+	{
+		OCLogError(@"Attempt to retrieve task without taskID.");
+		return (nil);
+	}
+
+	return ([self _retrieveTaskWhere:@{
+			@"taskID" : taskID
+		} error:outDBError]);
+}
+
+- (OCHTTPPipelineTask *)retrieveTaskForPipeline:(OCHTTPPipeline *)pipeline URLSession:(NSURLSession *)urlSession task:(NSURLSessionTask *)urlSessionTask error:(NSError **)outDBError
+{
+	NSString *urlSessionIdentifier = urlSession.configuration.identifier;
+
+	return ([self _retrieveTaskWhere:@{
+			@"pipelineID"	  	: pipeline.identifier,
+			@"bundleID"	  	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:pipeline.bundleIdentifier apply:(urlSessionIdentifier==nil)],
+			@"urlSessionID"	  	: OCSQLiteNullProtect(urlSessionIdentifier),
+			@"urlSessionTaskID" 	: @(urlSessionTask.taskIdentifier)
+		} error:outDBError]);
+}
+
+- (NSError *)enumerateTasksForPipeline:(OCHTTPPipeline *)pipeline enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator
+{
+	return ([self enumerateTasksWhere:@{
+			@"pipelineID" : pipeline.identifier,
+		} orderBy:@"taskID" limit:nil enumerator:taskEnumerator]);
+}
+
+- (NSError *)enumerateTasksWhere:(nullable NSDictionary<NSString *,id<NSObject>> *)whereConditions orderBy:(nullable NSString *)orderBy limit:(nullable NSString *)limit enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator
+{
+	NSError *dbError = nil;
+
+	dbError = [_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
+		__block NSError *retrieveError = nil;
+
+		[db executeQuery:[OCSQLiteQuery querySelectingColumns:nil
+						fromTable:OCHTTPPipelineTasksTableName
+						where:whereConditions
+						orderBy:orderBy
+						limit:limit
+						resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet)
+		{
+			retrieveError = error;
+
+			if (error == nil)
+			{
+				[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> * _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+					OCHTTPPipelineTask *task;
+
+					if ((task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary]) != nil)
+					{
+						taskEnumerator(task, stop);
+					}
+				} error:&retrieveError];
+			}
+		}]];
+
+		return (retrieveError);
+	}];
+
+	return (dbError);
+}
+
+- (NSNumber *)numberOfRequestsWithState:(OCHTTPPipelineTaskState)state inPipeline:(OCHTTPPipeline *)pipeline error:(NSError **)outDBError
+{
+	NSError *dbError = nil;
+	__block NSNumber *numberOfRequestsWithState = nil;
+
+	dbError = [_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
+		__block NSError *retrieveError = nil;
+
+		[db executeQuery:[OCSQLiteQuery query:@"SELECT COUNT(*) AS cnt FROM httpPipelineTasks WHERE pipeline=:pipelineID AND state=:state" withNamedParameters:@{
+			@"pipelineID" : pipeline.identifier,
+			@"state" : @(state)
+		} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+			numberOfRequestsWithState = [resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
+		}]];
+
+		return (retrieveError);
+	}];
+
+	if (outDBError != NULL)
+	{
+		*outDBError = dbError;
+	}
+
+	return (numberOfRequestsWithState);
+}
+
+- (void)queueBlock:(dispatch_block_t)block
+{
+	[_sqlDB executeOperation:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
+		block();
+		return(nil);
+	} completionHandler:nil];
 }
 
 @end
