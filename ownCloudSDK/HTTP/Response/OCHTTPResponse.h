@@ -44,8 +44,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSError *error;
 @property(strong,nullable) NSError *httpError;
 
-- (instancetype)initWithRequest:(OCHTTPRequest *)request; //!< Creates a OCHTTPResponse from a OCHTTPRequest.
-- (instancetype)initWithHTTPError:(NSError *)error; //!< Creates a OCHTTPResponse with the provided HTTP error (usually networking errors).
++ (instancetype)responseWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error; //!< Creates a OCHTTPResponse from a OCHTTPRequest. The HTTP error (usually networking/queue errors) is optional.
+
+- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error; //!< Creates a OCHTTPResponse from a OCHTTPRequest. The HTTP error (usually networking/queue errors) is optional.
 
 - (void)appendDataToResponseBody:(NSData *)appendResponseBodyData;
 

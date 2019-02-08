@@ -18,7 +18,10 @@
 
 #import "OCHTTPPipeline.h"
 #import "OCHTTPPipelineTask.h"
+#import "OCHTTPResponse.h"
 #import "OCProcessManager.h"
+#import "OCLogger.h"
+#import "NSError+OCError.h"
 
 @interface OCHTTPPipeline ()
 - (void)queueBlock:(dispatch_block_t)block;
@@ -36,9 +39,7 @@
 		_partitionHandlersByID = [NSMutableDictionary new];
 		_recentlyScheduledGroupIDs = [NSMutableArray new];
 
-		// Set identifiers
-		_identifier = identifier;
-		_bundleIdentifier = NSBundle.mainBundle.bundleIdentifier;
+		_insertXRequestID = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineInsertXRequestTracingID] boolValue];
 
 		// Set backend
 		if (backend == nil)
@@ -47,6 +48,10 @@
 		}
 
 		_backend = backend;
+
+		// Set identifiers
+		_identifier = identifier;
+		_bundleIdentifier = _backend.bundleIdentifier;
 
 		// Change sessionConfiguration to not store any session-related data on disk
 		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
@@ -69,6 +74,12 @@
 - (void)enqueueRequest:(OCHTTPRequest *)request forPartitionID:(OCHTTPPipelinePartitionID)partitionID
 {
 	OCHTTPPipelineTask *pipelineTask;
+
+	if ((request != nil) && (request.identifier != nil) && _insertXRequestID)
+	{
+		// Insert X-Request-ID for tracing
+		[request setValue:request.identifier forHeaderField:@"X-Request-ID"];
+	}
 
 	if ((pipelineTask = [[OCHTTPPipelineTask alloc] initWithRequest:request pipeline:self partition:partitionID]) != nil)
 	{
@@ -142,12 +153,13 @@
 
 	// Enumerate tasks in pipeline and pick ones for scheduling
 	__block NSMutableDictionary <OCHTTPRequestGroupID, NSMutableArray<OCHTTPPipelineTask *> *> *schedulableTasksByGroupID = [NSMutableDictionary new];
-	__block NSMutableSet <OCHTTPRequestGroupID> *activeGroupIDs = [NSMutableSet new];
+	__block NSMutableSet <OCHTTPRequestGroupID> *blockedGroupIDs = [NSMutableSet new];
 	const OCHTTPRequestGroupID defaultGroupID = @"_default_";
 
 	[_backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 		BOOL isRelevant = YES;
-		OCHTTPPipelinePartitionID partitionID;
+		OCHTTPPipelinePartitionID partitionID = nil;
+		id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
 
 		// Check if a partitionHandler is attached for this task - or if the task is deemed final and can be scheduled without
 		if ((partitionID = task.partitionID) == nil)
@@ -156,16 +168,18 @@
 			return;
 		}
 
+		@synchronized(self)
+		{
+			partitionHandler = self->_partitionHandlersByID[partitionID];
+		}
+
 		if (!task.requestFinal)
 		{
 			// Request isn't final
-			@synchronized(self)
+			if (partitionHandler==nil)
 			{
-				if (self->_attachedParititionHandlerIDs[partitionID] == nil)
-				{
-					// No partitionHandler for this task => skip
-					return;
-				}
+				// No partitionHandler for this task => skip
+				return;
 			}
 		}
 
@@ -189,6 +203,7 @@
 		{
 			OCHTTPRequestGroupID taskGroupID = task.groupID;
 
+			// Check group association
 			if (taskGroupID == nil)
 			{
 				// Task doesn't belong to a group. Assign default ID.
@@ -197,13 +212,14 @@
 			else
 			{
 				// Task belongs to group
-				if ([activeGroupIDs containsObject:taskGroupID])
+				if ([blockedGroupIDs containsObject:taskGroupID])
 				{
 					// Another task for the same task.groupID is already active
 					return;
 				}
 			}
 
+			// Check task state
 			switch (task.state)
 			{
 				case OCHTTPPipelineTaskStatePending:
@@ -211,17 +227,44 @@
 					if (taskGroupID != nil)
 					{
 						NSMutableArray <OCHTTPPipelineTask *> *schedulableTasks;
+						BOOL schedule = YES;
 
-						if ((schedulableTasks = schedulableTasksByGroupID[taskGroupID]) == nil)
+						// Check signal availability
+						if (task.request.requiredSignals.count > 0)
 						{
-							// First pending task with this taskGroupID
-							schedulableTasks = [[NSMutableArray alloc] initWithObjects:task, nil];
-							schedulableTasksByGroupID[taskGroupID] = schedulableTasks;
+							NSError *failWithError = nil;
+
+							schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals failWithError:&failWithError];
+
+							if (!schedule && (failWithError!=nil))
+							{
+								// Required signal check returned a failWithError => make request fail with that error
+								[self _finishedRequest:task.request withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:failWithError]];
+								return;
+							}
 						}
-						else if (task.groupID == nil)
+
+						if (schedule)
 						{
-							// Pending task without groupID (ignore tasks with groupID here, as it'd be the second with the groupID or later)
-							[schedulableTasks addObject:task];
+							if ((schedulableTasks = schedulableTasksByGroupID[taskGroupID]) == nil)
+							{
+								// First pending task with this taskGroupID
+								schedulableTasks = [[NSMutableArray alloc] initWithObjects:task, nil];
+								schedulableTasksByGroupID[taskGroupID] = schedulableTasks;
+							}
+							else if (task.groupID == nil)
+							{
+								// Pending task without groupID (ignore tasks with groupID here, as it'd be the second with the groupID or later)
+								[schedulableTasks addObject:task];
+							}
+						}
+						else
+						{
+							if (task.groupID != nil)
+							{
+								// Add groupID to list of blocked group IDs (to prevent out-of-order scheduling/execution of requests)
+								[blockedGroupIDs addObject:task.groupID];
+							}
 						}
 					}
 				break;
@@ -230,8 +273,8 @@
 					// Task is running
 					if (task.groupID != nil)
 					{
-						// Add groupID to active group ID
-						[activeGroupIDs addObject:task.groupID];
+						// Add groupID to list of blocked group IDs
+						[blockedGroupIDs addObject:task.groupID];
 
 						[schedulableTasksByGroupID removeObjectForKey:task.groupID];
 					}
@@ -349,6 +392,206 @@
 
 - (void)_scheduleTask:(OCHTTPPipelineTask *)task
 {
+	OCHTTPRequest *request = task.request;
+	OCHTTPPipelinePartitionID partitionID = task.partitionID;
+	NSError *error = nil;
+	BOOL updateTask = NO;
+
+	if ((partitionID = task.partitionID) == nil)
+	{
+		// PartitionID is mandatory. Remove and return if missing.
+		OCLogWarning(@"Mandatory partitionID missing from task=%@. Removing task.", task);
+		[_backend removePipelineTask:task];
+		return;
+	}
+	else if (request.cancelled)
+	{
+		// This request has been cancelled
+		error = OCError(OCErrorRequestCancelled);
+	}
+	else if (_urlSessionInvalidated)
+	{
+		// The underlying NSURLSession has been invalidated
+		error = OCError(OCErrorRequestURLSessionInvalidated);
+	}
+	else
+	{
+		// Get partitionHandler
+		id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
+
+		@synchronized(self)
+		{
+			partitionHandler = _partitionHandlersByID[partitionID];
+		}
+
+		// Prepare request
+		[request prepareForScheduling];
+
+		if (partitionHandler!=nil)
+		{
+			// Apply authentication and other pipeline-level changes
+			request = [partitionHandler pipeline:self prepareRequestForScheduling:request];
+
+			task.request = request;
+
+			updateTask = YES;
+		}
+
+		// Schedule request
+		if (request != nil)
+		{
+			NSURLRequest *urlRequest;
+			NSURLSessionTask *urlSessionTask = nil;
+			BOOL createTask = YES;
+
+			// Invoke host simulation (if any)
+			if ((partitionHandler!=nil) && [partitionHandler respondsToSelector:@selector(pipeline:partitionID:simulateRequestHandling:completionHandler:)])
+			{
+				createTask = [partitionHandler pipeline:self partitionID:partitionID simulateRequestHandling:request completionHandler:^(OCHTTPResponse * _Nonnull response) {
+					[self finishedRequest:request withResponse:response];
+				}];
+			}
+
+			if (createTask)
+			{
+				// Generate NSURLRequest and create an NSURLSessionTask with it
+				if ((urlRequest = [request generateURLRequest]) != nil)
+				{
+					@try
+					{
+						// Construct NSURLSessionTask
+						if (request.downloadRequest)
+						{
+							// Request is a download request. Make it a download task.
+							urlSessionTask = [_urlSession downloadTaskWithRequest:urlRequest];
+						}
+						else if (request.bodyURL != nil)
+						{
+							// Body comes from a file. Make it an upload task.
+							urlSessionTask = [_urlSession uploadTaskWithRequest:urlRequest fromFile:request.bodyURL];
+						}
+						else
+						{
+							// Create a regular data task
+							urlSessionTask = [_urlSession dataTaskWithRequest:urlRequest];
+						}
+
+						// Apply priority
+						urlSessionTask.priority = request.priority;
+
+						// Apply earliest date
+						if (request.earliestBeginDate != nil)
+						{
+							urlSessionTask.earliestBeginDate = request.earliestBeginDate;
+						}
+					}
+					@catch (NSException *exception)
+					{
+						OCLogDebug(@"Exception creating a task: %@", exception);
+						error = OCErrorWithInfo(OCErrorException, exception);
+					}
+				}
+
+				if (urlSessionTask != nil)
+				{
+					BOOL resumeSessionTask = YES;
+
+					// Save urlSessionTask to request
+					task.urlSessionTask = urlSessionTask;
+
+					task.urlSessionTaskID = @(urlSessionTask.taskIdentifier);
+					task.urlSessionID = _urlSessionIdentifier;
+
+					// Connect task progress to request progress (TODO / TO-REMOVE / TO-REPLACE)
+					request.progress.totalUnitCount += 200;
+					[request.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+
+					// Update internal tracking collections
+					task.state = OCHTTPPipelineTaskStateRunning;
+					updateTask = YES;
+
+					OCLogDebug(@"saved request for taskIdentifier <%@>, URL: %@, %p", request.urlSessionTaskIdentifier, urlRequest, self);
+
+					// Start task
+					if (resumeSessionTask)
+					{
+						// Prevent suspension for as long as this runs
+						if (_generateSystemActivityWhileRequestAreRunning)
+						{
+							NSString *absoluteURLString = request.url.absoluteString;
+
+							if (absoluteURLString==nil)
+							{
+								absoluteURLString = @"";
+							}
+
+							if (request.earliestBeginDate == nil) // Don't create system activity for long-running requests
+							{
+								request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
+							}
+						}
+
+						// Notify request observer
+						if (request.requestObserver != nil)
+						{
+							resumeSessionTask = !request.requestObserver(request, OCHTTPRequestObserverEventTaskResume);
+						}
+					}
+
+					if (resumeSessionTask)
+					{
+						[urlSessionTask resume];
+					}
+				}
+				else
+				{
+					// Request failure
+					if (error == nil)
+					{
+						error = OCError(OCErrorRequestURLSessionTaskConstructionFailed);
+					}
+				}
+			}
+		}
+		else
+		{
+			request = task.request;
+			error = OCError(OCErrorRequestRemovedBeforeScheduling);
+		}
+	}
+
+	// Log request
+	if (OCLogger.logLevel <= OCLogLevelDebug)
+	{
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
+	}
+
+	// Update task
+	if (updateTask)
+	{
+		[_backend updatePipelineTask:task];
+	}
+
+	// Finish request with an error if one occurred
+	if (error != nil)
+	{
+		[self queueBlock:^{
+			[self finishedRequest:request withResponse:[OCHTTPResponse responseWithRequest:request HTTPError:error]];
+		}];
+	}
+}
+
+#pragma mark - Request result handling
+- (void)finishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response
+{
+	[self queueBlock:^{
+		[self _finishedRequest:request withResponse:response];
+	}];
+}
+
+- (void)_finishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response
+{
 
 }
 
@@ -455,6 +698,11 @@
 	}
 }
 
+#pragma mark - Remove partition
+- (void)destroyPartition:(OCHTTPPipelinePartitionID)partitionID completionHandler:(nullable OCCompletionHandler)completionHandler
+{
+}
+
 #pragma mark - Shutdown
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
@@ -474,6 +722,69 @@
 #pragma mark - NSURLSessionDataDelegate
 #pragma mark - NSURLSessionDownloadDelegate
 
+#pragma mark - OCProgressResolver
+- (NSProgress *)resolveProgress:(OCProgress *)progress withContext:(nullable OCProgressResolutionContext)context
+{
+	if (progress.nextPathElementIsLast)
+	{
+		OCHTTPRequestID requestID;
+
+		if ((requestID = progress.nextPathElement) != nil)
+		{
+			/*
+				TODO: Resolve requestID to task, look for NSURLSessionTask and fetch progress if available
+
+				Also consider:
+				- moving OCProgressResolver support to OCHTTPPipelineManager
+				- provide a -progressForRequestID: method in OCHTTPPipeline
+				- caching of requestID->NSProgress in OCHTTPPipeline
+				- caching of queues requestIDs in OCHTTPPipeline
+			*/
+		}
+	}
+
+	return (nil);
+}
+
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (@"http");
+}
+
++ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	return (@{
+		  OCHTTPPipelineInsertXRequestTracingID : @(YES),
+	});
+}
+
+#pragma mark - Log tags
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"HTTP"]);
+}
+
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	NSArray<OCLogTagName> *logTags = nil;
+
+	if (_cachedLogTags == nil)
+	{
+		@synchronized(self)
+		{
+			if (_cachedLogTags == nil)
+			{
+				_cachedLogTags = [NSArray arrayWithObjects:@"HTTP", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+			}
+		}
+	}
+
+	logTags = _cachedLogTags;
+
+	return (logTags);
+}
+
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block
 {
@@ -481,3 +792,15 @@
 }
 
 @end
+
+OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID = @"insert-x-request-id";
+
+/*
+	TODO:
+	- complete HostSimulation support
+	- move authentication availability from OCHTTPRequest.skipAuthorization and OCConnection.canSendAuthenticatedRequestsForQueue:..] to -pipeline:meetsSignalRequirements:failWithError:
+		- idea 1: .skipAuthorization could be kept & independant from a "authentication" signal, so that auth methods have a way to bypass the signal requirement
+		- idea 2: OCHTTPRequest could be extended with a .failImmediatelyForMissingSignals property (either BOOL or array of signals)
+	- change in OCConnection signals should trigger scheduling in the pipeline
+	- move OCHTTPRequest.progress over to OCProgress
+*/

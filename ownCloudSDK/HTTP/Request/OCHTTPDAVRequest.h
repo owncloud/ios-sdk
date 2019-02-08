@@ -23,8 +23,6 @@
 
 @interface OCHTTPDAVRequest : OCHTTPRequest <NSXMLParserDelegate>
 {
-	OCXMLNode *_xmlRequest;
-
 	// Parsing variables
 	OCItem *_parseItem;
 	NSMutableArray <OCItem *> *_parseResultItems;

@@ -23,51 +23,7 @@
 
 @implementation OCHTTPRequest
 
-@synthesize identifier = _identifier;
-
-@synthesize urlSessionTask = _urlSessionTask;
-@synthesize progress = _progress;
-
-@synthesize urlSessionTaskIdentifier = _urlSessionTaskIdentifier;
-
-@synthesize bookmarkUUID = _bookmarkUUID;
-
-@synthesize method = _method;
-
-@synthesize url = _url;
-@synthesize effectiveURL = _effectiveURL;
-@synthesize headerFields = _headerFields;
-@synthesize parameters = _parameters;
 @synthesize bodyData = _bodyData;
-@synthesize bodyURL = _bodyURL;
-
-@synthesize earliestBeginDate = _earliestBeginDate;
-@synthesize requiredSignals = _requiredSignals;
-
-@synthesize resultHandlerAction = _resultHandlerAction;
-@synthesize ephermalResultHandler = _ephermalResultHandler;
-@synthesize ephermalRequestCertificateProceedHandler = _ephermalRequestCertificateProceedHandler;
-@synthesize forceCertificateDecisionDelegation = _forceCertificateDecisionDelegation;
-
-@synthesize eventTarget = _eventTarget;
-@synthesize userInfo = _userInfo;
-
-@synthesize priority = _priority;
-@synthesize groupID = _groupID;
-@synthesize skipAuthorization = _skipAuthorization;
-
-@synthesize requestObserver = _requestObserver;
-
-@synthesize downloadRequest = _downloadRequest;
-@synthesize downloadedFileURL = _downloadedFileURL;
-
-@synthesize responseBodyData = _responseBodyData;
-
-@synthesize cancelled = _cancelled;
-
-@synthesize systemActivity = _systemActivity;
-
-@synthesize error = _error;
 
 #pragma mark - Init & Dealloc
 - (instancetype)init
@@ -88,6 +44,8 @@
 			[weakSelf cancel];
 		};
 
+		self.requestProgress = [[OCProgress alloc] initWithPath:@[OCHTTPRequestGlobalDefaultPath, _identifier] progress:nil];
+
 		self.priority = NSURLSessionTaskPriorityDefault;
 	}
 	
@@ -103,7 +61,7 @@
 	OCHTTPRequest *request = [self new];
 	
 	request.url = url;
-	
+
 	return (request);
 }
 
@@ -177,11 +135,8 @@
 }
 
 #pragma mark - Queue scheduling support
-- (void)prepareForSchedulingInQueue:(OCConnectionQueue *)queue
+- (void)prepareForScheduling
 {
-	// Apply connection's bookmarkUUID
-	self.bookmarkUUID = queue.connection.bookmark.uuid;
-	
 	// Handle parameters and set effective URL
 	if (_parameters.count > 0)
 	{
@@ -217,7 +172,7 @@
 	}
 }
 
-- (NSMutableURLRequest *)generateURLRequestForQueue:(OCConnectionQueue *)queue
+- (NSMutableURLRequest *)generateURLRequest
 {
 	NSMutableURLRequest *urlRequest;
 	
@@ -537,8 +492,9 @@
 
 		_identifier		= [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 
-		self.bookmarkUUID	= [decoder decodeObjectOfClass:[NSUUID class] forKey:@"bookmarkUUID"];
 		self.urlSessionTaskIdentifier = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"urlSessionTaskIdentifier"];
+
+		self.requestProgress	= [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
 		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
@@ -574,8 +530,9 @@
 {
 	[coder encodeObject:_identifier 	forKey:@"identifier"];
 
-	[coder encodeObject:_bookmarkUUID	forKey:@"bookmarkUUID"];
 	[coder encodeObject:_urlSessionTaskIdentifier forKey:@"urlSessionTaskIdentifier"];
+
+	[coder encodeObject:_requestProgress 	forKey:@"progress"];
 
 	[coder encodeObject:_url 		forKey:@"url"];
 	[coder encodeObject:_method 		forKey:@"method"];
@@ -617,3 +574,4 @@ OCHTTPMethod OCHTTPMethodPROPPATCH = @"PROPPATCH";
 OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
 OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 
+OCProgressPathElementIdentifier OCHTTPRequestGlobalDefaultPath = @"_httpRequest";

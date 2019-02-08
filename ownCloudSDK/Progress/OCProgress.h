@@ -51,6 +51,10 @@ typedef NSString* OCProgressID;
 @property(strong) OCProgressPath path; //!< The progress path of the object that can be used for resolution.
 @property(nullable,strong) NSProgress *progress; //!< The resolved progress object
 
+@property(strong) NSDictionary<NSString*, id<NSSecureCoding>> *userInfo; //!< Custom information that helps an OCProgressResolver provide the NSProgress object
+
+- (instancetype)initWithPath:(OCProgressPath)path progress:(nullable NSProgress *)progress; //!< Createa a new OCProgress object from with the provided path. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
+
 - (instancetype)initWithSource:(id<OCProgressSource>)source pathElementIdentifier:(OCProgressPathElementIdentifier)identifier progress:(nullable NSProgress *)progress; //!< Creates a new OCProgress object from the source's progressBasePath with the specified pathElementIdentifier. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
 
 - (BOOL)nextPathElementIsLast; //!< Returns YES if the next path element is the last in the path.

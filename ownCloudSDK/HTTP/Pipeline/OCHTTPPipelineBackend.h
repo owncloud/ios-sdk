@@ -23,14 +23,19 @@
 
 @class OCHTTPPipeline;
 @class OCHTTPPipelineTask;
+@class OCHTTPPipelineTaskCache;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCHTTPPipelineBackend : NSObject
 {
 	OCSQLiteDB *_sqlDB;
-	BOOL isOpen;
+	BOOL _isOpen;
+
+	OCHTTPPipelineTaskCache *_taskCache;
 }
+
+@property(strong,readonly) NSString *bundleIdentifier;
 
 - (instancetype)initWithSQLDB:(nullable OCSQLiteDB *)sqlDB;
 

@@ -19,7 +19,12 @@
 #import "OCHTTPPipelineBackend.h"
 #import "OCSQLiteDB.h"
 #import "OCSQLiteTableSchema.h"
+#import "OCSQLiteQueryCondition.h"
 #import "OCHTTPPipelineTask.h"
+#import "OCMacros.h"
+#import "OCHTTPPipelineTaskCache.h"
+#import "OCLogger.h"
+#import "NSError+OCError.h"
 
 static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
@@ -35,6 +40,10 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 {
 	if ((self = [super init]) != nil)
 	{
+		_bundleIdentifier = NSBundle.mainBundle.bundleIdentifier;
+
+		_taskCache = [[OCHTTPPipelineTaskCache alloc] initWithBackend:self];
+
 		if (sqlDB != nil)
 		{
 			_sqlDB = sqlDB;
@@ -134,6 +143,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	return([_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
 		__block NSError *insertionError = nil;
 
+		// Persist in database
 		[db executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCHTTPPipelineTasksTableName rowValues:@{
 			@"pipelineID" 		: task.pipelineID,
 			@"bundleID"		: task.bundleID,
@@ -155,6 +165,9 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			insertionError = error;
 		}]];
 
+		// Update cache
+		[self->_taskCache updateWithTask:task remove:NO];
+
 		return (insertionError);
 	}]);
 }
@@ -169,7 +182,6 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 	return([_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
 		__block NSError *updateError = nil;
-
 		[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:task.taskID inTable:OCHTTPPipelineTasksTableName withRowValues:@{
 			@"bundleID" 		: task.bundleID,
 
@@ -184,6 +196,9 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 		} completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
 			updateError = error;
 		}]];
+
+		// Update cache
+		[self->_taskCache updateWithTask:task remove:NO];
 
 		return (updateError);
 	}]);
@@ -204,6 +219,9 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			removeError = error;
 		}]];
 
+		// Update cache
+		[self->_taskCache updateWithTask:task remove:YES];
+
 		return (removeError);
 	}]);
 }
@@ -223,9 +241,22 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			{
 				OCSQLiteRowDictionary rowDictionary;
 
+
+
 				if ((rowDictionary = [resultSet nextRowDictionaryWithError:&retrieveError]) != nil)
 				{
-					task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary];
+					OCHTTPPipelineTask *task;
+
+					// Retrieve from cache (if possible)
+					if ((task = [self->_taskCache cachedTaskForPipelineTaskID:(NSNumber *)rowDictionary[@"taskID"]]) == nil)
+					{
+					 	// If not, assemble new OCHTTPPipelineTask ..
+						if ((task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary]) != nil)
+						{
+							// .. and store it in the cache
+							[self->_taskCache updateWithTask:task remove:NO];
+						}
+					}
 				}
 			}
 		}]];
@@ -294,7 +325,18 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 				[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> * _Nonnull rowDictionary, BOOL * _Nonnull stop) {
 					OCHTTPPipelineTask *task;
 
-					if ((task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary]) != nil)
+					// Retrieve from cache (if possible)
+					if ((task = [self->_taskCache cachedTaskForPipelineTaskID:(NSNumber *)rowDictionary[@"taskID"]]) == nil)
+					{
+					 	// If not, assemble new OCHTTPPipelineTask ..
+						if ((task = [[OCHTTPPipelineTask alloc] initWithRowDictionary:rowDictionary]) != nil)
+						{
+							// .. and store it in the cache
+							[self->_taskCache updateWithTask:task remove:NO];
+						}
+					}
+
+					if (task != nil)
 					{
 						taskEnumerator(task, stop);
 					}
@@ -320,7 +362,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			@"pipelineID" : pipeline.identifier,
 			@"state" : @(state)
 		} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
-			numberOfRequestsWithState = [resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
+			numberOfRequestsWithState = (NSNumber *)[resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
 		}]];
 
 		return (retrieveError);

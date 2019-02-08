@@ -84,7 +84,6 @@
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
-		OCConnectionInsertXRequestTracingID 		: @(YES),
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"9.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
@@ -231,13 +230,17 @@
 - (OCHTTPRequest *)prepareRequest:(OCHTTPRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue
 {
 	// Insert X-Request-ID for tracing
-	if ([[self classSettingForOCClassSettingsKey:OCConnectionInsertXRequestTracingID] boolValue])
 	{
-		NSUUID *uuid;
-		
-		if ((uuid = [NSUUID UUID]) != nil)
+		NSString *xRequestID = request.identifier;
+
+		if (xRequestID == nil)
 		{
-			[request setValue:uuid.UUIDString forHeaderField:@"X-Request-ID"];
+			xRequestID = NSUUID.UUID.UUIDString;
+		}
+
+		if (xRequestID != nil)
+		{
+			[request setValue:xRequestID forHeaderField:@"X-Request-ID"];
 		}
 	}
 
@@ -1983,7 +1986,6 @@ OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root
 OCConnectionEndpointID OCConnectionEndpointIDThumbnail = @"endpoint-thumbnail";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 
-OCClassSettingsKey OCConnectionInsertXRequestTracingID = @"connection-insert-x-request-id";
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
 OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";

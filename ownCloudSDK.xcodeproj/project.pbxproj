@@ -158,7 +158,7 @@
 		DC4B116E2208306C0062BCDD /* OCHTTPPipeline.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B116C2208306C0062BCDD /* OCHTTPPipeline.m */; };
 		DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B116F220830F20062BCDD /* OCHTTPPipelineBackend.h */; };
 		DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B1170220830F20062BCDD /* OCHTTPPipelineBackend.m */; };
-		DC4B11FE220996480062BCDD /* OCProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B11FC220996480062BCDD /* OCProgress.h */; };
+		DC4B11FE220996480062BCDD /* OCProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4B11FC220996480062BCDD /* OCProgress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4B11FF220996480062BCDD /* OCProgress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B11FD220996480062BCDD /* OCProgress.m */; };
 		DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */; };
@@ -362,6 +362,8 @@
 		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
+		DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */; };
+		DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */; };
 		DCEA7D972093556600F25223 /* OCCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEA7D952093556600F25223 /* OCCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEA7D982093556600F25223 /* OCCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEA7D962093556600F25223 /* OCCache.m */; };
 		DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */ = {isa = PBXBuildFile; fileRef = DCEB94DA21105FDE004EF8D7 /* rainbow.png */; };
@@ -905,6 +907,8 @@
 		DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalImport.m"; sourceTree = "<group>"; };
 		DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDatabaseConsistentOperation.h; sourceTree = "<group>"; };
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
+		DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTaskCache.h; sourceTree = "<group>"; };
+		DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineTaskCache.m; sourceTree = "<group>"; };
 		DCEA7D952093556600F25223 /* OCCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCache.h; sourceTree = "<group>"; };
 		DCEA7D962093556600F25223 /* OCCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCache.m; sourceTree = "<group>"; };
 		DCEB94DA21105FDE004EF8D7 /* rainbow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rainbow.png; sourceTree = "<group>"; };
@@ -1398,6 +1402,8 @@
 				DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */,
 				DC4B1170220830F20062BCDD /* OCHTTPPipelineBackend.m */,
 				DC4B116F220830F20062BCDD /* OCHTTPPipelineBackend.h */,
+				DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */,
+				DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */,
 			);
 			path = Pipeline;
 			sourceTree = "<group>";
@@ -2205,6 +2211,7 @@
 				DC68057D212EB438006C3B1F /* OCExtensionMatch.h in Headers */,
 				DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */,
 				DCB0A45F21B828F400FAC4E9 /* OCCore+ConnectionStatus.h in Headers */,
+				DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */,
 				DC07C2992124510200B815A4 /* OCExtensionTypes.h in Headers */,
 				DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */,
 				DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */,
@@ -2704,6 +2711,7 @@
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,
+				DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */,
 				DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,

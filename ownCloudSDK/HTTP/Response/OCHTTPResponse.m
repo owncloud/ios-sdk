@@ -17,9 +17,26 @@
  */
 
 #import "OCHTTPResponse.h"
+#import "OCHTTPRequest.h"
 
 @implementation OCHTTPResponse
 
 @synthesize bodyData = _bodyData;
+
++ (instancetype)responseWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+{
+	return ([[self alloc] initWithRequest:request HTTPError:error]);
+}
+
+- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+{
+	if ((self = [super init]) != nil)
+	{
+		_requestID = request.identifier;
+		_httpError = error;
+	}
+
+	return(self);
+}
 
 @end

@@ -120,6 +120,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 //#import <ownCloudSDK/OCRetainer.h>
 //#import <ownCloudSDK/OCRetainerCollection.h>
 
+#import <ownCloudSDK/OCProgress.h>
+
 #import <ownCloudSDK/OCKeyValueStore.h>
 
 #import <ownCloudSDK/OCLogger.h>

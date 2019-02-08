@@ -27,16 +27,30 @@
 
 @implementation OCProgress
 
-- (instancetype)initWithSource:(id<OCProgressSource>)source pathElementIdentifier:(OCProgressPathElementIdentifier)identifier progress:(nullable NSProgress *)progress
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_identifier = NSUUID.UUID.UUIDString;
+	}
+
+	return (self);
+}
+
+- (instancetype)initWithPath:(OCProgressPath)path progress:(nullable NSProgress *)progress
 {
 	if ((self = [self init]) != nil)
 	{
-		_identifier = NSUUID.UUID.UUIDString;
-		_path = [[source progressBasePath] arrayByAddingObject:identifier];
+		_path = path;
 		_progress = progress;
 	}
 
 	return (self);
+}
+
+- (instancetype)initWithSource:(id<OCProgressSource>)source pathElementIdentifier:(OCProgressPathElementIdentifier)identifier progress:(nullable NSProgress *)progress
+{
+	return ([self initWithPath:[[source progressBasePath] arrayByAddingObject:identifier] progress:progress]);
 }
 
 - (BOOL)nextPathElementIsLast
@@ -174,6 +188,7 @@
 {
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_path forKey:@"path"];
+	[coder encodeObject:_userInfo forKey:@"userInfo"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)decoder
@@ -182,6 +197,7 @@
 	{
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 		_path = [decoder decodeObjectOfClass:[NSArray class] forKey:@"path"];
+		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
 	}
 
 	return (self);

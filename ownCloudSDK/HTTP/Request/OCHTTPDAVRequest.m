@@ -24,8 +24,6 @@
 
 @implementation OCHTTPDAVRequest
 
-@synthesize xmlRequest = _xmlRequest;
-
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth
 {
 	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];

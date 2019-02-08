@@ -26,9 +26,6 @@ This document provides an overview over the available sections and variables.
 	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
 		- type: string
 		- default: `status.php`
-	- `connection-insert-x-request-id`: Send a unique, random UUID in the `X-Request_ID` HTTP header with every request to enable server-side tracing ([Details](https://github.com/owncloud/ios-sdk/issues/1))
-		- type: boolean
-		- default: `true`
 	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most prefered first).
 		- type: array
 		- default: `["com.owncloud.oauth2", "com.owncloud.basicauth"]`
@@ -56,6 +53,15 @@ This document provides an overview over the available sections and variables.
 	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `["*"]` turns on thumbnail loading for all items.
 		- type: array
 		- default: `["*"]`
+
+## HTTP
+
+- **Section ID**: `http`
+
+- **Variables**:
+	- `insert-x-request-id`: Insert a unique, random UUID in the `X-Request_ID` HTTP header with every request to enable server-side tracing ([Details](https://github.com/owncloud/ios-sdk/issues/1))
+		- type: boolean
+		- default: `true`
 
 ## Logging
 

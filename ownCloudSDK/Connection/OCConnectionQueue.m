@@ -320,7 +320,7 @@
 			if (createTask)
 			{
 				// Generate NSURLRequest and create an NSURLSessionTask with it
-				if ((urlRequest = [request generateURLRequestForQueue:self]) != nil)
+				if ((urlRequest = [request generateURLRequest]) != nil)
 				{
 					@try
 					{
@@ -432,7 +432,7 @@
 	// Log request
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
 	}
 
@@ -449,7 +449,7 @@
 
 - (void)_prepareRequestForScheduling:(OCHTTPRequest *)request
 {
-	[request prepareForSchedulingInQueue:self];
+	[request prepareForScheduling];
 }
 
 - (void)_finishQueuedRequestsWithError:(NSError *)error filter:(BOOL(^)(OCHTTPRequest *request))requestFilter
@@ -572,8 +572,8 @@
 	// Log response
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.headerFields[@"X-Request-ID"]), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
-		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.headerFields[@"X-Request-ID"], ((error != nil) ? error : @"-"), request.responseDescription);
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.method, request.effectiveURL, request.identifier, ((error != nil) ? error : @"-"), request.responseDescription);
 	}
 
 	// Determine request instruction
