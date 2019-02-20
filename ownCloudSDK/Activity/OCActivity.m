@@ -74,7 +74,7 @@
 		return (OCError(OCErrorInsufficientParameters));
 	}
 
-	[update.updatesByKeyPath enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull keyPath, id<NSObject>  _Nonnull value, BOOL * _Nonnull stop) {
+	[update.updatesByKeyPath enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull keyPath, id<NSObject> value, BOOL * _Nonnull stop) {
 		NSError *applicationError = nil;
 
 		if ([value isEqual:[NSNull null]])

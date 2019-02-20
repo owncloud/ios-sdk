@@ -106,7 +106,7 @@
 {
 	if ((self.localItem != nil) && (self.updateProperties != nil))
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 
 		if ((progress = [self.core.connection updateItem:self.localItem properties:self.updateProperties options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{

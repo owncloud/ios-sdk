@@ -17,6 +17,7 @@
  */
 
 #import "OCProgress.h"
+#import "OCProgressManager.h"
 
 @interface OCProgress ()
 {
@@ -32,6 +33,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_identifier = NSUUID.UUID.UUIDString;
+		_cancellable = YES;
 	}
 
 	return (self);
@@ -88,6 +90,11 @@
 - (NSProgress *)resolveWith:(id<OCProgressResolver>)resolver context:(OCProgressResolutionContext)context
 {
 	NSProgress *progress = nil;
+
+	if (resolver == nil)
+	{
+		resolver = OCProgressManager.sharedProgressManager;
+	}
 
 	if ((context == nil) && ([resolver respondsToSelector:@selector(progressResolutionContext)]))
 	{
@@ -179,6 +186,23 @@
 	return ([self resolveWith:resolver context:nil]);
 }
 
+- (void)cancel
+{
+	if (!_cancelled && _cancellable)
+	{
+		self.cancelled = YES;
+
+		if (_cancellationHandler != nil)
+		{
+			_cancellationHandler();
+		}
+		else
+		{
+			[_progress cancel];
+		}
+	}
+}
+
 + (BOOL)supportsSecureCoding
 {
 	return(YES);
@@ -189,6 +213,8 @@
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_path forKey:@"path"];
 	[coder encodeObject:_userInfo forKey:@"userInfo"];
+	[coder encodeBool:_cancelled forKey:@"cancelled"];
+	[coder encodeBool:_cancellable forKey:@"cancellable"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)decoder
@@ -198,6 +224,8 @@
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 		_path = [decoder decodeObjectOfClass:[NSArray class] forKey:@"path"];
 		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		_cancelled = [decoder decodeBoolForKey:@"cancelled"];
+		_cancellable = [decoder decodeBoolForKey:@"cancellable"];
 	}
 
 	return (self);

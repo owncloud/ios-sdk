@@ -94,6 +94,10 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 #pragma mark - Issue handling
 - (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
 
+#pragma mark - Restore progress
+- (nullable OCItem *)itemToRestoreProgressRegistrationFor;
+- (void)restoreProgressRegistrationForSyncRecord:(OCSyncRecord *)syncRecord; //!< Restores progress registrations
+
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.
 - (void)decodeActionData:(NSCoder *)decoder;	//!< Called by -initWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

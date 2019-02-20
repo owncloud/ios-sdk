@@ -130,7 +130,7 @@
 
 	if (item != nil)
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 		NSDictionary *options = self.options;
 
 		NSURL *temporaryDirectoryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]  URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
@@ -150,7 +150,10 @@
 
 			[syncContext.syncRecord addProgress:progress];
 
-			[self.core registerProgress:syncContext.syncRecord.progress forItem:item];
+			if (syncContext.syncRecord.progress.progress != nil)
+			{
+				[self.core registerProgress:syncContext.syncRecord.progress.progress forItem:item];
+			}
 		}
 
 		// Transition to processing
@@ -422,6 +425,12 @@
 	}
 
 	return (resolutionError);
+}
+
+#pragma mark - Restore progress
+- (OCItem *)itemToRestoreProgressRegistrationFor
+{
+	return (self.archivedServerItem);
 }
 
 #pragma mark - NSCoding

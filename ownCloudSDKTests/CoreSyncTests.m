@@ -8,7 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCHostSimulator.h"
+#import <ownCloudMocking/ownCloudMocking.h>
 #import "OCCore+Internal.h"
 #import "TestTools.h"
 #import "OCTestTarget.h"

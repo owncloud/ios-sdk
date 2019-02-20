@@ -33,7 +33,7 @@ typedef NSString* OCProgressID;
 
 @property(readonly,strong,nonatomic,nullable) OCProgressResolutionContext progressResolutionContext; //!< If nil is passed for context to -[OCProgress resolveWith:context:], the method uses this context if the Resolver provides it.
 
-- (NSProgress *)resolveProgress:(OCProgress *)progress withContext:(nullable OCProgressResolutionContext)context; //!< Resolve the progress starting from the -nextPathElement. Returns the NSProgress if resolution succeeds.
+- (nullable NSProgress *)resolveProgress:(OCProgress *)progress withContext:(nullable OCProgressResolutionContext)context; //!< Resolve the progress starting from the -nextPathElement. Returns the NSProgress if resolution succeeds.
 - (nullable id<OCProgressResolver>)resolverForPathElement:(OCProgressPathElementIdentifier)pathElementIdentifier withContext:(nullable OCProgressResolutionContext)context; //!< Returns the resolver responsible for a path element. If a different OCProgressResolver is returned, -resolveProgress: is not needed.
 
 @end
@@ -50,6 +50,10 @@ typedef NSString* OCProgressID;
 
 @property(strong) OCProgressPath path; //!< The progress path of the object that can be used for resolution.
 @property(nullable,strong) NSProgress *progress; //!< The resolved progress object
+@property(assign) BOOL cancelled; //!< Cancelled
+@property(assign) BOOL cancellable; //!< Whether cancellation is possible
+
+@property(copy) void(^cancellationHandler)(void); //!< Block of code to be executed when -cancel is called. (ephermal)
 
 @property(strong) NSDictionary<NSString*, id<NSSecureCoding>> *userInfo; //!< Custom information that helps an OCProgressResolver provide the NSProgress object
 
@@ -61,9 +65,11 @@ typedef NSString* OCProgressID;
 - (nullable OCProgressPathElementIdentifier)nextPathElement; //!< Returns the next path element and moves the resolutionOffset to the next element.
 - (void)resetResolutionOffset; //!< Resets the resolution offset to 0, so the resolution can be restarted.
 
-- (nullable NSProgress *)resolveWith:(id<OCProgressResolver>)resolver context:(nullable OCProgressResolutionContext)context; //!< Thread-safe resolution that can be called repeatedly. If .progress is non-nil, immediately returns the object and bypasses resolution.
+- (nullable NSProgress *)resolveWith:(nullable id<OCProgressResolver>)resolver context:(nullable OCProgressResolutionContext)context; //!< Thread-safe resolution that can be called repeatedly. If resolver is nil, uses OCProgressManager.sharedProgressManager. If .progress is non-nil, immediately returns the object and bypasses resolution.
 
-- (nullable NSProgress *)resolveWith:(id<OCProgressResolver>)resolver; //!< Short-hand for -[resolveWith:resolver context:nil].
+- (nullable NSProgress *)resolveWith:(nullable id<OCProgressResolver>)resolver; //!< Short-hand for -[resolveWith:resolver context:nil].
+
+- (void)cancel; //!< Calls cancellationHandler if one is set. Otherwise calls [.progress cancel].
 
 @end
 

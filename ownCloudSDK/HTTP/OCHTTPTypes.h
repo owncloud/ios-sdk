@@ -6,17 +6,21 @@
 //  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2019, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import <Foundation/Foundation.h>
 #import "OCHTTPStatus.h"
+#import "OCCertificate.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef NS_ENUM(NSUInteger, OCHTTPStorageStatus)
-{
-	OCHTTPStorageStatusSystemManaged,	//!< Storage is managed by the system (vanishes after delegate/completion call)
-	OCHTTPStorageStatusPipelineManaged,	//!< Storage is managed by the pipeline (vanishes when request is removed )
-	OCHTTPStorageStatusPartitionManaged	//!< Storage is managed by the partition (no automatic deletion)
-};
 
 typedef NSString* OCHTTPMethod NS_TYPED_ENUM;
 typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPHeaderFields;
@@ -26,6 +30,8 @@ typedef float OCHTTPRequestPriority;
 typedef NSString* OCHTTPRequestID;
 typedef NSString* OCHTTPRequestGroupID;
 
+typedef NSString* OCHTTPPipelineID;
+typedef NSString* OCHTTPPipelinePartitionID;
 typedef NSNumber* OCHTTPPipelineTaskID;
 
 typedef NS_ENUM(NSUInteger, OCHTTPPipelineTaskState)
@@ -35,7 +41,23 @@ typedef NS_ENUM(NSUInteger, OCHTTPPipelineTaskState)
 	OCHTTPPipelineTaskStateCompleted //!< The task was returned by the NSURLSession as completed
 };
 
+typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
+{
+	OCHTTPRequestInstructionDeliver,	//!< Deliver the request as usual
+	OCHTTPRequestInstructionReschedule	//!< Stop processing of request and reschedule it
+};
+
+typedef NSString* OCConnectionSignalID NS_TYPED_ENUM;
+
 @class OCHTTPRequest;
 @class OCHTTPResponse;
 
+typedef void(^OCHTTPRequestEphermalResultHandler)(OCHTTPRequest *request, OCHTTPResponse * _Nullable response, NSError * _Nullable error);
+typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError * _Nullable error);
+typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
+
 NS_ASSUME_NONNULL_END
+
+#import "OCHTTPRequest.h"
+#import "OCHTTPResponse.h"
+

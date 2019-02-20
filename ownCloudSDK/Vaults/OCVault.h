@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSURL *_rootURL;
 	NSURL *_databaseURL;
 	NSURL *_filesRootURL;
-	NSURL *_connectionDataRootURL;
+	NSURL *_httpPipelineRootURL;
 
 	NSFileProviderDomain *_fileProviderDomain;
 
@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
 @property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
 @property(nullable,readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
-@property(nullable,readonly,nonatomic) NSURL *connectionDataRootURL; //!< The vault's root URL for connection data
+@property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 
 @property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
 
@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern NSString *OCVaultPathVaults;
-extern NSString *OCVaultPathConnectionData;
+extern NSString *OCVaultPathHTTPPipeline;
 
 NS_ASSUME_NONNULL_END
 

@@ -76,6 +76,8 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 @property(readonly,nonatomic) BOOL opened;
 
+@property(nullable,strong) NSString *runLoopThreadName; //!< Name of the OCRunLoopThread that's used to back the database. Only set it if you want to share one across several databases.
+
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
 
 #pragma mark - Init

@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_block_t completionHandler); //!< Block performing an operation while no OCCore uses the bookmark. Call completionHandler when done.
 
-@interface OCCoreManager : NSObject <OCLogTagging>
+@interface OCCoreManager : NSObject <OCLogTagging, OCProgressResolver>
 {
 	NSMutableDictionary <NSUUID *, OCCore *> *_coresByUUID;
 	NSMutableDictionary <NSUUID *, NSNumber *> *_requestCountByUUID;

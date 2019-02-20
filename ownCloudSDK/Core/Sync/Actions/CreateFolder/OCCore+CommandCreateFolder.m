@@ -27,7 +27,7 @@
 	if (folderName == nil) { return(nil); }
 	if (parentItem == nil) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCreateFolder alloc] initWithParentItem:parentItem folderName:folderName] resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCreateFolder alloc] initWithParentItem:parentItem folderName:folderName] cancellable:NO resultHandler:resultHandler]);
 }
 
 @end

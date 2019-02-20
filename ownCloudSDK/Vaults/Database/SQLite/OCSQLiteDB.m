@@ -35,6 +35,7 @@
 #define IsSQLiteErrorCode(error,errorCode) ((error.code == errorCode) && IsSQLiteError(error))
 
 static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
+static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThreadUsageCountByName;
 
 @implementation OCSQLiteDB
 
@@ -95,7 +96,29 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 		[self _close]; // Force-close on deallocation
 	}
 
-	[_sqliteThread terminate];
+	if ((_runLoopThreadName != nil) && (_sqliteThread != nil))
+	{
+		NSInteger usageCount;
+
+		usageCount = sOCSQliteDBSharedRunLoopThreadUsageCountByName[_runLoopThreadName].integerValue - 1;
+		sOCSQliteDBSharedRunLoopThreadUsageCountByName[_runLoopThreadName] = @(usageCount);
+
+		if (usageCount == 0)
+		{
+			[_sqliteThread terminate];
+		}
+		else
+		{
+			if (usageCount < 0)
+			{
+				OCLogError(@"Negative usage count for %@", _runLoopThreadName);
+			}
+		}
+	}
+	else
+	{
+		[_sqliteThread terminate];
+	}
 }
 
 #pragma mark - Queuing and execution
@@ -107,18 +130,38 @@ static BOOL sOCSQLiteDBAllowConcurrentFileAccess = NO;
 	{
 		if ((runLoopThread = _sqliteThread) == nil)
 		{
-			NSString *threadName;
+			NSString *threadName = _runLoopThreadName;
 
-			if ((_databaseURL.path != nil) && !OCSQLiteDB.allowConcurrentFileAccess)
+			if (threadName == nil)
 			{
-				threadName = [@"OCSQLiteDB-" stringByAppendingString:_databaseURL.path];
-			}
-			else
-			{
-				threadName = [@"OCSQLiteDB-" stringByAppendingString:NSUUID.UUID.UUIDString];
+				if ((_databaseURL.path != nil) && !OCSQLiteDB.allowConcurrentFileAccess)
+				{
+					threadName = [@"OCSQLiteDB-" stringByAppendingString:_databaseURL.path];
+				}
+				else
+				{
+					threadName = [@"OCSQLiteDB-" stringByAppendingString:NSUUID.UUID.UUIDString];
+				}
 			}
 
-			runLoopThread  = _sqliteThread = [OCRunLoopThread runLoopThreadNamed:threadName];
+			if (threadName != nil)
+			{
+				if (_runLoopThreadName != nil)
+				{
+					@synchronized([OCSQLiteDB class])
+					{
+						if (sOCSQliteDBSharedRunLoopThreadUsageCountByName==nil)
+						{
+							sOCSQliteDBSharedRunLoopThreadUsageCountByName = [NSMutableDictionary new];
+						}
+
+						sOCSQliteDBSharedRunLoopThreadUsageCountByName[_runLoopThreadName] = @(sOCSQliteDBSharedRunLoopThreadUsageCountByName[_runLoopThreadName].integerValue + 1);
+					}
+				}
+
+				_sqliteThread = [OCRunLoopThread runLoopThreadNamed:threadName];
+			 	runLoopThread = _sqliteThread;
+			}
 		}
 	}
 

@@ -27,8 +27,7 @@
 	// Enqueue sync record
 	NSProgress *progress;
 
-	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] resultHandler:resultHandler];
-	progress.cancellable = YES;
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionDownload alloc] initWithItem:item options:options] cancellable:YES resultHandler:resultHandler];
 
 	return (progress);
 }

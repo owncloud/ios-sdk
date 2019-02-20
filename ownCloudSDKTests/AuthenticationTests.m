@@ -68,7 +68,7 @@
 
 	bookmark = [OCBookmark bookmarkForURL:url];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierBasicAuth
 							 options:@{
@@ -104,15 +104,15 @@
 								request = [OCHTTPRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 								[request setValue:@"json" forParameter:@"format"];
 								
-							       	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
-									OCLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
+							       	[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+									OCLog(@"Result of request: %@ (error: %@):\n\n## Response: %@\n\n## Body: %@", request, error, response.httpURLResponse, response.bodyAsString);
 									
-									if (request.responseHTTPStatus.isSuccess)
+									if (response.status.isSuccess)
 									{
 										NSError *error = nil;
 										NSDictionary *capabilitiesDict;
 										
-										capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error];
+										capabilitiesDict = [response bodyConvertedDictionaryFromJSONWithError:&error];
 										XCTAssert((capabilitiesDict!=nil), @"Conversion from JSON successful");
 										XCTAssert(([capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]!=nil), @"Capabilities structure intact");
 										
@@ -160,7 +160,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		connection.delegate = self;
 	
@@ -191,7 +191,7 @@
 
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			OCLog(@"1 - Error: %@ - Supported methods: %@", error, supportMethods);
@@ -235,7 +235,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:@{ OCAuthenticationMethodAllowURLProtocolUpgradesKey : @(YES) } completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			OCLog(@"Supported methods: %@", supportMethods);
@@ -263,7 +263,7 @@
 	// bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://owncloud-io.lan/"]];
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.insecureTargetURL];
 
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		[connection requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportMethods) {
 			OCLog(@"Supported methods: %@", supportMethods);

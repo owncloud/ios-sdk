@@ -30,7 +30,7 @@
 		self.recordState = syncRecord.state;
 
 		_ranking = syncRecord.recordID.integerValue;
-		_progress = syncRecord.progress;
+		_progress = [syncRecord.progress resolveWith:nil];
 
 		_localizedDescription = syncRecord.action.localizedDescription;
 	}

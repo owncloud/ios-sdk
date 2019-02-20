@@ -71,16 +71,7 @@
 - (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
-	NSData *responseData = nil;
-
-	if (self.downloadRequest)
-	{
-		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
-	}
-	else
-	{
-		responseData = self.responseBodyData;
-	}
+	NSData *responseData = self.httpResponse.bodyData;
 
 	if (responseData != nil)
 	{
@@ -132,16 +123,7 @@
 - (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
 {
 	NSMutableDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *responsesByPath = nil;
-	NSData *responseData = nil;
-
-	if (self.downloadRequest)
-	{
-		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
-	}
-	else
-	{
-		responseData = self.responseBodyData;
-	}
+	NSData *responseData = self.httpResponse.bodyData;
 
 	if (responseData != nil)
 	{

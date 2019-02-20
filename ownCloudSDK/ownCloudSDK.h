@@ -59,8 +59,14 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCHTTPRequest.h>
+#import <ownCloudSDK/OCHTTPResponse.h>
 #import <ownCloudSDK/OCHTTPDAVRequest.h>
-#import <ownCloudSDK/OCConnectionQueue.h>
+
+#import <ownCloudSDK/OCHTTPPipelineManager.h>
+#import <ownCloudSDK/OCHTTPPipeline.h>
+#import <ownCloudSDK/OCHTTPPipelineTask.h>
+#import <ownCloudSDK/OCHTTPPipelineBackend.h>
+#import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
 
 #import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 

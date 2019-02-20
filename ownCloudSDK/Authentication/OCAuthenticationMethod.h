@@ -22,7 +22,7 @@
 
 @class OCConnection;
 @class OCHTTPRequest;
-@class OCConnectionQueue;
+@class OCHTTPResponse;
 @class OCIssue;
 
 typedef NSString* OCAuthenticationMethodIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!< NSString identifier for an authentication method, f.ex. "owncloud.oauth2" for OAuth2
@@ -83,7 +83,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called by the -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] to determine if the authentication method is currently in the position to authenticate requests for the given connection. If it is, YES should be returned and the availabilityHandler shouldn't be used. If it is not (if, f.ex. a token has expired and needs to be renewed first), this method should return NO, attempt the necessary changes (if this involves scheduling requests, make sure these have their skipAuthorization to YES) and then call the availabilityHandler with the outcome. If an error is returned, all queued requests fail with the provided error.
 
 #pragma mark - Handle responses before they are delivered to the request senders
-- (NSError *)handleResponse:(OCHTTPRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
 
 @end
 

@@ -165,7 +165,7 @@
 
 - (OCCoreSyncInstruction)scheduleWithContext:(OCSyncContext *)syncContext
 {
-	NSProgress *progress;
+	OCProgress *progress;
 
 	if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
 	{

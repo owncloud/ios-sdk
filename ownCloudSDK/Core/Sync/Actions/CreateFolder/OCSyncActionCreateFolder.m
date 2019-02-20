@@ -79,7 +79,7 @@
 	if (((folderName = self.folderName) != nil) &&
 	    ((parentItem = self.localItem) != nil))
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 
 		if ((progress = [self.core.connection createFolder:folderName inside:parentItem options:nil resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{

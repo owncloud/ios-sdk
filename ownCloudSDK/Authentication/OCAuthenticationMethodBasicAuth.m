@@ -175,7 +175,7 @@ OCAuthenticationMethodAutoRegister
 
 			request.skipAuthorization = YES;
 
-			[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
+			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
 					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
@@ -185,12 +185,12 @@ OCAuthenticationMethodAutoRegister
 					BOOL authorizationFailed = YES;
 					NSError *error = nil;
 
-					if (request.responseHTTPStatus.isSuccess)
+					if (response.status.isSuccess)
 					{
 						NSError *error = nil;
 						NSDictionary *capabilitiesDict;
 
-						if ((capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+						if ((capabilitiesDict = [response bodyConvertedDictionaryFromJSONWithError:&error]) != nil)
 						{
 							if ([capabilitiesDict valueForKeyPath:@"ocs.data"] != nil)
 							{
@@ -198,11 +198,11 @@ OCAuthenticationMethodAutoRegister
 							}
 						}
 					}
-					else if (request.responseHTTPStatus.isRedirection)
+					else if (response.status.isRedirection)
 					{
 						NSURL *responseRedirectURL;
 
-						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+						if ((responseRedirectURL = response.redirectURL) != nil)
 						{
 							NSURL *alternativeBaseURL;
 

@@ -41,7 +41,14 @@
 
 	OCConnection *connection;
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	// Force-stop all pipelines to get rid of cached HTTPS certificates
+	OCSyncExec(waitForForceStops, {
+		[OCHTTPPipelineManager.sharedPipelineManager forceStopAllPipelinesGracefully:YES completionHandler:^{
+			OCSyncExecDone(waitForForceStops);
+		}];
+	});
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 	connection.hostSimulator = hostSimulator;
 
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {

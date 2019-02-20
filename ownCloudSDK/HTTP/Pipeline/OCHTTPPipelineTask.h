@@ -41,7 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *urlSessionID;		//!< The sessionIdentifier of the NSURLSession this belongs to (background queues only)
 @property(nullable,strong) NSNumber *urlSessionTaskID;		//!< After scheduling: the taskIdentifier of the NSURLSessionTask
 @property(nullable,strong) NSURLSessionTask *urlSessionTask; 	//!< After scheduling: the NSURLSessionTask of the request
-@property(nullable,strong) NSProgress *progress;		//!<
 
 @property(strong) OCHTTPPipelinePartitionID partitionID;	//!< The paritionID this request belongs to
 @property(nullable,strong) OCHTTPRequestGroupID groupID;	//!< The groupID this request belongs to
@@ -50,16 +49,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) OCHTTPRequestID requestID;			//!< The request's unique requestID
 
-@property(strong,nonatomic) OCHTTPRequest *request;		//!< The request. Lazily deserializes .requestData as needed.
+@property(nullable,strong,nonatomic) OCHTTPRequest *request;		//!< The request. Lazily deserializes .requestData as needed.
 @property(nullable,strong,nonatomic) NSData *requestData;	//!< The serialized request. Lazily serializes .request as needed.
 @property(assign) BOOL requestFinal;				//!< YES if the request can be scheduled as-is.
 
 @property(nullable,strong,nonatomic) OCHTTPResponse *response;	//!< The response. Lazily deserializes .responseData as needed.
 @property(nullable,strong,nonatomic) NSData *responseData;	//!< The serialized response. Lazily serializes .response as needed.
 
+@property(assign) BOOL finished; 				//!< The task has been finished
+
 #pragma mark - Init
 - (instancetype)initWithRequest:(OCHTTPRequest *)request pipeline:(OCHTTPPipeline *)pipeline partition:(OCHTTPPipelinePartitionID)partitionID;
 - (instancetype)initWithRowDictionary:(NSDictionary<NSString*, id<NSObject>> *)rowDictionary;
+
+- (OCHTTPResponse *)responseFromURLSessionTask:(nullable NSURLSessionTask *)urlSessionTask; //! Creates a blank .response from .request if .response is currently nil. Optionally fills/replaces the .response's httpURLResponse (and thereby status + headerFields) from the urlSessionTask.
 
 @end
 

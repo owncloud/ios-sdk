@@ -19,9 +19,7 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 
 #import "OCConnection.h"
-#import "OCConnection+OCConnectionQueue.h"
 #import "OCHTTPRequest.h"
-#import "OCConnectionQueue+BackgroundSessionRecovery.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
@@ -36,6 +34,8 @@
 #import "OCEvent.h"
 #import "NSProgress+OCEvent.h"
 #import "OCAppIdentity.h"
+#import "OCHTTPPipelineManager.h"
+#import "OCHTTPPipelineTask.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -47,16 +47,13 @@
 
 @dynamic authenticationMethod;
 
+@synthesize partitionID = _partitionID;
+
 @synthesize preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 
 @synthesize bookmark = _bookmark;
 
 @synthesize loggedInUser = _loggedInUser;
-
-@synthesize commandQueue = _commandQueue;
-
-@synthesize uploadQueue = _uploadQueue;
-@synthesize downloadQueue = _downloadQueue;
 
 @synthesize actionSignals = _actionSignals;
 
@@ -66,7 +63,7 @@
 
 @synthesize hostSimulator = _hostSimulator;
 
-@dynamic allQueues;
+@dynamic allHTTPPipelines;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -121,12 +118,11 @@
 	return(nil);
 }
 
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark
 {
 	if ((self = [super init]) != nil)
 	{
-		OCKeyValueStore *persistentStore = nil;
-		NSString *backgroundSessionIdentifier = [OCConnectionQueue localBackgroundSessionIdentifierForUUID:bookmark.uuid];
+		_partitionID = bookmark.uuid.UUIDString;
 
 		self.bookmark = bookmark;
 
@@ -140,28 +136,50 @@
 			}
 		}
 
-		_commandQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-
-		if (OCConnection.backgroundURLSessionsAllowed)
-		{
-			_persistentStoreBaseURL = persistentStoreBaseURL;
-
-			if (_persistentStoreBaseURL != nil)
-			{
-				persistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:backgroundSessionIdentifier]];
-			}
-
-			_downloadQueue = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:backgroundSessionIdentifier persistentStore:persistentStore connection:self];
-		}
-		else
-		{
-			_downloadQueue = [[OCConnectionQueue alloc] initEphermalQueueWithConnection:self];
-		}
-		_uploadQueue = _downloadQueue;
-		_attachedExtensionQueuesBySessionIdentifier = [NSMutableDictionary new];
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
 		_signals = [NSMutableSet new];
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
+
+		// Get pipelines
+		OCSyncExec(waitForPipelines, {
+			[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDEphermal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+				self->_ephermalPipeline = pipeline;
+
+				OCLogDebug(@"Retrieved ephermal pipeline %@ with error=%@", pipeline, error);
+
+				[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDLocal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+					self->_commandPipeline = pipeline;
+
+					OCLogDebug(@"Retrieved local pipeline %@ with error=%@", pipeline, error);
+
+					if (OCConnection.backgroundURLSessionsAllowed)
+					{
+						[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDBackground completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+							self->_longLivedPipeline = pipeline;
+
+							OCLogDebug(@"Retrieved longlived pipeline %@ with error=%@", pipeline, error);
+
+							OCSyncExecDone(waitForPipelines);
+						}];
+					}
+					else
+					{
+						self->_longLivedPipeline = pipeline;
+
+						OCSyncExecDone(waitForPipelines);
+					}
+				}];
+			}];
+		});
+
+		// Attach to pipelines
+		[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL *stop) {
+			OCSyncExec(waitForAttach, {
+				[pipeline attachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+					OCSyncExecDone(waitForAttach);
+				}];
+			});
+		}];
 	}
 	
 	return (self);
@@ -169,35 +187,36 @@
 
 - (void)dealloc
 {
-	[_commandQueue invalidateAndCancelWithCompletionHandler:nil];
+	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
+//		OCSyncExec(waitForDetach, {
+//			[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+//				OCSyncExecDone(waitForDetach);
+//			}];
+//		});
 
-	[_uploadQueue invalidateAndCancelWithCompletionHandler:nil];
-
-	if (_uploadQueue != _downloadQueue)
-	{
-		[_downloadQueue invalidateAndCancelWithCompletionHandler:nil];
-	}
+		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
+	}];
 }
 
 #pragma mark - Queues
-- (NSSet<OCConnectionQueue *> *)allQueues
+- (NSSet<OCHTTPPipeline *> *)allHTTPPipelines
 {
-	NSMutableSet<OCConnectionQueue *> *connectionQueues = [NSMutableSet new];
+	NSMutableSet<OCHTTPPipeline *> *connectionPipelines = [NSMutableSet new];
 
-	if (self->_uploadQueue != nil)
+	if (self->_ephermalPipeline != nil)
 	{
-		[connectionQueues addObject:self->_uploadQueue];
+		[connectionPipelines addObject:self->_ephermalPipeline];
 	}
-	if (self->_downloadQueue != nil)
+	if (self->_longLivedPipeline != nil)
 	{
-		[connectionQueues addObject:self->_downloadQueue];
+		[connectionPipelines addObject:self->_longLivedPipeline];
 	}
-	if (self->_commandQueue != nil)
+	if (self->_commandPipeline != nil)
 	{
-		[connectionQueues addObject:self->_commandQueue];
+		[connectionPipelines addObject:self->_commandPipeline];
 	}
 
-	return (connectionQueues);
+	return (connectionPipelines);
 }
 
 #pragma mark - State
@@ -227,7 +246,7 @@
 }
 
 #pragma mark - Prepare request
-- (OCHTTPRequest *)prepareRequest:(OCHTTPRequest *)request forSchedulingInQueue:(OCConnectionQueue *)queue
+- (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request
 {
 	// Insert X-Request-ID for tracing
 	{
@@ -260,7 +279,7 @@
 }
 
 #pragma mark - Handle certificate challenges
-- (void)handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
 {
 	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
 	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
@@ -304,7 +323,7 @@
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
 				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.responseCertificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.httpResponse.certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 					if (decision == OCIssueDecisionApprove)
 					{
 						if (changeUserAccepted)
@@ -312,7 +331,7 @@
 							certificate.userAccepted = YES;
 						}
 
-						self->_bookmark.certificate = request.responseCertificate;
+						self->_bookmark.certificate = request.httpResponse.certificate;
 						self->_bookmark.certificateModificationDate = [NSDate date];
 
 						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
@@ -326,19 +345,52 @@
 }
 
 #pragma mark - Post process request after it finished
-- (NSError *)postProcessFinishedRequest:(OCHTTPRequest *)request error:(NSError *)error
+- (NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
 {
-	if (!request.skipAuthorization)
+	if (!task.request.skipAuthorization)
 	{
 		OCAuthenticationMethod *authMethod;
 
 		if ((authMethod = self.authenticationMethod) != nil)
 		{
-			error = [authMethod handleResponse:request forConnection:self withError:error];
+ 			error = [authMethod handleRequest:task.request response:task.response forConnection:self withError:error];
 		}
 	}
 
 	return (error);
+}
+
+- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline canProvideAuthenticationForRequests:(nonnull void (^)(NSError * _Nonnull, BOOL))availabilityHandler
+{
+	return ([self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:availabilityHandler]);
+}
+
+- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
+{
+	return ([self meetsSignalRequirements:requiredSignals]);
+}
+
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline partitionID:(OCHTTPPipelinePartitionID)partitionID simulateRequestHandling:(OCHTTPRequest *)request completionHandler:(void (^)(OCHTTPResponse * _Nonnull))completionHandler
+{
+	if (_hostSimulator != nil)
+	{
+		return ([_hostSimulator connection:self pipeline:pipeline simulateRequestHandling:request completionHandler:completionHandler]);
+	}
+
+	return (YES);
+}
+
+#pragma mark - Rescheduling support
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
+{
+	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
+
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
+	{
+		instruction = [_delegate connection:self instructionForFinishedRequest:task.request withResponse:task.response error:error defaultsTo:instruction];
+	}
+
+	return (instruction);
 }
 
 #pragma mark - Connect & Disconnect
@@ -384,26 +436,26 @@
 		};
 
 		// Reusable Completion Handler
-		OCConnectionEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCConnectionEphermalResultHandler) = ^(OCConnectionEphermalResultHandler resultHandler)
+		OCHTTPRequestEphermalResultHandler (^CompletionHandlerWithResultHandler)(OCHTTPRequestEphermalResultHandler) = ^(OCHTTPRequestEphermalResultHandler resultHandler)
 		{
-			return ^(OCHTTPRequest *request, NSError *error){
+			return ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error){
 				if (error == nil)
 				{
-					if (request.responseHTTPStatus.isSuccess)
+					if (response.status.isSuccess)
 					{
 						// Success
-						resultHandler(request, error);
+						resultHandler(request, response, error);
 
 						return;
 					}
-					else if (request.responseHTTPStatus.isRedirection)
+					else if (response.status.isRedirection)
 					{
 						// Redirection
 						NSURL *responseRedirectURL;
 						NSError *error = nil;
 						OCIssue *issue = nil;
 
-						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+						if ((responseRedirectURL = response.redirectURL) != nil)
 						{
 							NSURL *alternativeBaseURL;
 							
@@ -429,11 +481,11 @@
 
 						connectProgress.localizedDescription = @"";
 						completionHandler(error, issue);
-						resultHandler(request, error);
+						resultHandler(request, response, error);
 
 						return;
 					}
-					else if (request.responseHTTPStatus.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+					else if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
 					{
 						// Maintenance mode
 						error = OCError(OCErrorServerInMaintenanceMode);
@@ -441,7 +493,7 @@
 					else
 					{
 						// Unknown / Unexpected HTTP status => return an error
-						error = [request.responseHTTPStatus error];
+						error = [response.status error];
 					}
 				}
 
@@ -457,7 +509,7 @@
 
 					connectProgress.localizedDescription = OCLocalizedString(@"Error", @"");
 					completionHandler(error, issue);
-					resultHandler(request, error);
+					resultHandler(request, response, error);
 				}
 			};
 		};
@@ -467,13 +519,13 @@
 		{
 			statusRequest.skipAuthorization = YES;
 
-			[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, NSError *error) {
-				if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+				if ((error == nil) && (response.status.isSuccess))
 				{
 					NSError *jsonError = nil;
 					NSDictionary <NSString *, id> *serverStatus;
 
-					serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError];
+					serverStatus = [response bodyConvertedDictionaryFromJSONWithError:&jsonError];
 
 					if (serverStatus == nil)
 					{
@@ -530,8 +582,8 @@
 								
 								// OCLogDebug(@"%@", davRequest.xmlRequest.XMLString);
 
-								[self sendRequest:davRequest toQueue:self.commandQueue ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, NSError *error) {
-									if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+								[self sendRequest:davRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+									if ((error == nil) && (response.status.isSuccess))
 									{
 										// DAV request executed successfully
 										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
@@ -590,49 +642,40 @@
 	{
 		dispatch_block_t invalidationCompletionHandler = ^{
 			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
-			NSMutableSet<OCConnectionQueue *> *connectionQueues = nil;
+			NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
 
-			// Make sure every queue is finished and invalidated only once (uploadQueue and downloadQueue f.ex. may be the same queue)
-			connectionQueues = [[NSMutableSet alloc] initWithSet:self.allQueues];
+			// Detach from all pipelines
+			pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
 
-			if ((self->_attachedExtensionQueuesBySessionIdentifier != nil) && (self->_attachedExtensionQueuesBySessionIdentifier.allValues.count > 0))
+			for (OCHTTPPipeline *pipeline in pipelines)
 			{
-				OCLogWarning(@"clearing out attached extension queues before they finished: %@", self->_attachedExtensionQueuesBySessionIdentifier);
-				[connectionQueues addObjectsFromArray:self->_attachedExtensionQueuesBySessionIdentifier.allValues];
-			}
-
-			for (OCConnectionQueue *connectionQueue in connectionQueues)
-			{
-				OCLogDebug(@"telling queue %@ to finish tasks and invalidate", connectionQueue);
+				OCLogDebug(@"detaching from pipeline %@", pipeline);
 
 				dispatch_group_enter(waitQueueTerminationGroup);
 
-				// Wait for the queue to finish all tasks, then invalidate it and call the invalidation completion handler
-				[connectionQueue finishTasksAndInvalidateWithCompletionHandler:^{
+				// Cancel non-critical requests and detach from the pipeline
+				[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
+				[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
 					dispatch_group_leave(waitQueueTerminationGroup);
 				}];
 			}
-
-			// In order for the invalidation completion handlers to trigger, the NSURLSession.delegate must be the only remaining strong reference to
-			// the OCConnectionQueue, so drop ours
-			self->_uploadQueue = nil;
-			self->_downloadQueue = nil;
-			self->_commandQueue = nil;
-			[self->_attachedExtensionQueuesBySessionIdentifier removeAllObjects];
 
 			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
 			OCConnection *strongReference = self;
 
 			dispatch_group_notify(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
-				// In order for the OCConnection to be able to process outstanding responses,
-				// A REFERENCE TO SELF MUST BE KEPT AROUND UNTIL ALL QUEUES HAVE TERMINATED.
-				// this is done through this log message, which makes this block retain
-				// strongReference (aka self):
-				OCLogDebug(@"all queues terminated, calling completionHandler: %@, bookmark: %@", completionHandler, strongReference.bookmark);
-
-				if (completionHandler!=nil)
+				@autoreleasepool
 				{
-					completionHandler();
+					// In order for the OCConnection to be able to process outstanding responses,
+					// A REFERENCE TO SELF MUST BE KEPT AROUND UNTIL ALL QUEUES HAVE TERMINATED.
+					// this is done through this log message, which makes this block retain
+					// strongReference (aka self):
+					OCLogDebug(@"all queues terminated, calling completionHandler: %@, bookmark: %@", completionHandler, strongReference.bookmark);
+
+					if (completionHandler!=nil)
+					{
+						completionHandler();
+					}
 				}
 			});
 		};
@@ -669,7 +712,18 @@
 
 - (void)cancelNonCriticalRequests
 {
-	[self.allQueues makeObjectsPerformSelector:@selector(cancelNonCriticalRequests)];
+	NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
+
+	// Detach from all pipelines
+	pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
+
+	for (OCHTTPPipeline *pipeline in pipelines)
+	{
+		OCLogDebug(@"cancelling non-critical requests from pipeline %@", pipeline);
+
+		// Cancel non-critical requests
+		[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
+	}
 }
 
 #pragma mark - Server Status
@@ -681,13 +735,13 @@
 	{
 		statusRequest.skipAuthorization = YES;
 
-		[self sendRequest:statusRequest toQueue:self.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
-			if ((error == nil) && (request.responseHTTPStatus.isSuccess))
+		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+			if ((error == nil) && (response.status.isSuccess))
 			{
 				NSError *jsonError = nil;
 				NSDictionary <NSString *, id> *serverStatus;
 
-				if ((serverStatus = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
+				if ((serverStatus = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) == nil)
 				{
 					// JSON decode error
 					completionHandler(jsonError, request, nil);
@@ -800,9 +854,9 @@
 		}
 
 		// Enqueue request
-		[self.downloadQueue enqueueRequest:davRequest];
+		[((notBeforeDate!=nil) ? self.longLivedPipeline : self.ephermalPipeline) enqueueRequest:davRequest forPartitionID:self.partitionID];
 
-		progress = davRequest.progress;
+		progress = davRequest.progress.progress;
 		progress.eventType = OCEventTypeRetrieveItemList;
 		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 	}
@@ -866,9 +920,9 @@
 				break;
 			}
 
-			if ((event.error==nil) && !request.responseHTTPStatus.isSuccess)
+			if ((event.error==nil) && !request.httpResponse.status.isSuccess)
 			{
-				event.error = request.responseHTTPStatus.error;
+				event.error = request.httpResponse.status.error;
 			}
 		}
 
@@ -879,9 +933,9 @@
 #pragma mark - Actions
 
 #pragma mark - File transfer: upload
-- (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *uploadURL;
 
 	if ((sourceURL == nil) || (newParentDirectory == nil))
@@ -1002,23 +1056,23 @@
 			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
 		}
 
-		[self.uploadQueue enqueueRequest:request];
+		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-		progress = request.progress;
-		progress.eventType = OCEventTypeUpload;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
+		requestProgress = request.progress;
+		requestProgress.progress.eventType = OCEventTypeUpload;
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
 	}
 	else
 	{
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload sender:self];
 	}
 
-	return(progress);
+	return(requestProgress);
 }
 
 - (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
 {
-	if (request.responseHTTPStatus.isSuccess)
+	if (request.httpResponse.status.isSuccess)
 	{
 		NSString *fileName = request.userInfo[@"fileName"];
 		OCItem *parentItem = request.userInfo[@"parentItem"];
@@ -1066,7 +1120,7 @@
 			}
 			else
 			{
-				event.error = request.responseHTTPStatus.error;
+				event.error = request.httpResponse.status.error;
 			}
 
 			[request.eventTarget handleEvent:event sender:self];
@@ -1075,9 +1129,9 @@
 }
 
 #pragma mark - File transfer: download
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *downloadURL;
 
 	if (item == nil)
@@ -1108,18 +1162,18 @@
 		}
 
 		// Enqueue request
-		[self.downloadQueue enqueueRequest:request];
+		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-		progress = request.progress;
-		progress.eventType = OCEventTypeDownload;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
+		requestProgress = request.progress;
+		requestProgress.progress.eventType = OCEventTypeDownload;
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 	}
 	else
 	{
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload sender:self];
 	}
 
-	return(progress);
+	return(requestProgress);
 }
 
 - (void)_handleDownloadItemResult:(OCHTTPRequest *)request error:(NSError *)error
@@ -1140,31 +1194,31 @@
 			}
 			else
 			{
-				if (request.responseHTTPStatus.isSuccess)
+				if (request.httpResponse.status.isSuccess)
 				{
 					OCFile *file = [OCFile new];
 					OCChecksumHeaderString checksumString;
 
 					file.item = request.userInfo[@"item"];
 
-					file.url = request.downloadedFileURL;
+					file.url = request.httpResponse.bodyURL;
 
-					if ((checksumString = request.response.allHeaderFields[@"oc-checksum"]) != nil)
+					if ((checksumString = request.httpResponse.headerFields[@"oc-checksum"]) != nil)
 					{
 						file.checksum = [OCChecksum checksumFromHeaderString:checksumString];
 					}
 
-					file.eTag = request.response.allHeaderFields[@"oc-etag"];
+					file.eTag = request.httpResponse.headerFields[@"oc-etag"];
 					file.fileID = file.item.fileID;
 
 					event.file = file;
 				}
 				else
 				{
-					switch (request.responseHTTPStatus.code)
+					switch (request.httpResponse.status.code)
 					{
 						default:
-							event.error = request.responseHTTPStatus.error;
+							event.error = request.httpResponse.status.error;
 						break;
 					}
 				}
@@ -1176,9 +1230,9 @@
 }
 
 #pragma mark - Action: Item update
-- (NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *itemURL;
 
 	if ((itemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
@@ -1252,11 +1306,11 @@
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
 				// Enqueue request
-				[self.commandQueue enqueueRequest:patchRequest];
+				[self.commandPipeline enqueueRequest:patchRequest forPartitionID:self.partitionID];
 
-				progress = patchRequest.progress;
-				progress.eventType = OCEventTypeUpdate;
-				progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
+				requestProgress = patchRequest.progress;
+				requestProgress.progress.eventType = OCEventTypeUpdate;
+				requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
 			}
 		}
 		else
@@ -1269,7 +1323,7 @@
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate sender:self];
 	}
 
-	return (progress);
+	return (requestProgress);
 }
 
 - (void)_handleUpdateItemResult:(OCHTTPRequest *)request error:(NSError *)error
@@ -1285,7 +1339,7 @@
 		}
 		else
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.httpResponse.status.isSuccess)
 			{
 				NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *multistatusResponsesByPath;
 				NSDictionary <OCItemPropertyName, NSString *> *responseTagsByPropertyName = request.userInfo[@"responseTagsByPropertyName"];
@@ -1321,18 +1375,21 @@
 			}
 			else
 			{
-				event.error = request.responseHTTPStatus.error;
+				event.error = request.httpResponse.status.error;
 			}
 		}
 	}
 
-	[request.eventTarget handleEvent:event sender:self];
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Action: Create Directory
-- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *createFolderURL;
 	OCPath fullFolderPath = nil;
 
@@ -1360,18 +1417,18 @@
 		request.priority = NSURLSessionTaskPriorityHigh;
 
 		// Enqueue request
-		[self.commandQueue enqueueRequest:request];
+		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-		progress = request.progress;
-		progress.eventType = OCEventTypeCreateFolder;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
+		requestProgress = request.progress;
+		requestProgress.progress.eventType = OCEventTypeCreateFolder;
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
 	}
 	else
 	{
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder sender:self];
 	}
 
-	return(progress);
+	return(requestProgress);
 }
 
 - (void)_handleCreateFolderResult:(OCHTTPRequest *)request error:(NSError *)error
@@ -1390,7 +1447,7 @@
 			OCPath fullFolderPath = request.userInfo[@"fullFolderPath"];
 			OCItem *parentItem = request.userInfo[@"parentItem"];
 
-			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			if (request.httpResponse.status.code == OCHTTPStatusCodeCREATED)
 			{
 				postEvent = NO; // Wait until all info on the new item has been received
 
@@ -1416,60 +1473,60 @@
 			}
 			else
 			{
-				switch (request.responseHTTPStatus.code)
+				switch (request.httpResponse.status.code)
 				{
 					default:
-						event.error = request.responseHTTPStatus.error;
+						event.error = request.httpResponse.status.error;
 					break;
 				}
 			}
 		}
 	}
 
-	if (postEvent)
+	if (postEvent && (event!=nil))
 	{
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
 
 #pragma mark - Action: Copy Item + Move Item
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress;
+	OCProgress *requestProgress;
 
-	if ((progress = [self _copyMoveMethod:OCHTTPMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	if ((requestProgress = [self _copyMoveMethod:OCHTTPMethodMOVE type:OCEventTypeMove item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
-		progress.eventType = OCEventTypeMove;
+		requestProgress.progress.eventType = OCEventTypeMove;
 
 		if ([item.parentFileID isEqualToString:parentItem.fileID])
 		{
-			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
+			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
 		}
 		else
 		{
-			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, parentItem.name];
+			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, parentItem.name];
 		}
 	}
 
-	return (progress);
+	return (requestProgress);
 }
 
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress;
+	OCProgress *requestProgress;
 
-	if ((progress = [self _copyMoveMethod:OCHTTPMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
+	if ((requestProgress = [self _copyMoveMethod:OCHTTPMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
-		progress.eventType = OCEventTypeCopy;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
+		requestProgress.progress.eventType = OCEventTypeCopy;
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
 	}
 
-	return (progress);
+	return (requestProgress);
 }
 
-- (NSProgress *)_copyMoveMethod:(OCHTTPMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)_copyMoveMethod:(OCHTTPMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *sourceItemURL, *destinationURL;
 	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
@@ -1497,9 +1554,9 @@
 			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
 
 			// Enqueue request
-			[self.commandQueue enqueueRequest:request];
+			[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-			progress = request.progress;
+			requestProgress = request.progress;
 		}
 	}
 	else
@@ -1507,7 +1564,7 @@
 		[eventTarget handleError:OCError(OCErrorInternal) type:eventType sender:self];
 	}
 
-	return(progress);
+	return(requestProgress);
 }
 
 - (void)_handleCopyMoveItemResult:(OCHTTPRequest *)request error:(NSError *)error
@@ -1534,7 +1591,7 @@
 				newFullPath = [newFullPath stringByAppendingString:@"/"];
 			}
 
-			if (request.responseHTTPStatus.code == OCHTTPStatusCodeCREATED)
+			if (request.httpResponse.status.code == OCHTTPStatusCodeCREATED)
 			{
 				postEvent = NO; // Wait until all info on the new item has been received
 
@@ -1560,7 +1617,7 @@
 			}
 			else
 			{
-				switch (request.responseHTTPStatus.code)
+				switch (request.httpResponse.status.code)
 				{
 					case OCHTTPStatusCodeFORBIDDEN:
 						event.error = OCError(OCErrorItemOperationForbidden);
@@ -1583,23 +1640,23 @@
 					break;
 
 					default:
-						event.error = request.responseHTTPStatus.error;
+						event.error = request.httpResponse.status.error;
 					break;
 				}
 			}
 		}
 	}
 
-	if (postEvent)
+	if (postEvent && (event!=nil))
 	{
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
 
 #pragma mark - Action: Delete Item
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
 {
-	NSProgress *progress = nil;
+	OCProgress *requestProgress = nil;
 	NSURL *deleteItemURL;
 
 	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
@@ -1622,19 +1679,19 @@
 		}
 
 		// Enqueue request
-		[self.commandQueue enqueueRequest:request];
+		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-		progress = request.progress;
+		requestProgress = request.progress;
 
-		progress.eventType = OCEventTypeDelete;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
+		requestProgress.progress.eventType = OCEventTypeDelete;
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
 	}
 	else
 	{
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
 	}
 
-	return(progress);
+	return(requestProgress);
 }
 
 - (void)_handleDeleteItemResult:(OCHTTPRequest *)request error:(NSError *)error
@@ -1649,15 +1706,15 @@
 		}
 		else
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.httpResponse.status.isSuccess)
 			{
 				// Success (at the time of writing (2018-06-18), OC core doesn't support a multi-status response for this
 				// command, so this scenario isn't handled here
-				event.result = request.responseHTTPStatus;
+				event.result = request.httpResponse.status;
 			}
 			else
 			{
-				switch (request.responseHTTPStatus.code)
+				switch (request.httpResponse.status.code)
 				{
 					case OCHTTPStatusCodeFORBIDDEN:
 						/*
@@ -1703,14 +1760,17 @@
 					break;
 
 					default:
-						event.error = request.responseHTTPStatus.error;
+						event.error = request.httpResponse.status.error;
 					break;
 				}
 			}
 		}
 	}
 
-	[request.eventTarget handleEvent:event sender:self];
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Action: Retrieve Thumbnail
@@ -1786,16 +1846,9 @@
 		}
 
 		// Enqueue request
-		if (request.downloadRequest)
-		{
-			[self.downloadQueue enqueueRequest:request];
-		}
-		else
-		{
-			[self.commandQueue enqueueRequest:request];
-		}
+		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
-		progress = request.progress;
+		progress = request.progress.progress;
 	}
 
 	if (error != nil)
@@ -1818,31 +1871,21 @@
 		}
 		else
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.httpResponse.status.isSuccess)
 			{
 				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
 				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
 				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
 
-				thumbnail.mimeType = request.response.allHeaderFields[@"Content-Type"];
+				thumbnail.mimeType = request.httpResponse.headerFields[@"Content-Type"];
 
-				if (request.responseBodyData != nil)
+				if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
 				{
-					thumbnail.data = request.responseBodyData;
+					thumbnail.url = request.downloadedFileURL;
 				}
 				else
 				{
-					if (request.downloadedFileURL)
-					{
-						if (request.downloadedFileIsTemporary)
-						{
-							thumbnail.data = [NSData dataWithContentsOfURL:request.downloadedFileURL];
-						}
-						else
-						{
-							thumbnail.url = request.downloadedFileURL;
-						}
-					}
+					thumbnail.data = request.httpResponse.bodyData;
 				}
 
 				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
@@ -1852,26 +1895,28 @@
 			}
 			else
 			{
-				event.error = request.responseHTTPStatus.error;
+				event.error = request.httpResponse.status.error;
 			}
 		}
 	}
 
-	[request.eventTarget handleEvent:event sender:self];
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Actions
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	// Stub implementation
 	return(nil);
 }
 
 #pragma mark - Sending requests
-- (NSProgress *)sendRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler
+- (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler
 {
 	request.ephermalResultHandler = ephermalResultHandler;
-	request.resultHandlerAction = @selector(_handleSendRequestResult:error:);
 
 	// Strictly enfore bookmark certificate ..
 	if (self.state != OCConnectionStateDisconnected) // .. for all requests if connecting or connected ..
@@ -1884,86 +1929,24 @@
 		}
 	}
 	
-	[queue enqueueRequest:request];
+	[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	
-	return (request.progress);
-}
-
-- (void)_handleSendRequestResult:(OCHTTPRequest *)request error:(NSError *)error
-{
-	if (request.ephermalResultHandler != nil)
-	{
-		request.ephermalResultHandler(request, error);
-	}
+	return (request.progress.progress);
 }
 
 #pragma mark - Sending requests synchronously
-- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue
+- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request
 {
 	__block NSError *retError = nil;
 
 	OCSyncExec(requestCompletion, {
-		[self sendRequest:request toQueue:queue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
+		[self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			retError = error;
 			OCSyncExecDone(requestCompletion);
 		}];
 	});
 
 	return (retError);
-}
-
-#pragma mark - Resume background sessions
-- (void)resumeBackgroundSessions
-{
-	NSArray <NSString *> *otherBackgroundSessionIdentifiers = [OCConnectionQueue otherBackgroundSessionIdentifiersForUUID:self.bookmark.uuid];
-
-	for (NSString *otherBackgroundSessionIdentifier in otherBackgroundSessionIdentifiers)
-	{
-		OCKeyValueStore *otherPersistentStore = nil;
-
-		if (_persistentStoreBaseURL != nil)
-		{
-			otherPersistentStore = [[OCKeyValueStore alloc] initWithRootURL:[_persistentStoreBaseURL URLByAppendingPathComponent:otherBackgroundSessionIdentifier]];
-		}
-
-		@synchronized(_attachedExtensionQueuesBySessionIdentifier)
-		{
-			if (_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] == nil)
-			{
-				_attachedExtensionQueuesBySessionIdentifier[otherBackgroundSessionIdentifier] = [[OCConnectionQueue alloc] initBackgroundSessionQueueWithIdentifier:otherBackgroundSessionIdentifier persistentStore:otherPersistentStore connection:self];
-			}
-		}
-	}
-}
-
-- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier
-{
-	OCConnectionQueue *resumedBackgroundConnectionQueue = nil;
-
-	if (backgroundSessionIdentifier == nil) { return; }
-
-	if ((resumedBackgroundConnectionQueue = _attachedExtensionQueuesBySessionIdentifier[backgroundSessionIdentifier]) != nil)
-	{
-		@synchronized(_attachedExtensionQueuesBySessionIdentifier)
-		{
-			[_attachedExtensionQueuesBySessionIdentifier removeObjectForKey:backgroundSessionIdentifier];
-		}
-
-		[resumedBackgroundConnectionQueue finishTasksAndInvalidateWithCompletionHandler:nil];
-	}
-}
-
-#pragma mark - Rescheduling support
-- (OCHTTPRequestInstruction)instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error
-{
-	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
-
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:error:defaultsTo:)])
-	{
-		instruction = [_delegate connection:self instructionForFinishedRequest:finishedRequest error:error defaultsTo:instruction];
-	}
-
-	return (instruction);
 }
 
 #pragma mark - Log tags

@@ -256,10 +256,10 @@
 }
 
 #pragma mark - Handle responses before they are delivered to the request senders
-- (NSError *)handleResponse:(OCHTTPRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
 {
 	// If a request returns with an UNAUTHORIZED status code, turn it into an actual error
-	if (request.responseHTTPStatus.code == OCHTTPStatusCodeUNAUTHORIZED)
+	if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
 	{
 		if (error == nil)
 		{

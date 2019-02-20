@@ -382,7 +382,7 @@ OCAuthenticationMethodAutoRegister
 				    forHeaderField:@"Authorization"];
 		
 		// Send Token Request
-		[connection sendRequest:tokenRequest toQueue:connection.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
+		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			OCLogDebug(@"Received token request result (error=%@)", error);
 
 			// Handle Token Request Result
@@ -390,7 +390,7 @@ OCAuthenticationMethodAutoRegister
 			{
 				NSDictionary *jsonResponseDict;
 				
-				if ((jsonResponseDict = [request responseBodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
+				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
 				{
 					NSString *jsonError;
 

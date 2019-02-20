@@ -39,6 +39,8 @@
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
 #import "OCCore+ItemUpdates.h"
+#import "OCHTTPPipelineManager.h"
+#import "OCProgressManager.h"
 
 @interface OCCore ()
 {
@@ -160,7 +162,7 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
-		_connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:_vault.connectionDataRootURL];
+		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, nil];
 		_connection.delegate = self;
@@ -300,8 +302,8 @@
 
 				[self _updateState:OCCoreStateStopping];
 
-				// Cancel non-critical requests to speed up shutdown
-				[self->_connection cancelNonCriticalRequests];
+				// Cancel non-critical requests
+				[self.connection cancelNonCriticalRequests];
 
 				// Wait for running operations to finish
 				self->_runningActivitiesCompleteBlock = ^{
@@ -1139,6 +1141,43 @@
 	{
 		dispatch_async(_connectivityQueue, block);
 	}
+}
+
+#pragma mark - Progress resolution
+- (NSProgress *)resolveProgress:(OCProgress *)progress withContext:(OCProgressResolutionContext)context
+{
+	NSProgress *resolvedProgress = nil;
+
+	if (!progress.nextPathElementIsLast)
+	{
+		if ([progress.nextPathElement isEqual:OCCoreSyncRecordPath])
+		{
+			if (progress.nextPathElementIsLast)
+			{
+				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
+				OCProgress *sourceProgress = nil;
+
+				resolvedProgress = [NSProgress indeterminateProgress];
+				resolvedProgress.cancellable = progress.cancellable;
+
+				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
+				{
+					NSProgress *sourceNSProgress;
+
+					if ((sourceNSProgress = [sourceProgress resolveWith:nil]) != nil)
+					{
+						resolvedProgress.localizedDescription = sourceNSProgress.localizedDescription;
+						resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
+
+						resolvedProgress.totalUnitCount += 200;
+						[resolvedProgress addChild:sourceNSProgress withPendingUnitCount:200];
+					}
+				}
+			}
+		}
+	}
+
+	return (resolvedProgress);
 }
 
 #pragma mark - Log tags

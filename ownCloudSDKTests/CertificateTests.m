@@ -62,7 +62,7 @@
 
 	for (NSURL *urlToTest in urlsToTest)
 	{
-		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest] persistentStoreBaseURL:nil];
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest]];
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;
@@ -77,7 +77,7 @@
 			proceedHandler(YES, nil);
 		};
 
-		[connection sendSynchronousRequest:request toQueue:connection.commandQueue];
+		[connection sendSynchronousRequest:request];
 	}
 }
 

@@ -196,6 +196,26 @@
 	return (_archivedServerItem);
 }
 
+#pragma mark - Restore progress
+- (OCItem *)itemToRestoreProgressRegistrationFor
+{
+	return (nil);
+}
+
+- (void)restoreProgressRegistrationForSyncRecord:(OCSyncRecord *)syncRecord
+{
+	NSProgress *progress = nil;
+	OCItem *item;
+
+	if ((item = [self itemToRestoreProgressRegistrationFor]) != nil)
+	{
+		if ((progress = [syncRecord.progress resolveWith:nil]) != nil)
+		{
+			[self.core registerProgress:progress forItem:item];
+		}
+	}
+}
+
 #pragma mark - NSSecureCoding
 + (BOOL)supportsSecureCoding
 {

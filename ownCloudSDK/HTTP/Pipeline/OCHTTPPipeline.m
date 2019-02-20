@@ -19,32 +19,58 @@
 #import "OCHTTPPipeline.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse.h"
+#import "OCHTTPPipelineBackend.h"
+#import "OCHTTPPipelineManager.h"
 #import "OCProcessManager.h"
 #import "OCLogger.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
+#import "NSProgress+OCExtensions.h"
 
 @interface OCHTTPPipeline ()
+{
+	dispatch_block_t _invalidationCompletionHandler;
+
+	NSURLSessionConfiguration *_sessionConfiguration;
+
+	NSMutableDictionary<NSString*, NSURLSession*> *_attachedURLSessionsByIdentifier;
+	NSMutableDictionary<NSString*, dispatch_block_t> *_sessionCompletionHandlersByIdentifiers;
+
+	NSMutableSet<OCHTTPPipelinePartitionID> *_partitionsInDestruction;
+	NSMutableDictionary<OCHTTPPipelinePartitionID, NSMutableArray<dispatch_block_t> *> *_partitionEmptyHandlers;
+
+	dispatch_group_t _busyGroup;
+}
+
 - (void)queueBlock:(dispatch_block_t)block;
 @end
 
 @implementation OCHTTPPipeline
 
-#pragma mark - Init
-- (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration;
+#pragma mark - Lifecycle
+- (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration
 {
 	if ((self = [super init]) != nil)
 	{
 		// Set up internals
-		_attachedParititionHandlerIDs = [NSMutableArray new];
-		_partitionHandlersByID = [NSMutableDictionary new];
+		_partitionHandlersByID = [NSMapTable strongToWeakObjectsMapTable];
 		_recentlyScheduledGroupIDs = [NSMutableArray new];
+		_cachedCertificatesByHostnameAndPort = [NSMutableDictionary new];
+		_taskIDsInDelivery = [NSMutableSet new];
+		_partitionEmptyHandlers = [NSMutableDictionary new];
 
 		_insertXRequestID = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineInsertXRequestTracingID] boolValue];
+
+		_attachedURLSessionsByIdentifier = [NSMutableDictionary new];
+		_sessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
+		_partitionsInDestruction = [NSMutableSet new];
+
+		_busyGroup = dispatch_group_create();
 
 		// Set backend
 		if (backend == nil)
 		{
-			backend = [[OCHTTPPipelineBackend alloc] initWithSQLDB:nil];
+			backend = [OCHTTPPipelineBackend new];
 		}
 
 		_backend = backend;
@@ -61,19 +87,226 @@
 		// Grab the session identifier for those sessions that have it
 		_urlSessionIdentifier = sessionConfiguration.identifier;
 
-		// Create URL session
-		_urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration
-							    delegate:self
-						       delegateQueue:nil];
+		// Prepare URL session creation
+		_sessionConfiguration = sessionConfiguration;
 	}
 
 	return (self);
 }
 
+- (void)startWithCompletionHandler:(OCCompletionHandler)completionHandler
+{
+	@synchronized(self)
+	{
+		switch (_state)
+		{
+			case OCHTTPPipelineStateStarted:
+				completionHandler(self, nil);
+			break;
+
+			case OCHTTPPipelineStateStopped: {
+				_state = OCHTTPPipelineStateStarting;
+
+				[self.backend openWithCompletionHandler:^(id sender, NSError *error) {
+					@synchronized(self)
+					{
+						self->_state = OCHTTPPipelineStateStarted;
+					}
+
+					if (error == nil)
+					{
+						// Start URLSession
+						self->_urlSession = [NSURLSession sessionWithConfiguration:self->_sessionConfiguration delegate:self delegateQueue:nil];
+
+						[self _recoverQueueForURLSession:self->_urlSession];
+					}
+
+					completionHandler(self, error);
+				}];
+			}
+			break;
+
+			default:
+				completionHandler(self, OCError(OCErrorRunningOperation));
+			break;
+		}
+	}
+}
+
+- (void)stopWithCompletionHandler:(OCCompletionHandler)completionHandler graceful:(BOOL)graceful
+{
+	@synchronized(self)
+	{
+		switch (_state)
+		{
+			case OCHTTPPipelineStateStopped:
+				completionHandler(self, nil);
+			break;
+
+			case OCHTTPPipelineStateStarted: {
+				dispatch_block_t invalidationCompletionHandler = ^{
+					// Queue this block so that any operations to be queued from the current run have a chance to before closing down
+					[self queueBlock:^{
+						// Wait for outstanding operations to finish
+						OCLogDebug(@"Waiting for outstanding operations to finish");
+
+						dispatch_group_notify(self->_busyGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+							@autoreleasepool
+							{
+								[self.backend closeWithCompletionHandler:^(id sender, NSError *error) {
+									@synchronized(self)
+									{
+										self->_state = OCHTTPPipelineStateStopped;
+									}
+
+									OCLogDebug(@"Calling stopCompletionHandler %p", completionHandler);
+									completionHandler(self, error);
+								}];
+							}
+						});
+					} withBusy:NO];
+				};
+
+				_state = OCHTTPPipelineStateStopping;
+
+				if (graceful)
+				{
+					[self finishTasksAndInvalidateWithCompletionHandler:invalidationCompletionHandler];
+				}
+				else
+				{
+					[self invalidateAndCancelWithCompletionHandler:invalidationCompletionHandler];
+				}
+			}
+			break;
+
+			default:
+				completionHandler(self, OCError(OCErrorRunningOperation));
+			break;
+		}
+	}
+}
+
+#pragma mark - Queue recovery
+- (void)_recoverQueueForURLSession:(NSURLSession *)urlSession
+{
+	__block NSArray <NSURLSessionTask *> *urlSessionTasks = nil;
+	__block NSMutableArray <OCHTTPPipelineTask *> *droppedTasks = [NSMutableArray new];
+	NSString *urlSessionIdentifier = urlSession.configuration.identifier;
+
+	OCSyncExec(retrieveTasks, {
+		[urlSession getAllTasksWithCompletionHandler:^(NSArray<__kindof NSURLSessionTask *> * _Nonnull tasks) {
+			urlSessionTasks = tasks;
+			OCSyncExecDone(retrieveTasks);
+		}];
+	});
+
+	// Re-attach URL session tasks to pipeline tasks
+	for (NSURLSessionTask *urlSessionTask in urlSessionTasks)
+	{
+		NSError *backendError = nil;
+		OCHTTPPipelineTask *task;
+
+		if ((task = [self.backend retrieveTaskForPipeline:self URLSession:urlSession task:urlSessionTask error:&backendError]) != nil)
+		{
+			if (task.urlSessionTask == nil)
+			{
+				task.urlSessionTask = urlSessionTask;
+
+				// Reconnect/Recreate progress
+				if (task.request.progress.progress == nil)
+				{
+					task.request.progress.progress = [NSProgress indeterminateProgress];
+				}
+
+				if (task.request.progress.progress != nil)
+				{
+					__weak OCHTTPPipeline *weakSelf = self;
+					__weak OCHTTPRequest *weakRequest = task.request;
+
+					task.request.progress.progress.cancellationHandler = ^{
+						if (weakRequest != nil)
+						{
+							[weakSelf cancelRequest:weakRequest];
+						}
+					};
+
+					task.request.progress.progress.totalUnitCount += 200;
+					[task.request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+				}
+			}
+		}
+		else
+		{
+			OCLogError(@"Could not recover task from urlSessionTask=%@ with backendError=%@", urlSessionTask, backendError);
+		}
+	}
+
+	// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
+	[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
+		if ([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] && (pipelineTask.urlSessionTask == nil) && (pipelineTask.state == OCHTTPPipelineTaskStateRunning))
+		{
+			[droppedTasks addObject:pipelineTask];
+		}
+	}];
+
+	// Drop identified tasks
+	for (OCHTTPPipelineTask *task in droppedTasks)
+	{
+		[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestDroppedByURLSession)]];
+	}
+}
+
 #pragma mark - Request handling
 - (void)enqueueRequest:(OCHTTPRequest *)request forPartitionID:(OCHTTPPipelinePartitionID)partitionID
 {
+	[self enqueueRequest:request forPartitionID:partitionID isFinal:NO];
+}
+
+- (void)enqueueRequest:(OCHTTPRequest *)request forPartitionID:(OCHTTPPipelinePartitionID)partitionID isFinal:(BOOL)isFinal
+{
 	OCHTTPPipelineTask *pipelineTask;
+
+	// Check pipeline state
+	@synchronized(self)
+	{
+		if (_state != OCHTTPPipelineStateStarted)
+		{
+			OCLogError(@"Attempt to enqueue request before pipeline is started");
+			return;
+		}
+
+		// Check if partition is being destroyed
+		if ([self->_partitionsInDestruction containsObject:partitionID])
+		{
+			OCLogError(@"Attempt to enqueue request for partitionID=%@ that's being destroyed", partitionID);
+			return;
+		}
+	}
+
+	// Update progress object
+	if (request.progress.progress == nil)
+	{
+		request.progress.progress = [NSProgress indeterminateProgress];
+	}
+
+	if (request.progress.progress != nil)
+	{
+		__weak OCHTTPPipeline *weakSelf = self;
+		__weak OCHTTPRequest *weakRequest = request;
+
+		request.progress.progress.cancellationHandler = ^{
+			if (weakRequest != nil)
+			{
+				[weakSelf cancelRequest:weakRequest];
+			}
+		};
+	}
+
+	if (_alwaysUseDownloadTasks)
+	{
+		request.downloadRequest = YES;
+	}
 
 	if ((request != nil) && (request.identifier != nil) && _insertXRequestID)
 	{
@@ -83,6 +316,8 @@
 
 	if ((pipelineTask = [[OCHTTPPipelineTask alloc] initWithRequest:request pipeline:self partition:partitionID]) != nil)
 	{
+		pipelineTask.requestFinal = isFinal;
+
 		[_backend addPipelineTask:pipelineTask];
 
 		[self setPipelineNeedsScheduling];
@@ -91,12 +326,102 @@
 
 - (void)cancelRequest:(OCHTTPRequest *)request
 {
+	if (request == nil) { return; }
 
+	// Check pipeline state
+	@synchronized(self)
+	{
+		if (_state != OCHTTPPipelineStateStarted)
+		{
+			OCLogError(@"Attempt to cancel request before pipeline is started");
+			return;
+		}
+	}
+
+	[self queueBlock:^{
+		[self _cancelRequest:request];
+	}];
+}
+
+- (void)_cancelRequest:(OCHTTPRequest *)request
+{
+	NSError *backendError = nil;
+	OCHTTPPipelineTask *task = nil;
+
+	if ((task = [self.backend retrieveTaskForRequestID:request.identifier error:&backendError]) != nil)
+	{
+		[self _cancelTask:task];
+	}
+	else
+	{
+		OCLogError(@"Could not retrieve task for requestID=%@ with error=%@", request.identifier, backendError);
+	}
+}
+
+- (void)_cancelTask:(OCHTTPPipelineTask *)task
+{
+	if (task == nil) { return; }
+
+	switch (task.state)
+	{
+		case OCHTTPPipelineTaskStateRunning:
+			// Cancel the URLSessionTask if one is known
+			if (!task.request.cancelled)
+			{
+				task.request.cancelled = YES;
+				task.request.progress.cancelled = YES;
+
+				if (task.urlSessionTask != nil)
+				{
+					[task.urlSessionTask cancel];
+
+					[self.backend updatePipelineTask:task];
+					break;
+				}
+			}
+
+			// Insta-cancel otherwise
+
+		case OCHTTPPipelineTaskStatePending:
+			// Not scheduled yet => insta-cancel
+			[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestCancelled)]];
+		break;
+
+		case OCHTTPPipelineTaskStateCompleted:
+			// Can't cancel what's already complete
+		break;
+	}
 }
 
 - (void)cancelRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID queuedOnly:(BOOL)queuedOnly
 {
+	// Check pipeline state
+	@synchronized(self)
+	{
+		if (_state != OCHTTPPipelineStateStarted)
+		{
+			OCLogError(@"Attempt to cancel requests before pipeline is started");
+			return;
+		}
+	}
 
+	[self queueInline:^{
+		NSMutableArray <OCHTTPPipelineTask *> *tasksToCancel = [NSMutableArray new];
+
+		[self.backend enumerateTasksForPipeline:self partition:partitionID enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+			if (queuedOnly && (task.state!=OCHTTPPipelineTaskStatePending))
+			{
+				return;
+			}
+
+			[tasksToCancel addObject:task];
+		}];
+
+		for (OCHTTPPipelineTask *task in tasksToCancel)
+		{
+			[self _cancelTask:task];
+		}
+	}];
 }
 
 #pragma mark - Scheduling
@@ -131,12 +456,25 @@
 		- requests are only considered for scheduling if a partitionHandler is attached for them - or they have the .requestFinal flag set
 	*/
 
+	@synchronized(self)
+	{
+		// Only schedule if pipeline is started
+		if (_state != OCHTTPPipelineStateStarted)
+		{
+			OCLogWarning(@"Attempt to schedule before pipeline is started.");
+			return;
+		}
+
+		// Reset needsScheduling
+		_needsScheduling = NO;
+	}
+
 	// Enforce .maximumConcurrentRequests
 	if (self.maximumConcurrentRequests != 0)
 	{
 		NSNumber *runningRequestsCount;
 
-		if ((runningRequestsCount = [_backend numberOfRequestsWithState:OCHTTPPipelineTaskStateRunning inPipeline:self error:NULL]) != nil)
+		if ((runningRequestsCount = [_backend numberOfRequestsWithState:OCHTTPPipelineTaskStateRunning inPipeline:self partition:nil error:NULL]) != nil)
 		{
 			if (runningRequestsCount.unsignedIntegerValue >= self.maximumConcurrentRequests)
 			{
@@ -170,7 +508,14 @@
 
 		@synchronized(self)
 		{
-			partitionHandler = self->_partitionHandlersByID[partitionID];
+			// Check if partition is being destroyed => skip
+			if ([self->_partitionsInDestruction containsObject:partitionID])
+			{
+				return;
+			}
+
+			// Retrieve partition handler
+			partitionHandler = [self partitionHandlerForPartitionID:partitionID];
 		}
 
 		if (!task.requestFinal)
@@ -239,7 +584,7 @@
 							if (!schedule && (failWithError!=nil))
 							{
 								// Required signal check returned a failWithError => make request fail with that error
-								[self _finishedRequest:task.request withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:failWithError]];
+								[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:failWithError]];
 								return;
 							}
 						}
@@ -290,6 +635,8 @@
 		}
 	}];
 
+	// OCLogDebug(@"Scheduler state: schedulableTasksByGroupID=%@, blockedGroupIDs=%@, remainingSlots=%d, recentlyScheduledGroupIDs=%@", schedulableTasksByGroupID, blockedGroupIDs, remainingSlots, _recentlyScheduledGroupIDs);
+
 	// Filter and sort tasks
 	if (schedulableTasksByGroupID.count > 0)
 	{
@@ -325,13 +672,15 @@
 				// Add the oldest task from this group
 				if ((task = tasks.firstObject) != nil)
 				{
-					[scheduleTasks insertObject:task atIndex:0];
+					[scheduleTasks addObject:task];
 					[tasks removeObjectAtIndex:0];
 				}
 
 				[schedulableGroupIDs removeObject:groupID]; // Done with this group
 			}
 		}
+
+		// OCLogDebug(@"schedulableGroupIDs=%@", schedulableGroupIDs);
 
 		// Prioritize requests from groups whose requests have never been scheduled even higher (by inserting them at the top)
 		for (OCHTTPRequestGroupID groupID in schedulableGroupIDs)
@@ -359,11 +708,15 @@
 			[scheduleTasks addObjectsFromArray:tasks];
 		}
 
+		// OCLogDebug(@"scheduleTasks=%@", scheduleTasks);
+
 		// Reduce to maximum of remainingSlots
 		if (scheduleTasks.count > remainingSlots)
 		{
 			[scheduleTasks removeObjectsInRange:NSMakeRange(remainingSlots, scheduleTasks.count-remainingSlots)];
 		}
+
+		// OCLogDebug(@"scheduleTasksShortened=%@", scheduleTasks);
 
 		// Update recentlyScheduledGroupIDs
 		for (OCHTTPPipelineTask *task in scheduleTasks)
@@ -402,6 +755,7 @@
 		// PartitionID is mandatory. Remove and return if missing.
 		OCLogWarning(@"Mandatory partitionID missing from task=%@. Removing task.", task);
 		[_backend removePipelineTask:task];
+		[self _triggerPartitionEmptyHandlers];
 		return;
 	}
 	else if (request.cancelled)
@@ -421,7 +775,7 @@
 
 		@synchronized(self)
 		{
-			partitionHandler = _partitionHandlersByID[partitionID];
+			partitionHandler = [_partitionHandlersByID objectForKey:partitionID];
 		}
 
 		// Prepare request
@@ -448,7 +802,7 @@
 			if ((partitionHandler!=nil) && [partitionHandler respondsToSelector:@selector(pipeline:partitionID:simulateRequestHandling:completionHandler:)])
 			{
 				createTask = [partitionHandler pipeline:self partitionID:partitionID simulateRequestHandling:request completionHandler:^(OCHTTPResponse * _Nonnull response) {
-					[self finishedRequest:request withResponse:response];
+					[self finishedTask:task withResponse:response];
 				}];
 			}
 
@@ -502,15 +856,15 @@
 					task.urlSessionTaskID = @(urlSessionTask.taskIdentifier);
 					task.urlSessionID = _urlSessionIdentifier;
 
-					// Connect task progress to request progress (TODO / TO-REMOVE / TO-REPLACE)
-					request.progress.totalUnitCount += 200;
-					[request.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+					// Connect task progress to request progress
+					request.progress.progress.totalUnitCount += 200;
+					[request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
 
 					// Update internal tracking collections
 					task.state = OCHTTPPipelineTaskStateRunning;
 					updateTask = YES;
 
-					OCLogDebug(@"saved request for taskIdentifier <%@>, URL: %@, %p", request.urlSessionTaskIdentifier, urlRequest, self);
+					OCLogDebug(@"saved request for taskIdentifier <%ld>, URL: %@, %p", urlSessionTask.taskIdentifier, urlRequest, self);
 
 					// Start task
 					if (resumeSessionTask)
@@ -524,17 +878,12 @@
 							{
 								absoluteURLString = @"";
 							}
-
-							if (request.earliestBeginDate == nil) // Don't create system activity for long-running requests
-							{
-								request.systemActivity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiatedAllowingIdleSystemSleep reason:[@"Request to " stringByAppendingString:absoluteURLString]];
-							}
 						}
 
 						// Notify request observer
 						if (request.requestObserver != nil)
 						{
-							resumeSessionTask = !request.requestObserver(request, OCHTTPRequestObserverEventTaskResume);
+							resumeSessionTask = !request.requestObserver(task, request, OCHTTPRequestObserverEventTaskResume);
 						}
 					}
 
@@ -563,7 +912,7 @@
 	// Log request
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", request.urlSessionTaskIdentifier), nil];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
 	}
 
@@ -577,38 +926,263 @@
 	if (error != nil)
 	{
 		[self queueBlock:^{
-			[self finishedRequest:request withResponse:[OCHTTPResponse responseWithRequest:request HTTPError:error]];
+			[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:request HTTPError:error]];
 		}];
 	}
 }
 
 #pragma mark - Request result handling
-- (void)finishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response
+- (void)finishedTask:(OCHTTPPipelineTask *)task withResponse:(OCHTTPResponse *)response
 {
 	[self queueBlock:^{
-		[self _finishedRequest:request withResponse:response];
+		[self _finishedTask:task withResponse:response];
+		[self setPipelineNeedsScheduling];
 	}];
 }
 
-- (void)_finishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response
+- (void)_finishedTask:(OCHTTPPipelineTask *)task withResponse:(OCHTTPResponse *)response // allowRescheduling:(BOOL)reschedulingAllowed
 {
+	OCHTTPRequest *request = task.request;
 
+	if (task==nil) { return; }
+	if (request==nil) { return; }
+
+	if (task.finished)
+	{
+		OCLogWarning(@"Repeated calls to finishedTask:withResponse: for requestID=%@ (normal in case of reschedules)", task.requestID);
+	}
+
+	task.finished = YES;
+
+	// Check if this request should have a responseCertificate ..
+	if ((response.error == nil) && (response.httpError == nil))
+	{
+		NSURL *requestURL = request.url;
+
+		if ([requestURL.scheme.lowercaseString isEqualToString:@"https"])
+		{
+			// .. but hasn't ..
+			if (response.certificate == nil)
+			{
+				NSString *hostnameAndPort;
+
+				// .. and if we have one available in that case
+				if ((hostnameAndPort = [NSString stringWithFormat:@"%@:%@", requestURL.host.lowercaseString, ((requestURL.port!=nil)?requestURL.port : @"443" )]) != nil)
+				{
+					@synchronized(self)
+					{
+						// Attach certificate from cache (NSURLSession probably didn't do because the certificate is still cached in its internal TLS cache and we were asked before. Also see https://developer.apple.com/library/content/qa/qa1727/_index.html and https://github.com/AFNetworking/AFNetworking/issues/991 .)
+						if ((response.certificate = _cachedCertificatesByHostnameAndPort[hostnameAndPort]) != nil)
+						{
+							// Evaluate / prompt on delivery
+							response.certificateValidationResult = OCCertificateValidationResultNone;
+						}
+						else
+						{
+							response.httpError = OCError(OCErrorCertificateMissing);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Update task in backend
+	task.response = response;
+	task.state = OCHTTPPipelineTaskStateCompleted;
+	[self.backend updatePipelineTask:task];
+
+	// Log response
+	if (OCLogger.logLevel <= OCLogLevelDebug)
+	{
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
+	}
+
+	// Attempt delivery
+	[self _deliverResultForTask:task];
 }
 
-- (void)_deliverResultForTask:(OCHTTPPipelineTask *)task
+- (BOOL)_deliverResultForTask:(OCHTTPPipelineTask *)task
 {
+	// Get partitionHandler
+	id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
+	BOOL removeTask = NO;
 
+	if (task.partitionID != nil)
+	{
+		@synchronized(self)
+		{
+			partitionHandler = [_partitionHandlersByID objectForKey:task.partitionID];
+		}
+	}
+
+	if (partitionHandler != nil)
+	{
+		NSError *error = task.response.httpError;
+		NSMutableSet <OCHTTPPipelineTaskID> *taskIDsInDelivery = _taskIDsInDelivery;
+		dispatch_block_t updateTaskAndRetryDelivery = ^{
+			[self queueBlock:^{
+				[self.backend updatePipelineTask:task];
+
+				@synchronized(taskIDsInDelivery)
+				{
+					[taskIDsInDelivery removeObject:task.taskID];
+				}
+
+				[self _deliverResultForTask:task];
+			}];
+		};
+
+		// Add to _taskIDsInDelivery, so delivery isn't retried until async work has finished.
+		// (=> since this tracked in-memory, a crash/app termination will automatically result in delivery being retried)
+		@synchronized(taskIDsInDelivery)
+		{
+			if ([taskIDsInDelivery containsObject:task.taskID])
+			{
+				return (NO);
+			}
+
+			[taskIDsInDelivery addObject:task.taskID];
+		}
+
+		// Make response available via OCHTTPRequest.httpResponse
+		task.request.httpResponse = task.response;
+
+		// Check certificate validation status (for post-response attached certificates)
+		if ((task.response.certificate != nil) && (task.response.certificateValidationResult == OCCertificateValidationResultNone))
+		{
+			OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed, NSError *proceedError) {
+				if (!proceed)
+				{
+					task.response.error = (proceedError != nil) ? proceedError : OCError(OCErrorRequestServerCertificateRejected);
+					task.response.httpError = proceedError;
+				}
+
+				updateTaskAndRetryDelivery();
+			};
+
+			[self evaluateCertificate:task.response.certificate forTask:task proceedHandler:proceedHandler];
+
+			return (NO);
+		}
+
+		// If error is that request was cancelled, use request.error if set
+		if ([error.domain isEqualToString:NSURLErrorDomain] && (error.code==NSURLErrorCancelled))
+		{
+			if (task.response.error!=nil)
+			{
+				error = task.response.error;
+			}
+			else
+			{
+				error = OCErrorFromError(OCErrorRequestCancelled, error);
+			}
+		}
+
+		// Give connection a chance to pass it off to authentication methods / interpret the error before delivery to the sender
+		if ([partitionHandler respondsToSelector:@selector(pipeline:postProcessFinishedTask:error:)])
+		{
+			error = [partitionHandler pipeline:self postProcessFinishedTask:task error:error];
+		}
+
+		// Determine request instruction
+		OCHTTPRequestInstruction requestInstruction = OCHTTPRequestInstructionDeliver;
+
+		if ([partitionHandler respondsToSelector:@selector(pipeline:instructionForFinishedTask:error:)])
+		{
+			requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task error:error];
+		}
+
+		// Deliver to target
+		if (requestInstruction == OCHTTPRequestInstructionDeliver)
+		{
+			BOOL undeliverable = YES;
+
+			// Deliver Finished Request
+			if (task.request.resultHandlerAction != NULL)
+			{
+				// Below is identical to [partitionHandler performSelector:task.request.resultHandlerAction withObject:task.request withObject:error], but in an ARC-friendly manner.
+				void (*impFunction)(id, SEL, OCHTTPRequest *, NSError *) = (void *)[((NSObject *)partitionHandler) methodForSelector:task.request.resultHandlerAction];
+
+				if (impFunction != NULL)
+				{
+					impFunction(partitionHandler, task.request.resultHandlerAction, task.request, error);
+					removeTask = YES;
+					undeliverable = NO;
+				}
+			}
+			else
+			{
+				if (task.request.ephermalResultHandler != nil)
+				{
+					task.request.ephermalResultHandler(task.request, task.response, error);
+					removeTask = YES;
+					undeliverable = NO;
+				}
+			}
+
+			// Handle case where no delivery mechanism is available
+			if (undeliverable)
+			{
+				OCLogError(@"Response for requestID=%@ is undeliverable - removing undelivered", task.requestID);
+				removeTask = YES;
+			}
+		}
+
+		// Remove temporarily downloaded files
+		if (task.response.bodyURLIsTemporary && (task.response.bodyURL!=nil))
+		{
+			[[NSFileManager defaultManager] removeItemAtURL:task.response.bodyURL error:nil];
+			task.response.bodyURL = nil;
+		}
+
+		// Reschedule request if instructed so
+		if (requestInstruction == OCHTTPRequestInstructionReschedule)
+		{
+			[task.request scrubForRescheduling];
+
+			task.urlSessionID = nil;
+			task.urlSessionTaskID = nil;
+			task.state = OCHTTPPipelineTaskStatePending;
+			task.response = nil;
+
+			[_backend updatePipelineTask:task];
+		}
+
+		// Remove task
+		if (removeTask)
+		{
+			if (task.urlSessionTaskID != nil)
+			{
+				OCLogDebug(@"Removing request %@ with taskIdentifier <%@>", OCLogPrivate(task.request.url), task.urlSessionTaskID);
+			}
+
+			[self.backend removePipelineTask:task];
+			[self _triggerPartitionEmptyHandlers];
+		}
+
+		// Remove from tasks in delivery
+		@synchronized(taskIDsInDelivery)
+		{
+			[taskIDsInDelivery removeObject:task.taskID];
+		}
+	}
+
+	return (removeTask);
 }
 
 - (void)_deliverResultsForPartition:(OCHTTPPipelinePartitionID)partitionID
 {
-
+	[self.backend enumerateCompletedTasksForPipeline:self partition:partitionID enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+		[self _deliverResultForTask:task];
+	}];
 }
 
 #pragma mark - Attach & detach partition handlers
 - (void)attachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler completionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	[self queueBlock:^{
+	[self queueInline:^{
 		OCHTTPPipelinePartitionID partitionID;
 
 		if ((partitionID = [partitionHandler partitionID]) != nil)
@@ -618,7 +1192,7 @@
 			@synchronized(self)
 			{
 				// Check for duplicate handlers
-				if ((existingPartitionHandler = self->_partitionHandlersByID[partitionID]) != nil)
+				if ((existingPartitionHandler = [self->_partitionHandlersByID objectForKey:partitionID]) != nil)
 				{
 					OCLogWarning(@"Attempt to attach a handler (%@) for partition %@ for which one is already attached (%@). Detaching previous one.", partitionHandler, partitionID, existingPartitionHandler);
 
@@ -632,8 +1206,7 @@
 				}
 
 				// Add handler
-				[self->_attachedParititionHandlerIDs addObject:partitionID];
-				self->_partitionHandlersByID[partitionID] = partitionHandler;
+				[self->_partitionHandlersByID setObject:partitionHandler forKey:partitionID];
 			}
 
 			// Deliver pending results
@@ -654,17 +1227,16 @@
 
 - (void)detachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler completionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	[self queueBlock:^{
+	[self queueInline:^{
 		OCHTTPPipelinePartitionID partitionID;
 
 		if ((partitionID = [partitionHandler partitionID]) != nil)
 		{
 			@synchronized(self)
 			{
-				if (partitionHandler == self->_partitionHandlersByID[partitionID])
+				if (partitionHandler == [self->_partitionHandlersByID objectForKey:partitionID])
 				{
 					[self->_partitionHandlersByID removeObjectForKey:partitionID];
-					[self->_attachedParititionHandlerIDs removeObject:partitionID];
 				}
 				else
 				{
@@ -682,65 +1254,569 @@
 
 - (void)detachPartitionHandlerForPartitionID:(OCHTTPPipelinePartitionID)partitionID completionHandler:(nullable OCCompletionHandler)completionHandler
 {
+	id<OCHTTPPipelinePartitionHandler> partitionHandler = [self partitionHandlerForPartitionID:partitionID];
+
+	if (partitionHandler != nil)
+	{
+		[self detachPartitionHandler:partitionHandler completionHandler:completionHandler];
+	}
+	else
+	{
+		completionHandler(self, nil);
+	}
+}
+
+- (id<OCHTTPPipelinePartitionHandler>)partitionHandlerForPartitionID:(nullable OCHTTPPipelinePartitionID)partitionID
+{
+	id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
+
 	if (partitionID != nil)
 	{
-		id<OCHTTPPipelinePartitionHandler> partitionHandler;
-
 		@synchronized(self)
 		{
-			partitionHandler = _partitionHandlersByID[partitionID];
-		}
-
-		if (partitionHandler != nil)
-		{
-			[self detachPartitionHandler:partitionHandler completionHandler:completionHandler];
+			partitionHandler = [_partitionHandlersByID objectForKey:partitionID];
 		}
 	}
+
+	return (partitionHandler);
+}
+
+- (NSUInteger)tasksPendingDeliveryForPartitionID:(OCHTTPPipelinePartitionID)partitionID
+{
+	if (partitionID != nil)
+	{
+		return ([[self.backend numberOfRequestsWithState:OCHTTPPipelineTaskStateCompleted inPipeline:self partition:partitionID error:NULL] unsignedIntegerValue]);
+	}
+
+	return (0);
 }
 
 #pragma mark - Remove partition
 - (void)destroyPartition:(OCHTTPPipelinePartitionID)partitionID completionHandler:(nullable OCCompletionHandler)completionHandler
 {
+	OCLogDebug(@"destroy partitionID=%@", partitionID);
+
+	[self queueBlock:^{
+		// Prevent further scheduling for partitionID
+		@synchronized(self)
+		{
+			[self->_partitionsInDestruction addObject:partitionID];
+		}
+
+		// Cancel all requests for this partition
+		[self cancelRequestsForPartitionID:partitionID queuedOnly:NO];
+
+		dispatch_block_t completeDestruction = ^{
+			// Detach the partition handler
+			[self detachPartitionHandlerForPartitionID:partitionID completionHandler:^(id sender, NSError *error) {
+				NSURL *temporaryPartitionRootURL;
+
+				// Remove all records for this partition from the database
+				[self.backend removeAllTasksForPipeline:self.identifier partition:partitionID];
+
+				// Remove partition root dir for temporary files
+				if ((temporaryPartitionRootURL = [self _URLForPartitionID:partitionID requestID:nil]) != nil)
+				{
+					NSError *removeError = error;
+
+					if ([[NSFileManager defaultManager] fileExistsAtPath:temporaryPartitionRootURL.path])
+					{
+						[[NSFileManager defaultManager] removeItemAtURL:temporaryPartitionRootURL error:&removeError];
+					}
+
+					if (completionHandler!=nil)
+					{
+						completionHandler(self, removeError);
+					}
+				}
+				else
+				{
+					if (completionHandler!=nil)
+					{
+						completionHandler(self, error);
+					}
+				}
+			}];
+		};
+
+		@synchronized(self)
+		{
+			if ([self->_partitionHandlersByID objectForKey:partitionID] != nil)
+			{
+				// Make sure all cancellations have been delivered
+				[self addEmptyHandler:completeDestruction forPartition:partitionID];
+			}
+			else
+			{
+				// No handler attached that could take care => destroy right away
+				[self queueBlock:completeDestruction];
+			}
+		}
+	}];
+}
+
+#pragma mark - Partition empty handling
+- (void)addEmptyHandler:(dispatch_block_t)emptyHandler forPartition:(OCHTTPPipelinePartitionID)partitionID
+{
+	@synchronized(_partitionEmptyHandlers)
+	{
+		NSMutableArray<dispatch_block_t> *emptyHandlers;
+		if ((emptyHandlers = [_partitionEmptyHandlers objectForKey:partitionID]) == nil)
+		{
+			emptyHandlers = [[NSMutableArray alloc] initWithCapacity:1];
+			_partitionEmptyHandlers[partitionID] = emptyHandlers;
+		}
+
+		[emptyHandlers addObject:[emptyHandler copy]];
+	}
+}
+
+- (void)_triggerPartitionEmptyHandlers
+{
+	NSArray<OCHTTPPipelinePartitionID> *partitionIDs = nil;
+
+	@synchronized(_partitionEmptyHandlers)
+	{
+		if (_partitionEmptyHandlers.count > 0)
+		{
+			partitionIDs = [_partitionEmptyHandlers allKeys];
+		}
+	}
+
+	if (partitionIDs != nil)
+	{
+		for (OCHTTPPipelinePartitionID partitionID in partitionIDs)
+		{
+			if ([self.backend numberOfRequestsInPipeline:self partition:partitionID error:NULL].integerValue == 0)
+			{
+				@synchronized(_partitionEmptyHandlers)
+				{
+					NSMutableArray<dispatch_block_t> *emptyHandlers;
+					if ((emptyHandlers = [_partitionEmptyHandlers objectForKey:partitionID]) != nil)
+					{
+						[_partitionEmptyHandlers removeObjectForKey:partitionID];
+
+						[self queueBlock:^{
+							for (dispatch_block_t emptyHandler in emptyHandlers)
+							{
+								emptyHandler();
+							}
+						}];
+					}
+				}
+			}
+		}
+	}
 }
 
 #pragma mark - Shutdown
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"finish tasks and invalidate");
+
+	_invalidationCompletionHandler = completionHandler;
+
+	// Find and cancel non-critical requests
+	[self cancelNonCriticalRequestsForPartitionID:nil];
+
+	// Finish and invalidate remaining tasks in session
+	[_urlSession finishTasksAndInvalidate];
 }
 
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"cancel tasks and invalidate");
+
+	_invalidationCompletionHandler = completionHandler;
+
+	[_urlSession invalidateAndCancel];
 }
 
-- (void)cancelNonCriticalRequests
+- (void)cancelNonCriticalRequestsForPartitionID:(nullable OCHTTPPipelinePartitionID)partitionID
 {
+	[self queueBlock:^{
+		// Find and cancel non-critical requests
+		[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+			if (((partitionID==nil) || ((partitionID!=nil) && [task.partitionID isEqual:partitionID])) && task.request.isNonCritial)
+			{
+				[self _cancelTask:task];
+			}
+		}];
+	}];
+}
+
+#pragma mark - Background URL session finishing
+- (void)attachBackgroundURLSessionWithConfiguration:(NSURLSessionConfiguration *)backgroundSessionConfiguration handlingCompletionHandler:(dispatch_block_t)handlingCompletionHandler
+{
+	@synchronized(self)
+	{
+		NSString *sessionIdentifier;
+
+		if ((sessionIdentifier = backgroundSessionConfiguration.identifier) != nil)
+		{
+			[self queueBlock:^{
+				NSURLSession *session;
+
+				self->_sessionCompletionHandlersByIdentifiers[sessionIdentifier] = handlingCompletionHandler;
+
+				if (![sessionIdentifier isEqual:self.urlSessionIdentifier])
+				{
+					if ((session = [NSURLSession sessionWithConfiguration:backgroundSessionConfiguration delegate:self delegateQueue:nil]) != nil)
+					{
+						self->_attachedURLSessionsByIdentifier[sessionIdentifier] = session;
+					}
+				}
+			}];
+		}
+		else
+		{
+			OCLogError(@"Attempt to attach background URL session without identifier: %@", backgroundSessionConfiguration);
+		}
+	}
 }
 
 #pragma mark - NSURLSessionDelegate
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
+{
+	NSString *sessionIdentifier = session.configuration.identifier;
+
+	OCLogDebug(@"URLSessionDidFinishEventsForBackgroundSession: %@", session);
+
+	if (sessionIdentifier != nil)
+	{
+		// Call completion handler
+		[self queueBlock:^{
+			dispatch_block_t completionHandler;
+			NSURLSession *urlSession;
+
+			if ((completionHandler = self->_sessionCompletionHandlersByIdentifiers[sessionIdentifier]) != nil)
+			{
+				[self->_sessionCompletionHandlersByIdentifiers removeObjectForKey:sessionIdentifier];
+
+				// Apple docs: "Because the provided completion handler is part of UIKit, you must call it on your main thread."
+				dispatch_async(dispatch_get_main_queue(), ^{
+					completionHandler();
+				});
+			}
+
+			if ((completionHandler = [OCHTTPPipelineManager.sharedPipelineManager eventHandlingFinishedBlockForURLSessionIdentifier:sessionIdentifier remove:YES]) != nil)
+			{
+				// Apple docs: "Because the provided completion handler is part of UIKit, you must call it on your main thread."
+				dispatch_async(dispatch_get_main_queue(), ^{
+					completionHandler();
+				});
+			}
+
+			if ((urlSession = self->_attachedURLSessionsByIdentifier[sessionIdentifier]) != nil)
+			{
+				// Drop any dropped requests now
+				[self _recoverQueueForURLSession:urlSession];
+
+				// Terminate urlSession
+				[urlSession finishTasksAndInvalidate];
+			}
+		}];
+	}
+}
+
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
+{
+	NSString *sessionIdentifier = session.configuration.identifier;
+
+	if (([sessionIdentifier isEqual:_urlSessionIdentifier]) || (sessionIdentifier==nil))
+	{
+		_urlSessionInvalidated = YES;
+
+		OCLogDebug(@"did become invalid with error=%@, running invalidationCompletionHandler %p", error, _invalidationCompletionHandler);
+
+		if (_invalidationCompletionHandler != nil)
+		{
+			_invalidationCompletionHandler();
+			_invalidationCompletionHandler = nil;
+		}
+	}
+	else
+	{
+		OCLogDebug(@"%@ did become invalid with error=%@, removing from _attachedURLSessionsByIdentifier", session, error);
+
+		[self queueBlock:^{
+			// Drop urlSession
+			if (self->_attachedURLSessionsByIdentifier[sessionIdentifier] != nil)
+			{
+				[self->_attachedURLSessionsByIdentifier removeObjectForKey:sessionIdentifier];
+			}
+		}];
+	}
+}
 
 #pragma mark - NSURLSessionTaskDelegate
-#pragma mark - NSURLSessionDataDelegate
-#pragma mark - NSURLSessionDownloadDelegate
-
-#pragma mark - OCProgressResolver
-- (NSProgress *)resolveProgress:(OCProgress *)progress withContext:(nullable OCProgressResolutionContext)context
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didCompleteWithError:(nullable NSError *)error
 {
-	if (progress.nextPathElementIsLast)
+	NSError *backendError = nil;
+	OCHTTPPipelineTask *task;
+
+	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
 	{
-		OCHTTPRequestID requestID;
+		OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
 
-		if ((requestID = progress.nextPathElement) != nil)
+		if (error != nil)
 		{
-			/*
-				TODO: Resolve requestID to task, look for NSURLSessionTask and fetch progress if available
-
-				Also consider:
-				- moving OCProgressResolver support to OCHTTPPipelineManager
-				- provide a -progressForRequestID: method in OCHTTPPipeline
-				- caching of requestID->NSProgress in OCHTTPPipeline
-				- caching of queues requestIDs in OCHTTPPipeline
-			*/
+			[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:error]];
 		}
+		else
+		{
+			[self finishedTask:task withResponse:[task responseFromURLSessionTask:urlSessionTask]];
+		}
+	}
+	else
+	{
+		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
+	}
+}
+
+- (void)URLSession:(NSURLSession *)session
+        task:(NSURLSessionTask *)urlSessionTask
+        willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+        newRequest:(NSURLRequest *)request
+        completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
+{
+	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] wants to perform redirection from %@ to %@ via %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(request.URL), response);
+
+	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
+	if (completionHandler != nil)
+	{
+		completionHandler(NULL);
+	}
+}
+
+- (void)evaluateCertificate:(OCCertificate *)certificate forTask:(OCHTTPPipelineTask *)task proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+{
+	if ((task == nil) || (certificate==nil))
+	{
+		proceedHandler(NO, OCError(OCErrorInsufficientParameters));
+		return;
+	}
+
+	[certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *validationError) {
+		[self queueBlock:^{
+			OCHTTPResponse *response = [task responseFromURLSessionTask:nil];
+
+			response.certificate = certificate;
+			response.certificateValidationResult = validationResult;
+			response.certificateValidationError = validationError;
+
+			if (((validationResult == OCCertificateValidationResultUserAccepted) ||
+			     (validationResult == OCCertificateValidationResultPassed)) &&
+			     !task.request.forceCertificateDecisionDelegation)
+			{
+				proceedHandler(YES, nil);
+			}
+			else
+			{
+				if (task.request.ephermalRequestCertificateProceedHandler != nil)
+				{
+					task.request.ephermalRequestCertificateProceedHandler(task.request, certificate, validationResult, validationError, proceedHandler);
+				}
+				else
+				{
+					id<OCHTTPPipelinePartitionHandler> partitionHandler;
+
+					if ((partitionHandler = [self partitionHandlerForPartitionID:task.partitionID]) != nil)
+					{
+						[partitionHandler pipeline:self handleValidationOfRequest:task.request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+					}
+					else
+					{
+						// If no partitionHandler is available, reject the certificate
+						proceedHandler(NO, nil);
+					}
+				}
+			}
+		}];
+	}];
+}
+
+- (void)URLSession:(NSURLSession *)session
+        task:(NSURLSessionTask *)urlSessionTask
+        didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+        completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
+{
+	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
+
+	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
+	{
+		SecTrustRef serverTrust;
+
+		if ((serverTrust = challenge.protectionSpace.serverTrust) != NULL)
+		{
+			// Handle server trust challenges
+			OCCertificate *certificate = [OCCertificate certificateWithTrustRef:serverTrust hostName:urlSessionTask.currentRequest.URL.host];
+			OCHTTPPipelineTask *task = nil;
+			NSURL *requestURL = urlSessionTask.currentRequest.URL;
+			NSString *hostnameAndPort;
+			NSError *dbError = nil;
+
+			if ((hostnameAndPort = [NSString stringWithFormat:@"%@:%@", requestURL.host.lowercaseString, ((requestURL.port!=nil)?requestURL.port : @"443" )]) != nil)
+			{
+				// Cache certificates
+				@synchronized(self)
+				{
+					if (certificate != nil)
+					{
+						[_cachedCertificatesByHostnameAndPort setObject:certificate forKey:hostnameAndPort];
+					}
+					else
+					{
+						[_cachedCertificatesByHostnameAndPort removeObjectForKey:hostnameAndPort];
+					}
+				}
+			}
+
+			task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&dbError];
+
+			OCConnectionCertificateProceedHandler proceedHandler = ^(BOOL proceed, NSError *error) {
+				if (proceed)
+				{
+					completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:serverTrust]);
+				}
+				else
+				{
+					[task responseFromURLSessionTask:urlSessionTask].error = (error != nil) ? error : OCError(OCErrorRequestServerCertificateRejected);
+					completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+				}
+			};
+
+			if (task != nil)
+			{
+				[self evaluateCertificate:certificate forTask:task proceedHandler:proceedHandler];
+			}
+			else
+			{
+				OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] task:didReceiveChallenge=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge));
+				[_backend dumpDBTable];
+			}
+		}
+		else
+		{
+			completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+		}
+	}
+	else
+	{
+		// All other challenges
+		completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+	}
+}
+
+
+#pragma mark - NSURLSessionDataDelegate
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)urlSessionDataTask didReceiveData:(NSData *)data
+{
+	[self queueBlock:^{
+		NSError *dbError = nil;
+		OCHTTPPipelineTask *task;
+
+		if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionDataTask error:&dbError]) != nil)
+		{
+			OCHTTPResponse *response;
+
+			if (!task.request.downloadRequest)
+			{
+				if ((response = [task responseFromURLSessionTask:urlSessionDataTask]) != nil)
+				{
+					[response appendDataToResponseBody:data];
+				}
+			}
+		}
+		else
+		{
+			OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] dataTask:didReceiveDate:", urlSessionDataTask.taskIdentifier, OCLogPrivate(urlSessionDataTask.currentRequest.URL));
+		}
+	}];
+}
+
+
+#pragma mark - NSURLSessionDownloadDelegate
+- (nullable NSURL *)_URLForPartitionID:(nullable OCHTTPPipelinePartitionID)partitionID requestID:(nullable OCHTTPRequestID)requestID
+{
+	NSURL *url = [_backend.temporaryFilesRoot URLByAppendingPathComponent:_identifier]; // Add pipeline ID
+
+	if (partitionID != nil)
+	{
+		url = [url URLByAppendingPathComponent:partitionID isDirectory:YES];
+
+		if (requestID != nil)
+		{
+			url = [url URLByAppendingPathComponent:requestID isDirectory:NO];
+		}
+	}
+	else
+	{
+		if (requestID != nil)
+		{
+			OCLogError(@"Can't build URL for requestID=%@ without partitionID", requestID);
+			url = nil;
+		}
+	}
+
+	return (url);
+}
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)urlSessionDownloadTask didFinishDownloadingToURL:(NSURL *)location
+{
+	NSError *dbError = nil;
+	OCHTTPPipelineTask *task;
+
+	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionDownloadTask error:&dbError]) != nil)
+	{
+		OCHTTPRequest *request = task.request;
+		OCHTTPResponse *response = [task responseFromURLSessionTask:urlSessionDownloadTask];
+
+		if (request.downloadedFileURL == nil)
+		{
+			// Use partition- & request-specific subdirectory
+			NSURL *partitionURL;
+
+			if ((partitionURL = [self _URLForPartitionID:task.partitionID requestID:nil]) != nil)
+			{
+				if (![[NSFileManager defaultManager] fileExistsAtPath:partitionURL.path])
+				{
+					[[NSFileManager defaultManager] createDirectoryAtURL:partitionURL withIntermediateDirectories:YES attributes:nil error:NULL];
+				}
+			}
+
+			response.bodyURL = [self _URLForPartitionID:task.partitionID requestID:task.requestID];
+			response.bodyURLIsTemporary = YES;
+		}
+		else
+		{
+			response.bodyURL = request.downloadedFileURL;
+			response.bodyURLIsTemporary = request.downloadedFileIsTemporary;
+		}
+
+		if (response.bodyURL != nil)
+		{
+			NSError *error = nil;
+			[[NSFileManager defaultManager] moveItemAtURL:location toURL:response.bodyURL error:&error];
+		}
+
+		// Update task with results
+		[self.backend updatePipelineTask:task];
+	}
+
+	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: downloadTask:didFinishDownloadingToURL: %@", urlSessionDownloadTask.currentRequest.URL, urlSessionDownloadTask.taskIdentifier, location);
+	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
+}
+
+
+#pragma mark - Progress
+- (nullable NSProgress *)progressForRequestID:(OCHTTPRequestID)requestID
+{
+	OCHTTPPipelineTask *task;
+
+	if ((task = [self.backend retrieveTaskForRequestID:requestID error:nil]) != nil)
+	{
+		return (task.request.progress.progress);
 	}
 
 	return (nil);
@@ -786,9 +1862,44 @@
 }
 
 #pragma mark - Queue
+- (void)queueInline:(dispatch_block_t)block
+{
+	if (_backend.isOnQueueThread)
+	{
+		block();
+	}
+	else
+	{
+		[self queueBlock:block];
+	}
+}
+
 - (void)queueBlock:(dispatch_block_t)block
 {
-	[_backend queueBlock:block];
+	[self queueBlock:block withBusy:YES];
+}
+
+- (void)queueBlock:(dispatch_block_t)block withBusy:(BOOL)withBusy
+{
+	if (withBusy)
+	{
+		dispatch_group_enter(_busyGroup);
+
+		[_backend queueBlock:^{
+			@autoreleasepool {
+				block();
+			}
+			dispatch_group_leave(self->_busyGroup);
+		}];
+	}
+	else
+	{
+		[_backend queueBlock:^{
+			@autoreleasepool {
+				block();
+			}
+		}];
+	}
 }
 
 @end
@@ -797,10 +1908,7 @@ OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID = @"insert-x-request-id
 
 /*
 	TODO:
-	- complete HostSimulation support
 	- move authentication availability from OCHTTPRequest.skipAuthorization and OCConnection.canSendAuthenticatedRequestsForQueue:..] to -pipeline:meetsSignalRequirements:failWithError:
 		- idea 1: .skipAuthorization could be kept & independant from a "authentication" signal, so that auth methods have a way to bypass the signal requirement
 		- idea 2: OCHTTPRequest could be extended with a .failImmediatelyForMissingSignals property (either BOOL or array of signals)
-	- change in OCConnection signals should trigger scheduling in the pipeline
-	- move OCHTTPRequest.progress over to OCProgress
 */

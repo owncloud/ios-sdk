@@ -19,10 +19,11 @@
 #import <Foundation/Foundation.h>
 #import "OCEventTarget.h"
 #import "OCBookmark.h"
-#import "OCConnection.h"
 #import "OCCertificate.h"
 #import "OCHTTPTypes.h"
 #import "OCProgress.h"
+
+@class OCHTTPPipelineTask;
 
 typedef SEL OCHTTPRequestResultHandlerAction; //!< Selector following the format -handleResultForRequest:(OCHTTPRequest *)request error:(NSError *)error;
 
@@ -31,23 +32,17 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestObserverEvent)
 	OCHTTPRequestObserverEventTaskResume	//!< Return YES if the observer takes care of resuming the URL session task, NO if the observer doesn't.
 };
 
-typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
+typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
 
 @interface OCHTTPRequest : NSObject <NSSecureCoding>
 {
 	NSData *_bodyData;
 	NSInputStream *_bodyURLInputStream;
-
-	NSHTTPURLResponse *_injectedResponse;
 }
 
 @property(strong,readonly) OCHTTPRequestID identifier; //!< Unique ID (auto-generated) for every request
 
-@property(strong) NSURLSessionTask *urlSessionTask;	//!< NSURLSessionTask used to perform the request [not serialized] // TO-REMOVE
-@property(strong) NSNumber *urlSessionTaskIdentifier;	//!< Value of NSURLSessionTask.taskIdentifier // TO-REMOVE
-
-@property(strong) OCProgress *requestProgress;		//!< Resolvable progress object that tracks progress and provides cancellation ability/status
-@property(strong) NSProgress *progress;			//!< Progress object that tracks progress and provides cancellation ability/status [not serialized] // TO-REMOVE / TO-REPLACE
+@property(strong) OCProgress *progress;			//!< Resolvable progress object that tracks progress and provides cancellation ability/status
 
 @property(strong) OCHTTPMethod method;			//!< The HTTP method to use to request the URL
 
@@ -63,14 +58,14 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 @property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
 
 @property(assign) OCHTTPRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
-@property(copy)   OCConnectionEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
+@property(copy)   OCHTTPRequestEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
 @property(assign) BOOL forceCertificateDecisionDelegation; //!< YES if certificateProceedHandler and the connection (delegate) should be consulted even if the certificate has no issues or was previously approved by the user. [not serialized]
 
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
 @property(strong) NSDictionary *userInfo;		//!< User-info for free use. All contents should be serializable.
 
-@property(assign,nonatomic) OCHTTPRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
+@property(assign) OCHTTPRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
 @property(strong) OCHTTPRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 @property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
 
@@ -82,18 +77,12 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPRequest *request, OCHTTPRequestObserv
 
 @property(assign) BOOL isNonCritial;			//!< Request that are marked non-critical are allowed to be cancelled to speed up shutting down the connection queue
 
-@property(readonly) BOOL cancelled;
-
-@property(strong) id systemActivity;
+@property(assign) BOOL cancelled;
 
 @property(strong) NSError *error;
 
-NS_ASSUME_NONNULL_BEGIN
-
 #pragma mark - Init
 + (instancetype)requestWithURL:(NSURL *)url;
-
-NS_ASSUME_NONNULL_END
 
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling; //!< Called directly before scheduling of a request begins.
@@ -115,24 +104,13 @@ NS_ASSUME_NONNULL_END
 - (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields;
 
 #pragma mark - Response
-@property(strong,nonatomic) OCHTTPStatus *responseHTTPStatus; //!< HTTP Status delivered with response
-@property(strong) NSMutableData *responseBodyData;	//!< If downloadRequest is NO, any body data received in response is stored here. [not serialized]
-@property(strong) OCCertificate *responseCertificate;	//!< If HTTPS is used, the certificate of the server from which the response was served
-
-- (NSHTTPURLResponse *)response; //!< Convenience accessor for urlSessionTask.response
-
-- (NSURL *)responseRedirectURL; //!< URL contained in the response's Location header field
-
-- (void)appendDataToResponseBody:(NSData *)appendResponseBodyData;
-
-- (NSString *)responseBodyAsString; //!< Returns the response body as a string formatted using the text encoding provided by the server. If no text encoding is provided, ISO-8859-1 is used.
-
-- (NSDictionary *)responseBodyConvertedDictionaryFromJSONWithError:(NSError **)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
-- (NSArray *)responseBodyConvertedArrayFromJSONWithError:(NSError **)error; //!< Returns the response body as array as converted by the JSON deserializer
+@property(strong) OCHTTPResponse *httpResponse;
 
 #pragma mark - Description
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers;
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers;
+
 - (NSString *)requestDescription;
-- (NSString *)responseDescription;
 
 @end
 
@@ -150,4 +128,4 @@ extern OCHTTPMethod OCHTTPMethodPROPPATCH;
 extern OCHTTPMethod OCHTTPMethodLOCK;
 extern OCHTTPMethod OCHTTPMethodUNLOCK;
 
-extern OCProgressPathElementIdentifier OCHTTPRequestGlobalDefaultPath;
+extern OCProgressPathElementIdentifier OCHTTPRequestGlobalPath;

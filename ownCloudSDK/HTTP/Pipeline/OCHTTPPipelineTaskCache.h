@@ -27,18 +27,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_bundleIdentifier;
 
 	NSMutableDictionary<OCHTTPPipelineTaskID, OCHTTPPipelineTask *> *_taskByTaskID;
-	NSMutableDictionary<OCHTTPRequestID, OCHTTPPipelineTask *> *_taskByRequestID;
 }
 
 #pragma mark - Init
 - (instancetype)initWithBackend:(OCHTTPPipelineBackend *)backend;
 
 #pragma mark - Cache management
-- (OCHTTPPipelineTask *)cachedCopyForTask:(OCHTTPPipelineTask *)task storeIfNew:(BOOL)storeIfNew;
 - (void)updateWithTask:(OCHTTPPipelineTask *)task remove:(BOOL)remove;
 
 - (nullable OCHTTPPipelineTask *)cachedTaskForPipelineTaskID:(OCHTTPPipelineTaskID)taskID;
-- (nullable OCHTTPPipelineTask *)cachedTaskForRequestID:(OCHTTPRequestID)requestID;
+
+- (void)removeAllTasksForPipeline:(OCHTTPPipelineID)pipelineID partition:(OCHTTPPipelinePartitionID)partitionID;
 
 @end
 

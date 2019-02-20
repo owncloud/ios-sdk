@@ -192,19 +192,28 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 }
 
 #pragma mark - Sync Record Scheduling
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
 
 	if (action != nil)
 	{
-		progress = [NSProgress indeterminateProgress];
-		progress.cancellable = NO;
-
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
 
-		syncRecord.progress = progress;
+		if (syncRecord.progress == nil)
+		{
+			progress = [NSProgress indeterminateProgress];
+
+			syncRecord.progress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+		}
+		else
+		{
+			progress = syncRecord.progress.progress;
+		}
+
+		syncRecord.progress.cancellable = cancellable;
+		progress.cancellable = cancellable;
 
 		[self submitSyncRecord:syncRecord];
 	}
@@ -225,6 +234,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		}];
 
 		OCLogDebug(@"record %@ added to database with error %@", record, blockError);
+
+		// Set sync record's progress path
+		record.progress.path = @[OCCoreGlobalRootPath, self.bookmark.uuid.UUIDString, OCCoreSyncRecordPath, [record.recordID stringValue]];
 
 		// Pre-flight
 		if (blockError == nil)
@@ -1033,7 +1045,12 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
- 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:syncRecord.progress]];
+		NSProgress *progress;
+
+		if ((progress = syncRecord.progress.progress) != nil)
+		{
+	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+		}
 	}
 
 	[self.database updateSyncRecords:syncRecords completionHandler:completionHandler];
@@ -1071,13 +1088,24 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				if ([self->_publishedActivitySyncRecordIDs containsObject:syncRecord.recordID])
 				{
 					// Update published activities
-			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:syncRecord.progress]];
+					NSProgress *progress = [syncRecord.progress resolveWith:nil];
+
+					if (progress == nil)
+					{
+						progress = [NSProgress indeterminateProgress];
+						progress.cancellable = NO;
+					}
+
+			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
 				}
 				else
 				{
 					// Publish new activities
 					[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
 					[self->_publishedActivitySyncRecordIDs addObject:recordID];
+
+					syncRecord.action.core = self;
+					[syncRecord.action restoreProgressRegistrationForSyncRecord:syncRecord];
 				}
 			}
 		}
@@ -1156,3 +1184,5 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 OCEventUserInfoKey OCEventUserInfoKeySyncRecordID = @"syncRecordID";
 
+OCProgressPathElementIdentifier OCCoreGlobalRootPath = @"_core";
+OCProgressPathElementIdentifier OCCoreSyncRecordPath = @"_syncRecord";

@@ -30,14 +30,19 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCHTTPPipelineBackend : NSObject
 {
 	OCSQLiteDB *_sqlDB;
-	BOOL _isOpen;
+	NSUInteger _openCount;
+
+	OCCompletionHandler _openCompletionHandler;
 
 	OCHTTPPipelineTaskCache *_taskCache;
 }
 
 @property(strong,readonly) NSString *bundleIdentifier;
+@property(strong,nonatomic) NSURL *temporaryFilesRoot;
 
-- (instancetype)initWithSQLDB:(nullable OCSQLiteDB *)sqlDB;
+@property(readonly,nonatomic) BOOL isOnQueueThread;
+
+- (instancetype)initWithSQLDB:(nullable OCSQLiteDB *)sqlDB temporaryFilesRoot:(nullable NSURL *)temporaryFilesRoot;
 
 #pragma mark - Open & Close
 - (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler;
@@ -48,13 +53,22 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSError *)updatePipelineTask:(OCHTTPPipelineTask *)task;
 - (NSError *)removePipelineTask:(OCHTTPPipelineTask *)task;
 
-- (OCHTTPPipelineTask *)retrieveTaskForID:(OCHTTPPipelineTaskID)taskID error:(NSError **)outDBError;
-- (OCHTTPPipelineTask *)retrieveTaskForPipeline:(OCHTTPPipeline *)pipeline URLSession:(NSURLSession *)urlSession task:(NSURLSessionTask *)urlSessionTask error:(NSError **)outDBError;
+- (NSError *)removeAllTasksForPipeline:(OCHTTPPipelineID)pipelineID partition:(OCHTTPPipelinePartitionID)partitionID;
+
+- (OCHTTPPipelineTask *)retrieveTaskForRequestID:(OCHTTPRequestID)requestID error:(NSError * _Nullable *)outDBError;
+- (OCHTTPPipelineTask *)retrieveTaskForPipeline:(OCHTTPPipeline *)pipeline URLSession:(NSURLSession *)urlSession task:(NSURLSessionTask *)urlSessionTask error:(NSError * _Nullable *)outDBError;
 
 - (NSError *)enumerateTasksForPipeline:(OCHTTPPipeline *)pipeline enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
+- (NSError *)enumerateTasksForPipeline:(OCHTTPPipeline *)pipeline partition:(OCHTTPPipelinePartitionID)partitionID enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
+- (NSError *)enumerateCompletedTasksForPipeline:(OCHTTPPipeline *)pipeline partition:(OCHTTPPipelinePartitionID)partitionID enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
+
 - (NSError *)enumerateTasksWhere:(nullable NSDictionary<NSString *,id<NSObject>> *)whereConditions orderBy:(nullable NSString *)orderBy limit:(nullable NSString *)limit enumerator:(void (^)(OCHTTPPipelineTask * _Nonnull, BOOL * _Nonnull))taskEnumerator;
 
-- (NSNumber *)numberOfRequestsWithState:(OCHTTPPipelineTaskState)state inPipeline:(OCHTTPPipeline *)pipeline error:(NSError **)outDBError;
+- (NSNumber *)numberOfRequestsWithState:(OCHTTPPipelineTaskState)state inPipeline:(OCHTTPPipeline *)pipeline partition:(nullable OCHTTPPipelinePartitionID)partitionID error:(NSError * _Nullable *)outDBError;
+- (NSNumber *)numberOfRequestsInPipeline:(OCHTTPPipeline *)pipeline partition:(OCHTTPPipelinePartitionID)partitionID error:(NSError * _Nullable *)outDBError;
+
+#pragma mark - Debugging
+- (void)dumpDBTable;
 
 #pragma mark - Execution on DB thread
 - (void)queueBlock:(dispatch_block_t)block;

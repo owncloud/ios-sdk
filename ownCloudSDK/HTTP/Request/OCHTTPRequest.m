@@ -17,9 +17,9 @@
  */
 
 #import "OCHTTPRequest.h"
-#import "OCConnectionQueue.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
+#import "NSProgress+OCExtensions.h"
 
 @implementation OCHTTPRequest
 
@@ -39,12 +39,12 @@
 		self.headerFields = [NSMutableDictionary new];
 		self.parameters = [NSMutableDictionary new];
 
-		self.progress = [[NSProgress alloc] initWithParent:nil userInfo:nil];
-		self.progress.cancellationHandler = ^{
+		NSProgress *progress = [NSProgress indeterminateProgress];
+		progress.cancellationHandler = ^{
 			[weakSelf cancel];
 		};
 
-		self.requestProgress = [[OCProgress alloc] initWithPath:@[OCHTTPRequestGlobalDefaultPath, _identifier] progress:nil];
+		self.progress = [[OCProgress alloc] initWithPath:@[OCHTTPRequestGlobalPath, _identifier] progress:progress];
 
 		self.priority = NSURLSessionTaskPriorityDefault;
 	}
@@ -124,16 +124,6 @@
 	}
 }
 
-- (void)setPriority:(OCHTTPRequestPriority)priority
-{
-	_priority = priority;
-
-	if (_urlSessionTask != nil)
-	{
-		_urlSessionTask.priority = _priority;
-	}
-}
-
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
@@ -198,6 +188,8 @@
 		{
 			urlRequest.HTTPBody = self.bodyData;
 		}
+
+		urlRequest.networkServiceType = NSURLNetworkServiceTypeResponsiveData;
 	}
 
 	return (urlRequest);
@@ -205,10 +197,7 @@
 
 - (void)scrubForRescheduling
 {
-	_responseHTTPStatus = nil;
-	_injectedResponse = nil;
-	_responseBodyData = nil;
-	_responseCertificate = nil;
+	_httpResponse = nil;
 
 	if (_downloadRequest)
 	{
@@ -230,9 +219,6 @@
 	{
 		_downloadedFileURL = nil;
 	}
-
-	_urlSessionTask = nil;
-	_urlSessionTaskIdentifier = nil;
 }
 
 #pragma mark - Cancel support
@@ -242,149 +228,13 @@
 	{
 		if (!_cancelled)
 		{
-			[self willChangeValueForKey:@"cancelled"];
-
-			_cancelled = YES;
-			
-			if (_urlSessionTask != nil)
-			{
-				[_urlSessionTask cancel];
-			}
-
-			[self didChangeValueForKey:@"cancelled"];
+			self.cancelled = YES;
 		}
 	}
-}
-
-#pragma mark - Response Body
-- (NSHTTPURLResponse *)response
-{
-	NSURLResponse *response;
-
-	if (_injectedResponse != nil)
-	{
-		return (_injectedResponse);
-	}
-	
-	if ((response = _urlSessionTask.response) != nil)
-	{
-		if ([response isKindOfClass:[NSHTTPURLResponse class]])
-		{
-			return ((NSHTTPURLResponse *)response);
-		}
-	}
-
-	return(nil);
-}
-
-- (OCHTTPStatus *)responseHTTPStatus
-{
-	if (_responseHTTPStatus == nil)
-	{
-		NSHTTPURLResponse *httpResponse;
-
-		if ((httpResponse = self.response) != nil)
-		{
-			_responseHTTPStatus = [OCHTTPStatus HTTPStatusWithCode:httpResponse.statusCode];
-		}
-	}
-
-	return (_responseHTTPStatus);
-}
-
-- (NSURL *)responseRedirectURL
-{
-	NSString *locationURLString;
-	
-	if ((locationURLString = self.response.allHeaderFields[@"Location"]) != nil)
-	{
-		return ([NSURL URLWithString:locationURLString]);
-	}
-	
-	return (nil);
-}
-
-- (void)appendDataToResponseBody:(NSData *)appendResponseBodyData
-{
-	@synchronized(self)
-	{
-		if (_responseBodyData == nil)
-		{
-			_responseBodyData = [[NSMutableData alloc] initWithData:appendResponseBodyData];
-		}
-		else
-		{
-			[_responseBodyData appendData:appendResponseBodyData];
-		}
-	}
-}
-
-- (NSStringEncoding)responseBodyEncoding
-{
-	NSString *textEncodingName;
-	NSStringEncoding stringEncoding;
-
-	if ((textEncodingName = self.response.textEncodingName) != nil)
-	{
-		stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
-	}
-	else
-	{
-		stringEncoding = NSISOLatin1StringEncoding; // ISO-8859-1
-	}
-
-	return(stringEncoding);
-}
-
-- (NSString *)responseBodyAsString
-{
-	NSString *responseBodyAsString = nil;
-	NSData *responseBodyData;
-
-	if ((responseBodyData = self.responseBodyData) != nil)
-	{
-		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:self.responseBodyEncoding];
-	}
-	
-	return (responseBodyAsString);
-}
-
-- (NSDictionary *)responseBodyConvertedDictionaryFromJSONWithError:(NSError **)outError
-{
-	id jsonObject;
-	
-	if (self.responseBodyData == nil) { return(nil); }
-	
-	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
-	{
-		if ([jsonObject isKindOfClass:[NSDictionary class]])
-		{
-			return (jsonObject);
-		}
-	}
-	
-	return (nil);
-}
-
-- (NSArray *)responseBodyConvertedArrayFromJSONWithError:(NSError **)outError
-{
-	id jsonObject;
-
-	if (self.responseBodyData == nil) { return(nil); }
-
-	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.responseBodyData options:0 error:outError]) != nil)
-	{
-		if ([jsonObject isKindOfClass:[NSArray class]])
-		{
-			return (jsonObject);
-		}
-	}
-	
-	return (nil);
 }
 
 #pragma mark - Description
-- (NSString *)_bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
 {
 	NSString *contentType = headers[@"Content-Type"];
 	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"];
@@ -412,7 +262,7 @@
 	return (nil);
 }
 
-- (NSString *)_formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers
 {
 	NSMutableString *formattedHeaders = [NSMutableString new];
 
@@ -431,7 +281,7 @@
 {
 	NSMutableString *requestDescription = [NSMutableString new];
 
-	NSString *bodyDescription = [self _bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
 
 	[requestDescription appendFormat:@"%@ %@ HTTP/1.1\nHost: %@\n", self.method, self.url.path, self.url.hostAndPort];
 	if (_bodyData != nil)
@@ -447,7 +297,7 @@
 	}
 	if (_headerFields.count > 0)
 	{
-		[requestDescription appendString:[self _formattedHeaders:self.headerFields]];
+		[requestDescription appendString:[OCHTTPRequest formattedHeaders:self.headerFields]];
 	}
 
 	if (bodyDescription != nil)
@@ -456,26 +306,6 @@
 	}
 
 	return (requestDescription);
-}
-
-- (NSString *)responseDescription
-{
-	NSMutableString *responseDescription = [NSMutableString new];
-
-	NSString *bodyDescription = [self _bodyDescriptionForURL:self.downloadedFileURL data:self.responseBodyData headers:self.response.allHeaderFields];
-
-	[responseDescription appendFormat:@"%ld %@\n", (long)self.response.statusCode, [NSHTTPURLResponse localizedStringForStatusCode:self.response.statusCode].uppercaseString];
-	if (self.response.allHeaderFields.count > 0)
-	{
-		[responseDescription appendString:[self _formattedHeaders:self.response.allHeaderFields]];
-	}
-
-	if (bodyDescription != nil)
-	{
-		[responseDescription appendFormat:@"\n%@\n", bodyDescription];
-	}
-
-	return (responseDescription);
 }
 
 #pragma mark - Secure Coding
@@ -492,9 +322,7 @@
 
 		_identifier		= [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 
-		self.urlSessionTaskIdentifier = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"urlSessionTaskIdentifier"];
-
-		self.requestProgress	= [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
+		self.progress		= [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
 		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
@@ -530,9 +358,7 @@
 {
 	[coder encodeObject:_identifier 	forKey:@"identifier"];
 
-	[coder encodeObject:_urlSessionTaskIdentifier forKey:@"urlSessionTaskIdentifier"];
-
-	[coder encodeObject:_requestProgress 	forKey:@"progress"];
+	[coder encodeObject:_progress 		forKey:@"progress"];
 
 	[coder encodeObject:_url 		forKey:@"url"];
 	[coder encodeObject:_method 		forKey:@"method"];
@@ -574,4 +400,4 @@ OCHTTPMethod OCHTTPMethodPROPPATCH = @"PROPPATCH";
 OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
 OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 
-OCProgressPathElementIdentifier OCHTTPRequestGlobalDefaultPath = @"_httpRequest";
+OCProgressPathElementIdentifier OCHTTPRequestGlobalPath = @"_httpRequest";

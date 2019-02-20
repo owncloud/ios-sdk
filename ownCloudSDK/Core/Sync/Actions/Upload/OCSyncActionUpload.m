@@ -104,8 +104,6 @@
 	    ((uploadItem = self.localItem) != nil) &&
 	    ((uploadURL = self.importFileURL) != nil))
 	{
-		NSProgress *progress;
-
 		if (self.importFileIsTemporaryAlongsideCopy)
 		{
 			// uploadURL already is a copy of the file alongside item, so we can use it right away
@@ -139,6 +137,8 @@
 		// Compute checksum
 		if (_uploadCopyFileURL != nil)
 		{
+			OCProgress *progress;
+
 			OCSyncExec(checksumComputation, {
 				[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
 					self.importFileChecksum = computedChecksum;
@@ -170,7 +170,10 @@
 			{
 				[syncContext.syncRecord addProgress:progress];
 
-				[self.core registerProgress:syncContext.syncRecord.progress forItem:self.localItem];
+				if (syncContext.syncRecord.progress.progress != nil)
+				{
+					[self.core registerProgress:syncContext.syncRecord.progress.progress forItem:self.localItem];
+				}
 			}
 
 			// Transition to processing
@@ -267,6 +270,12 @@
 	}
 
 	return (resultInstruction);
+}
+
+#pragma mark - Restore progress
+- (OCItem *)itemToRestoreProgressRegistrationFor
+{
+	return (self.localItem);
 }
 
 #pragma mark - NSCoding

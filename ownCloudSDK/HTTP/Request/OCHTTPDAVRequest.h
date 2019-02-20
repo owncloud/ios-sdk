@@ -20,6 +20,7 @@
 #import "OCXMLNode.h"
 #import "OCHTTPDAVMultistatusResponse.h"
 #import "OCTypes.h"
+#import "OCItem.h"
 
 @interface OCHTTPDAVRequest : OCHTTPRequest <NSXMLParserDelegate>
 {

@@ -98,7 +98,7 @@
 	return (lineNumber);
 }
 
-- (NSDictionary<NSString *,id<NSObject>> *)nextRowDictionaryWithError:(NSError **)outError
+- (nullable NSDictionary<NSString *,id<NSObject>> *)nextRowDictionaryWithError:(NSError **)outError
 {
 	NSDictionary<NSString *,id<NSObject>> *nextRowDictionary = nil;
 

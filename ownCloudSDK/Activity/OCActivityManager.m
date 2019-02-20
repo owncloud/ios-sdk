@@ -259,7 +259,7 @@
 
 - (nonnull NSArray<OCLogTagName> *)logTags
 {
-	return (@[@"ACTIVITY" , OCLogTagTypedID(@"ActivityNotificationName", _activityUpdateNotificationName)]);
+	return ([[NSArray alloc] initWithObjects:@"ACTIVITY" , OCLogTagTypedID(@"ActivityNotificationName", _activityUpdateNotificationName), nil]);
 }
 
 @end

@@ -28,37 +28,22 @@
 #import "OCChecksum.h"
 #import "OCLogTag.h"
 #import "OCIPNotificationCenter.h"
+#import "OCHTTPTypes.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
 @class OCItem;
-@class OCConnectionQueue;
-@class OCHTTPRequest;
 @class OCConnection;
-@class OCCertificate;
-@class OCHTTPStatus;
-
-typedef void(^OCConnectionEphermalResultHandler)(OCHTTPRequest *request, NSError *error);
-typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError *error);
-typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
-
-typedef NSString* OCConnectionSignalID NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
 	OCConnectionStateDisconnected,
 	OCConnectionStateConnecting,
 	OCConnectionStateConnected
-};
-
-typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
-{
-	OCHTTPRequestInstructionDeliver,	//!< Deliver the request as usual
-	OCHTTPRequestInstructionReschedule	//!< Stop processing of request and reschedule it
 };
 
 @protocol OCConnectionDelegate <NSObject>
@@ -70,34 +55,29 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 
 - (void)connectionChangedState:(OCConnection *)connection;
 
-- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
+- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
 @end
+
+#import "OCHTTPPipeline.h"
 
 @protocol OCConnectionHostSimulator <NSObject>
 
-- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCHTTPRequest *)request completionHandler:(void(^)(NSError *error))completionHandler;
+- (BOOL)connection:(OCConnection *)connection pipeline:(OCHTTPPipeline *)pipeline simulateRequestHandling:(OCHTTPRequest *)request completionHandler:(void (^)(OCHTTPResponse * _Nonnull))completionHandler;
 
 @end
 
-@interface OCConnection : NSObject <OCClassSettingsSupport, OCLogTagging>
+@interface OCConnection : NSObject <OCClassSettingsSupport, OCLogTagging, OCHTTPPipelinePartitionHandler>
 {
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
 
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
+	OCHTTPPipelinePartitionID _partitionID;
+
 	OCUser *_loggedInUser;
 
-	NSURL *_persistentStoreBaseURL;
-
-	OCConnectionQueue *_commandQueue;
-
-	OCConnectionQueue *_uploadQueue;
-	OCConnectionQueue *_downloadQueue;
-
-	NSMutableDictionary <NSString *, OCConnectionQueue *> *_attachedExtensionQueuesBySessionIdentifier;
-	
 	OCConnectionState _state;
 
 	__weak id <OCConnectionDelegate> _delegate;
@@ -122,12 +102,11 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 
 @property(strong) OCUser *loggedInUser;
 
-@property(strong) OCConnectionQueue *commandQueue; //!< Queue for requests that carry metadata commands (move, delete, retrieve list, ..)
+@property(strong) OCHTTPPipeline *ephermalPipeline; //!< Pipeline for requests whose response is only interesting for the instance making them (f.ex. login, status, PROPFINDs)
+@property(strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
+@property(strong) OCHTTPPipeline *longLivedPipeline; //!< Pipeline for requests whose response may take a while (like uploads, downloads) or that may not be dropped - not even temporarily.
 
-@property(strong) OCConnectionQueue *uploadQueue; //!< Queue for requests that upload files / changes
-@property(strong) OCConnectionQueue *downloadQueue; //!< Queue for requests that download files / changes
-
-@property(strong,readonly,nonatomic) NSSet<OCConnectionQueue *> *allQueues; //!< A set of all queues used by the connection
+@property(strong,readonly,nonatomic) NSSet<OCHTTPPipeline *> *allHTTPPipelines; //!< A set of all HTTP pipelines used by the connection
 
 @property(strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
 
@@ -139,14 +118,14 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
-- (instancetype)initWithBookmark:(OCBookmark *)bookmark persistentStoreBaseURL:(NSURL *)persistentStoreBaseURL;
+- (instancetype)initWithBookmark:(OCBookmark *)bookmark;
 
 #pragma mark - Connect & Disconnect
 - (NSProgress *)connectWithCompletionHandler:(void(^)(NSError *error, OCIssue *issue))completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler;
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
-- (void)cancelNonCriticalRequests; //!< Cancels .isNonCritical requests on all queues
+- (void)cancelNonCriticalRequests;
 
 #pragma mark - Server Status
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
@@ -157,33 +136,26 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
 #pragma mark - Actions
-- (NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
-- (NSProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+
+- (OCProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
-- (NSProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
-
-- (NSProgress *)sendRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue ephermalCompletionHandler:(OCConnectionEphermalResultHandler)ephermalResultHandler;
+- (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler; //!< Sends a request to the ephermal pipeline and returns the result via the ephermalResultHandler.
 
 #pragma mark - Sending requests synchronously
-- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request toQueue:(OCConnectionQueue *)queue;
-
-#pragma mark - Resume background sessions
-- (void)resumeBackgroundSessions;
-- (void)finishedQueueForResumedBackgroundSessionWithIdentifier:(NSString *)backgroundSessionIdentifier;
-
-#pragma mark - Rescheduling support
-- (OCHTTPRequestInstruction)instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error;
+- (NSError *)sendSynchronousRequest:(OCHTTPRequest *)request; //!< Send a request synchronously using the ephermal pipeline and returns the error.
 
 @end
 
@@ -195,17 +167,6 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 - (BOOL)isSignalOn:(OCConnectionSignalID)signal;
 - (BOOL)meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals;
 @end
-
-//#pragma mark - JOBS
-//@interface OCConnection (Jobs)
-//
-//- (OCJobID)startNewJobWithRequest:(OCHTTPRequest *)request; //!< Starts a new job with the provided request
-//- (void)addRequest:(OCHTTPRequest *)request toJob:(OCJobID)jobID; //!< Adds another request to the job
-//- (void)completedRequest:(OCHTTPRequest *)request forJob:(OCJobID)jobID; //!< Marks a request as completed for the job
-//
-//- (BOOL)jobExists:(OCJobID)jobID; //!< Provides information on whether a job exists for a particular ID, allowing to detect if a job no longer exists.
-//
-//@end
 
 #pragma mark - SETUP
 @interface OCConnection (Setup)
@@ -223,7 +184,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestInstruction)
 
 - (void)generateAuthenticationDataWithMethod:(OCAuthenticationMethodIdentifier)methodIdentifier options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler; //!< Uses the OCAuthenticationMethod to generate the authenticationData for storing in the bookmark. It is not directly stored in the bookmark so that an app can decide on its own when to overwrite existing data - or save the result.
 
-- (BOOL)canSendAuthenticatedRequestsForQueue:(OCConnectionQueue *)queue availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called by the OCConnectionQueue to determine if authenticated requests can be sent right now. If the method returns YES, the queue will proceed to schedule requests immediately and the availabilityHandler must not be called. If the method returns NO, only requests whose skipAuthorization property is set to YES will be scheduled, while all other requests remain queued. The queue will resume normal operation once the availabilityHandler was called with error==nil and authenticationIsAvailable==YES. If authenticationIsAvailable==NO, the queue will cancel all queued requests with the provided error.
+- (BOOL)canSendAuthenticatedRequestsWithAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called to determine if authenticated requests can be sent right now. If the method returns YES, the queue will proceed to schedule requests immediately and the availabilityHandler must not be called. If the method returns NO, only requests whose skipAuthorization property is set to YES will be scheduled, while all other requests remain queued. The queue will resume normal operation once the availabilityHandler was called with error==nil and authenticationIsAvailable==YES. If authenticationIsAvailable==NO, the queue will cancel all queued requests with the provided error.
 
 + (NSArray <OCAuthenticationMethodIdentifier> *)filteredAndSortedMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)methodIdentifiers allowedMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)allowedMethodIdentifiers preferredMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)preferredMethodIdentifiers; //!< Returns allowed entries from methodIdentifiers in order of preferrence
 

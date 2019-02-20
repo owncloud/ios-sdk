@@ -17,7 +17,6 @@
  */
 
 #import "OCConnection.h"
-#import "OCConnectionQueue.h"
 #import "NSError+OCError.h"
 
 @implementation OCConnection (Authentication)
@@ -84,13 +83,13 @@
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		
-		request.ephermalResultHandler = ^(OCHTTPRequest *request, NSError *error) {
+		request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			dispatch_group_leave(preloadCompletionGroup);
 		};
 		
 		detectionRequestsByDetectionURL[detectionURL] = request;
 	
-		[self.commandQueue enqueueRequest:request];
+		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
 
 	// Schedule block for when all detection URL pre-loads have finished
@@ -139,17 +138,17 @@
 			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionURL.count > 0))
 			{
 				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCHTTPRequest *request, BOOL * _Nonnull stop) {
-					if (request.responseRedirectURL != nil)
+					if (request.httpResponse.redirectURL != nil)
 					{
 						NSURL *alternativeBaseURL;
 				
-						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.responseRedirectURL originalURL:request.url]) != nil)
+						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url]) != nil)
 						{
 							error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
 						}
 						else
 						{
-							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.responseRedirectURL });
+							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.httpResponse.redirectURL });
 						}
 					}
 					else if (request.error != nil)
@@ -205,7 +204,7 @@
 	}
 }
 
-- (BOOL)canSendAuthenticatedRequestsForQueue:(OCConnectionQueue *)queue availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+- (BOOL)canSendAuthenticatedRequestsWithAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	__weak id<OCConnectionDelegate> delegate = _delegate;
 	__weak OCConnection *weakSelf = self;

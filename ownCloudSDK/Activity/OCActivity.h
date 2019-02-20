@@ -81,8 +81,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithIdentifier:(OCActivityIdentifier)identifier;
 
-- (NSError *)applyUpdate:(OCActivityUpdate *)update; //!< Applies an update to the activity. Returns nil if the update could be applied, an error otherwise.
-- (NSError *)applyValue:(nullable id <NSObject>)value forKeyPath:(NSString *)keyPath; //!< Applies a new value to a keypath (entrypoint for subclassing)
+- (nullable NSError *)applyUpdate:(OCActivityUpdate *)update; //!< Applies an update to the activity. Returns nil if the update could be applied, an error otherwise.
+- (nullable NSError *)applyValue:(nullable id <NSObject>)value forKeyPath:(NSString *)keyPath; //!< Applies a new value to a keypath (entrypoint for subclassing)
 
 - (void)cancel;
 

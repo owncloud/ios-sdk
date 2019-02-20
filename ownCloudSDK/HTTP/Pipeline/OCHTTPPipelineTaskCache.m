@@ -23,10 +23,9 @@
 
 - (instancetype)init
 {
-	if ((self = [self init]) != nil)
+	if ((self = [super init]) != nil)
 	{
 		_taskByTaskID = [NSMutableDictionary new];
-		_taskByRequestID = [NSMutableDictionary new];
 	}
 
 	return (self);
@@ -57,42 +56,13 @@
 			if (remove)
 			{
 				[_taskByTaskID removeObjectForKey:task.taskID];
-				[_taskByRequestID removeObjectForKey:task.request.identifier];
 			}
 			else
 			{
 				_taskByTaskID[task.taskID] = task;
-				_taskByRequestID[task.request.identifier] = task;
 			}
 		}
 	}
-}
-
-- (OCHTTPPipelineTask *)cachedCopyForTask:(OCHTTPPipelineTask *)task storeIfNew:(BOOL)storeIfNew
-{
-	if ([self taskQualifiesForCaching:task])
-	{
-		// Manage cache
-		if (task.taskID != nil)
-		{
-			@synchronized(_taskByTaskID)
-			{
-				if (_taskByTaskID[task.taskID] != nil)
-				{
-					// Use copy from cache instead
-					task = _taskByTaskID[task.taskID];
-				}
-				else if (storeIfNew)
-				{
-					// Save to cache
-					_taskByTaskID[task.taskID] = task;
-					_taskByRequestID[task.request.identifier] = task;
-				}
-			}
-		}
-	}
-
-	return (task);
 }
 
 - (nullable OCHTTPPipelineTask *)cachedTaskForPipelineTaskID:(OCHTTPPipelineTaskID)taskID
@@ -110,19 +80,21 @@
 	return (task);
 }
 
-- (nullable OCHTTPPipelineTask *)cachedTaskForRequestID:(OCHTTPRequestID)requestID
+- (void)removeAllTasksForPipeline:(OCHTTPPipelineID)pipelineID partition:(OCHTTPPipelinePartitionID)partitionID
 {
-	OCHTTPPipelineTask *task = nil;
-
-	if (requestID != nil)
+	@synchronized(self)
 	{
-		@synchronized(_taskByTaskID)
-		{
-			task = _taskByRequestID[requestID];
-		}
-	}
+		NSMutableArray <OCHTTPPipelineTaskID> *removeTaskIDs = [NSMutableArray new];
 
-	return (task);
+		[_taskByTaskID enumerateKeysAndObjectsUsingBlock:^(OCHTTPPipelineTaskID taskID, OCHTTPPipelineTask *task, BOOL * _Nonnull stop) {
+			if ([task.pipelineID isEqual:pipelineID] && [task.partitionID isEqual:partitionID])
+			{
+				[removeTaskIDs addObject:taskID];
+			}
+		}];
+
+		[_taskByTaskID removeObjectsForKeys:removeTaskIDs];
+	}
 }
 
 @end

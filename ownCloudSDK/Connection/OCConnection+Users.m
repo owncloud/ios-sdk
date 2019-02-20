@@ -30,7 +30,7 @@
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
 	[request setValue:@"json" forParameter:@"format"];
 
-	[self sendRequest:request toQueue:self.commandQueue ephermalCompletionHandler:^(OCHTTPRequest *request, NSError *error) {
+	[self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)
 		{
 			completionHandler(error, nil);
@@ -41,7 +41,7 @@
 			NSDictionary *userInfoReturnDict;
 			NSDictionary *userInfoDict = nil;
 
-			if ((userInfoReturnDict = [request responseBodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+			if ((userInfoReturnDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
 			{
 				if ([userInfoReturnDict isKindOfClass:[NSDictionary class]])
 				{

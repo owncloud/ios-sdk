@@ -46,7 +46,7 @@ typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUIntege
 
 - (NSUInteger)iterateUsing:(OCSQLiteResultSetIterator)iterator error:( NSError * _Nullable *)outError; //!< Iterate over the result set using an interator block
 
-- (OCSQLiteRowDictionary)nextRowDictionaryWithError:(NSError * _Nullable *)outError; //!< Retrieve the next row in the result set as a dictionary.
+- (nullable OCSQLiteRowDictionary)nextRowDictionaryWithError:(NSError * _Nullable *)outError; //!< Retrieve the next row in the result set as a dictionary.
 
 @end
 

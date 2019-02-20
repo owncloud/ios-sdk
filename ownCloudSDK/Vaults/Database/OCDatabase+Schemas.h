@@ -30,5 +30,3 @@ extern OCDatabaseTableName OCDatabaseTableNameSyncJournal;
 extern OCDatabaseTableName OCDatabaseTableNameThumbnails;
 extern OCDatabaseTableName OCDatabaseTableNameCounters;
 extern OCDatabaseTableName OCDatabaseTableNameEvents;
-
-extern OCDatabaseTableName OCDatabaseTableNameConnectionRequests;

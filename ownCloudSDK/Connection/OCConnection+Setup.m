@@ -157,7 +157,7 @@
 			}
 		};
 		
-		error = [self sendSynchronousRequest:request toQueue:self.commandQueue];
+		error = [self sendSynchronousRequest:request];
 		
 		if (outRequest != NULL)
 		{
@@ -177,11 +177,11 @@
 		
 		if ((error = MakeRequest(url, &request)) == nil)
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.httpResponse.status.isSuccess)
 			{
 				NSDictionary *jsonDict;
 
-				if ((jsonDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+				if ((jsonDict = [request.httpResponse bodyConvertedDictionaryFromJSONWithError:&error]) != nil)
 				{
 					if (outJSONDict != NULL)
 					{
@@ -189,11 +189,11 @@
 					}
 				}
 			}
-			else if (request.responseHTTPStatus.isRedirection)
+			else if (request.httpResponse.status.isRedirection)
 			{
 				NSURL *redirectionURL;
 				
-				if ((redirectionURL = [request responseRedirectURL]) != nil)
+				if ((redirectionURL = request.httpResponse.redirectURL) != nil)
 				{
 					if (outRedirectionURL != NULL)
 					{
@@ -303,7 +303,7 @@
 		{
 			if ([error isOCErrorWithCode:OCErrorServerDetectionFailed])
 			{
-				if (statusRequest.responseHTTPStatus.code != 0)
+				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
 					if (![[url lastPathComponent] isEqual:@"owncloud"])
@@ -336,12 +336,12 @@
 							else
 							{
 								// Check response for redirect
-								if (rootURLRequest.responseHTTPStatus.isRedirection)
+								if (rootURLRequest.httpResponse.status.isRedirection)
 								{
-									if (rootURLRequest.responseRedirectURL != nil)
+									if (rootURLRequest.httpResponse.redirectURL != nil)
 									{
 										urlForCreationOfRedirectionIssueIfSuccessful = urlForTryingRootURL;
-										url = rootURLRequest.responseRedirectURL;
+										url = rootURLRequest.httpResponse.redirectURL;
 										urlForTryingRootURL = nil;
 
 										continue;

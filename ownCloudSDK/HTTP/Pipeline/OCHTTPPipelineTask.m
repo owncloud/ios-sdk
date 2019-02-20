@@ -17,6 +17,7 @@
  */
 
 #import "OCHTTPPipelineTask.h"
+#import "OCHTTPResponse.h"
 #import "OCMacros.h"
 
 @implementation OCHTTPPipelineTask
@@ -73,6 +74,31 @@
 	}
 
 	return (self);
+}
+
+- (OCHTTPResponse *)responseFromURLSessionTask:(NSURLSessionTask *)urlSessionTask
+{
+	OCHTTPResponse *response = nil;
+
+	// Create a new response if none exists
+	if ((response = self.response) == nil)
+	{
+		response = [[OCHTTPResponse alloc] initWithRequest:self.request HTTPError:nil];
+		self.response = response;
+	}
+
+	// Fill response with data from NSHTTPURLResponse
+	if ((response != nil) && (urlSessionTask != nil))
+	{
+		NSHTTPURLResponse *httpURLResponse;
+
+		if ((httpURLResponse = OCTypedCast(urlSessionTask.response, NSHTTPURLResponse)) != nil)
+		{
+			response.httpURLResponse = httpURLResponse; // automatically popuplates headerFields and status
+		}
+	}
+
+	return ((OCHTTPResponse * _Nonnull)response); // Working around a Static Analyzer bug that assumes [[OCHTTPResponse alloc] init] could return nil and triggers a false positive
 }
 
 #pragma mark - Serialized properties

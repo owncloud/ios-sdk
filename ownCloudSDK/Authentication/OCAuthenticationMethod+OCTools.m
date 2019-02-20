@@ -50,7 +50,7 @@
 			NSString *wwwAuthenticateHeader;
 			
 			// wwwAuthenticateHeader is something like 'Bearer realm="ownCloud", Basic realm="ownCloud"'
-			if ((wwwAuthenticateHeader = detectionRequest.response.allHeaderFields[@"Www-Authenticate"]) != nil)
+			if ((wwwAuthenticateHeader = detectionRequest.httpResponse.headerFields[@"Www-Authenticate"]) != nil)
 			{
 				NSArray <NSString *> *components = [wwwAuthenticateHeader componentsSeparatedByString:@","];
 				

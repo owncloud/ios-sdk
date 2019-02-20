@@ -23,10 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCSQLiteQueryCondition : NSObject
 
 @property(strong) NSString *sqlOperator; //!< I.e. "!="
-@property(strong) id value; //!< I.e. "admin"
+@property(nullable,strong) id value; //!< I.e. "admin"
 @property(assign) BOOL apply; //!< YES if this condition should be used as part of the WHERE clause, NO if it should be ignored
 
-+ (instancetype)queryConditionWithOperator:(NSString *)sqlOperator value:(id)value apply:(BOOL)apply;
++ (instancetype)queryConditionWithOperator:(NSString *)sqlOperator value:(nullable id)value apply:(BOOL)apply;
 
 @end
 

@@ -104,7 +104,7 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 #pragma mark - Class
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging>
+@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging, OCProgressResolver>
 {
 	OCBookmark *_bookmark;
 

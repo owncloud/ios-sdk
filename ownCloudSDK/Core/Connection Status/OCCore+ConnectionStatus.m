@@ -302,27 +302,26 @@
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
 }
 
-- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)finishedRequest error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
+- (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
 {
 	if (error != nil)
 	{
-//		if ([error.domain isEqual:(__bridge NSString *)kCFErrorDomainCFNetwork] && (error.code == kCFURLErrorCannotConnectToHost))
 		if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCannotConnectToHost))
 		{
 			[_serverStatusSignalProvider reportConnectionRefusedError];
 
-			if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{
 				return (OCHTTPRequestInstructionReschedule);
 			}
 		}
 	}
 
-	if (finishedRequest.responseHTTPStatus.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
 	{
 		[self reportResponseIndicatingMaintenanceMode];
 
-		if ([finishedRequest.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+		if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 		{
 			return (OCHTTPRequestInstructionReschedule);
 		}

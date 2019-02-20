@@ -605,7 +605,7 @@
 					{
 						if (syncRecord.progress != nil)
 						{
-							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress.progress;
 						}
 
 						if (syncRecord.resultHandler != nil)
@@ -646,9 +646,9 @@
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				@synchronized(db)
 				{
-					if (syncRecord.progress != nil)
+					if (syncRecord.progress.progress != nil)
 					{
-						self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress;
+						self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress.progress;
 					}
 					else
 					{
@@ -741,7 +741,7 @@
 
 			@synchronized(self.sqlDB)
 			{
-				syncRecord.progress = _progressBySyncRecordID[syncRecord.recordID];
+				syncRecord.progress.progress = _progressBySyncRecordID[syncRecord.recordID];
 				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
 				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
 			}

@@ -69,7 +69,7 @@
 
 	if ((item = self.archivedServerItem) != nil)
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 
 		if ((progress = [self.core.connection deleteItem:item requireMatch:self.requireMatch resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
