@@ -1797,6 +1797,13 @@
 		if (response.bodyURL != nil)
 		{
 			NSError *error = nil;
+			NSURL *parentURL = response.bodyURL.URLByDeletingLastPathComponent;
+
+			if (![[NSFileManager defaultManager] fileExistsAtPath:parentURL.path])
+			{
+				[[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error];
+			}
+
 			[[NSFileManager defaultManager] moveItemAtURL:location toURL:response.bodyURL error:&error];
 		}
 

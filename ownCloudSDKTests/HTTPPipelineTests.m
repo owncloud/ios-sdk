@@ -255,7 +255,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testSimpleHTTPRequestWithDownloadRequests
@@ -356,7 +356,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testDetachedFinalQueueingWithDownloadRequests
@@ -457,7 +457,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testDetachedNonFinalQueueingWithDownloadRequests
@@ -533,7 +533,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testDetachedCancellationWithDownloadRequests
@@ -609,7 +609,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testDetachedPartitionCancellationWithDownloadRequests
@@ -729,7 +729,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		});
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testPartitionIsolationWithDownloadRequests
@@ -885,7 +885,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testSignalsWithDownloadRequests
@@ -1199,7 +1199,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testRedirectionWithDownloadRequests
@@ -1792,7 +1792,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testRescheduleInstructionWithDownloadRequests
@@ -1869,7 +1869,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testDeliverInstructionWithDownloadRequests
@@ -1945,7 +1945,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - asks the pipeline to download a file
@@ -2017,7 +2017,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - asks the pipeline to download a file
@@ -2089,7 +2089,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - schedules a request while not attached
@@ -2147,7 +2147,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - Attach partition and schedule 100 requests
@@ -2228,7 +2228,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - creates a fake task in the backend with status "running" (=> when actually it has never been scheduled and the NSURLSession can't know about it)
@@ -2291,7 +2291,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 // - enqueues two requests
@@ -2371,7 +2371,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:20 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testProgress

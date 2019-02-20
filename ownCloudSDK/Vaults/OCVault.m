@@ -138,6 +138,16 @@
 	return (_httpPipelineRootURL);
 }
 
+- (NSURL *)temporaryDownloadURL
+{
+	if (_temporaryDownloadURL == nil)
+	{
+		_temporaryDownloadURL = [self.rootURL URLByAppendingPathComponent:@"TemporaryDownloads"];
+	}
+
+	return (_temporaryDownloadURL);
+}
+
 - (OCDatabase *)database
 {
 	if (_database == nil)

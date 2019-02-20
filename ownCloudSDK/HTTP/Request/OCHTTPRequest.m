@@ -325,6 +325,7 @@
 		self.progress		= [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
 		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+		self.effectiveURL 	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"effectiveURL"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
 		self.headerFields 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"headerFields"];
 		self.parameters 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"parameters"];
@@ -339,11 +340,14 @@
 
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
+		self.skipAuthorization  = [decoder decodeBoolForKey:@"skipAuthorization"];
 
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
+		self.downloadedFileIsTemporary = [decoder decodeBoolForKey:@"downloadedFileIsTemporary"];
 
 		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
+		self.cancelled		= [decoder decodeBoolForKey:@"cancelled"];
 
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
@@ -360,14 +364,17 @@
 
 	[coder encodeObject:_progress 		forKey:@"progress"];
 
-	[coder encodeObject:_url 		forKey:@"url"];
 	[coder encodeObject:_method 		forKey:@"method"];
-	[coder encodeObject:_headerFields 	forKey:@"headerFields"];
+
+	[coder encodeObject:_url 		forKey:@"url"];
+	[coder encodeObject:_effectiveURL	forKey:@"effectiveURL"];
 	[coder encodeObject:_parameters 	forKey:@"parameters"];
+	[coder encodeObject:_headerFields 	forKey:@"headerFields"];
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
+
 	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
@@ -375,11 +382,14 @@
 
 	[coder encodeFloat:_priority 		forKey:@"priority"];
 	[coder encodeObject:_groupID 		forKey:@"groupID"];
+	[coder encodeBool:_skipAuthorization 	forKey:@"skipAuthorization"];
 
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
+	[coder encodeBool:_downloadedFileIsTemporary forKey:@"downloadedFileIsTemporary"];
 
 	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
+	[coder encodeBool:_cancelled 		forKey:@"cancelled"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }
