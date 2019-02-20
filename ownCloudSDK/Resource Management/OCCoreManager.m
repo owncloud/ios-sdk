@@ -22,6 +22,7 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
+#import "OCMacros.h"
 
 @implementation OCCoreManager
 
@@ -49,192 +50,149 @@
 		_requestCountByUUID = [NSMutableDictionary new];
 
 		_queuedOfflineOperationsByUUID = [NSMutableDictionary new];
-		_runningOfflineOperationByUUID = [NSMutableDictionary new];
 
-		_shutdownWaitGroupByUUID = [NSMutableDictionary new];
+		_adminQueue = dispatch_queue_create("OCCoreManager admin queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 	}
 
 	return(self);
 }
 
 #pragma mark - Requesting and returning cores
-- (OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
+- (void)requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
+{
+	dispatch_async(_adminQueue, ^{
+		[self _requestCoreForBookmark:bookmark setup:setupHandler completionHandler:completionHandler];
+	});
+}
+
+- (void)_requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
 	OCCore *returnCore = nil;
 
 	OCLogDebug(@"core requested for bookmark %@", bookmark);
 
-	@synchronized(self)
-	{
-		if (_runningOfflineOperationByUUID[bookmark.uuid] != nil)
-		{
-			OCLog(@"core for bookmark %@ unavailable due to running offline operation", bookmark);
+	NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
 
+	requestCount = @(requestCount.integerValue + 1);
+	_requestCountByUUID[bookmark.uuid] = requestCount;
+
+	if (requestCount.integerValue == 1)
+	{
+		OCCore *core;
+
+		OCLog(@"creating core for bookmark %@", bookmark);
+
+		// Create and start core
+		if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
+		{
+			returnCore = core;
+
+			core.postFileProviderNotifications = self.postFileProviderNotifications;
+
+			@synchronized(self)
+			{
+				_coresByUUID[bookmark.uuid] = core;
+			}
+
+			if (setupHandler != nil)
+			{
+				setupHandler(core, nil);
+			}
+
+			OCLog(@"starting core for bookmark %@", bookmark);
+
+			OCSyncExec(waitForCoreStart, {
+				[core startWithCompletionHandler:^(id sender, NSError *error) {
+					OCLog(@"core=%@ started for bookmark=%@ with error=%@", sender, bookmark, error);
+
+					if (completionHandler != nil)
+					{
+						completionHandler((OCCore *)sender, error);
+					}
+
+					OCSyncExecDone(waitForCoreStart);
+				}];
+			});
+		}
+		else
+		{
 			if (completionHandler != nil)
 			{
-				completionHandler(nil, OCError(OCErrorRunningOperation));
+				completionHandler(nil, OCError(OCErrorInternal));
+			}
+		}
+	}
+	else
+	{
+		OCCore *core;
+
+		OCLog(@"re-using core for bookmark %@", bookmark);
+
+		@synchronized(self)
+		{
+			core = _coresByUUID[bookmark.uuid];
+		}
+
+		if (core != nil)
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler(core, nil);
 			}
 		}
 		else
 		{
-			NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
-
-			requestCount = @(requestCount.integerValue + 1);
-			_requestCountByUUID[bookmark.uuid] = requestCount;
-
-			if (requestCount.integerValue == 1)
-			{
-				OCCore *core;
-				dispatch_group_t shutdownWaitGroup = nil;
-
-				@synchronized(_shutdownWaitGroupByUUID)
-				{
-					shutdownWaitGroup = _shutdownWaitGroupByUUID[bookmark.uuid];
-				}
-
-				if (shutdownWaitGroup != nil)
-				{
-					OCLog(@"waiting for previous core for %@ to complete shutdown", bookmark);
-					dispatch_group_wait(shutdownWaitGroup, DISPATCH_TIME_FOREVER);
-					OCLog(@"previous core for %@ has completed shutdown", bookmark);
-				}
-
-				OCLog(@"creating core for bookmark %@", bookmark);
-
-				// Create and start core
-				if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
-				{
-					returnCore = core;
-
-					core.postFileProviderNotifications = self.postFileProviderNotifications;
-
-					_coresByUUID[bookmark.uuid] = core;
-
-					OCLog(@"starting core for bookmark %@", bookmark);
-
-					[core startWithCompletionHandler:^(id sender, NSError *error) {
-						OCLog(@"core started for bookmark %@", bookmark);
-
-						if (completionHandler != nil)
-						{
-							completionHandler((OCCore *)sender, error);
-						}
-					}];
-				}
-				else
-				{
-					if (completionHandler != nil)
-					{
-						completionHandler(nil, OCError(OCErrorInternal));
-					}
-				}
-			}
-			else
-			{
-				OCCore *core;
-
-				OCLog(@"re-using core for bookmark %@", bookmark);
-
-				if ((core = _coresByUUID[bookmark.uuid]) != nil)
-				{
-					returnCore = core;
-
-					if ((core.state != OCCoreStateRunning) && (core.state != OCCoreStateStarting))
-					{
-						OCLog(@"starting core for bookmark %@", bookmark);
-
-						[core startWithCompletionHandler:^(id sender, NSError *error) {
-							OCLog(@"core started for bookmark %@", bookmark);
-
-							if (completionHandler != nil)
-							{
-								completionHandler((OCCore *)sender, error);
-							}
-						}];
-					}
-					else if (completionHandler != nil)
-					{
-						OCLog(@"core for bookmark %@ already started", bookmark);
-						completionHandler(core, nil);
-					}
-				}
-				else
-				{
-					OCLogError(@"no core found for bookmark %@, although one should exist", bookmark);
-				}
-			}
+			OCLogError(@"no core found for bookmark %@, although one should exist", bookmark);
 		}
 	}
-
-	return (returnCore);
 }
+
 
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
 {
-	BOOL runCompletionHandler = NO;
+	dispatch_async(_adminQueue, ^{
+		[self _returnCoreForBookmark:bookmark completionHandler:completionHandler];
+	});
+}
+
+- (void)_returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
+{
+	NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
 
 	OCLogDebug(@"core returned for bookmark %@ (%@)", bookmark.uuid.UUIDString, bookmark.name);
 
-	@synchronized(self)
+	if (requestCount.integerValue > 0)
 	{
-		NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
+		requestCount = @(requestCount.integerValue - 1);
+		_requestCountByUUID[bookmark.uuid] = requestCount;
+	}
 
-		if (requestCount.integerValue > 0)
+	if (requestCount.integerValue == 0)
+	{
+		// Stop and release core
+		OCCore *core;
+
+		OCLog(@"shutting down core for bookmark %@", bookmark);
+
+		@synchronized(self)
 		{
-			requestCount = @(requestCount.integerValue - 1);
-			_requestCountByUUID[bookmark.uuid] = requestCount;
+			core = _coresByUUID[bookmark.uuid];
 		}
 
-		if (requestCount.integerValue == 0)
+		if (core != nil)
 		{
-			// Stop and release core
-			OCCore *core;
+			OCLog(@"stopping core for bookmark %@", bookmark);
 
-			OCLog(@"shutting down core for bookmark %@", bookmark);
-
-			if ((core = _coresByUUID[bookmark.uuid]) != nil)
+			// Remove core from LUT
+			@synchronized(self)
 			{
-				// Set up waitgroup for core shutdown
-				dispatch_group_t shutdownWaitGroup;
-
-				@synchronized(_shutdownWaitGroupByUUID)
-				{
-					// Create / add waitgroup for UUID
-					if ((shutdownWaitGroup = _shutdownWaitGroupByUUID[bookmark.uuid]) == nil)
-					{
-						if ((shutdownWaitGroup = dispatch_group_create()) != nil)
-						{
-							_shutdownWaitGroupByUUID[bookmark.uuid] = shutdownWaitGroup;
-						}
-					}
-
-					if (shutdownWaitGroup != nil)
-					{
-						// Lock waitgroup
-						dispatch_group_enter(shutdownWaitGroup);
-					}
-				}
-
-				// Remove core from LUT
 				[_coresByUUID removeObjectForKey:bookmark.uuid];
+			}
 
-				OCLog(@"stopping core for bookmark %@", bookmark);
-
-				// Stop core
+			// Stop core
+			OCSyncExec(waitForCoreStop, {
 				[core stopWithCompletionHandler:^(id sender, NSError *error) {
 					[core unregisterEventHandler];
-
-					@synchronized(self->_shutdownWaitGroupByUUID)
-					{
-						// Remove waitgroup for UUID
-						if (self->_shutdownWaitGroupByUUID[bookmark.uuid] == shutdownWaitGroup)
-						{
-							self->_shutdownWaitGroupByUUID[bookmark.uuid] = nil;
-						}
-
-						// Unlock waitgroup
-						dispatch_group_leave(shutdownWaitGroup);
-					}
 
 					OCLog(@"core stopped for bookmark %@", bookmark);
 
@@ -243,24 +201,22 @@
 						completionHandler();
 					}
 
-					[self _runNextOfflineOperationForBookmark:bookmark];
+					OCSyncExecDone(waitForCoreStop);
 				}];
-			}
-			else
-			{
-				OCLogError(@"no core found for bookmark %@, although one should exist", bookmark);
-			}
+			});
+
+			// Run offline operation
+			[self _runNextOfflineOperationForBookmark:bookmark];
 		}
 		else
 		{
-			OCLog(@"core still in use for bookmark %@", bookmark);
-
-			runCompletionHandler = YES;
+			OCLogError(@"no core found for bookmark %@, although one should exist", bookmark);
 		}
 	}
-
-	if (runCompletionHandler)
+	else
 	{
+		OCLog(@"core still in use for bookmark %@", bookmark);
+
 		if (completionHandler != nil)
 		{
 			completionHandler();
@@ -345,47 +301,47 @@
 		[queuedOfflineOperations addObject:offlineOperation];
 	}
 
-	[self _runNextOfflineOperationForBookmark:bookmark];
+	dispatch_async(_adminQueue, ^{
+		[self _runNextOfflineOperationForBookmark:bookmark];
+	});
 }
 
 - (void)_runNextOfflineOperationForBookmark:(OCBookmark *)bookmark
 {
 	OCCoreManagerOfflineOperation offlineOperation = nil;
 
-	@synchronized(self)
-	{
-		OCLogDebug(@"trying to run next offline operation for bookmark %@", bookmark);
+	OCLogDebug(@"trying to run next offline operation for bookmark %@", bookmark);
 
-		if ((_requestCountByUUID[bookmark.uuid].integerValue == 0) && (_runningOfflineOperationByUUID[bookmark.uuid] == nil))
+	if (_requestCountByUUID[bookmark.uuid].integerValue == 0)
+	{
+		@synchronized(self)
 		{
 			if ((offlineOperation = _queuedOfflineOperationsByUUID[bookmark.uuid].firstObject) != nil)
 			{
 				OCLogDebug(@"running offline operation for bookmark %@: %@", bookmark, offlineOperation);
 
 				[_queuedOfflineOperationsByUUID[bookmark.uuid] removeObjectAtIndex:0];
-				_runningOfflineOperationByUUID[bookmark.uuid] = @(YES);
 			}
 			else
 			{
 				OCLogDebug(@"no queued offline operation for bookmark %@", bookmark);
 			}
 		}
-		else
-		{
-			OCLogDebug(@"won't run offline operation for bookmark %@ at this time (requestCount=%lu, runningOperation=%d)", bookmark, _requestCountByUUID[bookmark.uuid].integerValue, (_runningOfflineOperationByUUID[bookmark.uuid] != nil));
-		}
+	}
+	else
+	{
+		OCLogDebug(@"won't run offline operation for bookmark %@ at this time (requestCount=%lu)", bookmark, _requestCountByUUID[bookmark.uuid].integerValue);
 	}
 
 	if (offlineOperation != nil)
 	{
-		offlineOperation(bookmark, ^{
-			@synchronized(self)
-			{
-				[self->_runningOfflineOperationByUUID removeObjectForKey:bookmark.uuid];
-
-				[self _runNextOfflineOperationForBookmark:bookmark];
-			}
+		OCSyncExec(waitForOfflineOperationToFinish, {
+			offlineOperation(bookmark, ^{
+				OCSyncExecDone(waitForOfflineOperationToFinish);
+			});
 		});
+
+		[self _runNextOfflineOperationForBookmark:bookmark];
 	}
 }
 

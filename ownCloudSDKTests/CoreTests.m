@@ -839,7 +839,7 @@
 	__block NSTimeInterval queryTwoTimestampCache = 0;
 	__block NSTimeInterval queryTwoTimestampIdle = 0;
 
-	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 		__weak OCCore *weakCore = core;
 
@@ -916,6 +916,7 @@
 
 	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			completionHandler();
 			[vaultErasedExpectation fulfill];
 		}];
 	} forBookmark:bookmark];
@@ -938,7 +939,7 @@
 	__block XCTestExpectation *vaultErasedExpectation = [self expectationWithDescription:@"Vault erased"];
 	__block OCItem *onlyItem = nil;
 
-	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 
 		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
@@ -1005,6 +1006,7 @@
 
 	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			completionHandler();
 			[vaultErasedExpectation fulfill];
 		}];
 	} forBookmark:bookmark];

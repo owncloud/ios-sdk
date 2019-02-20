@@ -24,21 +24,21 @@
 + (void)load
 {
 	[self addMockLocation:OCMockLocationOCCoreManagerRequestCoreForBookmark
-			  forSelector:@selector(requestCoreForBookmark:completionHandler:)
-					 with:@selector(ocm_requestCoreForBookmark:completionHandler:)];
+			  forSelector:@selector(requestCoreForBookmark:setup:completionHandler:)
+					 with:@selector(ocm_requestCoreForBookmark:setup:completionHandler:)];
 }
 
-- (OCCore *)ocm_requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler {
+- (void)ocm_requestCoreForBookmark:(OCBookmark *)bookmark setup:(void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler {
 
 	OCMockOCCoreManagerRequestCoreForBookmarkBlock mockBlock;
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCCoreManagerRequestCoreForBookmark]) != nil)
 	{
-		return(mockBlock(bookmark, completionHandler));
+		return(mockBlock(bookmark, setupHandler, completionHandler));
 	}
 	else
 	{
-		return([self ocm_requestCoreForBookmark:bookmark completionHandler:completionHandler]);
+		return([self ocm_requestCoreForBookmark:bookmark setup:setupHandler completionHandler:completionHandler]);
 	}
 }
 

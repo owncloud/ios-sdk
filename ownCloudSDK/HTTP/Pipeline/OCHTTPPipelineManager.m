@@ -54,6 +54,25 @@
 	return (sharedPipelineManager);
 }
 
+#pragma mark - Set up persistent pipelines
++ (void)setupPersistentPipelines
+{
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSArray <OCHTTPPipelineID> *persistentPipelineIDs = @[ OCHTTPPipelineIDLocal, OCHTTPPipelineIDBackground ];
+
+		for (OCHTTPPipelineID pipelineID in persistentPipelineIDs)
+		{
+			OCLogDebug(@"Setting up pipeline=%@ for persistance", pipelineID);
+
+			[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+				OCLogDebug(@"Started pipeline=%@ (%@) for persistance with error=%@", pipelineID, pipeline, error);
+			}];
+		}
+	});
+}
+
 #pragma mark - Init & Dealloc
 - (instancetype)init
 {

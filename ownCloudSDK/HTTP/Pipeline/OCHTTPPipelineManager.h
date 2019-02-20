@@ -34,6 +34,9 @@ typedef void(^OCHTTPPipelineManagerRequestCompletionHandler)(OCHTTPPipeline * _N
 @property(strong,readonly,nonatomic) OCHTTPPipelineBackend *backend; //!< Backend that persists tasks via SQLite on-disk.
 @property(strong,readonly,nonatomic) OCHTTPPipelineBackend *ephermalBackend; //!< Backend storing tasks in an in-memory SQLite db.
 
+#pragma mark - Set up persistent pipelines
++ (void)setupPersistentPipelines; //!< Makes sure that the pipelines OCHTTPPipelineIDLocal and OCHTTPPipelineIDBackground stay around for the lifetime of the process.
+
 #pragma mark - Requesting and returning pipelines
 - (void)requestPipelineWithIdentifier:(OCHTTPPipelineID)pipelineID completionHandler:(OCHTTPPipelineManagerRequestCompletionHandler)completionHandler; //!< Request the pipeline with the provided identifier to start using it
 - (void)returnPipelineWithIdentifier:(OCHTTPPipelineID)pipelineID completionHandler:(nullable dispatch_block_t)completionHandler; //!< Return the pipeline with the provided identifier to stop using it

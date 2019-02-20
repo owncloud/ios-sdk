@@ -118,10 +118,10 @@
 						// Start URLSession
 						self->_urlSession = [NSURLSession sessionWithConfiguration:self->_sessionConfiguration delegate:self delegateQueue:nil];
 
-						[self _recoverQueueForURLSession:self->_urlSession];
+						[self _recoverQueueForURLSession:self->_urlSession completionHandler:^{
+							completionHandler(self, error);
+						}];
 					}
-
-					completionHandler(self, error);
 				}];
 			}
 			break;
@@ -188,73 +188,82 @@
 }
 
 #pragma mark - Queue recovery
-- (void)_recoverQueueForURLSession:(NSURLSession *)urlSession
+- (void)_recoverQueueForURLSession:(NSURLSession *)urlSession completionHandler:(dispatch_block_t)completionHandler
 {
 	__block NSArray <NSURLSessionTask *> *urlSessionTasks = nil;
 	__block NSMutableArray <OCHTTPPipelineTask *> *droppedTasks = [NSMutableArray new];
 	NSString *urlSessionIdentifier = urlSession.configuration.identifier;
 
-	OCSyncExec(retrieveTasks, {
-		[urlSession getAllTasksWithCompletionHandler:^(NSArray<__kindof NSURLSessionTask *> * _Nonnull tasks) {
-			urlSessionTasks = tasks;
-			OCSyncExecDone(retrieveTasks);
-		}];
-	});
+	OCLogDebug(@"Recovering queue for urlSession=%@", urlSession);
 
-	// Re-attach URL session tasks to pipeline tasks
-	for (NSURLSessionTask *urlSessionTask in urlSessionTasks)
-	{
-		NSError *backendError = nil;
-		OCHTTPPipelineTask *task;
+	[urlSession getAllTasksWithCompletionHandler:^(NSArray<__kindof NSURLSessionTask *> * _Nonnull tasks) {
+		urlSessionTasks = tasks;
 
-		if ((task = [self.backend retrieveTaskForPipeline:self URLSession:urlSession task:urlSessionTask error:&backendError]) != nil)
-		{
-			if (task.urlSessionTask == nil)
+		OCLogDebug(@"Recovered urlSession=%@ tasks=%@", urlSession, tasks);
+
+		[self queueBlock:^{
+			// Re-attach URL session tasks to pipeline tasks
+			for (NSURLSessionTask *urlSessionTask in urlSessionTasks)
 			{
-				task.urlSessionTask = urlSessionTask;
+				NSError *backendError = nil;
+				OCHTTPPipelineTask *task;
 
-				// Reconnect/Recreate progress
-				if (task.request.progress.progress == nil)
+				if ((task = [self.backend retrieveTaskForPipeline:self URLSession:urlSession task:urlSessionTask error:&backendError]) != nil)
 				{
-					task.request.progress.progress = [NSProgress indeterminateProgress];
-				}
+					if (task.urlSessionTask == nil)
+					{
+						task.urlSessionTask = urlSessionTask;
 
-				if (task.request.progress.progress != nil)
-				{
-					__weak OCHTTPPipeline *weakSelf = self;
-					__weak OCHTTPRequest *weakRequest = task.request;
-
-					task.request.progress.progress.cancellationHandler = ^{
-						if (weakRequest != nil)
+						// Reconnect/Recreate progress
+						if (task.request.progress.progress == nil)
 						{
-							[weakSelf cancelRequest:weakRequest];
+							task.request.progress.progress = [NSProgress indeterminateProgress];
 						}
-					};
 
-					task.request.progress.progress.totalUnitCount += 200;
-					[task.request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+						if (task.request.progress.progress != nil)
+						{
+							__weak OCHTTPPipeline *weakSelf = self;
+							__weak OCHTTPRequest *weakRequest = task.request;
+
+							task.request.progress.progress.cancellationHandler = ^{
+								if (weakRequest != nil)
+								{
+									[weakSelf cancelRequest:weakRequest];
+								}
+							};
+
+							task.request.progress.progress.totalUnitCount += 200;
+							[task.request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+						}
+					}
+				}
+				else
+				{
+					OCLogError(@"Could not recover task from urlSessionTask=%@ with backendError=%@", urlSessionTask, backendError);
 				}
 			}
-		}
-		else
-		{
-			OCLogError(@"Could not recover task from urlSessionTask=%@ with backendError=%@", urlSessionTask, backendError);
-		}
-	}
 
-	// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
-	[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
-		if ([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] && (pipelineTask.urlSessionTask == nil) && (pipelineTask.state == OCHTTPPipelineTaskStateRunning))
-		{
-			[droppedTasks addObject:pipelineTask];
-		}
+			// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
+			[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
+				if ([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] && (pipelineTask.urlSessionTask == nil) && (pipelineTask.state == OCHTTPPipelineTaskStateRunning))
+				{
+					[droppedTasks addObject:pipelineTask];
+				}
+			}];
+
+			// Drop identified tasks
+			for (OCHTTPPipelineTask *task in droppedTasks)
+			{
+				[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestDroppedByURLSession)]];
+			}
+
+			// Call completionHandler
+			if (completionHandler != nil)
+			{
+				completionHandler();
+			}
+		}];
 	}];
-
-	// Drop identified tasks
-	for (OCHTTPPipelineTask *task in droppedTasks)
-	{
-		[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestDroppedByURLSession)]];
-	}
 }
 
 #pragma mark - Request handling
@@ -1510,10 +1519,10 @@
 			if ((urlSession = self->_attachedURLSessionsByIdentifier[sessionIdentifier]) != nil)
 			{
 				// Drop any dropped requests now
-				[self _recoverQueueForURLSession:urlSession];
-
-				// Terminate urlSession
-				[urlSession finishTasksAndInvalidate];
+				[self _recoverQueueForURLSession:urlSession completionHandler:^{
+					// Terminate urlSession
+					[urlSession finishTasksAndInvalidate];
+				}];
 			}
 		}];
 	}
@@ -1858,7 +1867,7 @@
 		{
 			if (_cachedLogTags == nil)
 			{
-				_cachedLogTags = [NSArray arrayWithObjects:@"HTTP", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+				_cachedLogTags = [NSArray arrayWithObjects:@"HTTP", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagTypedID(@"PipelineID", _identifier), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
 			}
 		}
 	}
