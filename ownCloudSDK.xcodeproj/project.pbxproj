@@ -95,8 +95,6 @@
 		DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */; };
 		DC2D649C21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2D649D21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */; };
-		DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC2EF1B820ECBB7100BA2A3E /* OCKeyValueStore.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */; };
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
 		DC3094882057358800189B9A /* ownCloudUI.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094862057358800189B9A /* ownCloudUI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
@@ -625,8 +623,6 @@
 		DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+Thumbnails.h"; sourceTree = "<group>"; };
 		DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodOAuth2+OCMocking.h"; sourceTree = "<group>"; };
 		DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodOAuth2+OCMocking.m"; sourceTree = "<group>"; };
-		DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueStore.h; sourceTree = "<group>"; };
-		DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueStore.m; sourceTree = "<group>"; };
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
 		DC3094842057358800189B9A /* ownCloudUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC3094862057358800189B9A /* ownCloudUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudUI.h; sourceTree = "<group>"; };
@@ -2059,8 +2055,6 @@
 			children = (
 				DCEA7D962093556600F25223 /* OCCache.m */,
 				DCEA7D952093556600F25223 /* OCCache.h */,
-				DC2EF1B620ECBB7100BA2A3E /* OCKeyValueStore.m */,
-				DC2EF1B520ECBB7100BA2A3E /* OCKeyValueStore.h */,
 				DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */,
 				DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */,
 				DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */,
@@ -2234,7 +2228,6 @@
 				DC139CC820DBB8440090175A /* OCChecksum.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */,
-				DC2EF1B720ECBB7100BA2A3E /* OCKeyValueStore.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
 				DC19BFCA21CA6B91007C20D1 /* OCSyncIssue.h in Headers */,
@@ -2641,7 +2634,6 @@
 				DC0283642090A3E8005B6334 /* OCItemThumbnail.m in Sources */,
 				DC75D310214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.m in Sources */,
 				DC07C28F21244FC800B815A4 /* OCExtensionManager.m in Sources */,
-				DC2EF1B820ECBB7100BA2A3E /* OCKeyValueStore.m in Sources */,
 				DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */,
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */,

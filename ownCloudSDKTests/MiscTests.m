@@ -322,35 +322,7 @@
 
 }
 
-#pragma mark - OCKeyValueStore
-- (void)testKeyValueStore
-{
-	NSURL *temporaryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"kvStore"];
-	OCKeyValueStore *keyValueStore = [[OCKeyValueStore alloc] initWithRootURL:temporaryURL];
-	NSUUID *testUUID = [NSUUID UUID], *retrievedUUID = nil;
-
-	XCTAssert(keyValueStore!=nil);
-
-	keyValueStore[@"test"] = testUUID;
-	XCTAssert(keyValueStore.allKeys.count == 1);
-
-	keyValueStore[@"test2"] = @"test";
-	XCTAssert(keyValueStore.allKeys.count == 2);
-
-	keyValueStore[@"test2"] = nil;
-	XCTAssert(keyValueStore.allKeys.count == 1);
-
-	retrievedUUID = keyValueStore[@"test"];
-
-	XCTAssert(retrievedUUID!=nil);
-	XCTAssert([retrievedUUID isEqual:testUUID]);
-	XCTAssert(retrievedUUID!=testUUID);
-
-	NSError *error = [keyValueStore eraseBackinngStore];
-	XCTAssert(error==nil);
-	XCTAssert(![[NSFileManager defaultManager] fileExistsAtPath:temporaryURL.path]);
-}
-
+#pragma mark - Formatting
 - (void)testStringFormatting
 {
 	XCTAssert([@"The quick brown fox jumps" isEqual:[@"The quick brown fox jumps" leftPaddedMinLength:10]]);

@@ -2171,7 +2171,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 		XCTAssert([pipeline tasksPendingDeliveryForPartitionID:partitionHandler.partitionID]==0);
 
-		__block NSInteger requests = 100, outstandingRequests, cancelledRequests = 0;
+		__block NSInteger requests = 200, outstandingRequests, cancelledRequests = 0;
 		__block BOOL deliveryAllowed = YES;
 
 		outstandingRequests = requests;
@@ -2199,7 +2199,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				[pipeline enqueueRequest:request forPartitionID:partitionHandler.partitionID isFinal:NO];
 			}
 
-			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 				XCTAssert([[NSFileManager defaultManager] fileExistsAtPath:[[pipeline.backend.temporaryFilesRoot URLByAppendingPathComponent:pipeline.identifier] path]]);
 				XCTAssert([[NSFileManager defaultManager] fileExistsAtPath:[[[pipeline.backend.temporaryFilesRoot URLByAppendingPathComponent:pipeline.identifier] URLByAppendingPathComponent:partitionHandler.partitionID] path]]);
 
