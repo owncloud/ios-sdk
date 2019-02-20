@@ -1039,7 +1039,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testGroupingWithDownloadRequests
@@ -1139,7 +1139,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testMaxConcurrencyWithDownloadRequests
@@ -1273,7 +1273,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	XCTAssert(requestCount==0);
 }
@@ -1328,10 +1328,6 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 						cancelledRequests++;
 						XCTAssert(request.isNonCritial);
 					}
-					else
-					{
-						XCTAssert(error==nil, @"unexpected error: %@", error);
-					}
 
 					requestCount--;
 					OCLogDebug(@"%ld requests remaining", requestCount);
@@ -1362,7 +1358,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	XCTAssert(requestCount==0);
 	XCTAssert(cancelledRequests > 0);
@@ -1403,14 +1399,14 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 		[pipeline attachPartitionHandler:partitionHandler completionHandler:^(id sender, NSError *error) {
 			[attachCompletedExpectation fulfill];
-			__block NSUInteger requestCount = 50;
+			__block NSUInteger requestCount = 150;
 			NSUInteger requests = requestCount;
 
 			for (NSUInteger i=0; i<requests; i++)
 			{
 				OCHTTPRequest *request;
 
-				request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://demo.owncloud.org/status.php"]];
+				request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://download.owncloud.org/community/owncloud-10.1.0.tar.bz2"]];
 				request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 					if ([error isOCErrorWithCode:OCErrorRequestCancelled])
 					{
@@ -1445,7 +1441,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	XCTAssert(cancelledRequests!=0);
 }
@@ -1572,7 +1568,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	XCTAssert(cancelledRequests!=0);
 	XCTAssert(requestCount==0);
@@ -1695,7 +1691,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:50 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	XCTAssert(cancelledRequests!=0);
 	XCTAssert(requestCount==0);
@@ -2405,7 +2401,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 			[attachCompletedExpectation fulfill];
 
-			if ((request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://speed.hetzner.de/100MB.bin"]]) != nil)
+			if ((request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://download.owncloud.org/community/owncloud-10.1.0.tar.bz2"]]) != nil)
 			{
 				NSProgress *progress = nil;
 
@@ -2455,7 +2451,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:480 handler:nil];
 
 	progressObserver = nil;
 }
@@ -2487,7 +2483,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 				[attachCompletedExpectation fulfill];
 
-				if ((request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://speed.hetzner.de/100MB.bin"]]) != nil)
+				if ((request = [OCHTTPRequest requestWithURL:[NSURL URLWithString:@"https://download.owncloud.org/community/owncloud-10.1.0.tar.bz2"]]) != nil)
 				{
 					NSProgress *progress = nil;
 
@@ -2539,7 +2535,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:480 handler:nil];
 
 	progressObserver = nil;
 }

@@ -188,8 +188,6 @@
 		{
 			urlRequest.HTTPBody = self.bodyData;
 		}
-
-		urlRequest.networkServiceType = NSURLNetworkServiceTypeResponsiveData;
 	}
 
 	return (urlRequest);

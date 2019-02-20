@@ -50,11 +50,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCHTTPRequestID requestID;			//!< The request's unique requestID
 
 @property(nullable,strong,nonatomic) OCHTTPRequest *request;		//!< The request. Lazily deserializes .requestData as needed.
-@property(nullable,strong,nonatomic) NSData *requestData;	//!< The serialized request. Lazily serializes .request as needed.
+@property(nullable,strong,nonatomic,readonly) NSData *requestData;	//!< The serialized request. Lazily serializes .request as needed.
 @property(assign) BOOL requestFinal;				//!< YES if the request can be scheduled as-is.
 
 @property(nullable,strong,nonatomic) OCHTTPResponse *response;	//!< The response. Lazily deserializes .responseData as needed.
-@property(nullable,strong,nonatomic) NSData *responseData;	//!< The serialized response. Lazily serializes .response as needed.
+@property(nullable,strong,nonatomic,readonly) NSData *responseData;	//!< The serialized response. Lazily serializes .response as needed.
 
 @property(assign) BOOL finished; 				//!< The task has been finished
 

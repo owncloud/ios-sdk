@@ -155,10 +155,10 @@
 	RETURN_LAZY_SERIALIZE(_request, _requestData);
 }
 
-- (void)setRequestData:(NSData *)requestData
-{
-	SET_DATA(requestData, _requestData, _request);
-}
+//- (void)setRequestData:(NSData *)requestData
+//{
+//	SET_DATA(requestData, _requestData, _request);
+//}
 
 // response & responseData
 - (OCHTTPResponse *)response
@@ -176,9 +176,9 @@
 	RETURN_LAZY_SERIALIZE(_response, _responseData);
 }
 
-- (void)setResponseData:(NSData *)responseData
-{
-	SET_DATA(responseData, _responseData, _response);
-}
+//- (void)setResponseData:(NSData *)responseData
+//{
+//	SET_DATA(responseData, _responseData, _response);
+//}
 
 @end
