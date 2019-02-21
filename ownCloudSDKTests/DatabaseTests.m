@@ -216,6 +216,8 @@
 
 			OCDatabase *database = [[OCDatabase alloc] initWithURL:databaseURL];
 
+			database.sqlDB.maxBusyRetryTimeInterval = 10;
+
 			[database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
 				[runLoopThread dispatchBlockToRunLoopAsync:^{
 
