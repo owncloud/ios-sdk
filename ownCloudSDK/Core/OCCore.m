@@ -325,22 +325,26 @@
 					[weakSelf.connection disconnectWithCompletionHandler:^{
 						OCWTLogDebug(@[@"STOP"], @"connection: disconnected");
 
-						// Close vault (incl. database)
-						OCWTLogDebug(@[@"STOP"], @"vault: closing");
+						[weakSelf queueBlock:^{
+							// Close vault (incl. database)
+							OCWTLogDebug(@[@"STOP"], @"vault: closing");
 
-						[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-							stopError = error;
-							OCWTLogDebug(@[@"STOP"], @"vault: closed");
+							OCSyncExec(waitForVaultClosing, {
+								[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+									OCWTLogDebug(@[@"STOP"], @"vault: closed");
+									stopError = error;
 
-							[weakSelf queueBlock:^{
-								OCWTLogDebug(@[@"STOP"], @"STOPPED");
-								[weakSelf _updateState:OCCoreStateStopped];
+									OCWTLogDebug(@[@"STOP"], @"STOPPED");
+									[weakSelf _updateState:OCCoreStateStopped];
 
-								if (completionHandler != nil)
-								{
-									completionHandler(weakSelf, stopError);
-								}
-							}];
+									OCSyncExecDone(waitForVaultClosing);
+
+									if (completionHandler != nil)
+									{
+										completionHandler(weakSelf, stopError);
+									}
+								}];
+							});
 						}];
 					}];
 				};
@@ -350,8 +354,10 @@
 					OCTLogDebug(@[@"STOP"], @"No running activities left. Proceeding.");
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
-						self->_runningActivitiesCompleteBlock();
+						dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;
+
 						self->_runningActivitiesCompleteBlock = nil;
+						runningActivitiesCompleteBlock();
 					}
 				}
 				else
@@ -1123,8 +1129,10 @@
 		{
 			if (self->_runningActivitiesCompleteBlock != nil)
 			{
-				self->_runningActivitiesCompleteBlock();
+				dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;
+
 				self->_runningActivitiesCompleteBlock = nil;
+				runningActivitiesCompleteBlock();
 			}
 		}
 	}];
