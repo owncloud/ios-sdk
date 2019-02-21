@@ -26,6 +26,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCProxyProgress.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -233,7 +234,7 @@
 							};
 
 							task.request.progress.progress.totalUnitCount += 200;
-							[task.request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+							[task.request.progress.progress addChild:[OCProxyProgress cloneProgress:urlSessionTask.progress] withPendingUnitCount:200];
 						}
 					}
 				}
@@ -867,7 +868,7 @@
 
 					// Connect task progress to request progress
 					request.progress.progress.totalUnitCount += 200;
-					[request.progress.progress addChild:urlSessionTask.progress withPendingUnitCount:200];
+					[request.progress.progress addChild:[OCProxyProgress cloneProgress:urlSessionTask.progress] withPendingUnitCount:200];
 
 					// Update internal tracking collections
 					task.state = OCHTTPPipelineTaskStateRunning;

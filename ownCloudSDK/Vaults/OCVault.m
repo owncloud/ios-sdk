@@ -163,7 +163,7 @@
 {
 	NSError *error = nil;
 
-	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:nil error:&error])
+	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 	{
 		[self.database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
 			completionHandler(db, error);

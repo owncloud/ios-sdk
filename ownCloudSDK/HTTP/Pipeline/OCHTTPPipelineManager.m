@@ -105,7 +105,7 @@
 		NSURL *backendTemporaryFilesRootURL = [backendRootURL URLByAppendingPathComponent:@"tmp"];
 		NSError *error = nil;
 
-		if (![[NSFileManager defaultManager] createDirectoryAtURL:backendRootURL withIntermediateDirectories:YES attributes:nil error:&error])
+		if (![[NSFileManager defaultManager] createDirectoryAtURL:backendRootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 		{
 			OCLogDebug(@"Creation of %@ failed with error=%@", backendRootURL, error);
 		}

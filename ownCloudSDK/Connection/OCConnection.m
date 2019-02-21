@@ -141,45 +141,7 @@
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		// Get pipelines
-		OCSyncExec(waitForPipelines, {
-			[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDEphermal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-				self->_ephermalPipeline = pipeline;
-
-				OCLogDebug(@"Retrieved ephermal pipeline %@ with error=%@", pipeline, error);
-
-				[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDLocal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-					self->_commandPipeline = pipeline;
-
-					OCLogDebug(@"Retrieved local pipeline %@ with error=%@", pipeline, error);
-
-					if (OCConnection.backgroundURLSessionsAllowed)
-					{
-						[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDBackground completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-							self->_longLivedPipeline = pipeline;
-
-							OCLogDebug(@"Retrieved longlived pipeline %@ with error=%@", pipeline, error);
-
-							OCSyncExecDone(waitForPipelines);
-						}];
-					}
-					else
-					{
-						self->_longLivedPipeline = pipeline;
-
-						OCSyncExecDone(waitForPipelines);
-					}
-				}];
-			}];
-		});
-
-		// Attach to pipelines
-		[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL *stop) {
-			OCSyncExec(waitForAttach, {
-				[pipeline attachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
-					OCSyncExecDone(waitForAttach);
-				}];
-			});
-		}];
+		[self spinUpPipelines];
 	}
 	
 	return (self);
@@ -198,7 +160,126 @@
 	}];
 }
 
-#pragma mark - Queues
+#pragma mark - Pipelines
+- (void)spinUpPipelines
+{
+	OCSyncExec(waitForPipelines, {
+		[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDEphermal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+			self->_ephermalPipeline = pipeline;
+
+			OCLogDebug(@"Retrieved ephermal pipeline %@ with error=%@", pipeline, error);
+
+			[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDLocal completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+				self->_commandPipeline = pipeline;
+
+				OCLogDebug(@"Retrieved local pipeline %@ with error=%@", pipeline, error);
+
+				if (OCConnection.backgroundURLSessionsAllowed)
+				{
+					[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDBackground completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
+						self->_longLivedPipeline = pipeline;
+
+						OCLogDebug(@"Retrieved longlived pipeline %@ with error=%@", pipeline, error);
+
+						OCSyncExecDone(waitForPipelines);
+					}];
+				}
+				else
+				{
+					self->_longLivedPipeline = pipeline;
+
+					OCSyncExecDone(waitForPipelines);
+				}
+			}];
+		}];
+	});
+}
+
+- (void)attachToPipelines
+{
+	BOOL attach = NO;
+
+	@synchronized(self)
+	{
+		if (!_attachedToPipelines)
+		{
+			attach = YES;
+			_attachedToPipelines = YES;
+		}
+	}
+
+	if (attach)
+	{
+		[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL *stop) {
+			OCSyncExec(waitForAttach, {
+				[pipeline attachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+					OCSyncExecDone(waitForAttach);
+				}];
+			});
+		}];
+	}
+}
+
+- (void)detachFromPipelinesWithCompletionHandler:(dispatch_block_t)completionHandler
+{
+	dispatch_group_t waitPipelineDetachGroup = dispatch_group_create();
+	NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
+	BOOL returnImmediately = NO;
+
+	@synchronized (self)
+	{
+		if (_attachedToPipelines)
+		{
+			_attachedToPipelines = NO;
+		}
+		else
+		{
+			returnImmediately = YES;
+		}
+	}
+
+	if (returnImmediately && (completionHandler != nil))
+	{
+		completionHandler();
+		return;
+	}
+
+	// Detach from all pipelines
+	pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
+
+	for (OCHTTPPipeline *pipeline in pipelines)
+	{
+		OCLogDebug(@"detaching from pipeline %@", pipeline);
+
+		dispatch_group_enter(waitPipelineDetachGroup);
+
+		// Cancel non-critical requests and detach from the pipeline
+		[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
+		[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+			dispatch_group_leave(waitPipelineDetachGroup);
+		}];
+	}
+
+	// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
+	OCConnection *strongReference = self;
+
+	dispatch_group_notify(waitPipelineDetachGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+		@autoreleasepool
+		{
+			// In order for the OCConnection to be able to process outstanding responses,
+			// A REFERENCE TO SELF MUST BE KEPT AROUND UNTIL ALL PIPELINES HAVE DETACHED.
+			// this is done through this log message, which makes this block retain
+			// strongReference (aka self):
+			OCLogDebug(@"detached from all pipelines, calling completionHandler: %@, bookmark: %@", completionHandler, strongReference.bookmark);
+
+			if (completionHandler!=nil)
+			{
+				completionHandler();
+			}
+		}
+	});
+}
+
 - (NSSet<OCHTTPPipeline *> *)allHTTPPipelines
 {
 	NSMutableSet<OCHTTPPipeline *> *connectionPipelines = [NSMutableSet new];
@@ -419,6 +500,9 @@
 	{
 		NSProgress *connectProgress = [NSProgress new];
 		OCHTTPRequest *statusRequest;
+
+		// Attach to pipelines
+		[self attachToPipelines];
 
 		// Set up progress
 		connectProgress.totalUnitCount = connectProgress.completedUnitCount = 0; // Indeterminate
@@ -641,43 +725,7 @@
 	if (invalidateConnection)
 	{
 		dispatch_block_t invalidationCompletionHandler = ^{
-			dispatch_group_t waitQueueTerminationGroup = dispatch_group_create();
-			NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
-
-			// Detach from all pipelines
-			pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
-
-			for (OCHTTPPipeline *pipeline in pipelines)
-			{
-				OCLogDebug(@"detaching from pipeline %@", pipeline);
-
-				dispatch_group_enter(waitQueueTerminationGroup);
-
-				// Cancel non-critical requests and detach from the pipeline
-				[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
-				[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
-					dispatch_group_leave(waitQueueTerminationGroup);
-				}];
-			}
-
-			// Wait for all invalidation completion handlers to finish executing, then call the provided completionHandler
-			OCConnection *strongReference = self;
-
-			dispatch_group_notify(waitQueueTerminationGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
-				@autoreleasepool
-				{
-					// In order for the OCConnection to be able to process outstanding responses,
-					// A REFERENCE TO SELF MUST BE KEPT AROUND UNTIL ALL QUEUES HAVE TERMINATED.
-					// this is done through this log message, which makes this block retain
-					// strongReference (aka self):
-					OCLogDebug(@"all queues terminated, calling completionHandler: %@, bookmark: %@", completionHandler, strongReference.bookmark);
-
-					if (completionHandler!=nil)
-					{
-						completionHandler();
-					}
-				}
-			});
+			[self detachFromPipelinesWithCompletionHandler:completionHandler];
 		};
 
 		completionHandler = invalidationCompletionHandler;
@@ -714,7 +762,9 @@
 {
 	NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
 
-	// Detach from all pipelines
+	// Attach to pipelines
+	[self attachToPipelines];
+
 	pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
 
 	for (OCHTTPPipeline *pipeline in pipelines)
@@ -852,6 +902,9 @@
 		{
 			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
 		}
+
+		// Attach to pipelines
+		[self attachToPipelines];
 
 		// Enqueue request
 		[((notBeforeDate!=nil) ? self.longLivedPipeline : self.ephermalPipeline) enqueueRequest:davRequest forPartitionID:self.partitionID];
@@ -1050,6 +1103,9 @@
 		request.eventTarget = eventTarget;
 		request.bodyURL = sourceURL;
 
+		// Attach to pipelines
+		[self attachToPipelines];
+
 		// Enqueue request
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -1114,13 +1170,20 @@
 
 		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload attributes:nil]) != nil)
 		{
-			if (request.error != nil)
+			if (error != nil)
 			{
-				event.error = request.error;
+				event.error = error;
 			}
 			else
 			{
-				event.error = request.httpResponse.status.error;
+				if (request.error != nil)
+				{
+					event.error = request.error;
+				}
+				else
+				{
+					event.error = request.httpResponse.status.error;
+				}
 			}
 
 			[request.eventTarget handleEvent:event sender:self];
@@ -1160,6 +1223,9 @@
 		{
 			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
 		}
+
+		// Attach to pipelines
+		[self attachToPipelines];
 
 		// Enqueue request
 		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -1305,6 +1371,9 @@
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
+				// Attach to pipelines
+				[self attachToPipelines];
+
 				// Enqueue request
 				[self.commandPipeline enqueueRequest:patchRequest forPartitionID:self.partitionID];
 
@@ -1415,6 +1484,9 @@
 		};
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
+
+		// Attach to pipelines
+		[self attachToPipelines];
 
 		// Enqueue request
 		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -1553,6 +1625,9 @@
 			[request setValue:@"infinity" forHeaderField:@"Depth"];
 			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
 
+			// Attach to pipelines
+			[self attachToPipelines];
+
 			// Enqueue request
 			[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
@@ -1677,6 +1752,9 @@
 				[request setValue:item.eTag forHeaderField:@"If-Match"];
 			}
 		}
+
+		// Attach to pipelines
+		[self attachToPipelines];
 
 		// Enqueue request
 		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -1845,6 +1923,9 @@
 			request.downloadedFileURL = localThumbnailURL;
 		}
 
+		// Attach to pipelines
+		[self attachToPipelines];
+
 		// Enqueue request
 		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
@@ -1916,6 +1997,9 @@
 #pragma mark - Sending requests
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler
 {
+	// Attach to pipelines
+	[self attachToPipelines];
+
 	request.ephermalResultHandler = ephermalResultHandler;
 
 	// Strictly enfore bookmark certificate ..

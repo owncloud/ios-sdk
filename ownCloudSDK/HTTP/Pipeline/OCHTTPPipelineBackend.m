@@ -566,7 +566,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	if (_temporaryFilesRoot == nil)
 	{
 		_temporaryFilesRoot = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:@"OCHTTPPipeline"];
-		[[NSFileManager defaultManager] createDirectoryAtURL:_temporaryFilesRoot withIntermediateDirectories:YES attributes:nil error:NULL];
+		[[NSFileManager defaultManager] createDirectoryAtURL:_temporaryFilesRoot withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:NULL];
 	}
 
 	return (_temporaryFilesRoot);

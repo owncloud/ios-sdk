@@ -41,10 +41,10 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCHTTPPipelineManager.h"
 #import "OCProgressManager.h"
+#import "OCProxyProgress.h"
 
 @interface OCCore ()
 {
-	dispatch_group_t _runningActivitiesGroup;
 	NSInteger _runningActivities;
 	NSMutableArray <NSString *> *_runningActivitiesStrings;
 	dispatch_block_t _runningActivitiesCompleteBlock;
@@ -157,8 +157,6 @@
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
-
-		_runningActivitiesGroup = dispatch_group_create();
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
@@ -303,65 +301,75 @@
 				[self _updateState:OCCoreStateStopping];
 
 				// Cancel non-critical requests
+				OCTLogDebug(@[@"STOP"], @"cancelling non-critical requests");
 				[self.connection cancelNonCriticalRequests];
 
 				// Wait for running operations to finish
 				self->_runningActivitiesCompleteBlock = ^{
-					dispatch_group_t stopGroup = nil;
-
-					// Stop..
-					stopGroup = dispatch_group_create();
-
 					// Shut down Sync Engine
+					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
 
 					// Shut down progress
+					OCWTLogDebug(@[@"STOP"], @"shutting down progress observation");
 					[weakSelf _shutdownProgressObservation];
 
 					// Close connection
+					OCWTLogDebug(@[@"STOP"], @"connection: disconnecting");
 					OCCore *strongSelf;
 					if ((strongSelf = weakSelf) != nil)
 					{
 						strongSelf->_attemptConnect = NO;
 					}
 
-					dispatch_group_enter(stopGroup);
-
 					[weakSelf.connection disconnectWithCompletionHandler:^{
-						dispatch_group_leave(stopGroup);
+						OCWTLogDebug(@[@"STOP"], @"connection: disconnected");
+
+						// Close vault (incl. database)
+						OCWTLogDebug(@[@"STOP"], @"vault: closing");
+
+						[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+							stopError = error;
+							OCWTLogDebug(@[@"STOP"], @"vault: closed");
+
+							[weakSelf queueBlock:^{
+								OCWTLogDebug(@[@"STOP"], @"STOPPED");
+								[weakSelf _updateState:OCCoreStateStopped];
+
+								if (completionHandler != nil)
+								{
+									completionHandler(weakSelf, stopError);
+								}
+							}];
+						}];
 					}];
-
-					dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
-
-					// Close vault (incl. database)
-					dispatch_group_enter(stopGroup);
-
-					[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-						stopError = error;
-						dispatch_group_leave(stopGroup);
-					}];
-
-					dispatch_group_wait(stopGroup, DISPATCH_TIME_FOREVER);
-
-					[weakSelf _updateState:OCCoreStateStopped];
-
-					if (completionHandler != nil)
-					{
-						completionHandler(weakSelf, stopError);
-					}
 				};
 
 				if (self->_runningActivities == 0)
 				{
+					OCTLogDebug(@[@"STOP"], @"No running activities left. Proceeding.");
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
 						self->_runningActivitiesCompleteBlock();
 						self->_runningActivitiesCompleteBlock = nil;
 					}
 				}
+				else
+				{
+					OCTLogDebug(@[@"STOP"], @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
+				}
+			}
+			else if (self->_state != OCCoreStateStopping)
+			{
+				OCTLogError(@[@"STOP"], @"core already in the process of stopping");
+				if (completionHandler != nil)
+				{
+					completionHandler(self, OCError(OCErrorRunningOperation));
+				}
 			}
 			else if (completionHandler != nil)
 			{
+				OCTLogWarning(@[@"STOP"], @"core already stopped");
 				completionHandler(self, stopError);
 			}
 		}];
@@ -942,7 +950,7 @@
 	{
 		if (![[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
 		{
-			if (![[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error])
+			if (![[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 			{
 				OCLogError(@"Item parent directory creation at %@ failed with error %@", OCLogPrivate(parentURL), error);
 			}
@@ -1074,8 +1082,6 @@
 
 		if (self->_runningActivities == 1)
 		{
-			dispatch_group_enter(self->_runningActivitiesGroup);
-
 			if (self->_runningActivitiesStrings == nil)
 			{
 				self->_runningActivitiesStrings = [NSMutableArray new];
@@ -1115,8 +1121,6 @@
 
 		if (allActivitiesEnded)
 		{
-			dispatch_group_leave(self->_runningActivitiesGroup);
-
 			if (self->_runningActivitiesCompleteBlock != nil)
 			{
 				self->_runningActivitiesCompleteBlock();
@@ -1170,7 +1174,7 @@
 						resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
 
 						resolvedProgress.totalUnitCount += 200;
-						[resolvedProgress addChild:sourceNSProgress withPendingUnitCount:200];
+						[resolvedProgress addChild:[OCProxyProgress cloneProgress:sourceNSProgress] withPendingUnitCount:200];
 					}
 				}
 			}

@@ -88,7 +88,10 @@
 		};
 		
 		detectionRequestsByDetectionURL[detectionURL] = request;
-	
+
+		// Attach to pipelines
+		[self attachToPipelines];
+
 		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
 

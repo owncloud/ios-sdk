@@ -89,6 +89,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 
+	BOOL _attachedToPipelines;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -126,6 +128,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 - (void)disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection;
 
 - (void)cancelNonCriticalRequests;
+
+#pragma mark - Pipelines
+- (void)attachToPipelines; //!< Attaches the connection to its pipelines (can be called repeatedly)
 
 #pragma mark - Server Status
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler;
