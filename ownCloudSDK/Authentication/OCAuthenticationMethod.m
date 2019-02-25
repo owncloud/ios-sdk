@@ -20,7 +20,7 @@
 
 #import "OCAuthenticationMethod.h"
 #import "OCBookmark.h"
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 #import "NSError+OCError.h"
 
 @implementation OCAuthenticationMethod
@@ -158,7 +158,7 @@
 	return(nil);
 }
 
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	if (completionHandler!=nil)
 	{
@@ -185,7 +185,7 @@
 	}
 }
 
-- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection
+- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
 {
 	return (request);
 }
@@ -256,10 +256,10 @@
 }
 
 #pragma mark - Handle responses before they are delivered to the request senders
-- (NSError *)handleResponse:(OCConnectionRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
 {
 	// If a request returns with an UNAUTHORIZED status code, turn it into an actual error
-	if (request.responseHTTPStatus.code == OCHTTPStatusCodeUNAUTHORIZED)
+	if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
 	{
 		if (error == nil)
 		{

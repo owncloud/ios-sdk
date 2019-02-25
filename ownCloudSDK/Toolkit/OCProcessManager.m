@@ -315,7 +315,7 @@
 
 						if (!processDidRespond)
 						{
-							// Extension did not respond => remove stale stae file for session
+							// Extension did not respond => remove stale state file for session
 							[self removeStateFileForSession:session];
 
 							return (NO);
@@ -360,18 +360,27 @@
 #pragma mark - Finding latest
 - (OCProcessSession *)findLatestSessionForProcessOf:(OCProcessSession *)otherSession
 {
+	OCProcessSession *latestSession;
+
+	latestSession = [self findLatestSessionForProcessWithBundleIdentifier:otherSession.bundleIdentifier];
+
+	return ((latestSession != nil) ? latestSession : otherSession);
+}
+
+- (nullable OCProcessSession *)findLatestSessionForProcessWithBundleIdentifier:(NSString *)bundleIdentifier
+{
 	@synchronized(self)
 	{
 		for (OCProcessSession *session in _sessions)
 		{
-			if ([otherSession.bundleIdentifier isEqual:session.bundleIdentifier])
+			if ([bundleIdentifier isEqual:session.bundleIdentifier])
 			{
 				return (session);
 			}
 		}
 	}
 
-	return (otherSession);
+	return (nil);
 }
 
 #pragma mark - System boot time

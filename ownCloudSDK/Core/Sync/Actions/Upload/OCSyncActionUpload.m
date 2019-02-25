@@ -104,8 +104,6 @@
 	    ((uploadItem = self.localItem) != nil) &&
 	    ((uploadURL = self.importFileURL) != nil))
 	{
-		NSProgress *progress;
-
 		if (self.importFileIsTemporaryAlongsideCopy)
 		{
 			// uploadURL already is a copy of the file alongside item, so we can use it right away
@@ -139,6 +137,8 @@
 		// Compute checksum
 		if (_uploadCopyFileURL != nil)
 		{
+			OCProgress *progress;
+
 			OCSyncExec(checksumComputation, {
 				[OCChecksum computeForFile:_uploadCopyFileURL checksumAlgorithm:self.core.preferredChecksumAlgorithm completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
 					self.importFileChecksum = computedChecksum;
@@ -170,7 +170,10 @@
 			{
 				[syncContext.syncRecord addProgress:progress];
 
-				[self.core registerProgress:syncContext.syncRecord.progress forItem:self.localItem];
+				if (syncContext.syncRecord.progress.progress != nil)
+				{
+					[self.core registerProgress:syncContext.syncRecord.progress.progress forItem:self.localItem];
+				}
 			}
 
 			// Transition to processing
@@ -261,12 +264,30 @@
 
 	if (event.error != nil)
 	{
-		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
-		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
+		if ([event.error isOCErrorWithCode:OCErrorCancelled] || [event.error isOCErrorWithCode:OCErrorRequestCancelled])
+		{
+			OCLogDebug(@"Upload has been cancelled - descheduling");
+			[self.core _descheduleSyncRecord:syncContext.syncRecord completeWithError:syncContext.error parameter:nil];
+
+			syncContext.error = nil;
+
+			resultInstruction = OCCoreSyncInstructionProcessNext;
+		}
+		else
+		{
+			// Create issue for cancellation for all other errors
+			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
+		}
 	}
 
 	return (resultInstruction);
+}
+
+#pragma mark - Restore progress
+- (OCItem *)itemToRestoreProgressRegistrationFor
+{
+	return (self.localItem);
 }
 
 #pragma mark - NSCoding

@@ -21,9 +21,9 @@
 
 @interface OCCoreManager (OCMocking)
 
-- (OCCore *)ocm_requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler;
+- (void)ocm_requestCoreForBookmark:(OCBookmark *)bookmark setup:(void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler;
 
 @end
 
-typedef OCCore *(^OCMockOCCoreManagerRequestCoreForBookmarkBlock)(OCBookmark *bookmark, void(^completionHandler)(OCCore *core, NSError *error));
+typedef void(^OCMockOCCoreManagerRequestCoreForBookmarkBlock)(OCBookmark *bookmark, void(^setupHandler)(OCCore *core, NSError *), void(^completionHandler)(OCCore *core, NSError *error));
 extern OCMockLocation OCMockLocationOCCoreManagerRequestCoreForBookmark;

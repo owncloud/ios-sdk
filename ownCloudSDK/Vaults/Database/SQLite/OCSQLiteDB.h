@@ -43,9 +43,11 @@ typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 	OCSQLiteDBErrorAlreadyOpenedInInstance //!< Instance has already opened file
 };
 
-typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError *error);
-typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet);
-typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumber *rowID);
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError * _Nullable error);
+typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet);
+typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable error, NSNumber * _Nullable rowID);
 
 @interface OCSQLiteDB : NSObject <OCLogTagging>
 {
@@ -66,47 +68,52 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError *error, NSNumb
 
 @property(class,nonatomic) BOOL allowConcurrentFileAccess; //!< Makes every OCSQLiteDB use a different OCRunLoopThread, so concurrent file access can occur. NO by default. Use this only for implementing concurrency tests.
 
-@property(strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
+@property(nullable,strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
 
 @property(assign,nonatomic) NSTimeInterval maxBusyRetryTimeInterval; //!< Amount of time SQLite retries accessing a database before it returns a SQLITE_BUSY error
 
-@property(readonly,nonatomic) sqlite3 *sqlite3DB;
+@property(nullable,readonly,nonatomic) sqlite3 *sqlite3DB;
 
 @property(readonly,nonatomic) BOOL opened;
+
+@property(nullable,strong) NSString *runLoopThreadName; //!< Name of the OCRunLoopThread that's used to back the database. Only set it if you want to share one across several databases.
 
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
 
 #pragma mark - Init
-- (instancetype)initWithURL:(NSURL *)sqliteDatabaseFileURL;
+- (instancetype)initWithURL:(nullable NSURL *)sqliteDatabaseFileURL;
 
 #pragma mark - Open & Close
-- (void)openWithFlags:(OCSQLiteOpenFlags)flags completionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
-- (void)closeWithCompletionHandler:(OCSQLiteDBCompletionHandler)completionHandler;
+- (void)openWithFlags:(OCSQLiteOpenFlags)flags completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
+- (void)closeWithCompletionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 
 #pragma mark - Table Schemas
 - (void)addTableSchema:(OCSQLiteTableSchema *)schema; //!< Adds a table schema to the database. All schemas must be added prior to calling -applyTableSchemasWithCompletionHandler: the database.
-- (void)applyTableSchemasWithCompletionHandler:(OCSQLiteDBCompletionHandler)completionHandler; //!< Applies the table schemas: creates tables that don't yet exist, applies all available upgrades for existing tables
+- (void)applyTableSchemasWithCompletionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Applies the table schemas: creates tables that don't yet exist, applies all available upgrades for existing tables
 
 #pragma mark - Execute
 - (void)executeQuery:(OCSQLiteQuery *)query; //!< Executes a query. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
 - (void)executeTransaction:(OCSQLiteTransaction *)query; //!< Executes a transaction. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.
-- (void)executeOperation:(NSError *(^)(OCSQLiteDB *db))operationBlock completionHandler:(OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
+- (void)executeOperation:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
+- (nullable NSError *)executeOperationSync:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock; //!< Executes a block in the internal context synchronously. WARNING: This call may block or deadlock. Use with caution!
 
 #pragma mark - Error handling
-- (NSError *)lastError;
+- (nullable NSError *)lastError;
 
 #pragma mark - Insertion Row ID
-- (NSNumber *)lastInsertRowID; //!< Returns the last insert row ID. May only be used within query and transaction completionHandlers. Will return nil otherwise.
+- (nullable NSNumber *)lastInsertRowID; //!< Returns the last insert row ID. May only be used within query and transaction completionHandlers. Will return nil otherwise.
 
 #pragma mark - Miscellaneous
 - (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.
-+ (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a memory limit on the 
++ (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a soft heap memory limit for SQLite
 
 @end
 
 extern NSErrorDomain OCSQLiteErrorDomain; //!< Native SQLite errors
 
 extern NSErrorDomain OCSQLiteDBErrorDomain; //!< OCSQLiteDB errors
+
+NS_ASSUME_NONNULL_END
 
 #define OCSQLiteError(errorCode) [NSError errorWithDomain:OCSQLiteErrorDomain code:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an NSError from an SQLite error code, but also adds method name, source file and line number)
 

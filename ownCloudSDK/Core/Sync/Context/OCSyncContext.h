@@ -39,7 +39,7 @@
 @property(strong) OCSyncIssue *issue; //!< Sync issue that should be relayed to the user [Result Handler]
 
 // Item changes properties
-@property(assign) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
+@property(strong) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
 @property(strong) NSArray <OCItem *> *addedItems; 	//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
 @property(strong) NSArray <OCItem *> *removedItems;  	//!< Removed items (f.ex. after deleting an item), used to update database and queries
 @property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries

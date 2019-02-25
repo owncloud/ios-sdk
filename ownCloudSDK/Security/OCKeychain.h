@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithAccessGroupIdentifier:(NSString *)accessGroupIdentifier;
 
-- (NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path;
+- (nullable NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)writeData:(nullable NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)removeKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 

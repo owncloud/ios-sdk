@@ -17,7 +17,6 @@
  */
 
 #import "OCConnection.h"
-#import "OCConnectionQueue.h"
 #import "NSError+OCError.h"
 
 @implementation OCConnection (Authentication)
@@ -28,7 +27,7 @@
 	NSArray <Class> *authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses];
 	NSMutableSet <NSURL *> *detectionURLs = [NSMutableSet set];
 	NSMutableDictionary <NSString *, NSArray <NSURL *> *> *detectionURLsByMethod = [NSMutableDictionary dictionary];
-	NSMutableDictionary <NSURL *, OCConnectionRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
+	NSMutableDictionary <NSURL *, OCHTTPRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
 	
 	if (completionHandler==nil) { return; }
 	
@@ -78,19 +77,22 @@
 	
 	for (NSURL *detectionURL in detectionURLs)
 	{
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:detectionURL];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
 		
 		request.skipAuthorization = YES;
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		
-		request.ephermalResultHandler = ^(OCConnectionRequest *request, NSError *error) {
+		request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			dispatch_group_leave(preloadCompletionGroup);
 		};
 		
 		detectionRequestsByDetectionURL[detectionURL] = request;
-	
-		[self.commandQueue enqueueRequest:request];
+
+		// Attach to pipelines
+		[self attachToPipelines];
+
+		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
 
 	// Schedule block for when all detection URL pre-loads have finished
@@ -106,12 +108,12 @@
 			
 			if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
 			{
-				NSMutableDictionary <NSURL *, OCConnectionRequest *> *resultsByURL = [NSMutableDictionary dictionary];
+				NSMutableDictionary <NSURL *, OCHTTPRequest *> *resultsByURL = [NSMutableDictionary dictionary];
 				
 				// Compile pre-load results
 				for (NSURL *detectionURL in detectionURLsByMethod[authMethodIdentifier])
 				{
-					OCConnectionRequest *request;
+					OCHTTPRequest *request;
 					
 					if ((request = [detectionRequestsByDetectionURL objectForKey:detectionURL]) != nil)
 					{
@@ -138,18 +140,18 @@
 			
 			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionURL.count > 0))
 			{
-				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCConnectionRequest *request, BOOL * _Nonnull stop) {
-					if (request.responseRedirectURL != nil)
+				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCHTTPRequest *request, BOOL * _Nonnull stop) {
+					if (request.httpResponse.redirectURL != nil)
 					{
 						NSURL *alternativeBaseURL;
 				
-						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.responseRedirectURL originalURL:request.url]) != nil)
+						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url]) != nil)
 						{
 							error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
 						}
 						else
 						{
-							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.responseRedirectURL });
+							error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : request.httpResponse.redirectURL });
 						}
 					}
 					else if (request.error != nil)
@@ -205,7 +207,7 @@
 	}
 }
 
-- (BOOL)canSendAuthenticatedRequestsForQueue:(OCConnectionQueue *)queue availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+- (BOOL)canSendAuthenticatedRequestsWithAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	__weak id<OCConnectionDelegate> delegate = _delegate;
 	__weak OCConnection *weakSelf = self;

@@ -19,7 +19,7 @@
 #import "OCAuthenticationMethodBasicAuth.h"
 #import "OCAuthenticationMethod+OCTools.h"
 #import "NSError+OCError.h"
-#import "OCConnectionRequest.h"
+#import "OCHTTPRequest.h"
 
 static NSString *OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey = @"BasicAuthString";
 
@@ -123,13 +123,13 @@ OCAuthenticationMethodAutoRegister
 	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
-- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection
+- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
 {
 	NSString *authenticationHeaderValue;
 
@@ -166,16 +166,16 @@ OCAuthenticationMethodAutoRegister
 		if ((authenticationData = [[self class] authenticationDataForUsername:userName passphrase:passPhrase authenticationHeaderValue:&authenticationHeaderValue error:&error]) != nil)
 		{
 			// Test credentials using connection before calling completionHandler; relay result of check
-			OCConnectionRequest *request;
+			OCHTTPRequest *request;
 
-			request = [OCConnectionRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
+			request = [OCHTTPRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 			[request setValue:@"json" forParameter:@"format"];
 
 			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
 
 			request.skipAuthorization = YES;
 
-			[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
 					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
@@ -185,12 +185,12 @@ OCAuthenticationMethodAutoRegister
 					BOOL authorizationFailed = YES;
 					NSError *error = nil;
 
-					if (request.responseHTTPStatus.isSuccess)
+					if (response.status.isSuccess)
 					{
 						NSError *error = nil;
 						NSDictionary *capabilitiesDict;
 
-						if ((capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+						if ((capabilitiesDict = [response bodyConvertedDictionaryFromJSONWithError:&error]) != nil)
 						{
 							if ([capabilitiesDict valueForKeyPath:@"ocs.data"] != nil)
 							{
@@ -198,11 +198,11 @@ OCAuthenticationMethodAutoRegister
 							}
 						}
 					}
-					else if (request.responseHTTPStatus.isRedirection)
+					else if (response.status.isRedirection)
 					{
 						NSURL *responseRedirectURL;
 
-						if ((responseRedirectURL = [request responseRedirectURL]) != nil)
+						if ((responseRedirectURL = response.redirectURL) != nil)
 						{
 							NSURL *alternativeBaseURL;
 

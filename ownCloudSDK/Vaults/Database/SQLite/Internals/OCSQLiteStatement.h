@@ -21,6 +21,8 @@
 
 @class OCSQLiteDB;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSQLiteStatement : NSObject
 {
 	__weak OCSQLiteDB *_database;
@@ -37,7 +39,7 @@
 @property(strong) NSString *query;
 
 - (instancetype)initWithSQLStatement:(sqlite3_stmt *)sqlStatement database:(OCSQLiteDB *)database;
-+ (instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError;
++ (nullable instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError;
 
 #pragma mark - Binding values
 - (void)bindParameterValue:(id)value atIndex:(int)paramIdx;
@@ -52,3 +54,5 @@
 - (void)releaseSQLObjects;
 
 @end
+
+NS_ASSUME_NONNULL_END

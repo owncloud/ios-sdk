@@ -58,11 +58,17 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAuthenticationMethodOAuth2.h>
 
 #import <ownCloudSDK/OCConnection.h>
-#import <ownCloudSDK/OCConnectionRequest.h>
-#import <ownCloudSDK/OCConnectionDAVRequest.h>
-#import <ownCloudSDK/OCConnectionQueue.h>
+#import <ownCloudSDK/OCHTTPRequest.h>
+#import <ownCloudSDK/OCHTTPResponse.h>
+#import <ownCloudSDK/OCHTTPDAVRequest.h>
 
-#import <ownCloudSDK/OCConnectionDAVMultistatusResponse.h>
+#import <ownCloudSDK/OCHTTPPipelineManager.h>
+#import <ownCloudSDK/OCHTTPPipeline.h>
+#import <ownCloudSDK/OCHTTPPipelineTask.h>
+#import <ownCloudSDK/OCHTTPPipelineBackend.h>
+#import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
+
+#import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
 #import <ownCloudSDK/OCWaitCondition.h>
 
@@ -120,7 +126,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 //#import <ownCloudSDK/OCRetainer.h>
 //#import <ownCloudSDK/OCRetainerCollection.h>
 
-#import <ownCloudSDK/OCKeyValueStore.h>
+#import <ownCloudSDK/OCProgress.h>
 
 #import <ownCloudSDK/OCLogger.h>
 #import <ownCloudSDK/OCLogComponent.h>

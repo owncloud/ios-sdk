@@ -48,23 +48,23 @@
 
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://www.apple.com/"]];
 	OCConnection *connection;
-	OCConnectionRequest *request;
-	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
-	
-	request = [OCConnectionRequest requestWithURL:bookmark.url];
-	
-	[connection sendRequest:request toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+	OCHTTPRequest *request;
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+	request = [OCHTTPRequest requestWithURL:bookmark.url];
+
+	[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		[expectAnswer fulfill];
 
-		OCLog(@"Result of request: %@ (error: %@):\n## Task: %@\n\n## Response: %@\n\n## Body: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString);
-		
-		if ((request.responseHTTPStatus.isSuccess) && ([request.responseBodyAsString containsString:@"/mac/"]))
+		OCLog(@"Result of request: %@ (error: %@):\n\n## Response: %@\n\n## Body: %@", request, error, response.httpURLResponse, response.bodyAsString);
+
+		if ((response.status.isSuccess) && ([response.bodyAsString containsString:@"/mac/"]))
 		{
 			[expectContentMatch fulfill];
 		}
 	}];
-	
+
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
@@ -76,7 +76,7 @@
 	
 	OCConnection *connection;
 	
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 	
 	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		OCLog(@"Issues: %@", issue.issues);
@@ -287,7 +287,7 @@
 	// Create bookmark from normalized URL (and extract username and password if included)
 	bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithUsername:&userName password:&password afterNormalizingURLString:userEnteredURLString protocolWasPrepended:NULL]];
 	
-	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 	{
 		// Prepare for setup
 		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
@@ -349,7 +349,7 @@
 
 										dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-											self->newConnection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+											self->newConnection = [[OCConnection alloc] initWithBookmark:bookmark];
 
 											if (preConnectAction != nil)
 											{
@@ -430,7 +430,7 @@
 		OCConnection *connection;
 		OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org"]];
 
-		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 		{
 			[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods)
 		 	{
@@ -454,7 +454,7 @@
 		bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 		bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:@"admin" passphrase:@"admin" authenticationHeaderValue:NULL error:NULL];
 
-		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 		{
 			[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 				// Testing just the connect here
@@ -639,12 +639,12 @@
 	XCTestExpectation *expectChecksumVerifies = [self expectationWithDescription:@"File checksum verified"];
 	OCConnection *connection = nil;
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
-	__block NSProgress *downloadProgress = nil;
+	__block OCProgress *downloadProgress = nil;
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
 	XCTAssert(connection!=nil);
 
@@ -688,7 +688,7 @@
 						}
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[downloadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
+					[downloadProgress addObserver:self forKeyPath:@"progress.fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
 				}
 
 				XCTAssert((error==nil), @"No error");
@@ -707,14 +707,16 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	[downloadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
+	[downloadProgress removeObserver:self forKeyPath:@"progress.fractionCompleted" context:nil];
+
+	OCLog(@"Done: %@", connection);
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
-	if ([keyPath isEqualToString:@"fractionCompleted"])
+	if ([keyPath isEqualToString:@"progress.fractionCompleted"])
 	{
-		OCLog(@"Fraction of %@: %f", object, ((NSProgress *)object).fractionCompleted);
+		OCLog(@"Fraction of %@: %f", object, ((OCProgress *)object).progress.fractionCompleted);
 	}
 }
 
@@ -728,7 +730,7 @@
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
 	XCTAssert(connection!=nil);
 
@@ -770,12 +772,12 @@
 	XCTestExpectation *expectFileDeleted = [self expectationWithDescription:@"File deleted"];
 	OCConnection *connection = nil;
 	OCBookmark *bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
-	__block NSProgress *uploadProgress = nil;
+	__block OCProgress *uploadProgress = nil;
 
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
 	XCTAssert(connection!=nil);
 
@@ -820,7 +822,7 @@
 						} userInfo:nil ephermalUserInfo:nil]];
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[uploadProgress addObserver:self forKeyPath:@"fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
+					[uploadProgress addObserver:self forKeyPath:@"progress.fractionCompleted" options:NSKeyValueObservingOptionInitial context:nil];
 				}
 
 				XCTAssert((error==nil), @"No error");
@@ -835,7 +837,7 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	[uploadProgress removeObserver:self forKeyPath:@"fractionCompleted" context:nil];
+	[uploadProgress removeObserver:self forKeyPath:@"progress.fractionCompleted" context:nil];
 }
 
 - (void)testConnectAndFavoriteFirstFile
@@ -905,7 +907,7 @@
 	OCConnection *connection;
 	XCTestExpectation *expectServerStatusResponse = [self expectationWithDescription:@"Received server status response"];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 	XCTAssert(connection!=nil);
 
 	XCTAssert(connection.serverVersion == nil);
@@ -914,7 +916,7 @@
 	XCTAssert(connection.serverProductName == nil);
 	XCTAssert(connection.serverLongProductVersionString == nil);
 
-	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+	[connection requestServerStatusWithCompletionHandler:^(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo) {
 		XCTAssert(statusInfo!=nil);
 		XCTAssert(statusInfo[@"edition"]!=nil);
 		XCTAssert(statusInfo[@"installed"]!=nil);
@@ -949,7 +951,7 @@
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
 
-	connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
 	XCTAssert(connection!=nil);
 

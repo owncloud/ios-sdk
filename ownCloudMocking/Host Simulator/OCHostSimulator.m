@@ -19,35 +19,6 @@
 
 #import "OCHostSimulator.h"
 
-@interface OCConnectionRequest (OCHostSimulatorInjection)
-
-- (void)applySimulatorResponse:(OCHostSimulatorResponse *)response;
-
-@end
-
-@implementation OCConnectionRequest (OCHostSimulatorInjection)
-
-- (void)applySimulatorResponse:(OCHostSimulatorResponse *)response
-{
-	if (response.url == nil)
-	{
-		response.url = self.url;
-	}
-
-	_injectedResponse = response.response;
-
-	if (self.downloadRequest)
-	{
-		self.downloadedFileURL = self.bodyURL;
-	}
-	else
-	{
-		self.responseBodyData = [response.bodyData mutableCopy];
-	}
-}
-
-@end
-
 @implementation OCHostSimulator
 
 #pragma mark - Init & Dealloc
@@ -55,7 +26,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		self.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		self.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 			// By default, answer all unroutable requests with 404 Not Found codes
 
 			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeNOT_FOUND headers:nil contentType:@"text/html" body:@"<html><body>Page not found</body></html>"]);
@@ -67,42 +38,64 @@
 	return(self);
 }
 
-- (void)_applyResponse:(OCHostSimulatorResponse *)response toRequest:(OCConnectionRequest *)request
+- (OCHTTPResponse *)_responseForRequest:(OCHTTPRequest *)request withResponse:(OCHostSimulatorResponse *)simulatorResponse error:(NSError *)error
 {
-	[request applySimulatorResponse:response];
-	request.responseCertificate = self.certificate;
+	OCHTTPResponse *httpResponse;
+
+	if (simulatorResponse.url == nil)
+	{
+		simulatorResponse.url = request.url;
+	}
+
+	httpResponse = [OCHTTPResponse responseWithRequest:request HTTPError:error];
+
+	if (simulatorResponse.response != nil)
+	{
+		httpResponse.httpURLResponse = simulatorResponse.response;
+	}
+
+	if (request.downloadRequest)
+	{
+		httpResponse.bodyURL = simulatorResponse.bodyURL;
+		httpResponse.bodyURLIsTemporary = NO;
+	}
+	else
+	{
+		httpResponse.bodyData = [simulatorResponse.bodyData mutableCopy];
+	}
+
+	httpResponse.certificate = self.certificate;
+
+	return (httpResponse);
 }
 
-- (BOOL)connection:(OCConnection *)connection queue:(OCConnectionQueue *)queue handleRequest:(OCConnectionRequest *)request completionHandler:(void(^)(NSError *error))completionHandler
+- (BOOL)connection:(OCConnection *)connection pipeline:(OCHTTPPipeline *)pipeline simulateRequestHandling:(OCHTTPRequest *)request completionHandler:(void (^)(OCHTTPResponse * _Nonnull))completionHandler
 {
 	OCHostSimulatorResponse *response = nil;
 	BOOL handlesRequest = YES;
 	OCHostSimulatorResponseHandler responseHandler = ^(NSError *error, OCHostSimulatorResponse *response) {
-		if (response != nil)
-		{
-			[self _applyResponse:response toRequest:request];
-		}
+		OCHTTPResponse *httpResponse = [self _responseForRequest:request withResponse:response error:error];
 
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			OCLogDebug(@"Host Simulator: sent response for %@", request.url);
+//
+//			if (response.certificate != nil)
+//			{
+//				[pipeline evaluateCertificate:response.certificate forTask:task proceedHandler:^(BOOL proceed, NSError *proceedError){
+//					if (proceed)
+//					{
+//						completionHandler(httpResponse);
+//					}
+//					else
+//					{
+//						task.request.error = (proceedError != nil) ? proceedError : OCError(OCErrorRequestServerCertificateRejected);
+//						completionHandler(proceedError);
+//					}
+//
+//				}];
+//			}
 
-			if (request.responseCertificate != nil)
-			{
-				[queue evaluateCertificate:request.responseCertificate forRequest:request proceedHandler:^(BOOL proceed, NSError *proceedError){
-					if (proceed)
-					{
-						completionHandler(proceedError);
-					}
-					else
-					{
-						request.error = (proceedError != nil) ? proceedError : OCError(OCErrorRequestServerCertificateRejected);
-						completionHandler(proceedError);
-					}
-
-				}];
-			}
-
-			completionHandler(error);
+			completionHandler(httpResponse);
 		});
 	};
 

@@ -95,14 +95,14 @@
 		AddIssue(issue);
 	};
 
-	NSError *(^MakeRequest)(NSURL *url, OCConnectionRequest **outRequest) = ^(NSURL *url, OCConnectionRequest **outRequest){
-		OCConnectionRequest *request;
+	NSError *(^MakeRequest)(NSURL *url, OCHTTPRequest **outRequest) = ^(NSURL *url, OCHTTPRequest **outRequest){
+		OCHTTPRequest *request;
 		NSError *error = nil;
 		
-		request = [OCConnectionRequest requestWithURL:url];
+		request = [OCHTTPRequest requestWithURL:url];
 		request.skipAuthorization = YES;
 		request.forceCertificateDecisionDelegation = YES;
-		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 			switch (validationResult)
 			{
 				case OCCertificateValidationResultError:
@@ -157,7 +157,7 @@
 			}
 		};
 		
-		error = [self sendSynchronousRequest:request toQueue:self.commandQueue];
+		error = [self sendSynchronousRequest:request];
 		
 		if (outRequest != NULL)
 		{
@@ -171,17 +171,17 @@
 		return (error);
 	};
 
-	NSError *(^MakeJSONRequest)(NSURL *url, OCConnectionRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict) = ^(NSURL *url, OCConnectionRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict){
-		OCConnectionRequest *request = nil;
+	NSError *(^MakeJSONRequest)(NSURL *url, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict) = ^(NSURL *url, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict){
+		OCHTTPRequest *request = nil;
 		NSError *error;
 		
 		if ((error = MakeRequest(url, &request)) == nil)
 		{
-			if (request.responseHTTPStatus.isSuccess)
+			if (request.httpResponse.status.isSuccess)
 			{
 				NSDictionary *jsonDict;
 
-				if ((jsonDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+				if ((jsonDict = [request.httpResponse bodyConvertedDictionaryFromJSONWithError:&error]) != nil)
 				{
 					if (outJSONDict != NULL)
 					{
@@ -189,11 +189,11 @@
 					}
 				}
 			}
-			else if (request.responseHTTPStatus.isRedirection)
+			else if (request.httpResponse.status.isRedirection)
 			{
 				NSURL *redirectionURL;
 				
-				if ((redirectionURL = [request responseRedirectURL]) != nil)
+				if ((redirectionURL = request.httpResponse.redirectURL) != nil)
 				{
 					if (outRedirectionURL != NULL)
 					{
@@ -211,11 +211,11 @@
 		return (error);
 	};
 
-	NSError *(^MakeStatusRequest)(NSURL *url, OCConnectionRequest **outRequest, NSURL **outSuggestedURL) = ^(NSURL *url, OCConnectionRequest **outRequest, NSURL **outSuggestedURL){
+	NSError *(^MakeStatusRequest)(NSURL *url, OCHTTPRequest **outRequest, NSURL **outSuggestedURL) = ^(NSURL *url, OCHTTPRequest **outRequest, NSURL **outSuggestedURL){
 		NSDictionary *jsonDict = nil;
 		NSError *error = nil;
 		NSURL *redirectionURL = nil;
-		OCConnectionRequest *request = nil;
+		OCHTTPRequest *request = nil;
 		NSURL *statusURL = [url URLByAppendingPathComponent:statusEndpointPath];
 
 		if ((error = MakeJSONRequest(statusURL, &request, &redirectionURL, &jsonDict)) == nil)
@@ -288,7 +288,7 @@
 	while (!completed)
 	{
 		NSURL *newBookmarkURL = nil;
-		OCConnectionRequest *statusRequest = nil;
+		OCHTTPRequest *statusRequest = nil;
 
 		if ((lastURLTried!=nil) && ([lastURLTried isEqual:url]))
 		{
@@ -303,7 +303,7 @@
 		{
 			if ([error isOCErrorWithCode:OCErrorServerDetectionFailed])
 			{
-				if (statusRequest.responseHTTPStatus.code != 0)
+				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
 					if (![[url lastPathComponent] isEqual:@"owncloud"])
@@ -324,7 +324,7 @@
 						// Check server root directory for a redirect
 						if (urlForTryingRootURL != nil)
 						{
-							OCConnectionRequest *rootURLRequest = nil;
+							OCHTTPRequest *rootURLRequest = nil;
 							NSURL *rootURL = urlForTryingRootURL;
 
 							if ((error = MakeRequest(rootURL, &rootURLRequest)) != nil)
@@ -336,12 +336,12 @@
 							else
 							{
 								// Check response for redirect
-								if (rootURLRequest.responseHTTPStatus.isRedirection)
+								if (rootURLRequest.httpResponse.status.isRedirection)
 								{
-									if (rootURLRequest.responseRedirectURL != nil)
+									if (rootURLRequest.httpResponse.redirectURL != nil)
 									{
 										urlForCreationOfRedirectionIssueIfSuccessful = urlForTryingRootURL;
-										url = rootURLRequest.responseRedirectURL;
+										url = rootURLRequest.httpResponse.redirectURL;
 										urlForTryingRootURL = nil;
 
 										continue;

@@ -104,7 +104,7 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 #pragma mark - Class
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging>
+@interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging, OCProgressResolver>
 {
 	OCBookmark *_bookmark;
 
@@ -132,6 +132,8 @@ NS_ASSUME_NONNULL_BEGIN
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
 
 	OCActivityManager *_activityManager;
+	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
+	BOOL _needsToBroadcastSyncRecordActivityUpdates;
 
 	OCEventHandlerIdentifier _eventHandlerIdentifier;
 

@@ -79,7 +79,9 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 #pragma mark - Result, cancel and progress handling
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
-@property(strong,nonatomic,nullable) NSProgress *progress; //!< Progress object tracking the progress of the action described in the sync record. (ephermal)
+@property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
+
++ (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID;
 
 #pragma mark - Instantiation
 - (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
@@ -100,7 +102,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 - (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter; //!< Calls the resultHandler and subsequently drops it. You're responsible from updating the record in the database.
 
 #pragma mark - Progress convenience method
-- (void)addProgress:(NSProgress *)progress;
+- (void)addProgress:(OCProgress *)progress;
 
 @end
 
@@ -112,5 +114,7 @@ extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;
 extern OCSyncActionIdentifier OCSyncActionIdentifierDownload;
 extern OCSyncActionIdentifier OCSyncActionIdentifierUpload;
 extern OCSyncActionIdentifier OCSyncActionIdentifierUpdate;
+
+extern NSString *OCSyncRecordProgressUserInfoKeySource;
 
 NS_ASSUME_NONNULL_END

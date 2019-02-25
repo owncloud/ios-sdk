@@ -23,6 +23,7 @@
 #import "OCDatabase.h"
 #import "OCMacros.h"
 #import "OCCore+FileProvider.h"
+#import "OCHTTPPipelineManager.h"
 
 @interface OCVault () <NSFileManagerDelegate>
 @end
@@ -127,14 +128,24 @@
 	return (_fileProviderDomain);
 }
 
-- (NSURL *)connectionDataRootURL
+- (NSURL *)httpPipelineRootURL
 {
-	if (_connectionDataRootURL == nil)
+	if (_httpPipelineRootURL == nil)
 	{
-		_connectionDataRootURL = [self.rootURL URLByAppendingPathComponent:OCVaultPathConnectionData];
+		_httpPipelineRootURL = [self.rootURL URLByAppendingPathComponent:OCVaultPathHTTPPipeline];
 	}
 
-	return (_connectionDataRootURL);
+	return (_httpPipelineRootURL);
+}
+
+- (NSURL *)temporaryDownloadURL
+{
+	if (_temporaryDownloadURL == nil)
+	{
+		_temporaryDownloadURL = [self.rootURL URLByAppendingPathComponent:@"TemporaryDownloads"];
+	}
+
+	return (_temporaryDownloadURL);
 }
 
 - (OCDatabase *)database
@@ -152,7 +163,7 @@
 {
 	NSError *error = nil;
 
-	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:nil error:&error])
+	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 	{
 		[self.database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
 			completionHandler(db, error);
@@ -182,6 +193,15 @@
 			NSFileManager *fileManager = [NSFileManager new];
 
 			fileManager.delegate = self;
+
+			if ([fileManager fileExistsAtPath:self.httpPipelineRootURL.path])
+			{
+				OCSyncExec(waitForPipelineDetachAndDestroy, {
+					[OCHTTPPipelineManager.sharedPipelineManager detachAndDestroyPartitionInAllPipelines:self->_uuid.UUIDString completionHandler:^(id sender, NSError *error) {
+						OCSyncExecDone(waitForPipelineDetachAndDestroy);
+					}];
+				});
+			}
 
 			if ([fileManager fileExistsAtPath:self.rootURL.path])
 			{
@@ -244,6 +264,5 @@
 @end
 
 NSString *OCVaultPathVaults = @"Vaults";
-NSString *OCVaultPathFiles = @"Files";
-NSString *OCVaultPathConnectionData = @"ConnectionData";
+NSString *OCVaultPathHTTPPipeline = @"HTTPPipeline";
 

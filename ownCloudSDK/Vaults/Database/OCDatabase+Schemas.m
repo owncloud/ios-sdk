@@ -724,30 +724,6 @@
 	];
 }
 
-- (void)addOrUpdateConnectionRequestsSchema
-{
-	/*** Requests ***/
-
-	// Version 1
-	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
-		schemaWithTableName:OCDatabaseTableNameConnectionRequests
-		version:1
-		creationQueries:@[
-			/*
-				rqID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
-				jobID : TEXT		- OCConnectionJobID this request belongs to (optional)
-				groupID : TEXT		- ID of the OCConnectionQueue group this request belongs to (optional)
-				urlSessionID : TEXT	- ID of the URL Session this request belongs to
-				taskID : INTEGER	- URL Session Task ID of the request when scheduled, NULL otherwise (optional)
-				requestData : BLOB	- data of the serialized OCConnectionRequest
-			*/
-			@"CREATE TABLE requests (rqID INTEGER PRIMARY KEY AUTOINCREMENT, jobID TEXT, groupID TEXT, urlSessionID TEXT NOT NULL, taskID INTEGER, requestData BLOB NOT NULL)"
-		]
-		openStatements:nil
-		upgradeMigrator:nil]
-	];
-}
-
 - (void)addOrUpdateCountersSchema
 {
 	/*** Counters ***/
@@ -775,6 +751,5 @@
 OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
-OCDatabaseTableName OCDatabaseTableNameConnectionRequests = @"requests";
 OCDatabaseTableName OCDatabaseTableNameEvents = @"events";
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";

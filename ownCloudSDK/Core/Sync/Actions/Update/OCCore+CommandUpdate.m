@@ -24,7 +24,7 @@
 #pragma mark - Command
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpdate alloc] initWithItem:item updateProperties:properties] resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionUpdate alloc] initWithItem:item updateProperties:properties] cancellable:NO resultHandler:resultHandler]);
 }
 
 @end

@@ -62,11 +62,11 @@
 
 	for (NSURL *urlToTest in urlsToTest)
 	{
-		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest] persistentStoreBaseURL:nil];
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:[OCBookmark bookmarkForURL:urlToTest]];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;
-		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 			NSError *parseError = nil;
 			NSDictionary *metaData = [certificate metaDataWithError:&parseError];
 
@@ -77,7 +77,7 @@
 			proceedHandler(YES, nil);
 		};
 
-		[connection sendSynchronousRequest:request toQueue:connection.commandQueue];
+		[connection sendSynchronousRequest:request];
 	}
 }
 

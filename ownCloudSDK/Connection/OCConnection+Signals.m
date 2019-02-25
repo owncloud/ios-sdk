@@ -17,7 +17,6 @@
  */
 
 #import "OCConnection.h"
-#import "OCConnectionQueue.h"
 
 @implementation OCConnection (Signals)
 
@@ -92,7 +91,7 @@
 
 - (void)_scheduleRequestsOnQueues
 {
-	[[self allQueues] makeObjectsPerformSelector:@selector(scheduleQueuedRequests)];
+	[[self allHTTPPipelines] makeObjectsPerformSelector:@selector(setPipelineNeedsScheduling)];
 }
 
 @end

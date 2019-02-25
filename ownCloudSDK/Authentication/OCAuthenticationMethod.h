@@ -21,8 +21,8 @@
 #import "OCLogTag.h"
 
 @class OCConnection;
-@class OCConnectionRequest;
-@class OCConnectionQueue;
+@class OCHTTPRequest;
+@class OCHTTPResponse;
 @class OCIssue;
 
 typedef NSString* OCAuthenticationMethodIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!< NSString identifier for an authentication method, f.ex. "owncloud.oauth2" for OAuth2
@@ -63,13 +63,13 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 #pragma mark - Authentication Method Detection
 + (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionURLsForConnection:) and then returns result via the completionHandler.
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionURLsForConnection:) and then returns result via the completionHandler.
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.
 - (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Deauthenticates the connection.
 
-- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection; //!< Applies all necessary modifications to a request so that it's authorized using this authentication method. This can be adding tokens, passwords, etc. to the headers. The request returned by this method is sent.
+- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection; //!< Applies all necessary modifications to a request so that it's authorized using this authentication method. This can be adding tokens, passwords, etc. to the headers. The request returned by this method is sent.
 
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler; //!< Generates the authenticationData for a connection's bookmark and returns the result via the completionHandler. It is not directly stored in the bookmark so that an app can decide on its own when to overwrite existing data - or save the result. The authentication method is obligated to return an error in the completionHandler if authentication is not possible (f.ex. rejected token request, wrong username/passphrase).
@@ -83,7 +83,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler; //!< This method is called by the -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] to determine if the authentication method is currently in the position to authenticate requests for the given connection. If it is, YES should be returned and the availabilityHandler shouldn't be used. If it is not (if, f.ex. a token has expired and needs to be renewed first), this method should return NO, attempt the necessary changes (if this involves scheduling requests, make sure these have their skipAuthorization to YES) and then call the availabilityHandler with the outcome. If an error is returned, all queued requests fail with the provided error.
 
 #pragma mark - Handle responses before they are delivered to the request senders
-- (NSError *)handleResponse:(OCConnectionRequest *)request forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error; //!< This method is called for every finished request before the response gets delivered to the sender. Gives the authentication method a chance to get knowledge of and react to error infos contained in response
 
 @end
 

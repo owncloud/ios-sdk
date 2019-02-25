@@ -26,7 +26,7 @@
 @synthesize sqlStatement = _sqlStatement;
 @synthesize database = _database;
 
-+ (instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError
++ (nullable instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError
 {
 	OCSQLiteStatement *statement = nil;
 	sqlite3_stmt *sqlStatement = NULL;

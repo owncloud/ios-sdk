@@ -419,7 +419,7 @@
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	__block XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
 
-	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 		// Return host not found errors by default
 		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
 
@@ -601,7 +601,7 @@
 	__block XCTestExpectation *requestOfLargerSizeExpectation = [self expectationWithDescription:@"Larger size expectation"];
 	OCHostSimulator *hostSimulator = [[OCHostSimulator alloc] init];
 
-	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+	hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 		// Return host not found errors by default
 		responseHandler([NSError errorWithDomain:(NSErrorDomain)kCFErrorDomainCFNetwork code:kCFHostErrorHostNotFound userInfo:nil], nil);
 
@@ -702,7 +702,7 @@
 														XCTAssert ((image.scale == 1.0), @"Thumbnail scale is 1");
 
 														// Verify that the next call will actually lead to a new request
-														hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+														hostSimulator.unroutableRequestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 															[requestOfLargerSizeExpectation fulfill];
 															requestOfLargerSizeExpectation = nil;
 
@@ -839,7 +839,7 @@
 	__block NSTimeInterval queryTwoTimestampCache = 0;
 	__block NSTimeInterval queryTwoTimestampIdle = 0;
 
-	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 		__weak OCCore *weakCore = core;
 
@@ -916,6 +916,7 @@
 
 	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			completionHandler();
 			[vaultErasedExpectation fulfill];
 		}];
 	} forBookmark:bookmark];
@@ -938,7 +939,7 @@
 	__block XCTestExpectation *vaultErasedExpectation = [self expectationWithDescription:@"Vault erased"];
 	__block OCItem *onlyItem = nil;
 
-	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 		OCQuery *query = [OCQuery queryForPath:@"/"];
 
 		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
@@ -1005,6 +1006,7 @@
 
 	[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 		[[[OCVault alloc] initWithBookmark:bookmark] eraseWithCompletionHandler:^(id sender, NSError *error) {
+			completionHandler();
 			[vaultErasedExpectation fulfill];
 		}];
 	} forBookmark:bookmark];

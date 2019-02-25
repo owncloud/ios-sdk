@@ -56,6 +56,11 @@
 		*outError = error;
 	}
 
+	if (sqErr != SQLITE_ROW)
+	{
+		_endOfResultSetReached = YES;
+	}
+
 	return (sqErr == SQLITE_ROW); // There'll be another row after that
 }
 
@@ -91,6 +96,19 @@
 	}
 
 	return (lineNumber);
+}
+
+- (nullable NSDictionary<NSString *,id<NSObject>> *)nextRowDictionaryWithError:(NSError **)outError
+{
+	NSDictionary<NSString *,id<NSObject>> *nextRowDictionary = nil;
+
+	if (!_endOfResultSetReached)
+	{
+		nextRowDictionary = [self rowDictionary];
+		[self nextRow:outError];
+	}
+
+	return (nextRowDictionary);
 }
 
 #pragma mark - Access result
@@ -204,7 +222,7 @@
 	return (nil);
 }
 
-- (NSDictionary<NSString *, id<NSObject>> *)rowDictionary
+- (OCSQLiteRowDictionary)rowDictionary
 {
 	sqlite3_stmt *sqlStatement;
 	NSMutableDictionary<NSString *, id<NSObject>> *rowDict = nil;

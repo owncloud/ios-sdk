@@ -69,7 +69,7 @@
 
 	if ((item = self.archivedServerItem) != nil)
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 
 		if ((progress = [self.core.connection deleteItem:item requireMatch:self.requireMatch resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
@@ -164,21 +164,30 @@
 			break;
 
 			case OCErrorItemNotFound:
-				// The item that was supposed to be deleted could not be found on the server
+				// The item that was supposed to be deleted could not be found on the server (may already have been deleted)
 
 				// => remove item
 				[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 				syncContext.removedItems = @[ self.localItem ];
 
 				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed
-				if (self.localItem.path.parentPath != nil)
 				{
-					syncContext.refreshPaths = @[ self.localItem.path.parentPath ];
+					NSString *parentPath = self.localItem.path.parentPath;
+
+					if (parentPath != nil)
+					{
+						syncContext.refreshPaths = @[ parentPath ];
+					}
 				}
 
-				// => inform the user
-				title = [NSString stringWithFormat:OCLocalizedString(@"%@ not found on the server",nil), self.localItem.path.lastPathComponent];
-				description = [NSString stringWithFormat:OCLocalizedString(@"%@ may have been renamed, moved or deleted remotely.",nil), self.localItem.path.lastPathComponent];
+				OCLogDebug(@"%@ not found on the server, %@ may have been renamed, moved or deleted remotely", self.localItem.path.lastPathComponent, self.localItem.path.lastPathComponent);
+
+				// Remove file locally
+				[self.core deleteDirectoryForItem:self.localItem];
+
+				// Action complete and can be removed
+				[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+				resultInstruction = OCCoreSyncInstructionDeleteLast;
 			break;
 
 			default:

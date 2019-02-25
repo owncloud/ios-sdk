@@ -86,7 +86,7 @@
 	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
 }
 
-- (void)addProgress:(NSProgress *)progress
+- (void)addProgress:(OCProgress *)progress
 {
 	if (progress != nil)
 	{
@@ -96,11 +96,23 @@
 		}
 		else
 		{
-			_progress.localizedDescription = progress.localizedDescription;
-			_progress.localizedAdditionalDescription = progress.localizedAdditionalDescription;
+			_progress.userInfo = @{ OCSyncRecordProgressUserInfoKeySource : progress };
 
-			_progress.totalUnitCount += 200;
-			[_progress addChild:progress withPendingUnitCount:200];
+			if (progress.progress != nil)
+			{
+				if (_progress.progress == nil)
+				{
+					_progress.progress = progress.progress;
+				}
+				else
+				{
+					_progress.progress.localizedDescription = progress.progress.localizedDescription;
+					_progress.progress.localizedAdditionalDescription = progress.progress.localizedAdditionalDescription;
+
+					_progress.progress.totalUnitCount += 200;
+					[_progress.progress addChild:progress.progress withPendingUnitCount:200];
+				}
+			}
 		}
 	}
 }
@@ -167,8 +179,8 @@
 
 			case OCSyncRecordStateCompleted:
 				// Indicate "done" to progress object
-				self.progress.totalUnitCount = 1;
-				self.progress.completedUnitCount = 1;
+				self.progress.progress.totalUnitCount = 1;
+				self.progress.progress.completedUnitCount = 1;
 			break;
 
 			default:
@@ -213,6 +225,8 @@
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
 
+		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
+
 		_waitConditions = [decoder decodeObjectOfClass:[NSArray class] forKey:@"waitConditions"];
 	}
 	
@@ -233,15 +247,22 @@
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
 
+	[coder encodeObject:_progress forKey:@"progress"];
+
 	[coder encodeObject:_waitConditions forKey:@"waitConditions"];
 }
 
 #pragma mark - Activity Source
++ (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID
+{
+	return ([NSString stringWithFormat:@"syncRecord:%@", recordID]);
+}
+
 - (OCActivityIdentifier)activityIdentifier
 {
 	if (_activityIdentifier == nil)
 	{
-		_activityIdentifier = [NSString stringWithFormat:@"syncRecord:%@", _recordID];
+		_activityIdentifier = [OCSyncRecord activityIdentifierForSyncRecordID:_recordID];
 	}
 
 	return (_activityIdentifier);
@@ -253,14 +274,15 @@
 }
 
 #pragma mark - Progress setup
-- (void)setProgress:(NSProgress *)progress
+- (void)setProgress:(OCProgress *)progress
 {
 	_progress = progress;
-	if (progress!=nil)
+
+	if (progress.progress!=nil)
 	{
-		if (progress.eventType == OCEventTypeNone)
+		if (progress.progress.eventType == OCEventTypeNone)
 		{
-			progress.eventType = _action.actionEventType;
+			progress.progress.eventType = _action.actionEventType;
 		}
 	}
 }
@@ -286,3 +308,5 @@ OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder = @"createFolder";
 OCSyncActionIdentifier OCSyncActionIdentifierDownload = @"download";
 OCSyncActionIdentifier OCSyncActionIdentifierUpload = @"upload";
 OCSyncActionIdentifier OCSyncActionIdentifierUpdate = @"update";
+
+NSString *OCSyncRecordProgressUserInfoKeySource = @"sourceProgress";

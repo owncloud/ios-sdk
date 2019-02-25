@@ -819,9 +819,7 @@
 		return;
 	}
 
-	[self beginActivity:@"Check for updates"];
-
-	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:@{ @"endActivity" : @(YES)  }];
+	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
 
 	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
 }
@@ -879,12 +877,6 @@
 				}
 			}
 		}
-	}
-
-	// End activity
-	if (event.ephermalUserInfo[@"endActivity"])
-	{
-		[self endActivity:@"Check for updates"];
 	}
 }
 

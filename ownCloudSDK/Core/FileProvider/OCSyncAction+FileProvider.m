@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncAction+FileProvider.h"
+#import "OCHTTPPipelineTask.h"
 
 @implementation OCSyncAction (FileProviderProgressReporting)
 
@@ -43,19 +44,19 @@
 
 				OCLogDebug(@"record %@ will register URLTask for %@", syncContext.syncRecord, item);
 
-				OCConnectionRequestObserver observer = [^(OCConnectionRequest *request, OCConnectionRequestObserverEvent event) {
-					if (event == OCConnectionRequestObserverEventTaskResume)
+				OCHTTPRequestObserver observer = [^(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event) {
+					if ((event == OCHTTPRequestObserverEventTaskResume) && (task.urlSessionTask != nil))
 					{
-						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:request.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
-							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, request.urlSessionTask, item, error);
+						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:task.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
+							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, task.urlSessionTask, item, error);
 
 							if (error != nil)
 							{
-								OCLogError(@"error registering %@ for %@: %@", request.urlSessionTask, item.localID, error);
+								OCLogError(@"error registering %@ for %@: %@", task.urlSessionTask, item.localID, error);
 							}
 
 							// File provider detail: the task may not be started until after this completionHandler was called
-							[request.urlSessionTask resume];
+							[task.urlSessionTask resume];
 						}];
 
 						return (YES);

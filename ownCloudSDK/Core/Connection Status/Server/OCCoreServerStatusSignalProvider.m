@@ -54,7 +54,7 @@
 
 - (void)_sendStatusPollRequest:(NSTimer *)timer
 {
-	[self.core.connection requestServerStatusWithCompletionHandler:^(NSError *error, OCConnectionRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+	[self.core.connection requestServerStatusWithCompletionHandler:^(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo) {
 		if ((error == nil) && (statusInfo != nil))
 		{
 			NSNumber *maintenanceMode;

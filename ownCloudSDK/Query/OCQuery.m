@@ -214,7 +214,13 @@
 		changesAvailable = _hasChangesAvailable;
 
 		_lastQueryResults = _processedQueryResults;
-		_hasChangesAvailable = NO;
+
+		if (_hasChangesAvailable)
+		{
+			[self willChangeValueForKey:@"hasChangesAvailable"];
+			_hasChangesAvailable = NO;
+			[self didChangeValueForKey:@"hasChangesAvailable"];
+		}
 
 		// Special handling for queries targeting a sync anchor: drop all entries when a change set is requested
 		if (self.querySinceSyncAnchor != nil)

@@ -24,7 +24,7 @@
 
 typedef void(^OCHostSimulatorResponseHandler)(NSError *error, OCHostSimulatorResponse *response);
 
-typedef BOOL(^OCHostSimulatorRequestHandler)(OCConnection *connection, OCConnectionRequest *request, OCHostSimulatorResponseHandler responseHandler);
+typedef BOOL(^OCHostSimulatorRequestHandler)(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler);
 
 @interface OCHostSimulator : NSObject <OCConnectionHostSimulator>
 

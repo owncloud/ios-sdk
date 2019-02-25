@@ -32,7 +32,7 @@
 
 		XCTAssert(OCCoreManager.sharedCoreManager!=nil);
 
-		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 			core1 = core;
 			core1Address = [NSValue valueWithNonretainedObject:core];
 
@@ -48,7 +48,7 @@
 			});
 		}];
 
-		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
 			core2 = core;
 			core2Address = [NSValue valueWithNonretainedObject:core];
 
@@ -64,12 +64,12 @@
 
 		[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-				[offlineOperationExpectation fulfill];
 				completionHandler();
+				[offlineOperationExpectation fulfill];
 			});
 		} forBookmark:bookmark];
 
-		[self waitForExpectationsWithTimeout:10 handler:nil];
+		[self waitForExpectationsWithTimeout:20 handler:nil];
 	}
 
 	[[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]];
@@ -87,7 +87,9 @@
 	__block NSValue *core1Address = NULL, *core2Address = NULL;
 
 	@autoreleasepool {
-		core1 = [[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+			core1 = core;
+
 			OCLog(@"Started core1=%@", core);
 			core1Address = [NSValue valueWithPointer:(__bridge const void *)core];
 
@@ -98,7 +100,9 @@
 						OCLog(@"Returned core1");
 					}];
 
-					core2 = [[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+					[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+						core2 = core;
+
 						OCLog(@"Started core2=%@", core);
 						core2Address = [NSValue valueWithPointer:(__bridge const void *)core];
 
@@ -108,8 +112,8 @@
 
 						[[OCCoreManager sharedCoreManager] scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 							dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-								[offlineOperationExpectation fulfill];
 								completionHandler();
+								[offlineOperationExpectation fulfill];
 							});
 						} forBookmark:bookmark];
 					}];

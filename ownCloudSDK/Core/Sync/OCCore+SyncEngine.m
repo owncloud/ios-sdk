@@ -36,6 +36,7 @@
 #import "OCSyncRecordActivity.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
+OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
 
 @implementation OCCore (SyncEngine)
 
@@ -45,22 +46,34 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
 }
 
+- (OCIPCNotificationName)notificationNameForSyncRecordsUpdate
+{
+	return ([OCIPCNotificationNameUpdateSyncRecordsBase stringByAppendingFormat:@":%@", self.bookmark.uuid.UUIDString]);
+}
+
 - (void)setupSyncEngine
 {
-	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+	OCIPCNotificationName processRecordsNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+	OCIPCNotificationName updateRecordsNotificationName = [self notificationNameForSyncRecordsUpdate];
 
-	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:notificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core setNeedsToProcessSyncRecords];
 	}];
 
-	[self publishInitialSyncRecordActivities];
+	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:updateRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core updatePublishedSyncRecordActivities];
+	}];
+
+	[self updatePublishedSyncRecordActivities];
 }
 
 - (void)shutdownSyncEngine
 {
-	OCIPCNotificationName notificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+	OCIPCNotificationName processRecordsNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+	OCIPCNotificationName updateRecordsNotificationName = [self notificationNameForSyncRecordsUpdate];
 
-	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:notificationName];
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:processRecordsNotificationName];
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:updateRecordsNotificationName];
 }
 
 #pragma mark - Sync Anchor
@@ -179,19 +192,28 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 }
 
 #pragma mark - Sync Record Scheduling
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
 
 	if (action != nil)
 	{
-		progress = [NSProgress indeterminateProgress];
-		progress.cancellable = NO;
-
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
 
-		syncRecord.progress = progress;
+		if (syncRecord.progress == nil)
+		{
+			progress = [NSProgress indeterminateProgress];
+
+			syncRecord.progress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+		}
+		else
+		{
+			progress = syncRecord.progress.progress;
+		}
+
+		syncRecord.progress.cancellable = cancellable;
+		progress.cancellable = cancellable;
 
 		[self submitSyncRecord:syncRecord];
 	}
@@ -212,6 +234,9 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 		}];
 
 		OCLogDebug(@"record %@ added to database with error %@", record, blockError);
+
+		// Set sync record's progress path
+		record.progress.path = @[OCCoreGlobalRootPath, self.bookmark.uuid.UUIDString, OCCoreSyncRecordPath, [record.recordID stringValue]];
 
 		// Pre-flight
 		if (blockError == nil)
@@ -1012,16 +1037,25 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	{
 		[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
 	}
+
+	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
- 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:syncRecord.progress]];
+		NSProgress *progress;
+
+		if ((progress = syncRecord.progress.progress) != nil)
+		{
+	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+		}
 	}
 
 	[self.database updateSyncRecords:syncRecords completionHandler:completionHandler];
+
+	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
@@ -1032,17 +1066,95 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 	}
 
 	[self.database removeSyncRecords:syncRecords completionHandler:completionHandler];
+
+	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
-- (void)publishInitialSyncRecordActivities
+- (void)updatePublishedSyncRecordActivities
 {
 	[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+		NSMutableSet <OCSyncRecordID> *removedSyncRecordIDs = [[NSMutableSet alloc] initWithSet:self->_publishedActivitySyncRecordIDs];
+
 		for (OCSyncRecord *syncRecord in syncRecords)
 		{
+			OCSyncRecordID recordID = syncRecord.recordID;
+
 			syncRecord.action.core = self;
-			[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+
+			if (recordID != nil)
+			{
+				[removedSyncRecordIDs removeObject:recordID];
+
+				if ([self->_publishedActivitySyncRecordIDs containsObject:syncRecord.recordID])
+				{
+					// Update published activities
+					NSProgress *progress = [syncRecord.progress resolveWith:nil];
+
+					if (progress == nil)
+					{
+						progress = [NSProgress indeterminateProgress];
+						progress.cancellable = NO;
+					}
+
+			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+				}
+				else
+				{
+					// Publish new activities
+					[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+					[self->_publishedActivitySyncRecordIDs addObject:recordID];
+
+					syncRecord.action.core = self;
+					[syncRecord.action restoreProgressRegistrationForSyncRecord:syncRecord];
+				}
+			}
 		}
+
+		// Unpublish ended activities
+		for (OCSyncRecordID syncRecordID in removedSyncRecordIDs)
+		{
+			[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:[OCSyncRecord activityIdentifierForSyncRecordID:syncRecordID]]];
+		}
+
+		[self->_publishedActivitySyncRecordIDs minusSet:removedSyncRecordIDs];
 	}];
+}
+
+- (void)setNeedsToBroadcastSyncRecordActivityUpdate
+{
+	BOOL scheduleBroadcast = NO;
+
+	@synchronized(self)
+	{
+		if (!_needsToBroadcastSyncRecordActivityUpdates)
+		{
+			_needsToBroadcastSyncRecordActivityUpdates = YES;
+			scheduleBroadcast = YES;
+		}
+	}
+
+	if (scheduleBroadcast)
+	{
+		[self beginActivity:@"Broadcast activity updates"];
+
+		// Throttle broadcasts to 10 per second
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), _queue, ^{
+			BOOL performBroadcast = NO;
+
+			@synchronized(self)
+			{
+				performBroadcast = self->_needsToBroadcastSyncRecordActivityUpdates;
+				self->_needsToBroadcastSyncRecordActivityUpdates = NO;
+			}
+
+			if (performBroadcast)
+			{
+				[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self notificationNameForSyncRecordsUpdate] ignoreSelf:YES];
+			}
+
+			[self endActivity:@"Broadcast activity updates"];
+		});
+	}
 }
 
 #pragma mark - Sync debugging
@@ -1072,3 +1184,5 @@ OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.ownclo
 
 OCEventUserInfoKey OCEventUserInfoKeySyncRecordID = @"syncRecordID";
 
+OCProgressPathElementIdentifier OCCoreGlobalRootPath = @"_core";
+OCProgressPathElementIdentifier OCCoreSyncRecordPath = @"_syncRecord";

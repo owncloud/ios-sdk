@@ -85,7 +85,7 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
-- (OCConnectionRequest *)authorizeRequest:(OCConnectionRequest *)request forConnection:(OCConnection *)connection
+- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
 {
 	NSDictionary *authSecret;
 
@@ -108,7 +108,7 @@ OCAuthenticationMethodAutoRegister
 	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]);
 }
 
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCConnectionRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
 }
@@ -365,14 +365,14 @@ OCAuthenticationMethodAutoRegister
 
 - (void)_sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
-	OCConnectionRequest *tokenRequest;
+	OCHTTPRequest *tokenRequest;
 
 	OCLogDebug(@"Sending token request with parameters: %@", OCLogPrivate(parameters));
 
 	// Compose Token Request
-	if ((tokenRequest = [OCConnectionRequest requestWithURL:[connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]]) != nil)
+	if ((tokenRequest = [OCHTTPRequest requestWithURL:[connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]]) != nil)
 	{
-		tokenRequest.method = OCConnectionRequestMethodPOST; // Use POST
+		tokenRequest.method = OCHTTPMethodPOST; // Use POST
 		
 		tokenRequest.skipAuthorization = YES;
 		
@@ -382,7 +382,7 @@ OCAuthenticationMethodAutoRegister
 				    forHeaderField:@"Authorization"];
 		
 		// Send Token Request
-		[connection sendRequest:tokenRequest toQueue:connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
+		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			OCLogDebug(@"Received token request result (error=%@)", error);
 
 			// Handle Token Request Result
@@ -390,7 +390,7 @@ OCAuthenticationMethodAutoRegister
 			{
 				NSDictionary *jsonResponseDict;
 				
-				if ((jsonResponseDict = [request responseBodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
+				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
 				{
 					NSString *jsonError;
 

@@ -16,21 +16,19 @@
  *
  */
 
-#import "OCConnectionDAVRequest.h"
+#import "OCHTTPDAVRequest.h"
 #import "OCItem.h"
 #import "OCXMLParser.h"
 #import "OCLogger.h"
-#import "OCConnectionDAVMultistatusResponse.h"
+#import "OCHTTPDAVMultistatusResponse.h"
 
-@implementation OCConnectionDAVRequest
-
-@synthesize xmlRequest = _xmlRequest;
+@implementation OCHTTPDAVRequest
 
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth
 {
-	OCConnectionDAVRequest *request = [OCConnectionDAVRequest requestWithURL:url];
+	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
 	
-	request.method = OCConnectionRequestMethodPROPFIND;
+	request.method = OCHTTPMethodPROPFIND;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
 		[OCXMLNode elementWithName:@"D:propfind" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:@[
 			[OCXMLNode elementWithName:@"D:prop"],
@@ -44,9 +42,9 @@
 
 + (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes
 {
-	OCConnectionDAVRequest *request = [OCConnectionDAVRequest requestWithURL:url];
+	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
 
-	request.method = OCConnectionRequestMethodPROPPATCH;
+	request.method = OCHTTPMethodPROPPATCH;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
 		[OCXMLNode elementWithName:@"D:propertyupdate" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:contentNodes]
 	];
@@ -73,16 +71,7 @@
 - (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
-	NSData *responseData = nil;
-
-	if (self.downloadRequest)
-	{
-		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
-	}
-	else
-	{
-		responseData = self.responseBodyData;
-	}
+	NSData *responseData = self.httpResponse.bodyData;
 
 	if (responseData != nil)
 	{
@@ -131,19 +120,10 @@
 	return (responseItems);
 }
 
-- (NSDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
+- (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath
 {
-	NSMutableDictionary <OCPath, OCConnectionDAVMultistatusResponse *> *responsesByPath = nil;
-	NSData *responseData = nil;
-
-	if (self.downloadRequest)
-	{
-		responseData = [NSData dataWithContentsOfURL:self.downloadedFileURL];
-	}
-	else
-	{
-		responseData = self.responseBodyData;
-	}
+	NSMutableDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *responsesByPath = nil;
+	NSData *responseData = self.httpResponse.bodyData;
 
 	if (responseData != nil)
 	{
@@ -165,7 +145,7 @@
 					nil];
 				}
 
-				[parser addObjectCreationClasses:@[ [OCConnectionDAVMultistatusResponse class] ]];
+				[parser addObjectCreationClasses:@[ [OCHTTPDAVMultistatusResponse class] ]];
 
 				if ([parser parse])
 				{
@@ -177,9 +157,9 @@
 
 						for (id parsedObject in parser.parsedObjects)
 						{
-							if ([parsedObject isKindOfClass:[OCConnectionDAVMultistatusResponse class]])
+							if ([parsedObject isKindOfClass:[OCHTTPDAVMultistatusResponse class]])
 							{
-								OCConnectionDAVMultistatusResponse *multiStatusResponse = (OCConnectionDAVMultistatusResponse *)parsedObject;
+								OCHTTPDAVMultistatusResponse *multiStatusResponse = (OCHTTPDAVMultistatusResponse *)parsedObject;
 
 								if (multiStatusResponse.path != nil)
 								{

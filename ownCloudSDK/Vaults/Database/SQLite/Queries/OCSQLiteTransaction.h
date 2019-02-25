@@ -19,8 +19,10 @@
 #import <Foundation/Foundation.h>
 #import "OCSQLiteQuery.h"
 
-typedef NSError *(^OCSQLiteTransactionBlock)(OCSQLiteDB *db, OCSQLiteTransaction *transaction);
-typedef void(^OCSQLiteTransactionCompletionHandler)(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error);
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NSError * _Nullable(^OCSQLiteTransactionBlock)(OCSQLiteDB *db, OCSQLiteTransaction *transaction);
+typedef void(^OCSQLiteTransactionCompletionHandler)(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError * _Nullable error);
 
 typedef NS_ENUM(NSUInteger, OCSQLiteTransactionType) //!< See https://www.sqlite.org/lang_transaction.html
 {
@@ -33,18 +35,20 @@ typedef NS_ENUM(NSUInteger, OCSQLiteTransactionType) //!< See https://www.sqlite
 
 @property(assign) OCSQLiteTransactionType type;
 
-@property(strong) NSArray <OCSQLiteQuery *> *queries; //!< An array of queries to execute in this transaction
-@property(copy) OCSQLiteTransactionBlock transactionBlock; //!< A custom block to execute in this transaction
+@property(nullable,strong) NSArray <OCSQLiteQuery *> *queries; //!< An array of queries to execute in this transaction
+@property(nullable,copy) OCSQLiteTransactionBlock transactionBlock; //!< A custom block to execute in this transaction
 
 @property(assign) BOOL commit; //!< After running .queries or transactionBlock, this value is checked to see if the transaction should be committed (YES) or rolled back (NO). Defaults to YES.
 
-@property(copy) OCSQLiteTransactionCompletionHandler completionHandler; //!< Called after commit or rollback of transaction.
+@property(nullable,copy) OCSQLiteTransactionCompletionHandler completionHandler; //!< Called after commit or rollback of transaction.
 
-@property(strong) id userInfo; //!< User info. Can be used to store any kind of object.
+@property(nullable,strong) id userInfo; //!< User info. Can be used to store any kind of object.
 
-+ (instancetype)transactionWithQueries:(NSArray <OCSQLiteQuery *> *)queries type:(OCSQLiteTransactionType)type completionHandler:(OCSQLiteTransactionCompletionHandler)completionHandler;
-+ (instancetype)transactionWithBlock:(OCSQLiteTransactionBlock)block type:(OCSQLiteTransactionType)type completionHandler:(OCSQLiteTransactionCompletionHandler)completionHandler;
++ (instancetype)transactionWithQueries:(NSArray <OCSQLiteQuery *> *)queries type:(OCSQLiteTransactionType)type completionHandler:(nullable OCSQLiteTransactionCompletionHandler)completionHandler;
++ (instancetype)transactionWithBlock:(OCSQLiteTransactionBlock)block type:(OCSQLiteTransactionType)type completionHandler:(nullable OCSQLiteTransactionCompletionHandler)completionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 extern NSErrorUserInfoKey OCSQLiteTransactionFailedRequestKey;

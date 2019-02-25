@@ -34,7 +34,7 @@
 {
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
 	{
-		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil]) != nil)
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 		{
 			[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierOAuth2 options:@{ OCAuthenticationMethodPresentingViewControllerKey : self } completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
 				[self appendLog:[NSString stringWithFormat:@"## generateAuthenticationDataWithMethod response:\nError: %@\nMethod: %@\nData: %@", error, authenticationMethodIdentifier, authenticationData]];
@@ -47,19 +47,19 @@
 					self->bookmark.authenticationData = authenticationData;
 
 					// Request resource
-					OCConnectionRequest *request = nil;
-					request = [OCConnectionRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
+					OCHTTPRequest *request = nil;
+					request = [OCHTTPRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 					[request setValue:@"json" forParameter:@"format"];
 		
-					[self->connection sendRequest:request toQueue:self->connection.commandQueue ephermalCompletionHandler:^(OCConnectionRequest *request, NSError *error) {
-						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\nTask: %@\n\nResponse: %@\n\nBody: %@", request, error, request.urlSessionTask, request.response, request.responseBodyAsString]];
+					[self->connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\n\nResponse: %@\n\nBody: %@", request, error, request.httpResponse, request.httpResponse.bodyAsString]];
 						
-						if (request.responseHTTPStatus.isSuccess)
+						if (request.httpResponse.status.isSuccess)
 						{
 							NSError *error = nil;
 							NSDictionary *capabilitiesDict;
 							
-							capabilitiesDict = [request responseBodyConvertedDictionaryFromJSONWithError:&error];
+							capabilitiesDict = [request.httpResponse bodyConvertedDictionaryFromJSONWithError:&error];
 							
 							[self appendLog:[NSString stringWithFormat:@"Capabilities: %@", capabilitiesDict]];
 							[self appendLog:[NSString stringWithFormat:@"Version: %@", [capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]]];
@@ -75,11 +75,11 @@
 {
 	if ((bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:self.serverURLField.text]]) != nil)
 	{
-		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark persistentStoreBaseURL:nil];
-		OCConnectionRequest *request = [OCConnectionRequest requestWithURL:connection.bookmark.url];
+		OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark];
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:connection.bookmark.url];
 
 		request.forceCertificateDecisionDelegation = YES;
-		request.ephermalRequestCertificateProceedHandler = ^(OCConnectionRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
@@ -102,7 +102,7 @@
 			proceedHandler(YES, nil);
 		};
 
-		[connection sendSynchronousRequest:request toQueue:connection.commandQueue];
+		[connection sendSynchronousRequest:request];
 	}
 }
 

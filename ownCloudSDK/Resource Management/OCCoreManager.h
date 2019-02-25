@@ -23,17 +23,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_block_t completionHandler); //!< Block performing an operation while no OCCore uses the bookmark. Call completionHandler when done.
 
-@interface OCCoreManager : NSObject <OCLogTagging>
+@interface OCCoreManager : NSObject <OCLogTagging, OCProgressResolver>
 {
 	NSMutableDictionary <NSUUID *, OCCore *> *_coresByUUID;
 	NSMutableDictionary <NSUUID *, NSNumber *> *_requestCountByUUID;
 
 	NSMutableDictionary <NSUUID *, NSMutableArray<OCCoreManagerOfflineOperation> *> *_queuedOfflineOperationsByUUID;
-	NSMutableDictionary <NSUUID *, NSNumber *> *_runningOfflineOperationByUUID;
-
-	NSMutableDictionary <NSUUID *, dispatch_group_t> *_shutdownWaitGroupByUUID;
 
 	BOOL _postFileProviderNotifications;
+
+	dispatch_queue_t _adminQueue;
 }
 
 #pragma mark - Shared instance
@@ -43,7 +42,7 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 @property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
 
 #pragma mark - Requesting and returning cores
-- (nullable OCCore *)requestCoreForBookmark:(OCBookmark *)bookmark completionHandler:(nullable void (^)(OCCore * _Nullable core, NSError * _Nullable error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.
+- (void)requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore * _Nullable core, NSError * _Nullable error))setupHandler completionHandler:(void (^)(OCCore * _Nullable core, NSError * _Nullable  error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.
 
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(nullable dispatch_block_t)completionHandler; //!< Return the core for this bookmark. If all users have returned the core, it is stopped.
 

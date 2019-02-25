@@ -26,14 +26,14 @@
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierCopy targetName:name targetParentItem:parentItem isRename:NO] resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierCopy targetName:name targetParentItem:parentItem isRename:NO] cancellable:NO resultHandler:resultHandler]);
 }
 
 - (nullable NSProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)name options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	if ((item == nil) || (name == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:name targetParentItem:parentItem isRename:NO] resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:name targetParentItem:parentItem isRename:NO] cancellable:NO resultHandler:resultHandler]);
 }
 
 - (nullable NSProgress *)renameItem:(OCItem *)item to:(NSString *)newFileName options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
@@ -53,7 +53,7 @@
 
 	if ((item == nil) || (newFileName == nil) || (parentItem == nil)) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:newFileName targetParentItem:parentItem isRename:YES] resultHandler:resultHandler]);
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCopyMove alloc] initWithItem:item action:OCSyncActionIdentifierMove targetName:newFileName targetParentItem:parentItem isRename:YES] cancellable:NO resultHandler:resultHandler]);
 }
 
 @end

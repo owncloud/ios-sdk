@@ -130,15 +130,18 @@
 
 	if (item != nil)
 	{
-		NSProgress *progress;
+		OCProgress *progress;
 		NSDictionary *options = self.options;
 
-		NSURL *temporaryDirectoryURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]  URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
-		NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:item.name];
+		NSURL *temporaryDirectoryURL = self.core.vault.temporaryDownloadURL;
+		NSURL *temporaryFileURL = [temporaryDirectoryURL URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
 
 		OCLogDebug(@"record %@ download: setting up directory", syncContext.syncRecord);
 
-		[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+		if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryDirectoryURL.path])
+		{
+			[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+		}
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
@@ -150,7 +153,10 @@
 
 			[syncContext.syncRecord addProgress:progress];
 
-			[self.core registerProgress:syncContext.syncRecord.progress forItem:item];
+			if (syncContext.syncRecord.progress.progress != nil)
+			{
+				[self.core registerProgress:syncContext.syncRecord.progress.progress forItem:item];
+			}
 		}
 
 		// Transition to processing
@@ -422,6 +428,12 @@
 	}
 
 	return (resolutionError);
+}
+
+#pragma mark - Restore progress
+- (OCItem *)itemToRestoreProgressRegistrationFor
+{
+	return (self.archivedServerItem);
 }
 
 #pragma mark - NSCoding
