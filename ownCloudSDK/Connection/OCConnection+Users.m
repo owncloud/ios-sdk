@@ -28,6 +28,8 @@
 	OCHTTPRequest *request;
 
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
+	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+
 	[request setValue:@"json" forParameter:@"format"];
 
 	[self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {

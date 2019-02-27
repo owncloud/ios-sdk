@@ -42,7 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Requirements
 - (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError;
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline canProvideAuthenticationForRequests:(void(^)(NSError *error, BOOL authenticationIsAvailable))availabilityHandler;
 
 #pragma mark - Scheduling
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
@@ -129,6 +128,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)cancelRequest:(nullable OCHTTPRequest *)request; //!< Cancels a request
 - (void)cancelRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID queuedOnly:(BOOL)queuedOnly; //!< Cancels all requests for a partitionID (or only those in the queue if queuedOnly is YES)
 - (void)cancelNonCriticalRequestsForPartitionID:(nullable OCHTTPPipelinePartitionID)partitionID; //!< Cancels all non critical requests. If a partitionID is provided, cancels only non-critical requests for that partition.
+- (void)finishPendingRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID withError:(NSError *)error filter:(BOOL(^)(OCHTTPPipeline *pipeline, OCHTTPPipelineTask *task))filter;
 
 #pragma mark - Scheduling
 - (void)setPipelineNeedsScheduling;
@@ -154,6 +154,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Progress
 - (nullable NSProgress *)progressForRequestID:(OCHTTPRequestID)requestID;
+
+#pragma mark - Internal job queue
+- (void)queueBlock:(dispatch_block_t)block withBusy:(BOOL)withBusy; //!< Add a block for execution on the internal job queue.
 
 @end
 

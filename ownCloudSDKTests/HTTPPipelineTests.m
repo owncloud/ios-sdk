@@ -12,7 +12,6 @@
 
 #pragma mark - Partition Simulator
 typedef BOOL(^PartitionSimulatorMeetsSignalRequirements)(OCHTTPPipeline *pipeline, NSSet<OCConnectionSignalID> *requiredSignals, NSError **failWithError);
-typedef BOOL(^PartitionSimulatorCanProvideAuthenticationForRequests)(OCHTTPPipeline *pipeline, void(^availabilityHandler)(NSError *error, BOOL authenticationIsAvailable));
 
 typedef OCHTTPRequest *(^PartitionSimulatorPrepareRequestForScheduling)(OCHTTPPipeline *pipeline, OCHTTPRequest *request);
 typedef NSError *(^PartitionSimulatorPostProcessFinishedTask)(OCHTTPPipeline *pipeline, OCHTTPPipelineTask *task, NSError *error);
@@ -30,7 +29,6 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 @property(nullable,strong) OCCertificate *certificate; //!< The certificate used by the partition.
 
 @property(copy) PartitionSimulatorMeetsSignalRequirements meetsSignalRequirements;
-@property(copy) PartitionSimulatorCanProvideAuthenticationForRequests canProvideAuthenticationForRequests;
 
 @property(copy) PartitionSimulatorPrepareRequestForScheduling prepareRequestForScheduling;
 @property(copy) PartitionSimulatorPostProcessFinishedTask postProcessFinishedTask;
@@ -67,16 +65,6 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	if (self.meetsSignalRequirements != nil)
 	{
 		return (self.meetsSignalRequirements(pipeline, requiredSignals, outError));
-	}
-
-	return (YES);
-}
-
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline canProvideAuthenticationForRequests:(void(^)(NSError *error, BOOL authenticationIsAvailable))availabilityHandler
-{
-	if (self.canProvideAuthenticationForRequests != nil)
-	{
-		return (self.canProvideAuthenticationForRequests(pipeline, availabilityHandler));
 	}
 
 	return (YES);

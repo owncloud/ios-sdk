@@ -235,7 +235,7 @@
 + (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
 {
 	NSString *contentType = headers[@"Content-Type"];
-	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"];
+	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"] || [contentType isEqualToString:@"application/x-www-form-urlencoded"];
 
 	if (url != nil)
 	{
@@ -338,7 +338,6 @@
 
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
-		self.skipAuthorization  = [decoder decodeBoolForKey:@"skipAuthorization"];
 
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
@@ -380,7 +379,6 @@
 
 	[coder encodeFloat:_priority 		forKey:@"priority"];
 	[coder encodeObject:_groupID 		forKey:@"groupID"];
-	[coder encodeBool:_skipAuthorization 	forKey:@"skipAuthorization"];
 
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];

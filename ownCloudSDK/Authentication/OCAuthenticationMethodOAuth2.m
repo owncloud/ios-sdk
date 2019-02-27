@@ -334,6 +334,8 @@ OCAuthenticationMethodAutoRegister
 					if ((error==nil) && (authenticationData!=nil))
 					{
 						connection.bookmark.authenticationData = authenticationData;
+
+						[self flushCachedAuthenticationSecret];
 					}
 				
 					availabilityHandler(error, (error==nil));
@@ -373,8 +375,6 @@ OCAuthenticationMethodAutoRegister
 	if ((tokenRequest = [OCHTTPRequest requestWithURL:[connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]]) != nil)
 	{
 		tokenRequest.method = OCHTTPMethodPOST; // Use POST
-		
-		tokenRequest.skipAuthorization = YES;
 		
 		[tokenRequest addParameters:parameters];
 

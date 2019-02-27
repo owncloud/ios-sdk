@@ -74,7 +74,6 @@
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-			
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",
 		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
@@ -137,8 +136,10 @@
 		}
 
 		_pendingAuthenticationAvailabilityHandlers = [NSMutableArray new];
-		_signals = [NSMutableSet new];
+		_signals = [[NSMutableSet alloc] initWithObjects:OCConnectionSignalIDAuthenticationAvailable, nil];
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
+
+		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		// Get pipelines
 		[self spinUpPipelines];
@@ -345,7 +346,7 @@
 	}
 
 	// Authorization
-	if (!request.skipAuthorization)
+	if ([request.requiredSignals containsObject:OCConnectionSignalIDAuthenticationAvailable])
 	{
 		// Apply authorization to request
 		OCAuthenticationMethod *authenticationMethod;
@@ -428,7 +429,7 @@
 #pragma mark - Post process request after it finished
 - (NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
 {
-	if (!task.request.skipAuthorization)
+	if ([task.request.requiredSignals containsObject:OCConnectionSignalIDAuthenticationAvailable])
 	{
 		OCAuthenticationMethod *authMethod;
 
@@ -441,13 +442,35 @@
 	return (error);
 }
 
-- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline canProvideAuthenticationForRequests:(nonnull void (^)(NSError * _Nonnull, BOOL))availabilityHandler
-{
-	return ([self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:availabilityHandler]);
-}
-
 - (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
+	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
+
+	if (authenticationAvailable)
+	{
+		authenticationAvailable = [self canSendAuthenticatedRequestsWithAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+			// Set OCConnectionSignalIDAuthenticationAvailable to YES regardless of authenticationIsAvailable's value in order to ensure -[OCConnection canSendAuthenticatedRequestsForQueue:availabilityHandler:] is called ever again (for requests queued in the future)
+			[pipeline queueBlock:^{
+				[self setSignal:OCConnectionSignalIDAuthenticationAvailable on:YES];
+			} withBusy:YES];
+
+			if (authenticationIsAvailable)
+			{
+				// Authentication is now available => schedule queued requests
+				[pipeline setPipelineNeedsScheduling];
+			}
+			else
+			{
+				// Authentication is not available => end scheduled requests that need authentication with error
+				[pipeline finishPendingRequestsForPartitionID:self.partitionID withError:error filter:^BOOL(OCHTTPPipeline * _Nonnull pipeline, OCHTTPPipelineTask * _Nonnull task) {
+					return ([task.request.requiredSignals containsObject:OCConnectionSignalIDAuthenticationAvailable]);
+				}];
+			}
+		}];
+
+		[self setSignal:OCConnectionSignalIDAuthenticationAvailable on:authenticationAvailable];
+	}
+
 	return ([self meetsSignalRequirements:requiredSignals]);
 }
 
@@ -601,8 +624,6 @@
 		// Check status
 		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
-			statusRequest.skipAuthorization = YES;
-
 			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if ((error == nil) && (response.status.isSuccess))
 				{
@@ -659,6 +680,7 @@
 								OCHTTPDAVRequest *davRequest;
 								
 								davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+								davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 								
 								[davRequest.xmlRequestPropAttribute addChildren:@[
 									[OCXMLNode elementWithName:@"D:supported-method-set"],
@@ -783,8 +805,6 @@
 
 	if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
-		statusRequest.skipAuthorization = YES;
-
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			if ((error == nil) && (response.status.isSuccess))
 			{
@@ -892,6 +912,7 @@
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
+		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -2067,3 +2088,5 @@ OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
+
+OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";

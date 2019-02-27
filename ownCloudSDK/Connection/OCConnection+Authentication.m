@@ -79,8 +79,6 @@
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
 		
-		request.skipAuthorization = YES;
-		
 		dispatch_group_enter(preloadCompletionGroup);
 		
 		request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
