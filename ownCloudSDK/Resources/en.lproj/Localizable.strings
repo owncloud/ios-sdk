@@ -79,6 +79,11 @@
 /* Retrieving file list */
 "Retrieving file list for %@…" = "Retrieving file list for %@…";
 
+/* Status */
+"Pending" = "Pending";
+"Running" = "Running";
+"Failed" = "Failed";
+
 /* Update */
 "\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
 "Update failed with status code %d" = "Update failed with status code %d";
