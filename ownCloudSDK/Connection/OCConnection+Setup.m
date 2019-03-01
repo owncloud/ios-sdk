@@ -100,7 +100,6 @@
 		NSError *error = nil;
 		
 		request = [OCHTTPRequest requestWithURL:url];
-		request.skipAuthorization = YES;
 		request.forceCertificateDecisionDelegation = YES;
 		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 			switch (validationResult)

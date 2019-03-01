@@ -173,8 +173,6 @@ OCAuthenticationMethodAutoRegister
 
 			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
 
-			request.skipAuthorization = YES;
-
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{

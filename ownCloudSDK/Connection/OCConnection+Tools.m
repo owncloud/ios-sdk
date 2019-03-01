@@ -53,7 +53,7 @@
 	
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
-		return ([[_bookmark.url URLByAppendingPathComponent:endpointPath] absoluteURL]);
+		return ([self URLForEndpointPath:endpointPath]);
 	}
 
 	return (nil);
@@ -63,7 +63,7 @@
 {
 	if (endpointPath != nil)
 	{
-		return ([[NSURL URLWithString:endpointPath relativeToURL:_bookmark.url] absoluteURL]);
+		return ([[_bookmark.url URLByAppendingPathComponent:endpointPath] absoluteURL]);
 	}
 	
 	return (_bookmark.url);
