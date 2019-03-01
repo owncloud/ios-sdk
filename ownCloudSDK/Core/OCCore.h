@@ -58,7 +58,7 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 	OCCoreConnectionStatusOnline,		//!< The server and client device are online
 };
 
-typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignal)
+typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 {
 	OCCoreConnectionStatusSignalReachable = (1 << 0), //!< The server is reachable
 	OCCoreConnectionStatusSignalAvailable = (1 << 1), //!< The server is available (not in maintenance mode, not responding with unexpected responses)

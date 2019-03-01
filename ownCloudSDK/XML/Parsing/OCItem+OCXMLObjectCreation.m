@@ -140,7 +140,50 @@
 				{
 					item.isFavorite = (((NSString *)value).integerValue) ? (__bridge id)kCFBooleanTrue : (__bridge id)kCFBooleanFalse;
 				}
-			} copy]
+			} copy],
+
+			@"oc:share-type" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					if (((NSString *)value).length > 0)
+					{
+						switch (((NSString *)value).integerValue)
+						{
+							case OCShareNativeTypeUserShare:
+								item.shareTypesMask |= OCShareTypesMaskUserShare;
+							break;
+
+							case OCShareNativeTypeGroupShare:
+								item.shareTypesMask |= OCShareTypesMaskGroupShare;
+							break;
+
+							case OCShareNativeTypeLink:
+								item.shareTypesMask |= OCShareTypesMaskLink;
+							break;
+
+							case OCShareNativeTypeGuest:
+								item.shareTypesMask |= OCShareTypesMaskGuest;
+							break;
+
+							case OCShareNativeTypeRemote:
+								item.shareTypesMask |= OCShareTypesMaskRemote;
+							break;
+						}
+					}
+				}
+			} copy],
+
+			@"oc:owner-display-name" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					if (((NSString *)value).length > 0)
+					{
+						item.ownerDisplayName = value;
+					}
+				}
+			} copy],
+
+
 		};
 	});
 
@@ -193,6 +236,10 @@
 								[resourcetypeNode enumerateChildNodesWithName:@"d:collection" usingBlock:^(OCXMLParserNode *collectionNode) {
 									isCollection = YES;
 								}];
+							}];
+
+							[propNode enumerateChildNodesWithName:@"oc:share-types" usingBlock:^(OCXMLParserNode *shareTypesNode) {
+								[shareTypesNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];
 							}];
 
 							item.type = isCollection ? OCItemTypeCollection : OCItemTypeFile;

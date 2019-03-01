@@ -851,6 +851,8 @@
 
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
+		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
+
 		[davRequest.xmlRequestPropAttribute addChildren:@[
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
@@ -861,17 +863,17 @@
 			[OCXMLNode elementWithName:@"D:getetag"],
 //			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
 //			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
-			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"favorite" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
 
-//			[OCXMLNode elementWithName:@"tags" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"share-types" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-count" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-href" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-unread" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"owner-display-name" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+//			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
 		]];
 	}
 
