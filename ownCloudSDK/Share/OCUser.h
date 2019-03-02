@@ -18,19 +18,25 @@
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCUser : NSObject <NSSecureCoding>
 {
 	UIImage *_avatar;
 }
 
-@property(strong) NSString *displayName; //!< Display name of the user (f.ex. "John Appleseed")
+@property(nullable,strong) NSString *displayName; //!< Display name of the user (f.ex. "John Appleseed")
 
-@property(strong) NSString *userName; //!< User name of the user (f.ex. "jappleseed")
+@property(nullable,strong) NSString *userName; //!< User name of the user (f.ex. "jappleseed")
 
-@property(strong) NSString *emailAddress; //!< Email address of the user (f.ex. "jappleseed@owncloud.org")
+@property(nullable,strong) NSString *emailAddress; //!< Email address of the user (f.ex. "jappleseed@owncloud.org")
 
-@property(strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
+@property(nullable,strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
 
-@property(readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
+@property(nullable,readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
+
++ (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
 
 @end
+
+NS_ASSUME_NONNULL_END

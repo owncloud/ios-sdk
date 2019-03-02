@@ -18,12 +18,12 @@
 
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
-#import "OCShare.h"
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 
 @class OCFile;
 @class OCCore;
+@class OCShare;
 
 typedef NS_ENUM(NSInteger, OCItemType)
 {
@@ -76,6 +76,8 @@ typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 	OCItemCloudStatusLocallyModified,	//!< Item is a modified copy of a file on the server
 	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
 };
+
+#import "OCShare.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

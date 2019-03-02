@@ -197,6 +197,58 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+#pragma mark - SHARING
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSUInteger,OCConnectionShareScope)
+{
+	OCConnectionShareScopeSharedByUser,		//!< Return shares for items shared by the user
+	OCConnectionShareScopeSharedWithUser,		//!< Return shares for items shared with the user
+	OCConnectionShareScopePendingCloudShares,	//!< Return pending cloud shares
+	OCConnectionShareScopeAcceptedCloudShares,	//!< Return accepted cloud shares
+	OCConnectionShareScopeItem,			//!< Return shares for the provided item itself (current user only)
+	OCConnectionShareScopeItemWithReshares,		//!< Return shares for the provided item itself (all, not just current user)
+	OCConnectionShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
+};
+
+
+typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+
+@interface OCConnection (Sharing)
+
+#pragma mark - Retrieval
+- (nullable NSProgress *)retrieveSharesWithScope:(OCConnectionShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the shares for the given scope and (optional) item.
+
+#pragma mark - Creation
+
+/*
+	Shares:
+	- [x] retrieve all shares
+		- [x] shared with user
+		- [x] shared by user
+
+	- [x] retrieve shares for item shared by user
+		- [x] path
+		- [x] reshares
+		- [x] all subitems (collections only)
+
+	- create new share
+	- delete share
+
+	Cloud shares:
+	- [x] get pending cloud shares
+	- [x] get existing cloud shares
+	- accept / decline pending cloud shares
+	- delete accepted cloud share
+
+	Recipients:
+	-
+*/
+
+@end
+
+NS_ASSUME_NONNULL_END
+
 #pragma mark - USERS
 @interface OCConnection (Users)
 
@@ -250,6 +302,8 @@ extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
+extern OCConnectionEndpointID OCConnectionEndpointIDShares;
+extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]

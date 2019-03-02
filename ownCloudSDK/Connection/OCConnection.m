@@ -79,11 +79,13 @@
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
+		OCConnectionEndpointIDShares			: @"ocs/v1.php/apps/files_sharing/api/v1/shares",
+		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"9.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
-		OCConnectionAllowCellular				: @(YES)
+		OCConnectionAllowCellular			: @(YES)
 	});
 }
 
@@ -854,26 +856,30 @@
 		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
 
 		[davRequest.xmlRequestPropAttribute addChildren:@[
+			// WebDAV properties
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
-			// [OCXMLNode elementWithName:@"D:creationdate"],
 			[OCXMLNode elementWithName:@"D:getcontentlength"],
-			// [OCXMLNode elementWithName:@"D:displayname"],
 			[OCXMLNode elementWithName:@"D:getcontenttype"],
 			[OCXMLNode elementWithName:@"D:getetag"],
-//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
-			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
+
+			// OC properties
 			[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
 			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
 			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
+
+//		 	[OCXMLNode elementWithName:@"D:creationdate"],
+//		 	[OCXMLNode elementWithName:@"D:displayname"],
+//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
 
 //			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
 //			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
 //			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
 //			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
 		]];
 	}
 
@@ -2075,6 +2081,8 @@ OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
 OCConnectionEndpointID OCConnectionEndpointIDThumbnail = @"endpoint-thumbnail";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
+OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
+OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

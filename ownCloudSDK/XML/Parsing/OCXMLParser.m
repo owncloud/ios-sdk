@@ -25,11 +25,6 @@
 
 @implementation OCXMLParser
 
-@synthesize options = _options;
-@synthesize errors = _errors;
-@synthesize parsedObjects = _parsedObjects;
-@synthesize forceRetain = _forceRetain;
-
 #pragma mark - Init & Dealloc
 - (instancetype)init
 {
@@ -141,6 +136,27 @@
 			}
 		}
 	}
+}
+
+#pragma mark - Properties
+- (NSMutableDictionary<NSString *,id> *)userInfo
+{
+	if (_userInfo == nil)
+	{
+		_userInfo = [NSMutableDictionary new];
+	}
+
+	return (_userInfo);
+}
+
+- (NSMutableDictionary<NSString *,id> *)options
+{
+	if (_options == nil)
+	{
+		_options = [NSMutableDictionary new];
+	}
+
+	return (_options);
 }
 
 #pragma mark - Parse

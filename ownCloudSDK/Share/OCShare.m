@@ -20,13 +20,39 @@
 
 @implementation OCShare
 
-@synthesize type;
+@dynamic canRead;
+@dynamic canUpdate;
+@dynamic canCreate;
+@dynamic canDelete;
+@dynamic canShare;
 
-@synthesize url;
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = OCShareTypeUnknown;
+	}
 
-@synthesize expirationDate;
+	return (self);
+}
 
-@synthesize users;
+#pragma mark - Permission convenience
+#define BIT_ACCESSOR(getMethodName,setMethodName,flag) \
+- (BOOL)getMethodName \
+{ \
+	return ((_permissions & flag) == flag); \
+} \
+\
+- (void)setMethodName:(BOOL)flagValue \
+{ \
+	_permissions = (_permissions & ~flag) | (flagValue ? flag : 0); \
+}
+
+BIT_ACCESSOR(canRead,	setCanRead,	OCSharePermissionsMaskRead);
+BIT_ACCESSOR(canUpdate,	setCanUpdate,	OCSharePermissionsMaskUpdate);
+BIT_ACCESSOR(canCreate,	setCanCreate,	OCSharePermissionsMaskCreate);
+BIT_ACCESSOR(canDelete,	setCanDelete,	OCSharePermissionsMaskDelete);
+BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
@@ -38,10 +64,9 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		self.type = [decoder decodeIntegerForKey:@"type"];
-		self.url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
-		self.expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
-		self.users = [decoder decodeObjectOfClass:[NSArray class] forKey:@"users"];
+		_type = [decoder decodeIntegerForKey:@"type"];
+		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+		_expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
 	}
 	
 	return (self);
@@ -52,7 +77,6 @@
 	[coder encodeInteger:self.type forKey:@"type"];
 	[coder encodeObject:self.url forKey:@"url"];
 	[coder encodeObject:self.expirationDate forKey:@"expirationDate"];
-	[coder encodeObject:self.users forKey:@"users"];
 }
 
 @end

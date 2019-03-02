@@ -18,9 +18,16 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSDate (OCDateParser)
 
-+ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error;
-- (NSString *)davDateString;
++ (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError * _Nullable *)error;
+- (nullable NSString *)davDateString;
+
++ (instancetype)dateParsedFromCompactUTCString:(NSString *)dateString error:(NSError * _Nullable *)error;
+- (nullable NSString *)compactUTCString;
 
 @end
+
+NS_ASSUME_NONNULL_END

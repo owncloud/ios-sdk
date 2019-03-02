@@ -149,23 +149,23 @@
 					{
 						switch (((NSString *)value).integerValue)
 						{
-							case OCShareNativeTypeUserShare:
+							case OCShareTypeUserShare:
 								item.shareTypesMask |= OCShareTypesMaskUserShare;
 							break;
 
-							case OCShareNativeTypeGroupShare:
+							case OCShareTypeGroupShare:
 								item.shareTypesMask |= OCShareTypesMaskGroupShare;
 							break;
 
-							case OCShareNativeTypeLink:
+							case OCShareTypeLink:
 								item.shareTypesMask |= OCShareTypesMaskLink;
 							break;
 
-							case OCShareNativeTypeGuest:
+							case OCShareTypeGuest:
 								item.shareTypesMask |= OCShareTypesMaskGuest;
 							break;
 
-							case OCShareNativeTypeRemote:
+							case OCShareTypeRemote:
 								item.shareTypesMask |= OCShareTypesMaskRemote;
 							break;
 						}

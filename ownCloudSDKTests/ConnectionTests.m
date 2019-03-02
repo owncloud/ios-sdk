@@ -18,7 +18,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import <ownCloudSDK/NSString+OCVersionCompare.h>
 
 #import "OCTestTarget.h"
 

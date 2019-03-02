@@ -24,6 +24,16 @@
 @synthesize displayName = _displayName;
 @synthesize avatarData = _avatarData;
 
++ (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName
+{
+	OCUser *user = [OCUser new];
+
+	user.userName = userName;
+	user.displayName = displayName;
+
+	return (user);
+}
+
 - (UIImage *)avatar
 {
 	if ((_avatar == nil) && (_avatarData != nil))
