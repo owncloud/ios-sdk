@@ -20,8 +20,10 @@
 - (void)testSharesRetrieval
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
-	XCTestExpectation *expectSharesRetrieved = [self expectationWithDescription:@"Received file list"];
+	XCTestExpectation *expectShareCreated = [self expectationWithDescription:@"Created share"];
+	XCTestExpectation *expectSharesRetrieved = [self expectationWithDescription:@"Received share list"];
 	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Disconnected"];
 	OCConnection *connection = nil;
 
 	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
@@ -31,19 +33,30 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		if (error == nil)
-		{
-			[connection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
-				OCLogDebug(@"error=%@, shares=%@", error, shares);
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection createShare:[OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				OCLog(@"error=%@, newShare=%@", event.error, event.result);
 
-				[expectSharesRetrieved fulfill];
+				[expectShareCreated fulfill];
 
-				[connection disconnectWithCompletionHandler:^{
-					[expectDisconnect fulfill];
+				[connection retrieveItemListAtPath:@"/Documents/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					[expectLists fulfill];
+
+					if (error == nil)
+					{
+						[connection retrieveSharesWithScope:OCConnectionShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
+							OCLogDebug(@"error=%@, shares=%@", error, shares);
+
+							[expectSharesRetrieved fulfill];
+
+							[connection disconnectWithCompletionHandler:^{
+								[expectDisconnect fulfill];
+							}];
+						}];
+					}
 				}];
-			}];
-		}
-
+			} userInfo:nil ephermalUserInfo:nil]];
+		}];
 		[expectConnect fulfill];
 	}];
 

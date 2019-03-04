@@ -34,6 +34,9 @@ typedef NS_ENUM(NSUInteger, OCRecipientType) {
 @property(nullable,strong) OCGroup *group;
 @property(nullable,strong) OCUser *user;
 
+@property(nullable,strong,nonatomic) NSString *identifier; //!< Depending on type, returns user.userName or group.identifier
+@property(nullable,strong,nonatomic) NSString *displayName; //!< Depending on type, returns user.displayName or group.name
+
 + (instancetype)recipientWithUser:(OCUser *)user;
 + (instancetype)recipientWithGroup:(OCGroup *)group;
 

@@ -29,7 +29,6 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	// Creation
 	OCEventTypeCreateFolder,
 	OCEventTypeCreateEmptyFile,
-	OCEventTypeCreateShare,
 
 	// Modification
 	OCEventTypeMove,
@@ -43,7 +42,14 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	// Metadata
 	OCEventTypeRetrieveThumbnail,
 	OCEventTypeRetrieveItemList,
+	OCEventTypeRetrieveShares,
 	OCEventTypeUpdate,
+
+	// Sharing
+	OCEventTypeCreateShare,
+	OCEventTypeUpdateShare,
+	OCEventTypeDeleteShare,
+	OCEventTypeDecideOnShare,
 
 	// Issues
 	OCEventTypeIssueResponse

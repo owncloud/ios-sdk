@@ -22,6 +22,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 {
 	OCErrorInternal, 		//!< Internal error
 	OCErrorInsufficientParameters, 	//!< Insufficient parameters
+	OCErrorUnknown,			//!< Unknown error
 
 	OCErrorAuthorizationFailed, 		//!< Authorization failed
 	OCErrorAuthorizationRedirect, 		//!< Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL. The userInfo of the error contains the alternative server URL as value for the key OCAuthorizationMethodAlternativeServerURLKey
@@ -75,7 +76,15 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorRunningOperation, //!< A running operation prevents execution
 
-	OCErrorInvalidProcess //!< Invalid process.
+	OCErrorInvalidProcess, //!< Invalid process.
+
+	OCErrorShareUnauthorized, //!< Not authorized to access shares
+	OCErrorShareUnavailable,  //!< Shares are unavailable.
+	OCErrorShareItemNotADirectory, //!< Item is not a directory.
+	OCErrorShareItemNotFound,  //!< Item not found.
+	OCErrorShareNotFound,  	   //!< Share not found.
+	OCErrorShareUnknownType,   //!< Unknown share type.
+	OCErrorSharePublicUploadDisabled //!< Public upload was disabled by the administrator.
 };
 
 @class OCIssue;

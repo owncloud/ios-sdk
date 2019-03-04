@@ -30,4 +30,10 @@
 	return (group);
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, name: %@>", NSStringFromClass(self.class), self, _identifier, _name]);
+}
+
 @end

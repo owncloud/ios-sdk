@@ -213,13 +213,55 @@ typedef NS_ENUM(NSUInteger,OCConnectionShareScope)
 
 
 typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
 
 @interface OCConnection (Sharing)
 
 #pragma mark - Retrieval
 - (nullable NSProgress *)retrieveSharesWithScope:(OCConnectionShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the shares for the given scope and (optional) item.
 
-#pragma mark - Creation
+- (nullable NSProgress *)retrieveShareWithID:(OCShareID)shareID options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareCompletionHandler)completionHandler; //!< Retrieves the share for the given shareID.
+
+#pragma mark - Creation and deletion
+/**
+ Creates a new share on the server.
+
+ @param share The OCShare object with the share to create. Use the OCShare convenience constructors for this object.
+ @param options Options (pass nil for now).
+ @param eventTarget Event target to receive the outcome via the event's .error and .result. The latter can contain an OCShare object.
+ @return A progress object tracking the underlying HTTP request.
+ */
+- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+
+/**
+ Updates an existing share with changes.
+
+ @param share The share to update (without changes).
+ @param performChanges A block within which the changes to the share need to be performed (will be called immediately) so the method can detect what changed and perform updates on the server as needed.
+ @param eventTarget Event target to receive the outcome via the event's .error and .result. The latter can contain an OCShare object.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges resultTarget:(OCEventTarget *)eventTarget;
+
+/**
+ Deletes an existing share.
+
+ @param share The share to delete.
+ @param eventTarget Event target to receive the outcome via the event's .error.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)deleteShare:(OCShare *)share resultTarget:(OCEventTarget *)eventTarget;
+
+#pragma mark - Federated share management
+/**
+ Make a decision on whether to allow or reject a request for federated sharing.
+
+ @param share The share to make the decision on.
+ @param accept YES to allow the request for sharing. NO to decline it.
+ @param eventTarget Event target to receive the outcome via the event's .error.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept resultTarget:(OCEventTarget *)eventTarget;
 
 /*
 	Shares:
@@ -243,6 +285,11 @@ typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable e
 
 	Recipients:
 	-
+
+	--
+
+	Source code:
+	https://github.com/owncloud/core/blob/master/apps/files_sharing/lib/Controller/Share20OcsController.php
 */
 
 @end

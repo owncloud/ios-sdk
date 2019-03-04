@@ -20,6 +20,9 @@
 
 @implementation OCRecipient
 
+@dynamic identifier;
+@dynamic displayName;
+
 + (instancetype)recipientWithUser:(OCUser *)user
 {
 	OCRecipient *recipient = [self new];
@@ -38,6 +41,57 @@
 	recipient.group = group;
 
 	return (recipient);
+}
+
+- (NSString *)identifier
+{
+	switch (_type)
+	{
+		case OCRecipientTypeUser:
+			return (_user.userName);
+		break;
+
+		case OCRecipientTypeGroup:
+			return (_group.identifier);
+		break;
+	}
+
+	return (nil);
+}
+
+- (NSString *)displayName
+{
+	switch (_type)
+	{
+		case OCRecipientTypeUser:
+			return (_user.displayName);
+		break;
+
+		case OCRecipientTypeGroup:
+			return (_group.name);
+		break;
+	}
+
+	return (nil);
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	NSString *typeAsString = @"unknown";
+
+	switch (_type)
+	{
+		case OCRecipientTypeUser:
+			typeAsString = @"user";
+		break;
+
+		case OCRecipientTypeGroup:
+			typeAsString = @"group";
+		break;
+	}
+
+	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@"")]);
 }
 
 @end

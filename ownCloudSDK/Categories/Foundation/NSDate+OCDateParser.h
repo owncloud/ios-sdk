@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)dateParsedFromCompactUTCString:(NSString *)dateString error:(NSError * _Nullable *)error;
 - (nullable NSString *)compactUTCString;
+- (nullable NSString *)compactUTCStringDateOnly;
 
 @end
 

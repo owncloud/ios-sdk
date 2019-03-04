@@ -47,7 +47,7 @@
 		{
 			[dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
 			[dateFormatter setTimeZone:[NSTimeZone timeZoneWithName:@"UTC"]];
-			[dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ssZ"];
+			[dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
 		}
 	});
 
@@ -72,6 +72,18 @@
 - (NSString *)compactUTCString
 {
 	return ([[[self class] _ocDateFormatterCompactUTC] stringFromDate:self]);
+}
+
+- (NSString *)compactUTCStringDateOnly
+{
+	NSString *dateString = [[[self class] _ocDateFormatterCompactUTC] stringFromDate:self];
+
+	if (dateString.length >= 10)
+	{
+		return ([dateString substringToIndex:10]);
+	}
+
+	return (nil);
 }
 
 @end

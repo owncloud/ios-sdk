@@ -414,4 +414,199 @@ x-frame-options: SAMEORIGIN
  </data>
 </ocs>
 
+
+// Share creator of public folder share (Download / View)
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/shares
+Request-ID: 15DD4E9B-C96C-4509-A7C7-3535549697A5
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Mon, 04 Mar 2019 13:49:04 GMT
+x-robots-tag: none
+Content-Length: 439
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>4</id>
+   <share_type>3</share_type>
+   <uid_owner>admin</uid_owner>
+   <displayname_owner>admin</displayname_owner>
+   <permissions>1</permissions>
+   <stime>1551706852</stime>
+   <parent/>
+   <expiration/>
+   <token>MFvU91PDCvAfzWh</token>
+   <uid_file_owner>admin</uid_file_owner>
+   <displayname_file_owner>admin</displayname_file_owner>
+   <path>/Photos</path>
+   <item_type>folder</item_type>
+   <mimetype>httpd/unix-directory</mimetype>
+   <storage_id>home::admin</storage_id>
+   <storage>2</storage>
+   <item_source>86</item_source>
+   <file_source>86</file_source>
+   <file_parent>9</file_parent>
+   <file_target>/Photos</file_target>
+   <share_with/>
+   <share_with_displayname/>
+   <name>Public link</name>
+   <url>https://demo.owncloud.com/s/MFvU91PDCvAfzWh</url>
+   <mail_send>0</mail_send>
+  </element>
+ </data>
+</ocs>
+
+// Share creator of public folder share (Download / View / Upload)
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/shares
+Request-ID: 2B20D73E-3BBD-40F5-AD11-3174F8F5C474
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Mon, 04 Mar 2019 13:43:41 GMT
+x-robots-tag: none
+Content-Length: 440
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>4</id>
+   <share_type>3</share_type>
+   <uid_owner>admin</uid_owner>
+   <displayname_owner>admin</displayname_owner>
+   <permissions>15</permissions>
+   <stime>1551706852</stime>
+   <parent/>
+   <expiration/>
+   <token>PDCvAfMFvU91zWh</token>
+   <uid_file_owner>admin</uid_file_owner>
+   <displayname_file_owner>admin</displayname_file_owner>
+   <path>/Photos</path>
+   <item_type>folder</item_type>
+   <mimetype>httpd/unix-directory</mimetype>
+   <storage_id>home::admin</storage_id>
+   <storage>2</storage>
+   <item_source>86</item_source>
+   <file_source>86</file_source>
+   <file_parent>9</file_parent>
+   <file_target>/Photos</file_target>
+   <share_with/>
+   <share_with_displayname/>
+   <name>Public link</name>
+   <url>https://demo.owncloud.com/s/PDCvAfMFvU91zWh</url>
+   <mail_send>0</mail_send>
+  </element>
+ </data>
+</ocs>
+
+// Share creator of public folder share (Filedrop / Upload only)
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/shares
+Request-ID: 586C0F46-DEB5-4DA8-8219-74CF94C026EE
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Set-Cookie: ocs7se16w8jy=t58hm9ummjs2fh7upiottk14sk; path=/; secure; HttpOnly, oc_sessionPassphrase=1FcdWiNnjq75zIfeJrQhKbfpNKK4fXJ35FY7iI4N43u68gWCrsoyKDM1uHTnDhuqQKOVELYHZ0AQDeufj%2FKB7wIPms0jZCHZAhuHUE0b7EDQXsL8VmrriipV4UPspjNd; path=/; secure; HttpOnly, ocs7se16w8jy=lbso12odlonjsjcoqmdjiolv6b; path=/; secure; HttpOnly, cookie_test=test; expires=Mon, 04-Mar-2019 14:50:03 GMT; Max-Age=3600, oc_username=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; secure; HttpOnly, oc_token=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; secure; HttpOnly, oc_remember_login=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; secure; HttpOnly, oc_username=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; secure; HttpOnly, oc_token=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; secure; HttpOnly, oc_remember_login=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; secure; HttpOnly, ocs7se16w8jy=q5g576nfftoco3otnn0t5plcnq; path=/; secure; HttpOnly, ocs7se16w8jy=07gfceqikgglubvaq56vq86en4; path=/; secure; HttpOnly
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Mon, 04 Mar 2019 13:50:02 GMT
+x-robots-tag: none
+Content-Length: 437
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>4</id>
+   <share_type>3</share_type>
+   <uid_owner>admin</uid_owner>
+   <displayname_owner>admin</displayname_owner>
+   <permissions>4</permissions>
+   <stime>1551706852</stime>
+   <parent/>
+   <expiration/>
+   <token>MFvU91PDCvAfzWh</token>
+   <uid_file_owner>admin</uid_file_owner>
+   <displayname_file_owner>admin</displayname_file_owner>
+   <path>/Photos</path>
+   <item_type>folder</item_type>
+   <mimetype>httpd/unix-directory</mimetype>
+   <storage_id>home::admin</storage_id>
+   <storage>2</storage>
+   <item_source>86</item_source>
+   <file_source>86</file_source>
+   <file_parent>9</file_parent>
+   <file_target>/Photos</file_target>
+   <share_with/>
+   <share_with_displayname/>
+   <name>Public link</name>
+   <url>https://demo.owncloud.com/s/MFvU91PDCvAfzWh</url>
+   <mail_send>0</mail_send>
+  </element>
+ </data>
+</ocs>
+
+
 */

@@ -86,8 +86,34 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSDate *creationDate; //!< Creation date of the share
 @property(nullable,strong) NSDate *expirationDate; //!< Expiration date of the share
 
+@property(nullable,strong) NSString *password; //!< Password of the share (not always available)
+
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
 @property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
+
+#pragma mark - Convenience constructors
+/**
+ Creates an object that can be used to create a share on the server.
+
+ @param recipient The recipient representing the user or group to share with.
+ @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param permissions Bitmask of permissions.
+ @param expirationDate Optional expiration date.
+ @return An OCShare instance configured with the respective options.
+ */
++ (instancetype)shareWithRecipient:(OCRecipient *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
+
+/**
+ Creates an object that can be used to create a public link.
+
+ @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param name Optional name for the public link.
+ @param permissions Bitmask of permissions: OCSharePermissionsMaskRead for "Download + View". OCSharePermissionsMaskCreate for "Upload" (specify only this for a folder to create a file drop). OCSharePermissionsMaskUpdate|OCSharePermissionsMaskDelete to also allow changes / deletion of items.
+ @param password Optional password to control access.
+ @param expirationDate Optional expiration date.
+ @return An OCShare instance configured with the respective options.
+ */
++ (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
 
 @end
 

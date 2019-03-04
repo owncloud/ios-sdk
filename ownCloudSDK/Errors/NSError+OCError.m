@@ -53,6 +53,10 @@
 				unlocalizedString = @"Insufficient parameters.";
 			break;
 
+			case OCErrorUnknown:
+				unlocalizedString = @"Unknown error.";
+			break;
+
 			case OCErrorAuthorizationFailed:
 				unlocalizedString = @"Authorization failed.";
 			break;
@@ -207,6 +211,34 @@
 
 			case OCErrorInvalidProcess:
 				unlocalizedString = @"Invalid process.";
+			break;
+
+			case OCErrorShareUnauthorized:
+				unlocalizedString = @"Not authorized to access shares.";
+			break;
+
+			case OCErrorShareUnavailable:
+				unlocalizedString = @"Shares are unavailable.";
+			break;
+
+			case OCErrorShareItemNotADirectory:
+				unlocalizedString = @"Item is not a directory.";
+			break;
+
+			case OCErrorShareItemNotFound:
+				unlocalizedString = @"Item not found.";
+			break;
+
+			case OCErrorShareNotFound:
+				unlocalizedString = @"Share not found.";
+			break;
+
+			case OCErrorShareUnknownType:
+				unlocalizedString = @"Unknown share type.";
+			break;
+
+			case OCErrorSharePublicUploadDisabled:
+				unlocalizedString = @"Public upload was disabled by the administrator.";
 			break;
 		}
 	}

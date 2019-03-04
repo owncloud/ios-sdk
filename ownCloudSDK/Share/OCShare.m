@@ -36,6 +36,55 @@
 	return (self);
 }
 
+#pragma mark - Convenience constructors
++ (instancetype)shareWithRecipient:(OCRecipient *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate
+{
+	OCShare *share = [OCShare new];
+
+	if (recipient.type == OCRecipientTypeGroup)
+	{
+		share.type = OCShareTypeGroupShare;
+	}
+	else if (recipient.type == OCRecipientTypeUser)
+	{
+		if (recipient.user.isRemote)
+		{
+			share.type = OCShareTypeRemote;
+		}
+		else
+		{
+			share.type = OCShareTypeUserShare;
+		}
+	}
+
+	share.recipient = recipient;
+
+	share.itemPath = path;
+
+	share.permissions = permissions;
+	share.expirationDate = expirationDate;
+
+	return (share);
+}
+
++ (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate
+{
+	OCShare *share = [OCShare new];
+
+	share.type = OCShareTypeLink;
+
+	share.name = name;
+
+	share.itemPath = path;
+
+	share.password = password;
+
+	share.permissions = permissions;
+	share.expirationDate = expirationDate;
+
+	return (share);
+}
+
 #pragma mark - Permission convenience
 #define BIT_ACCESSOR(getMethodName,setMethodName,flag) \
 - (BOOL)getMethodName \
@@ -78,5 +127,56 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeObject:self.url forKey:@"url"];
 	[coder encodeObject:self.expirationDate forKey:@"expirationDate"];
 }
+
+#pragma mark - Description
+- (NSString *)description
+{
+	NSString *typeAsString = nil, *permissionsString = @"";
+
+	switch (_type)
+	{
+		case OCShareTypeUserShare:
+			typeAsString = @"user";
+		break;
+
+		case OCShareTypeGroupShare:
+			typeAsString = @"group";
+		break;
+
+		case OCShareTypeLink:
+			typeAsString = @"link";
+		break;
+
+		case OCShareTypeGuest:
+			typeAsString = @"guest";
+		break;
+
+		case OCShareTypeRemote:
+			typeAsString = @"remote";
+		break;
+
+		case OCShareTypeUnknown:
+			typeAsString = @"unknown";
+		break;
+	}
+
+	if (self.canRead) { permissionsString = [permissionsString stringByAppendingString:@"read, "]; }
+	if (self.canUpdate) { permissionsString = [permissionsString stringByAppendingString:@"update, "]; }
+	if (self.canCreate) { permissionsString = [permissionsString stringByAppendingString:@"create, "]; }
+	if (self.canDelete) { permissionsString = [permissionsString stringByAppendingString:@"delete, "]; }
+	if (self.canShare) { permissionsString = [permissionsString stringByAppendingString:@"share, "]; }
+
+	if (permissionsString.length > 3)
+	{
+		permissionsString = [permissionsString substringWithRange:NSMakeRange(0, permissionsString.length-2)];
+	}
+	else
+	{
+		permissionsString = @"none";
+	}
+
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : @""), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : nil), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : nil), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @"")]);
+}
+
 
 @end

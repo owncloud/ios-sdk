@@ -24,6 +24,10 @@
 @synthesize displayName = _displayName;
 @synthesize avatarData = _avatarData;
 
+@dynamic isRemote;
+@dynamic remoteHost;
+@dynamic remoteUserName;
+
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName
 {
 	OCUser *user = [OCUser new];
@@ -32,6 +36,43 @@
 	user.displayName = displayName;
 
 	return (user);
+}
+
+- (BOOL)isRemote
+{
+	NSRange atRange;
+
+	atRange = [_userName rangeOfString:@"@"];
+
+	return (atRange.location != NSNotFound);
+}
+
+- (NSString *)remoteUserName
+{
+	NSRange atRange;
+
+	atRange = [_userName rangeOfString:@"@"];
+
+	if (atRange.location != NSNotFound)
+	{
+		return ([_userName substringToIndex:atRange.location]);
+	}
+
+	return (nil);
+}
+
+- (NSString *)remoteHost
+{
+	NSRange atRange;
+
+	atRange = [_userName rangeOfString:@"@"];
+
+	if (atRange.location != NSNotFound)
+	{
+		return ([_userName substringFromIndex:atRange.location+1]);
+	}
+
+	return (nil);
 }
 
 - (UIImage *)avatar
@@ -69,6 +110,12 @@
 	[coder encodeObject:self.displayName forKey:@"displayName"];
 	[coder encodeObject:self.emailAddress forKey:@"emailAddress"];
 	[coder encodeObject:self.avatarData forKey:@"avatarData"];
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, userName: %@, displayName: %@%@%@>", NSStringFromClass(self.class), self, _userName, _displayName, ((_emailAddress!=nil) ? [NSString stringWithFormat:@", emailAddress: [%@]",_emailAddress] : @""), ((self.avatarData!=nil) ? @", avatarData" : @"")]);
 }
 
 @end

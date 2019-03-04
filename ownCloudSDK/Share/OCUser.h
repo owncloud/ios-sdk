@@ -31,6 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSString *emailAddress; //!< Email address of the user (f.ex. "jappleseed@owncloud.org")
 
+@property(nonatomic,readonly) BOOL isRemote; //!< Returns YES if the userName contains an @ sign
+@property(nullable,readonly) NSString *remoteUserName; //!< Returns the part before the @ sign for usernames containing an @ sign (nil otherwise)
+@property(nullable,readonly) NSString *remoteHost; //!< Returns the part after the @ sign for usernames containing an @ sign (nil otherwise)
+
 @property(nullable,strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
 
 @property(nullable,readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
