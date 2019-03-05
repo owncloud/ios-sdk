@@ -130,7 +130,7 @@
 	// Handle parameters and set effective URL
 	if (_parameters.count > 0)
 	{
-		if ([_method isEqual:OCHTTPMethodPOST])
+		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
 			// POST Method: Generate body from parameters
 			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];

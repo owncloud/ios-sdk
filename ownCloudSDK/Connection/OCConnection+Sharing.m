@@ -425,30 +425,314 @@
 
 - (nullable OCProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges resultTarget:(OCEventTarget *)eventTarget
 {
-	return (nil);
+	// Save previous values of editable properties
+	NSString *previousName = share.name;
+	NSString *previousPassword = share.password;
+	NSDate *previousExpirationDate = share.expirationDate;
+	OCSharePermissionsMask previousPermissions = share.permissions;
+	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
+	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+
+	// Perform changes
+	performChanges(share);
+
+	// Compare and detect changes
+	if (![share.name isEqual:previousName])
+	{
+		changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+	}
+
+	if (![share.password isEqual:previousPassword])
+	{
+		changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+	}
+
+	if (![share.expirationDate isEqual:previousExpirationDate])
+	{
+		changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+	}
+
+	if (share.permissions != previousPermissions)
+	{
+		changedValuesByPropertyNames[@"permissions"] = [NSString stringWithFormat:@"%ld", share.permissions];
+	}
+
+	if (changedValuesByPropertyNames.count == 0)
+	{
+		// No changes => return immediately
+		[eventTarget handleEvent:[OCEvent eventForEventTarget:eventTarget type:OCEventTypeUpdateShare attributes:nil] sender:self];
+		return (nil);
+	}
+	else
+	{
+		// Changes => schedule requests
+		userInfo[@"shareID"] = share.identifier;
+		userInfo[@"updateProperties"] = changedValuesByPropertyNames;
+
+		return ([self _scheduleShareUpdateWithUserInfo:userInfo resultTarget:eventTarget]);
+	}
+}
+
+- (OCProgress *)_scheduleShareUpdateWithUserInfo:(NSDictionary *)inUserInfo resultTarget:(OCEventTarget *)eventTarget
+{
+	NSMutableDictionary *userInfo = [inUserInfo mutableCopy];
+	OCShareID shareID = userInfo[@"shareID"];
+	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [userInfo[@"updateProperties"] mutableCopy];
+	NSString *updateProperty = nil;
+	NSString *updateValue = nil;
+	OCProgress *requestProgress = nil;
+
+	if (changedValuesByPropertyNames.count > 0)
+	{
+		updateProperty = changedValuesByPropertyNames.allKeys.firstObject;
+		updateValue = changedValuesByPropertyNames[updateProperty];
+	}
+
+	if ((updateProperty!=nil) && (updateValue!=nil))
+	{
+		// Remove from update dict
+		[changedValuesByPropertyNames removeObjectForKey:updateProperty];
+		userInfo[@"updateProperties"] = changedValuesByPropertyNames;
+		userInfo[@"lastChangedProperty"] = updateProperty;
+		userInfo[@"moreUpdatesPending"] = @(changedValuesByPropertyNames.count > 0);
+
+		// Compose and send request
+		OCHTTPRequest *request;
+
+		request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
+		request.method = OCHTTPMethodPUT;
+		request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+
+		[request setValue:updateValue forParameter:updateProperty];
+
+		request.resultHandlerAction = @selector(_handleUpdateShareResult:error:);
+		request.eventTarget = eventTarget;
+		request.userInfo = userInfo;
+
+		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
+
+		requestProgress = request.progress;
+		requestProgress.progress.eventType = OCEventTypeUpdateShare;
+		requestProgress.progress.localizedDescription = OCLocalized(@"Updating share…");
+	}
+
+	return (requestProgress);
 }
 
 - (void)_handleUpdateShareResult:(OCHTTPRequest *)request error:(NSError *)error
 {
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			NSArray <OCShare *> *shares = nil;
+			NSError *parseError = nil;
+
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+				NSError *error = nil;
+
+				switch (status.statusCode.integerValue)
+				{
+					case 100:
+						// Successful
+					break;
+
+					case 400:
+						// Wrong or no update parameter given
+						error = OCErrorWithInfo(OCErrorInsufficientParameters, status.message != nil ? status.message : @"Wrong or no update parameter given.");
+					break;
+
+					case 403:
+						// Public upload disabled by the admin
+						error = OCError(OCErrorSharePublicUploadDisabled);
+					break;
+
+					case 404:
+						// Share couldn't be updated
+						error = OCError(OCErrorShareNotFound);
+					break;
+
+					default:
+						// Unknown error
+						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+					break;
+				}
+
+				return (error);
+			}];
+
+			if (parseError == nil)
+			{
+				NSDictionary *userInfo = request.userInfo;
+				OCEventTarget *eventTarget = request.eventTarget;
+				BOOL moreUpdatesPending = ((NSNumber *)userInfo[@"moreUpdatesPending"]).boolValue;
+
+				if (moreUpdatesPending)
+				{
+					event = nil;
+					[self _scheduleShareUpdateWithUserInfo:userInfo resultTarget:eventTarget];
+				}
+				else
+				{
+					event.result = shares.firstObject;
+				}
+			}
+			else
+			{
+				event.error = parseError;
+			}
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 - (nullable OCProgress *)deleteShare:(OCShare *)share resultTarget:(OCEventTarget *)eventTarget
 {
-	return (nil);
+	OCHTTPRequest *request;
+	OCProgress *requestProgress = nil;
+
+	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
+	request.method = OCHTTPMethodDELETE;
+	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+
+	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
+	request.eventTarget = eventTarget;
+
+	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
+
+	requestProgress = request.progress;
+	requestProgress.progress.eventType = OCEventTypeDeleteShare;
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemPath.lastPathComponent];
+
+	return (requestProgress);
 }
 
 - (void)_handleDeleteShareResult:(OCHTTPRequest *)request error:(NSError *)error
 {
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			NSArray <OCShare *> *shares = nil;
+
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+				NSError *error = nil;
+
+				switch (status.statusCode.integerValue)
+				{
+					case 100:
+						// Successful
+					break;
+
+					case 404:
+						// Share couldn't be deleted
+						error = OCError(OCErrorShareNotFound);
+					break;
+
+					default:
+						// Unknown error
+						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+					break;
+				}
+
+				return (error);
+			}];
+
+			event.error = error;
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 #pragma mark - Federated share management
 - (nullable OCProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept resultTarget:(OCEventTarget *)eventTarget
 {
-	return (nil);
+	OCHTTPRequest *request;
+	OCProgress *requestProgress = nil;
+
+	request = [OCHTTPRequest requestWithURL:[[[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
+	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);
+	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+
+	[request setValue:share.identifier forParameter:@"share_id"];
+
+	request.resultHandlerAction = @selector(_handleCreateShareResult:error:);
+	request.eventTarget = eventTarget;
+
+	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
+
+	requestProgress = request.progress;
+	requestProgress.progress.eventType = OCEventTypeDecideOnShare;
+	requestProgress.progress.localizedDescription = (accept ? OCLocalized(@"Accepting share…") : OCLocalized(@"Rejecting share…"));
+
+	return (requestProgress);
 }
 
 - (void)_handleMakeDecisionOnShareResult:(OCHTTPRequest *)request error:(NSError *)error
 {
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDecideOnShare attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			NSArray <OCShare *> *shares = nil;
+
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+				NSError *error = nil;
+
+				switch (status.statusCode.integerValue)
+				{
+					case 100:
+						// Successful
+					break;
+
+					case 404:
+						// Share doesn’t exist
+						error = OCError(OCErrorShareNotFound);
+					break;
+
+					default:
+						// Unknown error
+						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+					break;
+				}
+
+				return (error);
+			}];
+
+			event.error = error;
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
 }
 
 @end

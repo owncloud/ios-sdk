@@ -62,6 +62,12 @@
 				else if ([itemType isEqual:@"folder"])
 				{
 					share.itemType = OCItemTypeCollection;
+
+					// Ensure itemPath conforms to OCPath convention that directories end with a "/"
+					if (![share.itemPath hasSuffix:@"/"])
+					{
+						share.itemPath = [share.itemPath stringByAppendingString:@"/"];
+					}
 				}
 			}
 
