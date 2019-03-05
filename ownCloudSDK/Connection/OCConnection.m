@@ -83,7 +83,7 @@
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
-		OCConnectionMinimumVersionRequired		: @"9.0",
+		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular			: @(YES)
 	});
@@ -647,7 +647,7 @@
 						// Check minimum version
 						NSError *minimumVersionError;
 
-						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion longVersion:self.serverLongProductVersionString]) != nil)
+						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion product:self.serverProductName longVersion:self.serverLongProductVersionString]) != nil)
 						{
 							completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 

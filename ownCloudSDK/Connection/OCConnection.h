@@ -339,7 +339,7 @@ NS_ASSUME_NONNULL_END
 - (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
 
 #pragma mark - Checks
-- (NSError *)supportsServerVersion:(NSString *)serverVersion longVersion:(NSString *)longVersion;
+- (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion;
 
 @end
 

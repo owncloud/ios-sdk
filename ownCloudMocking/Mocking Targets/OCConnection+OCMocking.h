@@ -33,3 +33,9 @@ extern OCMockLocation OCMockLocationOCConnectionPrepareForSetupWithOptions;
 
 typedef void(^OCMockOCConnectionGenerateAuthenticationDataWithMethodBlock)(OCAuthenticationMethodIdentifier methodIdentifier, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData));
 extern OCMockLocation OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod;
+
+typedef NSProgress *(^OCMockOCConnectionConnectWithCompletionHandlerBlock)(void (^completionHandler)(NSError *, OCIssue *));
+extern OCMockLocation OCMockLocationOCConnectionConnectWithCompletionHandler;
+
+typedef void(^OCMockOCConnectionDisconnectWithCompletionHandlerBlock)(dispatch_block_t completionHandler, BOOL invalidate);
+extern OCMockLocation OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate;
