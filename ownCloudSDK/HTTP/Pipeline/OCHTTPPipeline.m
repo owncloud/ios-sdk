@@ -911,6 +911,12 @@
 					}
 				}
 			}
+			else
+			{
+				// Update internal tracking collections
+				task.state = OCHTTPPipelineTaskStateRunning;
+				updateTask = YES;
+			}
 		}
 		else
 		{
@@ -1455,6 +1461,18 @@
 	}];
 }
 
+- (void)finishPendingRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID withError:(NSError *)error filter:(BOOL(^)(OCHTTPPipeline *pipeline, OCHTTPPipelineTask *task))filter
+{
+	[self queueInline:^{
+		[self.backend enumerateTasksForPipeline:self partition:partitionID enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+			if (filter(self, task))
+			{
+				[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:error]];
+			}
+		}];
+	}];
+}
+
 #pragma mark - Background URL session finishing
 - (void)attachBackgroundURLSessionWithConfiguration:(NSURLSessionConfiguration *)backgroundSessionConfiguration handlingCompletionHandler:(dispatch_block_t)handlingCompletionHandler
 {
@@ -1922,10 +1940,3 @@
 @end
 
 OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID = @"insert-x-request-id";
-
-/*
-	TODO:
-	- move authentication availability from OCHTTPRequest.skipAuthorization and OCConnection.canSendAuthenticatedRequestsForQueue:..] to -pipeline:meetsSignalRequirements:failWithError:
-		- idea 1: .skipAuthorization could be kept & independant from a "authentication" signal, so that auth methods have a way to bypass the signal requirement
-		- idea 2: OCHTTPRequest could be extended with a .failImmediatelyForMissingSignals property (either BOOL or array of signals)
-*/

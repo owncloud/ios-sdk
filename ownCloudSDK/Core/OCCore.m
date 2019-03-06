@@ -162,7 +162,7 @@
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
-		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, nil];
+		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 		_connection.delegate = self;
 
 		_connectionStatusSignalProviders = [NSMutableArray new];

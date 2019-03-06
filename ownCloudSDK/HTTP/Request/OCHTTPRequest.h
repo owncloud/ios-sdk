@@ -67,7 +67,6 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *re
 
 @property(assign) OCHTTPRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
 @property(strong) OCHTTPRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
-@property(assign) BOOL skipAuthorization;		//!< YES if the connection should not perform authorization on the request during scheduling [not serialized]
 
 @property(copy) OCHTTPRequestObserver requestObserver; //!< OCHTTPRequestObserver block called as the request encounters various events
 
