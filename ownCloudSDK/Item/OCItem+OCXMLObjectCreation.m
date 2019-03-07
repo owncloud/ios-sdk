@@ -370,4 +370,58 @@ Example response:
     </d:propstat>
 </d:response>
 </d:multistatus>
+
+// Accepted cloud shares
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/remote_shares
+Request-ID: 19DA2961-8506-4A44-9B12-FFA5D1CF0A98
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Thu, 07 Mar 2019 15:32:15 GMT
+x-robots-tag: none
+Content-Length: 333
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>8</id>
+   <remote>https://demo.owncloud.org</remote>
+   <remote_id>7</remote_id>
+   <share_token>owIxIMahh76sG4D</share_token>
+   <name>/Documents</name>
+   <owner>admin</owner>
+   <user>test</user>
+   <mountpoint>/Documents (2)</mountpoint>
+   <accepted>1</accepted>
+   <mimetype>httpd/unix-directory</mimetype>
+   <mtime>1551970943</mtime>
+   <permissions>9</permissions>
+   <type>dir</type>
+   <file_id>148</file_id>
+  </element>
+ </data>
+</ocs>
+
 */

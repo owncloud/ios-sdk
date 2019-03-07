@@ -23,7 +23,7 @@
 
 + (NSURL *)federatedTargetURL
 {
-	return ([NSURL URLWithString:@"http://demo.owncloud.com/"]);
+	return ([NSURL URLWithString:@"https://demo.owncloud.com/"]);
 }
 
 + (NSString *)adminLogin

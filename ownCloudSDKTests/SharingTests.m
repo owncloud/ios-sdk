@@ -221,7 +221,158 @@
 		[expectConnect fulfill];
 	}];
 
-	[self waitForExpectationsWithTimeout:60 handler:nil];}
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testFederatedSharing
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectShareCreated = [self expectationWithDescription:@"Created share"];
+	XCTestExpectation *expectShareRetrieved = [self expectationWithDescription:@"Share retrieved"];
+	XCTestExpectation *expectPendingSharesRetrieved = [self expectationWithDescription:@"Pending shares retrieved"];
+	XCTestExpectation *expectPendingSharesContainNewShare = [self expectationWithDescription:@"Pending shares contain new share"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectList = [self expectationWithDescription:@"File list retrieved"];
+	OCConnection *connection = nil;
+
+	OCConnection *recipientConnection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	recipientConnection = [[OCConnection alloc] initWithBookmark:OCTestTarget.federatedBookmark];
+	XCTAssert(recipientConnection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *createShare = [OCShare shareWithRecipient:[OCRecipient recipientWithUser:[OCUser userWithUserName:@"test@demo.owncloud.com" displayName:@"test@demo.owncloud.com"]] path:items[1].path permissions:OCSharePermissionsMaskRead expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+
+			[expectList fulfill];
+
+			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				OCShare *newShare = event.result;
+
+				XCTAssert(event.error==nil);
+				XCTAssert(event.result!=nil);
+
+				OCLog(@"Created new share with error=%@, newShare=%@", event.error, event.result);
+
+				XCTAssert(createShare.recipient 	!= nil);
+				XCTAssert(createShare.recipient.user 	!= nil);
+				XCTAssert(createShare.recipient.user.isRemote == newShare.recipient.user.isRemote);
+				XCTAssert([createShare.recipient.user.remoteUserName isEqual:newShare.recipient.user.remoteUserName]);
+				XCTAssert([createShare.recipient.user.remoteHost isEqual:newShare.recipient.user.remoteHost]);
+				XCTAssert(createShare.permissions 	== newShare.permissions);
+				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+
+				XCTAssert(newShare.token != nil);
+				XCTAssert(newShare.creationDate != nil);
+				XCTAssert(createShare.expirationDate.timeIntervalSinceNow >= (24*60*60));
+
+				[expectShareCreated fulfill];
+
+				[connection retrieveSharesWithScope:OCConnectionShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+					XCTAssert(error==nil);
+					XCTAssert(shares.count > 0);
+
+					OCLog(@"Retrieved shares: %@", shares);
+
+					for (OCShare *share in shares)
+					{
+						if ([share.token isEqual:newShare.token])
+						{
+							[expectShareRetrieved fulfill];
+						}
+					}
+
+					[recipientConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+						[recipientConnection retrieveSharesWithScope:OCConnectionShareScopePendingCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+							XCTAssert(error == nil);
+							XCTAssert(shares.count > 0);
+
+							OCLog(@"Pending shares: %@", shares);
+
+							[expectPendingSharesRetrieved fulfill];
+
+							for (OCShare *share in shares)
+							{
+								if ([share.token isEqual:newShare.token])
+								{
+									[expectPendingSharesContainNewShare fulfill];
+									XCTAssert((share.accepted!=nil) && !share.accepted.boolValue);
+
+									[recipientConnection makeDecisionOnShare:share accept:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+										OCLog(@"Accepted share: %@, error=%@, result=%@", event, event.error, event.result);
+
+										XCTAssert(event.error == nil);
+
+										sleep(2); // Apparently accepted shares /can/ be slow to be updated :-/
+
+										[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+											OCShare *deleteShare = nil;
+
+											XCTAssert(error==nil);
+											XCTAssert(shares.count > 0);
+
+											OCLog(@"Accepted shares: %@", shares);
+
+											for (OCShare *share in shares)
+											{
+												if ([share.token isEqual:newShare.token])
+												{
+													deleteShare = share;
+													XCTAssert(share.accepted.boolValue);
+
+												}
+											}
+
+											if (deleteShare != nil)
+											{
+												[recipientConnection makeDecisionOnShare:deleteShare accept:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+													XCTAssert(event.error == nil);
+
+													sleep(2); // Apparently accepted shares /can/ be slow to be updated :-/
+
+													[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+														XCTAssert(error==nil);
+
+														OCLog(@"Accepted shares: %@", shares);
+
+														for (OCShare *share in shares)
+														{
+															if ([share.token isEqual:newShare.token])
+															{
+																XCTFail(@"Deleted share still around");
+															}
+														}
+
+														[recipientConnection disconnectWithCompletionHandler:^{
+															[connection disconnectWithCompletionHandler:^{
+																[expectDisconnect fulfill];
+															}];
+														}];
+													}];
+												} userInfo:nil ephermalUserInfo:nil]];
+											}
+										}];
+									} userInfo:nil ephermalUserInfo:nil]];
+
+									break;
+								}
+							}
+						}];
+					}];
+				}];
+			} userInfo:nil ephermalUserInfo:nil]];
+		}];
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
 
 - (void)testSharesRetrieval
 {

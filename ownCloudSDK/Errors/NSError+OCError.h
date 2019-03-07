@@ -111,6 +111,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
 
+#define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
+
 #define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 
 #define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError }] //!< Like the OCError macro, but allows to specifiy an underlying error, too

@@ -91,6 +91,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
 @property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
 
+@property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
+@property(nullable,strong) NSNumber *accepted; //!< Share has been accepted (federated sharing)
+
 #pragma mark - Convenience constructors
 /**
  Creates an object that can be used to create a share on the server.

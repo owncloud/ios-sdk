@@ -46,9 +46,33 @@
 			{
 				share.type = shareType.integerValue;
 			}
+			else
+			{
+				// Special case: federated share
+				if (shareNode.keyValues[@"remote_id"] != nil)
+				{
+					share.type = OCShareTypeRemote;
+				}
+			}
 
 			// Item path
 			share.itemPath = shareNode.keyValues[@"path"];
+
+			if (share.itemPath == nil)
+			{
+				// Special case: federated share
+				NSString *mountPoint = nil;
+
+				if ((mountPoint = shareNode.keyValues[@"mountpoint"]) != nil)
+				{
+					share.mountPoint = mountPoint;
+					
+					if (![mountPoint hasPrefix:@"{{TemporaryMountPointName#"])
+					{
+						share.itemPath = mountPoint;
+					}
+				}
+			}
 
 			// Item type
 			NSString *itemType;
@@ -62,12 +86,32 @@
 				else if ([itemType isEqual:@"folder"])
 				{
 					share.itemType = OCItemTypeCollection;
+				}
+			}
+			else
+			{
+				// Special case: federated share
+				NSString *type;
 
-					// Ensure itemPath conforms to OCPath convention that directories end with a "/"
-					if (![share.itemPath hasSuffix:@"/"])
+				if ((type = shareNode.keyValues[@"type"]) != nil)
+				{
+					if ([type isEqual:@"file"])
 					{
-						share.itemPath = [share.itemPath stringByAppendingString:@"/"];
+						share.itemType = OCItemTypeFile;
 					}
+					else if ([type isEqual:@"dir"])
+					{
+						share.itemType = OCItemTypeCollection;
+					}
+				}
+			}
+
+			if (share.itemType == OCItemTypeCollection)
+			{
+				// Ensure itemPath conforms to OCPath convention that directories end with a "/"
+				if (![share.itemPath hasSuffix:@"/"])
+				{
+					share.itemPath = [share.itemPath stringByAppendingString:@"/"];
 				}
 			}
 
@@ -91,7 +135,15 @@
 			share.name = shareNode.keyValues[@"name"];
 
 			// Share token
-			share.token = shareNode.keyValues[@"token"];
+			NSString *token;
+
+			if ((token = shareNode.keyValues[@"token"]) == nil)
+			{
+				// Special case: federated share
+				token = shareNode.keyValues[@"share_token"];
+			}
+
+			share.token = token;
 
 			// Share URL
 			NSString *shareURLString;
@@ -105,6 +157,10 @@
 			NSString *createDateUNIXTimestamp;
 
 			if ((createDateUNIXTimestamp = shareNode.keyValues[@"stime"]) != nil)
+			{
+				share.creationDate = [[NSDate alloc] initWithTimeIntervalSince1970:(NSTimeInterval)createDateUNIXTimestamp.integerValue];
+			}
+			else if ((createDateUNIXTimestamp = shareNode.keyValues[@"mtime"]) != nil)
 			{
 				share.creationDate = [[NSDate alloc] initWithTimeIntervalSince1970:(NSTimeInterval)createDateUNIXTimestamp.integerValue];
 			}
@@ -129,6 +185,32 @@
 				share.owner.userName = userNameShareOwner;
 				share.owner.displayName = displayNameShareOwner;
 			}
+			else
+			{
+				// Special case: federated share
+				NSString *owner;
+				NSString *remoteURLString;
+
+				if (((owner = shareNode.keyValues[@"owner"]) != nil) &&
+				    ((remoteURLString = shareNode.keyValues[@"remote"]) != nil))
+				{
+					NSURL *remoteURL = [NSURL URLWithString:remoteURLString];
+					NSString *remoteHost = remoteURL.resourceSpecifier;
+
+					while ((remoteHost != nil) && ([remoteHost hasPrefix:@"/"]))
+					{
+						remoteHost = [remoteHost substringFromIndex:1];
+					};
+
+					if (remoteHost.length > 0)
+					{
+						owner = [owner stringByAppendingFormat:@"@%@", remoteHost];
+					}
+
+					share.owner = [OCUser new];
+					share.owner.userName = owner;
+				}
+			}
 
 			// Recipient
 			if (shareType != nil)
@@ -143,6 +225,7 @@
 					switch (share.type)
 					{
 						case OCShareTypeUserShare:
+						case OCShareTypeRemote:
 							share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
 						break;
 
@@ -156,12 +239,31 @@
 				}
 			}
 
+			if (share.recipient == nil)
+			{
+				// Special case: federated sharing
+				NSString *user = nil;
+
+				if ((user = shareNode.keyValues[@"user"]) != nil)
+				{
+					share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:user displayName:nil]];
+				}
+			}
+
 			// Permissions
 			NSString *permissions;
 
 			if ((permissions = shareNode.keyValues[@"permissions"]) != nil)
 			{
 				share.permissions = permissions.integerValue;
+			}
+
+			// Accepted
+			NSString *accepted;
+
+			if ((accepted = shareNode.keyValues[@"accepted"]) != nil)
+			{
+				share.accepted = @(accepted.integerValue);
 			}
 		}
 	}
@@ -614,5 +716,121 @@ x-frame-options: SAMEORIGIN
  </data>
 </ocs>
 
+// Pending shares (test = recipient, admin = sender)
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/remote_shares/pending
+Request-ID: 646A7A16-27AE-4694-BCBB-47986FCBEEC1
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Thu, 07 Mar 2019 15:10:52 GMT
+x-robots-tag: none
+Content-Length: 283
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>3</id>
+   <remote>https://demo.owncloud.org</remote>
+   <remote_id>2</remote_id>
+   <share_token>kMM7MRx8FwYjPch</share_token>
+   <name>/Documents</name>
+   <owner>admin</owner>
+   <user>test</user>
+   <mountpoint>{{TemporaryMountPointName#/Documents}}</mountpoint>
+   <accepted>0</accepted>
+  </element>
+ </data>
+</ocs>
+
+// Accepted shares
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/remote_shares
+Request-ID: C8D2F53F-ACC4-48E9-9D06-F475312B1D2F
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Thu, 07 Mar 2019 15:36:01 GMT
+x-robots-tag: none
+Content-Length: 431
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>8</id>
+   <remote>https://demo.owncloud.org</remote>
+   <remote_id>7</remote_id>
+   <share_token>owIxIMahh76sG4D</share_token>
+   <name>/Documents</name>
+   <owner>admin</owner>
+   <user>test</user>
+   <mountpoint>/Documents (2)</mountpoint>
+   <accepted>1</accepted>
+   <mimetype>httpd/unix-directory</mimetype>
+   <mtime>1551970943</mtime>
+   <permissions>9</permissions>
+   <type>dir</type>
+   <file_id>148</file_id>
+  </element>
+  <element>
+   <id>9</id>
+   <remote>https://demo.owncloud.org</remote>
+   <remote_id>8</remote_id>
+   <share_token>n4BVOKNIQ47Mkmc</share_token>
+   <name>/ownCloud Manual.pdf</name>
+   <owner>test</owner>
+   <user>test</user>
+   <mountpoint>/ownCloud Manual (2).pdf</mountpoint>
+   <accepted>1</accepted>
+   <mimetype>application/pdf</mimetype>
+   <mtime>1551972619</mtime>
+   <permissions>27</permissions>
+   <type>file</type>
+   <file_id>150</file_id>
+  </element>
+ </data>
+</ocs>
 
 */

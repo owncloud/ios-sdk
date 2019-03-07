@@ -204,14 +204,13 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger,OCConnectionShareScope)
 {
 	OCConnectionShareScopeSharedByUser,		//!< Return shares for items shared by the user
-	OCConnectionShareScopeSharedWithUser,		//!< Return shares for items shared with the user
+	OCConnectionShareScopeSharedWithUser,		//!< Return shares for items shared with the user (does not include cloud shares)
 	OCConnectionShareScopePendingCloudShares,	//!< Return pending cloud shares
 	OCConnectionShareScopeAcceptedCloudShares,	//!< Return accepted cloud shares
 	OCConnectionShareScopeItem,			//!< Return shares for the provided item itself (current user only)
 	OCConnectionShareScopeItemWithReshares,		//!< Return shares for the provided item itself (all, not just current user)
 	OCConnectionShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
 };
-
 
 typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
 typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);

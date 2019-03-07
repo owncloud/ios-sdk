@@ -225,7 +225,7 @@
 
 					case 400:
 						// Not a directory (fetching shares for directory)
-						error = OCError(OCErrorShareItemNotADirectory);
+						error = OCErrorWithDescription(OCErrorShareItemNotADirectory, status.message);
 					break;
 
 					case 404:
@@ -234,32 +234,30 @@
 							case OCConnectionShareScopeSharedByUser:
 							case OCConnectionShareScopeSharedWithUser:
 								// Couldn't fetch shares (fetching all shares)
-								error = OCError(OCErrorShareUnavailable);
+								error = OCErrorWithDescription(OCErrorShareUnavailable, status.message);
 							break;
 
 							case OCConnectionShareScopeItem:
 							case OCConnectionShareScopeItemWithReshares:
 								// File doesn't exist (fetching shares for file)
-								error = OCError(OCErrorShareItemNotFound);
+								error = OCErrorWithDescription(OCErrorShareItemNotFound, status.message);
 							break;
 
 							default:
 								// Unknown error
-								error = OCErrorWithInfo(OCErrorUnknown, @{
-									@"statusCode" : status.statusCode
-								});
+								error = OCErrorWithDescription(OCErrorUnknown, status.message);
 							break;
 						}
 					break;
 
 					case 997:
 						// Unauthorized
-						error = OCError(OCErrorShareUnauthorized);
+						error = OCErrorWithDescription(OCErrorShareUnauthorized, status.message);
 					break;
 
 					default:
 						// Unknown error
-						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+						error = OCErrorWithDescription(OCErrorUnknown, status.message);
 					break;
 				}
 
@@ -298,12 +296,12 @@
 
 						case 404:
 							// Share does not exist
-							error = OCError(OCErrorShareNotFound);
+							error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
 						break;
 
 						default:
 							// Unknown error
-							error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+							error = OCErrorWithDescription(OCErrorUnknown, status.message);
 						break;
 					}
 
@@ -390,22 +388,22 @@
 
 					case 400:
 						// Not a directory (fetching shares for directory)
-						error = OCError(OCErrorShareUnknownType);
+						error = OCErrorWithDescription(OCErrorShareUnknownType, status.message);
 					break;
 
 					case 403:
 						// Public upload was disabled by the admin
-						error = OCError(OCErrorSharePublicUploadDisabled);
+						error = OCErrorWithDescription(OCErrorSharePublicUploadDisabled, status.message);
 					break;
 
 					case 404:
 						// File or folder couldn’t be shared
-						error = OCError(OCErrorShareItemNotFound);
+						error = OCErrorWithDescription(OCErrorShareItemNotFound, status.message);
 					break;
 
 					default:
 						// Unknown error
-						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+						error = OCErrorWithDescription(OCErrorUnknown, status.message);
 					break;
 				}
 
@@ -545,22 +543,22 @@
 
 					case 400:
 						// Wrong or no update parameter given
-						error = OCErrorWithInfo(OCErrorInsufficientParameters, status.message != nil ? status.message : @"Wrong or no update parameter given.");
+						error = OCErrorWithDescription(OCErrorInsufficientParameters, status.message);
 					break;
 
 					case 403:
 						// Public upload disabled by the admin
-						error = OCError(OCErrorSharePublicUploadDisabled);
+						error = OCErrorWithDescription(OCErrorSharePublicUploadDisabled, status.message);
 					break;
 
 					case 404:
 						// Share couldn't be updated
-						error = OCError(OCErrorShareNotFound);
+						error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
 					break;
 
 					default:
 						// Unknown error
-						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+						error = OCErrorWithDescription(OCErrorUnknown, status.message);
 					break;
 				}
 
@@ -642,12 +640,12 @@
 
 					case 404:
 						// Share couldn't be deleted
-						error = OCError(OCErrorShareNotFound);
+						error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
 					break;
 
 					default:
 						// Unknown error
-						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+						error = OCErrorWithDescription(OCErrorUnknown, status.message);
 					break;
 				}
 
@@ -713,12 +711,12 @@
 
 					case 404:
 						// Share doesn’t exist
-						error = OCError(OCErrorShareNotFound);
+						error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
 					break;
 
 					default:
 						// Unknown error
-						error = OCErrorWithInfo(OCErrorUnknown, status.message != nil ? status.message : @"Unknown server error without description.");
+						error = OCErrorWithDescription(OCErrorUnknown, status.message);
 					break;
 				}
 

@@ -398,12 +398,13 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
 
 	/*
-		WARNING: urlSessionTask.taskIdentifier are not unique!
+		WARNING: urlSessionTask.taskIdentifier is not unique!
 
-		They can be reused - even on background queues - after a queue
-		has been shut down and recreated!
+		Identifiers can be reused - even on background queues - after a queue
+		has been shut down and recreated.
 
-		Therefore, the XRequestID is used as additional (and superior)
+		Therefore, the XRequestID is used as preferred search criteria to retrieve
+		the correct OCHTTPPipelineTask for a NSURLSessionTask.
 	*/
 
 	// Repurpose X-Request-ID to retrieve by requestID ..
