@@ -42,12 +42,19 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
+#import "OCRateLimitter.h"
 
 @interface OCCore ()
 {
 	NSInteger _runningActivities;
 	NSMutableArray <NSString *> *_runningActivitiesStrings;
 	dispatch_block_t _runningActivitiesCompleteBlock;
+
+	NSUInteger _pendingIPCChangeNotifications;
+	OCRateLimitter *_ipChangeNotificationRateLimitter;
+
+	OCIPCNotificationName _ipNotificationName;
+	OCIPNotificationCenter *_ipNotificationCenter;
 }
 
 @end
@@ -128,6 +135,7 @@
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
+		_ipChangeNotificationRateLimitter = [[OCRateLimitter alloc] initWithMinimumTime:0.1];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
@@ -572,34 +580,38 @@
 	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
 }
 
-- (void)_postIPCChangeNotification
-{
-	[_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
-}
-
 - (void)postIPCChangeNotification
 {
 	// Wait for database transaction to settle and current task on the queue to finish before posting the notification
-	@synchronized(OCIPNotificationCenter.class)
+	@synchronized(_ipChangeNotificationRateLimitter)
 	{
 		_pendingIPCChangeNotifications++;
+
+		if (_pendingIPCChangeNotifications == 1)
+		{
+			[self beginActivity:@"Post IPC change notification"];
+		}
 	}
 
-	[self beginActivity:@"Post IPC change notification"];
-	[self queueBlock:^{
-		// Transaction is not yet closed, so post IPC change notification only after changes have settled
-		[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
-			@synchronized(OCIPNotificationCenter.class)
-			{
-				if (self->_pendingIPCChangeNotifications != 0)
+	// Rate-limit IP change notifications
+	[_ipChangeNotificationRateLimitter runRateLimitedBlock:^{
+		[self queueBlock:^{
+			// Transaction is not yet closed, so post IPC change notification only after changes have settled
+			[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
+				// Post IPC change notification
+				@synchronized(self->_ipChangeNotificationRateLimitter)
 				{
-					self->_pendingIPCChangeNotifications = 0;
-					[self _postIPCChangeNotification];
+					if (self->_pendingIPCChangeNotifications != 0)
+					{
+						self->_pendingIPCChangeNotifications = 0;
+						[self->_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+
+						[self endActivity:@"Post IPC change notification"];
+					}
 				}
-			}
-			[self endActivity:@"Post IPC change notification"];
-			return(nil);
-		} completionHandler:nil];
+				return(nil);
+			} completionHandler:nil];
+		}];
 	}];
 }
 

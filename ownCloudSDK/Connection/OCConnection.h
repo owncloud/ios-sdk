@@ -137,6 +137,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 #pragma mark - Metadata actions
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler; //!< Retrieves the items at the specified path with options
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
@@ -263,6 +264,7 @@ extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Las
 extern OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey; // Request is non-critical
 extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
+extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
 
 extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 

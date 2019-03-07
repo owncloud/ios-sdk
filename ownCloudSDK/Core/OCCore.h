@@ -37,6 +37,7 @@
 @class OCCoreItemListTask;
 @class OCSyncAction;
 @class OCIPNotificationCenter;
+@class OCRateLimitter;
 
 @class OCCoreConnectionStatusSignalProvider;
 @class OCCoreServerStatusSignalProvider;
@@ -154,11 +155,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	id _fileProviderSignalCountByContainerItemIdentifiersLock;
 	BOOL _postFileProviderNotifications;
-
-	NSUInteger _pendingIPCChangeNotifications;
-
-	OCIPCNotificationName _ipNotificationName;
-	OCIPNotificationCenter *_ipNotificationCenter;
 
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
