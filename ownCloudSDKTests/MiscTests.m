@@ -380,13 +380,13 @@
 
 	// Test sending with listener but ignored
 	[notificationCenter addObserver:self forName:@"hello-others" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		XCTAssert(1==0); // Assert since this should never be called
+		XCTFail(@"Own message received despite ignore"); // Fail since this should never be called
 	}];
 	[notificationCenter postNotificationForName:@"hello-others" ignoreSelf:YES];
 
 	// Test adding listener, then removing all, then send a test message that should not be received
 	[notificationCenter addObserver:self forName:@"hello-noone" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		XCTAssert(1==0); // Assert since this should never be called
+		XCTFail(@"Own message received despite ignore"); // Fail since this should never be called
 	}];
 	[notificationCenter removeAllObserversForName:@"hello-noone"];
 	[notificationCenter postNotificationForName:@"hello-noone" ignoreSelf:NO];
@@ -511,4 +511,87 @@
 	[reachabilityStatusProvider providerWillBeRemoved];
 	[reachabilityStatusProvider providerWasRemoved];
 }
+
+- (void)testRateLimitter
+{
+	XCTestExpectation *expectFirstInvocation = [self expectationWithDescription:@"Expect first invocation"];
+	XCTestExpectation *expectSecondInvocation = [self expectationWithDescription:@"Expect second invocation"];
+	XCTestExpectation *expectThirdInvocation = [self expectationWithDescription:@"Expect third invocation"];
+
+	OCRateLimitter *rateLimitter = [[OCRateLimitter alloc] initWithMinimumTime:0.5];
+
+	[rateLimitter runRateLimitedBlock:^{
+		OCLogDebug(@"This invocation should run first");
+		[expectFirstInvocation fulfill];
+	}];
+
+	[rateLimitter runRateLimitedBlock:^{
+		XCTFail(@"This invocation should not run");
+	}];
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		[rateLimitter runRateLimitedBlock:^{
+			OCLogDebug(@"This invocation should run");
+			[expectSecondInvocation fulfill];
+		}];
+	});
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		[rateLimitter runRateLimitedBlock:^{
+			XCTFail(@"This invocation should not run");
+		}];
+	});
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.85 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		[rateLimitter runRateLimitedBlock:^{
+			OCLogDebug(@"This invocation should run");
+			[expectThirdInvocation fulfill];
+		}];
+	});
+
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+}
+
+- (void)_testIPCFlooding
+{
+	OCIPNotificationCenter *otherNotificationCenter = [OCIPNotificationCenter new];
+	OCIPNotificationCenter *ipNotificationCenter = [OCIPNotificationCenter sharedNotificationCenter];
+	OCIPCNotificationName testNotificationName = @"testNotification";
+	XCTestExpectation *expectNoNotifications = [self expectationWithDescription:@"Received unexpected notification"];
+	XCTestExpectation *expectNotifications = [self expectationWithDescription:@"Received expected notification"];
+	XCTestExpectation *expectSendingNotifications = [self expectationWithDescription:@"Sending notification"];
+	NSUInteger notificationCount = 1000;
+	__block NSUInteger receivedNotifications = 0;
+
+	[expectNoNotifications setInverted:YES];
+
+	expectNotifications.expectedFulfillmentCount = notificationCount;
+	expectSendingNotifications.expectedFulfillmentCount = notificationCount;
+
+	[ipNotificationCenter addObserver:self forName:testNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		OCLog(@"Received unexpected notification");
+		[expectNoNotifications fulfill];
+	}];
+
+	[otherNotificationCenter addObserver:self forName:testNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		OCLog(@"Received expected notification");
+		[expectNotifications fulfill];
+
+		receivedNotifications++;
+	}];
+
+	for (NSUInteger i=0; i<notificationCount; i++)
+	{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			OCLog(@"Sending notification %ld", i);
+			[ipNotificationCenter postNotificationForName:testNotificationName ignoreSelf:YES];
+			[expectSendingNotifications fulfill];
+		});
+	}
+
+	[self waitForExpectationsWithTimeout:5 handler:nil];
+
+	OCLog(@"%@ received %ld notifications, %@ awaits: %@", otherNotificationCenter, receivedNotifications, ipNotificationCenter, [ipNotificationCenter valueForKey:@"_ignoreCountsByNotificationName"]);
+}
+
 @end

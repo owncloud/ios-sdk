@@ -160,7 +160,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			}];
 		}
 
-		OCIPNotificationCenter.loggingEnabled = YES;
+		OCIPNotificationCenter.loggingEnabled = ![[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSynchronousLogging] boolValue];
 	});
 	
 	return (sharedLogger);
@@ -180,7 +180,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			OCClassSettingsKeyLogLevel		   : @(OCLogLevelOff),
 			OCClassSettingsKeyLogPrivacyMask	   : @(NO),
 			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
-			OCClassSettingsKeyLogSynchronousLogging    : @(YES),
+			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO)
 		});
 	}
