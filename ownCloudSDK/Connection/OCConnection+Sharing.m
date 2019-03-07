@@ -316,7 +316,7 @@
 }
 
 #pragma mark - Creation and deletion
-- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
@@ -599,6 +599,12 @@
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
 
+	if (share.type == OCShareTypeRemote)
+	{
+		// Shares of type "remote" need to be declined to be deleted
+		return ([self makeDecisionOnShare:share accept:NO resultTarget:eventTarget]);
+	}
+
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
@@ -674,7 +680,7 @@
 
 	[request setValue:share.identifier forParameter:@"share_id"];
 
-	request.resultHandlerAction = @selector(_handleCreateShareResult:error:);
+	request.resultHandlerAction = @selector(_handleMakeDecisionOnShareResult:error:);
 	request.eventTarget = eventTarget;
 
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];

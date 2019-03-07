@@ -23,11 +23,15 @@
 @property(strong,readonly,nonnull,class) NSString *userLogin;
 @property(strong,readonly,nonnull,class) NSString *userPassword;
 
+@property(strong,readonly,nonnull,class) NSString *demoLogin;
+@property(strong,readonly,nonnull,class) NSString *demoPassword;
+
 @property(strong,readonly,nonnull,class) NSString *federatedLogin;
 @property(strong,readonly,nonnull,class) NSString *federatedPassword;
 
 + (OCBookmark *)adminBookmark;
 + (OCBookmark *)userBookmark;
++ (OCBookmark *)demoBookmark;
 
 + (OCBookmark *)federatedBookmark;
 

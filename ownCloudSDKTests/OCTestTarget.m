@@ -46,6 +46,16 @@
 	return (@"test");
 }
 
++ (NSString *)demoLogin
+{
+	return (@"demo");
+}
+
++ (NSString *)demoPassword
+{
+	return (@"demo");
+}
+
 + (NSString *)federatedLogin
 {
 	return (@"test");
@@ -73,6 +83,17 @@
 
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+
+	return (bookmark);
+}
+
++ (OCBookmark *)demoBookmark
+{
+	OCBookmark *bookmark;
+
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.demoLogin passphrase:OCTestTarget.demoPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	return (bookmark);

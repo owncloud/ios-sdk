@@ -120,8 +120,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-extern OCShareOptionKey OCShareOptionType; //!< The type of share (value: OCShareTypesMask).
-extern OCShareOptionKey OCShareOptionUsers; //!< The identifier of the users to share with (value: NSArray<OCUser>*).
-extern OCShareOptionKey OCShareOptionExpirationDate; //!< The date of expiration of the share.
-
 NS_ASSUME_NONNULL_END

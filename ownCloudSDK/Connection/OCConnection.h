@@ -154,8 +154,6 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 - (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
-
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler; //!< Sends a request to the ephermal pipeline and returns the result via the ephermalResultHandler.
@@ -231,7 +229,7 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
  @param eventTarget Event target to receive the outcome via the event's .error and .result. The latter can contain an OCShare object.
  @return A progress object tracking the underlying HTTP request.
  */
-- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
 /**
  Updates an existing share with changes.
@@ -274,14 +272,14 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 		- [x] reshares
 		- [x] all subitems (collections only)
 
-	- create new share
-	- delete share
+	- [x] create new share
+	- [x] delete share
 
 	Cloud shares:
 	- [x] get pending cloud shares
 	- [x] get existing cloud shares
-	- accept / decline pending cloud shares
-	- delete accepted cloud share
+	- [x] accept / decline pending cloud shares
+	- [x] delete accepted cloud share
 
 	Recipients:
 	-
@@ -351,6 +349,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
+extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
