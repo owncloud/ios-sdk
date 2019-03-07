@@ -25,7 +25,5 @@
 
 @end
 
-typedef void(^OCMockOCConnectionGenerateAuthenticationDataWithMethodBlock)(OCAuthenticationMethodIdentifier methodIdentifier, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData));
-
 typedef void *(^OCMockOCQueryRequestChangeSetWithFlagsBlock)(OCQueryChangeSetRequestFlag flags, void(^completionHandler)(OCQueryChangeSetRequestCompletionHandler));
 extern OCMockLocation OCMockLocationOCQueryRequestChangeSetWithFlags;
