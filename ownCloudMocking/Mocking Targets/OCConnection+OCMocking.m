@@ -45,7 +45,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionPrepareForSetupWithOptions]) != nil)
 	{
-		mockBlock(options, completionHandler);
+		mockBlock(self, options, completionHandler);
 	}
 	else
 	{
@@ -59,7 +59,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod]) != nil)
 	{
-		mockBlock(methodIdentifier, options, completionHandler);
+		mockBlock(self, methodIdentifier, options, completionHandler);
 	}
 	else
 	{
@@ -73,7 +73,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionConnectWithCompletionHandler]) != nil)
 	{
-		return (mockBlock(completionHandler));
+		return (mockBlock(self, completionHandler));
 	}
 	else
 	{
@@ -87,7 +87,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate]) != nil)
 	{
-		mockBlock(completionHandler, invalidateConnection);
+		mockBlock(self, completionHandler, invalidateConnection);
 	}
 	else
 	{

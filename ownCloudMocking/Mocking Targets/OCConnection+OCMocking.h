@@ -28,14 +28,14 @@
 @end
 
 // Block and mock location for every mockable method
-typedef void(^OCMockOCConnectionPrepareForSetupWithOptionsBlock)(NSDictionary<NSString *, id> *options, void(^completionHandler)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods));
+typedef void(^OCMockOCConnectionPrepareForSetupWithOptionsBlock)(OCConnection *connection, NSDictionary<NSString *, id> *options, void(^completionHandler)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods));
 extern OCMockLocation OCMockLocationOCConnectionPrepareForSetupWithOptions;
 
-typedef void(^OCMockOCConnectionGenerateAuthenticationDataWithMethodBlock)(OCAuthenticationMethodIdentifier methodIdentifier, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData));
+typedef void(^OCMockOCConnectionGenerateAuthenticationDataWithMethodBlock)(OCConnection *connection, OCAuthenticationMethodIdentifier methodIdentifier, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData));
 extern OCMockLocation OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod;
 
-typedef NSProgress *(^OCMockOCConnectionConnectWithCompletionHandlerBlock)(void (^completionHandler)(NSError *, OCIssue *));
+typedef NSProgress *(^OCMockOCConnectionConnectWithCompletionHandlerBlock)(OCConnection *connection, void (^completionHandler)(NSError *, OCIssue *));
 extern OCMockLocation OCMockLocationOCConnectionConnectWithCompletionHandler;
 
-typedef void(^OCMockOCConnectionDisconnectWithCompletionHandlerBlock)(dispatch_block_t completionHandler, BOOL invalidate);
+typedef void(^OCMockOCConnectionDisconnectWithCompletionHandlerBlock)(OCConnection *connection, dispatch_block_t completionHandler, BOOL invalidate);
 extern OCMockLocation OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate;
