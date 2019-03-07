@@ -395,26 +395,47 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 	OCHTTPPipelineTask *task;
 
-	// Use combination of urlSessionID and urlSessionTaskID to retrieve task
-	task = [self _retrieveTaskWhere:@{
-		@"pipelineID"	  	: pipeline.identifier,
-		@"bundleID"	  	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:pipeline.bundleIdentifier apply:(urlSessionIdentifier==nil)],
-		@"urlSessionID"	  	: OCSQLiteNullProtect(urlSessionIdentifier),
-		@"urlSessionTaskID" 	: @(urlSessionTask.taskIdentifier)
-	} error:outDBError];
+	NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
 
-	// Repurpose X-Request-ID to retrieve by requestID
-	if (task == nil)
+	/*
+		WARNING: urlSessionTask.taskIdentifier are not unique!
+
+		They can be reused - even on background queues - after a queue
+		has been shut down and recreated!
+
+		Therefore, the XRequestID is used as additional (and superior)
+	*/
+
+	// Repurpose X-Request-ID to retrieve by requestID ..
+	if (XRequestID != nil)
 	{
-		NSString *XRequestID;
+		// .. narrowing further by sessionID and sessionTaskID
+		task = [self _retrieveTaskWhere:@{
+				@"pipelineID"	    : pipeline.identifier,
+				@"requestID"	    : XRequestID,
+				@"urlSessionID"	    : OCSQLiteNullProtect(urlSessionIdentifier),
+				@"urlSessionTaskID" : @(urlSessionTask.taskIdentifier)
+		} error:outDBError];
 
-		if ((XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"]) != nil)
+		if (task == nil)
 		{
+			// .. using just the request ID
 			task = [self _retrieveTaskWhere:@{
 					@"pipelineID"	: pipeline.identifier,
 					@"requestID"	: XRequestID
 			} error:outDBError];
 		}
+	}
+
+	// Use combination of urlSessionID and urlSessionTaskID to retrieve task
+	if (task == nil)
+	{
+		task = [self _retrieveTaskWhere:@{
+			@"pipelineID"	  	: pipeline.identifier,
+			@"bundleID"	  	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:pipeline.bundleIdentifier apply:(urlSessionIdentifier==nil)],
+			@"urlSessionID"	  	: OCSQLiteNullProtect(urlSessionIdentifier),
+			@"urlSessionTaskID" 	: @(urlSessionTask.taskIdentifier)
+		} error:outDBError];
 	}
 
 	return (task);
