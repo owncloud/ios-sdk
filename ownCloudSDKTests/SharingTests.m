@@ -834,4 +834,109 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testRecipientsSearch
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		[expectConnect fulfill];
+
+		void (^CountUsersAndGroups)(NSArray<OCRecipient *> *recipient, NSUInteger expectedUsers, NSUInteger expectedGroups) = ^(NSArray<OCRecipient *> *recipients, NSUInteger expectedUsers, NSUInteger expectedGroups) {
+			NSInteger users = 0, groups = 0;
+
+			for (OCRecipient *recipient in recipients)
+			{
+				if (recipient.type == OCRecipientTypeUser)
+				{
+					users++;
+				}
+
+				if (recipient.type == OCRecipientTypeGroup)
+				{
+					groups++;
+				}
+			}
+
+			XCTAssert(expectedUsers == users);
+			XCTAssert(expectedGroups == groups);
+		};
+
+		[connection retrieveRecipientsForItemType:OCItemTypeFile ofShareType:nil searchTerm:nil maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+			OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+			XCTAssert(error==nil);
+			XCTAssert(recipients!=nil);
+			CountUsersAndGroups(recipients, 3, 1);
+
+			[connection retrieveRecipientsForItemType:OCItemTypeCollection ofShareType:@[@(OCShareTypeGroupShare)] searchTerm:nil maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+				OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+				XCTAssert(error==nil);
+				XCTAssert(recipients!=nil);
+				CountUsersAndGroups(recipients, 0, 1);
+
+				[connection retrieveRecipientsForItemType:OCItemTypeFile ofShareType:@[@(OCShareTypeUserShare)] searchTerm:nil maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+					OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+					XCTAssert(error==nil);
+					XCTAssert(recipients!=nil);
+					CountUsersAndGroups(recipients, 3, 0);
+
+					[connection retrieveRecipientsForItemType:OCItemTypeFile ofShareType:@[@(OCShareTypeUserShare), @(OCShareTypeGroupShare)] searchTerm:nil maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+						OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+						XCTAssert(error==nil);
+						XCTAssert(recipients!=nil);
+						CountUsersAndGroups(recipients, 3, 1);
+
+						[connection retrieveRecipientsForItemType:OCItemTypeFile ofShareType:@[@(OCShareTypeUserShare)] searchTerm:@"admin" maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+							OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+							XCTAssert(error==nil);
+							XCTAssert(recipients!=nil);
+							CountUsersAndGroups(recipients, 1, 0);
+
+							[connection retrieveRecipientsForItemType:OCItemTypeCollection ofShareType:@[@(OCShareTypeGroupShare)] searchTerm:@"admin" maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+								OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+								XCTAssert(error==nil);
+								XCTAssert(recipients!=nil);
+								CountUsersAndGroups(recipients, 0, 1);
+
+								[connection retrieveRecipientsForItemType:OCItemTypeCollection ofShareType:nil searchTerm:@"admin" maximumNumberOfRecipients:200 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+									OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+									XCTAssert(error==nil);
+									XCTAssert(recipients!=nil);
+									CountUsersAndGroups(recipients, 1, 1);
+
+									[connection retrieveRecipientsForItemType:OCItemTypeCollection ofShareType:nil searchTerm:@"admin" maximumNumberOfRecipients:0 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+										OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+										XCTAssert(error!=nil);
+										XCTAssert([error isOCErrorWithCode:OCErrorInsufficientParameters]);
+										XCTAssert(recipients==nil);
+
+										[connection disconnectWithCompletionHandler:^{
+											[expectDisconnect fulfill];
+										}];
+									}];
+								}];
+							}];
+						}];
+					}];
+				}];
+			}];
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end

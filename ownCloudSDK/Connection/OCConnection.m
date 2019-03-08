@@ -36,6 +36,7 @@
 #import "OCAppIdentity.h"
 #import "OCHTTPPipelineManager.h"
 #import "OCHTTPPipelineTask.h"
+#import "OCHTTPResponse+DAVError.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -358,6 +359,12 @@
 		{
 			request = [authenticationMethod authorizeRequest:request forConnection:self];
 		}
+	}
+
+	// Static header fields
+	if (_staticHeaderFields != nil)
+	{
+		[request addHeaderFields:_staticHeaderFields];
 	}
 
 	return (request);
@@ -1585,12 +1592,36 @@
 			}
 			else
 			{
+				NSError *error = request.httpResponse.status.error;
+				NSError *davError = [request.httpResponse bodyParsedAsDAVError];
+				NSString *davMessage = davError.davExceptionMessage;
+
 				switch (request.httpResponse.status.code)
 				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						// Server doesn't allow creation of folder here
+						error = OCErrorWithDescription(OCErrorItemInsufficientPermissions, davMessage);
+					break;
+
+					case OCHTTPStatusCodeMETHOD_NOT_ALLOWED:
+						// Folder already exists
+						error = OCErrorWithDescription(OCErrorItemAlreadyExists, davMessage);
+					break;
+
+					case OCHTTPStatusCodeCONFLICT:
+						// Parent folder doesn't exist
+						error = OCErrorWithDescription(OCErrorItemNotFound, davMessage);
+					break;
+
 					default:
-						event.error = request.httpResponse.status.error;
+						if (davError != nil)
+						{
+							error = davError;
+						}
 					break;
 				}
+
+				event.error = error;
 			}
 		}
 	}

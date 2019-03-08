@@ -31,6 +31,8 @@ typedef NS_ENUM(NSInteger, OCShareType)
 	OCShareTypeUnknown = 255
 };
 
+typedef NSNumber* OCShareTypeID; //!< NSNumber-packaged OCShareType value
+
 typedef NS_OPTIONS(NSInteger, OCShareTypesMask)
 {
 	OCShareTypesMaskNone	   = 0,		//!< No shares

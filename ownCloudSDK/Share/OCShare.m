@@ -113,9 +113,29 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 {
 	if ((self = [super init]) != nil)
 	{
+		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
+
 		_type = [decoder decodeIntegerForKey:@"type"];
+
+		_itemPath = [decoder decodeObjectOfClass:[NSString class] forKey:@"itemPath"];
+		_itemType = [decoder decodeIntegerForKey:@"itemType"];
+		_itemOwner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"itemOwner"];
+		_itemMIMEType = [decoder decodeObjectOfClass:[NSString class] forKey:@"itemMIMEType"];
+
+		_name = [decoder decodeObjectOfClass:[NSString class] forKey:@"name"];
+		_token = [decoder decodeObjectOfClass:[NSString class] forKey:@"token"];
 		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+
+		_permissions = [decoder decodeIntegerForKey:@"permissions"];
+
+		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
+
+		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
+		_recipient = [decoder decodeObjectOfClass:[OCRecipient class] forKey:@"recipient"];
+
+		_mountPoint = [decoder decodeObjectOfClass:[NSString class] forKey:@"mountPoint"];
+		_accepted = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"accepted"];
 	}
 	
 	return (self);
@@ -123,9 +143,27 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeInteger:self.type forKey:@"type"];
-	[coder encodeObject:self.url forKey:@"url"];
-	[coder encodeObject:self.expirationDate forKey:@"expirationDate"];
+	[coder encodeObject:_identifier forKey:@"identifier"];
+
+	[coder encodeInteger:_type forKey:@"type"];
+
+	[coder encodeObject:_itemPath forKey:@"itemPath"];
+	[coder encodeInteger:_itemType forKey:@"itemType"];
+	[coder encodeObject:_itemOwner forKey:@"itemOwner"];
+	[coder encodeObject:_itemMIMEType forKey:@"itemMIMEType"];
+
+	[coder encodeObject:_name forKey:@"name"];
+	[coder encodeObject:_token forKey:@"token"];
+	[coder encodeObject:_url forKey:@"url"];
+
+	[coder encodeObject:_creationDate forKey:@"creationDate"];
+	[coder encodeObject:_expirationDate forKey:@"expirationDate"];
+
+	[coder encodeObject:_owner forKey:@"owner"];
+	[coder encodeObject:_recipient forKey:@"recipient"];
+
+	[coder encodeObject:_mountPoint forKey:@"mountPoint"];
+	[coder encodeObject:_accepted forKey:@"accepted"];
 }
 
 #pragma mark - Description

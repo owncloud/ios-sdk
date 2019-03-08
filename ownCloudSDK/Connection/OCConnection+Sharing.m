@@ -16,6 +16,12 @@
  *
  */
 
+/*
+	References:
+	- Developer documentation: https://doc.owncloud.com/server/developer_manual/core/ocs-share-api.html
+	- Implementation: https://github.com/owncloud/core/blob/master/apps/files_sharing/lib/Controller/Share20OcsController.php
+*/
+
 #import "OCConnection.h"
 #import "OCItem.h"
 #import "NSError+OCError.h"
@@ -142,7 +148,7 @@
 	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
 
 	request = [OCHTTPRequest new];
-	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	request.requiredSignals = self.actionSignals;
 
 	switch (scope)
 	{
@@ -277,7 +283,7 @@
 	NSProgress *progress = nil;
 
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
-	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	request.requiredSignals = self.actionSignals;
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		OCSharingResponseStatus *status = nil;
@@ -323,7 +329,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:nil]];
 	request.method = OCHTTPMethodPOST;
-	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	request.requiredSignals = self.actionSignals;
 
 	if (share.name != nil)
 	{
@@ -499,7 +505,7 @@
 
 		request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
 		request.method = OCHTTPMethodPUT;
-		request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		request.requiredSignals = self.actionSignals;
 
 		[request setValue:updateValue forParameter:updateProperty];
 
@@ -607,7 +613,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
-	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	request.requiredSignals = self.actionSignals;
 
 	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
 	request.eventTarget = eventTarget;
@@ -676,7 +682,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[[[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
 	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);
-	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	request.requiredSignals = self.actionSignals;
 
 	[request setValue:share.identifier forParameter:@"share_id"];
 

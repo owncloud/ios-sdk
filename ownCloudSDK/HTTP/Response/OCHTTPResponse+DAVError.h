@@ -1,8 +1,8 @@
 //
-//  OCGroup.h
+//  OCHTTPResponse+DAVError.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 01.03.19.
+//  Created by Felix Schwarz on 08.03.19.
 //  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,19 +16,14 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "OCHTTPResponse.h"
+#import "NSError+OCDAVError.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCUserGroupID;
+@interface OCHTTPResponse (DAVError)
 
-@interface OCGroup : NSObject <NSSecureCoding>
-
-@property(strong) OCUserGroupID identifier;
-
-@property(nullable,strong) NSString *name;
-
-+ (instancetype)groupWithIdentifier:(nullable OCUserGroupID)groupID name:(nullable NSString *)name;
+- (nullable NSError *)bodyParsedAsDAVError; //!< Returns an error wrapping the parsed DAV error on success, nil on failure
 
 @end
 

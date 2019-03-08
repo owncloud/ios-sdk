@@ -75,6 +75,37 @@
 	return (nil);
 }
 
+#pragma mark - Secure coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [self init]) != nil)
+	{
+		_type = [decoder decodeIntegerForKey:@"type"];
+
+		_group = [decoder decodeObjectOfClass:[OCGroup class] forKey:@"group"];
+		_user = [decoder decodeObjectOfClass:[OCUser class] forKey:@"user"];
+
+		_matchType = [decoder decodeIntegerForKey:@"matchType"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:_type forKey:@"type"];
+
+	[coder encodeObject:_group forKey:@"group"];
+	[coder encodeObject:_user forKey:@"user"];
+
+	[coder encodeInteger:_matchType forKey:@"matchType"];
+}
+
 #pragma mark - Description
 - (NSString *)description
 {
@@ -91,7 +122,7 @@
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_matchType!=OCRecipientMatchTypeUnknown) ? ((_matchType==OCRecipientMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
 }
 
 @end

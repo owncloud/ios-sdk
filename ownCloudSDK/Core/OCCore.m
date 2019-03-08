@@ -100,7 +100,8 @@
 	return (@{
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
 			@"*"
-		]
+		],
+		OCCoreAddAcceptLanguageHeader : @(YES)
 	});
 }
 
@@ -172,6 +173,21 @@
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 		_connection.delegate = self;
+
+		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
+		{
+			NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+
+			if (preferredLocalizations.count > 0)
+			{
+				NSString *acceptLanguage;
+
+				if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
+				{
+					_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
+				}
+			}
+		}
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
@@ -1250,6 +1266,7 @@
 
 @end
 
+OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header";
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";

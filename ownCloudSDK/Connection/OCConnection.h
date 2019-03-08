@@ -100,6 +100,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
+@property(strong) NSDictionary<NSString *, NSString *> *staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
+
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
 @property(strong) OCUser *loggedInUser;
@@ -261,34 +263,19 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
  */
 - (nullable OCProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept resultTarget:(OCEventTarget *)eventTarget;
 
-/*
-	Shares:
-	- [x] retrieve all shares
-		- [x] shared with user
-		- [x] shared by user
+@end
 
-	- [x] retrieve shares for item shared by user
-		- [x] path
-		- [x] reshares
-		- [x] all subitems (collections only)
+NS_ASSUME_NONNULL_END
 
-	- [x] create new share
-	- [x] delete share
+#pragma mark - RECIPIENTS
+NS_ASSUME_NONNULL_BEGIN
 
-	Cloud shares:
-	- [x] get pending cloud shares
-	- [x] get existing cloud shares
-	- [x] accept / decline pending cloud shares
-	- [x] delete accepted cloud share
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCRecipient *> * _Nullable recipients);
 
-	Recipients:
-	-
+@interface OCConnection (Recipients)
 
-	--
-
-	Source code:
-	https://github.com/owncloud/core/blob/master/apps/files_sharing/lib/Controller/Share20OcsController.php
-*/
+#pragma mark - Retrieval
+- (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
 
 @end
 

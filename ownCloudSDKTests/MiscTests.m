@@ -529,27 +529,27 @@
 		XCTFail(@"This invocation should not run");
 	}];
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 		[rateLimitter runRateLimitedBlock:^{
 			OCLogDebug(@"This invocation should run");
 			[expectSecondInvocation fulfill];
 		}];
 	});
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 		[rateLimitter runRateLimitedBlock:^{
 			XCTFail(@"This invocation should not run");
 		}];
 	});
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.85 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.85 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 		[rateLimitter runRateLimitedBlock:^{
 			OCLogDebug(@"This invocation should run");
 			[expectThirdInvocation fulfill];
 		}];
 	});
 
-	[self waitForExpectationsWithTimeout:2 handler:nil];
+	[self waitForExpectationsWithTimeout:4 handler:nil];
 }
 
 - (void)_testIPCFlooding

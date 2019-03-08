@@ -30,6 +30,29 @@
 	return (group);
 }
 
+#pragma mark - Secure coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [self init]) != nil)
+	{
+		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
+		_name = [decoder decodeObjectOfClass:[NSString class] forKey:@"name"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_identifier forKey:@"identifier"];
+	[coder encodeObject:_name forKey:@"name"];
+}
+
 #pragma mark - Description
 - (NSString *)description
 {
