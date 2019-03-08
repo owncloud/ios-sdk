@@ -24,11 +24,19 @@
 + (void)load
 {
 	[self addMockLocation:OCMockLocationOCConnectionPrepareForSetupWithOptions
-		 forSelector:@selector(prepareForSetupWithOptions:completionHandler:)
-					 with:@selector(ocm_prepareForSetupWithOptions:completionHandler:)];
+		  forSelector:@selector(prepareForSetupWithOptions:completionHandler:)
+			 with:@selector(ocm_prepareForSetupWithOptions:completionHandler:)];
+
 	[self addMockLocation:OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod
-			  forSelector:@selector(generateAuthenticationDataWithMethod:options:completionHandler:)
-					 with:@selector(ocm_generateAuthenticationDataWithMethod:options:completionHandler:)];
+		  forSelector:@selector(generateAuthenticationDataWithMethod:options:completionHandler:)
+			 with:@selector(ocm_generateAuthenticationDataWithMethod:options:completionHandler:)];
+
+	[self addMockLocation:OCMockLocationOCConnectionConnectWithCompletionHandler
+		  forSelector:@selector(connectWithCompletionHandler:)
+			 with:@selector(ocm_connectWithCompletionHandler:)];
+			 
+	[self addMockLocation:OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate forSelector:@selector(disconnectWithCompletionHandler:invalidate:)
+			 with:@selector(ocm_disconnectWithCompletionHandler:invalidate:)];
 }
 
 - (void)ocm_prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
@@ -37,7 +45,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionPrepareForSetupWithOptions]) != nil)
 	{
-		mockBlock(options, completionHandler);
+		mockBlock(self, options, completionHandler);
 	}
 	else
 	{
@@ -51,7 +59,7 @@
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod]) != nil)
 	{
-		mockBlock(methodIdentifier, options, completionHandler);
+		mockBlock(self, methodIdentifier, options, completionHandler);
 	}
 	else
 	{
@@ -59,7 +67,38 @@
 	}
 }
 
+- (NSProgress *)ocm_connectWithCompletionHandler:(void (^)(NSError *, OCIssue *))completionHandler
+{
+	OCMockOCConnectionConnectWithCompletionHandlerBlock mockBlock;
+
+	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionConnectWithCompletionHandler]) != nil)
+	{
+		return (mockBlock(self, completionHandler));
+	}
+	else
+	{
+		return ([self ocm_connectWithCompletionHandler:completionHandler]);
+	}
+}
+
+- (void)ocm_disconnectWithCompletionHandler:(dispatch_block_t)completionHandler invalidate:(BOOL)invalidateConnection
+{
+	OCMockOCConnectionDisconnectWithCompletionHandlerBlock mockBlock;
+
+	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate]) != nil)
+	{
+		mockBlock(self, completionHandler, invalidateConnection);
+	}
+	else
+	{
+		[self ocm_disconnectWithCompletionHandler:completionHandler invalidate:invalidateConnection];
+	}
+}
+
 OCMockLocation OCMockLocationOCConnectionPrepareForSetupWithOptions = @"OCConnection.prepareForSetupWithOptions";
 OCMockLocation OCMockLocationOCConnectionGenerateAuthenticationDataWithMethod = @"OCConnection.generateAuthenticationDataWithMethod";
+
+OCMockLocation OCMockLocationOCConnectionConnectWithCompletionHandler = @"OCConnection.connectWithCompletionHandler";
+OCMockLocation OCMockLocationOCConnectionDisconnectWithCompletionHandlerInvalidate = @"OCConnection.disconnectWithCompletionHandlerInvalidate";
 
 @end

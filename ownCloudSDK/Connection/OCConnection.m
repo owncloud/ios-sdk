@@ -81,7 +81,7 @@
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
-		OCConnectionMinimumVersionRequired		: @"9.0",
+		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular				: @(YES)
 	});
@@ -645,7 +645,7 @@
 						// Check minimum version
 						NSError *minimumVersionError;
 
-						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion longVersion:self.serverLongProductVersionString]) != nil)
+						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion product:self.serverProductName longVersion:self.serverLongProductVersionString]) != nil)
 						{
 							completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 
@@ -880,7 +880,12 @@
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil completionHandler:completionHandler]);
+}
+
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+{
+	return ([self retrieveItemListAtPath:path depth:depth notBefore:notBeforeDate options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
 			{
 				completionHandler(event.error, nil);
@@ -922,6 +927,11 @@
 		if (options[OCConnectionOptionIsNonCriticalKey] != nil)
 		{
 			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
+		}
+
+		if (options[OCConnectionOptionGroupIDKey] != nil)
+		{
+			davRequest.groupID = options[OCConnectionOptionGroupIDKey];
 		}
 
 		// Attach to pipelines
@@ -2086,6 +2096,7 @@ OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modific
 OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey = @"is-non-critical";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
+OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 

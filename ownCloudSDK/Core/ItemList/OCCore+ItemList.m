@@ -28,6 +28,12 @@
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
+#import <objc/runtime.h>
+
+static const NSString *OCCoreItemListTaskForQueryKey = @"item-list-task-for-query";
+
+static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
+static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroundItemListTasks";
 
 @implementation OCCore (ItemList)
 
@@ -40,6 +46,8 @@
 	{
 		@synchronized(_queuedItemListTaskPaths)
 		{
+			objc_setAssociatedObject(path, (__bridge const void *)OCCoreItemListTaskForQueryKey, @(forQuery), OBJC_ASSOCIATION_RETAIN);
+
 			if (forQuery)
 			{
 				putInQueue = NO;
@@ -59,7 +67,12 @@
 			}
 			else
 			{
-				[self _scheduleItemListTaskForPath:path];
+				OCCoreItemListTask *task;
+
+				if ((task = [self _scheduleItemListTaskForPath:path inGroup:OCCoreItemListTaskGroupQueryTasks]) != nil)
+				{
+					[_scheduledItemListTasks addObject:task];
+				}
 			}
 		}
 
@@ -78,7 +91,28 @@
 	{
 		if (_scheduledItemListTasks.count == 0)
 		{
-			if ((nextItemListTaskPath = _queuedItemListTaskPaths.firstObject) != nil)
+			BOOL isForQuery = NO;
+
+			// Check for high-priority query item list paths
+			for (NSString *path in _queuedItemListTaskPaths)
+			{
+				NSNumber *isItemListTaskForQuery = nil;
+
+				if (((isItemListTaskForQuery = objc_getAssociatedObject(path, (__bridge const void *)OCCoreItemListTaskForQueryKey)) != nil) && isItemListTaskForQuery.boolValue)
+				{
+					nextItemListTaskPath = path;
+					isForQuery = YES;
+					break;
+				}
+			}
+
+			if (nextItemListTaskPath == nil)
+			{
+				// If no high-priority query item list paths have been found => proceed with top of the list
+				nextItemListTaskPath = _queuedItemListTaskPaths.firstObject;
+			}
+
+			if (nextItemListTaskPath != nil)
 			{
 				// Remove the path and any duplicates (effectively coalescating the tasks)
 				[_queuedItemListTaskPaths removeObject:nextItemListTaskPath];
@@ -88,7 +122,7 @@
 			{
 				OCCoreItemListTask *task;
 
-				if ((task = [self _scheduleItemListTaskForPath:nextItemListTaskPath]) != nil)
+				if ((task = [self _scheduleItemListTaskForPath:nextItemListTaskPath inGroup:(isForQuery ? OCCoreItemListTaskGroupQueryTasks : OCCoreItemListTaskGroupBackgroundTasks)]) != nil)
 				{
 					[_scheduledItemListTasks addObject:task];
 				}
@@ -97,7 +131,7 @@
 	}
 }
 
-- (OCCoreItemListTask *)_scheduleItemListTaskForPath:(OCPath)path
+- (OCCoreItemListTask *)_scheduleItemListTaskForPath:(OCPath)path inGroup:(OCHTTPRequestGroupID)groupID
 {
 	OCCoreItemListTask *task = nil;
 
@@ -113,6 +147,8 @@
 
 		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
 		{
+			task.groupID = groupID;
+
 			_itemListTasksByPath[task.path] = task;
 
 			[self.activityManager update:[OCActivityUpdate publishingActivityFor:task]];

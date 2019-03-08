@@ -21,6 +21,7 @@
 #import "OCItem.h"
 #import "OCCoreItemList.h"
 #import "OCActivity.h"
+#import "OCHTTPTypes.h"
 
 @class OCCore;
 @class OCCoreItemListTask;
@@ -37,6 +38,8 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 @property(weak) OCCore *core;
 @property(strong) OCPath path;
+
+@property(strong) OCHTTPRequestGroupID groupID;
 
 @property(strong) OCCoreItemList *cachedSet;
 @property(strong) OCCoreItemList *retrievedSet;

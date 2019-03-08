@@ -225,12 +225,15 @@
 			}
 			else
 			{
-				NSString *serverVersion;
-				NSNumber *maintenanceMode;
+				NSString *serverVersion = nil;
+				NSNumber *maintenanceMode = nil;
+				NSString *product = nil;
 
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
 				{
-					error = [self supportsServerVersion:serverVersion longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict]];
+					product = jsonDict[@"productname"];
+
+					error = [self supportsServerVersion:serverVersion product:product longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict]];
 				}
 
 				if ((jsonDict!=nil) && ((maintenanceMode = jsonDict[@"maintenance"]) != nil))

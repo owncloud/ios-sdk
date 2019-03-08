@@ -46,7 +46,29 @@
 
 + (NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus
 {
-	return ([NSString stringWithFormat:@"%@ %@ %@", serverStatus[@"productname"], serverStatus[@"edition"], serverStatus[@"version"]]);
+	NSMutableArray *nameComponents = [NSMutableArray new];
+
+	if (serverStatus[@"productname"] != nil)
+	{
+		[nameComponents addObject:serverStatus[@"productname"]];
+	}
+
+	if (serverStatus[@"edition"] != nil)
+	{
+		[nameComponents addObject:serverStatus[@"edition"]];
+	}
+
+	if (serverStatus[@"version"] != nil)
+	{
+		[nameComponents addObject:serverStatus[@"version"]];
+	}
+
+	if (nameComponents.count == 0)
+	{
+		return (@"Unknown Server");
+	}
+
+	return ([nameComponents componentsJoinedByString:@" "]);
 }
 
 - (NSString *)serverLongProductVersionString
@@ -67,9 +89,16 @@
 }
 
 #pragma mark - Checks
-- (NSError *)supportsServerVersion:(NSString *)serverVersion longVersion:(NSString *)longVersion
+- (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion
 {
 	NSString *minimumVersion;
+
+	if ((product!=nil) && [product.lowercaseString isEqual:@"nextcloud"])
+	{
+		return ([NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
+			NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"Server software %@ not supported.", @""), longVersion]
+		}]);
+	}
 
 	if ((minimumVersion = [self classSettingForOCClassSettingsKey:OCConnectionMinimumVersionRequired]) != nil)
 	{
