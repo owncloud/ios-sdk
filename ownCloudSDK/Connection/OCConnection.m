@@ -145,6 +145,8 @@
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
+		_usersByUserID = [NSMutableDictionary new];
+
 		// Get pipelines
 		[self spinUpPipelines];
 	}
@@ -813,7 +815,7 @@
 {
 	OCHTTPRequest *statusRequest;
 
-	if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			if ((error == nil) && (response.status.isSuccess))
@@ -877,6 +879,8 @@
 			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
 			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
 			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+
+			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
 			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
 
 //		 	[OCXMLNode elementWithName:@"D:creationdate"],
@@ -999,7 +1003,7 @@
 
 			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
+			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:_usersByUserID withErrors:&errors];
 
 			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{

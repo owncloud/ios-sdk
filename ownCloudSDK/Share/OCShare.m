@@ -17,6 +17,7 @@
  */
 
 #import "OCShare.h"
+#import "OCMacros.h"
 
 @implementation OCShare
 
@@ -102,6 +103,49 @@ BIT_ACCESSOR(canUpdate,	setCanUpdate,	OCSharePermissionsMaskUpdate);
 BIT_ACCESSOR(canCreate,	setCanCreate,	OCSharePermissionsMaskCreate);
 BIT_ACCESSOR(canDelete,	setCanDelete,	OCSharePermissionsMaskDelete);
 BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return (_identifier.hash ^ _token.hash ^ _itemPath.hash ^ _owner.hash ^ _recipient.hash ^ _itemOwner.hash ^ _type);
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCShare *otherShare = OCTypedCast(object, OCShare);
+
+	if (otherShare != nil)
+	{
+		#define compareVar(var) ((otherShare->var == var) || [otherShare->var isEqual:var])
+
+		return (compareVar(_identifier) &&
+
+			(otherShare->_type == _type) &&
+
+			compareVar(_itemPath) &&
+			(otherShare->_itemType == _itemType) &&
+			compareVar(_itemOwner) &&
+			compareVar(_itemMIMEType) &&
+
+			compareVar(_name) &&
+			compareVar(_token) &&
+			compareVar(_url) &&
+
+			(otherShare->_permissions == _permissions) &&
+
+			compareVar(_creationDate) &&
+			compareVar(_expirationDate) &&
+
+			compareVar(_owner) &&
+			compareVar(_recipient) &&
+
+			compareVar(_mountPoint) &&
+			compareVar(_accepted)
+		);
+	}
+
+	return (NO);
+}
 
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding

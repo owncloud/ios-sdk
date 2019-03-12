@@ -109,7 +109,7 @@
 	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
 	[coder encodeInteger:_shareTypesMask 	forKey:@"shareTypesMask"];
-	[coder encodeObject:_ownerDisplayName 	forKey:@"ownerDisplayName"];
+	[coder encodeObject:_owner 		forKey:@"owner"];
 
 	[coder encodeObject:_shares		forKey:@"shares"];
 
@@ -160,7 +160,7 @@
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
-		_ownerDisplayName = [decoder decodeObjectOfClass:[NSString class] forKey:@"ownerDisplayName"];
+		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
 
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
@@ -566,7 +566,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_ownerDisplayName!=nil) ? [NSString stringWithFormat:@", ownerDisplayName: %@",_ownerDisplayName] : @""), (_removed ? @", removed" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @"")]);
 }
 
 #pragma mark - Copying

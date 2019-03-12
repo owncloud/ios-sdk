@@ -139,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
 
-@property(strong,nullable) NSString *ownerDisplayName; //!< Display name of the item's owner
+@property(strong,nullable) OCUser *owner; //!< The owner of the item
 @property(assign) OCShareTypesMask shareTypesMask; //!< Mask indicating the type of shares (to third parties) for this item. OCShareTypesMaskNone if none.
 @property(readonly,nonatomic) BOOL isShareable; //!< YES if this item can be shared (convenience accessor to check if .permissions has OCItemPermissionShareable set)
 @property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)

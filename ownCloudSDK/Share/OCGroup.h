@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCUserGroupID;
 
-@interface OCGroup : NSObject <NSSecureCoding>
+@interface OCGroup : NSObject <NSSecureCoding, NSCopying>
 
 @property(strong) OCUserGroupID identifier;
 

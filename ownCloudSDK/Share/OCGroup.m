@@ -17,6 +17,7 @@
  */
 
 #import "OCGroup.h"
+#import "OCMacros.h"
 
 @implementation OCGroup
 
@@ -26,6 +27,37 @@
 
 	group.identifier = groupID;
 	group.name = name;
+
+	return (group);
+}
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return ((_identifier.hash >> 1) ^ (_name.hash << 2));
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCGroup *otherGroup = OCTypedCast(object, OCGroup);
+
+	if (otherGroup != nil)
+	{
+		#define compareVar(var) ((otherGroup->var == var) || [otherGroup->var isEqual:var])
+
+		return (compareVar(_identifier) && compareVar(_name));
+	}
+
+	return (NO);
+}
+
+#pragma mark - Copying
+- (id)copyWithZone:(NSZone *)zone
+{
+	OCGroup *group = [OCGroup new];
+
+	group->_identifier = _identifier;
+	group->_name = _name;
 
 	return (group);
 }

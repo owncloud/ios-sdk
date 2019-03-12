@@ -68,7 +68,7 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
 	NSData *responseData = self.httpResponse.bodyData;
@@ -89,7 +89,8 @@
 				if (basePath != nil)
 				{
 					parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-						basePath, @"basePath",
+						basePath, 	@"basePath",
+						usersByUserID, 	@"usersByUserID",
 					nil];
 				}
 

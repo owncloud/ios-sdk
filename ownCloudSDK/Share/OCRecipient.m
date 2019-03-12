@@ -17,6 +17,7 @@
  */
 
 #import "OCRecipient.h"
+#import "OCMacros.h"
 
 @implementation OCRecipient
 
@@ -33,7 +34,7 @@
 	return (recipient);
 }
 
-+ (instancetype)recipientWithGroup:(OCGroup *)group;
++ (instancetype)recipientWithGroup:(OCGroup *)group
 {
 	OCRecipient *recipient = [self new];
 
@@ -73,6 +74,39 @@
 	}
 
 	return (nil);
+}
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return (_type ^ (_user.hash << 3) ^ (_group.hash >> 3));
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCRecipient *otherRecipient = OCTypedCast(object, OCRecipient);
+
+	if (otherRecipient != nil)
+	{
+		#define compareVar(var) ((otherRecipient->var == var) || [otherRecipient->var isEqual:var])
+
+		return ((otherRecipient.type == _type) && compareVar(_user) && compareVar(_group));
+	}
+
+	return (NO);
+}
+
+#pragma mark - Copying
+- (id)copyWithZone:(NSZone *)zone
+{
+	OCRecipient *recipient = [OCRecipient new];
+
+	recipient->_type = _type;
+	recipient->_user = _user;
+	recipient->_group = _group;
+	recipient->_matchType = _matchType;
+
+	return (recipient);
 }
 
 #pragma mark - Secure coding

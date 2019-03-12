@@ -33,7 +33,7 @@ typedef NS_ENUM(NSUInteger, OCRecipientMatchType) {
 	OCRecipientMatchTypeAdditional	//!< Additional match from search
 };
 
-@interface OCRecipient : NSObject <NSSecureCoding>
+@interface OCRecipient : NSObject <NSSecureCoding, NSCopying>
 
 @property(assign) OCRecipientType type;
 

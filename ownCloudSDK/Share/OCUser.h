@@ -20,7 +20,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCUser : NSObject <NSSecureCoding>
+@interface OCUser : NSObject <NSSecureCoding, NSCopying>
 {
 	UIImage *_avatar;
 }

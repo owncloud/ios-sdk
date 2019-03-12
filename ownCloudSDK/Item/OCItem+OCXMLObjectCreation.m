@@ -172,18 +172,6 @@
 					}
 				}
 			} copy],
-
-			@"oc:owner-display-name" : [^(OCItem *item, NSString *key, id value) {
-				if ([value isKindOfClass:[NSString class]])
-				{
-					if (((NSString *)value).length > 0)
-					{
-						item.ownerDisplayName = value;
-					}
-				}
-			} copy],
-
-
 		};
 	});
 
@@ -199,6 +187,7 @@
 {
 	OCItem *item = nil;
 	NSString *itemPath;
+	NSMutableDictionary<NSString *, OCUser *> *usersByUserID = xmlParser.options[@"usersByUserID"];
 
 	// Path of item
 	if ((itemPath = responseNode.keyValues[@"d:href"]) != nil)
@@ -231,6 +220,8 @@
 						[propstatNode enumerateChildNodesWithName:@"d:prop" usingBlock:^(OCXMLParserNode *propNode) {
 							// Collection?
 							__block BOOL isCollection = NO;
+							NSString *ownerDisplayName = nil, *ownerID = nil;
+							OCUser *owner = nil;
 
 							[propNode enumerateChildNodesWithName:@"d:resourcetype" usingBlock:^(OCXMLParserNode *resourcetypeNode) {
 								[resourcetypeNode enumerateChildNodesWithName:@"d:collection" usingBlock:^(OCXMLParserNode *collectionNode) {
@@ -243,6 +234,46 @@
 							}];
 
 							item.type = isCollection ? OCItemTypeCollection : OCItemTypeFile;
+
+							// Share OCUser instances for owner
+							ownerDisplayName = propNode.keyValues[@"oc:owner-display-name"];
+							ownerID = propNode.keyValues[@"oc:owner-id"];
+
+							if ((ownerID != nil) && (ownerDisplayName != nil))
+							{
+								if (usersByUserID != nil)
+								{
+									@synchronized(usersByUserID)
+									{
+										if ((owner = usersByUserID[ownerID]) != nil)
+										{
+											if (![owner.displayName isEqualToString:ownerDisplayName])
+											{
+												owner = nil;
+											}
+										}
+										else
+										{
+											owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+
+											usersByUserID[ownerID] = owner;
+										}
+									}
+								}
+
+								if (owner == nil)
+								{
+									owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+								}
+							}
+							else
+							{
+								if (ownerID != nil)
+								{
+									owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+								}
+							}
+							item.owner = owner;
 
 							// Parse remaining key-values
 							[propNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];

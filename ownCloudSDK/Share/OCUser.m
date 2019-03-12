@@ -17,6 +17,7 @@
  */
 
 #import "OCUser.h"
+#import "OCMacros.h"
 
 @implementation OCUser
 
@@ -83,6 +84,40 @@
 	}
 	
 	return (_avatar);
+}
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return ((_userName.hash << 1) ^ (_displayName.hash >> 1));
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCUser *otherUser = OCTypedCast(object, OCUser);
+
+	if (otherUser != nil)
+	{
+		#define compareVar(var) ((otherUser->var == var) || [otherUser->var isEqual:var])
+
+		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData));
+	}
+
+	return (NO);
+}
+
+#pragma mark - Copying
+- (id)copyWithZone:(NSZone *)zone
+{
+	OCUser *user = [OCUser new];
+
+	user->_userName = _userName;
+	user->_displayName = _displayName;
+	user->_emailAddress = _emailAddress;
+	user->_avatarData = _avatarData;
+	user->_avatar = _avatar;
+
+	return (user);
 }
 
 #pragma mark - Secure Coding

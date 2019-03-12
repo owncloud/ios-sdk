@@ -86,6 +86,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 	NSDictionary<NSString *, id> *_serverStatus;
 
+	NSMutableDictionary<NSString *, OCUser *> *_usersByUserID;
+
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 
