@@ -141,7 +141,7 @@
 	return (parser.parsedObjects);
 }
 
-- (nullable NSProgress *)retrieveSharesWithScope:(OCConnectionShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
+- (nullable NSProgress *)retrieveSharesWithScope:(OCShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
 {
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
@@ -152,9 +152,9 @@
 
 	switch (scope)
 	{
-		case OCConnectionShareScopeItem:
-		case OCConnectionShareScopeItemWithReshares:
-		case OCConnectionShareScopeSubItems:
+		case OCShareScopeItem:
+		case OCShareScopeItemWithReshares:
+		case OCShareScopeSubItems:
 		break;
 
 		default:
@@ -167,25 +167,25 @@
 
 	switch (scope)
 	{
-		case OCConnectionShareScopeSharedByUser:
+		case OCShareScopeSharedByUser:
 			// No options to set
 		break;
 
-		case OCConnectionShareScopeSharedWithUser:
+		case OCShareScopeSharedWithUser:
 			[request setValue:@"true" forParameter:@"shared_with_me"];
 		break;
 
-		case OCConnectionShareScopePendingCloudShares:
+		case OCShareScopePendingCloudShares:
 			url = [[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"];
 		break;
 
-		case OCConnectionShareScopeAcceptedCloudShares:
+		case OCShareScopeAcceptedCloudShares:
 			url = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
 		break;
 
-		case OCConnectionShareScopeItem:
-		case OCConnectionShareScopeItemWithReshares:
-		case OCConnectionShareScopeSubItems:
+		case OCShareScopeItem:
+		case OCShareScopeItemWithReshares:
+		case OCShareScopeSubItems:
 			if (item == nil)
 			{
 				OCLogError(@"item required for retrieval of shares with scope=%d", scope);
@@ -200,12 +200,12 @@
 
 			[request setValue:item.path forParameter:@"path"];
 
-			if (scope == OCConnectionShareScopeItemWithReshares)
+			if (scope == OCShareScopeItemWithReshares)
 			{
 				[request setValue:@"true" forParameter:@"reshares"];
 			}
 
-			if (scope == OCConnectionShareScopeSubItems)
+			if (scope == OCShareScopeSubItems)
 			{
 				[request setValue:@"true" forParameter:@"subfiles"];
 			}
@@ -237,14 +237,14 @@
 					case 404:
 						switch (scope)
 						{
-							case OCConnectionShareScopeSharedByUser:
-							case OCConnectionShareScopeSharedWithUser:
+							case OCShareScopeSharedByUser:
+							case OCShareScopeSharedWithUser:
 								// Couldn't fetch shares (fetching all shares)
 								error = OCErrorWithDescription(OCErrorShareUnavailable, status.message);
 							break;
 
-							case OCConnectionShareScopeItem:
-							case OCConnectionShareScopeItemWithReshares:
+							case OCShareScopeItem:
+							case OCShareScopeItemWithReshares:
 								// File doesn't exist (fetching shares for file)
 								error = OCErrorWithDescription(OCErrorShareItemNotFound, status.message);
 							break;
@@ -679,6 +679,13 @@
 {
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
+
+	// Only remote shares can a decision be made on
+	if (share.type != OCShareTypeRemote)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
+		return (nil);
+	}
 
 	request = [OCHTTPRequest requestWithURL:[[[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
 	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);

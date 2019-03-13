@@ -512,38 +512,38 @@
 	[reachabilityStatusProvider providerWasRemoved];
 }
 
-- (void)testRateLimitter
+- (void)testRateLimiter
 {
 	XCTestExpectation *expectFirstInvocation = [self expectationWithDescription:@"Expect first invocation"];
 	XCTestExpectation *expectSecondInvocation = [self expectationWithDescription:@"Expect second invocation"];
 	XCTestExpectation *expectThirdInvocation = [self expectationWithDescription:@"Expect third invocation"];
 
-	OCRateLimitter *rateLimitter = [[OCRateLimitter alloc] initWithMinimumTime:0.5];
+	OCRateLimiter *rateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.5];
 
-	[rateLimitter runRateLimitedBlock:^{
+	[rateLimiter runRateLimitedBlock:^{
 		OCLogDebug(@"This invocation should run first");
 		[expectFirstInvocation fulfill];
 	}];
 
-	[rateLimitter runRateLimitedBlock:^{
+	[rateLimiter runRateLimitedBlock:^{
 		XCTFail(@"This invocation should not run");
 	}];
 
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-		[rateLimitter runRateLimitedBlock:^{
+		[rateLimiter runRateLimitedBlock:^{
 			OCLogDebug(@"This invocation should run");
 			[expectSecondInvocation fulfill];
 		}];
 	});
 
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-		[rateLimitter runRateLimitedBlock:^{
+		[rateLimiter runRateLimitedBlock:^{
 			XCTFail(@"This invocation should not run");
 		}];
 	});
 
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.85 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-		[rateLimitter runRateLimitedBlock:^{
+		[rateLimiter runRateLimitedBlock:^{
 			OCLogDebug(@"This invocation should run");
 			[expectThirdInvocation fulfill];
 		}];

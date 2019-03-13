@@ -39,7 +39,7 @@ The following examples don't take local optimizations to be introduced by full o
 - C is blocked until A and B have finished
 - The result is that the downloads and rename succeed. Without blocking, one or both files could possibly no longer have been found.
 
-### Download file, remote rename and deletion
+#### Download file, remote rename and deletion
 - Action A: user wants to download `/Pictures/Photo.jpg` (Local ID: `ABC`)
 - Action B: remote user renames  `/Pictures/Photo.jpg` to `/Pictures/Zoo.jpg`
 - Action C: user wants to delete `/Pictures/Zoo.jpg`
@@ -47,15 +47,15 @@ The following examples don't take local optimizations to be introduced by full o
 - C is blocked by A because  `/Pictures/Zoo.jpg` has the same Local ID as `/Pictures/Photo.jpg`
 - The result is what one would expect. Without blocking, the file could have been deleted completing the download.
 
-### Duplicate file, delete duplicate
+#### Duplicate file, delete duplicate
 - Action A: user duplicates file `/Pictures/Photo.jpg` to `/Pictures/Photo 2.jpg`
 - Action B: user deletes `/Pictures/Photo 2.jpg`
 - B is blocked until B is finished
 - The result is what one would expect. Without blocking, deleting the duplicate file could have produced an error, while the duplicate file could be present shortly after.
 
-### Parallel upload and download
+#### Parallel upload and download
 - Action A: user uploads `/Pictures/New.jpg`
-- Action B: user uploads `/Pictures/Photo.jpg`
+- Action B: user downloads `/Pictures/Photo.jpg`
 - Both actions are performed at the same time
 
 # Historic

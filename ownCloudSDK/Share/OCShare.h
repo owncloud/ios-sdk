@@ -53,6 +53,17 @@ typedef NS_OPTIONS(NSInteger, OCSharePermissionsMask)
 	OCSharePermissionsMaskShare 	= (1<<4)
 };
 
+typedef NS_ENUM(NSUInteger, OCShareScope)
+{
+	OCShareScopeSharedByUser,		//!< Return shares for items shared by the user
+	OCShareScopeSharedWithUser,		//!< Return shares for items shared with the user (does not include cloud shares)
+	OCShareScopePendingCloudShares,		//!< Return pending cloud shares
+	OCShareScopeAcceptedCloudShares,	//!< Return accepted cloud shares
+	OCShareScopeItem,			//!< Return shares for the provided item itself (current user only)
+	OCShareScopeItemWithReshares,		//!< Return shares for the provided item itself (all, not just current user)
+	OCShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
+};
+
 typedef NSString* OCShareOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCShareOptionKey,id>* OCShareOptions;
 

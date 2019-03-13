@@ -93,7 +93,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCShare.h>
 #import <ownCloudSDK/OCUser.h>
+#import <ownCloudSDK/OCGroup.h>
 #import <ownCloudSDK/OCRecipient.h>
+
+#import <ownCloudSDK/OCRecipientSearchController.h>
 
 #import <ownCloudSDK/OCActivity.h>
 #import <ownCloudSDK/OCActivityManager.h>
@@ -147,4 +150,4 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCIPNotificationCenter.h>
 
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
-#import <ownCloudSDK/OCRateLimitter.h>
+#import <ownCloudSDK/OCRateLimiter.h>

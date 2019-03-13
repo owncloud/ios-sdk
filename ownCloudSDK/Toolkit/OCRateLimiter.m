@@ -1,5 +1,5 @@
 //
-//  OCRateLimitter.m
+//  OCRateLimiter.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 07.03.19.
@@ -16,9 +16,9 @@
  *
  */
 
-#import "OCRateLimitter.h"
+#import "OCRateLimiter.h"
 
-@interface OCRateLimitter ()
+@interface OCRateLimiter ()
 {
 	NSTimeInterval _lastTime;
 	BOOL _nextInvocationScheduled;
@@ -27,7 +27,7 @@
 
 @end
 
-@implementation OCRateLimitter
+@implementation OCRateLimiter
 
 - (instancetype)initWithMinimumTime:(NSTimeInterval)minimumTime
 {

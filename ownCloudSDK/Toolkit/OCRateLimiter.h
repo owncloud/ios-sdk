@@ -1,5 +1,5 @@
 //
-//  OCRateLimitter.h
+//  OCRateLimiter.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 07.03.19.
@@ -20,7 +20,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCRateLimitter : NSObject
+@interface OCRateLimiter : NSObject
 
 @property(assign) NSTimeInterval minimumTime; //!< The minimum amount of time that should pass before invoking the action again
 

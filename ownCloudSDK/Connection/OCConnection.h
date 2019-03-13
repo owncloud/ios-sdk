@@ -203,24 +203,13 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 #pragma mark - SHARING
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger,OCConnectionShareScope)
-{
-	OCConnectionShareScopeSharedByUser,		//!< Return shares for items shared by the user
-	OCConnectionShareScopeSharedWithUser,		//!< Return shares for items shared with the user (does not include cloud shares)
-	OCConnectionShareScopePendingCloudShares,	//!< Return pending cloud shares
-	OCConnectionShareScopeAcceptedCloudShares,	//!< Return accepted cloud shares
-	OCConnectionShareScopeItem,			//!< Return shares for the provided item itself (current user only)
-	OCConnectionShareScopeItemWithReshares,		//!< Return shares for the provided item itself (all, not just current user)
-	OCConnectionShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
-};
-
 typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
 typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
 
 @interface OCConnection (Sharing)
 
 #pragma mark - Retrieval
-- (nullable NSProgress *)retrieveSharesWithScope:(OCConnectionShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the shares for the given scope and (optional) item.
+- (nullable NSProgress *)retrieveSharesWithScope:(OCShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the shares for the given scope and (optional) item.
 
 - (nullable NSProgress *)retrieveShareWithID:(OCShareID)shareID options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareCompletionHandler)completionHandler; //!< Retrieves the share for the given shareID.
 

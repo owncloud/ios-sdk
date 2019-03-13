@@ -42,7 +42,7 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
-#import "OCRateLimitter.h"
+#import "OCRateLimiter.h"
 
 @interface OCCore ()
 {
@@ -51,7 +51,7 @@
 	dispatch_block_t _runningActivitiesCompleteBlock;
 
 	NSUInteger _pendingIPCChangeNotifications;
-	OCRateLimitter *_ipChangeNotificationRateLimitter;
+	OCRateLimiter *_ipChangeNotificationRateLimiter;
 
 	OCIPCNotificationName _ipNotificationName;
 	OCIPNotificationCenter *_ipNotificationCenter;
@@ -136,11 +136,12 @@
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
-		_ipChangeNotificationRateLimitter = [[OCRateLimitter alloc] initWithMinimumTime:0.1];
+		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
+		_shareQueries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
 		_queuedItemListTaskPaths = [NSMutableArray new];
@@ -599,7 +600,7 @@
 - (void)postIPCChangeNotification
 {
 	// Wait for database transaction to settle and current task on the queue to finish before posting the notification
-	@synchronized(_ipChangeNotificationRateLimitter)
+	@synchronized(_ipChangeNotificationRateLimiter)
 	{
 		_pendingIPCChangeNotifications++;
 
@@ -610,12 +611,12 @@
 	}
 
 	// Rate-limit IP change notifications
-	[_ipChangeNotificationRateLimitter runRateLimitedBlock:^{
+	[_ipChangeNotificationRateLimiter runRateLimitedBlock:^{
 		[self queueBlock:^{
 			// Transaction is not yet closed, so post IPC change notification only after changes have settled
 			[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
 				// Post IPC change notification
-				@synchronized(self->_ipChangeNotificationRateLimitter)
+				@synchronized(self->_ipChangeNotificationRateLimiter)
 				{
 					if (self->_pendingIPCChangeNotifications != 0)
 					{
@@ -937,6 +938,16 @@
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
 {
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
+}
+
+- (NSURL *)localCopyOfItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self localURLForItem:item]);
+	}
+
+	return (nil);
 }
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName

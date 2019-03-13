@@ -79,7 +79,7 @@
 
 					if (error == nil)
 					{
-						[connection retrieveSharesWithScope:OCConnectionShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
+						[connection retrieveSharesWithScope:OCShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
 							OCLogDebug(@"retrieveSharesWithScope: error=%@, shares=%@", error, shares);
 
 							[expectSharesRetrieved fulfill];
@@ -282,7 +282,7 @@
 
 				[expectShareCreated fulfill];
 
-				[connection retrieveSharesWithScope:OCConnectionShareScopeItem forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+				[connection retrieveSharesWithScope:OCShareScopeItem forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 					XCTAssert(error==nil);
 					XCTAssert(shares.count > 0);
 
@@ -296,7 +296,7 @@
 						}
 					}
 
-					[connection retrieveSharesWithScope:OCConnectionShareScopeSubItems forItem:rootItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+					[connection retrieveSharesWithScope:OCShareScopeSubItems forItem:rootItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 						OCLog(@"Retrieved shares of %@: %@", rootItem.path, shares);
 
 						for (OCShare *share in shares)
@@ -308,7 +308,7 @@
 						}
 
 						[recipientConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-							[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+							[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 								XCTAssert(error == nil);
 								XCTAssert(shares.count > 0);
 
@@ -325,7 +325,7 @@
 										[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 											XCTAssert(event.error == nil);
 
-											[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+											[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 												XCTAssert(error==nil);
 
 												OCLog(@"Recipient shares after deletion: %@", shares);
@@ -419,7 +419,7 @@
 
 				[expectShareCreated fulfill];
 
-				[connection retrieveSharesWithScope:OCConnectionShareScopeItem forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+				[connection retrieveSharesWithScope:OCShareScopeItem forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 					XCTAssert(error==nil);
 					XCTAssert(shares.count > 0);
 
@@ -433,7 +433,7 @@
 						}
 					}
 
-					[connection retrieveSharesWithScope:OCConnectionShareScopeSubItems forItem:rootItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+					[connection retrieveSharesWithScope:OCShareScopeSubItems forItem:rootItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 						OCLog(@"Retrieved shares of %@: %@", rootItem.path, shares);
 
 						for (OCShare *share in shares)
@@ -445,7 +445,7 @@
 						}
 
 						[recipientConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-							[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+							[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 								XCTAssert(error == nil);
 								XCTAssert(shares.count > 0);
 
@@ -469,7 +469,7 @@
 
 											OCLog(@"Created re-share: %@", newReshare);
 
-											[connection retrieveSharesWithScope:OCConnectionShareScopeItemWithReshares forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+											[connection retrieveSharesWithScope:OCShareScopeItemWithReshares forItem:shareItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 
 												XCTAssert(error==nil);
 												XCTAssert(shares!=nil);
@@ -490,7 +490,7 @@
 												}
 
 												[reshareRecipientConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-													[reshareRecipientConnection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													[reshareRecipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 														XCTAssert(error==nil);
 														XCTAssert(shares!=nil);
 
@@ -508,7 +508,7 @@
 															[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 																XCTAssert(event.error == nil);
 
-																[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+																[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 																	XCTAssert(error==nil);
 
 																	OCLog(@"Recipient shares after deletion: %@", shares);
@@ -612,7 +612,7 @@
 
 				[expectShareCreated fulfill];
 
-				[connection retrieveSharesWithScope:OCConnectionShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+				[connection retrieveSharesWithScope:OCShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 					XCTAssert(error==nil);
 					XCTAssert(shares.count > 0);
 
@@ -627,7 +627,7 @@
 					}
 
 					[recipientConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-						[recipientConnection retrieveSharesWithScope:OCConnectionShareScopePendingCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+						[recipientConnection retrieveSharesWithScope:OCShareScopePendingCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 							XCTAssert(error == nil);
 							XCTAssert(shares.count > 0);
 
@@ -649,7 +649,7 @@
 
 										sleep(2); // Apparently accepted shares /can/ be slow to be updated :-/
 
-										[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+										[recipientConnection retrieveSharesWithScope:OCShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 											OCShare *deleteShare = nil;
 
 											XCTAssert(error==nil);
@@ -674,7 +674,7 @@
 
 													sleep(2); // Apparently accepted shares /can/ be slow to be updated :-/
 
-													[recipientConnection retrieveSharesWithScope:OCConnectionShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													[recipientConnection retrieveSharesWithScope:OCShareScopeAcceptedCloudShares forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 														XCTAssert(error==nil);
 
 														OCLog(@"Accepted shares: %@", shares);
@@ -758,7 +758,7 @@
 			// Retrieve shares for item without item
 			dispatch_group_enter(waitForCompletion);
 
-			[connection retrieveSharesWithScope:OCConnectionShareScopeItem forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+			[connection retrieveSharesWithScope:OCShareScopeItem forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 				XCTAssert(error != nil); // Scope requires item
 				XCTAssert([error isOCErrorWithCode:OCErrorInsufficientParameters]);
 				dispatch_group_leave(waitForCompletion);
@@ -770,7 +770,7 @@
 
 			dispatch_group_enter(waitForCompletion);
 
-			[connection retrieveSharesWithScope:OCConnectionShareScopeItem forItem:nonexistantItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+			[connection retrieveSharesWithScope:OCShareScopeItem forItem:nonexistantItem options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 				XCTAssert(error != nil); // Scope requires item
 				XCTAssert([error isOCErrorWithCode:OCErrorShareItemNotFound]);
 				dispatch_group_leave(waitForCompletion);
@@ -815,7 +815,7 @@
 
 					if (error == nil)
 					{
-						[connection retrieveSharesWithScope:OCConnectionShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
+						[connection retrieveSharesWithScope:OCShareScopeSharedByUser forItem:nil options:nil completionHandler:^(NSError *error, NSArray<OCShare *> *shares) {
 							OCLogDebug(@"error=%@, shares=%@", error, shares);
 
 							[expectSharesRetrieved fulfill];

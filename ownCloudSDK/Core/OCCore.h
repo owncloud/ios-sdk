@@ -31,13 +31,15 @@
 #import "OCAsyncSequentialQueue.h"
 #import "OCActivityManager.h"
 #import "OCActivityUpdate.h"
+#import "OCRecipientSearchController.h"
 
 @class OCCore;
 @class OCItem;
 @class OCCoreItemListTask;
 @class OCSyncAction;
 @class OCIPNotificationCenter;
-@class OCRateLimitter;
+@class OCRecipientSearchController;
+@class OCShareQuery;
 
 @class OCCoreConnectionStatusSignalProvider;
 @class OCCoreServerStatusSignalProvider;
@@ -116,6 +118,8 @@ NS_ASSUME_NONNULL_BEGIN
 	OCCoreMemoryConfiguration _memoryConfiguration;
 
 	NSMutableArray <OCQuery *> *_queries;
+
+	NSMutableArray <OCShareQuery *> *_shareQueries;
 
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
@@ -222,8 +226,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
 
 #pragma mark - Item location & directory lifecycle
-- (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself.
+- (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself. Also returns a URL for items that don't have a local copy. Please use -localCopyOfItem: if you'd like to check for a local copy and retrive its URL in one go.
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
+
+- (NSURL *)localCopyOfItem:(OCItem *)item; 			//!< Returns the local URL of the item if a local copy exists.
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
@@ -247,6 +253,53 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (Thumbnails)
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
+@end
+
+@interface OCCore (Sharing)
+- (void)startShareQuery:(OCShareQuery *)shareQuery;
+- (void)reloadShareQuery:(OCShareQuery *)shareQuery;
+- (void)stopShareQuery:(OCShareQuery *)shareQuery;
+
+/**
+ Creates a new share on the server.
+
+ @param share The OCShare object with the share to create. Use the OCShare convenience constructors for this object.
+ @param options Options (pass nil for now).
+ @param completionHandler Completion handler to receive the result upon completion.
+ @return A progress object tracking the underlying HTTP request.
+ */
+- (nullable NSProgress *)createShare:(OCShare *)share options:(nullable OCShareOptions)options completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable newShare))completionHandler;
+
+/**
+ Updates an existing share with changes.
+
+ @param share The share to update (without changes).
+ @param performChanges A block within which the changes to the share need to be performed (will be called immediately) so the method can detect what changed and perform updates on the server as needed.
+ @param completionHandler Completion handler to receive the result upon completion.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable NSProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable newShare))completionHandler;
+
+/**
+ Deletes an existing share.
+
+ @param share The share to delete.
+ @param completionHandler Completion handler to receive the result upon completion.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable NSProgress *)deleteShare:(OCShare *)share completionHandler:(void(^)(NSError * _Nullable error))completionHandler;
+
+/**
+ Make a decision on whether to allow or reject a request for federated sharing.
+
+ @param share The share to make the decision on.
+ @param accept YES to allow the request for sharing. NO to decline it.
+ @param completionHandler Completion handler to receive the result upon completion.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable NSProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept completionHandler:(void(^)(NSError * _Nullable error))completionHandler;
+
+- (OCRecipientSearchController *)recipientSearchControllerForItem:(OCItem *)item; //!< Returns a recipient search controller for the provided item
 @end
 
 @interface OCCore (CommandDownload)
