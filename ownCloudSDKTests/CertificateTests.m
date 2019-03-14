@@ -56,7 +56,7 @@
 - (void)testCertificateMetaDataParsingFromWeb
 {
 	NSArray <NSURL *> *urlsToTest = @[
-		[NSURL URLWithString:@"https://demo.owncloud.org/"],
+		[NSURL URLWithString:@"https://owncloud.org/"],
 		[NSURL URLWithString:@"https://www.braintreegateway.com/"]
 	];
 
@@ -72,7 +72,7 @@
 
 			OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
 
-			XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:urlToTest.host], @"Common name is host name");
+			XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:urlToTest.host], @"Common name is host name: metaData=%@, host=%@", metaData, urlToTest.host);
 
 			proceedHandler(YES, nil);
 		};
