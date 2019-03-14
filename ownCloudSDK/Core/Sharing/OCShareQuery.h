@@ -17,12 +17,17 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCCore.h"
+#import "OCCoreQuery.h"
+#import "OCItem.h"
 #import "OCShare.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCShareQuery : NSObject
+@class OCShareQuery;
+
+typedef void(^OCShareQueryChangesAvailableNotificationHandler)(OCShareQuery *query);
+
+@interface OCShareQuery : OCCoreQuery
 
 @property(assign) OCShareScope scope;	//!< The scope of the query
 @property(strong,nullable) OCItem *item; //!< The item for scopes OCShareScopeItem, OCShareScopeItemWithReshares and OCShareScopeSubItems.
@@ -31,7 +36,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) NSDate *lastRefreshStarted; //!< The last time a refresh was initiated by the core
 @property(strong) NSDate *lastRefreshed; //!< The last time the query was refreshed with results from the server
 
-@property(readonly,strong,nonatomic) NSArray <OCShare *> *queryResults;
+@property(readonly,strong,nonatomic) NSArray <OCShare *> *queryResults; //!< KVO-observable array of OCShares resulting from the query
+
+@property(copy) OCShareQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler;
+
++ (instancetype)queryWithScope:(OCShareScope)scope item:(nullable OCItem *)item;
 
 @end
 

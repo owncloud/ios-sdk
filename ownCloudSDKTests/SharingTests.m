@@ -41,7 +41,7 @@
 			[expectList fulfill];
 
 			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-				OCShare *newShare = event.result;
+				OCShare *newShare = (OCShare *)event.result;
 
 				XCTAssert(event.error==nil);
 				XCTAssert(event.result!=nil);
@@ -154,7 +154,7 @@
 			[expectList fulfill];
 
 			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-				OCShare *newShare = event.result;
+				OCShare *newShare = (OCShare *)event.result;
 
 				XCTAssert(event.error==nil);
 				XCTAssert(event.result!=nil);
@@ -263,7 +263,7 @@
 			[expectList fulfill];
 
 			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-				OCShare *newShare = event.result;
+				OCShare *newShare = (OCShare *)event.result;
 
 				XCTAssert(event.error==nil);
 				XCTAssert(event.result!=nil);
@@ -400,7 +400,7 @@
 			[expectList fulfill];
 
 			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-				OCShare *newShare = event.result;
+				OCShare *newShare = (OCShare *)event.result;
 
 				XCTAssert(event.error==nil);
 				XCTAssert(event.result!=nil);
@@ -462,7 +462,7 @@
 										OCShare *createReshare = [OCShare shareWithRecipient:[OCRecipient recipientWithUser:[OCUser userWithUserName:OCTestTarget.demoLogin displayName:nil]] path:share.itemPath permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare expiration:nil];
 
 										[recipientConnection createShare:createReshare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-											OCShare *newReshare = event.result;
+											OCShare *newReshare = (OCShare *)event.result;
 
 											XCTAssert(event.error == nil);
 											XCTAssert(event.result != nil);
@@ -590,7 +590,7 @@
 			[expectList fulfill];
 
 			[connection createShare:createShare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-				OCShare *newShare = event.result;
+				OCShare *newShare = (OCShare *)event.result;
 
 				XCTAssert(event.error==nil);
 				XCTAssert(event.result!=nil);
@@ -923,8 +923,18 @@
 										XCTAssert([error isOCErrorWithCode:OCErrorInsufficientParameters]);
 										XCTAssert(recipients==nil);
 
-										[connection disconnectWithCompletionHandler:^{
-											[expectDisconnect fulfill];
+										[connection retrieveRecipientsForItemType:OCItemTypeCollection ofShareType:nil searchTerm:@"admin@demo.owncloud." maximumNumberOfRecipients:10 completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
+											OCLog(@"Retrieved recipients=%@ with error=%@", recipients, error);
+
+											XCTAssert(error==nil);
+											XCTAssert(recipients.count == 1);
+											XCTAssert(recipients.firstObject.type == OCRecipientTypeUser);
+											XCTAssert([recipients.firstObject.user.userName isEqual:@"admin@demo.owncloud."]);
+											XCTAssert([recipients.firstObject.user.displayName isEqual:@"admin@demo.owncloud."]);
+
+											[connection disconnectWithCompletionHandler:^{
+												[expectDisconnect fulfill];
+											}];
 										}];
 									}];
 								}];

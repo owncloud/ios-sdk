@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
+#import "OCShareQuery.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
@@ -505,43 +506,76 @@
 	}];
 }
 
-- (void)startQuery:(OCQuery *)query
+- (void)startQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	// Add query to list of queries
-	[self queueBlock:^{
-		[self->_queries addObject:query];
-	}];
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
 
-	if (query.querySinceSyncAnchor == nil)
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		// Add query to list of queries
+		[self queueBlock:^{
+			[self->_queries addObject:query];
+		}];
+
+		if (query.querySinceSyncAnchor == nil)
+		{
+			[self _startItemListTaskForQuery:query];
+		}
+		else
+		{
+			[self _startSyncAnchorDatabaseRequestForQuery:query];
+		}
 	}
-	else
+
+	if (shareQuery != nil)
 	{
-		[self _startSyncAnchorDatabaseRequestForQuery:query];
+		[self startShareQuery:shareQuery];
 	}
 }
 
-- (void)reloadQuery:(OCQuery *)query
+- (void)reloadQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	if (query.querySinceSyncAnchor == nil)
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		if (query.querySinceSyncAnchor == nil)
+		{
+			[self _startItemListTaskForQuery:query];
+		}
+	}
+
+	if (shareQuery != nil)
+	{
+		[self reloadShareQuery:shareQuery];
 	}
 }
 
-- (void)stopQuery:(OCQuery *)query
+- (void)stopQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	[self queueBlock:^{
-		[self->_queries removeObject:query];
-		query.state = OCQueryStateStopped;
-	}];
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
+	{
+		[self queueBlock:^{
+			[self->_queries removeObject:query];
+			query.state = OCQueryStateStopped;
+		}];
+	}
+
+	if (shareQuery != nil)
+	{
+		[self stopShareQuery:shareQuery];
+	}
 }
 
 #pragma mark - Tools
@@ -746,11 +780,6 @@
 }
 
 #pragma mark - ## Commands
-- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation

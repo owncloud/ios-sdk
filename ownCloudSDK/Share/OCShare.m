@@ -260,5 +260,37 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : @""), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @"")]);
 }
 
+#pragma mark - Copying
+- (id)copyWithZone:(NSZone *)zone
+{
+	OCShare *copiedShare = [self.class new];
+
+	copiedShare->_identifier = _identifier;
+	copiedShare->_type = _type;
+
+	copiedShare->_itemPath = _itemPath;
+	copiedShare->_itemType = _itemType;
+	copiedShare->_itemOwner = _itemOwner;
+	copiedShare->_itemMIMEType = _itemMIMEType;
+
+	copiedShare->_name = _name;
+	copiedShare->_token = _token;
+	copiedShare->_url = _url;
+
+	copiedShare->_permissions = _permissions;
+
+	copiedShare->_creationDate = _creationDate;
+	copiedShare->_expirationDate = _expirationDate;
+
+	copiedShare->_password = _password;
+
+	copiedShare->_owner = _owner;
+	copiedShare->_recipient = _recipient;
+
+	copiedShare->_mountPoint = _mountPoint;
+	copiedShare->_accepted = _accepted;
+
+	return (copiedShare);
+}
 
 @end

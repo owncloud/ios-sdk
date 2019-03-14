@@ -73,7 +73,7 @@ typedef NSString* OCShareID;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCShare : NSObject <NSSecureCoding>
+@interface OCShare : NSObject <NSSecureCoding, NSCopying>
 
 @property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share
 

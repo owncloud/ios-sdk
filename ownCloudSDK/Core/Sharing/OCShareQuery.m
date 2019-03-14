@@ -18,6 +18,7 @@
 
 #import "OCShareQuery.h"
 #import "OCShareQuery+Internal.h"
+#import "OCLogger.h"
 
 @interface OCShareQuery ()
 {
@@ -29,6 +30,41 @@
 @end
 
 @implementation OCShareQuery
+
+#pragma mark - Convenience initializers
++ (instancetype)queryWithScope:(OCShareScope)scope item:(OCItem *)item
+{
+	OCShareQuery *query = [self new];
+
+	query.scope = scope;
+
+	switch (scope)
+	{
+		case OCShareScopeSharedByUser:
+		case OCShareScopeSharedWithUser:
+		case OCShareScopePendingCloudShares:
+		case OCShareScopeAcceptedCloudShares:
+			if (item != nil)
+			{
+				OCLogWarning(@"Item %@ provided to create share query with scope that doesn't support an item");
+			}
+		break;
+
+		case OCShareScopeItem:
+		case OCShareScopeItemWithReshares:
+		case OCShareScopeSubItems:
+			if (item == nil)
+			{
+				OCLogError(@"No item provided to create share query with a scope that requires one");
+				return (nil);
+			}
+
+			query.item = item;
+		break;
+	}
+
+	return (query);
+}
 
 #pragma mark - Init & Dealloc
 - (instancetype)init
@@ -55,12 +91,17 @@
 		}
 	}
 	[self didChangeValueForKey:@"queryResults"];
+
+	if (_changesAvailableNotificationHandler != nil)
+	{
+		_changesAvailableNotificationHandler(self);
+	}
 }
 
 - (void)_updateWithRetrievedShares:(NSArray <OCShare *> *)newShares forItem:(OCItem *)item scope:(OCShareScope)scope
 {
 	// Replace if item and scope match and differences in the objects were found
-	if (([self.item.path isEqual:item.path]) && (scope == self.scope))
+	if ((([self.item.path isEqual:item.path]) || (self.item == item)) && (scope == self.scope))
 	{
 		BOOL hasDifferences;
 
@@ -139,7 +180,7 @@
 		switch (_scope)
 		{
 			case OCShareScopePendingCloudShares:
-				doAdd = (addedShare.type == OCShareTypeRemote) && (addedShare.accepted!=nil) && !addedShare.accepted.boolValue;
+				doAdd = (addedShare.type == OCShareTypeRemote) && (addedShare.accepted!=nil) && (!addedShare.accepted.boolValue);
 			break;
 
 			case OCShareScopeAcceptedCloudShares:
@@ -151,7 +192,7 @@
 			break;
 
 			case OCShareScopeSharedWithUser:
-				// Additions are "handled" by full replacements, so don't add items here
+				// Additions are "handled" by full replacements and never come from the user's own actions (mind the "shared WITH"), so don't add items here
 			break;
 
 			case OCShareScopeItem:
@@ -233,7 +274,7 @@
 
 	@synchronized(self)
 	{
-		if ((queryResults = _queryResults) != nil)
+		if ((queryResults = _queryResults) == nil)
 		{
 			_queryResults = [[NSArray alloc] initWithArray:_shares];
 			queryResults = _queryResults;

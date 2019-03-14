@@ -438,6 +438,7 @@
 	NSMutableDictionary *userInfo = [NSMutableDictionary new];
 
 	// Perform changes
+	share = [share copy];
 	performChanges(share);
 
 	// Compare and detect changes
@@ -608,7 +609,11 @@
 	if (share.type == OCShareTypeRemote)
 	{
 		// Shares of type "remote" need to be declined to be deleted
-		return ([self makeDecisionOnShare:share accept:NO resultTarget:eventTarget]);
+		if (share.owner.isRemote)
+		{
+			// But only if the owner is remote (otherwise the share was created by the logged in user)
+			return ([self makeDecisionOnShare:share accept:NO resultTarget:eventTarget]);
+		}
 	}
 
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];

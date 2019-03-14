@@ -25,6 +25,9 @@
 	OCRateLimiter *_rateLimiter;
 	OCItemType _itemType;
 	NSUInteger _activeRetrievalCounter;
+
+	NSUInteger _lastSearchID;
+	NSUInteger _searchIDCounter;
 }
 
 @end
@@ -88,6 +91,8 @@
 
 	if ((core = _core) != nil)
 	{
+		NSUInteger searchID;
+
 		@synchronized(self)
 		{
 			_activeRetrievalCounter++;
@@ -97,10 +102,11 @@
 				self.isWaitingForResults = YES;
 				[core beginActivity:@"Search for recipients"];
 			}
+
+			searchID = _searchIDCounter++;
 		}
 
 		[core.connection retrieveRecipientsForItemType:_itemType ofShareType:self.shareTypes searchTerm:self.searchTerm maximumNumberOfRecipients:self.maximumResultCount completionHandler:^(NSError * _Nullable error, NSArray<OCRecipient *> * _Nullable recipients) {
-
 			@synchronized(self)
 			{
 				self->_activeRetrievalCounter--;
@@ -110,6 +116,14 @@
 					self.isWaitingForResults = NO;
 					[core endActivity:@"Search for recipients"];
 				}
+
+				if (searchID < self->_lastSearchID)
+				{
+					// Ignore search results that are older than already received search results, so that a "large" search that returns after a subsequent "short" search can't overwrite more recent, more specific results for a different search term
+					return;
+				}
+
+				self->_lastSearchID = searchID;
 			}
 
 			self.recipients = recipients;

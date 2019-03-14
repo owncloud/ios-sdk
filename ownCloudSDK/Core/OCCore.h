@@ -20,6 +20,7 @@
 #import "OCBookmark.h"
 #import "OCVault.h"
 #import "OCQuery.h"
+#import "OCShareQuery.h"
 #import "OCItem.h"
 #import "NSProgress+OCEvent.h"
 #import "OCConnection.h"
@@ -39,7 +40,7 @@
 @class OCSyncAction;
 @class OCIPNotificationCenter;
 @class OCRecipientSearchController;
-@class OCShareQuery;
+@class OCCoreQuery;
 
 @class OCCoreConnectionStatusSignalProvider;
 @class OCCoreServerStatusSignalProvider;
@@ -209,13 +210,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler;
 
 #pragma mark - Query
-- (void)startQuery:(OCQuery *)query;	//!< Starts a query
-- (void)reloadQuery:(OCQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
-- (void)stopQuery:(OCQuery *)query;	//!< Stops a query
+- (void)startQuery:(OCCoreQuery *)query;	//!< Starts a query
+- (void)reloadQuery:(OCCoreQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
+- (void)stopQuery:(OCCoreQuery *)query;	//!< Stops a query
 
 #pragma mark - Commands
-- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
-
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
 - (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
 
@@ -256,10 +255,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface OCCore (Sharing)
-- (void)startShareQuery:(OCShareQuery *)shareQuery;
-- (void)reloadShareQuery:(OCShareQuery *)shareQuery;
-- (void)stopShareQuery:(OCShareQuery *)shareQuery;
-
 /**
  Creates a new share on the server.
 
@@ -278,7 +273,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param completionHandler Completion handler to receive the result upon completion.
  @return A progress object tracking the underlying HTTP request(s).
  */
-- (nullable NSProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable newShare))completionHandler;
+- (nullable NSProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable updatedShare))completionHandler;
 
 /**
  Deletes an existing share.

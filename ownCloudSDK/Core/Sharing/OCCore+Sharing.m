@@ -28,6 +28,8 @@
 {
 	[self queueBlock:^{
 		[self->_shareQueries addObject:shareQuery];
+
+		[self reloadShareQuery:shareQuery];
 	}];
 }
 
@@ -59,12 +61,15 @@
 	}];
 }
 
-- (void)_updateShareQueriesWithAddedShare:(nullable OCShare *)addedShare updatedShare:(nullable OCShare *)updatedShare removedShare:(nullable OCShare *)removedShare
+- (void)_updateShareQueriesWithAddedShare:(nullable OCShare *)addedShare updatedShare:(nullable OCShare *)updatedShare removedShare:(nullable OCShare *)removedShare limitScope:(NSNumber *)scopeNumber
 {
 	[self queueBlock:^{
 		for (OCShareQuery *query in self->_shareQueries)
 		{
-			[query _updateWithAddedShare:addedShare updatedShare:updatedShare removedShare:removedShare];
+			if ((scopeNumber == nil) || ((scopeNumber != nil) && (scopeNumber.integerValue == query.scope)))
+			{
+				[query _updateWithAddedShare:addedShare updatedShare:updatedShare removedShare:removedShare];
+			}
 		}
 	}];
 }
@@ -77,26 +82,26 @@
 	progress = [self.connection createShare:share options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if ((event.result != nil) && (event.error == nil))
 		{
-			[self _updateShareQueriesWithAddedShare:event.result updatedShare:nil removedShare:nil];
+			[self _updateShareQueriesWithAddedShare:(OCShare *)event.result updatedShare:nil removedShare:nil limitScope:nil];
 		}
 
-		completionHandler(event.error, event.result);
+		completionHandler(event.error, (OCShare *)event.result);
 	} userInfo:nil ephermalUserInfo:nil]];
 
 	return (progress.progress);
 }
 
-- (nullable NSProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable newShare))completionHandler
+- (nullable NSProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable updatedShare))completionHandler
 {
 	OCProgress *progress;
 
 	progress = [self.connection updateShare:share afterPerformingChanges:performChanges resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if ((event.result != nil) && (event.error == nil))
 		{
-			[self _updateShareQueriesWithAddedShare:nil updatedShare:event.result removedShare:nil];
+			[self _updateShareQueriesWithAddedShare:nil updatedShare:(OCShare *)event.result removedShare:nil limitScope:nil];
 		}
 
-		completionHandler(event.error, event.result);
+		completionHandler(event.error, (OCShare *)event.result);
 	} userInfo:nil ephermalUserInfo:nil]];
 
 	return (progress.progress);
@@ -109,7 +114,7 @@
 	progress = [self.connection deleteShare:share resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
-			[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share];
+			[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:nil];
 		}
 
 		completionHandler(event.error);
@@ -126,7 +131,8 @@
 		if (event.error == nil)
 		{
 			share.accepted = @(accept);
-			[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil];
+			[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
+			[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
 		}
 
 		completionHandler(event.error);

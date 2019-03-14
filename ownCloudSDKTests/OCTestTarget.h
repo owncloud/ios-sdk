@@ -36,3 +36,7 @@
 + (OCBookmark *)federatedBookmark;
 
 @end
+
+#define XCTWeakSelfAssert(expression, ...) \
+    _XCTPrimitiveAssertTrue(weakSelf, expression, @#expression, __VA_ARGS__)
+
