@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
+#import "OCShareQuery.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
@@ -42,7 +43,7 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
-#import "OCRateLimitter.h"
+#import "OCRateLimiter.h"
 
 @interface OCCore ()
 {
@@ -51,7 +52,7 @@
 	dispatch_block_t _runningActivitiesCompleteBlock;
 
 	NSUInteger _pendingIPCChangeNotifications;
-	OCRateLimitter *_ipChangeNotificationRateLimitter;
+	OCRateLimiter *_ipChangeNotificationRateLimiter;
 
 	OCIPCNotificationName _ipNotificationName;
 	OCIPNotificationCenter *_ipNotificationCenter;
@@ -100,7 +101,8 @@
 	return (@{
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
 			@"*"
-		]
+		],
+		OCCoreAddAcceptLanguageHeader : @(YES)
 	});
 }
 
@@ -121,11 +123,6 @@
 
 		_automaticItemListUpdatesEnabled = YES;
 
-		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
-		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
-		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
-		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
-		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
@@ -135,11 +132,12 @@
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
-		_ipChangeNotificationRateLimitter = [[OCRateLimitter alloc] initWithMinimumTime:0.1];
+		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
+		_shareQueries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
 		_queuedItemListTaskPaths = [NSMutableArray new];
@@ -172,6 +170,21 @@
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 		_connection.delegate = self;
+
+		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
+		{
+			NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+
+			if (preferredLocalizations.count > 0)
+			{
+				NSString *acceptLanguage;
+
+				if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
+				{
+					_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
+				}
+			}
+		}
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
@@ -411,6 +424,20 @@
 			[self beginActivity:@"Connection connect"];
 
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+				if (error == nil)
+				{
+					OCChecksumAlgorithmIdentifier preferredUploadChecksumType;
+
+					// Use preferred upload checksum type if information is provided as part of capabilities and algorith is available locally
+					if ((preferredUploadChecksumType = self.connection.capabilities.preferredUploadChecksumType) != nil)
+					{
+						if (([OCChecksumAlgorithm algorithmForIdentifier:preferredUploadChecksumType] != nil) && (![self->_preferredChecksumAlgorithm isEqual:preferredUploadChecksumType]))
+						{
+							self->_preferredChecksumAlgorithm = preferredUploadChecksumType;
+						}
+					}
+				}
+
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)
@@ -488,43 +515,76 @@
 	}];
 }
 
-- (void)startQuery:(OCQuery *)query
+- (void)startQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	// Add query to list of queries
-	[self queueBlock:^{
-		[self->_queries addObject:query];
-	}];
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
 
-	if (query.querySinceSyncAnchor == nil)
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		// Add query to list of queries
+		[self queueBlock:^{
+			[self->_queries addObject:query];
+		}];
+
+		if (query.querySinceSyncAnchor == nil)
+		{
+			[self _startItemListTaskForQuery:query];
+		}
+		else
+		{
+			[self _startSyncAnchorDatabaseRequestForQuery:query];
+		}
 	}
-	else
+
+	if (shareQuery != nil)
 	{
-		[self _startSyncAnchorDatabaseRequestForQuery:query];
+		[self startShareQuery:shareQuery];
 	}
 }
 
-- (void)reloadQuery:(OCQuery *)query
+- (void)reloadQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	if (query.querySinceSyncAnchor == nil)
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		if (query.querySinceSyncAnchor == nil)
+		{
+			[self _startItemListTaskForQuery:query];
+		}
+	}
+
+	if (shareQuery != nil)
+	{
+		[self reloadShareQuery:shareQuery];
 	}
 }
 
-- (void)stopQuery:(OCQuery *)query
+- (void)stopQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	[self queueBlock:^{
-		[self->_queries removeObject:query];
-		query.state = OCQueryStateStopped;
-	}];
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
+	{
+		[self queueBlock:^{
+			[self->_queries removeObject:query];
+			query.state = OCQueryStateStopped;
+		}];
+	}
+
+	if (shareQuery != nil)
+	{
+		[self stopShareQuery:shareQuery];
+	}
 }
 
 #pragma mark - Tools
@@ -583,7 +643,7 @@
 - (void)postIPCChangeNotification
 {
 	// Wait for database transaction to settle and current task on the queue to finish before posting the notification
-	@synchronized(_ipChangeNotificationRateLimitter)
+	@synchronized(_ipChangeNotificationRateLimiter)
 	{
 		_pendingIPCChangeNotifications++;
 
@@ -594,12 +654,12 @@
 	}
 
 	// Rate-limit IP change notifications
-	[_ipChangeNotificationRateLimitter runRateLimitedBlock:^{
+	[_ipChangeNotificationRateLimiter runRateLimitedBlock:^{
 		[self queueBlock:^{
 			// Transaction is not yet closed, so post IPC change notification only after changes have settled
 			[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
 				// Post IPC change notification
-				@synchronized(self->_ipChangeNotificationRateLimitter)
+				@synchronized(self->_ipChangeNotificationRateLimiter)
 				{
 					if (self->_pendingIPCChangeNotifications != 0)
 					{
@@ -729,11 +789,6 @@
 }
 
 #pragma mark - ## Commands
-- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	return(nil); // Stub implementation
@@ -921,6 +976,16 @@
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
 {
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
+}
+
+- (NSURL *)localCopyOfItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self localURLForItem:item]);
+	}
+
+	return (nil);
 }
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
@@ -1250,6 +1315,7 @@
 
 @end
 
+OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header";
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";

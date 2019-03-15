@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCCoreItemListTask.h"
+#import "OCShareQuery.h"
 
 @interface OCCore (Internal)
 
@@ -43,5 +44,12 @@
 - (void)postIPCChangeNotification;
 - (void)_checkForChangesByOtherProcessesAndUpdateQueries;
 - (void)_replayChangesSinceSyncAnchor:(OCSyncAnchor)fromSyncAnchor;
+
+#pragma mark - Share queries
+- (void)startShareQuery:(OCShareQuery *)shareQuery;
+- (void)reloadShareQuery:(OCShareQuery *)shareQuery;
+- (void)stopShareQuery:(OCShareQuery *)shareQuery;
+
+- (void)_pollNextShareQuery;
 
 @end

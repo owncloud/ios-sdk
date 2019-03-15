@@ -26,13 +26,14 @@
 - (NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
 	OCHTTPRequest *request;
+	NSProgress *progress = nil;
 
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
 	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 	[request setValue:@"json" forParameter:@"format"];
 
-	[self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)
 		{
 			completionHandler(error, nil);
@@ -70,7 +71,7 @@
 		}
 	}];
 
-	return (nil);
+	return (progress);
 }
 
 @end

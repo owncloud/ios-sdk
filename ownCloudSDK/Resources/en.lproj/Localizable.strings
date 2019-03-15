@@ -218,3 +218,24 @@
 
 // OCErrorRunningOperation
 "A running operation prevents execution." = "A running operation prevents execution.";
+
+// OCErrorShareUnauthorized:
+"Not authorized to access shares." = "Not authorized to access shares.";
+
+// OCErrorShareUnavailable
+"Shares are unavailable." = "Shares are unavailable.";
+
+// OCErrorShareItemNotADirectory:
+"Item is not a directory." = "Item is not a directory.";
+
+// OCErrorShareItemNotFound
+"Item not found." = "Item not found.";
+
+// OCErrorShareNotFound
+"Share not found." = "Share not found.";
+
+// OCErrorShareUnknownType
+"Unknown share type." = "Unknown share type.";
+
+// OCErrorSharePublicUploadDisabled
+"Public upload was disabled by the administrator." = "Public upload was disabled by the administrator.";

@@ -32,6 +32,20 @@
 	return [[NSUUID new].UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
 }
 
+#pragma mark - Init
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		[self _captureCallstack];
+
+		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
+		_localID = [OCItem generateNewLocalID];
+	}
+
+	return (self);
+}
+
 #pragma mark - Placeholder
 + (instancetype)placeholderItemOfType:(OCItemType)type
 {
@@ -49,22 +63,6 @@
 + (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName
 {
 	return (OCLocalized([@"itemProperty.%@" stringByAppendingString:propertyName]));
-}
-
-#pragma mark - Serialization tools
-+ (instancetype)itemFromSerializedData:(NSData *)serializedData;
-{
-	if (serializedData != nil)
-	{
-		return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
-	}
-
-	return (nil);
-}
-
-- (NSData *)serializedData
-{
-	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
 }
 
 #pragma mark - Secure Coding
@@ -110,23 +108,12 @@
 	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
 	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
+	[coder encodeInteger:_shareTypesMask 	forKey:@"shareTypesMask"];
+	[coder encodeObject:_owner 		forKey:@"owner"];
+
 	[coder encodeObject:_shares		forKey:@"shares"];
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
-}
-
-#pragma mark - Init & Dealloc
-- (instancetype)init
-{
-	if ((self = [super init]) != nil)
-	{
-		[self _captureCallstack];
-
-		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
-		_localID = [OCItem generateNewLocalID];
-	}
-
-	return (self);
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -172,12 +159,31 @@
 		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
+		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
+		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
+
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 	}
 
 	return (self);
+}
+
+#pragma mark - Serialization tools
++ (instancetype)itemFromSerializedData:(NSData *)serializedData;
+{
+	if (serializedData != nil)
+	{
+		return ([NSKeyedUnarchiver unarchiveObjectWithData:serializedData]);
+	}
+
+	return (nil);
+}
+
+- (NSData *)serializedData
+{
+	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
 }
 
 #pragma mark - Metadata
@@ -324,6 +330,17 @@
 	}
 }
 
+#pragma mark - Sharing
+- (BOOL)isSharedWithUser
+{
+	return ((_permissions & OCItemPermissionShared) == OCItemPermissionShared);
+}
+
+- (BOOL)isShareable
+{
+	return ((_permissions & OCItemPermissionShareable) == OCItemPermissionShareable);
+}
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
 {
@@ -463,6 +480,9 @@
 
 	CloneMetadata(@"shares");
 
+	CloneMetadata(@"shareTypesMask");
+	CloneMetadata(@"ownerDisplayName");
+
 	CloneMetadata(@"databaseID");
 }
 
@@ -486,9 +506,67 @@
 }
 
 #pragma mark - Description
+- (NSString *)_shareTypesDescription
+{
+	NSString *shareTypesDescription = nil;
+	OCShareTypesMask checkMask = 1;
+
+	do
+	{
+		if ((self.shareTypesMask & checkMask) != 0)
+		{
+			NSString *shareTypeName = nil;
+
+			switch (checkMask)
+			{
+				case OCShareTypesMaskNone:
+				break;
+
+				case OCShareTypesMaskUserShare:
+					shareTypeName = @"user";
+				break;
+
+				case OCShareTypesMaskGroupShare:
+					shareTypeName = @"group";
+				break;
+
+				case OCShareTypesMaskLink:
+					shareTypeName = @"link";
+				break;
+
+				case OCShareTypesMaskGuest:
+					shareTypeName = @"guest";
+				break;
+
+				case OCShareTypesMaskRemote:
+					shareTypeName = @"remote";
+				break;
+			}
+
+			if (shareTypeName != nil)
+			{
+				if (shareTypesDescription==nil)
+				{
+					shareTypesDescription = shareTypeName;
+				}
+				else
+				{
+					shareTypesDescription = [shareTypesDescription stringByAppendingFormat:@", %@", shareTypeName];
+				}
+			}
+		}
+
+		checkMask <<= 1;
+	} while(checkMask <= self.shareTypesMask);
+
+	return (shareTypesDescription);
+}
+
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, (_removed ? @", removed" : @"")]);
+	NSString *shareTypesDescription = [self _shareTypesDescription];
+
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @"")]);
 }
 
 #pragma mark - Copying

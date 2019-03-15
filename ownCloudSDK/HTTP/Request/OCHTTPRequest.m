@@ -20,6 +20,7 @@
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCMacros.h"
 
 @implementation OCHTTPRequest
 
@@ -87,6 +88,60 @@
 	}
 }
 
+- (void)setValueArray:(NSArray *)valueArray apply:(NSString *(^)(id value))applyBlock forParameter:(NSString *)parameter
+{
+	NSUInteger index = 0;
+
+	if (parameter == nil) { return; }
+
+	if ((valueArray != nil) && (valueArray.count > 0))
+	{
+		for (id value in valueArray)
+		{
+			NSString *valueString = nil;
+
+			if (applyBlock != nil)
+			{
+				valueString = applyBlock(value);
+			}
+
+			if (valueString != nil)
+			{
+				valueString = OCTypedCast(valueString, NSString);
+			}
+
+			if (valueString != nil)
+			{
+				if ((index==0) && (valueArray.count == 1))
+				{
+					[self setValue:valueString forParameter:parameter];
+				}
+				else
+				{
+					[self setValue:valueString forParameter:[NSString stringWithFormat:@"%@[%ld]", parameter, index]];
+				}
+
+				index++;
+			}
+		}
+	}
+	else
+	{
+		NSString *parameterArrayPrefix = [parameter stringByAppendingString:@"["];
+		NSMutableArray *removeKeys = [NSMutableArray new];
+
+		for (NSString *parameterName in _parameters)
+		{
+			if (([parameterName hasPrefix:parameterArrayPrefix]) || [parameterName isEqual:parameter])
+			{
+				[removeKeys addObject:parameterName];
+			}
+		}
+
+		[_parameters removeObjectsForKeys:removeKeys];
+	}
+}
+
 - (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters
 {
 	if (parameters != nil)
@@ -130,7 +185,7 @@
 	// Handle parameters and set effective URL
 	if (_parameters.count > 0)
 	{
-		if ([_method isEqual:OCHTTPMethodPOST])
+		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
 			// POST Method: Generate body from parameters
 			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];

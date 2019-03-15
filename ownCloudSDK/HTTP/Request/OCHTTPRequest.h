@@ -94,6 +94,7 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *re
 #pragma mark - Access
 - (NSString *)valueForParameter:(NSString *)parameter;
 - (void)setValue:(NSString *)value forParameter:(NSString *)parameter;
+- (void)setValueArray:(NSArray *)valueArray apply:(NSString *(^)(id value))applyBlock forParameter:(NSString *)parameter;
 
 - (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters;
 

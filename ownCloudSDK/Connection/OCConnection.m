@@ -36,6 +36,7 @@
 #import "OCAppIdentity.h"
 #import "OCHTTPPipelineManager.h"
 #import "OCHTTPPipelineTask.h"
+#import "OCHTTPResponse+DAVError.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -54,6 +55,7 @@
 @synthesize bookmark = _bookmark;
 
 @synthesize loggedInUser = _loggedInUser;
+@synthesize capabilities = _capabilities;
 
 @synthesize actionSignals = _actionSignals;
 
@@ -79,11 +81,14 @@
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
 		OCConnectionEndpointIDStatus 	    		: @"status.php",
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
+		OCConnectionEndpointIDShares			: @"ocs/v1.php/apps/files_sharing/api/v1/shares",
+		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
+		OCConnectionEndpointIDRecipients		: @"ocs/v1.php/apps/files_sharing/api/v1/sharees",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
-		OCConnectionAllowCellular				: @(YES)
+		OCConnectionAllowCellular			: @(YES)
 	});
 }
 
@@ -140,6 +145,8 @@
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+
+		_usersByUserID = [NSMutableDictionary new];
 
 		// Get pipelines
 		[self spinUpPipelines];
@@ -355,6 +362,12 @@
 		{
 			request = [authenticationMethod authorizeRequest:request forConnection:self];
 		}
+	}
+
+	// Static header fields
+	if (_staticHeaderFields != nil)
+	{
+		[request addHeaderFields:_staticHeaderFields];
 	}
 
 	return (request);
@@ -692,28 +705,46 @@
 									if ((error == nil) && (response.status.isSuccess))
 									{
 										// DAV request executed successfully
-										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 
-										// Get user info
-										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
-											self.loggedInUser = loggedInUser;
+										// Retrieve capabilities
+										connectProgress.localizedDescription = OCLocalizedString(@"Retrieving capabilities…", @"");
 
-											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-											if (error!=nil)
+										[self retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
+											if (error == nil)
 											{
-												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+												// Get user info
+												connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
+
+												[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+													self.loggedInUser = loggedInUser;
+
+													connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+													if (error!=nil)
+													{
+														completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+													}
+													else
+													{
+														// DONE!
+														connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+														self.state = OCConnectionStateConnected;
+
+														completionHandler(nil, nil);
+													}
+												}];
 											}
 											else
 											{
-												// DONE!
-												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-												self.state = OCConnectionStateConnected;
-
-												completionHandler(nil, nil);
+												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 											}
 										}];
+									}
+									else
+									{
+										// Intentionally no error handling here! If an error occurs here, it's handled by the auth system, so that calling the completionHandler here will lead to a crash.
+										// (crash reproducable in CoreTests.testInvalidLoginData)
 									}
 								})];
 							}
@@ -803,7 +834,7 @@
 {
 	OCHTTPRequest *statusRequest;
 
-	if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			if ((error == nil) && (response.status.isSuccess))
@@ -851,27 +882,35 @@
 
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
+		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
+
 		[davRequest.xmlRequestPropAttribute addChildren:@[
+			// WebDAV properties
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
-			// [OCXMLNode elementWithName:@"D:creationdate"],
 			[OCXMLNode elementWithName:@"D:getcontentlength"],
-			// [OCXMLNode elementWithName:@"D:displayname"],
 			[OCXMLNode elementWithName:@"D:getcontenttype"],
 			[OCXMLNode elementWithName:@"D:getetag"],
+
+			// OC properties
+			[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+
+			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
+			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
+
+//		 	[OCXMLNode elementWithName:@"D:creationdate"],
+//		 	[OCXMLNode elementWithName:@"D:displayname"],
 //			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
 //			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
-			[OCXMLNode elementWithName:@"size" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"id" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"permissions" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-			[OCXMLNode elementWithName:@"favorite" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
 
-//			[OCXMLNode elementWithName:@"tags" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"share-types" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-count" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-href" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"comments-unread" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]],
-//			[OCXMLNode elementWithName:@"owner-display-name" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+//			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
+//			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
 		]];
 	}
 
@@ -983,7 +1022,7 @@
 
 			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path withErrors:&errors];
+			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:_usersByUserID withErrors:&errors];
 
 			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{
@@ -1576,12 +1615,36 @@
 			}
 			else
 			{
+				NSError *error = request.httpResponse.status.error;
+				NSError *davError = [request.httpResponse bodyParsedAsDAVError];
+				NSString *davMessage = davError.davExceptionMessage;
+
 				switch (request.httpResponse.status.code)
 				{
+					case OCHTTPStatusCodeFORBIDDEN:
+						// Server doesn't allow creation of folder here
+						error = OCErrorWithDescription(OCErrorItemInsufficientPermissions, davMessage);
+					break;
+
+					case OCHTTPStatusCodeMETHOD_NOT_ALLOWED:
+						// Folder already exists
+						error = OCErrorWithDescription(OCErrorItemAlreadyExists, davMessage);
+					break;
+
+					case OCHTTPStatusCodeCONFLICT:
+						// Parent folder doesn't exist
+						error = OCErrorWithDescription(OCErrorItemNotFound, davMessage);
+					break;
+
 					default:
-						event.error = request.httpResponse.status.error;
+						if (davError != nil)
+						{
+							error = davError;
+						}
 					break;
 				}
+
+				event.error = error;
 			}
 		}
 	}
@@ -2019,11 +2082,6 @@
 }
 
 #pragma mark - Actions
-- (OCProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget
-{
-	// Stub implementation
-	return(nil);
-}
 
 #pragma mark - Sending requests
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler
@@ -2083,6 +2141,9 @@ OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
 OCConnectionEndpointID OCConnectionEndpointIDThumbnail = @"endpoint-thumbnail";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
+OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
+OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
+OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

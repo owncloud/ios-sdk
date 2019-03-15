@@ -41,12 +41,32 @@
 
 - (NSError *)xmlParser:(OCXMLParser *)xmlParser parseKey:(NSString *)key value:(id)value attributes:(NSDictionary <NSString*,NSString*> *)attributes
 {
+	id setValue = ((value==nil) ? [NSNull null] : value);
+
 	if (_keyValues==nil)
 	{
-		_keyValues = [NSMutableDictionary new];
+		_keyValues = [[NSMutableDictionary alloc] initWithObjectsAndKeys: setValue, key, nil];
 	}
-	
-	_keyValues[key] = ((value==nil) ? [NSNull null] : value);
+	else
+	{
+		id existingKeyValue = nil;
+
+		if ((existingKeyValue = _keyValues[key]) == nil)
+		{
+			_keyValues[key] = setValue;
+		}
+		else
+		{
+			if ([existingKeyValue isKindOfClass:[NSMutableArray class]])
+			{
+				[(NSMutableArray *)existingKeyValue addObject:setValue];
+			}
+			else
+			{
+				_keyValues[key] = [[NSMutableArray alloc] initWithObjects:existingKeyValue, setValue, nil];
+			}
+		}
+	}
 
 	return (nil);
 }
@@ -168,7 +188,17 @@
 		if ((parseBlock = blockForKeysDict[key]) != nil)
 		{
 			@autoreleasepool {
-				parseBlock(target, key, value);
+				if ([value isKindOfClass:[NSArray class]])
+				{
+					for (id singleValue in (NSArray *)value)
+					{
+						parseBlock(target, key, singleValue);
+					}
+				}
+				else
+				{
+					parseBlock(target, key, value);
+				}
 			}
 		}
 	}];

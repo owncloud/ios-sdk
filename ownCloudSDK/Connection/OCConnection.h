@@ -29,6 +29,7 @@
 #import "OCLogTag.h"
 #import "OCIPNotificationCenter.h"
 #import "OCHTTPTypes.h"
+#import "OCCapabilities.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -77,6 +78,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCHTTPPipelinePartitionID _partitionID;
 
 	OCUser *_loggedInUser;
+	OCCapabilities *_capabilities;
 
 	OCConnectionState _state;
 
@@ -85,6 +87,8 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	__weak id <OCConnectionHostSimulator> _hostSimulator;
 
 	NSDictionary<NSString *, id> *_serverStatus;
+
+	NSMutableDictionary<NSString *, OCUser *> *_usersByUserID;
 
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
@@ -100,9 +104,12 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
+@property(strong) NSDictionary<NSString *, NSString *> *staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
+
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
 @property(strong) OCUser *loggedInUser;
+@property(strong) OCCapabilities *capabilities;
 
 @property(strong) OCHTTPPipeline *ephermalPipeline; //!< Pipeline for requests whose response is only interesting for the instance making them (f.ex. login, status, PROPFINDs)
 @property(strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
@@ -154,8 +161,6 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 - (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (OCProgress *)shareItem:(OCItem *)item options:(OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
-
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler; //!< Sends a request to the ephermal pipeline and returns the result via the ephermalResultHandler.
@@ -198,6 +203,78 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @end
 
+#pragma mark - SHARING
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
+
+@interface OCConnection (Sharing)
+
+#pragma mark - Retrieval
+- (nullable NSProgress *)retrieveSharesWithScope:(OCShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the shares for the given scope and (optional) item.
+
+- (nullable NSProgress *)retrieveShareWithID:(OCShareID)shareID options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareCompletionHandler)completionHandler; //!< Retrieves the share for the given shareID.
+
+#pragma mark - Creation and deletion
+/**
+ Creates a new share on the server.
+
+ @param share The OCShare object with the share to create. Use the OCShare convenience constructors for this object.
+ @param options Options (pass nil for now).
+ @param eventTarget Event target to receive the outcome via the event's .error and .result. The latter can contain an OCShare object.
+ @return A progress object tracking the underlying HTTP request.
+ */
+- (nullable OCProgress *)createShare:(OCShare *)share options:(nullable OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
+
+/**
+ Updates an existing share with changes.
+
+ @param share The share to update (without changes).
+ @param performChanges A block within which the changes to the share need to be performed (will be called immediately) so the method can detect what changed and perform updates on the server as needed.
+ @param eventTarget Event target to receive the outcome via the event's .error and .result. The latter can contain an OCShare object.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges resultTarget:(OCEventTarget *)eventTarget;
+
+/**
+ Deletes an existing share.
+
+ @param share The share to delete.
+ @param eventTarget Event target to receive the outcome via the event's .error.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)deleteShare:(OCShare *)share resultTarget:(OCEventTarget *)eventTarget;
+
+#pragma mark - Federated share management
+/**
+ Make a decision on whether to allow or reject a request for federated sharing.
+
+ @param share The share to make the decision on.
+ @param accept YES to allow the request for sharing. NO to decline it.
+ @param eventTarget Event target to receive the outcome via the event's .error.
+ @return A progress object tracking the underlying HTTP request(s).
+ */
+- (nullable OCProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept resultTarget:(OCEventTarget *)eventTarget;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+#pragma mark - RECIPIENTS
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCRecipient *> * _Nullable recipients);
+
+@interface OCConnection (Recipients)
+
+#pragma mark - Retrieval
+- (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
 #pragma mark - USERS
 @interface OCConnection (Users)
 
@@ -226,6 +303,9 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 #pragma mark - COMPATIBILITY
 @interface OCConnection (Compatibility)
 
+#pragma mark - Retrieve capabilities
+- (NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler;
+
 #pragma mark - Version
 - (NSString *)serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
 - (NSString *)serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
@@ -251,6 +331,9 @@ extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
+extern OCConnectionEndpointID OCConnectionEndpointIDShares;
+extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
+extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]

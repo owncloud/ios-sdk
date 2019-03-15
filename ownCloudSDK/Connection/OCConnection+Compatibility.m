@@ -23,6 +23,48 @@
 
 @implementation OCConnection (Compatibility)
 
+#pragma mark - Retrieve capabilities
+- (NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler
+{
+	OCHTTPRequest *request;
+	NSProgress *progress = nil;
+
+	if ((request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]]) != nil)
+	{
+		request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		[request setValue:@"json" forParameter:@"format"];
+
+		progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+			NSData *responseBody = response.bodyData;
+			OCCapabilities *capabilities = nil;
+
+			if ((error == nil) && response.status.isSuccess && (responseBody!=nil))
+			{
+				NSDictionary<NSString *, id> *rawJSON;
+
+				if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&error]) != nil)
+				{
+					if ((capabilities = [[OCCapabilities alloc] initWithRawJSON:rawJSON]) != nil)
+					{
+						self.capabilities = capabilities;
+					}
+				}
+			}
+			else
+			{
+				if (error == nil)
+				{
+					error = response.status.error;
+				}
+			}
+
+			completionHandler(error, capabilities);
+		}];
+	}
+
+	return (progress);
+}
+
 #pragma mark - Version
 - (NSString *)serverVersion
 {

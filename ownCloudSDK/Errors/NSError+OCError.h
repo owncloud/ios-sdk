@@ -22,6 +22,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 {
 	OCErrorInternal, 		//!< Internal error
 	OCErrorInsufficientParameters, 	//!< Insufficient parameters
+	OCErrorUnknown,			//!< Unknown error
 
 	OCErrorAuthorizationFailed, 		//!< Authorization failed
 	OCErrorAuthorizationRedirect, 		//!< Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL. The userInfo of the error contains the alternative server URL as value for the key OCAuthorizationMethodAlternativeServerURLKey
@@ -75,7 +76,15 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorRunningOperation, //!< A running operation prevents execution
 
-	OCErrorInvalidProcess //!< Invalid process.
+	OCErrorInvalidProcess, //!< Invalid process.
+
+	OCErrorShareUnauthorized, //!< Not authorized to access shares
+	OCErrorShareUnavailable,  //!< Shares are unavailable.
+	OCErrorShareItemNotADirectory, //!< Item is not a directory.
+	OCErrorShareItemNotFound,  //!< Item not found.
+	OCErrorShareNotFound,  	   //!< Share not found.
+	OCErrorShareUnknownType,   //!< Unknown share type.
+	OCErrorSharePublicUploadDisabled //!< Public upload was disabled by the administrator.
 };
 
 @class OCIssue;
@@ -101,6 +110,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
+
+#define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
 
 #define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 

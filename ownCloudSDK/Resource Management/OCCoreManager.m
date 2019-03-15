@@ -67,8 +67,6 @@
 
 - (void)_requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
-	OCCore *returnCore = nil;
-
 	OCLogDebug(@"core requested for bookmark %@", bookmark);
 
 	NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
@@ -85,8 +83,6 @@
 		// Create and start core
 		if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 		{
-			returnCore = core;
-
 			core.postFileProviderNotifications = self.postFileProviderNotifications;
 
 			@synchronized(self)
@@ -227,6 +223,8 @@
 #pragma mark - Background session recovery
 - (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"Handle events for background URL session: %@", identifier);
+
 	[OCHTTPPipelineManager.sharedPipelineManager handleEventsForBackgroundURLSession:identifier completionHandler:completionHandler];
 
 //	OCLogDebug(@"Handle events for background URL session: %@", identifier);

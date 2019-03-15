@@ -48,20 +48,14 @@ typedef NSError *(^OCXMLParserElementValueConverter)(NSString *elementName, NSSt
 	NSInteger _elementContentsLastIndex;
 
 	NSInteger _objectCreationRetainDepth;
-	BOOL _forceRetain;
-
-	NSMutableArray<NSError *> *_errors;
-
-	NSMutableArray *_parsedObjects;
-
-	NSMutableDictionary <NSString *, id> *_options;
 }
 
 @property(readonly,strong) NSMutableArray<NSError *> *errors;
 @property(readonly,strong) NSMutableArray *parsedObjects;
 
 @property(assign) BOOL forceRetain;
-@property(strong) NSMutableDictionary <NSString *, id> *options;
+@property(strong,nonatomic) NSMutableDictionary <NSString *, id> *options;
+@property(strong,nonatomic) NSMutableDictionary <NSString *, id> *userInfo;
 
 #pragma mark - Init & Dealloc
 - (instancetype)initWithParser:(NSXMLParser *)xmlParser;

@@ -21,6 +21,11 @@
 	return ([NSURL URLWithString:@"http://demo.owncloud.org/"]);
 }
 
++ (NSURL *)federatedTargetURL
+{
+	return ([NSURL URLWithString:@"https://demo.owncloud.com/"]);
+}
+
 + (NSString *)adminLogin
 {
 	return (@"admin");
@@ -37,6 +42,26 @@
 }
 
 + (NSString *)userPassword
+{
+	return (@"test");
+}
+
++ (NSString *)demoLogin
+{
+	return (@"demo");
+}
+
++ (NSString *)demoPassword
+{
+	return (@"demo");
+}
+
++ (NSString *)federatedLogin
+{
+	return (@"test");
+}
+
++ (NSString *)federatedPassword
 {
 	return (@"test");
 }
@@ -58,6 +83,28 @@
 
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
 	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+
+	return (bookmark);
+}
+
++ (OCBookmark *)demoBookmark
+{
+	OCBookmark *bookmark;
+
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.demoLogin passphrase:OCTestTarget.demoPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
+
+	return (bookmark);
+}
+
++ (OCBookmark *)federatedBookmark
+{
+	OCBookmark *bookmark;
+
+	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.federatedTargetURL];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.federatedLogin passphrase:OCTestTarget.federatedPassword authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	return (bookmark);

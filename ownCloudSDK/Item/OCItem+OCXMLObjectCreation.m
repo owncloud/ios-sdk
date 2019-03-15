@@ -140,7 +140,38 @@
 				{
 					item.isFavorite = (((NSString *)value).integerValue) ? (__bridge id)kCFBooleanTrue : (__bridge id)kCFBooleanFalse;
 				}
-			} copy]
+			} copy],
+
+			@"oc:share-type" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					if (((NSString *)value).length > 0)
+					{
+						switch (((NSString *)value).integerValue)
+						{
+							case OCShareTypeUserShare:
+								item.shareTypesMask |= OCShareTypesMaskUserShare;
+							break;
+
+							case OCShareTypeGroupShare:
+								item.shareTypesMask |= OCShareTypesMaskGroupShare;
+							break;
+
+							case OCShareTypeLink:
+								item.shareTypesMask |= OCShareTypesMaskLink;
+							break;
+
+							case OCShareTypeGuest:
+								item.shareTypesMask |= OCShareTypesMaskGuest;
+							break;
+
+							case OCShareTypeRemote:
+								item.shareTypesMask |= OCShareTypesMaskRemote;
+							break;
+						}
+					}
+				}
+			} copy],
 		};
 	});
 
@@ -156,6 +187,7 @@
 {
 	OCItem *item = nil;
 	NSString *itemPath;
+	NSMutableDictionary<NSString *, OCUser *> *usersByUserID = xmlParser.options[@"usersByUserID"];
 
 	// Path of item
 	if ((itemPath = responseNode.keyValues[@"d:href"]) != nil)
@@ -188,6 +220,8 @@
 						[propstatNode enumerateChildNodesWithName:@"d:prop" usingBlock:^(OCXMLParserNode *propNode) {
 							// Collection?
 							__block BOOL isCollection = NO;
+							NSString *ownerDisplayName = nil, *ownerID = nil;
+							OCUser *owner = nil;
 
 							[propNode enumerateChildNodesWithName:@"d:resourcetype" usingBlock:^(OCXMLParserNode *resourcetypeNode) {
 								[resourcetypeNode enumerateChildNodesWithName:@"d:collection" usingBlock:^(OCXMLParserNode *collectionNode) {
@@ -195,7 +229,51 @@
 								}];
 							}];
 
+							[propNode enumerateChildNodesWithName:@"oc:share-types" usingBlock:^(OCXMLParserNode *shareTypesNode) {
+								[shareTypesNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];
+							}];
+
 							item.type = isCollection ? OCItemTypeCollection : OCItemTypeFile;
+
+							// Share OCUser instances for owner
+							ownerDisplayName = propNode.keyValues[@"oc:owner-display-name"];
+							ownerID = propNode.keyValues[@"oc:owner-id"];
+
+							if ((ownerID != nil) && (ownerDisplayName != nil))
+							{
+								if (usersByUserID != nil)
+								{
+									@synchronized(usersByUserID)
+									{
+										if ((owner = usersByUserID[ownerID]) != nil)
+										{
+											if (![owner.displayName isEqualToString:ownerDisplayName])
+											{
+												owner = nil;
+											}
+										}
+										else
+										{
+											owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+
+											usersByUserID[ownerID] = owner;
+										}
+									}
+								}
+
+								if (owner == nil)
+								{
+									owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+								}
+							}
+							else
+							{
+								if (ownerID != nil)
+								{
+									owner = [OCUser userWithUserName:ownerID displayName:ownerDisplayName];
+								}
+							}
+							item.owner = owner;
 
 							// Parse remaining key-values
 							[propNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];
@@ -323,4 +401,58 @@ Example response:
     </d:propstat>
 </d:response>
 </d:multistatus>
+
+// Accepted cloud shares
+
+# RESPONSE --------------------------------------------------------
+Method:     GET
+URL:        https://demo.owncloud.com/ocs/v1.php/apps/files_sharing/api/v1/remote_shares
+Request-ID: 19DA2961-8506-4A44-9B12-FFA5D1CF0A98
+Error:      -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+200 NO ERROR
+Content-Type: text/xml; charset=UTF-8
+Pragma: no-cache
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-src *; img-src * data: blob:; font-src 'self' data:; media-src *; connect-src *
+Server: Apache
+x-download-options: noopen
+Content-Encoding: gzip
+x-xss-protection: 1; mode=block
+x-permitted-cross-domain-policies: none
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Date: Thu, 07 Mar 2019 15:32:15 GMT
+x-robots-tag: none
+Content-Length: 333
+x-content-type-options: nosniff
+Vary: Accept-Encoding
+x-frame-options: SAMEORIGIN
+
+<?xml version="1.0"?>
+<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message/>
+ </meta>
+ <data>
+  <element>
+   <id>8</id>
+   <remote>https://demo.owncloud.org</remote>
+   <remote_id>7</remote_id>
+   <share_token>owIxIMahh76sG4D</share_token>
+   <name>/Documents</name>
+   <owner>admin</owner>
+   <user>test</user>
+   <mountpoint>/Documents (2)</mountpoint>
+   <accepted>1</accepted>
+   <mimetype>httpd/unix-directory</mimetype>
+   <mtime>1551970943</mtime>
+   <permissions>9</permissions>
+   <type>dir</type>
+   <file_id>148</file_id>
+  </element>
+ </data>
+</ocs>
+
 */

@@ -18,7 +18,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import <ownCloudSDK/NSString+OCVersionCompare.h>
 
 #import "OCTestTarget.h"
 
@@ -936,6 +935,75 @@
 	}];
 
 	[self waitForExpectationsWithTimeout:120 handler:nil];
+}
+
+- (void)testCapabilitiesDecoding
+{
+	NSURL *capabilitiesURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"capabilities" withExtension:@"json"];
+	NSDictionary<NSString *, id> *jsonDict = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfURL:capabilitiesURL] options:0 error:NULL];
+	OCCapabilities *capabilities = [[OCCapabilities alloc] initWithRawJSON:jsonDict];
+
+	XCTAssert(capabilities.majorVersion.integerValue == 10);
+	XCTAssert(capabilities.minorVersion.integerValue == 1);
+	XCTAssert(capabilities.microVersion != nil);
+
+	XCTAssert(capabilities.pollInterval.integerValue == 60);
+	XCTAssert([capabilities.webDAVRoot isEqual:@"remote.php/webdav"]);
+
+	XCTAssert((capabilities.installed!=nil) && capabilities.installed.boolValue);
+	XCTAssert((capabilities.maintenance!=nil) && !capabilities.maintenance.boolValue);
+	XCTAssert((capabilities.needsDBUpgrade!=nil) && !capabilities.needsDBUpgrade.boolValue);
+	XCTAssert([capabilities.version isEqual:@"10.1.0.4"]);
+	XCTAssert([capabilities.versionString isEqual:@"10.1.0"]);
+	XCTAssert([capabilities.edition isEqual:@"Community"]);
+	XCTAssert([capabilities.productName isEqual:@"ownCloud"]);
+	XCTAssert([capabilities.hostName isEqual:@"owncloud"]);
+
+	XCTAssert([capabilities.supportedChecksumTypes isEqualToArray:@[ OCChecksumAlgorithmIdentifierSHA1 ]]);
+	XCTAssert([capabilities.preferredUploadChecksumType isEqual:OCChecksumAlgorithmIdentifierSHA1]);
+
+	XCTAssert([capabilities.davChunkingVersion isEqual:@"1.0"]);
+	XCTAssert([capabilities.davReports isEqualToArray:@[ @"search-files" ]]);
+
+	XCTAssert((capabilities.supportsPrivateLinks!=nil) && capabilities.supportsPrivateLinks.boolValue);
+	XCTAssert((capabilities.supportsBigFileChunking!=nil) && capabilities.supportsBigFileChunking.boolValue);
+	XCTAssert([capabilities.blacklistedFiles isEqualToArray:@[ @".htaccess" ]]);
+	XCTAssert((capabilities.supportsUndelete!=nil) && capabilities.supportsUndelete.boolValue);
+	XCTAssert((capabilities.supportsVersioning!=nil) && capabilities.supportsVersioning.boolValue);
+
+	XCTAssert((capabilities.sharingAPIEnabled!=nil) && capabilities.sharingAPIEnabled.boolValue);
+	XCTAssert((capabilities.sharingResharing!=nil) && capabilities.sharingResharing.boolValue);
+	XCTAssert((capabilities.sharingGroupSharing!=nil) && capabilities.sharingGroupSharing.boolValue);
+	XCTAssert((capabilities.sharingAutoAcceptShare!=nil) && capabilities.sharingAutoAcceptShare.boolValue);
+	XCTAssert((capabilities.sharingWithGroupMembersOnly!=nil) && capabilities.sharingWithGroupMembersOnly.boolValue);
+	XCTAssert((capabilities.sharingWithMembershipGroupsOnly!=nil) && capabilities.sharingWithMembershipGroupsOnly.boolValue);
+	XCTAssert((capabilities.sharingAllowed!=nil) && capabilities.sharingAllowed.boolValue);
+	XCTAssert(capabilities.sharingDefaultPermissions == 31);
+	XCTAssert((capabilities.sharingSearchMinLength!=nil) && (capabilities.sharingSearchMinLength.integerValue==2));
+
+	XCTAssert((capabilities.publicSharingEnabled!=nil) && capabilities.publicSharingEnabled.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforced!=nil) && !capabilities.publicSharingPasswordEnforced.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForReadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadWrite!=nil) && !capabilities.publicSharingPasswordEnforcedForReadWrite.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForUploadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForUploadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingExpireDateEnabled!=nil) && !capabilities.publicSharingExpireDateEnabled.boolValue);
+	XCTAssert((capabilities.publicSharingSendMail!=nil) && !capabilities.publicSharingSendMail.boolValue);
+	XCTAssert((capabilities.publicSharingSocialShare!=nil) && capabilities.publicSharingSocialShare.boolValue);
+	XCTAssert((capabilities.publicSharingUpload!=nil) && capabilities.publicSharingUpload.boolValue);
+	XCTAssert((capabilities.publicSharingMultiple!=nil) && capabilities.publicSharingMultiple.boolValue);
+	XCTAssert((capabilities.publicSharingSupportsUploadOnly!=nil) && capabilities.publicSharingSupportsUploadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingDefaultLinkName!=nil) && [capabilities.publicSharingDefaultLinkName isEqual:@"Public link"]);
+
+	XCTAssert((capabilities.userSharingSendMail!=nil) && !capabilities.userSharingSendMail.boolValue);
+
+	XCTAssert((capabilities.userEnumerationEnabled!=nil) && capabilities.userEnumerationEnabled.boolValue);
+	XCTAssert((capabilities.userEnumerationGroupMembersOnly!=nil) && !capabilities.userEnumerationGroupMembersOnly.boolValue);
+
+	XCTAssert((capabilities.federatedSharingIncoming!=nil) && capabilities.federatedSharingIncoming.boolValue);
+	XCTAssert((capabilities.federatedSharingOutgoing!=nil) && capabilities.federatedSharingOutgoing.boolValue);
+
+	NSArray *endpoints = @[ @"list", @"get", @"delete" ];
+	XCTAssert([capabilities.notificationEndpoints isEqualToArray:endpoints]);
 }
 
 - (void)_testPropFindZeroStresstest

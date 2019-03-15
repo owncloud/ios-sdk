@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCCoreQuery.h"
 #import "OCTypes.h"
 #import "OCQueryFilter.h"
 #import "OCItem.h"
@@ -54,7 +55,7 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 @end
 
 #pragma mark - Query
-@interface OCQuery : NSObject
+@interface OCQuery : OCCoreQuery
 {
 	BOOL _includeRootItem;
 	OCItem *_rootItem;
