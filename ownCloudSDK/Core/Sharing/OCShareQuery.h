@@ -40,7 +40,7 @@ typedef void(^OCShareQueryChangesAvailableNotificationHandler)(OCShareQuery *que
 
 @property(copy) OCShareQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler;
 
-+ (instancetype)queryWithScope:(OCShareScope)scope item:(nullable OCItem *)item;
++ (nullable instancetype)queryWithScope:(OCShareScope)scope item:(nullable OCItem *)item;
 
 @end
 

@@ -54,6 +54,8 @@
 #pragma mark - Automatic polling
 - (void)_pollNextShareQuery
 {
+	[self beginActivity:@"Poll next share query"];
+
 	[self queueBlock:^{
 		if ((self->_pollingQuery == nil) && (self.state == OCCoreStateRunning))
 		{
@@ -70,11 +72,15 @@
 
 						self->_pollingQuery = shareQuery;
 
+						[self beginActivity:@"Polling for shares"];
+
 						[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:^{
 							[self queueBlock:^{
 								self->_pollingQuery = nil;
 
 								[self _pollNextShareQuery];
+
+								[self endActivity:@"Polling for shares"];
 							}];
 						}];
 
@@ -111,6 +117,8 @@
 				});
 			}
 		}
+
+		[self endActivity:@"Poll next share query"];
 	}];
 }
 

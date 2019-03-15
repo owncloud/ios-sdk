@@ -41,7 +41,10 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	if ((self = [super init]) != nil)
 	{
 		_bundleIdentifier = NSBundle.mainBundle.bundleIdentifier;
-		_temporaryFilesRoot = temporaryFilesRoot;
+		if (temporaryFilesRoot != nil)
+		{
+			_temporaryFilesRoot = temporaryFilesRoot;
+		}
 
 		_taskCache = [[OCHTTPPipelineTaskCache alloc] initWithBackend:self];
 

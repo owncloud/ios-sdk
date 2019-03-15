@@ -644,9 +644,7 @@
 		}
 		else
 		{
-			NSArray <OCShare *> *shares = nil;
-
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -722,9 +720,7 @@
 		}
 		else
 		{
-			NSArray <OCShare *> *shares = nil;
-
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)

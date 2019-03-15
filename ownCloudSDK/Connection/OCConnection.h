@@ -29,6 +29,7 @@
 #import "OCLogTag.h"
 #import "OCIPNotificationCenter.h"
 #import "OCHTTPTypes.h"
+#import "OCCapabilities.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -77,6 +78,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCHTTPPipelinePartitionID _partitionID;
 
 	OCUser *_loggedInUser;
+	OCCapabilities *_capabilities;
 
 	OCConnectionState _state;
 
@@ -107,6 +109,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
 @property(strong) OCUser *loggedInUser;
+@property(strong) OCCapabilities *capabilities;
 
 @property(strong) OCHTTPPipeline *ephermalPipeline; //!< Pipeline for requests whose response is only interesting for the instance making them (f.ex. login, status, PROPFINDs)
 @property(strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
@@ -299,6 +302,9 @@ NS_ASSUME_NONNULL_END
 
 #pragma mark - COMPATIBILITY
 @interface OCConnection (Compatibility)
+
+#pragma mark - Retrieve capabilities
+- (NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler;
 
 #pragma mark - Version
 - (NSString *)serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".

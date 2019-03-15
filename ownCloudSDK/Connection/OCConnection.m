@@ -55,6 +55,7 @@
 @synthesize bookmark = _bookmark;
 
 @synthesize loggedInUser = _loggedInUser;
+@synthesize capabilities = _capabilities;
 
 @synthesize actionSignals = _actionSignals;
 
@@ -704,28 +705,50 @@
 									if ((error == nil) && (response.status.isSuccess))
 									{
 										// DAV request executed successfully
-										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 
-										// Get user info
-										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
-											self.loggedInUser = loggedInUser;
+										// Retrieve capabilities
+										connectProgress.localizedDescription = OCLocalizedString(@"Retrieving capabilities…", @"");
 
-											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-											if (error!=nil)
+										[self retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
+											if (error == nil)
 											{
-												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+												// Get user info
+												connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
+
+												[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+													self.loggedInUser = loggedInUser;
+
+													connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+													if (error!=nil)
+													{
+														completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+													}
+													else
+													{
+														// DONE!
+														connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+														self.state = OCConnectionStateConnected;
+
+														completionHandler(nil, nil);
+													}
+												}];
 											}
 											else
 											{
-												// DONE!
-												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-												self.state = OCConnectionStateConnected;
-
-												completionHandler(nil, nil);
+												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 											}
 										}];
+									}
+									else
+									{
+										if (error == nil)
+										{
+											error = response.status.error;
+										}
+
+										completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 									}
 								})];
 							}

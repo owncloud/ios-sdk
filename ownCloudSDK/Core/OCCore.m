@@ -123,11 +123,6 @@
 
 		_automaticItemListUpdatesEnabled = YES;
 
-		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
-		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
-		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
-		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
-		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
@@ -429,6 +424,20 @@
 			[self beginActivity:@"Connection connect"];
 
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+				if (error == nil)
+				{
+					OCChecksumAlgorithmIdentifier preferredUploadChecksumType;
+
+					// Use preferred upload checksum type if information is provided as part of capabilities and algorith is available locally
+					if ((preferredUploadChecksumType = self.connection.capabilities.preferredUploadChecksumType) != nil)
+					{
+						if (([OCChecksumAlgorithm algorithmForIdentifier:preferredUploadChecksumType] != nil) && (![self->_preferredChecksumAlgorithm isEqual:preferredUploadChecksumType]))
+						{
+							self->_preferredChecksumAlgorithm = preferredUploadChecksumType;
+						}
+					}
+				}
+
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)
