@@ -743,12 +743,8 @@
 									}
 									else
 									{
-										if (error == nil)
-										{
-											error = response.status.error;
-										}
-
-										completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+										// Intentionally no error handling here! If an error occurs here, it's handled by the auth system, so that calling the completionHandler here will lead to a crash.
+										// (crash reproducable in CoreTests.testInvalidLoginData)
 									}
 								})];
 							}
