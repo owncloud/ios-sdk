@@ -32,7 +32,7 @@ typedef void(^OCShareQueryChangesAvailableNotificationHandler)(OCShareQuery *que
 @property(assign) OCShareScope scope;	//!< The scope of the query
 @property(strong,nullable) OCItem *item; //!< The item for scopes OCShareScopeItem, OCShareScopeItemWithReshares and OCShareScopeSubItems.
 
-@property(assign) NSTimeInterval refreshInterval; //!< Minimum amount of time between polling the server to refresh the query's results.
+@property(assign) NSTimeInterval refreshInterval; //!< Minimum amount of time between polling the server to refresh the query's results. A value of 0 turns off polling (default). The refresh interval needs to be set before starting the query.
 @property(strong) NSDate *lastRefreshStarted; //!< The last time a refresh was initiated by the core
 @property(strong) NSDate *lastRefreshed; //!< The last time the query was refreshed with results from the server
 

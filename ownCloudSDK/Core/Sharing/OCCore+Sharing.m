@@ -30,12 +30,18 @@
 		[self->_shareQueries addObject:shareQuery];
 
 		[self reloadShareQuery:shareQuery];
+
+		[self _pollNextShareQuery];
 	}];
 }
 
 - (void)reloadShareQuery:(OCShareQuery *)shareQuery
 {
-	[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item];
+	[self queueBlock:^{
+		shareQuery.lastRefreshStarted = [NSDate new];
+
+		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:nil];
+	}];
 }
 
 - (void)stopShareQuery:(OCShareQuery *)shareQuery
@@ -45,8 +51,71 @@
 	}];
 }
 
+#pragma mark - Automatic polling
+- (void)_pollNextShareQuery
+{
+	[self queueBlock:^{
+		if ((self->_pollingQuery == nil) && (self.state == OCCoreStateRunning))
+		{
+			NSDate *earliestRefresh = nil;
+
+			for (OCShareQuery *shareQuery in self->_shareQueries)
+			{
+				if (shareQuery.refreshInterval > 0)
+				{
+					if (((-shareQuery.lastRefreshed.timeIntervalSinceNow) > shareQuery.refreshInterval) &&
+					    ((-shareQuery.lastRefreshStarted.timeIntervalSinceNow) > shareQuery.refreshInterval))
+					{
+						shareQuery.lastRefreshStarted = [NSDate new];
+
+						self->_pollingQuery = shareQuery;
+
+						[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:^{
+							[self queueBlock:^{
+								self->_pollingQuery = nil;
+
+								[self _pollNextShareQuery];
+							}];
+						}];
+
+						earliestRefresh = nil;
+
+						break;
+					}
+					else
+					{
+						NSDate *latestRefreshActivity=nil, *nextRefresh=nil;
+
+						if ((shareQuery.lastRefreshed != nil) || (shareQuery.lastRefreshStarted != nil))
+						{
+							latestRefreshActivity = (shareQuery.lastRefreshed.timeIntervalSinceReferenceDate > shareQuery.lastRefreshStarted.timeIntervalSinceReferenceDate) ? shareQuery.lastRefreshed : shareQuery.lastRefreshStarted;
+							nextRefresh = [latestRefreshActivity dateByAddingTimeInterval:shareQuery.refreshInterval];
+						}
+						else
+						{
+							nextRefresh = [NSDate dateWithTimeIntervalSinceNow:shareQuery.refreshInterval];
+						}
+
+						if ((nextRefresh != nil) && ((earliestRefresh==nil) || ((earliestRefresh!=nil) && (nextRefresh.timeIntervalSinceReferenceDate < earliestRefresh.timeIntervalSinceReferenceDate))))
+						{
+							earliestRefresh = nextRefresh;
+						}
+					}
+				}
+			}
+
+			if (earliestRefresh != nil)
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(earliestRefresh.timeIntervalSinceNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
+					[self _pollNextShareQuery];
+				});
+			}
+		}
+	}];
+}
+
 #pragma mark - Updating share queries
-- (void)_pollForSharesWithScope:(OCShareScope)scope item:(OCItem *)item
+- (void)_pollForSharesWithScope:(OCShareScope)scope item:(OCItem *)item completionHandler:(dispatch_block_t)completionHandler
 {
 	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 		if (error == nil)
@@ -56,7 +125,19 @@
 				{
 					[query _updateWithRetrievedShares:shares forItem:item scope:scope];
 				}
+
+				if (completionHandler != nil)
+				{
+					completionHandler();
+				}
 			}];
+		}
+		else
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler();
+			}
 		}
 	}];
 }

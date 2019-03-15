@@ -50,5 +50,6 @@
 - (void)reloadShareQuery:(OCShareQuery *)shareQuery;
 - (void)stopShareQuery:(OCShareQuery *)shareQuery;
 
+- (void)_pollNextShareQuery;
 
 @end

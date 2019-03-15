@@ -681,6 +681,102 @@
 	[self waitForExpectationsWithTimeout:30.0 handler:nil];
 }
 
+- (void)testShareQueryPollingUpdates
+{
+	XCTestExpectation *expectFileList = [self expectationWithDescription:@"Expect root dir file list"];
+	XCTestExpectation *expectCoreStop = [self expectationWithDescription:@"Expect core to stop"];
+	__block XCTestExpectation *expectCreateShare = [self expectationWithDescription:@"Create share"];
+	__block XCTestExpectation *expectDeleteShare = [self expectationWithDescription:@"Delete share"];
+	__block XCTestExpectation *expectNewShareInQueryResults = [self expectationWithDescription:@"New share in query results"];
+	__block XCTestExpectation *expectNewShareMissingInQueryResults = [self expectationWithDescription:@"New share missing in query results"];
+
+	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
+	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
+	NSString *initialName = NSUUID.UUID.UUIDString;
+	__block OCShare *createdShare = nil;
+
+	BOOL(^ContainsShareNamed)(OCShareQuery *shareQuery, NSString *name) = ^(OCShareQuery *shareQuery, NSString *name) {
+		for (OCShare *share in shareQuery.queryResults)
+		{
+			if ([share.name isEqual:name])
+			{
+				return (YES);
+			}
+		}
+
+		return (NO);
+	};
+
+	[core startWithCompletionHandler:^(id sender, NSError *error) {
+		query.includeRootItem = YES;
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if (query.state == OCQueryStateIdle)
+			{
+				OCItem *shareItem = nil;
+				[expectFileList fulfill];
+
+				for (OCItem *item in query.queryResults)
+				{
+					if (![item.path isEqual:@"/"])
+					{
+						shareItem = item;
+						break;
+					}
+				}
+
+				if (shareItem != nil)
+				{
+					shareQuery.refreshInterval = 2;
+					shareQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
+						OCLogDebug(@"shareQuery.queryResults=%@", query.queryResults);
+
+						if (ContainsShareNamed(query, initialName) && (expectNewShareInQueryResults!=nil))
+						{
+							[expectNewShareInQueryResults fulfill];
+							expectNewShareInQueryResults = nil;
+
+							[core.connection deleteShare:createdShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+								[expectDeleteShare fulfill];
+								expectDeleteShare = nil;
+							} userInfo:nil ephermalUserInfo:nil]];
+						}
+						else if ((expectNewShareInQueryResults == nil) && (expectNewShareMissingInQueryResults != nil))
+						{
+							[expectNewShareMissingInQueryResults fulfill];
+							expectNewShareMissingInQueryResults = nil;
+
+							[core stopQuery:query];
+
+							[core stopWithCompletionHandler:^(id sender, NSError *error) {
+								[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+									[expectCoreStop fulfill];
+								}];
+							}];
+						}
+					};
+					[core startQuery:shareQuery];
+
+					[core.connection createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						createdShare = (OCShare *)event.result;
+
+						OCLogDebug(@"Created share: %@, error: %@", createdShare, error);
+
+						XCTAssert(event.error == nil);
+						XCTAssert(createdShare != nil);
+
+						[expectCreateShare fulfill];
+					} userInfo:nil ephermalUserInfo:nil]];
+				}
+			}
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+}
+
 - (void)testFederatedAccept
 {
 	XCTestExpectation *expectEraseComplete = [self expectationWithDescription:@"Erase complete"];

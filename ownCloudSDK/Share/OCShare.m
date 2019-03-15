@@ -200,6 +200,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeObject:_token forKey:@"token"];
 	[coder encodeObject:_url forKey:@"url"];
 
+	[coder encodeInteger:_permissions forKey:@"permissions"];
+
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
 	[coder encodeObject:_expirationDate forKey:@"expirationDate"];
 

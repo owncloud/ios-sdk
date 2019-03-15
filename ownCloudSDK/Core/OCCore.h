@@ -121,6 +121,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray <OCQuery *> *_queries;
 
 	NSMutableArray <OCShareQuery *> *_shareQueries;
+	OCShareQuery *_pollingQuery;
 
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;

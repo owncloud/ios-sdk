@@ -287,6 +287,8 @@
 							}
 
 							[self setNeedsToProcessSyncRecords];
+
+							[self _pollNextShareQuery];
 						}
 					}];
 				}];

@@ -59,6 +59,8 @@
 
 				[expectShareCreated fulfill];
 
+				XCTAssert([[NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:newShare]] isEqual:newShare]); // Test OCShare archive/dearchive/comparison
+
 				[connection retrieveShareWithID:newShare.identifier options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable share) {
 					OCLog(@"Retrieved new share with error=%@, share=%@", error, share);
 
@@ -852,6 +854,8 @@
 
 			for (OCRecipient *recipient in recipients)
 			{
+				XCTAssert([[NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:recipient]] isEqual:recipient]); // Test OCRecipient/OCUser/OCGroup archive/dearchive/comparison
+
 				if (recipient.type == OCRecipientTypeUser)
 				{
 					users++;
