@@ -704,7 +704,7 @@
 		[expectConnect fulfill];
 	}];
 
-	[self waitForExpectationsWithTimeout:60 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	[downloadProgress removeObserver:self forKeyPath:@"progress.fractionCompleted" context:nil];
 

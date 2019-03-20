@@ -65,6 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSError *)error;
 - (NSError *)errorWithURL:(NSURL *)url;
+- (NSError *)errorWithDescription:(NSString *)description;
 - (NSError *)errorWithResponse:(NSHTTPURLResponse *)response;
 
 @end

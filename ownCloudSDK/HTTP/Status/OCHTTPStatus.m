@@ -64,6 +64,11 @@
 	return ([NSError errorWithDomain:OCHTTPStatusErrorDomain code:_code userInfo:((url!=nil) ? @{ @"url" : url } : nil)]);
 }
 
+- (NSError *)errorWithDescription:(NSString *)description
+{
+	return ([NSError errorWithDomain:OCHTTPStatusErrorDomain code:_code userInfo:((description!=nil) ? @{ NSLocalizedDescriptionKey : description } : nil)]);
+}
+
 - (NSError *)errorWithResponse:(NSHTTPURLResponse *)response
 {
 	return ([NSError errorWithDomain:OCHTTPStatusErrorDomain code:_code userInfo:((response!=nil) ? @{ @"response" : response } : nil)]);
