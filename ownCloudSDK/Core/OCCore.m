@@ -515,6 +515,40 @@
 	}];
 }
 
+- (void)_startCustomQuery:(OCQuery *)query
+{
+	[self beginActivity:@"Retrieving full query results from custom query"];
+
+	[self queueBlock:^{
+		// Update query state to "started"
+		if (query.state == OCQueryStateStopped)
+		{
+			query.state = OCQueryStateStarted;
+		}
+
+		// Retrieve initial items from query
+		[query provideFullQueryResultsForCore:self resultHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable initialItems) {
+			[self queueBlock:^{
+				if ((error == nil) && (initialItems != nil))
+				{
+					[query setFullQueryResults:[[NSMutableArray alloc] initWithArray:initialItems]];
+					query.state = OCQueryStateContentsFromCache;
+
+					[query setNeedsRecomputation];
+				}
+				else
+				{
+					OCLogError(@"Error=%@, initialItems=%@ asking query=%@ to provide full query results.", error, initialItems, query);
+				}
+
+				query.state = OCQueryStateIdle;
+
+				[self endActivity:@"Retrieving full query results from custom query"];
+			}];
+		}];
+	}];
+}
+
 - (void)startQuery:(OCCoreQuery *)coreQuery
 {
 	if (coreQuery == nil) { return; }
@@ -529,13 +563,20 @@
 			[self->_queries addObject:query];
 		}];
 
-		if (query.querySinceSyncAnchor == nil)
+		if (!query.isCustom)
 		{
-			[self _startItemListTaskForQuery:query];
+			if (query.querySinceSyncAnchor == nil)
+			{
+				[self _startItemListTaskForQuery:query];
+			}
+			else
+			{
+				[self _startSyncAnchorDatabaseRequestForQuery:query];
+			}
 		}
 		else
 		{
-			[self _startSyncAnchorDatabaseRequestForQuery:query];
+			[self _startCustomQuery:query];
 		}
 	}
 
@@ -554,9 +595,16 @@
 
 	if (query != nil)
 	{
-		if (query.querySinceSyncAnchor == nil)
+		if (!query.isCustom)
 		{
-			[self _startItemListTaskForQuery:query];
+			if (query.querySinceSyncAnchor == nil)
+			{
+				[self _startItemListTaskForQuery:query];
+			}
+		}
+		else
+		{
+			[self _startCustomQuery:query];
 		}
 	}
 

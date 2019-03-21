@@ -487,6 +487,12 @@
 						}
 					}
 
+					// Custom queries
+					if (query.isCustom && ((addedItemList!=nil) || (updatedItemList!=nil) || (removedItemList!=nil)))
+					{
+						[query updateWithAddedItems:addedItemList updatedItems:updatedItemList removedItems:removedItemList];
+					}
+
 					// Apply postprocessing on queries
 					if (queryPostProcessor != nil)
 					{

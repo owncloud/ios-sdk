@@ -127,6 +127,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
+@property(readonly,nonatomic) BOOL hasLocalAttributes; //!< Returns YES if the item has any local attributes
 @property(nullable,strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
 @property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
 
@@ -136,6 +137,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(nullable,strong) NSDate *creationDate; //!< Date of creation
 @property(nullable,strong) NSDate *lastModified; //!< Date of last modification
+
+@property(nullable,strong) NSDate *lastUsed; //!< Date of last use: updated on local import, local update, download - and via lastModified if that date is more recent.
 
 @property(nullable,strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
 
@@ -184,8 +187,20 @@ extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items t
 extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
 extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
 
-extern OCItemPropertyName OCItemPropertyNameLastModified;
-extern OCItemPropertyName OCItemPropertyNameIsFavorite;
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
+extern OCItemPropertyName OCItemPropertyNameLastModified;
+
+// Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameSize; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameCloudStatus; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameHasLocalAttributes; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder
 
 NS_ASSUME_NONNULL_END

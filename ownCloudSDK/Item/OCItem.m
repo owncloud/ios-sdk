@@ -26,6 +26,7 @@
 @implementation OCItem
 
 @dynamic cloudStatus;
+@dynamic hasLocalAttributes;
 
 + (OCLocalID)generateNewLocalID
 {
@@ -102,6 +103,7 @@
 	[coder encodeInteger:_size  		forKey:@"size"];
 	[coder encodeObject:_creationDate	forKey:@"creationDate"];
 	[coder encodeObject:_lastModified	forKey:@"lastModified"];
+	[coder encodeObject:_lastUsed		forKey:@"lastUsed"];
 
 	[coder encodeObject:_isFavorite		forKey:@"isFavorite"];
 
@@ -153,6 +155,7 @@
 		_size = [decoder decodeIntegerForKey:@"size"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
+		_lastUsed = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastUsed"];
 
 		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
 
@@ -256,6 +259,18 @@
 }
 
 #pragma mark - Local attributes
+- (BOOL)hasLocalAttributes
+{
+	BOOL hasLocalAttributes = NO;
+
+	@synchronized(self)
+	{
+		hasLocalAttributes = (_localAttributes.count > 0);
+	}
+
+	return (hasLocalAttributes);
+}
+
 - (NSDictionary<OCLocalAttribute,id> *)localAttributes
 {
 	NSDictionary<OCLocalAttribute,id> *localAttributesCopy = nil;
@@ -424,6 +439,12 @@
 		self.localAttributes 	  	 = item.localAttributes;
 		self.localAttributesLastModified = item.localAttributesLastModified;
 	}
+
+	// Make sure to use the most recent lastUsed date
+	if (self.lastUsed.timeIntervalSinceReferenceDate < item.lastUsed.timeIntervalSinceReferenceDate)
+	{
+		self.lastUsed = item.lastUsed;
+	}
 }
 
 - (void)copyFilesystemMetadataFrom:(OCItem *)item
@@ -432,6 +453,7 @@
 	self.size = item.size;
 	self.creationDate = item.creationDate;
 	self.lastModified = item.lastModified;
+	self.lastUsed = item.lastUsed;
 }
 
 - (void)copyMetadataFrom:(OCItem *)item except:(NSSet <OCItemPropertyName> *)exceptProperties
@@ -473,6 +495,7 @@
 	CloneMetadata(@"size");
 	CloneMetadata(@"creationDate");
 	CloneMetadata(@"lastModified");
+	CloneMetadata(@"lastUsed");
 
 	CloneMetadata(@"isFavorite");
 
@@ -566,7 +589,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @"")]);
 }
 
 #pragma mark - Copying
@@ -584,6 +607,17 @@ OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
 OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
 
 OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
+OCItemPropertyName OCItemPropertyNameLastUsed = @"lastUsed";
 OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";
 OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 
+OCItemPropertyName OCItemPropertyNameCloudStatus = @"cloudStatus";
+OCItemPropertyName OCItemPropertyNameHasLocalAttributes = @"hasLocalAttributes";
+
+OCItemPropertyName OCItemPropertyNameType = @"type"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNamePath = @"path"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameName = @"name"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameSize = @"size";
+OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
+OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath"; //!< Supported by OCQueryCondition SQLBuilder

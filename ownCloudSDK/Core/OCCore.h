@@ -231,7 +231,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 
-- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
+- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString * _Nullable *)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
 
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
@@ -328,8 +328,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
 @end
 
-NS_ASSUME_NONNULL_END
-
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 
@@ -345,3 +343,5 @@ extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [B
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.
 extern NSNotificationName OCCoreItemStopsHavingProgress; //!< Notification sent when an item no longer has any progress. The object is the localID of the item.
+
+NS_ASSUME_NONNULL_END

@@ -36,7 +36,7 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 
 @class OCLogger;
 
-typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> ** _Nullable pTags, NSString **pLogMessage, uint64_t threadID, NSDate *timestamp); //!< Filter block. Returns YES if the message should be logged, NO otherwise. Can alter the log message via pLogMessage.
+typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> * _Nullable * _Nullable pTags, NSString *_Nonnull * _Nonnull pLogMessage, uint64_t threadID, NSDate *timestamp); //!< Filter block. Returns YES if the message should be logged, NO otherwise. Can alter the log message via pLogMessage.
 
 @class OCLogSource;
 @class OCLogWriter;

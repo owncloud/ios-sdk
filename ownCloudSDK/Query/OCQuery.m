@@ -16,10 +16,14 @@
  *
  */
 
-#import <objc/runtime.h>
-
+#import "OCCore.h"
 #import "OCQuery.h"
 #import "OCQuery+Internal.h"
+#import "OCLogger.h"
+#import "OCQueryCondition+Item.h"
+#import "NSError+OCError.h"
+
+#import <objc/runtime.h>
 
 @implementation OCQuery
 
@@ -76,6 +80,42 @@
 	return (query);
 }
 
++ (instancetype)queryWithCustomSource:(OCQueryCustomSource)customSource inputFilter:(id<OCQueryFilter>)inputFilter
+{
+	OCQuery *query = [self new];
+
+	query.isCustom = YES;
+
+	query.customSource = customSource;
+	query.inputFilter = inputFilter;
+
+	return (query);
+}
+
++ (instancetype)queryWithCondition:(OCQueryCondition *)condition inputFilter:(nullable id<OCQueryFilter>)inputFilter
+{
+	OCQueryCustomSource customSource = ^(OCCore *core, OCQuery *query, OCQueryCustomResultHandler resultHandler) {
+		[core.vault.database retrieveCacheItemsForQueryCondition:condition completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			resultHandler(error, items);
+		}];
+	};
+	OCQuery *query;
+
+	if (inputFilter == nil)
+	{
+		inputFilter = [OCQueryFilter filterWithHandler:^BOOL(OCQuery *query, OCQueryFilter *filter, OCItem *item) {
+			return ([condition fulfilledByItem:item]);
+		}];
+	}
+
+	if ((query = [self queryWithCustomSource:customSource inputFilter:inputFilter]) != nil)
+	{
+		query.sortComparator = condition.itemComparator;
+	}
+
+	return (query);
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -84,6 +124,125 @@
 	}
 
 	return (self);
+}
+
+#pragma mark - Custom queries
+- (void)provideFullQueryResultsForCore:(OCCore *)core resultHandler:(OCQueryCustomResultHandler)resultHandler
+{
+	if (_customSource != nil)
+	{
+		_customSource(core, self, resultHandler);
+	}
+	else
+	{
+		OCLogWarning(@"full query results requested for %@, but .customSource==nil - returning insufficient parameters error", self);
+		resultHandler(OCError(OCErrorInsufficientParameters), nil);
+	}
+}
+
+- (void)modifyFullQueryResults:(BOOL(^)(NSMutableArray <OCItem *> *fullQueryResults, OCCoreItemList *(^CoreItemListProvider)(void)))modificator
+{
+	if (modificator != nil)
+	{
+		@synchronized(self)
+		{
+			if (modificator(_fullQueryResults, ^{ return ([self fullQueryResultsItemList]); }))
+			{
+				// Release cached item list
+				_fullQueryResultsItemList = nil;
+
+				// Signal recomputation is needed
+				[self setNeedsRecomputation];
+			}
+		}
+	}
+}
+
+- (void)updateWithAddedItems:(nullable OCCoreItemList *)addedItems updatedItems:(nullable OCCoreItemList *)updatedItems removedItems:(nullable OCCoreItemList *)removedItems
+{
+	if (self.inputFilter != nil)
+	{
+		[self modifyFullQueryResults:^BOOL(NSMutableArray<OCItem *> * _Nonnull fullQueryResults, OCCoreItemList * _Nonnull (^ _Nonnull coreItemListProvider)(void)) {
+			BOOL madeChanges = NO;
+
+			if (addedItems != nil)
+			{
+				for (OCItem *addedItem in addedItems.items)
+				{
+					if ([self.inputFilter query:self shouldIncludeItem:addedItem])
+					{
+						// Add new items that match the filter
+						[fullQueryResults addObject:addedItem];
+						madeChanges = YES;
+					}
+				}
+			}
+
+			if (updatedItems != nil)
+			{
+				OCCoreItemList *fullQueryResultsItemList = coreItemListProvider();
+
+				for (OCItem *updatedItem in updatedItems.items)
+				{
+					OCLocalID updatedItemLocalID = updatedItem.localID;
+					OCItem *existingItem = (updatedItemLocalID != nil) ? fullQueryResultsItemList.itemsByLocalID[updatedItemLocalID] : nil;
+
+					if ([self.inputFilter query:self shouldIncludeItem:updatedItem])
+					{
+						if (existingItem != nil)
+						{
+							// Update existing items that match the filter
+							NSUInteger indexOfExistingItem;
+
+							if ((indexOfExistingItem = [fullQueryResults indexOfObjectIdenticalTo:existingItem]) != NSNotFound)
+							{
+								[fullQueryResults replaceObjectAtIndex:indexOfExistingItem withObject:updatedItem];
+							}
+						}
+						else
+						{
+							// Add items that match the filter after having been updated
+							[fullQueryResults addObject:updatedItem];
+						}
+
+						madeChanges = YES;
+					}
+					else
+					{
+						if (existingItem != nil)
+						{
+							// Remove items that no longer match the filter after having been updated
+							[fullQueryResults removeObject:existingItem];
+							madeChanges = YES;
+						}
+					}
+				}
+			}
+
+			if (removedItems != nil)
+			{
+				OCCoreItemList *fullQueryResultsItemList = coreItemListProvider();
+
+				// Remove removed items in the query result set
+				for (OCItem *removedItem in removedItems.items)
+				{
+					OCItem *removeItem;
+
+					if ((removeItem = fullQueryResultsItemList.itemsByLocalID[removedItem.localID]) != nil)
+					{
+						[fullQueryResults removeObject:removeItem];
+						madeChanges = YES;
+					}
+				}
+			}
+
+			return (madeChanges);
+		}];
+	}
+	else
+	{
+		OCLogWarning(@"-[OCQuery updateWithAddedItems:updatedItems:removedItems:] not performing any action on custom query %@ because no inputFilter is set", self);
+	}
 }
 
 #pragma mark - Sorting
