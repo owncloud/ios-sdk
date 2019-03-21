@@ -555,7 +555,7 @@
 		[expectConnect fulfill];
 	}];
 
-	[self waitForExpectationsWithTimeout:60 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
 - (void)testFederatedSharing

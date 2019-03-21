@@ -1198,11 +1198,11 @@
 
 - (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
 {
+	NSString *fileName = request.userInfo[@"fileName"];
+	OCItem *parentItem = request.userInfo[@"parentItem"];
+
 	if (request.httpResponse.status.isSuccess)
 	{
-		NSString *fileName = request.userInfo[@"fileName"];
-		OCItem *parentItem = request.userInfo[@"parentItem"];
-
 		/*
 			Almost there! Only lacking permissions and mime type and we'd not have to do this PROPFIND 0.
 
@@ -1252,7 +1252,31 @@
 				}
 				else
 				{
-					event.error = request.httpResponse.status.error;
+					switch (request.httpResponse.status.code)
+					{
+						case OCHTTPStatusCodePRECONDITION_FAILED: {
+							NSString *errorDescription = nil;
+
+							errorDescription = [NSString stringWithFormat:OCLocalized(@"Another item named %@ already exists in %@."), fileName, parentItem.name];
+							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+						}
+						break;
+
+						default: {
+							NSError *davError = [request.httpResponse bodyParsedAsDAVError];
+							NSString *davMessage = davError.davExceptionMessage;
+
+							if (davMessage != nil)
+							{
+								event.error = [request.httpResponse.status errorWithDescription:davMessage];
+							}
+							else
+							{
+								event.error = request.httpResponse.status.error;
+							}
+						}
+						break;
+					}
 				}
 			}
 

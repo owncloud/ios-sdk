@@ -122,7 +122,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:20.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
 - (void)searchController:(OCRecipientSearchController *)searchController isWaitingForResults:(BOOL)isSearching
@@ -376,7 +376,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
 - (void)testShareQueryDiffNoDifferences
@@ -465,7 +465,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 
 }
 
@@ -571,7 +571,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
 - (void)testShareQueryDiffUpdatedShare
@@ -678,7 +678,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
 - (void)testShareQueryPollingUpdates
@@ -774,7 +774,7 @@
 		[core startQuery:query];
 	}];
 
-	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
 - (void)testFederatedAccept
