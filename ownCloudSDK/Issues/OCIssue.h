@@ -38,6 +38,7 @@ typedef NS_ENUM(NSUInteger, OCIssueType)
 
 	OCIssueTypeURLRedirection,
 	OCIssueTypeCertificate,
+	OCIssueTypeGeneric,
 
 	OCIssueTypeError
 };
@@ -112,6 +113,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 + (instancetype)issueForError:(NSError *)error level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCIssueChoice *> *)choices completionHandler:(nullable OCIssueHandler)issueHandler;
+
++ (instancetype)issueWithLocalizedTitle:(NSString *)title localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForIssues:(NSArray <OCIssue *> *)issues completionHandler:(nullable OCIssueHandler)completionHandler;
 

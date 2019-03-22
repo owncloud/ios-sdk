@@ -47,6 +47,15 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 	OCConnectionStateConnected
 };
 
+typedef NS_ENUM(NSUInteger, OCConnectionSetupHTTPPolicy)
+{
+	OCConnectionSetupHTTPPolicyAuto,		//!< Determines the HTTP policy from class settings. Defaults to Warn. Can be used to return to the settings/default-controlled value after manually overriding it, f.ex. in the context of a unit test.
+
+	OCConnectionSetupHTTPPolicyAllow,		//!< Allow plain-text HTTP URL during setup without warning (** for unit tests only **).
+	OCConnectionSetupHTTPPolicyWarn,		//!< Ask the user when trying to use a plain-text HTTP URL during setup
+	OCConnectionSetupHTTPPolicyForbidden		//!< Make setup fail when the user tries to use a plain-text HTTP URL
+};
+
 @protocol OCConnectionDelegate <NSObject>
 
 @optional
@@ -100,6 +109,7 @@ typedef NS_ENUM(NSUInteger, OCConnectionState)
 
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
 @property(class,assign,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used.
+@property(class,assign,nonatomic) OCConnectionSetupHTTPPolicy setupHTTPPolicy; //!< Policy to use for setting up with plain-text HTTP URLs.
 
 @property(strong) OCBookmark *bookmark;
 @property(strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
@@ -341,6 +351,7 @@ extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!<
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
+extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads
