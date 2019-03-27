@@ -114,6 +114,10 @@
 	[coder encodeObject:_shares		forKey:@"shares"];
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
+
+	[coder encodeInt64:_quotaBytesAvailable forKey:@"quotaBytesAvailable"];
+	[coder encodeInt64:_quotaBytesUsed forKey:@"quotaBytesUsed"];
+
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -165,6 +169,9 @@
 		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
+
+		_quotaBytesAvailable = [decoder decodeInt64ForKey:@"quotaBytesAvailable"];
+		_quotaBytesUsed = [decoder decodeInt64ForKey:@"quotaBytesUsed"];
 	}
 
 	return (self);
@@ -484,6 +491,9 @@
 	CloneMetadata(@"ownerDisplayName");
 
 	CloneMetadata(@"databaseID");
+
+	CloneMetadata(@"quotaBytesAvailable");
+	CloneMetadata(@"quotaBytesUsed");
 }
 
 #pragma mark - File tools

@@ -933,12 +933,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
 
 			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
+			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes],
 
 //		 	[OCXMLNode elementWithName:@"D:creationdate"],
 //		 	[OCXMLNode elementWithName:@"D:displayname"],
-//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
+			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
 
 //			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
 //			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],

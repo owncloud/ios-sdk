@@ -15,7 +15,7 @@
  * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
  *
  */
-
+#import <objc/runtime.h>
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCItemThumbnail.h"
@@ -150,6 +150,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item (only provided in conjunction with dedicated sharing APIs)
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+
+@property(assign) int64_t quotaBytesAvailable; //!< Quota bytes available property
+
+@property(assign) int64_t quotaBytesUsed; //!< Quota bytes used property
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 

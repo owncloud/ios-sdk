@@ -172,6 +172,20 @@
 					}
 				}
 			} copy],
+
+			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.quotaBytesAvailable = ((NSString *)value).longLongValue;
+				}
+			} copy],
+
+			@"d:quota-used-bytes" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.quotaBytesUsed = ((NSString *)value).longLongValue;
+				}
+			} copy],
 		};
 	});
 
