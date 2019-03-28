@@ -47,6 +47,8 @@
 				OCHTTPRequestObserver observer = [^(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event) {
 					if ((event == OCHTTPRequestObserverEventTaskResume) && (task.urlSessionTask != nil))
 					{
+						OCLogDebug(@"record %@ is registering URLTask for %@", syncContext.syncRecord, item);
+
 						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:task.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
 							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, task.urlSessionTask, item, error);
 

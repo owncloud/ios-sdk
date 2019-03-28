@@ -19,9 +19,11 @@
 #import "OCAuthenticationMethod.h"
 #import "OCClassSettings.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod <OCClassSettingsSupport>
 
-+ (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to SFAuthenticationSession and ASWebAuthenticationSession.
++ (BOOL)startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to SFAuthenticationSession and ASWebAuthenticationSession.
 
 @end
 
@@ -32,3 +34,5 @@ extern OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret;
+
+NS_ASSUME_NONNULL_END

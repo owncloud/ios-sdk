@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCQueryCondition (SQLBuilder)
 
-- (nullable NSString *)buildSQLQueryWithPropertyColumnNameMap:(NSDictionary<OCItemPropertyName, NSString *> *)propertyColumnNameMap parameters:(NSArray **)outParameters error:(NSError * _Nullable *)error;
+- (nullable NSString *)buildSQLQueryWithPropertyColumnNameMap:(NSDictionary<OCItemPropertyName, NSString *> *)propertyColumnNameMap parameters:(NSArray * _Nonnull * _Nullable)outParameters error:(NSError * _Nullable *)error;
 
 @end
 

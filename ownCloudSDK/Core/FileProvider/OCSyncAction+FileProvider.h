@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSyncAction (FileProviderProgressReporting)
 
-- (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext *)syncContext;
+- (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary * _Nullable * _Nullable)options syncContext:(OCSyncContext *)syncContext;
 
 @end
 

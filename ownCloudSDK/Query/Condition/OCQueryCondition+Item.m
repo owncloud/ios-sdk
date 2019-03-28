@@ -38,7 +38,7 @@
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, NSStringFromClass(propertyValue.class));
+				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 			}
 		break;
 
@@ -49,7 +49,7 @@
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, NSStringFromClass(propertyValue.class));
+				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 			}
 		break;
 
@@ -68,7 +68,7 @@
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for prefix because it doesn't respond to hasPrefix:", propertyValue, NSStringFromClass(propertyValue.class));
+				OCLogError(@"propertyValue=%@ (class %@) can't be checked for prefix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 			}
 		break;
 
@@ -79,7 +79,7 @@
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for suffix because it doesn't respond to hasPrefix:", propertyValue, NSStringFromClass(propertyValue.class));
+				OCLogError(@"propertyValue=%@ (class %@) can't be checked for suffix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 			}
 		break;
 
@@ -90,7 +90,7 @@
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for containing %@ because it doesn't respond to localizedStandardContainsString:", propertyValue, NSStringFromClass(propertyValue.class), operatorValue);
+				OCLogError(@"propertyValue=%@ (class %@) can't be checked for containing %@ because it doesn't respond to localizedStandardContainsString:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"), operatorValue);
 			}
 		break;
 

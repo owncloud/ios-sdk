@@ -56,6 +56,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong,nonatomic) OCHTTPResponse *response;	//!< The response. Lazily deserializes .responseData as needed.
 @property(nullable,strong,nonatomic,readonly) NSData *responseData;	//!< The serialized response. Lazily serializes .response as needed.
 
+@property(nullable,strong) NSString *metrics;
+
 @property(assign) BOOL finished; 				//!< The task has been finished
 
 #pragma mark - Init
