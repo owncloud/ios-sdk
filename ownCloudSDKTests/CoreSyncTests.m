@@ -760,32 +760,35 @@
 				{
 					if (!didCreateFolder)
 					{
-						OCItem *copyFolderItem, *copyFileItem;
+						OCItem *copyFolderItem=nil, *copyFileItem=nil;
+						NSString *copyFolderItemName=nil, *copyFileItemName=nil;
 
 						for (OCItem *item in query.queryResults)
 						{
 							if (item.type == OCItemTypeFile)
 							{
 								copyFileItem = item;
+								copyFileItemName = [copyFileItem.name stringByAppendingString:@" copy"];
 							}
 
 							if (item.type == OCItemTypeCollection)
 							{
 								copyFolderItem = item;
+								copyFolderItemName = [copyFolderItem.name stringByAppendingString:@" copy"];
 							}
 						}
 
 						didCreateFolder = YES;
 
-						[core createFolder:folderName inside:query.rootItem options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+						[core createFolder:folderName inside:query.rootItem options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newFolderItem, id parameter) {
 							XCTAssert(error==nil);
-							XCTAssert(item!=nil);
+							XCTAssert(newFolderItem!=nil);
 
-							localIDParentFolderOnCompletion = item.localID;
+							localIDParentFolderOnCompletion = newFolderItem.localID;
 
 							[dirCreatedExpectation fulfill];
 
-							newFolderQuery = [OCQuery queryForPath:item.path];
+							newFolderQuery = [OCQuery queryForPath:newFolderItem.path];
 							newFolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
 								[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 									if (changeset != nil)
@@ -820,7 +823,7 @@
 									{
 										for (OCItem *item in query.queryResults)
 										{
-											if ([item.name isEqualToString:[copyFolderItem.name stringByAppendingString:@" copy"]])
+											if ([item.name isEqualToString:copyFolderItemName])
 											{
 												if (item.isPlaceholder && (localIDQueryPlaceholderCopyFolder==nil))
 												{
@@ -832,7 +835,7 @@
 												folderCopiedNotificationExpectation = nil;
 											}
 
-											if ([item.name isEqualToString:[copyFileItem.name stringByAppendingString:@" copy"]])
+											if ([item.name isEqualToString:copyFileItemName])
 											{
 												if (item.isPlaceholder && (localIDQueryPlaceholderCopyFile==nil))
 												{
@@ -861,13 +864,13 @@
 
 							[core startQuery:newFolderQuery];
 
-							[core copyItem:copyFolderItem to:item withName:[copyFolderItem.name stringByAppendingString:@" copy"] options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+							[core copyItem:copyFolderItem to:newFolderItem withName:copyFolderItemName options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 								OCLog(@"Copy folder item: error=%@ item=%@", error, newItem);
 
 								XCTAssert(error==nil);
 								XCTAssert(newItem!=nil);
-								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
-								XCTAssert([newItem.name isEqual:[copyFolderItem.name stringByAppendingString:@" copy"]]);
+								XCTAssert([newItem.parentFileID isEqual:newFolderItem.fileID]);
+								XCTAssert([newItem.name isEqual:copyFolderItemName]);
 
 								localIDCopiedFolder = newItem.localID;
 								localIDCopiedFolderParent = newItem.parentLocalID;
@@ -875,13 +878,13 @@
 								[folderCopiedExpectation fulfill];
 							}];
 
-							[core copyItem:copyFileItem to:item withName:[copyFileItem.name stringByAppendingString:@" copy"] options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
+							[core copyItem:copyFileItem to:newFolderItem withName:copyFileItemName options:nil resultHandler:^(NSError *error, OCCore *core, OCItem *newItem, id parameter) {
 								OCLog(@"Copy file item: error=%@ item=%@", error, newItem);
 
 								XCTAssert(error==nil);
 								XCTAssert(newItem!=nil);
-								XCTAssert([newItem.parentFileID isEqual:item.fileID]);
-								XCTAssert([newItem.name isEqual:[copyFileItem.name stringByAppendingString:@" copy"]]);
+								XCTAssert([newItem.parentFileID isEqual:newFolderItem.fileID]);
+								XCTAssert([newItem.name isEqual:copyFileItemName]);
 
 								localIDCopiedFile = newItem.localID;
 								localIDCopiedFileParent = newItem.parentLocalID;
@@ -899,7 +902,7 @@
 
 								[fileCopiedToExistingLocationExpectation fulfill];
 
-								[core deleteItem:item requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
+								[core deleteItem:newFolderItem requireMatch:YES resultHandler:^(NSError *error, OCCore *core, OCItem *item, id parameter) {
 									OCLog(@"Delete test folder: error=%@ item=%@", error, item);
 
 									localIDParentFolderOnDeleteCompletion = item.localID;
@@ -944,17 +947,17 @@
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 
-	XCTAssert([localIDQueryPlaceholderCopyFile isEqual:localIDCopiedFile]);
-	XCTAssert([localIDQueryPlaceholderCopyFolder isEqual:localIDCopiedFolder]);
+	XCTAssert([localIDQueryPlaceholderCopyFile isEqual:localIDCopiedFile], @"%@ != %@", localIDQueryPlaceholderCopyFile, localIDCopiedFile);
+	XCTAssert([localIDQueryPlaceholderCopyFolder isEqual:localIDCopiedFolder], @"%@ != %@", localIDQueryPlaceholderCopyFolder, localIDCopiedFolder);
 
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFileParent]);
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDQueryPlaceholderCopyFolderParent]);
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFolderParent]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFileParent], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDCopiedFileParent);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDQueryPlaceholderCopyFolderParent], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDQueryPlaceholderCopyFolderParent);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDCopiedFolderParent], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDCopiedFolderParent);
 
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderPlaceholderOnQuery]);
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderCompleteOnQuery]);
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnCompletion]);
-	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnDeleteCompletion]);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderPlaceholderOnQuery], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDParentFolderPlaceholderOnQuery);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderCompleteOnQuery], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDParentFolderCompleteOnQuery);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnCompletion], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDParentFolderOnCompletion);
+	XCTAssert([localIDQueryPlaceholderCopyFileParent isEqual:localIDParentFolderOnDeleteCompletion], @"%@ != %@", localIDQueryPlaceholderCopyFileParent, localIDParentFolderOnDeleteCompletion);
 
 	// Erase vault
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {

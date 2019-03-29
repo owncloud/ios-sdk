@@ -10,6 +10,8 @@
 
 @class OCBookmark;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCTestTarget : NSObject
 
 @property(strong,readonly,nonnull,class) NSURL *secureTargetURL;
@@ -36,6 +38,8 @@
 + (OCBookmark *)federatedBookmark;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #define XCTWeakSelfAssert(expression, ...) \
     _XCTPrimitiveAssertTrue(weakSelf, expression, @#expression, __VA_ARGS__)
