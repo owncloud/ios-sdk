@@ -286,6 +286,54 @@
 	NSURL *urlForTryingRootURL = nil;
 	NSURL *lastURLTried = nil;
 
+	// Plain-text HTTP check
+	if ([url.scheme.lowercaseString isEqualToString:@"http"])
+	{
+		OCIssue *issue = nil;
+
+		switch (OCConnection.setupHTTPPolicy)
+		{
+			case OCConnectionSetupHTTPPolicyAllow:
+				// Pass
+			break;
+
+			case OCConnectionSetupHTTPPolicyAuto:
+			case OCConnectionSetupHTTPPolicyWarn:
+				// Warn user about HTTP usage
+				if (self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] == nil)
+				{
+					issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.") level:OCIssueLevelWarning issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+						switch (decision)
+						{
+							case OCIssueDecisionApprove:
+								self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = [NSDate new];
+							break;
+
+							default:
+								self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+							break;
+						}
+					}];
+				}
+			break;
+
+			case OCConnectionSetupHTTPPolicyForbidden:
+				// HTTP forbidden
+				self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+
+				issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL forbidden") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.") level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+					self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+				}];
+			break;
+		}
+
+		if (issue != nil)
+		{
+			completionHandler(issue, nil, nil, nil);
+			return;
+		}
+	}
+
 	// Query [url]/status.php
 	while (!completed)
 	{

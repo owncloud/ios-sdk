@@ -76,6 +76,11 @@
 	return ([[self alloc] initWithError:error level:level issueHandler:issueHandler]);
 }
 
++ (instancetype)issueWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler
+{
+	return ([[self alloc] initWithLocalizedTitle:localizedTitle localizedDescription:localizedDescription level:level issueHandler:issueHandler]);
+}
+
 - (instancetype)initWithCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler
 {
 	if ((self = [super init]) != nil)
@@ -169,6 +174,23 @@
 		_localizedDescription = localizedDescription;
 
 		_choices = choices;
+		_issueHandler = [issueHandler copy];
+	}
+
+	return(self);
+}
+
+- (instancetype)initWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = OCIssueTypeGeneric;
+
+		_localizedTitle = localizedTitle;
+		_localizedDescription = localizedDescription;
+
+		_level = level;
+
 		_issueHandler = [issueHandler copy];
 	}
 
@@ -400,6 +422,10 @@
 
 		case OCIssueTypeCertificate:
 			[descriptionString appendFormat:@"Certificate [%@]", _certificate.hostName];
+		break;
+
+		case OCIssueTypeGeneric:
+			[descriptionString appendFormat:@"Generic [%@: %@]", _localizedTitle, _localizedDescription];
 		break;
 
 		case OCIssueTypeError:

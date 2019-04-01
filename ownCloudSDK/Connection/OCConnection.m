@@ -44,6 +44,8 @@
 
 #import "OCChecksumAlgorithmSHA1.h"
 
+static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyAuto;
+
 @implementation OCConnection
 
 @dynamic authenticationMethod;
@@ -88,7 +90,8 @@
 		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
-		OCConnectionAllowCellular			: @(YES)
+		OCConnectionAllowCellular			: @(YES),
+		OCConnectionPlainHTTPPolicy			: @"warn"
 	});
 }
 
@@ -114,6 +117,36 @@
 	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:allowCellular forKey:OCConnectionAllowCellular];
 
 	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameConnectionSettingsChanged ignoreSelf:NO];
+}
+
++ (void)setSetupHTTPPolicy:(OCConnectionSetupHTTPPolicy)setupHTTPPolicy
+{
+	sSetupHTTPPolicy = setupHTTPPolicy;
+}
+
++ (OCConnectionSetupHTTPPolicy)setupHTTPPolicy
+{
+	if (sSetupHTTPPolicy == OCConnectionSetupHTTPPolicyAuto)
+	{
+ 		NSString *policyName = [self classSettingForOCClassSettingsKey:OCConnectionPlainHTTPPolicy];
+
+ 		if ([policyName isEqual:@"warn"])
+ 		{
+ 			sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyWarn;
+		}
+
+ 		if ([policyName isEqual:@"forbidden"])
+ 		{
+ 			sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyForbidden;
+		}
+	}
+
+	if (sSetupHTTPPolicy == OCConnectionSetupHTTPPolicyAuto)
+	{
+		sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyWarn;
+	}
+
+	return (sSetupHTTPPolicy);
 }
 
 #pragma mark - Init
@@ -2175,6 +2208,7 @@ OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connecti
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
+OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

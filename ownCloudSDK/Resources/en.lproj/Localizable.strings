@@ -24,6 +24,13 @@
 "Proceed" = "Proceed";
 "OK" = "OK";
 
+/* Connection setup */
+"Insecure HTTP URL" = "Insecure HTTP URL";
+"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.";
+
+"Insecure HTTP URL forbidden" = "Insecure HTTP URL forbidden";
+"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.";
+
 /* Connection status */
 "Offline" = "Offline";
 "Offline (no WiFi connection)" = "Offline (no WiFi connection)";

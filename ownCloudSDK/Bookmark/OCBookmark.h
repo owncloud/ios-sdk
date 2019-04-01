@@ -62,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern NSString *OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
+
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 
 extern NSNotificationName OCBookmarkUpdatedNotification; //!< Name of notification that can be sent by third parties after completing an update to a bookmark.
