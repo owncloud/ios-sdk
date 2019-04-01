@@ -18,6 +18,7 @@
 
 #import "OCSyncAction+FileProvider.h"
 #import "OCHTTPPipelineTask.h"
+#import "NSURLSessionTaskMetrics+OCCompactSummary.h"
 
 @implementation OCSyncAction (FileProviderProgressReporting)
 
@@ -58,6 +59,7 @@
 							}
 
 							// File provider detail: the task may not be started until after this completionHandler was called
+							task.urlSessionTask.resumeTaskDate = [NSDate new];
 							[task.urlSessionTask resume];
 						}];
 

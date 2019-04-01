@@ -128,6 +128,8 @@
 		DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */; };
 		DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3422802180765900705508 /* OCCore+ItemUpdates.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3422812180765900705508 /* OCCore+ItemUpdates.m */; };
+		DC3521782251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3521762251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h */; };
+		DC3521792251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3521772251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m */; };
 		DC359692223FA7CC00C4D6E6 /* OCQueryCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC359690223FA7CC00C4D6E6 /* OCQueryCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC359693223FA7CC00C4D6E6 /* OCQueryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC359691223FA7CC00C4D6E6 /* OCQueryCondition.m */; };
 		DC35969622403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = DC35969422403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h */; };
@@ -682,6 +684,8 @@
 		DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIPNotificationCenter.m; sourceTree = "<group>"; };
 		DC3422802180765900705508 /* OCCore+ItemUpdates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+ItemUpdates.h"; sourceTree = "<group>"; };
 		DC3422812180765900705508 /* OCCore+ItemUpdates.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+ItemUpdates.m"; sourceTree = "<group>"; };
+		DC3521762251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLSessionTaskMetrics+OCCompactSummary.h"; sourceTree = "<group>"; };
+		DC3521772251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLSessionTaskMetrics+OCCompactSummary.m"; sourceTree = "<group>"; };
 		DC359690223FA7CC00C4D6E6 /* OCQueryCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCQueryCondition.h; sourceTree = "<group>"; };
 		DC359691223FA7CC00C4D6E6 /* OCQueryCondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCQueryCondition.m; sourceTree = "<group>"; };
 		DC35969422403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQueryCondition+SQLBuilder.h"; sourceTree = "<group>"; };
@@ -1127,6 +1131,8 @@
 				DC434D0C20D68C3000740056 /* NSString+OCParentPath.h */,
 				DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */,
 				DC75D309214BF1BA00B6FB62 /* NSString+OCFormatting.h */,
+				DC3521772251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m */,
+				DC3521762251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h */,
 			);
 			path = Foundation;
 			sourceTree = "<group>";
@@ -2275,6 +2281,7 @@
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
+				DC3521782251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h in Headers */,
 				DC708CE0214135D100FE43CA /* OCSyncActionDelete.h in Headers */,
 				DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */,
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
@@ -2743,6 +2750,7 @@
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
 				DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */,
 				DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */,
+				DC3521792251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m in Sources */,
 				DC20DE9021C104DE0096000B /* OCLogTag.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCHTTPDAVRequest.m in Sources */,
 				DC4AFAA7206A6E7100189B9A /* OCSQLiteResultSet.m in Sources */,

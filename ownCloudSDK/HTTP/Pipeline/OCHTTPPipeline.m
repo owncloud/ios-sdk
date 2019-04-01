@@ -27,6 +27,7 @@
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCProxyProgress.h"
+#import "NSURLSessionTaskMetrics+OCCompactSummary.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -900,6 +901,7 @@
 					if (resumeSessionTask)
 					{
 						OCLogDebug(@"resuming request for taskIdentifier <%ld>, URL: %@, %p", urlSessionTask.taskIdentifier, urlRequest, self);
+						urlSessionTask.resumeTaskDate = [NSDate new];
 						[urlSessionTask resume];
 					}
 				}
@@ -1612,7 +1614,13 @@
 
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
 {
-	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), metrics);
+	if (OCLogger.logLevel <= OCLogLevelDebug)
+	{
+		NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
+		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
+
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics: %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), [metrics compactSummaryWithTask:urlSessionTask]);
+	}
 }
 
 - (void)URLSession:(NSURLSession *)session
