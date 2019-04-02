@@ -96,6 +96,8 @@
 					return;
 				}
 
+				placeholderItem.localRelativePath = [self.core.vault relativePathForItem:placeholderItem];
+
 				sourceURL = [self.core localURLForItem:sourceItem];
 				destinationURL = [self.core localURLForItem:placeholderItem];
 

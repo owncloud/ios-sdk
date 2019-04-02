@@ -50,6 +50,7 @@
 
 	if ((uploadItem = self.localItem) != nil)
 	{
+		uploadItem.lastUsed = [NSDate new];
 		[uploadItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
 		if (uploadItem.isPlaceholder)
@@ -212,6 +213,7 @@
 
 			// Prepare uploadedItem to replace uploadItem
 			[uploadedItem prepareToReplace:uploadItem];
+			uploadedItem.lastUsed = uploadItem.lastUsed;
 
 			// Update uploaded item with local relative path
 			uploadedItem.localRelativePath = [self.core.vault relativePathForItem:uploadedItem];

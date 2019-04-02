@@ -887,6 +887,8 @@
 
 							[expectFavorite fulfill];
 						} userInfo:nil ephermalUserInfo:nil]];
+
+						break;
 					}
 				}
 			}];

@@ -22,6 +22,8 @@
 #import "OCQueryFilter.h"
 #import "OCItem.h"
 #import "OCQueryChangeSet.h"
+#import "OCCoreItemList.h"
+#import "OCQueryCondition.h"
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCQueryState)
@@ -47,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void(^OCQueryChangesAvailableNotificationHandler)(OCQuery *query);
 typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryChangeSet * _Nullable changeset);
 
+typedef void(^OCQueryCustomResultHandler)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable initialItems);
+typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomResultHandler resultHandler);
+
 @protocol OCQueryDelegate <NSObject>
 
 - (void)query:(OCQuery *)query failedWithError:(NSError *)error; //!< Notifies the delegate that the query failed with an error (f.ex. network/server unreachable) and was removed from the core.
@@ -63,6 +68,8 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 	NSMutableArray <OCItem *> *_fullQueryResults; 	  		// All items matching the query, before applying filters and sorting.
 	NSMutableArray <OCItem *> *_processedQueryResults; 		// Like full query results, but after applying sorting and filtering.
 
+	OCCoreItemList *_fullQueryResultsItemList;			// Cached item list of _fullQueryResults used in the default
+
 	NSArray <OCItem *> *_lastQueryResults;				// processedQueryResults at the time a changeset was last requested.
 
 	NSMutableArray <id<OCQueryFilter>> *_filters;
@@ -78,14 +85,40 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 }
 
 #pragma mark - Initializers
+// Native queries
 + (instancetype)queryForPath:(OCPath)queryPath;	//!< Query for directory
 + (instancetype)queryWithItem:(OCItem *)item;   //!< Query for single file item
 + (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; //!< Query for changed folders since (but not including) a particular sync anchor
+
+// Custom queries
+/**
+ Creates a custom query.
+
+ A custom query starts out empty and - when started - is initially filled with the items asynchronously returned by the provided customSource.
+
+ The query results are subsequently kept up to date with just the changes (additions, updates, deletions) using the provided inputFilter to determine relevance.
+
+ If a query is reloaded, the customSource is invoked again and the query results replaced with the items it provides.
+
+ @param customSource Called on start and reload of the query.
+ @param inputFilter Filter to determine relevance to the query results.
+ @return An OCQuery instance.
+ */
++ (instancetype)queryWithCustomSource:(OCQueryCustomSource)customSource inputFilter:(id<OCQueryFilter>)inputFilter;
++ (instancetype)queryWithCondition:(OCQueryCondition *)condition inputFilter:(nullable id<OCQueryFilter>)inputFilter; //!< Custom query for items matching the condition. An inputFilter is automatically generated from the condition. However, for best performance, an inputFilter should be supplied where possible.
 
 #pragma mark - Location
 @property(nullable, strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
 @property(nullable, strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
 @property(nullable, strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
+
+#pragma mark - Custom queries
+@property(assign) BOOL isCustom; //!< YES if this is a custom query and handles updates itself via the -updateWithAddedItems:updatedItems:removedItems:.. method
+@property(nullable, copy) OCQueryCustomSource customSource; //!< Convenience block used by -provideFullQueryResultsForCore: (=> see its description for more info).
+@property(nullable, strong) id<OCQueryFilter> inputFilter; //!< (Input) filter to apply to items to determine if they should be included in the full query result set using the default -updateWithAddedItems:updatedItems:removedItems: implementation.
+- (void)provideFullQueryResultsForCore:(OCCore *)core resultHandler:(OCQueryCustomResultHandler)resultHandler; //!< Method used to request full query results for the query upon start and reload of a custom query. The default implementation calls .customSource if it is set.
+- (void)modifyFullQueryResults:(BOOL(^)(NSMutableArray <OCItem *> *fullQueryResults, OCCoreItemList *(^coreItemListProvider)(void)))modificator; //!< Intended for use by -updateWithAddedItems:updatedItems:removedItems: to modify the internally stored array of result items for the query (provided as fullQueryResults). The coreItemListProvider block is provided as a convenience to retrieve a cached (!) OCCoreItemList of the supplied fullQueryResults. The block should return YES if it made changes, NO otherwise.
+- (void)updateWithAddedItems:(nullable OCCoreItemList *)addedItems updatedItems:(nullable OCCoreItemList *)updatedItems removedItems:(nullable OCCoreItemList *)removedItems; //!< OCQuery subclasses can provide their own custom updating logic for custom queries (.isCustom = YES) here. The default implementation uses .inputFilter in combination with -modifyFullQueryResults: to keep the internal full query results up-to-date.
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query
@@ -94,7 +127,7 @@ typedef void(^OCQueryChangeSetRequestCompletionHandler)(OCQuery *query, OCQueryC
 @property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
 
 #pragma mark - Filtering
-@property(nullable,strong) NSArray <id<OCQueryFilter>> *filters; //!< Filters to be applied on the query results
+@property(nullable,strong) NSArray <id<OCQueryFilter>> *filters; //!< (Output) filters to be applied on the query results.
 
 - (void)addFilter:(id<OCQueryFilter>)filter withIdentifier:(OCQueryFilterIdentifier)identifier;  //!< Adds a filter to the query.
 - (nullable id<OCQueryFilter>)filterWithIdentifier:(OCQueryFilterIdentifier)identifier; //!< Retrieve a filter by its identifier.

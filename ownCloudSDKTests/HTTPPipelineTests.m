@@ -1429,7 +1429,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:240 handler:nil];
 
 	XCTAssert(cancelledRequests!=0);
 }
@@ -2212,7 +2212,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:240 handler:nil];
 }
 
 // - creates a fake task in the backend with status "running" (=> when actually it has never been scheduled and the NSURLSession can't know about it)

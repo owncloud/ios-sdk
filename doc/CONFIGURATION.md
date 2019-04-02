@@ -44,6 +44,9 @@ This document provides an overview over the available sections and variables.
 	- `allow-cellular`: Allow the use of cellular connections.
 		- type: boolean
 		- default: `true`
+	- `plain-http-policy`: Policy regarding the use of plain (unencryped) HTTP URLs for creating bookmarks. A value of `warn` will create an issue (typically then presented to the user as a warning), but ultimately allow the creation of the bookmark. A value of `forbidden` will block the use of `http`-URLs for the creation of new bookmarks.
+		- type: string
+		- default: `warn`
 
 ## Core
 

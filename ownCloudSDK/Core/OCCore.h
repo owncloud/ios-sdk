@@ -85,29 +85,29 @@ typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
 	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
 };
 
-typedef void(^OCCoreActionResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
-typedef void(^OCCoreUploadResultHandler)(NSError *error, OCCore *core, OCItem *item, id parameter);
-typedef void(^OCCoreDownloadResultHandler)(NSError *error, OCCore *core, OCItem *item, OCFile *file);
-typedef void(^OCCoreRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, id retrievedObject, BOOL isOngoing, NSProgress *progress);
-typedef void(^OCCoreThumbnailRetrieveHandler)(NSError *error, OCCore *core, OCItem *item, OCItemThumbnail *thumbnail, BOOL isOngoing, NSProgress *progress);
-typedef void(^OCCorePlaceholderCompletionHandler)(NSError *error, OCItem *item);
-typedef void(^OCCoreCompletionHandler)(NSError *error);
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^OCCoreActionResultHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable parameter);
+typedef void(^OCCoreUploadResultHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable parameter);
+typedef void(^OCCoreDownloadResultHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, OCFile * _Nullable file);
+typedef void(^OCCoreRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable retrievedObject, BOOL isOngoing, NSProgress * _Nullable progress);
+typedef void(^OCCoreThumbnailRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, OCItemThumbnail * _Nullable thumbnail, BOOL isOngoing, NSProgress * _Nullable progress);
+typedef void(^OCCorePlaceholderCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
+typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
-typedef NSError *(^OCCoreImportTransformation)(NSURL *sourceURL);
+typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
 
 typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 #pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
 
-- (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCIssue *)issue;
+- (void)core:(OCCore *)core handleError:(nullable NSError *)error issue:(nullable OCIssue *)issue;
 
 @end
 
 #pragma mark - Class
-NS_ASSUME_NONNULL_BEGIN
-
 @interface OCCore : NSObject <OCEventHandler, OCClassSettingsSupport, OCLogTagging, OCProgressResolver>
 {
 	OCBookmark *_bookmark;
@@ -231,7 +231,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 
-- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
+- (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString * _Nullable * _Nullable)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
 
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
@@ -328,8 +328,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
 @end
 
-NS_ASSUME_NONNULL_END
-
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 
@@ -345,3 +343,5 @@ extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [B
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.
 extern NSNotificationName OCCoreItemStopsHavingProgress; //!< Notification sent when an item no longer has any progress. The object is the localID of the item.
+
+NS_ASSUME_NONNULL_END

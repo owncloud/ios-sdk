@@ -1,9 +1,9 @@
 //
-//  OCSyncAction+FileProvider.h
+//  NSURLSessionTaskMetrics+OCCompactSummary.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 17.11.18.
-//  Copyright © 2018 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 01.04.19.
+//  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
 /*
@@ -16,13 +16,19 @@
  *
  */
 
-#import "OCSyncAction.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCSyncAction (FileProviderProgressReporting)
+@interface NSURLSessionTask (OCURLMetrics)
 
-- (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary * _Nullable * _Nullable)options syncContext:(OCSyncContext *)syncContext;
+@property(strong,nullable,nonatomic) NSDate *resumeTaskDate;
+
+@end
+
+@interface NSURLSessionTaskMetrics (OCCompactSummary)
+
+- (NSString *)compactSummaryWithTask:(NSURLSessionTask *)task;
 
 @end
 

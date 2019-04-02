@@ -23,6 +23,7 @@
 #import "OCTypes.h"
 #import "OCSQLiteTableSchema.h"
 #import "OCLogTag.h"
+#import "OCQueryCondition.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -91,6 +92,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+
+- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 #pragma mark - Thumbnail interface
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;

@@ -26,7 +26,7 @@ typedef NSDictionary<NSString*,id<NSObject>>* OCSQLiteRowDictionary;
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef id(^OCSQLiteResultSetColumnFilter)(id object);
+typedef id _Nullable (^OCSQLiteResultSetColumnFilter)(id object);
 typedef void(^OCSQLiteResultSetIterator)(OCSQLiteResultSet *resultSet, NSUInteger line, OCSQLiteRowDictionary rowDictionary, BOOL *stop);
 
 @interface OCSQLiteResultSet : NSObject

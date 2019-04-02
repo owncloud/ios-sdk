@@ -29,6 +29,7 @@
 #import "OCMacros.h"
 #import "OCSyncAction.h"
 #import "OCProcessManager.h"
+#import "OCQueryCondition+SQLBuilder.h"
 
 @interface OCDatabase ()
 {
@@ -177,6 +178,12 @@
 			@"path" 		: item.path,
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
+			@"mimeType" 		: OCSQLiteNullProtect(item.mimeType),
+			@"size" 		: @(item.size),
+			@"favorite" 		: @(item.isFavorite.boolValue),
+			@"cloudStatus" 		: @(item.cloudStatus),
+			@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
+			@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 			@"fileID"		: item.fileID,
 			@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
 			@"itemData"		: [item serializedData]
@@ -222,6 +229,12 @@
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
+				@"mimeType" 		: OCSQLiteNullProtect(item.mimeType),
+				@"size" 		: @(item.size),
+				@"favorite" 		: @(item.isFavorite.boolValue),
+				@"cloudStatus" 		: @(item.cloudStatus),
+				@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
+				@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 				@"fileID"		: item.fileID,
 				@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
 				@"itemData"		: [item serializedData]
@@ -438,6 +451,61 @@
 			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
 		}
 	}]];
+}
+
++ (NSDictionary<OCItemPropertyName, NSString *> *)columnNameByPropertyName
+{
+	static dispatch_once_t onceToken;
+	static NSDictionary<OCItemPropertyName, NSString *> *columnNameByPropertyName;
+
+	dispatch_once(&onceToken, ^{
+		columnNameByPropertyName = @{
+			OCItemPropertyNameType : @"type",
+
+			OCItemPropertyNameName : @"name",
+			OCItemPropertyNamePath : @"path",
+
+			OCItemPropertyNameLocalRelativePath 	: @"localRelativePath",
+			OCItemPropertyNameLocallyModified 	: @"locallyModified",
+
+			OCItemPropertyNameMIMEType 		: @"mimeType",
+			OCItemPropertyNameSize 			: @"size",
+			OCItemPropertyNameIsFavorite 		: @"favorite",
+			OCItemPropertyNameCloudStatus 		: @"cloudStatus",
+			OCItemPropertyNameHasLocalAttributes 	: @"hasLocalAttributes",
+			OCItemPropertyNameLastUsed 		: @"lastUsedDate"
+		};
+	});
+
+	return (columnNameByPropertyName);
+}
+
+- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+{
+	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE removed=0 AND ";
+	NSString *sqlWhereString = nil;
+	NSArray *parameters = nil;
+	NSError *error = nil;
+
+	if ((sqlWhereString = [queryCondition buildSQLQueryWithPropertyColumnNameMap:[[self class] columnNameByPropertyName] parameters:&parameters error:&error]) != nil)
+	{
+		sqlQueryString = [sqlQueryString stringByAppendingString:sqlWhereString];
+
+		[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+			if (error != nil)
+			{
+				completionHandler(self, error, nil, nil);
+			}
+			else
+			{
+				[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
+			}
+		}]];
+	}
+	else
+	{
+		completionHandler(self, error, nil, nil);
+	}
 }
 
 #pragma mark - Thumbnail interface

@@ -26,7 +26,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef id(^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContext *context, NSError * __nullable * __nullable outError);
+typedef id _Nullable (^OCExtensionObjectProvider)(OCExtension *extension, OCExtensionContext *context, NSError * __nullable * __nullable outError);
 typedef OCExtensionPriority(^OCExtensionCustomContextMatcher)(OCExtensionContext *context, OCExtensionPriority defaultPriority);
 
 @interface OCExtension : NSObject
