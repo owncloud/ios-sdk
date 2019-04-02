@@ -916,32 +916,32 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
-		NSMutableArray <OCXMLNode *> *ocPropAtributes = [NSMutableArray arrayWithArray:@[
-																						 // WebDAV properties
-																						 [OCXMLNode elementWithName:@"D:resourcetype"],
-																						 [OCXMLNode elementWithName:@"D:getlastmodified"],
-																						 [OCXMLNode elementWithName:@"D:getcontentlength"],
-																						 [OCXMLNode elementWithName:@"D:getcontenttype"],
-																						 [OCXMLNode elementWithName:@"D:getetag"],
+		NSMutableArray <OCXMLNode *> *ocPropAtributes = [[NSMutableArray alloc] initWithArray:@[
+																								// WebDAV properties
+																								[OCXMLNode elementWithName:@"D:resourcetype"],
+																								[OCXMLNode elementWithName:@"D:getlastmodified"],
+																								[OCXMLNode elementWithName:@"D:getcontentlength"],
+																								[OCXMLNode elementWithName:@"D:getcontenttype"],
+																								[OCXMLNode elementWithName:@"D:getetag"],
 
-																						 // OC properties
-																						 [OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
-																						 [OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
-																						 [OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
-																						 [OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
-																						 [OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+																								// OC properties
+																								[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
 
-																						 [OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
-																						 [OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
+																								[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes],
 
-																						 //		 	[OCXMLNode elementWithName:@"D:creationdate"],
-																						 //		 	[OCXMLNode elementWithName:@"D:displayname"],
+																								//		 	[OCXMLNode elementWithName:@"D:creationdate"],
+																								//		 	[OCXMLNode elementWithName:@"D:displayname"],
 
-																						 //			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
-																						 //			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
-																						 //			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
-																						 //			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
-																						 ]];
+																								//			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
+																								//			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
+																								//			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
+																								//			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
+																								]];
 		if(depth == 0)
 		{
 			[ocPropAtributes addObject:[OCXMLNode elementWithName:@"D:quota-available-bytes"]];
