@@ -47,11 +47,16 @@
 
 	if ((item = self.localItem) != nil)
 	{
+		item.lastUsed = [NSDate new];
+
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
 		{
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
+
+			// Make sure the lastUsed property is updated regardless
+			syncContext.updatedItems = @[ item ];
 
 			[syncContext completeWithError:nil core:self.core item:item parameter:[item fileWithCore:self.core]];
 		}

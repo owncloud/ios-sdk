@@ -28,6 +28,9 @@
 	{
 		_fullQueryResults = fullQueryResults;
 
+		// Release cached item list
+		_fullQueryResultsItemList = nil;
+
 		[self setNeedsRecomputation];
 	}
 }
@@ -59,6 +62,10 @@
 		OCCoreItemList *itemList = [OCCoreItemList new];
 		NSDictionary <OCPath, OCItem *> *itemsByPath;
 
+		// Release cached item list
+		_fullQueryResultsItemList = nil;
+
+		// Merge
 		if (_fullQueryResults == nil) { _fullQueryResults = [NSMutableArray new]; }
 
 		itemList.items = _fullQueryResults;
@@ -85,6 +92,22 @@
 			}
 		}
 	}
+}
+
+- (OCCoreItemList *)fullQueryResultsItemList
+{
+	OCCoreItemList *itemList = nil;
+
+	@synchronized(self)
+	{
+		if ((itemList = _fullQueryResultsItemList) == nil)
+		{
+			_fullQueryResultsItemList = [OCCoreItemList itemListWithItems:[[NSArray alloc] initWithArray:_fullQueryResults]];
+			itemList = _fullQueryResultsItemList;
+		}
+	}
+
+	return (itemList);
 }
 
 #pragma mark - Update processed results

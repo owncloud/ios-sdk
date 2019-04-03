@@ -45,7 +45,7 @@
 "%@ couldn't be deleted" = "%@ couldn't be deleted";
 "Please check if you have sufficient permissions to delete %@." = "Please check if you have sufficient permissions to delete %@.";
 
-/* Copy / Move */
+/* Move/Rename/Copy */
 "Operation forbidden" = "Operation forbidden";
 "%@ can't be copied to %@." = "%@ can't be copied to %@.";
 "%@ can't be moved to %@." = "%@ can't be moved to %@.";
@@ -69,13 +69,15 @@
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";
 
-/* Download */
-"Downloading %@…" = "Downloading %@…";
-
-/* Move/Rename/Copy */
 "Renaming %@ to %@…" = "Renaming %@ to %@…";
 "Moving %@ to %@…" = "Moving %@ to %@…";
 "Copying %@ to %@…" = "Copying %@ to %@…";
+
+/* Upload */
+"Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
+
+/* Download */
+"Downloading %@…" = "Downloading %@…";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";

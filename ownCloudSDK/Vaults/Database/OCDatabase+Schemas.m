@@ -418,6 +418,109 @@
 			}]];
 		}]
 	];
+
+	// Version 7
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameMetaData
+		version:7
+		creationQueries:@[
+			/*
+				mdID : INTEGER	  		- unique ID used to uniquely identify and efficiently update a row
+				type : INTEGER    		- OCItemType value to indicate if this is a file or a collection/folder
+				syncAnchor: INTEGER		- sync anchor, a number that increases its value with every change to an entry. For files, higher sync anchor values indicate the file changed (incl. creation, content or meta data changes). For collections/folders, higher sync anchor values indicate the list of items in the collection/folder changed in a way not covered by file entries (i.e. rename, deletion, but not creation of files).
+				removed : INTEGER		- value indicating if this file or folder has been removed: 1 if it was, 0 if not (default). Removed entries are kept around until their delta to the latest syncAnchor value exceeds -[OCDatabase removedItemRetentionLength].
+				locallyModified: INTEGER	- value indicating if this is a file that's been created or modified locally
+				localRelativePath: TEXT		- path of the local copy of the item, relative to the rootURL of the vault that stores it
+				path : TEXT	  		- full path of the item (e.g. "/example/file.txt")
+				parentPath : TEXT 		- parent path of the item. (e.g. "/example" for an item at "/example/file.txt")
+				name : TEXT 	  		- name of the item (e.g. "file.txt" for an item at "/example/file.txt")
+				mimeType : TEXT			- MIME type of the item
+				size : INTEGER			- size of the item
+				favorite : INTEGER		- BOOL indicating if the item is favorite (OCItem.isFavorite)
+				cloudStatus : INTEGER 		- Cloud status of the item (OCItem.cloudStatus)
+				hasLocalAttributes : INTEGER 	- BOOL indicating an item with local attributes (OCItem.hasLocalAttributes)
+				lastUsedDate : REAL 		- NSDate.timeIntervalSince1970 value of OCItem.lastUsed
+				fileID : TEXT			- OCFileID identifying the item
+				localID : TEXT			- OCLocalID identifying the item
+				itemData : BLOB	  		- data of the serialized OCItem
+			*/
+			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT NOT NULL, localID TEXT, itemData BLOB NOT NULL)",
+
+			// Create indexes over path and parentPath
+			@"CREATE INDEX idx_metaData_path ON metaData (path)",
+			@"CREATE INDEX idx_metaData_parentPath ON metaData (parentPath)",
+			@"CREATE INDEX idx_metaData_synchAnchor ON metaData (syncAnchor)",
+			@"CREATE INDEX idx_metaData_localID ON metaData (localID)",
+			@"CREATE INDEX idx_metaData_fileID ON metaData (fileID)",
+			@"CREATE INDEX idx_metaData_removed ON metaData (removed)",
+		]
+		openStatements:@[
+			// Create trigger to delete thumbnails alongside metadata entries
+			@"CREATE TEMPORARY TRIGGER temp_delete_associated_thumbnails AFTER DELETE ON metaData BEGIN DELETE FROM thumb.thumbnails WHERE fileID = OLD.fileID; END" // relatedTo:OCDatabaseTableNameThumbnails
+		]
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 4
+
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Create new table
+				[db executeQuery:[OCSQLiteQuery query:
+				@"CREATE TABLE metaData_new (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT NOT NULL, localID TEXT, itemData BLOB NOT NULL)" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Migrate data to new table, filling new columns with placeholder data
+				[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO metaData_new (mdID, type, syncAnchor, removed, locallyModified, localRelativePath, path, parentPath, name, mimeType, size, favorite, cloudStatus, hasLocalAttributes, lastUsedDate, fileID, localID, itemData) SELECT mdID, type, syncAnchor, removed, locallyModified, localRelativePath, path, parentPath, name, \"-\", 0, 0, 0, 0, 0, fileID, localID, itemData FROM metaData" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Drop old table
+				[db executeQuery:[OCSQLiteQuery query:@"DROP TABLE metaData" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Rename new table
+				[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE metaData_new RENAME TO metaData" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Fill new columns with real data
+				[db executeQuery:[OCSQLiteQuery querySelectingColumns:@[@"mdID", @"itemData"] fromTable:OCDatabaseTableNameMetaData where:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+					// Migrate OCItems
+					[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *, id> *rowDictionary, BOOL *stop) {
+						OCItem *item;
+
+						if ((item = [OCItem itemFromSerializedData:rowDictionary[@"itemData"]]) != nil)
+						{
+							if (rowDictionary[@"mdID"] != nil)
+							{
+								[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:rowDictionary[@"mdID"]
+												inTable:OCDatabaseTableNameMetaData
+												withRowValues:@{
+															@"mimeType" : OCSQLiteNullProtect(item.mimeType),
+															@"size" : @(item.size),
+															@"favorite" : OCSQLiteNullProtect(item.isFavorite),
+															@"cloudStatus" : @(item.cloudStatus),
+															@"hasLocalAttributes" : @(item.hasLocalAttributes),
+															@"lastUsedDate" : OCSQLiteNullProtect(item.lastModified)
+													       }
+												completionHandler:^(OCSQLiteDB *db, NSError *error) {
+													if (error != nil)
+													{
+														transactionError = error;
+													}
+												}
+										]
+								];
+							}
+						}
+					} error:&transactionError];
+				}]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
+	];
 }
 
 - (void)addOrUpdateSyncJournalSchema
@@ -449,8 +552,8 @@
 		creationQueries:@[
 			/*
 				recordID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
-				timestampDate : REAL		- NSDate.timeIntervalSinceReferenceDate at the time the record was added to the journal
-				inProgressSinceDate : REAL	- NSDate.timeIntervalSinceReferenceDate at the time the record was beginning to be processed
+				timestampDate : REAL		- NSDate.timeIntervalSince1970 at the time the record was added to the journal
+				inProgressSinceDate : REAL	- NSDate.timeIntervalSince1970 at the time the record was beginning to be processed
 				action : TEXT			- action to perform
 				path : TEXT			- path of the item targeted by the operation
 				recordData : BLOB		- archived OCSyncRecord data
@@ -486,8 +589,8 @@
 		creationQueries:@[
 			/*
 				recordID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
-				timestampDate : REAL		- NSDate.timeIntervalSinceReferenceDate at the time the record was added to the journal
-				inProgressSinceDate : REAL	- NSDate.timeIntervalSinceReferenceDate at the time the record was beginning to be processed
+				timestampDate : REAL		- NSDate.timeIntervalSince1970 at the time the record was added to the journal
+				inProgressSinceDate : REAL	- NSDate.timeIntervalSince1970 at the time the record was beginning to be processed
 				action : TEXT			- action to perform
 				localID : TEXT			- localID of the item targeted by the operation
 				path : TEXT			- path of the item targeted by the operation
@@ -524,8 +627,8 @@
 		creationQueries:@[
 			/*
 				recordID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
-				timestampDate : REAL		- NSDate.timeIntervalSinceReferenceDate at the time the record was added to the journal
-				inProgressSinceDate : REAL	- NSDate.timeIntervalSinceReferenceDate at the time the record was beginning to be processed
+				timestampDate : REAL		- NSDate.timeIntervalSince1970 at the time the record was added to the journal
+				inProgressSinceDate : REAL	- NSDate.timeIntervalSince1970 at the time the record was beginning to be processed
 				action : TEXT			- action to perform
 				localID : TEXT			- localID of the item targeted by the operation
 				path : TEXT			- path of the item targeted by the operation

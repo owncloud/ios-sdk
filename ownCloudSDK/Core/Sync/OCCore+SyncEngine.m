@@ -124,7 +124,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				*outError = error;
 			}
 
-			latestItem = items[0];
+			latestItem = items.firstObject;
 
 			OCSyncExecDone(databaseRetrieval);
 
