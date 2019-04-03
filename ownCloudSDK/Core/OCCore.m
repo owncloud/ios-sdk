@@ -90,8 +90,9 @@
 
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
-@synthesize rootQuotaAvailableBytes = _rootQuotaAvailableBytes;
-@synthesize rootQuotaUsedBytes = _rootQuotaUsedBytes;
+@synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
+@synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
+@synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier

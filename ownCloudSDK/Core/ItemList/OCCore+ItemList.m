@@ -874,16 +874,40 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			NSError *error = nil;
 			OCItem *cacheItem = nil;
 			OCItem *remoteItem = items.firstObject;
-
 			NSArray<OCItem*> *cacheItems = nil;
+			BOOL updateQuotaTotal = NO;
 
-			[self willChangeValueForKey:@"rootQuotaAvailableBytes"];
-			_rootQuotaAvailableBytes = remoteItem.quotaBytesAvailable;
-			[self didChangeValueForKey:@"rootQuotaAvailableBytes"];
+			if ([remoteItem.path isEqual:@"/"])
+			{
+				// Update root quota properties
 
-			[self willChangeValueForKey:@"rootQuotaUsedBytes"];
-			_rootQuotaUsedBytes = remoteItem.quotaBytesUsed;
-			[self didChangeValueForKey:@"rootQuotaUsedBytes"];
+				if (((_rootQuotaBytesRemaining != nil) != (remoteItem.quotaBytesRemaining != nil)) || (_rootQuotaBytesRemaining.integerValue != remoteItem.quotaBytesRemaining.integerValue))
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesRemaining"];
+					_rootQuotaBytesRemaining = remoteItem.quotaBytesRemaining;
+					[self didChangeValueForKey:@"rootQuotaBytesRemaining"];
+
+					updateQuotaTotal = YES;
+				}
+
+				if (((_rootQuotaBytesUsed != nil) != (remoteItem.quotaBytesUsed != nil)) || (_rootQuotaBytesUsed.integerValue != remoteItem.quotaBytesUsed.integerValue))
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesUsed"];
+					_rootQuotaBytesUsed = remoteItem.quotaBytesUsed;
+					[self didChangeValueForKey:@"rootQuotaBytesUsed"];
+
+					updateQuotaTotal = YES;
+				}
+
+				if (updateQuotaTotal)
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesTotal"];
+					_rootQuotaBytesTotal = (_rootQuotaBytesRemaining != nil) ?
+							@(_rootQuotaBytesUsed.integerValue + _rootQuotaBytesRemaining.integerValue) :
+							nil;
+					[self didChangeValueForKey:@"rootQuotaBytesTotal"];
+				}
+			}
 
 			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{

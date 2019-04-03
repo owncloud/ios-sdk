@@ -117,7 +117,7 @@
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 
-	[coder encodeObject:_quotaBytesAvailable forKey:@"quotaBytesAvailable"];
+	[coder encodeObject:_quotaBytesRemaining forKey:@"quotaBytesRemaining"];
 	[coder encodeObject:_quotaBytesUsed forKey:@"quotaBytesUsed"];
 
 }
@@ -173,7 +173,7 @@
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 
-		_quotaBytesAvailable = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesAvailable"];
+		_quotaBytesRemaining = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesRemaining"];
 		_quotaBytesUsed = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesUsed"];
 	}
 
@@ -515,7 +515,7 @@
 
 	CloneMetadata(@"databaseID");
 
-	CloneMetadata(@"quotaBytesAvailable");
+	CloneMetadata(@"quotaBytesRemaining");
 	CloneMetadata(@"quotaBytesUsed");
 }
 
