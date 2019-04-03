@@ -150,9 +150,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
-@property(assign) int64_t quotaBytesAvailable; //!< Quota bytes available property
+@property(nullable,strong) NSNumber* quotaBytesAvailable; //!< Quota bytes available property
 
-@property(assign) int64_t quotaBytesUsed; //!< Quota bytes used property
+@property(nullable,strong) NSNumber* quotaBytesUsed; //!< Quota bytes used property
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 

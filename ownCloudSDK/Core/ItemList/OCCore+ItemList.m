@@ -877,6 +877,14 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			NSArray<OCItem*> *cacheItems = nil;
 
+			[self willChangeValueForKey:@"rootQuotaAvailableBytes"];
+			_rootQuotaAvailableBytes = remoteItem.quotaBytesAvailable;
+			[self didChangeValueForKey:@"rootQuotaAvailableBytes"];
+
+			[self willChangeValueForKey:@"rootQuotaUsedBytes"];
+			_rootQuotaUsedBytes = remoteItem.quotaBytesUsed;
+			[self didChangeValueForKey:@"rootQuotaUsedBytes"];
+
 			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{
 				if ((cacheItem = cacheItems.firstObject) != nil)

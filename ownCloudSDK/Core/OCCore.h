@@ -170,6 +170,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
 	__weak id <OCCoreDelegate> _delegate;
+
+	NSNumber* _rootQuotaAvailableBytes;
+	NSNumber* _rootQuotaUsedBytes;
 }
 
 @property(readonly) OCBookmark *bookmark; //!< Bookmark identifying the server this core manages.
@@ -199,6 +202,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm; //!< Identifier of the preferred checksum algorithm
 
 @property(assign) BOOL automaticItemListUpdatesEnabled; //!< Whether OCCore should scan for item list updates automatically.
+
+@property(readonly,strong,nullable) NSNumber* rootQuotaAvailableBytes;
+
+@property(readonly,strong,nullable) NSNumber* rootQuotaUsedBytes;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

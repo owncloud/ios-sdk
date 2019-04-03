@@ -115,8 +115,8 @@
 
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 
-	[coder encodeInt64:_quotaBytesAvailable forKey:@"quotaBytesAvailable"];
-	[coder encodeInt64:_quotaBytesUsed forKey:@"quotaBytesUsed"];
+	[coder encodeObject:_quotaBytesAvailable forKey:@"quotaBytesAvailable"];
+	[coder encodeObject:_quotaBytesUsed forKey:@"quotaBytesUsed"];
 
 }
 
@@ -170,8 +170,8 @@
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 
-		_quotaBytesAvailable = [decoder decodeInt64ForKey:@"quotaBytesAvailable"];
-		_quotaBytesUsed = [decoder decodeInt64ForKey:@"quotaBytesUsed"];
+		_quotaBytesAvailable = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesAvailable"];
+		_quotaBytesUsed = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesUsed"];
 	}
 
 	return (self);
