@@ -250,6 +250,10 @@
 				case OCErrorSharePublicUploadDisabled:
 					unlocalizedString = @"Public upload was disabled by the administrator.";
 				break;
+
+				case OCErrorInsufficientStorage:
+					unlocalizedString = @"Insufficient storage.";
+				break;
 			}
 		}
 	}

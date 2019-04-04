@@ -1298,6 +1298,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						}
 						break;
 
+						case OCHTTPStatusCodeINSUFFICIENT_STORAGE: {
+							NSString *errorDescription = nil;
+
+							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
+							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+						}
+						break;
+
 						default: {
 							NSError *davError = [request.httpResponse bodyParsedAsDAVError];
 							NSString *davMessage = davError.davExceptionMessage;

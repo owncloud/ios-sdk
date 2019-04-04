@@ -84,7 +84,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorShareItemNotFound,  //!< Item not found.
 	OCErrorShareNotFound,  	   //!< Share not found.
 	OCErrorShareUnknownType,   //!< Unknown share type.
-	OCErrorSharePublicUploadDisabled //!< Public upload was disabled by the administrator.
+	OCErrorSharePublicUploadDisabled, //!< Public upload was disabled by the administrator.
+
+	OCErrorInsufficientStorage //!< Insufficient storage
 };
 
 @class OCIssue;
