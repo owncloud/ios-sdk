@@ -170,6 +170,10 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
 	__weak id <OCCoreDelegate> _delegate;
+
+	NSNumber *_rootQuotaBytesRemaining;
+	NSNumber *_rootQuotaBytesUsed;
+	NSNumber *_rootQuotaBytesTotal;
 }
 
 @property(readonly) OCBookmark *bookmark; //!< Bookmark identifying the server this core manages.
@@ -199,6 +203,10 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm; //!< Identifier of the preferred checksum algorithm
 
 @property(assign) BOOL automaticItemListUpdatesEnabled; //!< Whether OCCore should scan for item list updates automatically.
+
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesRemaining; //!< The remaining number of bytes available to the user.
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesUsed; //!< The number of bytes used by the user's content.
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesTotal; //!< The total amount of space assigned/available to the user.
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

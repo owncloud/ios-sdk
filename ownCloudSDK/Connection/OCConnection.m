@@ -916,8 +916,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
-
-		[davRequest.xmlRequestPropAttribute addChildren:@[
+		NSMutableArray <OCXMLNode *> *ocPropAtributes = [[NSMutableArray alloc] initWithObjects:
 			// WebDAV properties
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
@@ -933,18 +932,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
 
 			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
+			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes],
 
-//		 	[OCXMLNode elementWithName:@"D:creationdate"],
-//		 	[OCXMLNode elementWithName:@"D:displayname"],
-//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
+			// Quota
+			((depth == 0) ? [OCXMLNode elementWithName:@"D:quota-available-bytes"] : nil),
+			((depth == 0) ? [OCXMLNode elementWithName:@"D:quota-used-bytes"]      : nil),
 
-//			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
-		]];
+			// [OCXMLNode elementWithName:@"D:creationdate"],
+			// [OCXMLNode elementWithName:@"D:displayname"],
+
+			// [OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
+			// [OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
+			// [OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
+			// [OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
+		nil];
+
+		[davRequest.xmlRequestPropAttribute addChildren:ocPropAtributes];
 	}
 
 	return (davRequest);
