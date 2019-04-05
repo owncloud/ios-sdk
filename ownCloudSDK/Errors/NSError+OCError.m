@@ -16,6 +16,8 @@
  *
  */
 
+#import <objc/runtime.h>
+
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 
@@ -295,27 +297,14 @@
 
 - (NSError *)errorByEmbeddingIssue:(OCIssue *)issue
 {
-	NSMutableDictionary *userInfo = nil;
-	
-	if (issue==nil) { return(self); }
-	
-	if (self.userInfo != nil)
-	{
-		userInfo = [NSMutableDictionary dictionaryWithDictionary:self.userInfo];
-	}
-	else
-	{
-		userInfo = [NSMutableDictionary dictionary];
-	}
-	
-	userInfo[OCErrorIssueKey] = issue;
-	
-	return ([NSError errorWithDomain:self.domain code:self.code userInfo:userInfo]);
+	objc_setAssociatedObject(self, (__bridge const void *)OCErrorIssueKey, issue, OBJC_ASSOCIATION_RETAIN);
+
+	return (self);
 }
 
 - (OCIssue *)embeddedIssue
 {
-	return (self.userInfo[OCErrorIssueKey]);
+	return (objc_getAssociatedObject(self, (__bridge const void *)OCErrorIssueKey));
 }
 
 - (NSDictionary *)ocErrorInfoDictionary

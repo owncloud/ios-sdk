@@ -1007,6 +1007,12 @@
 	}
 
 	// Update task in backend
+	if ((task.response != nil) && (task.response != response))
+	{
+		// has existing response
+		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", response, task.response);
+	}
+
 	task.response = response;
 	task.state = OCHTTPPipelineTaskStateCompleted;
 	[self.backend updatePipelineTask:task];
@@ -1594,7 +1600,12 @@
 
 		if (error != nil)
 		{
-			[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:error]];
+			OCHTTPResponse *response = [task responseFromURLSessionTask:urlSessionTask];
+
+			response.requestID = task.request.identifier;
+			response.httpError = error;
+
+			[self finishedTask:task withResponse:response];
 		}
 		else
 		{

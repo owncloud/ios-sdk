@@ -66,6 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)connection:(OCConnection *)connection request:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 - (void)connectionChangedState:(OCConnection *)connection;
+- (void)connectionCertificateUserApproved:(OCConnection *)connection;
 
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 

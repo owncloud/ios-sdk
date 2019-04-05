@@ -451,7 +451,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
 				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.httpResponse.certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 					if (decision == OCIssueDecisionApprove)
 					{
 						if (changeUserAccepted)
@@ -459,10 +459,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							certificate.userAccepted = YES;
 						}
 
-						self->_bookmark.certificate = request.httpResponse.certificate;
+						self->_bookmark.certificate = certificate;
 						self->_bookmark.certificateModificationDate = [NSDate date];
 
 						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
+
+						if ((self.delegate!=nil) && [self.delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+						{
+							[self.delegate connectionCertificateUserApproved:self];
+						}
 					}
 				}]];
 			}

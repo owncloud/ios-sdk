@@ -304,6 +304,17 @@
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
 }
 
+- (void)connectionCertificateUserApproved:(OCConnection *)connection
+{
+	// User approved a certificate that was blocking connecting
+	[self queueBlock:^{
+		if ((self->_state == OCCoreStateStarting) && (self->_connection.state != OCConnectionStateConnecting))
+		{
+			[self _attemptConnect];
+		}
+	}];
+}
+
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
 {
 	if (error != nil)
