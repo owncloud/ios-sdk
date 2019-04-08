@@ -1018,7 +1018,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[self attachToPipelines];
 
 		// Enqueue request
-		[((notBeforeDate!=nil) ? self.longLivedPipeline : self.ephermalPipeline) enqueueRequest:davRequest forPartitionID:self.partitionID];
+		if ((notBeforeDate != nil) || (options[@"alternativeEventType"] != nil))
+		{
+			[self.longLivedPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+		}
+		else
+		{
+			[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+		}
 
 		progress = davRequest.progress.progress;
 		progress.eventType = OCEventTypeRetrieveItemList;
