@@ -35,6 +35,15 @@
 			{
 				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
 			}
+			else
+			{
+				NSString *bookmarkUsername = _bookmark.userName;
+
+				if (bookmarkUsername != nil)
+				{
+					endpointPath = [endpointPath stringByAppendingPathComponent:bookmarkUsername];
+				}
+			}
 		}
 		else
 		{
