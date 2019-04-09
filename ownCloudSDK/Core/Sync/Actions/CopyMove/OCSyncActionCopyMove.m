@@ -378,6 +378,11 @@
 			break;
 		}
 
+		if (issueDescription != nil)
+		{
+			event.error = OCErrorWithDescription(event.error.code, issueDescription);
+		}
+
 		// Action complete
 		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
 
