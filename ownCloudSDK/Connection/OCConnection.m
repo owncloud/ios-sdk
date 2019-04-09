@@ -2011,8 +2011,23 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						event.error = OCError(OCErrorItemChanged);
 					break;
 
-					default:
-						event.error = request.httpResponse.status.error;
+					case OCHTTPStatusCodeLOCKED:
+						/*
+							Status code: 423
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>OCA\DAV\Connector\Sabre\Exception\FileLocked</s:exception>
+							  <s:message>"new folder/newfile.pdf" is locked</s:message>
+							</d:error>
+						*/
+
+					default: {
+						NSString *davMessage = [request.httpResponse bodyParsedAsDAVError].davExceptionMessage;
+
+						error = ((davMessage != nil) ? OCErrorWithDescription(OCErrorItemOperationForbidden, davMessage) : request.httpResponse.status.error);
+					}
 					break;
 				}
 			}
