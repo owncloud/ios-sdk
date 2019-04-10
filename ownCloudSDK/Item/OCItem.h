@@ -149,8 +149,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
-@property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item (only provided in conjunction with dedicated sharing APIs)
-
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 @property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)

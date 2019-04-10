@@ -113,8 +113,6 @@
 	[coder encodeInteger:_shareTypesMask 	forKey:@"shareTypesMask"];
 	[coder encodeObject:_owner 		forKey:@"owner"];
 
-	[coder encodeObject:_shares		forKey:@"shares"];
-
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 
 	[coder encodeObject:_quotaBytesRemaining forKey:@"quotaBytesRemaining"];
@@ -168,8 +166,6 @@
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
 		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
-
-		_shares = [decoder decodeObjectOfClass:[NSArray class] forKey:@"shares"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 
