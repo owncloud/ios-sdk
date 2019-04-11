@@ -221,7 +221,7 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 #pragma mark - Query
 - (void)startQuery:(OCCoreQuery *)query;	//!< Starts a query
 - (void)reloadQuery:(OCCoreQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
-- (void)stopQuery:(OCCoreQuery *)query;	//!< Stops a query
+- (void)stopQuery:(OCCoreQuery *)query;		//!< Stops a query
 
 #pragma mark - Commands
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
@@ -233,11 +233,15 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 - (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
 
+#pragma mark - Item lookup and information
+- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified path from the cache.
+- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
+- (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the parent directory represented by parentItem.
+- (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
+
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself. Also returns a URL for items that don't have a local copy. Please use -localCopyOfItem: if you'd like to check for a local copy and retrive its URL in one go.
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
-
-- (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString * _Nullable * _Nullable)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
@@ -347,6 +351,7 @@ extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
 extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransformation] Transformation to be applied on local item before upload
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
+extern OCCoreOption OCCoreOptionPlaceholderCompletionHandler; //!< [OCCorePlaceholderCompletionHandler] For actions that support it: optional block that's invoked with the placeholder item if one is created by the action.
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.
