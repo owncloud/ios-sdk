@@ -174,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setValue:(nullable id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
 
 #pragma mark - File tools
-- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
+- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if the item doesn't reference a local file. To test local availability of a file, use -[OCCore localCopyOfItem:] instead of this method.
 
 #pragma mark - Serialization tools
 + (nullable instancetype)itemFromSerializedData:(NSData *)serializedData;

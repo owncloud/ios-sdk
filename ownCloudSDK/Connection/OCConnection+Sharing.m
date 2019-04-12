@@ -360,6 +360,8 @@
 	request.resultHandlerAction = @selector(_handleCreateShareResult:error:);
 	request.eventTarget = eventTarget;
 
+	request.forceCertificateDecisionDelegation = YES;
+
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
 	requestProgress = request.progress;
@@ -514,6 +516,8 @@
 		request.eventTarget = eventTarget;
 		request.userInfo = userInfo;
 
+		request.forceCertificateDecisionDelegation = YES;
+
 		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
@@ -619,6 +623,7 @@
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.actionSignals;
+	request.forceCertificateDecisionDelegation = YES;
 
 	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
 	request.eventTarget = eventTarget;
@@ -698,6 +703,8 @@
 
 	request.resultHandlerAction = @selector(_handleMakeDecisionOnShareResult:error:);
 	request.eventTarget = eventTarget;
+
+	request.forceCertificateDecisionDelegation = YES;
 
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 

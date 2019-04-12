@@ -37,6 +37,7 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse+DAVError.h"
+#import "OCCertificateRuleChecker.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -87,7 +88,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
 		OCConnectionEndpointIDRecipients		: @"ocs/v1.php/apps/files_sharing/api/v1/sharees",
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
-		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
+		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
+		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular			: @(YES),
@@ -411,14 +413,92 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
 	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
-	BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
 
-	// Strictly enfore bookmark certificate
-	if (strictBookmarkCertificateEnforcement)
+	// Enforce bookmark certificate
+	if (_bookmark.certificate != nil)
 	{
-		if (_bookmark.certificate != nil)
+		BOOL extendedValidationPassed = NO;
+		NSString *extendedValidationRule = nil;
+
+		if ((extendedValidationRule = [self classSettingForOCClassSettingsKey:OCConnectionCertificateExtendedValidationRule]) != nil)
 		{
-			fulfillsBookmarkRequirements = [_bookmark.certificate isEqual:certificate];
+			// Check extended validation rule
+			OCCertificateRuleChecker *ruleChecker = nil;
+
+			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:extendedValidationRule]) != nil)
+			{
+				extendedValidationPassed = [ruleChecker evaluateRule];
+			}
+		}
+		else
+		{
+			// Check if certificate SHA-256 fingerprints are identical
+			extendedValidationPassed = [_bookmark.certificate isEqual:certificate];
+		}
+
+		if (extendedValidationPassed)
+		{
+			fulfillsBookmarkRequirements = YES;
+		}
+		else
+		{
+			// Evaluate the renewal acceptance rule to determine if this certificate should be used instead
+			NSString *renewalAcceptanceRule = nil;
+
+			fulfillsBookmarkRequirements = NO;
+
+			OCLogWarning(@"Certificate %@ does not match bookmark certificate %@. Checking with rule: %@", OCLogPrivate(certificate), OCLogPrivate(_bookmark.certificate), OCLogPrivate(renewalAcceptanceRule));
+
+			if ((renewalAcceptanceRule = [self classSettingForOCClassSettingsKey:OCConnectionRenewedCertificateAcceptanceRule]) != nil)
+			{
+				OCCertificateRuleChecker *ruleChecker;
+
+				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:renewalAcceptanceRule]) != nil)
+				{
+					fulfillsBookmarkRequirements = [ruleChecker evaluateRule];
+
+					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
+					{
+						// Update bookmark certificate
+						_bookmark.certificate = certificate;
+						_bookmark.certificateModificationDate = [NSDate date];
+
+						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
+
+						if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+						{
+							[_delegate connectionCertificateUserApproved:self];
+						}
+
+						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(_bookmark), certificate);
+					}
+
+					defaultWouldProceed = fulfillsBookmarkRequirements;
+				}
+			}
+
+			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
+
+//			// Certificate SHA-256 fingerprints differ - check public keys
+//			NSError *publicKeyDataError = nil;
+//
+//			// Compare public keys: if they are identical, the bookmark requirements are fulfilled
+//			fulfillsBookmarkRequirements = [_bookmark.certificate hasIdenticalPublicKeyAs:certificate error:&publicKeyDataError];
+//
+//			if (fulfillsBookmarkRequirements &&	// New certificate has same public key
+//			    defaultWouldProceed)		// New certificate does pass validation or has already been user-approved
+//			{
+//				// Update bookmark certificate
+//				_bookmark.certificate = certificate;
+//				_bookmark.certificateModificationDate = [NSDate date];
+//
+//				[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
+//
+//				if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+//				{
+//					[_delegate connectionCertificateUserApproved:self];
+//				}
+//			}
 		}
 	}
 
@@ -434,9 +514,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			NSError *errorIssue = nil;
 			BOOL doProceed = NO, changeUserAccepted = NO;
 
-			if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
+			if (defaultWouldProceed && request.forceCertificateDecisionDelegation)
 			{
-				// strictBookmarkCertificateEnforcement => enforce bookmark certificate where available
+				// enforce bookmark certificate where available
 				doProceed = fulfillsBookmarkRequirements;
 			}
 			else
@@ -997,6 +1077,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		davRequest.downloadRequest = YES;
 		davRequest.earliestBeginDate = notBeforeDate;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
+		davRequest.forceCertificateDecisionDelegation = YES;
 		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
@@ -1220,6 +1301,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		request.eventTarget = eventTarget;
 		request.bodyURL = sourceURL;
+		request.forceCertificateDecisionDelegation = YES;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -1366,6 +1448,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.eventTarget = eventTarget;
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
+		request.forceCertificateDecisionDelegation = YES;
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
@@ -1518,6 +1601,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				};
 				patchRequest.eventTarget = eventTarget;
 				patchRequest.priority = NSURLSessionTaskPriorityHigh;
+				patchRequest.forceCertificateDecisionDelegation = YES;
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
@@ -1634,6 +1718,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
+		request.forceCertificateDecisionDelegation = YES;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -1795,6 +1880,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			};
 			request.priority = NSURLSessionTaskPriorityHigh;
 
+			request.forceCertificateDecisionDelegation = YES;
+
 			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
 			[request setValue:@"infinity" forHeaderField:@"Depth"];
 			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
@@ -1918,6 +2005,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
+		request.forceCertificateDecisionDelegation = YES;
 
 		if (requireMatch && (item.eTag!=nil))
 		{
@@ -2026,7 +2114,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					default: {
 						NSString *davMessage = [request.httpResponse bodyParsedAsDAVError].davExceptionMessage;
 
-						error = ((davMessage != nil) ? OCErrorWithDescription(OCErrorItemOperationForbidden, davMessage) : request.httpResponse.status.error);
+						event.error = ((davMessage != nil) ? OCErrorWithDescription(OCErrorItemOperationForbidden, davMessage) : request.httpResponse.status.error);
 					}
 					break;
 				}
@@ -2112,6 +2200,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			request.downloadedFileURL = localThumbnailURL;
 		}
 
+		request.forceCertificateDecisionDelegation = YES;
+
 		// Attach to pipelines
 		[self attachToPipelines];
 
@@ -2186,15 +2276,10 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	request.ephermalResultHandler = ephermalResultHandler;
 
-	// Strictly enfore bookmark certificate ..
+	// Strictly enforce bookmark certificate ..
 	if (self.state != OCConnectionStateDisconnected) // .. for all requests if connecting or connected ..
 	{
-		BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
-
-		if (strictBookmarkCertificateEnforcement) // .. and the option is turned on
-		{
-			request.forceCertificateDecisionDelegation = YES;
-		}
+		request.forceCertificateDecisionDelegation = YES;
 	}
 	
 	[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -2242,7 +2327,8 @@ OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients"
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
-OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
+OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"connection-certificate-extended-validation-rule";
+OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"connection-renewed-certificate-acceptance-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";

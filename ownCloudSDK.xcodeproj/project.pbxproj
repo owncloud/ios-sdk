@@ -89,6 +89,14 @@
 		DC24F8E921E2B3EF00C9119C /* OCWaitConditionIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC24F8E721E2B3EF00C9119C /* OCWaitConditionIssue.m */; };
 		DC24F8F021E4F5BF00C9119C /* OCSQLiteDB+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC24F8EE21E4F5BF00C9119C /* OCSQLiteDB+Internal.h */; };
 		DC24F8F121E4F5BF00C9119C /* OCSQLiteDB+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DC24F8EF21E4F5BF00C9119C /* OCSQLiteDB+Internal.m */; };
+		DC2565F12260BE3700828AA5 /* OCCertificate+PrivacyLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2565EF2260BE3600828AA5 /* OCCertificate+PrivacyLogging.h */; };
+		DC2565F22260BE3700828AA5 /* OCCertificate+PrivacyLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2565F02260BE3600828AA5 /* OCCertificate+PrivacyLogging.m */; };
+		DC2565F52260C86A00828AA5 /* OCCertificateRuleChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2565F32260C86A00828AA5 /* OCCertificateRuleChecker.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC2565F62260C86A00828AA5 /* OCCertificateRuleChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2565F42260C86A00828AA5 /* OCCertificateRuleChecker.m */; };
+		DC2566012260D24500828AA5 /* demo-cert-letsencrypt.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC2565FD2260D24500828AA5 /* demo-cert-letsencrypt.cer */; };
+		DC2566022260D24500828AA5 /* demo-cert-root.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC2565FE2260D24500828AA5 /* demo-cert-root.cer */; };
+		DC2566062260D38200828AA5 /* demo-cert-new.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC2566042260D38100828AA5 /* demo-cert-new.cer */; };
+		DC2566072260D38200828AA5 /* demo-cert-old.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC2566052260D38200828AA5 /* demo-cert-old.cer */; };
 		DC27A19720CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */; };
 		DC27A19820CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */; };
 		DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -650,6 +658,14 @@
 		DC24F8E721E2B3EF00C9119C /* OCWaitConditionIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionIssue.m; sourceTree = "<group>"; };
 		DC24F8EE21E4F5BF00C9119C /* OCSQLiteDB+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCSQLiteDB+Internal.h"; sourceTree = "<group>"; };
 		DC24F8EF21E4F5BF00C9119C /* OCSQLiteDB+Internal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCSQLiteDB+Internal.m"; sourceTree = "<group>"; };
+		DC2565EF2260BE3600828AA5 /* OCCertificate+PrivacyLogging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCertificate+PrivacyLogging.h"; sourceTree = "<group>"; };
+		DC2565F02260BE3600828AA5 /* OCCertificate+PrivacyLogging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCertificate+PrivacyLogging.m"; sourceTree = "<group>"; };
+		DC2565F32260C86A00828AA5 /* OCCertificateRuleChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateRuleChecker.h; sourceTree = "<group>"; };
+		DC2565F42260C86A00828AA5 /* OCCertificateRuleChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateRuleChecker.m; sourceTree = "<group>"; };
+		DC2565FD2260D24500828AA5 /* demo-cert-letsencrypt.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-cert-letsencrypt.cer"; sourceTree = "<group>"; };
+		DC2565FE2260D24500828AA5 /* demo-cert-root.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-cert-root.cer"; sourceTree = "<group>"; };
+		DC2566042260D38100828AA5 /* demo-cert-new.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-cert-new.cer"; sourceTree = "<group>"; };
+		DC2566052260D38200828AA5 /* demo-cert-old.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-cert-old.cer"; sourceTree = "<group>"; };
 		DC27A19520CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+UIAppExtension.h"; sourceTree = "<group>"; };
 		DC27A19620CAA395008ACB6C /* OCAuthenticationMethod+UIAppExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethod+UIAppExtension.m"; sourceTree = "<group>"; };
 		DC27A19E20CBE8BD008ACB6C /* OCCore+FileProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+FileProvider.h"; sourceTree = "<group>"; };
@@ -1303,6 +1319,10 @@
 				DC7E0A6D2036F28B006111FA /* OCKeychain.h */,
 				DCEEB2EC2046E2B900189B9A /* OCCertificate.m */,
 				DCEEB2EB2046E2B900189B9A /* OCCertificate.h */,
+				DC2565F42260C86A00828AA5 /* OCCertificateRuleChecker.m */,
+				DC2565F32260C86A00828AA5 /* OCCertificateRuleChecker.h */,
+				DC2565F02260BE3600828AA5 /* OCCertificate+PrivacyLogging.m */,
+				DC2565EF2260BE3600828AA5 /* OCCertificate+PrivacyLogging.h */,
 			);
 			path = Security;
 			sourceTree = "<group>";
@@ -2140,6 +2160,10 @@
 				DCEB94DA21105FDE004EF8D7 /* rainbow.png */,
 				DC7185BA216E160500BDEA2A /* rainbow-crystalized.png */,
 				DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */,
+				DC2566042260D38100828AA5 /* demo-cert-new.cer */,
+				DC2566052260D38200828AA5 /* demo-cert-old.cer */,
+				DC2565FD2260D24500828AA5 /* demo-cert-letsencrypt.cer */,
+				DC2565FE2260D24500828AA5 /* demo-cert-root.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 				DCC6563C20C979FB00110A97 /* TestTools.m */,
 				DCC6563B20C979FB00110A97 /* TestTools.h */,
@@ -2319,6 +2343,7 @@
 				DC8245BA21FB334200775AB9 /* OCCore+Internal.h in Headers */,
 				DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */,
 				DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */,
+				DC2565F52260C86A00828AA5 /* OCCertificateRuleChecker.h in Headers */,
 				DC85571C2050196000189B9A /* OCItem+OCXMLObjectCreation.h in Headers */,
 				DC24F8F021E4F5BF00C9119C /* OCSQLiteDB+Internal.h in Headers */,
 				DC14CC4A21067320006DDA69 /* OCCore+ItemList.h in Headers */,
@@ -2372,6 +2397,7 @@
 				DC2F636B2239523A0063C2DA /* OCShareQuery.h in Headers */,
 				DCB0A46421B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h in Headers */,
 				DC6CF8242195D7C90013B9F9 /* OCSyncActionUpdate.h in Headers */,
+				DC2565F12260BE3700828AA5 /* OCCertificate+PrivacyLogging.h in Headers */,
 				DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */,
 				DC139CC820DBB8440090175A /* OCChecksum.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
@@ -2665,9 +2691,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
+				DC2566072260D38200828AA5 /* demo-cert-old.cer in Resources */,
 				DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */,
+				DC2566012260D24500828AA5 /* demo-cert-letsencrypt.cer in Resources */,
+				DC2566062260D38200828AA5 /* demo-cert-new.cer in Resources */,
 				DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */,
 				DCD6327B223BE0980090169E /* capabilities.json in Resources */,
+				DC2566022260D24500828AA5 /* demo-cert-root.cer in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 				DC7185BB216E160500BDEA2A /* rainbow-crystalized.png in Resources */,
 			);
@@ -2742,6 +2772,7 @@
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
+				DC2565F62260C86A00828AA5 /* OCCertificateRuleChecker.m in Sources */,
 				DC35969722403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m in Sources */,
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
@@ -2815,6 +2846,7 @@
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
+				DC2565F22260BE3700828AA5 /* OCCertificate+PrivacyLogging.m in Sources */,
 				DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */,
 				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,

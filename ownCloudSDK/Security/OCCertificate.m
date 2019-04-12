@@ -26,9 +26,12 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 @implementation OCCertificate
 
 @synthesize hostName = _hostName;
+@synthesize commonName = _commonName;
 
 @synthesize userAcceptedDate = _userAcceptedDate;
 @synthesize certificateData = _certificateData;
+
+@synthesize parentCertificate = _parentCertificate;
 
 #pragma mark - User Accepted Certificates
 + (void)_mutateUserAcceptedCertificates:(void(^)(NSMutableSet<OCCertificate *> *userAcceptedCertificates, NSMutableDictionary<NSData *, OCCertificate *> *userAcceptedCertificatesBySHA256Fingerprints))mutationBlock
@@ -103,12 +106,12 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 }
 
 #pragma mark - Init & Dealloc
-+ (instancetype)certificateWithCertificateRef:(SecCertificateRef)certificateRef hostName:(NSString *)hostName;
++ (instancetype)certificateWithCertificateRef:(SecCertificateRef)certificateRef hostName:(NSString *)hostName
 {
 	return ([[self alloc] initWithCertificateRef:certificateRef hostName:hostName]);
 }
 
-+ (instancetype)certificateWithCertificateData:(NSData *)certificateData hostName:(NSString *)hostName;
++ (instancetype)certificateWithCertificateData:(NSData *)certificateData hostName:(NSString *)hostName
 {
 	return ([[self alloc] initWithCertificateData:certificateData hostName:hostName]);
 }
@@ -188,10 +191,37 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 
 		if ((_certificateRef==NULL) && (_trustRef != NULL))
 		{
-			if (SecTrustGetCertificateCount(_trustRef) > 0)
+			CFIndex certificateCount = SecTrustGetCertificateCount(_trustRef);
+
+			if (certificateCount > 0)
 			{
-				_certificateRef = SecTrustGetCertificateAtIndex(_trustRef, 0);
-				CFRetain(_certificateRef);
+				OCCertificate *topCertificate = self;
+
+				for (CFIndex idx=0; idx < certificateCount; idx++)
+				{
+					if (idx == 0)
+					{
+						if ((_certificateRef = SecTrustGetCertificateAtIndex(_trustRef, idx)) != NULL)
+						{
+							CFRetain(_certificateRef);
+						}
+					}
+					else
+					{
+						SecCertificateRef parentCertificateRef;
+
+						if ((parentCertificateRef = SecTrustGetCertificateAtIndex(_trustRef, idx)) != NULL)
+						{
+							OCCertificate *parentCertificate;
+
+							if ((parentCertificate = [OCCertificate certificateWithCertificateRef:parentCertificateRef hostName:nil]) != nil)
+							{
+								topCertificate.parentCertificate = parentCertificate;
+								topCertificate = parentCertificate;
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -281,10 +311,23 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 			if ((certificateRef = self.certificateRef) != NULL)
 			{
 				SecPolicyRef policyRef;
-				
+
 				if ((policyRef = SecPolicyCreateSSL(true, (__bridge CFStringRef)_hostName)) != NULL)
 				{
-					SecTrustCreateWithCertificates((CFArrayRef)@[ (__bridge id)certificateRef ], policyRef, &_trustRef);
+					NSArray <OCCertificate *> *certificateChain = [self chainInReverse:NO];
+					NSMutableArray *certificateRefs = [NSMutableArray new];
+
+					for (OCCertificate *certificate in certificateChain)
+					{
+						SecCertificateRef certificateRef;
+
+						if ((certificateRef = certificate.certificateRef) != NULL)
+						{
+							[certificateRefs addObject:(__bridge id)certificateRef];
+						}
+					}
+
+					SecTrustCreateWithCertificates((__bridge CFArrayRef)certificateRefs, policyRef, &_trustRef);
 					
 					CFRelease(policyRef);
 				}
@@ -313,14 +356,39 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 		
 		// Clear other representations
 		_certificateData = nil;
-		
+
 		if (_certificateRef != NULL)
 		{
 			CFRelease(_certificateRef);
 			_certificateRef = NULL;
 		}
-		
+
 		[self _clearFingerPrints];
+
+		// Clear parent certificate
+		_parentCertificate = nil;
+	}
+}
+
+- (OCCertificate *)parentCertificate
+{
+	@synchronized (self)
+	{
+		if (_trustRef != NULL)
+		{
+			// Ensure the SecTrustRef has been parsed into certificates and parent certificate
+			[self certificateRef];
+		}
+
+		return (_parentCertificate);
+	}
+}
+
+- (void)setParentCertificate:(OCCertificate *)parentCertificate
+{
+	@synchronized (self)
+	{
+		_parentCertificate = parentCertificate;
 	}
 }
 
@@ -414,6 +482,30 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 	}
 	
 	return (_userAcceptedDate);
+}
+
+#pragma mark - Common name
+- (NSString *)commonName
+{
+	@synchronized(self)
+	{
+		if (_commonName == nil)
+		{
+			SecCertificateRef certificateRef;
+
+			if ((certificateRef = self.certificateRef) != NULL)
+			{
+				CFStringRef commonNameString = NULL;
+
+				if (SecCertificateCopyCommonName(certificateRef, &commonNameString) == noErr)
+				{
+					_commonName = CFBridgingRelease(commonNameString);
+				}
+			}
+		}
+
+		return (_commonName);
+	}
 }
 
 #pragma mark - Evaluation
@@ -605,6 +697,8 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 		_certificateData = [decoder decodeObjectOfClass:[NSData class] forKey:@"certificateData"];
 
 		_userAcceptedDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"userAcceptedDate"];
+
+		_parentCertificate = [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"parentCertificate"];
 	}
 	
 	return (self);
@@ -616,6 +710,41 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 	[coder encodeObject:self.certificateData forKey:@"certificateData"];
 
 	[coder encodeObject:self.userAcceptedDate forKey:@"userAcceptedDate"];
+
+	[coder encodeObject:self.parentCertificate forKey:@"parentCertificate"];
+}
+
+#pragma mark - Comparisons
+- (BOOL)hasIdenticalPublicKeyAs:(OCCertificate *)otherCertificate error:(NSError * _Nullable * _Nullable )error
+{
+	BOOL isIdentical = NO;
+	NSError *publicKeyDataError = nil;
+	NSData *publicKeyData;
+
+	if ((publicKeyData = [self publicKeyDataWithError:&publicKeyDataError]) != nil)
+	{
+		NSData *otherCertificatePublicKeyData;
+
+		if ((otherCertificatePublicKeyData = [otherCertificate publicKeyDataWithError:&publicKeyDataError]) != nil)
+		{
+			isIdentical = [otherCertificatePublicKeyData isEqualToData:publicKeyData];
+		}
+		else
+		{
+			NSLog(@"Failed to extract public key from otherCertificate with error=%@", publicKeyDataError);
+		}
+	}
+	else
+	{
+		NSLog(@"Failed to extract public key from certificate with error=%@", publicKeyDataError);
+	}
+
+	if (error != NULL)
+	{
+		*error = publicKeyDataError;
+	}
+
+	return (isIdentical);
 }
 
 #pragma mark - Comparison support
@@ -637,6 +766,67 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 - (NSUInteger)hash
 {
 	return (self.certificateData.hash ^ self.hostName.hash ^ ((NSUInteger)0x1827364554637281)); // Use hash of certificateData and hostName
+}
+
+#pragma mark - Chain
+- (OCCertificate *)rootCertificate
+{
+	OCCertificate *rootCertificate = self;
+
+	while (rootCertificate.parentCertificate != nil)
+	{
+		rootCertificate = rootCertificate.parentCertificate;
+	};
+
+	return (rootCertificate);
+}
+
+- (NSArray <OCCertificate *> *)chainInReverse:(BOOL)inReverse
+{
+	if (self.parentCertificate != nil)
+	{
+		OCCertificate *certificate = self;
+		NSMutableArray<OCCertificate *> *certificateChain = [NSMutableArray new];
+
+		while (certificate != nil)
+		{
+			if (inReverse)
+			{
+				[certificateChain insertObject:certificate atIndex:0];
+			}
+			else
+			{
+				[certificateChain addObject:certificate];
+			}
+
+			certificate = certificate.parentCertificate;
+		};
+
+		return (certificateChain);
+	}
+	else
+	{
+		return (@[ self ]);
+	}
+}
+
++ (OCCertificate *)assembleChain:(NSArray <OCCertificate *> *)certificates
+{
+	OCCertificate *previousCertificate = nil;
+
+	for (OCCertificate *certificate in certificates)
+	{
+		certificate.parentCertificate = previousCertificate;
+		previousCertificate = certificate;
+	}
+
+	return (previousCertificate);
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((self.hostName != nil) ? [NSString stringWithFormat:@", hostName=%@", self.hostName] : @""),  ((self.commonName != nil) ? [NSString stringWithFormat:@", commonName=%@", self.commonName] : @""), ((self.parentCertificate != nil) ? [NSString stringWithFormat:@", parent: %@", self.parentCertificate] : @"")]);
 }
 
 @end

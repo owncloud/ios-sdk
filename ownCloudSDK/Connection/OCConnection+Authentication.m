@@ -90,6 +90,8 @@
 		// Attach to pipelines
 		[self attachToPipelines];
 
+		request.forceCertificateDecisionDelegation = NO;
+
 		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
 

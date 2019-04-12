@@ -83,17 +83,17 @@
 }
 
 #pragma mark - Parsing for presentation
-+ (NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)_certificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
++ (NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)certificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
 {
 	NSMutableArray <OCCertificateDetailsViewNode *> *sections = [NSMutableArray new];
 
-	if (_certificate != nil)
+	if (certificate != nil)
 	{
 		NSError *error = nil;
 		NSDictionary<OCCertificateMetadataKey, id> *metaData;
 		OCCertificateDetailsViewNode *validationStatusNode = nil;
 
-		if ((metaData = [_certificate metaDataWithError:&error]) != nil)
+		if ((metaData = [certificate metaDataWithError:&error]) != nil)
 		{
 			void (^AddSectionFromChildren)(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict) = ^(NSString *title, NSArray <OCCertificateMetadataKey> *fields, NSDictionary<OCCertificateMetadataKey, id> *sectionValueDict){
 				OCCertificateDetailsViewNode *sectionNode = [OCCertificateDetailsViewNode nodeWithTitle:title value:nil];
@@ -121,7 +121,10 @@
 				certificateStatusSectionNode = [OCCertificateDetailsViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:nil];
 				validationStatusNode = [OCCertificateDetailsViewNode nodeWithTitle:OCLocalizedString(@"Validation Status",@"") value:OCLocalizedString(@"Validating…",@"")];
 
-				[certificateStatusSectionNode addNode:[OCCertificateDetailsViewNode nodeWithTitle:OCLocalizedString(@"Hostname",@"") value:_certificate.hostName]];
+				if (certificate.hostName != nil)
+				{
+					[certificateStatusSectionNode addNode:[OCCertificateDetailsViewNode nodeWithTitle:OCLocalizedString(@"Hostname",@"") value:certificate.hostName]];
+				}
 
 				if (validationCompletionHandler!=nil)
 				{
@@ -201,17 +204,17 @@
 
 				NSString *fingerprint;
 
-				if ((fingerprint = [[_certificate sha256Fingerprint] asHexStringWithSeparator:@" "]) != nil)
+				if ((fingerprint = [[certificate sha256Fingerprint] asHexStringWithSeparator:@" "]) != nil)
 				{
 					[sectionNode addNode:[OCCertificateDetailsViewNode nodeWithTitle:@"SHA-256" value:fingerprint certificateKey:@"_fingerprint"]];
 				}
 
-				if ((fingerprint = [[_certificate sha1Fingerprint] asHexStringWithSeparator:@" "]) != nil)
+				if ((fingerprint = [[certificate sha1Fingerprint] asHexStringWithSeparator:@" "]) != nil)
 				{
 					[sectionNode addNode:[OCCertificateDetailsViewNode nodeWithTitle:@"SHA-1" value:fingerprint certificateKey:@"_fingerprint"]];
 				}
 
-				if ((fingerprint = [[_certificate md5Fingerprint] asHexStringWithSeparator:@" "]) != nil)
+				if ((fingerprint = [[certificate md5Fingerprint] asHexStringWithSeparator:@" "]) != nil)
 				{
 					[sectionNode addNode:[OCCertificateDetailsViewNode nodeWithTitle:@"MD5" value:fingerprint certificateKey:@"_fingerprint"]];
 				}
@@ -222,10 +225,33 @@
 				}
 			}
 
+			// Certificate
+			if (certificate.parentCertificate != nil)
+			{
+				OCCertificateDetailsViewNode *sectionNode = [OCCertificateDetailsViewNode nodeWithTitle:OCLocalizedString(@"Certificate chain",@"") value:nil];
+				NSArray <OCCertificate *> *certificateChain = [certificate chainInReverse:NO];
+
+				[certificateChain enumerateObjectsUsingBlock:^(OCCertificate * _Nonnull certificate, NSUInteger idx, BOOL * _Nonnull stop) {
+					if (idx > 0)
+					{
+						OCCertificateDetailsViewNode *certificateNode = [OCCertificateDetailsViewNode nodeWithTitle:((idx == certificateChain.count-1) ? OCLocalizedString(@"Root Certificate",@"") : OCLocalizedString(@"Intermediate Certificate",@"")) value:certificate.commonName certificateKey:@"_certificateChain"];
+
+						certificateNode.certificate = certificate;
+
+						[sectionNode addNode:certificateNode];
+					}
+				}];
+
+				if (sectionNode.children.count > 0)
+				{
+					[sections addObject:sectionNode];
+				}
+			}
+
 			// Validation
 			if (validationCompletionHandler != nil)
 			{
-				[_certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error) {
+				[certificate evaluateWithCompletionHandler:^(OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *error) {
 					NSString *status = @"";
 					UIColor *backgroundColor = nil;
 

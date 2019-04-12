@@ -32,9 +32,20 @@ This document provides an overview over the available sections and variables.
 	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
 		- type: array
 		- default: `nil`
-	- `connection-strict-bookmark-certificate-enforcement`: If `true`:  require the certificate stored in the connection's bookmark if the connection's state is not disconnected. If `false`: accept all validating certificates and certificates approved by the user.
-		- type: boolean
-		- default: `true`
+	- `connection-certificate-extended-validation-rule`: Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.
+		- type: string
+		- default: `bookmarkCertificate == serverCertificate`
+		- examples of expressions:
+			- `bookmarkCertificate == serverCertificate`: the whole certificate needs to be identical to the one stored in the bookmark during setup.
+			- `bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData`:  the public key of the received certificate needs to be identical to the public key stored in the bookmark during setup.
+			- `serverCertificate.passedValidationOrIsUserAccepted == true`: any certificate is accepted as long as it has passed validation by the OS or was accepted by the user.
+			- `serverCertificate.commonName == "demo.owncloud.org"`: the common name of the certificate must be "demo.owncloud.org".
+			- `serverCertificate.rootCertificate.commonName == "DST Root CA X3"`: the common name of the root certificate must be "DST Root CA X3".
+			- `serverCertificate.parentCertificate.commonName == "Let's Encrypt Authority X3"`: the common name of the parent certificate must be "Let's Encrypt Authority X3".
+			- `serverCertificate.publicKeyData.sha256Hash.asFingerPrintString == "2A 00 98 90 BD … F7"`: the SHA-256 fingerprint of the public key of the server certificate needs to match the provided value.
+	- `connection-renewed-certificate-acceptance-rule`: Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to "never" if the user should always be prompted when a server's certificate changed.
+		- type: string
+		- default: `(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))`
 	- `connection-minimum-server-version`:  The minimum server version required.
 		- type: string
 		- default: `9.0`
