@@ -38,6 +38,7 @@
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse+DAVError.h"
 #import "OCCertificateRuleChecker.h"
+#import "OCProcessManager.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -193,12 +194,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 - (void)dealloc
 {
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
-//		OCSyncExec(waitForDetach, {
-//			[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
-//				OCSyncExecDone(waitForDetach);
-//			}];
-//		});
-
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
 }
@@ -217,7 +212,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 				OCLogDebug(@"Retrieved local pipeline %@ with error=%@", pipeline, error);
 
-				if (OCConnection.backgroundURLSessionsAllowed)
+				if (OCConnection.backgroundURLSessionsAllowed &&
+				    [OCProcessManager isProcessExtension]) // use background URL sessions only in extensions
 				{
 					[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDBackground completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
 						self->_longLivedPipeline = pipeline;
@@ -478,27 +474,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			}
 
 			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
-
-//			// Certificate SHA-256 fingerprints differ - check public keys
-//			NSError *publicKeyDataError = nil;
-//
-//			// Compare public keys: if they are identical, the bookmark requirements are fulfilled
-//			fulfillsBookmarkRequirements = [_bookmark.certificate hasIdenticalPublicKeyAs:certificate error:&publicKeyDataError];
-//
-//			if (fulfillsBookmarkRequirements &&	// New certificate has same public key
-//			    defaultWouldProceed)		// New certificate does pass validation or has already been user-approved
-//			{
-//				// Update bookmark certificate
-//				_bookmark.certificate = certificate;
-//				_bookmark.certificateModificationDate = [NSDate date];
-//
-//				[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
-//
-//				if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
-//				{
-//					[_delegate connectionCertificateUserApproved:self];
-//				}
-//			}
 		}
 	}
 

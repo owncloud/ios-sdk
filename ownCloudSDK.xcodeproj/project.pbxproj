@@ -186,6 +186,12 @@
 		DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */; };
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
+		DC576EC6226484E30087316D /* OCBackgroundManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576EC4226484E30087316D /* OCBackgroundManager.h */; };
+		DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC5226484E30087316D /* OCBackgroundManager.m */; };
+		DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576EC8226484F50087316D /* OCBackgroundTask.h */; };
+		DC576ECB226484F50087316D /* OCBackgroundTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC9226484F50087316D /* OCBackgroundTask.m */; };
+		DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576ECC2264894E0087316D /* OCDeallocAction.h */; };
+		DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576ECD2264894E0087316D /* OCDeallocAction.m */; };
 		DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1021EF4B2900B882C4 /* OCAsyncSequentialQueue.m */; };
 		DC594B1D21EFD25100B882C4 /* CoreManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1C21EFD25000B882C4 /* CoreManagerTests.m */; };
@@ -750,6 +756,12 @@
 		DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandDelete.m"; sourceTree = "<group>"; };
 		DC545E78203F7DD0006111FA /* OCUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCUser.h; sourceTree = "<group>"; };
 		DC545E79203F7DD0006111FA /* OCUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCUser.m; sourceTree = "<group>"; };
+		DC576EC4226484E30087316D /* OCBackgroundManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCBackgroundManager.h; sourceTree = "<group>"; };
+		DC576EC5226484E30087316D /* OCBackgroundManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCBackgroundManager.m; sourceTree = "<group>"; };
+		DC576EC8226484F50087316D /* OCBackgroundTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCBackgroundTask.h; sourceTree = "<group>"; };
+		DC576EC9226484F50087316D /* OCBackgroundTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCBackgroundTask.m; sourceTree = "<group>"; };
+		DC576ECC2264894E0087316D /* OCDeallocAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDeallocAction.h; sourceTree = "<group>"; };
+		DC576ECD2264894E0087316D /* OCDeallocAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDeallocAction.m; sourceTree = "<group>"; };
 		DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAsyncSequentialQueue.h; sourceTree = "<group>"; };
 		DC594B1021EF4B2900B882C4 /* OCAsyncSequentialQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAsyncSequentialQueue.m; sourceTree = "<group>"; };
 		DC594B1C21EFD25000B882C4 /* CoreManagerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreManagerTests.m; sourceTree = "<group>"; };
@@ -2058,6 +2070,10 @@
 				DCC6567220CA695600110A97 /* OCCoreManager.h */,
 				DCC6567720CA696A00110A97 /* OCBookmarkManager.m */,
 				DCC6567620CA696A00110A97 /* OCBookmarkManager.h */,
+				DC576EC5226484E30087316D /* OCBackgroundManager.m */,
+				DC576EC4226484E30087316D /* OCBackgroundManager.h */,
+				DC576EC9226484F50087316D /* OCBackgroundTask.m */,
+				DC576EC8226484F50087316D /* OCBackgroundTask.h */,
 			);
 			path = "Resource Management";
 			sourceTree = "<group>";
@@ -2221,6 +2237,8 @@
 				DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */,
 				DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */,
 				DCDD9B2922312ED80052A001 /* OCRateLimiter.h */,
+				DC576ECD2264894E0087316D /* OCDeallocAction.m */,
+				DC576ECC2264894E0087316D /* OCDeallocAction.h */,
 			);
 			path = Toolkit;
 			sourceTree = "<group>";
@@ -2297,6 +2315,7 @@
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DCDD9B1C22298D050052A001 /* OCGroup.h in Headers */,
 				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
+				DC576EC6226484E30087316D /* OCBackgroundManager.h in Headers */,
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCParentPath.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
@@ -2312,6 +2331,7 @@
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
 				DC24F8E821E2B3EF00C9119C /* OCWaitConditionIssue.h in Headers */,
 				DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */,
+				DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */,
 				DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */,
 				DCEA7D972093556600F25223 /* OCCache.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
@@ -2368,6 +2388,7 @@
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
 				DC4B116D2208306C0062BCDD /* OCHTTPPipeline.h in Headers */,
+				DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */,
 				DCC8F9FB2028586900EB6701 /* OCAuthenticationMethod.h in Headers */,
 				DC359692223FA7CC00C4D6E6 /* OCQueryCondition.h in Headers */,
 				DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */,
@@ -2825,6 +2846,7 @@
 				DC0283642090A3E8005B6334 /* OCItemThumbnail.m in Sources */,
 				DC75D310214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.m in Sources */,
 				DC07C28F21244FC800B815A4 /* OCExtensionManager.m in Sources */,
+				DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */,
 				DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */,
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */,
@@ -2846,6 +2868,7 @@
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,
+				DC576ECB226484F50087316D /* OCBackgroundTask.m in Sources */,
 				DC2565F22260BE3700828AA5 /* OCCertificate+PrivacyLogging.m in Sources */,
 				DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */,
 				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
@@ -2875,6 +2898,7 @@
 				DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */,
 				DC75D30C214BF1BA00B6FB62 /* NSString+OCFormatting.m in Sources */,
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
+				DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */,
 				DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */,
 				DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,

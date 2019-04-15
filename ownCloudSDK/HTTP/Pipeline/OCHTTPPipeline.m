@@ -28,6 +28,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCProxyProgress.h"
 #import "NSURLSessionTaskMetrics+OCCompactSummary.h"
+#import "OCBackgroundTask.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -880,15 +881,22 @@
 					// Start task
 					if (resumeSessionTask)
 					{
-						// Prevent suspension for as long as this runs
-						if (_generateSystemActivityWhileRequestAreRunning)
+						// Prevent suspension of app process for as long as this runs
+						if (!OCProcessManager.isProcessExtension && // UIApplication is not available in extensions
+						    (_urlSessionIdentifier == nil)) // Only use background tasks when not handling a background session
 						{
+							NSUInteger urlSessionTaskID = urlSessionTask.taskIdentifier;
 							NSString *absoluteURLString = request.url.absoluteString;
 
 							if (absoluteURLString==nil)
 							{
 								absoluteURLString = @"";
 							}
+
+							// Register background task
+							[[[[OCBackgroundTask alloc] initWithName:[NSString stringWithFormat:@"OCHTTPPipeline: %@", absoluteURLString] expirationHandler:^{
+								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> exipred", absoluteURLString, urlSessionTaskID);
+							}] start] endWhenDeallocating:task];
 						}
 
 						// Notify request observer

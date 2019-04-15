@@ -111,7 +111,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,readonly) OCHTTPPipelineBackend *backend;
 
-@property(assign) BOOL generateSystemActivityWhileRequestAreRunning;
 @property(assign) NSUInteger maximumConcurrentRequests; //!< The maximum number of concurrently running requests. A value of 0 means no limit.
 
 @property(strong,nullable,readonly) NSString *urlSessionIdentifier;
