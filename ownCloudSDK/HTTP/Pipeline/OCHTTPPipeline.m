@@ -248,7 +248,9 @@
 
 			// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
 			[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
-				if ([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] && (pipelineTask.urlSessionTask == nil) && (pipelineTask.state == OCHTTPPipelineTaskStateRunning))
+				if (([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] || ((pipelineTask.urlSessionID == nil) && (urlSessionIdentifier == nil))) && // URL Session ID identical, or both not having any
+				    (pipelineTask.urlSessionTask == nil) && // No URL Session task known for this pipeline task
+				    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
 				{
 					[droppedTasks addObject:pipelineTask];
 				}
@@ -894,7 +896,10 @@
 							}
 
 							// Register background task
-							[[[[OCBackgroundTask alloc] initWithName:[NSString stringWithFormat:@"OCHTTPPipeline: %@", absoluteURLString] expirationHandler:^{
+							[[[OCBackgroundTask backgroundTaskWithName:[NSString stringWithFormat:@"OCHTTPPipeline <%ld>: %@", urlSessionTaskID, absoluteURLString] expirationHandler:^(OCBackgroundTask *backgroundTask){
+								// Task needs to end in the expiration handler - or the app will be terminated by iOS
+								[backgroundTask end];
+
 								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> exipred", absoluteURLString, urlSessionTaskID);
 							}] start] endWhenDeallocating:task];
 						}

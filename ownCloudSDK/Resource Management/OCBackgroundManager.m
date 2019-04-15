@@ -74,7 +74,16 @@
 
 			if (_delegate != nil)
 			{
-				[_delegate beginBackgroundTaskWithName:task.name expirationHandler:task.expirationHandler];
+				[_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
+					if (task.expirationHandler != nil)
+					{
+						task.expirationHandler(task);
+					}
+					else
+					{
+						[self endTask:task];
+					}
+				}];
 			}
 		}
 	}
@@ -84,9 +93,11 @@
 {
 	@synchronized(self)
 	{
-		if ([_tasks indexOfObjectIdenticalTo:task] != NSNotFound)
+		NSUInteger taskIndex;
+
+		if ((taskIndex = [_tasks indexOfObjectIdenticalTo:task]) != NSNotFound)
 		{
-			[_tasks removeObjectIdenticalTo:task];
+			[_tasks removeObjectAtIndex:taskIndex];
 			task.started = NO;
 
 			OCLogDebug(@"Ending background task '%@' (delegate=%@)", task.name, _delegate);

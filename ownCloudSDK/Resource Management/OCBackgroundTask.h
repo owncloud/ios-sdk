@@ -21,6 +21,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class OCBackgroundTask;
+
+typedef void(^OCBackgroundTaskExpirationHandler)(OCBackgroundTask *task);
+
 @interface OCBackgroundTask : NSObject
 
 @property(readonly) UIBackgroundTaskIdentifier identifier;
@@ -28,9 +32,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) BOOL started;
 
-@property(readonly,copy) dispatch_block_t expirationHandler;
+@property(readonly,copy) OCBackgroundTaskExpirationHandler expirationHandler;
 
-- (instancetype)initWithName:(nullable NSString *)name expirationHandler:(dispatch_block_t)expirationHandler;
++ (instancetype)backgroundTaskWithName:(nullable NSString *)name expirationHandler:(OCBackgroundTaskExpirationHandler)expirationHandler;
+
+- (instancetype)initWithName:(nullable NSString *)name expirationHandler:(OCBackgroundTaskExpirationHandler)expirationHandler;
 
 - (instancetype)start;
 

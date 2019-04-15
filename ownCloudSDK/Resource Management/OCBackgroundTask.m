@@ -22,8 +22,13 @@
 
 @implementation OCBackgroundTask
 
-#pragma mark - Init & Dealloc
-- (instancetype)initWithName:(nullable NSString *)name expirationHandler:(dispatch_block_t)expirationHandler;
+#pragma mark - Init
++ (instancetype)backgroundTaskWithName:(nullable NSString *)name expirationHandler:(OCBackgroundTaskExpirationHandler)expirationHandler
+{
+	return ([[self alloc] initWithName:name expirationHandler:expirationHandler]);
+}
+
+- (instancetype)initWithName:(nullable NSString *)name expirationHandler:(OCBackgroundTaskExpirationHandler)expirationHandler
 {
 	if ((self = [super init]) != nil)
 	{
@@ -34,6 +39,7 @@
 	return(self);
 }
 
+#pragma mark - Start and end
 - (instancetype)start
 {
 	[OCBackgroundManager.sharedBackgroundManager startTask:self];
