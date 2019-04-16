@@ -25,6 +25,8 @@
 @interface OCBackgroundManager () <OCLogTagging>
 {
 	NSMutableArray <OCBackgroundTask *> *_tasks;
+	NSMutableDictionary <NSNumber *, NSMutableArray<dispatch_block_t> *> *_queuedBlocksByBackground;
+	BOOL _isBackgrounded;
 }
 
 @end
@@ -56,11 +58,152 @@
 	if ((self = [super init]) != nil)
 	{
 		_tasks = [NSMutableArray new];
+
+		_queuedBlocksByBackground = [NSMutableDictionary new];
+		_queuedBlocksByBackground[@(NO)] = [NSMutableArray new];
+		_queuedBlocksByBackground[@(YES)] = [NSMutableArray new];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationStateChanged:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationStateChanged:) name:UIApplicationDidBecomeActiveNotification object:nil];
 	}
 
 	return(self);
 }
 
+- (void)dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+
+	self.delegate = nil;
+}
+
+#pragma mark - Accessors
+- (void)setDelegate:(id<OCBackgroundManagerDelegate>)delegate
+{
+	_delegate = delegate;
+
+	[self updateIsBackgrounded];
+}
+
+#pragma mark - Determining state
+- (BOOL)_isBackgroundedComputed
+{
+	if (OCProcessManager.isProcessExtension)
+	{
+		// Handle extensions as if they're never in the background
+		return (NO);
+	}
+
+	if (_delegate != nil)
+	{
+		return ([_delegate applicationState] == UIApplicationStateBackground);
+	}
+
+	return (NO);
+}
+
+- (void)updateIsBackgrounded
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self _updateIsBackgrounded];
+	});
+}
+
+- (void)_updateIsBackgrounded
+{
+	BOOL isBackgrounded = [self _isBackgroundedComputed];
+
+	if (isBackgrounded != _isBackgrounded)
+	{
+		NSMutableArray <dispatch_block_t> *runBlocks = nil;
+
+		[self willChangeValueForKey:@"isBackgrounded"];
+		_isBackgrounded = isBackgrounded;
+		[self didChangeValueForKey:@"isBackgrounded"];
+
+		OCLogDebug(@"Process moved to the %@", (isBackgrounded ? @"background" : @"foreground"));
+
+		@synchronized(_queuedBlocksByBackground)
+		{
+			NSMutableArray <dispatch_block_t> *queuedBlocks = _queuedBlocksByBackground[@(isBackgrounded)];
+
+			if (queuedBlocks.count > 0)
+			{
+				runBlocks = [[NSMutableArray alloc] initWithArray:_queuedBlocksByBackground[@(isBackgrounded)]];
+				[queuedBlocks removeAllObjects];
+			}
+		}
+
+		if (runBlocks != nil)
+		{
+			OCLogDebug(@"Running %lu queued %@ blocks", runBlocks.count, (isBackgrounded ? @"background" : @"foreground"));
+
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+
+				while (YES)
+				{
+					dispatch_block_t runBlock;
+
+					@autoreleasepool {
+						if ((runBlock = runBlocks.firstObject) != nil)
+						{
+							OCLogDebug(@"Running queued %@ block %@", (isBackgrounded ? @"background" : @"foreground"), runBlock);
+							runBlock();
+
+							[runBlocks removeObjectAtIndex:0]; // Release immediately after execution in order to trigger the end of any observing OCBackgroundTask
+						}
+						else
+						{
+							break;
+						}
+					}
+				};
+			});
+		}
+	}
+}
+
+- (void)_applicationStateChanged:(NSNotification *)notification
+{
+	if ([notification.name isEqualToString:UIApplicationDidBecomeActiveNotification] ||
+	    [notification.name isEqualToString:UIApplicationDidEnterBackgroundNotification])
+	{
+		[self updateIsBackgrounded];
+	}
+}
+
+- (void)scheduleBlock:(dispatch_block_t)block inBackground:(BOOL)inBackground
+{
+	if (block == nil) { return; }
+
+	if (self.isBackgrounded == inBackground)
+	{
+		OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
+		block();
+	}
+	else
+	{
+		block = [block copy];
+
+		if (inBackground)
+		{
+			// Wrap background blocks into a background task to ensure background execution (app may otherwise be suspended beforehand)
+			[[[OCBackgroundTask backgroundTaskWithName:@"scheduled block" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+				[task end];
+			}] start] endWhenDeallocating:block];
+		}
+
+		OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
+
+		@synchronized(_queuedBlocksByBackground)
+		{
+			[_queuedBlocksByBackground[@(inBackground)] addObject:block];
+		}
+	}
+}
+
+#pragma mark - Start and end background tasks
 - (void)startTask:(OCBackgroundTask *)task
 {
 	@synchronized(self)
@@ -74,7 +217,7 @@
 
 			if (_delegate != nil)
 			{
-				[_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
+				task.identifier = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
 					if (task.expirationHandler != nil)
 					{
 						task.expirationHandler(task);

@@ -28,6 +28,7 @@
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
+#import "OCBackgroundManager.h"
 #import <objc/runtime.h>
 
 static const NSString *OCCoreItemListTaskForQueryKey = @"item-list-task-for-query";
@@ -848,16 +849,41 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (void)_checkForUpdatesNotBefore:(NSDate *)notBefore
 {
-	OCEventTarget *eventTarget;
-
 	if (self.state != OCCoreStateRunning)
 	{
 		return;
 	}
 
-	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+	__weak OCCore *weakSelf = self;
 
-	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
+	[[OCBackgroundManager sharedBackgroundManager] scheduleBlock:^{
+		OCCore *strongSelf = weakSelf;
+
+		if (strongSelf != nil)
+		{
+			dispatch_block_t scheduleUpdateCheck = ^{
+				OCCore *strongSelf = weakSelf;
+
+				if (strongSelf != nil)
+				{
+					OCEventTarget *eventTarget;
+
+					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+					[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
+				}
+			};
+
+			if ((notBefore != nil) && ([notBefore timeIntervalSinceNow] > 0))
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)([notBefore timeIntervalSinceNow] * NSEC_PER_SEC)), strongSelf->_queue, scheduleUpdateCheck);
+			}
+			else
+			{
+				scheduleUpdateCheck();
+			}
+		}
+	} inBackground:NO];
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender

@@ -27,7 +27,7 @@ typedef void(^OCBackgroundTaskExpirationHandler)(OCBackgroundTask *task);
 
 @interface OCBackgroundTask : NSObject
 
-@property(readonly) UIBackgroundTaskIdentifier identifier;
+@property(assign) UIBackgroundTaskIdentifier identifier;
 @property(readonly,strong) NSString *name;
 
 @property(assign) BOOL started;

@@ -346,10 +346,6 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
 
-	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
-		error = removeError;
-	}];
-
 	if ((syncAction = syncRecord.action) != nil)
 	{
 		syncAction.core = self;
@@ -367,6 +363,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
+				// Sync record is about to be removed, so no need to try updating it
+				syncContext.updateStoredSyncRecordAfterItemUpdates = NO;
+
 				// Perform any descheduler-triggered updates
 				[self performSyncContextActions:syncContext];
 
@@ -374,6 +373,18 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 	}
+
+	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
+		if (removeError != nil)
+		{
+			OCLogError(@"Error removing sync record %@ from database: %@", syncRecord, removeError);
+
+			if (error == nil)
+			{
+				error = removeError;
+			}
+		}
+	}];
 
 	[syncRecord completeWithError:completionError core:self item:syncRecord.action.localItem parameter:parameter];
 

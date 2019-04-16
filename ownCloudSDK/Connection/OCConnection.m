@@ -212,8 +212,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 				OCLogDebug(@"Retrieved local pipeline %@ with error=%@", pipeline, error);
 
-				if (OCConnection.backgroundURLSessionsAllowed &&
-				    [OCProcessManager isProcessExtension]) // use background URL sessions only in extensions
+				if (OCConnection.backgroundURLSessionsAllowed)
 				{
 					[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:OCHTTPPipelineIDBackground completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
 						self->_longLivedPipeline = pipeline;
@@ -1015,12 +1014,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil completionHandler:completionHandler]);
+	return ([self retrieveItemListAtPath:path depth:depth options:nil completionHandler:completionHandler]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth notBefore:notBeforeDate options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+	return ([self retrieveItemListAtPath:path depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
 			{
 				completionHandler(event.error, nil);
@@ -1032,7 +1031,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
@@ -1050,7 +1049,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
-		davRequest.earliestBeginDate = notBeforeDate;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
 		davRequest.forceCertificateDecisionDelegation = YES;
 		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
@@ -1074,9 +1072,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[self attachToPipelines];
 
 		// Enqueue request
-		if ((notBeforeDate != nil) || (options[@"alternativeEventType"] != nil))
+		if (options[@"alternativeEventType"] != nil)
 		{
-			[self.longLivedPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
 		}
 		else
 		{
@@ -1334,7 +1332,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		*/
 
 		// Retrieve item information and continue in _handleUploadFileItemResult:error:
-		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 notBefore:nil options:@{
+		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
 			@"alternativeEventType"  : @(OCEventTypeUpload),
 			@"_originalUserInfo"	: request.userInfo
 		} resultTarget:request.eventTarget];

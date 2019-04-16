@@ -179,7 +179,11 @@
 			if (resolutionError == nil)
 			{
 				[syncRecord removeWaitCondition:self];
-				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
+
+				if (syncRecord.recordID != nil) // Check if the sync record has been removed as part of the issue resolution (f.ex. when descheduling)
+				{
+					syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
+				}
 			}
 			else
 			{

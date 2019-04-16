@@ -109,6 +109,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) OCHTTPPipelineState state;
 
+@property(readonly,nonatomic) BOOL backgroundSessionBacked; //!< YES if this pipeline is backed by a background NSURLSession
+
 @property(strong,readonly) OCHTTPPipelineBackend *backend;
 
 @property(assign) NSUInteger maximumConcurrentRequests; //!< The maximum number of concurrently running requests. A value of 0 means no limit.

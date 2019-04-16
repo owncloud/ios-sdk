@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol OCBackgroundManagerDelegate <NSObject>
 
+- (UIApplicationState)applicationState;
+
 - (UIBackgroundTaskIdentifier)beginBackgroundTaskWithName:(nullable NSString *)taskName expirationHandler:(void(^ __nullable)(void))expirationHandler;
 - (void)endBackgroundTask:(UIBackgroundTaskIdentifier)identifier;
 
@@ -32,10 +34,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCBackgroundManager : NSObject
 
+@property(weak,nonatomic) id <OCBackgroundManagerDelegate> delegate; //!< Typically UIApplication.sharedApplication (not available in extensions)
+
+#pragma mark - Shared instance
 @property(class,readonly,nonatomic,strong) OCBackgroundManager *sharedBackgroundManager;
 
-@property(weak) id <OCBackgroundManagerDelegate> delegate;
+#pragma mark - State-based execution
+@property(readonly) BOOL isBackgrounded;
 
+- (void)scheduleBlock:(dispatch_block_t)block inBackground:(BOOL)inBackground; //!< Schedule a block for background or foreground execution. If the app is currently in that state, the block gets executed immediately. If the app is in a different state, the block is queued until the app returns to the desired state.
+
+#pragma mark - Start and end background tasks
 - (void)startTask:(OCBackgroundTask *)task;
 - (void)endTask:(OCBackgroundTask *)task;
 

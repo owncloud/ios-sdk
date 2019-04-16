@@ -885,7 +885,7 @@
 					{
 						// Prevent suspension of app process for as long as this runs
 						if (!OCProcessManager.isProcessExtension && // UIApplication is not available in extensions
-						    (_urlSessionIdentifier == nil)) // Only use background tasks when not handling a background session
+						    !self.backgroundSessionBacked) // Only use background tasks when not handling a background session
 						{
 							NSUInteger urlSessionTaskID = urlSessionTask.taskIdentifier;
 							NSString *absoluteURLString = request.url.absoluteString;
@@ -900,7 +900,7 @@
 								// Task needs to end in the expiration handler - or the app will be terminated by iOS
 								[backgroundTask end];
 
-								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> exipred", absoluteURLString, urlSessionTaskID);
+								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
 							}] start] endWhenDeallocating:task];
 						}
 
@@ -1525,6 +1525,12 @@
 	}
 }
 
+#pragma mark - Accessors
+- (BOOL)backgroundSessionBacked
+{
+	return (_urlSessionIdentifier != nil);
+}
+
 #pragma mark - NSURLSessionDelegate
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
 {
@@ -1573,7 +1579,7 @@
 {
 	NSString *sessionIdentifier = session.configuration.identifier;
 
-	if (([sessionIdentifier isEqual:_urlSessionIdentifier]) || (sessionIdentifier==nil))
+	if (([sessionIdentifier isEqual:_urlSessionIdentifier]) || !self.backgroundSessionBacked)
 	{
 		_urlSessionInvalidated = YES;
 
@@ -1931,7 +1937,7 @@
 		{
 			if (_cachedLogTags == nil)
 			{
-				_cachedLogTags = [NSArray arrayWithObjects:@"HTTP", ((_urlSessionIdentifier != nil) ? @"Background" : @"Local"), OCLogTagTypedID(@"PipelineID", _identifier), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
+				_cachedLogTags = [NSArray arrayWithObjects:@"HTTP", (self.backgroundSessionBacked ? @"Background" : @"Local"), OCLogTagTypedID(@"PipelineID", _identifier), OCLogTagInstance(self), OCLogTagTypedID(@"URLSessionID", _urlSessionIdentifier), nil];
 			}
 		}
 	}
