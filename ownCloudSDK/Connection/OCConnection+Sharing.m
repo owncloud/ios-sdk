@@ -160,7 +160,7 @@
 		default:
 			if (item != nil)
 			{
-				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%d", item, scope);
+				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%lu", item, scope);
 			}
 		break;
 	}
@@ -188,7 +188,7 @@
 		case OCShareScopeSubItems:
 			if (item == nil)
 			{
-				OCLogError(@"item required for retrieval of shares with scope=%d", scope);
+				OCLogError(@"item required for retrieval of shares with scope=%lu", scope);
 
 				if (completionHandler != nil)
 				{

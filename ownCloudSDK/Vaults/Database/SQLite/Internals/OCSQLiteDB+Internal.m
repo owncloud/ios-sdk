@@ -34,7 +34,7 @@
 	{
 		if (_liveStatements.count > 0)
 		{
-			OCLogDebug(@"Releasing the resources of up to %d live statements", _liveStatements.count);
+			OCLogDebug(@"Releasing the resources of up to %lu live statements", (unsigned long)_liveStatements.count);
 		}
 
 		for (OCSQLiteStatement *statement in _liveStatements)

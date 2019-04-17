@@ -115,7 +115,7 @@
 		}
 		else
 		{
-			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
+			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: %@", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
 			criticalError = error;
 		}
 

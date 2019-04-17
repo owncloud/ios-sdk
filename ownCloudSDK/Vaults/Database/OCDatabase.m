@@ -1016,7 +1016,7 @@
 	}
 	else
 	{
-		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", @(__PRETTY_FUNCTION__));
+		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", event, @(__PRETTY_FUNCTION__));
 		error = OCError(OCErrorInsufficientParameters);
 	}
 

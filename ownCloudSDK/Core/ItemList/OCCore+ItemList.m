@@ -862,7 +862,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
 {
-	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%d, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
+	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%lu, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
 
 	// Handle result
 	if (event.error == nil)
