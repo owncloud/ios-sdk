@@ -454,6 +454,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
 					{
+						// Auto-accept successor to user-accepted certificate that also would prompt for confirmation
+						if ((_bookmark.certificate.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
+						{
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
+
+							validationResult = OCCertificateValidationResultUserAccepted;
+						}
+
 						// Update bookmark certificate
 						_bookmark.certificate = certificate;
 						_bookmark.certificateModificationDate = [NSDate date];
@@ -510,7 +518,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					{
 						if (changeUserAccepted)
 						{
-							certificate.userAccepted = YES;
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 						}
 
 						self->_bookmark.certificate = certificate;

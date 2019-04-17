@@ -273,7 +273,19 @@
 						break;
 
 						case OCCertificateValidationResultUserAccepted:
-							status = OCLocalizedString(@"User-accepted.", @"");
+							if ([certificate.userAcceptedReason isEqual:OCCertificateAcceptanceReasonAutoAccepted])
+							{
+								status = OCLocalizedString(@"Auto-accepted.", @"");
+							}
+							else
+							{
+								status = OCLocalizedString(@"User-accepted.", @"");
+							}
+
+							if (certificate.userAcceptedReasonDescription != nil)
+							{
+								status = [status stringByAppendingFormat:@"\n\n%@:\n%@", OCLocalizedString(@"Reason", @""), certificate.userAcceptedReasonDescription];
+							}
 							backgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:1.0 alpha:1.0];
 						break;
 

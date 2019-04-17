@@ -92,6 +92,11 @@
 
 		request.forceCertificateDecisionDelegation = NO;
 
+		// Force-allow any certificate for detection requests
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest * _Nonnull request, OCCertificate * _Nonnull certificate, OCCertificateValidationResult validationResult, NSError * _Nonnull certificateValidationError, OCConnectionCertificateProceedHandler  _Nonnull proceedHandler) {
+			proceedHandler(YES, nil);
+		};
+
 		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
 

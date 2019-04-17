@@ -1031,7 +1031,7 @@
 	if ((task.response != nil) && (task.response != response))
 	{
 		// has existing response
-		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", response.responseDescription, task.response.responseDescription);
+		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", task.requestID, response.responseDescription, task.response.responseDescription);
 	}
 
 	task.response = response;

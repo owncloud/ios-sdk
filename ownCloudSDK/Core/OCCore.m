@@ -170,6 +170,8 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
+		_warnedCertificates = [NSMutableArray new];
+
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];

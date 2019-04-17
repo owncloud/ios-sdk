@@ -952,6 +952,38 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 		}
 	}
+	else
+	{
+		// Handle certificate errors while connected
+		if (([event.error isOCErrorWithCode:OCErrorRequestServerCertificateRejected]) && (self.connectionStatus == OCCoreConnectionStatusOnline))
+		{
+			OCCertificate *certificate;
+			OCIssue *certificateIssue = event.error.embeddedIssue;
+
+			if ((certificateIssue != nil) && ((certificate = certificateIssue.certificate) != nil))
+			{
+				BOOL sendIssueToDelegate = NO;
+
+				@synchronized(_warnedCertificates)
+				{
+					if (![_warnedCertificates containsObject:certificate])
+					{
+						[_warnedCertificates addObject:certificate];
+
+						sendIssueToDelegate = YES;
+					}
+				}
+
+				if (sendIssueToDelegate)
+				{
+					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					{
+						[self.delegate core:self handleError:event.error issue:certificateIssue];
+					}
+				}
+			}
+		}
+	}
 
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))

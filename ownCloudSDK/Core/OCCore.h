@@ -169,6 +169,8 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
+	NSMutableArray <OCCertificate *> *_warnedCertificates;
+
 	__weak id <OCCoreDelegate> _delegate;
 
 	NSNumber *_rootQuotaBytesRemaining;

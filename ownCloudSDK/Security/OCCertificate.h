@@ -39,6 +39,8 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 	OCCertificateValidationResultUserAccepted
 };
 
+typedef NSString* OCCertificateAcceptanceReason NS_TYPED_ENUM;
+
 @interface OCCertificate : NSObject <NSSecureCoding>
 {
 	NSString *_hostName;
@@ -52,6 +54,8 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 	NSData *_publicKeyData;
 
 	NSDate *_userAcceptedDate;
+	OCCertificateAcceptanceReason _userAcceptedReason;
+	NSString *_userAcceptedReasonDescription;
 
 	NSData *_md5FingerPrint;
 	NSData *_sha1FingerPrint;
@@ -67,6 +71,8 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 
 @property(assign,nonatomic) BOOL userAccepted; //!< Whether a certificate is saved as accepted by the user in +[OCCertificate userAcceptedCertificates] - or not.
 @property(nullable,strong,readonly) NSDate *userAcceptedDate; //!< The date the user accepted the OCCertificate.
+@property(nullable,strong,readonly) OCCertificateAcceptanceReason userAcceptedReason; //!< Reason for accepting the certificate
+@property(nullable,strong,readonly) NSString *userAcceptedReasonDescription; //!< Additional description regarding the reason for accepting the certificate
 
 @property(nullable,strong) OCCertificate *parentCertificate; //!< Parent certificate
 
@@ -110,8 +116,14 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 #pragma mark - Comparisons
 - (BOOL)hasIdenticalPublicKeyAs:(OCCertificate *)otherCertificate error:(NSError * _Nullable * _Nullable )error; //!< Returns YES if the two certificates share the same public key. Returns any error via the error parameter.
 
+#pragma mark - User-Acceptance
+- (void)userAccepted:(BOOL)userAccepted withReason:(nullable OCCertificateAcceptanceReason)reason description:(nullable NSString *)description;
+
 @end
 
 extern NSNotificationName OCCertificateUserAcceptanceDidChangeNotification;
+
+extern OCCertificateAcceptanceReason OCCertificateAcceptanceReasonUserAccepted;
+extern OCCertificateAcceptanceReason OCCertificateAcceptanceReasonAutoAccepted;
 
 NS_ASSUME_NONNULL_END

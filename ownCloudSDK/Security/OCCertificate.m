@@ -29,6 +29,8 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 @synthesize commonName = _commonName;
 
 @synthesize userAcceptedDate = _userAcceptedDate;
+@synthesize userAcceptedReason = _userAcceptedReason;
+@synthesize userAcceptedReasonDescription = _userAcceptedReasonDescription;
 @synthesize certificateData = _certificateData;
 
 @synthesize parentCertificate = _parentCertificate;
@@ -697,6 +699,8 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 		_certificateData = [decoder decodeObjectOfClass:[NSData class] forKey:@"certificateData"];
 
 		_userAcceptedDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"userAcceptedDate"];
+		_userAcceptedReason = [decoder decodeObjectOfClass:[NSString class] forKey:@"userAcceptedReason"];
+		_userAcceptedReasonDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"userAcceptedReasonDescription"];
 
 		_parentCertificate = [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"parentCertificate"];
 	}
@@ -710,8 +714,19 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 	[coder encodeObject:self.certificateData forKey:@"certificateData"];
 
 	[coder encodeObject:self.userAcceptedDate forKey:@"userAcceptedDate"];
+	[coder encodeObject:self.userAcceptedReason forKey:@"userAcceptedReason"];
+	[coder encodeObject:self.userAcceptedReasonDescription forKey:@"userAcceptedReasonDescription"];
 
 	[coder encodeObject:self.parentCertificate forKey:@"parentCertificate"];
+}
+
+#pragma mark - User-Acceptance
+- (void)userAccepted:(BOOL)userAccepted withReason:(nullable OCCertificateAcceptanceReason)reason description:(nullable NSString *)description
+{
+	_userAcceptedReason = reason;
+	_userAcceptedReasonDescription = description;
+
+	self.userAccepted = userAccepted;
 }
 
 #pragma mark - Comparisons
@@ -832,3 +847,6 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 @end
 
 NSNotificationName OCCertificateUserAcceptanceDidChangeNotification = @"OCCertificateUserAcceptanceDidChangeNotification";
+
+OCCertificateAcceptanceReason OCCertificateAcceptanceReasonUserAccepted = @"userAccepted";
+OCCertificateAcceptanceReason OCCertificateAcceptanceReasonAutoAccepted = @"autoAccepted";
