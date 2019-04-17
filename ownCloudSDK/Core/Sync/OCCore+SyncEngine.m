@@ -444,7 +444,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		}
 		else
 		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
+			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];
@@ -490,7 +490,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				// Process sync record
 				nextInstruction = [self processSyncRecord:syncRecord error:&error];
 
-				OCLogDebug(@"Processing of sync record finished with nextInstruction=%d", nextInstruction);
+				OCLogDebug(@"Processing of sync record finished with nextInstruction=%lu", nextInstruction);
 
 				[self dumpSyncJournalWithTags:@[@"PostProc"]];
 
@@ -656,7 +656,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 						break;
 					}
 
-					OCLogDebug(@"evaluated wait condition %@ with state=%d, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
+					OCLogDebug(@"evaluated wait condition %@ with state=%lu, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
 				}];
 
 				if (updateSyncRecordInDB)
@@ -739,7 +739,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				{
 					if (eventInstruction != OCCoreSyncInstructionNone)
 					{
-						OCLogDebug(@"event instruction %d overwritten with %d by later event=%@", eventInstruction, instruction, event);
+						OCLogDebug(@"event instruction %lu overwritten with %lu by later event=%@", eventInstruction, instruction, event);
 					}
 
 					eventInstruction = instruction;
@@ -833,7 +833,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 					[self setNeedsToProcessSyncRecords];
 				}
 
-				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%d, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
+				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%lu, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
 			}
 			else
 			{
@@ -866,7 +866,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		case OCSyncRecordStateCompleted:
 			// Sync record has completed => continue with next syncRecord
-			OCLogWarning(@"record %@ has completed and will be removed: %@", syncRecord);
+			OCLogWarning(@"record %@ has completed and will be removed", syncRecord);
 
 			doNext = OCCoreSyncInstructionDeleteLast;
 		break;

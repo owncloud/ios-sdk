@@ -170,7 +170,7 @@
 {
 	if (_stack.count > 0)
 	{
-		OCLogWarning(@"Stack not empty: ", _stack);
+		OCLogWarning(@"Stack not empty: %@", _stack);
 	}
 }
 

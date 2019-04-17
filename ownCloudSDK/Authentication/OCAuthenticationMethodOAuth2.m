@@ -394,7 +394,7 @@ OCAuthenticationMethodAutoRegister
 				{
 					NSString *jsonError;
 
-					OCLogDebug(@"Received token request response:", OCLogPrivate(jsonResponseDict));
+					OCLogDebug(@"Received token request response: %@", OCLogPrivate(jsonResponseDict));
 
 					if ((jsonError = jsonResponseDict[@"error"]) != nil)
 					{

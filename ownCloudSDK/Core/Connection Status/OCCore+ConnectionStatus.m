@@ -203,7 +203,7 @@
 	// Property changes
 	if (newStatus != _connectionStatus)
 	{
-		OCLogDebug(@"************ Connection Status will change from %d to %d ************", oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status will change from %lu to %lu ************", (unsigned long)oldStatus, newStatus);
 
 		// Announce change
 		[self willChangeValueForKey:@"connectionStatus"];
@@ -211,7 +211,7 @@
 
 	if (newSignal != _connectionStatusSignals)
 	{
-		OCLogDebug(@"************ Connection Status Signal will change from %d to %d ************", oldSignal, newSignal);
+		OCLogDebug(@"************ Connection Status Signal will change from %lu to %lu ************", oldSignal, newSignal);
 
 		// Announce change
 		[self willChangeValueForKey:@"connectionStatusSignals"];
@@ -223,7 +223,7 @@
 		_connectionStatusSignals = newSignal;
 		[self didChangeValueForKey:@"connectionStatusSignals"];
 
-		OCLogDebug(@"************ Connection Status Signal changed from %d to %d ************", oldSignal, newSignal);
+		OCLogDebug(@"************ Connection Status Signal changed from %lu to %lu ************", oldSignal, newSignal);
 	}
 
 	if (newStatus != _connectionStatus)
@@ -232,7 +232,7 @@
 		_connectionStatus = newStatus;
 		[self didChangeValueForKey:@"connectionStatus"];
 
-		OCLogDebug(@"************ Connection Status changed from %d to %d ************", oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status changed from %lu to %lu ************", oldStatus, newStatus);
 	}
 
 	// Determine internal updates

@@ -217,7 +217,7 @@
 		return ([columnNames objectAtIndex:columnIdx]);
 	}
 
-	OCLogError(@"Column index out of bounds: index %ld not in 0..%ld range", columnIdx, columnNames.count);
+	OCLogError(@"Column index out of bounds: index %d not in 0..%ld range", columnIdx, columnNames.count);
 
 	return (nil);
 }
