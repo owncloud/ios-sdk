@@ -168,6 +168,12 @@
 				}
 			}];
 		}
+
+		if (self.initialPopulationHandler != nil)
+		{
+			self.initialPopulationHandler(self);
+			self.initialPopulationHandler = nil;
+		}
 	}
 }
 
