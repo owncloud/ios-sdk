@@ -187,7 +187,7 @@
 	{
 		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
-			// POST Method: Generate body from parameters
+			// POST and PUT methods: generate body from parameters
 			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
 			NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 			
@@ -344,7 +344,8 @@
 	if (_bodyURL != nil)
 	{
 		NSNumber *fileSize = nil;
-		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL]) {
+		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
 			[requestDescription appendFormat:@"Content-Length: %lu\n", fileSize.unsignedIntegerValue];
 		}
 	}

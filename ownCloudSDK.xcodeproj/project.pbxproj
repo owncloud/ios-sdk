@@ -198,6 +198,8 @@
 		DC594B1F21EFD7F900B882C4 /* BookmarkManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1E21EFD7F900B882C4 /* BookmarkManagerTests.m */; };
 		DC5A20312074E8890083DB7D /* CoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A20302074E8890083DB7D /* CoreTests.m */; };
 		DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */; };
+		DC5AD95422665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5AD95222665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC5AD95522665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5AD95322665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m */; };
 		DC61E931221423D2002889D6 /* HTTPPipelineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC61E930221423D2002889D6 /* HTTPPipelineTests.m */; };
 		DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */; };
 		DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */; };
@@ -769,6 +771,8 @@
 		DC5A20302074E8890083DB7D /* CoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreTests.m; sourceTree = "<group>"; };
 		DC5A20322074F9020083DB7D /* Ocean.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ocean.entitlements; sourceTree = SOURCE_ROOT; };
 		DC5A794D21E5FAF20045BCAA /* OCConnection+Signals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Signals.m"; sourceTree = "<group>"; };
+		DC5AD95222665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTaskMetrics.h; sourceTree = "<group>"; };
+		DC5AD95322665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineTaskMetrics.m; sourceTree = "<group>"; };
 		DC61E930221423D2002889D6 /* HTTPPipelineTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPPipelineTests.m; sourceTree = "<group>"; };
 		DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCThumbnail.h"; sourceTree = "<group>"; };
 		DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCThumbnail.m"; sourceTree = "<group>"; };
@@ -1535,6 +1539,8 @@
 				DC4B116F220830F20062BCDD /* OCHTTPPipelineBackend.h */,
 				DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */,
 				DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */,
+				DC5AD95322665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m */,
+				DC5AD95222665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h */,
 			);
 			path = Pipeline;
 			sourceTree = "<group>";
@@ -2321,6 +2327,7 @@
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
+				DC5AD95422665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h in Headers */,
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
@@ -2900,6 +2907,7 @@
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
 				DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */,
 				DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */,
+				DC5AD95522665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m in Sources */,
 				DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,

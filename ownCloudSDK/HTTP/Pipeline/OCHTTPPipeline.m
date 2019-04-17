@@ -42,6 +42,10 @@
 	NSMutableSet<OCHTTPPipelinePartitionID> *_partitionsInDestruction;
 	NSMutableDictionary<OCHTTPPipelinePartitionID, NSMutableArray<dispatch_block_t> *> *_partitionEmptyHandlers;
 
+	NSMutableArray<OCHTTPPipelineTaskMetrics *> *_metricsHistory;
+	NSTimeInterval _metricsHistoryMaxAge;
+	NSTimeInterval _metricsMinimumTotalTransferDurationRelevancyThreshold;
+
 	dispatch_group_t _busyGroup;
 }
 
@@ -67,6 +71,10 @@
 		_attachedURLSessionsByIdentifier = [NSMutableDictionary new];
 		_sessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
 		_partitionsInDestruction = [NSMutableSet new];
+
+		_metricsHistory = [NSMutableArray new];
+		_metricsHistoryMaxAge = 10 * 60; //!< Metrics records are used for computation for a maximum of 10 minutes
+		_metricsMinimumTotalTransferDurationRelevancyThreshold = 0.01; // Only metrics with a minimum total transfer duration of X secs should be considered relevant
 
 		_busyGroup = dispatch_group_create();
 
@@ -1617,6 +1625,8 @@
 	{
 		OCLogDebug(@"Known task [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
 
+		[self addMetrics:task.metrics withTask:urlSessionTask];
+
 		if (error != nil)
 		{
 			OCHTTPResponse *response = [task responseFromURLSessionTask:urlSessionTask];
@@ -1644,12 +1654,20 @@
 
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
 {
+	OCHTTPPipelineTask *task = nil;
+	NSError *backendError = nil;
+
 	if (OCLogger.logLevel <= OCLogLevelDebug)
 	{
 		NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
 
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics: %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), [metrics compactSummaryWithTask:urlSessionTask]);
+	}
+
+	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
+	{
+		task.metrics = [[OCHTTPPipelineTaskMetrics alloc] initWithURLSessionTaskMetrics:metrics];
 	}
 }
 
@@ -1894,6 +1912,172 @@
 	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
+#pragma mark - Metrics
+- (void)addMetrics:(OCHTTPPipelineTaskMetrics *)metrics withTask:(NSURLSessionTask *)task
+{
+	if ((metrics != nil) && (task != nil))
+	{
+		if ((metrics.totalTransferDuration.doubleValue > _metricsMinimumTotalTransferDurationRelevancyThreshold) &&
+		    ((-[metrics.date timeIntervalSinceNow]) < _metricsHistoryMaxAge))
+		{
+			[metrics addTransferSizesFromURLSessionTask:task];
+
+			@synchronized(_metricsHistory)
+			{
+				// Drop outdated records
+				[_metricsHistory filterUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(OCHTTPPipelineTaskMetrics *filterMetrics, NSDictionary<NSString *,id> * _Nullable bindings) {
+					return ((-[filterMetrics.date timeIntervalSinceNow]) < self->_metricsHistoryMaxAge);
+				}]];
+
+				// Add new record
+				[_metricsHistory addObject:metrics];
+			}
+		}
+	}
+}
+
+- (BOOL)weightedAverageSendBytesPerSecond:(NSNumber **)outSendBytesPerSecond receiveBytesPerSecond:(NSNumber **)outReceiveBytesPerSecond transportationDelaySeconds:(NSNumber **)outTransportationDelaySeconds largestSendBytes:(NSUInteger *)outLargestSendBytes largestReceiveBytes:(NSUInteger *)outLargestReceiveBytes forHostname:(NSString *)hostname
+{
+	@synchronized(_metricsHistory)
+	{
+		NSUInteger totalSendBytesPerSecond = 0;
+		NSUInteger totalSendBytesPerSecondSamples = 0;
+
+		NSUInteger totalReceiveBytesPerSecond = 0;
+		NSUInteger totalReceiveBytesPerSecondSamples = 0;
+
+		NSTimeInterval totalTransportationDelaySeconds = 0;
+		NSUInteger     totalTransportationDelaySamples = 0;
+
+		NSUInteger totalSentBytes = 0;
+		NSUInteger totalReceivedBytes = 0;
+
+		NSUInteger largestSentBytes = 0;
+		NSUInteger largestReceiveBytes = 0;
+
+		for (OCHTTPPipelineTaskMetrics *metrics in _metricsHistory)
+		{
+			if (((-[metrics.date timeIntervalSinceNow]) < _metricsHistoryMaxAge) && [metrics.hostname isEqual:hostname])
+			{
+				NSNumber *number;
+
+				if ((number = metrics.sentBytesPerSecond) != nil)
+				{
+					NSUInteger totalBytes = metrics.totalRequestSizeBytes.unsignedIntegerValue;
+
+					totalSendBytesPerSecond += number.unsignedIntegerValue * totalBytes;
+					totalSendBytesPerSecondSamples += 1;
+
+					totalSentBytes += totalBytes;
+
+					if (largestSentBytes < totalBytes)
+					{
+						largestSentBytes = totalBytes;
+					}
+				}
+
+				if ((number = metrics.receivedBytesPerSecond) != nil)
+				{
+					NSUInteger totalBytes = metrics.totalResponseSizeBytes.unsignedIntegerValue;
+
+					totalReceiveBytesPerSecond += number.unsignedIntegerValue * totalBytes;
+					totalReceiveBytesPerSecondSamples += 1;
+
+					totalReceivedBytes += metrics.totalResponseSizeBytes.unsignedIntegerValue;
+
+					if (largestReceiveBytes < totalBytes)
+					{
+						largestReceiveBytes = totalBytes;
+					}
+				}
+
+				if ((number = metrics.serverProcessingTimeInterval) != nil)
+				{
+					totalTransportationDelaySeconds += number.doubleValue;
+					totalTransportationDelaySamples += 1;
+				}
+			}
+		}
+
+		if ((totalSendBytesPerSecondSamples > 0) && (totalSentBytes > 0))
+		{
+			*outSendBytesPerSecond = @(totalSendBytesPerSecond / (totalSentBytes * totalSendBytesPerSecondSamples));
+		}
+		else
+		{
+			*outSendBytesPerSecond = nil;
+		}
+
+		if ((totalReceiveBytesPerSecondSamples > 0) && (totalReceivedBytes > 0))
+		{
+			*outReceiveBytesPerSecond = @(totalReceiveBytesPerSecond / (totalReceivedBytes * totalReceiveBytesPerSecondSamples));
+		}
+		else
+		{
+			*outReceiveBytesPerSecond = nil;
+		}
+
+		if (totalTransportationDelaySamples > 0)
+		{
+			*outTransportationDelaySeconds = @(totalTransportationDelaySeconds / ((NSTimeInterval)totalTransportationDelaySamples));
+		}
+		else
+		{
+			*outTransportationDelaySeconds = nil;
+		}
+
+		*outLargestReceiveBytes = largestReceiveBytes;
+		*outLargestSendBytes = largestSentBytes;
+
+		return ((totalSendBytesPerSecondSamples > 0) && (totalReceiveBytesPerSecondSamples > 0) && (totalTransportationDelaySeconds > 0));
+	}
+}
+
+- (nullable NSNumber *)estimatedTimeForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength confidence:(double *)outConfidence
+{
+	NSNumber *averageSendBytesPerSecond=nil, *averageReceiveBytesPerSecond=nil, *averageTransportationDelay = nil;
+	NSUInteger largestSendBytes = 0, largestReceivesBytes = 0;
+
+	if ([self weightedAverageSendBytesPerSecond:&averageSendBytesPerSecond receiveBytesPerSecond:&averageReceiveBytesPerSecond transportationDelaySeconds:&averageTransportationDelay largestSendBytes:&largestSendBytes largestReceiveBytes:&largestReceivesBytes	 forHostname:request.url.host])
+	{
+		NSUInteger requestSize = 0, responseSize = expectedResponseLength;
+		NSTimeInterval estimatedTimeToComplete = 0;
+		CGFloat confidenceLevel = 0;
+
+		[request prepareForScheduling];
+
+		requestSize += [OCHTTPPipelineTaskMetrics lengthOfHeaderDictionary:request.headerFields method:request.method url:request.effectiveURL];
+
+		if (request.bodyURL != nil)
+		{
+			NSNumber *fileSize = nil;
+
+			if ([request.bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+			{
+				requestSize += fileSize.unsignedIntegerValue;
+			}
+		}
+		else
+		{
+			requestSize += request.bodyData.length;
+		}
+
+		estimatedTimeToComplete = ((NSTimeInterval)requestSize / (NSTimeInterval)averageSendBytesPerSecond.unsignedIntegerValue) + ((NSTimeInterval)responseSize / (NSTimeInterval)averageReceiveBytesPerSecond.unsignedIntegerValue) + averageTransportationDelay.doubleValue;
+
+		confidenceLevel = (CGFloat)1.0 / ((((CGFloat)(requestSize*requestSize) / (CGFloat)largestSendBytes) + ((CGFloat)(responseSize*responseSize) / (CGFloat)largestReceivesBytes)) / ((CGFloat)(requestSize + responseSize)));
+
+		OCLogDebug(@"weightedAverage sendBPS=%@, receiveBPS=%@, transportationDelay=%@ - bytesToSend=%lu, bytesToReceive=%lu - estimatedTimeToComplete=%.02f, confidenceLevel=%.03f", averageSendBytesPerSecond, averageReceiveBytesPerSecond, averageTransportationDelay, requestSize, responseSize, estimatedTimeToComplete, confidenceLevel);
+
+		if (outConfidence != NULL)
+		{
+			*outConfidence = confidenceLevel;
+		}
+
+		return (@(estimatedTimeToComplete));
+	}
+
+	return (nil);
+}
 
 #pragma mark - Progress
 - (nullable NSProgress *)progressForRequestID:(OCHTTPRequestID)requestID

@@ -156,6 +156,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Progress
 - (nullable NSProgress *)progressForRequestID:(OCHTTPRequestID)requestID;
 
+#pragma mark - Metrics
+- (nullable NSNumber *)estimatedTimeForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength confidence:(double * _Nullable)outConfidence;//!< If a sufficient amount of metrics could be collected, returns the estimated number of seconds it'll take the request to be sent and a response of expectedResponseLength be received.
+
 #pragma mark - Internal job queue
 - (void)queueBlock:(dispatch_block_t)block withBusy:(BOOL)withBusy; //!< Add a block for execution on the internal job queue.
 

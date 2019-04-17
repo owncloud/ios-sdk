@@ -71,6 +71,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPPipelineManager.h>
 #import <ownCloudSDK/OCHTTPPipeline.h>
 #import <ownCloudSDK/OCHTTPPipelineTask.h>
+#import <ownCloudSDK/OCHTTPPipelineTaskMetrics.h>
 #import <ownCloudSDK/OCHTTPPipelineBackend.h>
 #import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
 

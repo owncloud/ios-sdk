@@ -1155,6 +1155,60 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 }
 
+#pragma mark - Estimates
+- (NSNumber *)estimatedTimeForTransferRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength confidence:(double * _Nullable)outConfidence
+{
+	double longlivedConfidence = 0;
+	NSNumber *longLivedEstimatedTime = [self.longLivedPipeline estimatedTimeForRequest:request withExpectedResponseLength:expectedResponseLength confidence:&longlivedConfidence];
+
+	double commandConfidence = 0;
+	NSNumber *commandEstimatedTime = [self.commandPipeline estimatedTimeForRequest:request withExpectedResponseLength:expectedResponseLength confidence:&commandConfidence];
+
+	double estimationConfidence = 0;
+	NSNumber *estimatedTime = nil;
+
+	if ((commandEstimatedTime != nil) && (commandConfidence > longlivedConfidence))
+	{
+		estimatedTime = commandEstimatedTime;
+		estimationConfidence = commandConfidence;
+	}
+	else if ((longLivedEstimatedTime != nil) && (longlivedConfidence > commandConfidence))
+	{
+		estimatedTime = longLivedEstimatedTime;
+		estimationConfidence = longlivedConfidence;
+	}
+
+	if (outConfidence != NULL)
+	{
+		*outConfidence = estimationConfidence;
+	}
+
+	return (estimatedTime);
+}
+
+- (OCHTTPPipeline *)transferPipelineForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength
+{
+	double confidenceLevel = 0;
+	NSNumber *estimatedTime = nil;
+
+	if (!OCProcessManager.isProcessExtension)
+	{
+		if ((estimatedTime = [self estimatedTimeForTransferRequest:request withExpectedResponseLength:expectedResponseLength confidence:&confidenceLevel]) != nil)
+		{
+			BOOL useCommandPipeline = (estimatedTime.doubleValue <= 120.0) && (confidenceLevel >= 0.15);
+
+			OCLogDebug(@"Expected finish time: %@ (in %@ seconds, confidence %.02f) - pipeline: %@", [NSDate dateWithTimeIntervalSinceNow:estimatedTime.doubleValue], estimatedTime, confidenceLevel, (useCommandPipeline ? @"command" : @"longLived"));
+
+			if (useCommandPipeline)
+			{
+				return (self.commandPipeline);
+			}
+		}
+	}
+
+	return (self.longLivedPipeline);
+}
+
 #pragma mark - Actions
 
 #pragma mark - File transfer: upload
@@ -1285,7 +1339,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
 		}
 
-		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
+		[[self transferPipelineForRequest:request withExpectedResponseLength:1000] enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeUpload;
@@ -1434,7 +1488,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[self attachToPipelines];
 
 		// Enqueue request
-		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
+		[[self transferPipelineForRequest:request withExpectedResponseLength:item.size] enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeDownload;
