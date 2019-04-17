@@ -46,7 +46,7 @@
 		case OCShareScopeAcceptedCloudShares:
 			if (item != nil)
 			{
-				OCLogWarning(@"Item %@ provided to create share query with scope that doesn't support an item");
+				OCLogWarning(@"Item %@ provided to create share query with scope that doesn't support an item", item);
 			}
 		break;
 
