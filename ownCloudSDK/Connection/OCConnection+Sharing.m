@@ -441,20 +441,22 @@
 	share = [share copy];
 	performChanges(share);
 
-	// Compare and detect changes
-	if (![share.name isEqual:previousName])
-	{
-		changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
-	}
+	if (share.type == OCShareTypeLink) {
+		// Compare and detect changes
+		if (![share.name isEqual:previousName])
+		{
+			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+		}
 
-	if (![share.password isEqual:previousPassword])
-	{
-		changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
-	}
+		if (![share.password isEqual:previousPassword])
+		{
+			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+		}
 
-	if (![share.expirationDate isEqual:previousExpirationDate])
-	{
-		changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		if (![share.expirationDate isEqual:previousExpirationDate])
+		{
+			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		}
 	}
 
 	if (share.permissions != previousPermissions)
