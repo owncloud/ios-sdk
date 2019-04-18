@@ -441,8 +441,8 @@
 	share = [share copy];
 	performChanges(share);
 
+	// Compare and detect changes
 	if (share.type == OCShareTypeLink) {
-		// Compare and detect changes
 		if (![share.name isEqual:previousName])
 		{
 			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
