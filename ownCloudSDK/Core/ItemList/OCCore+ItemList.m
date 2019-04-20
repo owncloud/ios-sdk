@@ -457,7 +457,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}];
 
-			// Preserve localID for remotely moved, known items
+			// Preserve localID for remotely moved, known items / preserve .removed status for locally removed items while deletion is in progress
 			{
 				NSMutableIndexSet *removeItemsFromDeletedItemsIndexes = nil;
 				NSMutableIndexSet *removeItemsFromNewItemsIndexes = nil;
@@ -467,9 +467,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				for (OCItem *newItem in newItems)
 				{
 					__block OCItem *knownItem = nil;
+					__block BOOL knownItemRemoved = NO;
 
 					[self.database retrieveCacheItemForFileID:newItem.fileID includingRemoved:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 						knownItem = item;
+						knownItemRemoved = knownItem.removed;
 						knownItem.removed = NO;
 					}];
 
@@ -491,6 +493,16 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						{
 							// If paths aren't identical => pass along metadata
 							newItem.previousPath = knownItem.path;
+						}
+						else
+						{
+							// Prevent files in process of deletion from re-appearing
+							if (knownItemRemoved && // known item was marked removed
+							   (knownItem.syncActivity & OCItemSyncActivityDeleting)) // known item is still in the process of removal
+							{
+								newItem.removed = knownItemRemoved; // carry over the removed status
+								[queryResults removeObject:newItem]; // remove from query results
+							}
 						}
 
 						// Remove from deletedCacheItems
