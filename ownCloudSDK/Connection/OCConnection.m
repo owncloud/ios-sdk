@@ -2171,6 +2171,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	NSError *error = nil;
 	NSProgress *progress = nil;
 
+	if (item.isPlaceholder)
+	{
+		// No remote thumbnails available for placeholders
+		[eventTarget handleError:OCError(OCErrorItemNotFound) type:OCEventTypeRetrieveThumbnail sender:self];
+		return (nil);
+	}
+
 	if (item.type != OCItemTypeCollection)
 	{
 		if (self.supportsPreviewAPI)
