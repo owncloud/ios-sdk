@@ -436,32 +436,58 @@
 	OCSharePermissionsMask previousPermissions = share.permissions;
 	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
 	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+	BOOL returnLinkShareOnlyError = NO;
 
 	// Perform changes
 	share = [share copy];
 	performChanges(share);
 
 	// Compare and detect changes
-	if (share.type == OCShareTypeLink) {
-		if (![share.name isEqual:previousName])
+	if (OCNANotEqual(share.name, previousName))
+	{
+		if (share.type == OCShareTypeLink)
 		{
 			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
 		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
+	}
 
-		if (![share.password isEqual:previousPassword])
+	if (OCNANotEqual(share.password, previousPassword))
+	{
+		if (share.type == OCShareTypeLink)
 		{
 			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
 		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
+	}
 
-		if (![share.expirationDate isEqual:previousExpirationDate])
+	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
+	{
+		if (share.type == OCShareTypeLink)
 		{
 			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
 		}
 	}
 
 	if (share.permissions != previousPermissions)
 	{
 		changedValuesByPropertyNames[@"permissions"] = [NSString stringWithFormat:@"%ld", share.permissions];
+	}
+
+	if (returnLinkShareOnlyError)
+	{
+		[eventTarget handleError:OCErrorWithDescription(OCErrorFeatureNotSupportedByServer, @"Updating the name, password and expiryDate is only supported for shares of type link") type:OCEventTypeUpdateShare sender:self];
+		return (nil);
 	}
 
 	if (changedValuesByPropertyNames.count == 0)
