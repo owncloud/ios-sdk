@@ -40,4 +40,8 @@
 
 #define OCTypedCast(var,className) ([var isKindOfClass:[className class]] ? ((className *)var) : nil)
 
+// nil-aware comparisons
+#define OCNANotEqual(a,b) ((![(a) isEqual:(b)]) && ((a) != (b)))
+#define OCNAIsEqual(a,b)  (([(a) isEqual:(b)]) || ((a) == (b)))
+
 #endif /* OCMacros_h */
