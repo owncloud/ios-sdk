@@ -62,6 +62,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}
 
+			if ((self.state == OCCoreStateStopping) || (self.state == OCCoreStateStopped))
+			{
+				putInQueue = YES;
+			}
+
 			if (putInQueue)
 			{
 				[_queuedItemListTaskPaths addObject:path];
@@ -90,7 +95,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	@synchronized(_queuedItemListTaskPaths)
 	{
-		if (_scheduledItemListTasks.count == 0)
+		if ((_scheduledItemListTasks.count == 0) && (self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
 		{
 			BOOL isForQuery = NO;
 
