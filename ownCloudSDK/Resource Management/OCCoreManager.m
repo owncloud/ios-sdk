@@ -51,10 +51,32 @@
 
 		_queuedOfflineOperationsByUUID = [NSMutableDictionary new];
 
-		_adminQueue = dispatch_queue_create("OCCoreManager admin queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
+		_adminQueueByUUID = [NSMutableDictionary new];
 	}
 
 	return(self);
+}
+
+#pragma mark - Admin queues
+- (dispatch_queue_t)_adminQueueForBookmark:(OCBookmark *)bookmark
+{
+	dispatch_queue_t adminQueue = nil;
+
+	if (bookmark.uuid != nil)
+	{
+		@synchronized (_adminQueueByUUID)
+		{
+			if ((adminQueue = _adminQueueByUUID[bookmark.uuid]) == nil)
+			{
+				if ((adminQueue = dispatch_queue_create("OCCoreManager admin queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL)) != nil)
+				{
+					_adminQueueByUUID[bookmark.uuid] = adminQueue;
+				}
+			}
+		}
+	}
+
+	return (adminQueue);
 }
 
 #pragma mark - Requesting and returning cores
@@ -62,7 +84,7 @@
 {
 	OCLogDebug(@"queuing core request for bookmark %@", bookmark);
 
-	dispatch_async(_adminQueue, ^{
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _requestCoreForBookmark:bookmark setup:setupHandler completionHandler:completionHandler];
 	});
 }
@@ -150,7 +172,7 @@
 {
 	OCLogDebug(@"queuing core return for bookmark %@", bookmark);
 
-	dispatch_async(_adminQueue, ^{
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _returnCoreForBookmark:bookmark completionHandler:completionHandler];
 	});
 }
@@ -303,7 +325,7 @@
 		[queuedOfflineOperations addObject:offlineOperation];
 	}
 
-	dispatch_async(_adminQueue, ^{
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _runNextOfflineOperationForBookmark:bookmark];
 	});
 }
