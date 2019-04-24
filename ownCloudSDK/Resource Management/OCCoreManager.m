@@ -60,6 +60,8 @@
 #pragma mark - Requesting and returning cores
 - (void)requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
+	OCLogDebug(@"queuing core request for bookmark %@", bookmark);
+
 	dispatch_async(_adminQueue, ^{
 		[self _requestCoreForBookmark:bookmark setup:setupHandler completionHandler:completionHandler];
 	});
@@ -146,6 +148,8 @@
 
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
 {
+	OCLogDebug(@"queuing core return for bookmark %@", bookmark);
+
 	dispatch_async(_adminQueue, ^{
 		[self _returnCoreForBookmark:bookmark completionHandler:completionHandler];
 	});
