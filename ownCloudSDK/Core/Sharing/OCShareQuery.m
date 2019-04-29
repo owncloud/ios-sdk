@@ -174,6 +174,11 @@
 			self.initialPopulationHandler(self);
 			self.initialPopulationHandler = nil;
 		}
+
+		if (self.changesAvailableNotificationHandler != nil)
+		{
+			self.changesAvailableNotificationHandler(self);
+		}
 	}
 }
 
