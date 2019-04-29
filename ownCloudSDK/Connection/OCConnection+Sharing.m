@@ -160,7 +160,7 @@
 		default:
 			if (item != nil)
 			{
-				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%d", item, scope);
+				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%lu", item, scope);
 			}
 		break;
 	}
@@ -188,7 +188,7 @@
 		case OCShareScopeSubItems:
 			if (item == nil)
 			{
-				OCLogError(@"item required for retrieval of shares with scope=%d", scope);
+				OCLogError(@"item required for retrieval of shares with scope=%lu", scope);
 
 				if (completionHandler != nil)
 				{
@@ -360,6 +360,8 @@
 	request.resultHandlerAction = @selector(_handleCreateShareResult:error:);
 	request.eventTarget = eventTarget;
 
+	request.forceCertificateDecisionDelegation = YES;
+
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
 	requestProgress = request.progress;
@@ -436,30 +438,58 @@
 	OCSharePermissionsMask previousPermissions = share.permissions;
 	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
 	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+	BOOL returnLinkShareOnlyError = NO;
 
 	// Perform changes
 	share = [share copy];
 	performChanges(share);
 
 	// Compare and detect changes
-	if (![share.name isEqual:previousName])
+	if (OCNANotEqual(share.name, previousName))
 	{
-		changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
-	if (![share.password isEqual:previousPassword])
+	if (OCNANotEqual(share.password, previousPassword))
 	{
-		changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
-	if (![share.expirationDate isEqual:previousExpirationDate])
+	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
 	{
-		changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
 	if (share.permissions != previousPermissions)
 	{
 		changedValuesByPropertyNames[@"permissions"] = [NSString stringWithFormat:@"%ld", share.permissions];
+	}
+
+	if (returnLinkShareOnlyError)
+	{
+		[eventTarget handleError:OCErrorWithDescription(OCErrorFeatureNotSupportedByServer, @"Updating the name, password and expiryDate is only supported for shares of type link") type:OCEventTypeUpdateShare sender:self];
+		return (nil);
 	}
 
 	if (changedValuesByPropertyNames.count == 0)
@@ -513,6 +543,8 @@
 		request.resultHandlerAction = @selector(_handleUpdateShareResult:error:);
 		request.eventTarget = eventTarget;
 		request.userInfo = userInfo;
+
+		request.forceCertificateDecisionDelegation = YES;
 
 		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
@@ -619,6 +651,7 @@
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.actionSignals;
+	request.forceCertificateDecisionDelegation = YES;
 
 	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
 	request.eventTarget = eventTarget;
@@ -698,6 +731,8 @@
 
 	request.resultHandlerAction = @selector(_handleMakeDecisionOnShareResult:error:);
 	request.eventTarget = eventTarget;
+
+	request.forceCertificateDecisionDelegation = YES;
 
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 

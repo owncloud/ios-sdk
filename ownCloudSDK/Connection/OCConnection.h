@@ -66,6 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)connection:(OCConnection *)connection request:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError defaultProceedValue:(BOOL)defaultProceedValue proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
 
 - (void)connectionChangedState:(OCConnection *)connection;
+- (void)connectionCertificateUserApproved:(OCConnection *)connection;
 
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
@@ -160,9 +161,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Metadata actions
 - (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path
-- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(nullable NSDate *)notBeforeDate options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
+- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
 
-- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(nullable NSDate *)notBeforeDate options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
+- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
 #pragma mark - Actions
 - (nullable OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
@@ -345,7 +346,8 @@ extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
-extern OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement; //!< Controls whether OCConnection should only allow the bookmark's certificate when connected. Defaults to YES.
+extern OCClassSettingsKey OCConnectionCertificateExtendedValidationRule; //!< Rule that defines the criteria a certificate needs to meet for OCConnection to accept it.
+extern OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule; //!< Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate automatically. Used when OCConnectionCertificateExtendedValidationRule fails. Set this to "never" if the user should always be prompted when a server's certificate changed.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)

@@ -36,6 +36,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCAppIdentity.h>
 
+#import <ownCloudSDK/OCKeychain.h>
+#import <ownCloudSDK/OCCertificate.h>
+#import <ownCloudSDK/OCCertificateRuleChecker.h>
+
 #import <ownCloudSDK/OCClassSettings.h>
 #import <ownCloudSDK/NSObject+OCClassSettings.h>
 #import <ownCloudSDK/OCClassSettingsFlatSource.h>
@@ -67,6 +71,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPPipelineManager.h>
 #import <ownCloudSDK/OCHTTPPipeline.h>
 #import <ownCloudSDK/OCHTTPPipelineTask.h>
+#import <ownCloudSDK/OCHTTPPipelineTaskMetrics.h>
 #import <ownCloudSDK/OCHTTPPipelineBackend.h>
 #import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
 

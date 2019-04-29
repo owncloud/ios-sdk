@@ -32,7 +32,7 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 
 	BOOL _postFileProviderNotifications;
 
-	dispatch_queue_t _adminQueue;
+	NSMutableDictionary <NSUUID *, dispatch_queue_t> *_adminQueueByUUID;
 }
 
 #pragma mark - Shared instance

@@ -26,15 +26,24 @@
 	[super tearDown];
 }
 
+- (OCCertificate *)certificateNamed:(NSString *)certName hostName:(NSString *)hostName
+{
+	NSURL *certURL = [[NSBundle bundleForClass:[self class]] URLForResource:certName withExtension:@"cer"];
+	NSData *certData = [NSData dataWithContentsOfURL:certURL];
+	OCCertificate *certificate;
+
+	certificate = [OCCertificate certificateWithCertificateData:certData hostName:hostName];
+
+	return (certificate);
+}
+
 - (void)testCertificateMetaDataParsing
 {
-	NSURL *fakeCertURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"fake-demo_owncloud_org" withExtension:@"cer"];
-	NSData *fakeCertData = [NSData dataWithContentsOfURL:fakeCertURL];
 	NSError *parseError;
 	NSDictionary *metaData;
 	XCTestExpectation *viewNodesReceivedExpectation = [self expectationWithDescription:@"expect view nodes"];
 
-	OCCertificate *certificate = [OCCertificate certificateWithCertificateData:fakeCertData hostName:@"demo.owncloud.org"];
+	OCCertificate *certificate = [self certificateNamed:@"fake-demo_owncloud_org" hostName:@"demo.owncloud.org"];
 
 	XCTAssert(((metaData = [certificate metaDataWithError:&parseError]) != nil), @"Metadata returned");
 	XCTAssert([((NSDictionary *)metaData[OCCertificateMetadataSubjectKey])[OCCertificateMetadataCommonNameKey] isEqual:@"demo.owncloud.org"], @"Common name is correct");
@@ -79,6 +88,73 @@
 
 		[connection sendSynchronousRequest:request];
 	}
+}
+
+- (void)testCertificateRuleChecker
+{
+	OCCertificate *demoCertNew = [OCCertificate assembleChain:@[
+		[self certificateNamed:@"demo-cert-root" 	hostName:nil],
+		[self certificateNamed:@"demo-cert-letsencrypt" hostName:nil],
+		[self certificateNamed:@"demo-cert-new" 	hostName:@"demo.owncloud.org"]
+	]];
+
+	OCCertificate *demoCertOld = [OCCertificate assembleChain:@[
+		[self certificateNamed:@"demo-cert-root" 	hostName:nil],
+		[self certificateNamed:@"demo-cert-letsencrypt" hostName:nil],
+		[self certificateNamed:@"demo-cert-old" 	hostName:@"demo.owncloud.org"]
+	]];
+
+	OCCertificate *demoCertWrongOrder = [OCCertificate assembleChain:@[
+		[self certificateNamed:@"demo-cert-letsencrypt" hostName:nil],
+		[self certificateNamed:@"demo-cert-root" 	hostName:nil],
+		[self certificateNamed:@"demo-cert-old" 	hostName:@"demo.owncloud.org"]
+	]];
+
+	OCLogDebug(@"demoCertNew:\n%@\n\ndemoCertOld:\n%@", demoCertNew, demoCertOld);
+
+	BOOL (^RunCheck)(OCCertificate *certificate, OCCertificate *newCertificate, NSString *rule) = ^(OCCertificate *certificate, OCCertificate *newCertificate, NSString *rule) {
+		OCCertificateRuleChecker *ruleChecker;
+		BOOL ruleEvaluated;
+
+		ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:certificate newCertificate:newCertificate rule:rule];
+		ruleEvaluated = ruleChecker.evaluateRule;
+
+		OCLogDebug(@"Rule '%@': %d", ruleChecker.rule, ruleEvaluated);
+
+		return (ruleEvaluated);
+	};
+
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.validationResult == \"passed\"") == YES);
+	XCTAssert(RunCheck(demoCertOld, nil, @"certificate.validationResult == \"passed\"") == YES);
+
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"certificate.publicKeyData == newCertificate.publicKeyData") == NO);
+	XCTAssert(RunCheck(demoCertNew, demoCertNew, @"certificate.publicKeyData == newCertificate.publicKeyData") == YES);
+
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"check.certificatesHaveIdenticalParents == true") == YES);
+	XCTAssert(RunCheck(demoCertOld, demoCertWrongOrder, @"check.certificatesHaveIdenticalParents == true") == NO);
+
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"certificate == newCertificate") == NO);
+	XCTAssert(RunCheck(demoCertOld, demoCertOld, @"certificate == newCertificate") == YES);
+
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"(certificate.publicKeyData == newCertificate.publicKeyData) OR (check.certificatesHaveIdenticalParents == true)") == YES);
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"(certificate.publicKeyData == newCertificate.publicKeyData) OR (check.parentCertificatesHaveIdenticalPublicKeys == true)") == YES);
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))") == YES);
+
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"never") == NO);
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"evaluateRule == true") == NO);
+	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"check.evaluateRule == true") == NO);
+
+	NSLog(@"certificate.publicKeyData.sha256Hash.asFingerPrintString=%@", demoCertNew.publicKeyData.sha256Hash.asFingerPrintString);
+
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AE EE 54 3F 49 E2 06 64 5E 8E F1 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AA BB CC DD EE FF 00 11 22 33 44 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == NO);
+
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.passedValidationOrIsUserAccepted == true") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.commonName == \"demo.owncloud.org\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.rootCertificate.commonName == \"DST Root CA X3\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.parentCertificate.commonName == \"Let's Encrypt Authority X3\"") == YES);
+
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.rootCertificate.commonName == \"DST Root CA X3\")") == NO); // Exception catching test
 }
 
 @end

@@ -90,6 +90,10 @@
 
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
+@synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
+@synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
+@synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
@@ -165,6 +169,8 @@
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
+
+		_warnedCertificates = [NSMutableArray new];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
@@ -1010,6 +1016,65 @@
 	return (resultProgressObjects);
 }
 
+
+#pragma mark - Item lookup and information
+- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	__block OCItem *cachedItem = nil;
+
+	if (path != nil)
+	{
+		OCSyncExec(retrieveCachedItem, {
+			[self.vault.database retrieveCacheItemsAtPath:path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				cachedItem = items.firstObject;
+
+				if (outError != NULL)
+				{
+					*outError = error;
+				}
+
+				OCSyncExecDone(retrieveCachedItem);
+			}];
+		});
+	}
+	else
+	{
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorInsufficientParameters);
+		}
+	}
+
+	return (cachedItem);
+}
+
+- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	NSString *path = [parentPath stringByAppendingPathComponent:name];
+
+	if (isDirectory && ![path hasSuffix:@"/"])
+	{
+		path = [path stringByAppendingString:@"/"];
+	}
+
+	return ([self cachedItemAtPath:path error:outError]);
+}
+
+- (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	return ([self cachedItemInParentPath:parentItem.path withName:name isDirectory:isDirectory error:outError]);
+}
+
+- (NSURL *)localCopyOfItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self localURLForItem:item]);
+	}
+
+	return (nil);
+}
+
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item
 {
@@ -1024,16 +1089,6 @@
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
 {
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
-}
-
-- (NSURL *)localCopyOfItem:(OCItem *)item
-{
-	if (item.localRelativePath != nil)
-	{
-		return ([self localURLForItem:item]);
-	}
-
-	return (nil);
 }
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
@@ -1374,6 +1429,7 @@ OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
+OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

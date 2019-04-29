@@ -24,6 +24,8 @@
 
 @property(strong) OCItem *parentItem;
 
+@property(strong) OCItem *replaceItem;
+
 @property(strong) NSURL *importFileURL;
 @property(assign) BOOL importFileIsTemporaryAlongsideCopy;
 @property(strong) OCChecksum *importFileChecksum;

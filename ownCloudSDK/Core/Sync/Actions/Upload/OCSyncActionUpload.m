@@ -20,6 +20,7 @@
 #import "OCSyncAction+FileProvider.h"
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
+#import "NSDate+OCDateParser.h"
 
 @implementation OCSyncActionUpload
 
@@ -165,7 +166,7 @@
 			if ((progress = [self.core.connection uploadFileFromURL:uploadURL
 								       withName:remoteFileName
 									     to:parentItem
-								  replacingItem:self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem
+								  replacingItem:(self.replaceItem != nil) ? self.replaceItem : (self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem)
 									options:options
 								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 			{
@@ -205,7 +206,7 @@
 			uploadedItem.localID = uploadItem.localID;
 			uploadedItem.parentLocalID = uploadItem.parentLocalID;
 
-			// Propagte previousPlaceholderFileID
+			// Propagate previousPlaceholderFileID
 			if (![uploadedItem.fileID isEqual:uploadItem.fileID])
 			{
 				uploadedItem.previousPlaceholderFileID = uploadItem.fileID;
@@ -278,12 +279,206 @@
 		else
 		{
 			// Create issue for cancellation for all other errors
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+			OCSyncIssue *issue;
+			NSMutableArray <OCSyncIssueChoice *> *choices = [NSMutableArray new];
+
+			[choices addObject:[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]];
+
+			if ([event.error isOCErrorWithCode:OCErrorItemAlreadyExists])
+			{
+				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]];
+//				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactDataLoss identifier:@"replaceExisting" label:OCLocalized(@"Replace existing") metaData:nil]];
+			}
+			else
+			{
+				[choices addObject:[OCSyncIssueChoice retryChoice]];
+			}
+
+			issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord
+							  level:OCIssueLevelError
+							  title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
+						    description:event.error.localizedDescription
+						       metaData:nil
+							choices:choices];
+
+			[syncContext addSyncIssue:issue];
 			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 		}
 	}
 
 	return (resultInstruction);
+}
+
+#pragma mark - Issue resolution
+- (NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext
+{
+	NSError *resolutionError = nil;
+
+	if ((resolutionError = [super resolveIssue:issue withChoice:choice context:syncContext]) != nil)
+	{
+		if (![resolutionError isOCErrorWithCode:OCErrorFeatureNotImplemented])
+		{
+			return (resolutionError);
+		}
+
+		if ([choice.identifier isEqual:@"keepBoth"])
+		{
+			// Keep both
+			if (self.filename != nil)
+			{
+				NSString *filename = [self.filename stringByDeletingPathExtension];
+				NSString *extension = [self.filename pathExtension];
+				NSString *dateString = [[NSDate new] compactUTCString];
+				NSURL *previousLocalURL = [self.core localURLForItem:self.localItem];
+
+				if (filename.length > 0)
+				{
+					filename = [filename stringByAppendingFormat:@" (%@)", dateString];
+				}
+				else
+				{
+					filename = @"";
+					extension = [extension stringByAppendingFormat:@" (%@)", dateString];
+				}
+
+				// Create filename with timestamp
+				self.filename = [NSString stringWithFormat:@"%@.%@", filename, extension];
+
+				// Adapt paths
+ 				self.localItem.path = [self.localItem.path.parentPath stringByAppendingPathComponent:self.filename];
+ 				self.localItem.localRelativePath = [self.core.vault relativePathForItem:self.localItem];
+
+ 				// Move underlying file
+ 				NSURL *newLocalURL = [self.core localURLForItem:self.localItem];
+ 				NSError *error = nil;
+
+ 				if (![[NSFileManager defaultManager] moveItemAtURL:previousLocalURL toURL:newLocalURL error:&error])
+ 				{
+ 					OCLogError(@"Renaming local copy of file from %@ to %@ during `keepBoth` issue resolution returned an error=%@", previousLocalURL, newLocalURL, error);
+				}
+
+				syncContext.updatedItems = @[ self.localItem ];
+			}
+
+			// Reschedule
+			[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
+
+			resolutionError = nil;
+		}
+
+//		Needs more work and probably worth new APIs for general (re-)use
+//
+//		if ([choice.identifier isEqual:@"replaceExisting"])
+//		{
+//			// Replace existing
+//			NSError *error = nil;
+//			OCItem *latestVersionItem = nil;
+//			OCItem *replaceItem = nil;
+//
+//			if ((latestVersionItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:&error]) != nil)
+//			{
+//				if (latestVersionItem.isPlaceholder)
+//				{
+//					if (latestVersionItem.remoteItem != nil)
+//					{
+//						replaceItem = latestVersionItem.remoteItem;
+//					}
+//				}
+//				else
+//				{
+//					replaceItem = latestVersionItem;
+//				}
+//
+//				if (replaceItem != nil)
+//				{
+//					// Avoid conflicts with other ongoing sync activities
+//					if ((replaceItem.syncActivity == OCItemSyncActivityNone) && (replaceItem.activeSyncRecordIDs.count == 0))
+//					{
+//						OCItem *placeholderItemCopy;
+//
+//						// Replace existing item
+//						self.replaceItem = replaceItem;
+//
+//						// Remove item with new placeholder ID
+//						if ((placeholderItemCopy = [self.localItem copy]) != nil)
+//						{
+//							syncContext.removedItems = @[ placeholderItemCopy ];
+//						}
+//
+//						// Move upload item to existing localID
+//						[self.localItem prepareToReplace:self.replaceItem];
+//
+//						// Carry over fileID
+//						self.localItem.fileID = self.replaceItem.fileID;
+//
+//						// Carry over sync status
+//						self.localItem.syncActivity = placeholderItemCopy.syncActivity;
+//						self.localItem.activeSyncRecordIDs = placeholderItemCopy.activeSyncRecordIDs;
+//
+//						// Carry over locally modified status
+//						self.localItem.locallyModified = placeholderItemCopy.locallyModified;
+//
+//						// Move over file to upload
+//						NSURL *replacedItemFileURL;
+//
+//						if ((replacedItemFileURL = [self.core localURLForItem:self.localItem]) != nil)
+//						{
+//							NSError *error = nil;
+//
+//							// Make a copy of the file before upload (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
+//							if (![[NSFileManager defaultManager] removeItemAtURL:replacedItemFileURL error:&error])
+//							{
+//								if (error != nil)
+//								{
+//									OCLogError(@"Error %@ removing file %@", error, replacedItemFileURL);
+//								}
+//							}
+//
+// 							TODO: Clarify roles of _uploadCopyFileURL and _importFileURL. Adapt path and localRelativePath. Also remove placeholder item directory afterwards. Finish implementation.
+//							if ([[NSFileManager defaultManager] copyItemAtURL:_uploadCopyFileURL toURL:replacedItemFileURL error:&error])
+//							{
+//								// Cloning succeeded - upload from the clone
+//								_uploadCopyFileURL = replacedItemFileURL;
+//
+//								_importFileURL = _uploadCopyFileURL;
+//								_importFileIsTemporaryAlongsideCopy = NO;
+//							}
+//							else
+//							{
+//								// Cloning failed - continue to use the "original"
+//								OCLogError(@"error cloning file to import from %@ to %@: %@", _uploadCopyFileURL, replacedItemFileURL, error);
+//
+//								_uploadCopyFileURL = nil;
+//							}
+//						}
+//
+//						// Update with existing localID
+//						syncContext.updatedItems = @[ self.localItem ];
+//
+//						// Make sure this is stored
+//						syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
+//
+//						// Reschedule
+//						[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
+//					}
+//					else
+//					{
+//						replaceItem = nil;
+//					}
+//				}
+//			}
+//
+//			if (replaceItem == nil)
+//			{
+//				// No item to replace found / available => turn into ordinary retry
+//				[self.core rescheduleSyncRecord:syncContext.syncRecord withUpdates:nil];
+//			}
+//
+//			resolutionError = nil;
+//		}
+	}
+
+	return (resolutionError);
 }
 
 #pragma mark - Restore progress
@@ -302,6 +497,7 @@
 	_importFileIsTemporaryAlongsideCopy = [decoder decodeBoolForKey:@"importFileIsTemporaryAlongsideCopy"];
 
 	_parentItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"parentItem"];
+	_replaceItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"replaceItem"];
 
 	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
 }
@@ -315,6 +511,7 @@
 	[coder encodeBool:_importFileIsTemporaryAlongsideCopy forKey:@"importFileIsTemporaryAlongsideCopy"];
 
 	[coder encodeObject:_parentItem forKey:@"parentItem"];
+	[coder encodeObject:_replaceItem forKey:@"replaceItem"];
 
 	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
 }

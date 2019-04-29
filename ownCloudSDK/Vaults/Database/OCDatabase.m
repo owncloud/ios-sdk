@@ -366,7 +366,7 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:(includingRemoved ? @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=?" : @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE fileID=? AND removed=0") withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:(includingRemoved ? @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE fileID=?" : @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE fileID=? AND removed=0") withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil, nil);
@@ -1016,7 +1016,7 @@
 	}
 	else
 	{
-		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", @(__PRETTY_FUNCTION__));
+		OCLogError(@"Event %@ passed to %@ without databaseID. Attempt of multi-removal?", event, @(__PRETTY_FUNCTION__));
 		error = OCError(OCErrorInsufficientParameters);
 	}
 

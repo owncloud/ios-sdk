@@ -21,7 +21,7 @@
 @implementation OCSyncActionCreateFolder
 
 #pragma mark - Initializer
-- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName
+- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler
 {
 	if ((self = [super initWithItem:parentItem]) != nil)
 	{
@@ -43,6 +43,11 @@
 
 		self.actionEventType = OCEventTypeCreateFolder;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
+
+		if (placeholderCompletionHandler != nil)
+		{
+			self.ephermalParameters = [[NSDictionary alloc] initWithObjectsAndKeys: [placeholderCompletionHandler copy], OCCoreOptionPlaceholderCompletionHandler, nil];
+		}
 	}
 
 	return (self);
@@ -53,9 +58,17 @@
 {
 	if (self.placeholderItem != nil)
 	{
+		OCCorePlaceholderCompletionHandler placeholderCompletionHandler = nil;
+
 		[_placeholderItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
 
 		syncContext.addedItems = @[ _placeholderItem ];
+
+		if ((placeholderCompletionHandler = self.ephermalParameters[OCCoreOptionPlaceholderCompletionHandler]) != nil)
+		{
+			placeholderCompletionHandler(nil, _placeholderItem);
+			self.ephermalParameters = nil;
+		}
 
 		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated placeHolderItem (now with databaseID) will be stored in the database and can later be used to remove the placeHolderItem again.
 	}

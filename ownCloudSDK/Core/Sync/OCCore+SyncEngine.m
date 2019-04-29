@@ -346,10 +346,6 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
 
-	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
-		error = removeError;
-	}];
-
 	if ((syncAction = syncRecord.action) != nil)
 	{
 		syncAction.core = self;
@@ -367,6 +363,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
+				// Sync record is about to be removed, so no need to try updating it
+				syncContext.updateStoredSyncRecordAfterItemUpdates = NO;
+
 				// Perform any descheduler-triggered updates
 				[self performSyncContextActions:syncContext];
 
@@ -374,6 +373,18 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 	}
+
+	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
+		if (removeError != nil)
+		{
+			OCLogError(@"Error removing sync record %@ from database: %@", syncRecord, removeError);
+
+			if (error == nil)
+			{
+				error = removeError;
+			}
+		}
+	}];
 
 	[syncRecord completeWithError:completionError core:self item:syncRecord.action.localItem parameter:parameter];
 
@@ -433,7 +444,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		}
 		else
 		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
+			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];
@@ -479,7 +490,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				// Process sync record
 				nextInstruction = [self processSyncRecord:syncRecord error:&error];
 
-				OCLogDebug(@"Processing of sync record finished with nextInstruction=%d", nextInstruction);
+				OCLogDebug(@"Processing of sync record finished with nextInstruction=%lu", nextInstruction);
 
 				[self dumpSyncJournalWithTags:@[@"PostProc"]];
 
@@ -645,7 +656,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 						break;
 					}
 
-					OCLogDebug(@"evaluated wait condition %@ with state=%d, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
+					OCLogDebug(@"evaluated wait condition %@ with state=%lu, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
 				}];
 
 				if (updateSyncRecordInDB)
@@ -728,7 +739,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				{
 					if (eventInstruction != OCCoreSyncInstructionNone)
 					{
-						OCLogDebug(@"event instruction %d overwritten with %d by later event=%@", eventInstruction, instruction, event);
+						OCLogDebug(@"event instruction %lu overwritten with %lu by later event=%@", eventInstruction, instruction, event);
 					}
 
 					eventInstruction = instruction;
@@ -822,7 +833,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 					[self setNeedsToProcessSyncRecords];
 				}
 
-				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%d, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
+				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%lu, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
 			}
 			else
 			{
@@ -855,7 +866,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		case OCSyncRecordStateCompleted:
 			// Sync record has completed => continue with next syncRecord
-			OCLogWarning(@"record %@ has completed and will be removed: %@", syncRecord);
+			OCLogWarning(@"record %@ has completed and will be removed", syncRecord);
 
 			doNext = OCCoreSyncInstructionDeleteLast;
 		break;

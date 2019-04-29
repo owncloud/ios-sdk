@@ -689,6 +689,7 @@
 	__block XCTestExpectation *expectDeleteShare = [self expectationWithDescription:@"Delete share"];
 	__block XCTestExpectation *expectNewShareInQueryResults = [self expectationWithDescription:@"New share in query results"];
 	__block XCTestExpectation *expectNewShareMissingInQueryResults = [self expectationWithDescription:@"New share missing in query results"];
+	__block XCTestExpectation *expectInitialPopulationHandlerCall = [self expectationWithDescription:@"Initial population handler called"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
 	OCQuery *query = [OCQuery queryForPath:@"/"];
@@ -755,18 +756,23 @@
 							}];
 						}
 					};
+					shareQuery.initialPopulationHandler = ^(OCShareQuery * _Nonnull query) {
+						[expectInitialPopulationHandlerCall fulfill];
+
+						XCTAssert(query.queryResults.count == 0);
+
+						[core.connection createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+							createdShare = (OCShare *)event.result;
+
+							OCLogDebug(@"Created share: %@, error: %@", createdShare, error);
+
+							XCTAssert(event.error == nil);
+							XCTAssert(createdShare != nil);
+
+							[expectCreateShare fulfill];
+						} userInfo:nil ephermalUserInfo:nil]];
+					};
 					[core startQuery:shareQuery];
-
-					[core.connection createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-						createdShare = (OCShare *)event.result;
-
-						OCLogDebug(@"Created share: %@, error: %@", createdShare, error);
-
-						XCTAssert(event.error == nil);
-						XCTAssert(createdShare != nil);
-
-						[expectCreateShare fulfill];
-					} userInfo:nil ephermalUserInfo:nil]];
 				}
 			}
 		};

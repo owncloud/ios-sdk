@@ -18,14 +18,18 @@
 
 #import "OCSyncAction.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSyncActionCreateFolder : OCSyncAction
 
 // .localItem == folder to create folder in
 
 @property(strong) NSString *folderName;
 
-@property(strong) OCItem *placeholderItem;
+@property(nullable,strong) OCItem *placeholderItem;
 
-- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName;
+- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END

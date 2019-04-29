@@ -184,6 +184,11 @@
 	((OCCertificateTableCell *)cell).titleLabel.textColor = _lineTitleColor;
 	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : _lineValueColor;
 
+	if (node.certificate != nil)
+	{
+		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+	}
+
 	return cell;
 }
 
@@ -220,12 +225,38 @@
 
 - (BOOL)tableView:(UITableView *)tableView shouldHighlightRowAtIndexPath:(nonnull NSIndexPath *)indexPath
 {
+	OCCertificateDetailsViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
+
+	if (node.certificate != nil)
+	{
+		return (YES);
+	}
+
 	return (NO);
 }
 
 - (NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	OCCertificateDetailsViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
+
+	if (node.certificate != nil)
+	{
+		return (indexPath);
+	}
+
 	return (nil);
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	OCCertificateDetailsViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
+
+	if (node.certificate != nil)
+	{
+		OCCertificateViewController *viewController = [[[self class] alloc] initWithCertificate:node.certificate];
+
+		[self.navigationController pushViewController:viewController animated:YES];
+	}
 }
 
 #pragma mark - Color support

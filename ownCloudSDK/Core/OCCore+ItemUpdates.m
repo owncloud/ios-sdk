@@ -260,8 +260,9 @@
 					// Queries targeting directories
 					if (query.queryPath != nil)
 					{
-						// Only update queries that have already gone through their complete, initial content update
-						if (query.state == OCQueryStateIdle)
+						// Only update queries that ..
+						if ((query.state == OCQueryStateIdle) || // .. have already gone through their complete, initial content update.
+						    ((query.state == OCQueryStateContentsFromCache) && (self.connectionStatus != OCCoreConnectionStatusOnline))) // .. have not yet been able to go through their complete, initial content update because the connection isn't online.
 						{
 							__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
 							__block OCCoreItemList *updatedFullQueryResultsItemList = nil;
@@ -376,16 +377,25 @@
 												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:reMoveItem]) != NSNotFound)
 												{
 													[updatedFullQueryResults removeObjectAtIndex:replaceAtIndex];
-													[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
+													if (!item.removed)
+													{
+														[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
+													}
 												}
 												else
 												{
-													[updatedFullQueryResults addObject:item];
+													if (!item.removed)
+													{
+														[updatedFullQueryResults addObject:item];
+													}
 												}
 											}
 											else
 											{
-												[updatedFullQueryResults addObject:item];
+												if (!item.removed)
+												{
+													[updatedFullQueryResults addObject:item];
+												}
 											}
 										}
 									}

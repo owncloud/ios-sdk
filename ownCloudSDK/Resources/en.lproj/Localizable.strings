@@ -75,6 +75,7 @@
 
 /* Upload */
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
+"Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
 
 /* Download */
 "Downloading %@…" = "Downloading %@…";
@@ -248,3 +249,6 @@
 
 // OCErrorSharePublicUploadDisabled
 "Public upload was disabled by the administrator." = "Public upload was disabled by the administrator.";
+
+// OCErrorInsufficientStorage
+"Insufficient storage." = "Insufficient storage.";

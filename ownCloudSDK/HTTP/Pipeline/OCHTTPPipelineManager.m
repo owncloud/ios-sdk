@@ -220,6 +220,7 @@
 	sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
 	sessionConfiguration.URLCache = nil; // Do not cache responses
 	sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
+	sessionConfiguration.networkServiceType = NSURLNetworkServiceTypeResponsiveData;
 
 	return (sessionConfiguration);
 }
