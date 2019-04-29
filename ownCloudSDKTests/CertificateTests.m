@@ -125,7 +125,7 @@
 	};
 
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.validationResult == \"passed\"") == YES);
-	XCTAssert(RunCheck(demoCertOld, nil, @"certificate.validationResult == \"passed\"") == YES);
+	XCTAssert(RunCheck(demoCertOld, nil, @"certificate.validationResult == \"passed\"") == NO);
 
 	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"certificate.publicKeyData == newCertificate.publicKeyData") == NO);
 	XCTAssert(RunCheck(demoCertNew, demoCertNew, @"certificate.publicKeyData == newCertificate.publicKeyData") == YES);

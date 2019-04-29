@@ -20,8 +20,6 @@
 
 @interface OCSyncActionUpload : OCSyncAction
 
-// .localItem == folder to import item into
-
 @property(strong) OCItem *parentItem;
 
 @property(strong) OCItem *replaceItem;

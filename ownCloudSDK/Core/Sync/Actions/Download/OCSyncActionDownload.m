@@ -441,6 +441,14 @@
 	return (self.archivedServerItem);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {

@@ -176,6 +176,15 @@
 	return (resultInstruction);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem),
+		OCSyncActionWrapNullableItem(self.archivedItemVersion)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {

@@ -90,6 +90,8 @@
 
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
+@synthesize maximumSyncLanes = _maximumSyncLanes;
+
 @synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
 @synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
 @synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
@@ -126,6 +128,8 @@
 		_bookmark = bookmark;
 
 		_automaticItemListUpdatesEnabled = YES;
+
+		_maximumSyncLanes = 0;
 
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 

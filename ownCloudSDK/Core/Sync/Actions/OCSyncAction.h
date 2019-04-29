@@ -27,6 +27,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#define OCSyncActionWrapNullableItem(item) ((item != nil) ? item : ((OCItem*)NSNull.null))
+
 @class OCSyncContext;
 
 typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
@@ -47,20 +49,23 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 
 #pragma mark - Core properties
 @property(weak,nullable) OCCore *core; //!< The core using this sync action.
-@property(strong) OCSyncActionIdentifier identifier;
+@property(strong) OCSyncActionIdentifier identifier; //!< Identifier of the action (persisted)
 
 #pragma mark - Persisted properties
-@property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on
-@property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed.
+@property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on (persisted)
+@property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed. (persisted)
 
 @property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action (persisted)
 
 #pragma mark - Ephermal properties
 @property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
 
+#pragma mark - Sync lane properties
+@property(strong,nonatomic,nullable) NSSet<OCSyncLaneTag> *laneTags; //!< Set of lane tags defining the scope of the action (persisted)
+
 #pragma mark - User-facing
-@property(strong,nullable,nonatomic) NSString *localizedDescription; //!< Localized description of the sync action
-@property(assign,nonatomic) OCEventType actionEventType; //!< Event type best describing this sync action
+@property(strong,nullable,nonatomic) NSString *localizedDescription; //!< Localized description of the sync action (persisted)
+@property(assign,nonatomic) OCEventType actionEventType; //!< Event type best describing this sync action (persisted)
 
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item;
@@ -97,6 +102,10 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 #pragma mark - Restore progress
 - (nullable OCItem *)itemToRestoreProgressRegistrationFor;
 - (void)restoreProgressRegistrationForSyncRecord:(OCSyncRecord *)syncRecord; //!< Restores progress registrations
+
+#pragma mark - Lane tags
+- (NSMutableSet <OCSyncLaneTag> *)generateLaneTagsFromItems:(NSArray<OCItem *> *)items; //!< Helper method to create lane tags from an array of items. Allow passing NSNull objects to simplify syntax using OCSyncActionWrapNullableItem.
+- (NSSet <OCSyncLaneTag> *)generateLaneTags; //!< Called by the -laneTags if no _laneTags is nil.
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

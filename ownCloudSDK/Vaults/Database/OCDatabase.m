@@ -28,6 +28,7 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCSyncAction.h"
+#import "OCSyncLane.h"
 #import "OCProcessManager.h"
 #import "OCQueryCondition+SQLBuilder.h"
 
@@ -174,7 +175,7 @@
 			@"syncAnchor"		: syncAnchor,
 			@"removed"		: @(0),
 			@"locallyModified" 	: @(item.locallyModified),
-			@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
+			@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 			@"path" 		: item.path,
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
@@ -184,8 +185,8 @@
 			@"cloudStatus" 		: @(item.cloudStatus),
 			@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
 			@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
-			@"fileID"		: item.fileID,
-			@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
+			@"fileID"		: OCSQLiteNullProtect(item.fileID),
+			@"localID"		: OCSQLiteNullProtect(item.localID),
 			@"itemData"		: [item serializedData]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
@@ -225,7 +226,7 @@
 				@"syncAnchor"		: syncAnchor,
 				@"removed"		: @(item.removed),
 				@"locallyModified" 	: @(item.locallyModified),
-				@"localRelativePath"	: ((item.localRelativePath!=nil) ? item.localRelativePath : [NSNull null]),
+				@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
@@ -235,8 +236,8 @@
 				@"cloudStatus" 		: @(item.cloudStatus),
 				@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
 				@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
-				@"fileID"		: item.fileID,
-				@"localID"		: ((item.localID!=nil) ? item.localID : [NSNull null]),
+				@"fileID"		: OCSQLiteNullProtect(item.fileID),
+				@"localID"		: OCSQLiteNullProtect(item.localID),
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
 		}
@@ -644,7 +645,216 @@
 	}]];
 }
 
-#pragma mark - Sync interface
+#pragma mark - Sync Lane interface
+- (void)addSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *laneData = [NSKeyedArchiver archivedDataWithRootObject:lane];
+
+	if (laneData != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncLanes rowValues:@{
+			@"laneData" 		: laneData
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			lane.identifier = rowID;
+
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not serialize lane=%@ to laneData=%@", lane, laneData);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)updateSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *laneData = [NSKeyedArchiver archivedDataWithRootObject:lane];
+
+	if ((lane.identifier != nil) && (laneData != nil))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:lane.identifier inTable:OCDatabaseTableNameSyncLanes withRowValues:@{
+			@"laneData"	: laneData
+		} completionHandler:^(OCSQLiteDB *db, NSError *error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not update lane: serialize lane=%@ to laneData=%@ failed - or lane.identifier=%@ is nil", lane, laneData, lane.identifier);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)removeSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (lane.identifier != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:lane.identifier fromTable:OCDatabaseTableNameSyncLanes completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not remove lane: lane.identifier is nil");
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)retrieveSyncLaneForID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncLaneCompletionHandler)completionHandler
+{
+	if (laneID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"laneData" ] fromTable:OCDatabaseTableNameSyncLanes where:@{
+			@"laneID" : laneID,
+		} orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+			__block OCSyncLane *syncLane = nil;
+			NSError *iterationError = error;
+
+			if (error == nil)
+			{
+				[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+					if (rowDictionary[@"laneData"] != nil)
+					{
+						syncLane = [NSKeyedUnarchiver unarchiveObjectWithData:((NSData *)rowDictionary[@"laneData"])];
+						syncLane.identifier = laneID;
+						*stop = YES;
+					}
+				} error:&iterationError];
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, iterationError, syncLane);
+			}
+		}]];
+	}
+}
+
+- (void)retrieveSyncLanesWithCompletionHandler:(OCDatabaseRetrieveSyncLanesCompletionHandler)completionHandler;
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"laneID", @"laneData" ] fromTable:OCDatabaseTableNameSyncLanes where:@{} orderBy:@"laneID" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block NSMutableArray <OCSyncLane *> *syncLanes = nil;
+		NSError *iterationError = error;
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				if (rowDictionary[@"laneData"] != nil)
+				{
+					if (syncLanes == nil) { syncLanes = [NSMutableArray new]; }
+
+					OCSyncLane *syncLane;
+
+					if ((syncLane = [NSKeyedUnarchiver unarchiveObjectWithData:((NSData *)rowDictionary[@"laneData"])]) != nil)
+					{
+						syncLane.identifier = (NSNumber *)rowDictionary[@"laneID"];
+
+						[syncLanes addObject:syncLane];
+					}
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncLanes);
+		}
+	}]];
+}
+
+- (OCSyncLane *)laneForTags:(NSSet <OCSyncLaneTag> *)tags updatedLanes:(BOOL *)outUpdatedLanes readOnly:(BOOL)readOnly
+{
+	__block OCSyncLane *returnLane = nil;
+	__block BOOL updatedLanes = NO;
+
+	if (tags.count == 0)
+	{
+		return (nil);
+	}
+
+	OCSyncExec(waitForDatabase, {
+		[self _laneForTags:tags updatedLanes:&updatedLanes readOnly:readOnly completionHandler:^(OCSyncLane *lane, BOOL updatedTheLanes) {
+			returnLane = lane;
+			updatedLanes = updatedTheLanes;
+
+			OCSyncExecDone(waitForDatabase);
+		}];
+	});
+
+	if (outUpdatedLanes != NULL)
+	{
+		*outUpdatedLanes = updatedLanes;
+	}
+
+	return (returnLane);
+}
+
+- (void)_laneForTags:(NSSet <OCSyncLaneTag> *)tags updatedLanes:(BOOL *)outUpdatedLanes readOnly:(BOOL)readOnly completionHandler:(void(^)(OCSyncLane *lane, BOOL updatedLanes))completionHandler
+{
+	if (tags.count == 0)
+	{
+		completionHandler(nil, NO);
+	}
+
+	[self retrieveSyncLanesWithCompletionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncLane *> *syncLanes) {
+		NSMutableSet <OCSyncLaneID> *afterLaneIDs = nil;
+		__block OCSyncLane *returnLane = nil;
+		__block BOOL updatedLanes = NO;
+
+		for (OCSyncLane *lane in syncLanes)
+		{
+			NSUInteger prefixMatches=0, identicalTags=0;
+
+			if ([lane coversTags:tags prefixMatches:&prefixMatches identicalTags:&identicalTags])
+			{
+				if (identicalTags == tags.count)
+				{
+					// Tags are identical => use existing lane
+					returnLane = lane;
+				}
+				else
+				{
+					// Tags overlap with lane => create new, dependant lane => add afterLaneIDs
+					if (!readOnly)
+					{
+						if (afterLaneIDs == nil) { afterLaneIDs = [NSMutableSet new]; }
+
+						[afterLaneIDs addObject:lane.identifier];
+					}
+				}
+			}
+		}
+
+		// Create new lane if no matching one was found
+		if ((returnLane == nil) && (!readOnly))
+		{
+			OCSyncLane *lane;
+
+			if ((lane = [OCSyncLane new]) != nil)
+			{
+				[lane extendWithTags:tags];
+				lane.afterLanes = afterLaneIDs;
+
+				[db addSyncLane:lane completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil)
+					{
+						OCLogError(@"Error adding lane=%@: %@", lane, error);
+					}
+					else
+					{
+						returnLane = lane;
+						updatedLanes = YES;
+					}
+				}];
+			}
+		}
+
+		completionHandler(returnLane, updatedLanes);
+	}];
+}
+
+#pragma mark - Sync Journal interface
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:syncRecords.count];
@@ -658,8 +868,9 @@
 		if (path != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
+				@"laneID"		: OCSQLiteNullProtect(syncRecord.laneID),
 				@"timestampDate" 	: syncRecord.timestamp,
-				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
+				@"inProgressSinceDate"	: OCSQLiteNullProtect(syncRecord.inProgressSince),
 				@"action"		: syncRecord.actionIdentifier,
 				@"path"			: path,
 				@"localID"		: syncRecord.localID,
@@ -708,7 +919,8 @@
 		if (syncRecord.recordID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
-				@"inProgressSinceDate"	: ((syncRecord.inProgressSince != nil) ? syncRecord.inProgressSince : [NSNull null]),
+				@"laneID"		: OCSQLiteNullProtect(syncRecord.laneID),
+				@"inProgressSinceDate"	: OCSQLiteNullProtect(syncRecord.inProgressSince),
 				@"recordData"		: [syncRecord serializedData],
 				@"localID"		: syncRecord.localID
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
@@ -878,10 +1090,11 @@
 	}]];
 }
 
-- (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler
+- (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID", @"recordData" ] fromTable:OCDatabaseTableNameSyncJournal where:@{
-		@"recordID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:recordID apply:(recordID!=nil)]
+		@"recordID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:recordID apply:(recordID!=nil)],
+		@"laneID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:laneID apply:(laneID!=nil)]
 	} orderBy:@"recordID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		__block OCSyncRecord *syncRecord = nil;
 		NSError *iterationError = error;

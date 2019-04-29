@@ -167,6 +167,8 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 	BOOL _automaticItemListUpdatesEnabled;
 	NSDate *_lastScheduledItemListUpdateDate;
 
+	NSUInteger _maximumSyncLanes;
+
 	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
 	NSMutableArray <OCCertificate *> *_warnedCertificates;
@@ -205,6 +207,8 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 @property(strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm; //!< Identifier of the preferred checksum algorithm
 
 @property(assign) BOOL automaticItemListUpdatesEnabled; //!< Whether OCCore should scan for item list updates automatically.
+
+@property(assign,nonatomic) NSUInteger maximumSyncLanes; //!< The maximum number of sync lanes, which limit how many sync actions can be executed at the same time. A value of 0 equals no limits (default: 0).
 
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesRemaining; //!< The remaining number of bytes available to the user.
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesUsed; //!< The number of bytes used by the user's content.

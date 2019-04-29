@@ -216,6 +216,45 @@
 	}
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)laneTags
+{
+	if (_laneTags == nil)
+	{
+		_laneTags = [self generateLaneTags];
+	}
+
+	return (_laneTags);
+}
+
+- (NSSet <OCSyncLaneTag> *)generateLaneTags
+{
+	return ([NSSet new]);
+}
+
+- (NSMutableSet <OCSyncLaneTag> *)generateLaneTagsFromItems:(NSArray<OCItem *> *)items
+{
+	NSMutableSet<OCSyncLaneTag> *laneTags = [NSMutableSet new];
+
+	for (OCItem *item in items)
+	{
+		if ([item isKindOfClass:[OCItem class]])
+		{
+			if (item.localID != nil)
+			{
+				[laneTags addObject:item.localID];
+			}
+
+			if (item.path != nil)
+			{
+				[laneTags addObject:item.path];
+			}
+		}
+	}
+
+	return (laneTags);
+}
+
 #pragma mark - NSSecureCoding
 + (BOOL)supportsSecureCoding
 {
@@ -231,7 +270,10 @@
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
 	[coder encodeObject:_parameters forKey:@"parameters"];
 
+	[coder encodeObject:_laneTags forKey:@"laneTags"];
+
 	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
+	[coder encodeInteger:_actionEventType forKey:@"actionEventType"];
 
 	[self encodeActionData:coder];
 }
@@ -247,7 +289,10 @@
 
 		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
 
+		_laneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"laneTags"];
+
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
+		_actionEventType = [decoder decodeIntegerForKey:@"actionEventType"];
 
 		[self decodeActionData:decoder];
 	}
