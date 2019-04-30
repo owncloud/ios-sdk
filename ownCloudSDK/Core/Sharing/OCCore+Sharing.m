@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCCore+Internal.h"
+#import "OCCore+ItemList.h"
 #import "OCShareQuery+Internal.h"
 #import "OCRecipientSearchController.h"
 
@@ -159,6 +160,14 @@
 			{
 				[query _updateWithAddedShare:addedShare updatedShare:updatedShare removedShare:removedShare];
 			}
+		}
+
+		// Update OCItem representing item
+		OCShare *share = ((addedShare != nil) ? addedShare : ((updatedShare != nil) ? updatedShare : removedShare));
+
+		if (share != nil)
+		{
+			[self scheduleItemListTaskForPath:share.itemPath forQuery:YES];
 		}
 	}];
 }
