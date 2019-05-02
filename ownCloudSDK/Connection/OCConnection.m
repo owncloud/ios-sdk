@@ -62,6 +62,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 @synthesize capabilities = _capabilities;
 
 @synthesize actionSignals = _actionSignals;
+@synthesize propFindSignals = _propFindSignals;
 
 @synthesize state = _state;
 
@@ -181,6 +182,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		_propFindSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		_usersByUserID = [NSMutableDictionary new];
 
@@ -1015,6 +1017,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		nil];
 
 		[davRequest.xmlRequestPropAttribute addChildren:ocPropAtributes];
+
+		davRequest.requiredSignals = self.propFindSignals;
 	}
 
 	return (davRequest);
@@ -1059,7 +1063,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		davRequest.downloadRequest = YES;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
 		davRequest.forceCertificateDecisionDelegation = YES;
-		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{

@@ -348,6 +348,8 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
+extern OCClassSettingsKey OCCoreOverrideReachabilitySignal;
+extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;

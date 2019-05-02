@@ -108,6 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
+	NSSet<OCConnectionSignalID> *_propFindSignals;
 
 	BOOL _attachedToPipelines;
 
@@ -135,6 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,readonly,nonatomic) NSSet<OCHTTPPipeline *> *allHTTPPipelines; //!< A set of all HTTP pipelines used by the connection
 
 @property(nullable,strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
+@property(nullable,strong) NSSet<OCConnectionSignalID> *propFindSignals; //!< The set of signals to use for PROPFIND requests
 
 @property(assign,nonatomic) OCConnectionState state;
 

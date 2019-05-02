@@ -66,7 +66,7 @@
 		_taskIDsInDelivery = [NSMutableSet new];
 		_partitionEmptyHandlers = [NSMutableDictionary new];
 
-		_insertXRequestID = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineInsertXRequestTracingID] boolValue];
+		_insertXRequestID = YES;
 
 		_attachedURLSessionsByIdentifier = [NSMutableDictionary new];
 		_sessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
@@ -2101,7 +2101,6 @@
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		  OCHTTPPipelineInsertXRequestTracingID : @(YES),
 	});
 }
 
@@ -2173,5 +2172,3 @@
 }
 
 @end
-
-OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID = @"insert-x-request-id";

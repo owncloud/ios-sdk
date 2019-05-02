@@ -179,6 +179,7 @@
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
+//		_connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
 		_connection.delegate = self;
 
 		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
@@ -198,13 +199,31 @@
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
-		if (@available(iOS 12, *))
+		NSNumber *override = nil;
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideAvailabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			// OCCore depends on OCCoreServerStatusSignalProvider interfaces, so we force-override this signal if told to
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateForceTrue : OCCoreConnectionStatusSignalStateForceFalse);
+
+			[self addSignalProvider:[[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalAvailable initialState:signalState stateProvider:nil]];
 		}
-		else
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideReachabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
+
+			_reachabilityStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:signalState stateProvider:nil];
+		}
+
+		if (_reachabilityStatusSignalProvider == nil)
+		{
+			if (@available(iOS 12, *))
+			{
+				_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			}
+			else
+			{
+				_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			}
 		}
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
@@ -1424,6 +1443,8 @@
 
 OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header";
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
+OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
+OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
