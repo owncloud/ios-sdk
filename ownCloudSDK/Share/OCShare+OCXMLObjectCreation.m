@@ -233,6 +233,11 @@
 							share.recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
 						break;
 
+						case OCShareTypeLink:
+							// for links, share_with or share_with_displayname only have values if protected by a password
+							share.protectedByPassword = YES;
+						break;
+
 						default:
 						break;
 					}

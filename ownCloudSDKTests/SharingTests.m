@@ -170,6 +170,7 @@
 				XCTAssert(newShare.url != nil);
 				XCTAssert(newShare.token != nil);
 				XCTAssert(newShare.creationDate != nil);
+				XCTAssert(newShare.protectedByPassword);
 				XCTAssert(createShare.expirationDate.timeIntervalSinceNow >= (24*60*60));
 
 				[expectShareCreated fulfill];
@@ -177,10 +178,14 @@
 				[connection updateShare:newShare afterPerformingChanges:^(OCShare * _Nonnull share) {
 					share.name = @"iOS SDK CI Share (updated)";
 					share.permissions = OCSharePermissionsMaskRead|OCSharePermissionsMaskCreate|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskDelete;
-					share.password = @"testpassword";
+					share.protectedByPassword = NO;
 					share.expirationDate = [NSDate dateWithTimeIntervalSinceNow:(24*60*60 * 14)];
 				} resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					OCShare *updatedShare = (OCShare *)event.result;
+
 					OCLog(@"Updated share with error=%@, share=%@", event.error, event.result);
+
+					XCTAssert(!updatedShare.protectedByPassword);
 
 					[connection updateShare:newShare afterPerformingChanges:^(OCShare * _Nonnull share) {
 						// Change nothing => should return immediately
@@ -202,6 +207,7 @@
 							XCTAssert([share.url 		isEqual:newShare.url]);
 							XCTAssert([share.token 		isEqual:newShare.token]);
 							XCTAssert([share.creationDate 	isEqual:newShare.creationDate]);
+							XCTAssert(!share.protectedByPassword);
 							XCTAssert(share.expirationDate.timeIntervalSinceNow >= (24*60*60*12));
 							XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
 

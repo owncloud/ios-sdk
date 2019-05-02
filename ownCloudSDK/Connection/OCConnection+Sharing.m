@@ -434,6 +434,7 @@
 	// Save previous values of editable properties
 	NSString *previousName = share.name;
 	NSString *previousPassword = share.password;
+	BOOL previousProtectedByPassword = share.protectedByPassword;
 	NSDate *previousExpirationDate = share.expirationDate;
 	OCSharePermissionsMask previousPermissions = share.permissions;
 	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
@@ -457,8 +458,14 @@
 		}
 	}
 
-	if (OCNANotEqual(share.password, previousPassword))
+	if ((OCNANotEqual(share.password, previousPassword)) || (share.protectedByPassword != previousProtectedByPassword))
 	{
+		if ((share.protectedByPassword != previousProtectedByPassword) && (previousProtectedByPassword))
+		{
+			// Remove password
+			share.password = @"";
+		}
+
 		if (share.type == OCShareTypeLink)
 		{
 			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";

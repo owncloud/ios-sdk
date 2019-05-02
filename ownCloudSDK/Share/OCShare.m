@@ -27,6 +27,8 @@
 @dynamic canDelete;
 @dynamic canShare;
 
+@synthesize protectedByPassword = _protectedByPassword;
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -104,6 +106,26 @@ BIT_ACCESSOR(canCreate,	setCanCreate,	OCSharePermissionsMaskCreate);
 BIT_ACCESSOR(canDelete,	setCanDelete,	OCSharePermissionsMaskDelete);
 BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
+- (BOOL)protectedByPassword
+{
+	if ((_password != nil) && ![_password isEqual:@""])
+	{
+		_protectedByPassword = YES;
+	}
+
+	return (_protectedByPassword);
+}
+
+- (void)setProtectedByPassword:(BOOL)protectedByPassword
+{
+	if (!protectedByPassword)
+	{
+		self.password = nil;
+	}
+
+	_protectedByPassword = protectedByPassword;
+}
+
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
@@ -132,6 +154,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 			compareVar(_url) &&
 
 			(otherShare->_permissions == _permissions) &&
+
+			(otherShare.protectedByPassword == self.protectedByPassword) &&
 
 			compareVar(_creationDate) &&
 			compareVar(_expirationDate) &&
@@ -172,6 +196,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
+		_protectedByPassword = [decoder decodeBoolForKey:@"protectedByPassword"];
+
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
 
@@ -201,6 +227,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeObject:_url forKey:@"url"];
 
 	[coder encodeInteger:_permissions forKey:@"permissions"];
+
+	[coder encodeBool:self.protectedByPassword forKey:@"protectedByPassword"];
 
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
 	[coder encodeObject:_expirationDate forKey:@"expirationDate"];
@@ -259,7 +287,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		permissionsString = @"none";
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : @""), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @"")]);
 }
 
 #pragma mark - Copying
@@ -285,6 +313,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	copiedShare->_expirationDate = _expirationDate;
 
 	copiedShare->_password = _password;
+	copiedShare->_protectedByPassword = _protectedByPassword;
 
 	copiedShare->_owner = _owner;
 	copiedShare->_recipient = _recipient;

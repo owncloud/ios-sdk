@@ -99,6 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSDate *creationDate; //!< Creation date of the share
 @property(nullable,strong) NSDate *expirationDate; //!< Expiration date of the share
 
+@property(assign,nonatomic) BOOL protectedByPassword; //!< YES if the share is password protected (not always available)
 @property(nullable,strong) NSString *password; //!< Password of the share (not always available)
 
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
