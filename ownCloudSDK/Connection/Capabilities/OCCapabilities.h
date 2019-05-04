@@ -78,6 +78,8 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWrite;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForUploadOnly;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnabled;
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnforced;
+@property(readonly,nullable,nonatomic) NSNumber *publicSharingDefaultExpireDateDays;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingSendMail;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingSocialShare;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingUpload;
