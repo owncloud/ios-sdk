@@ -39,6 +39,8 @@
 
 		self.actionEventType = OCEventTypeUpload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
+
+		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
 	}
 
 	return (self);
@@ -526,3 +528,5 @@
 }
 
 @end
+
+OCSyncActionCategory OCSyncActionCategoryUpload = @"upload";

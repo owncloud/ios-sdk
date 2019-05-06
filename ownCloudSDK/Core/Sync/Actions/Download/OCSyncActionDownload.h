@@ -25,3 +25,5 @@
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options;
 
 @end
+
+extern OCSyncActionCategory OCSyncActionCategoryDownload; //!< Action category for downloads

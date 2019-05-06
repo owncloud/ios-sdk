@@ -34,6 +34,8 @@
 
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
+
+		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryDownload ];
 	}
 
 	return (self);
@@ -461,3 +463,5 @@
 }
 
 @end
+
+OCSyncActionCategory OCSyncActionCategoryDownload = @"download";

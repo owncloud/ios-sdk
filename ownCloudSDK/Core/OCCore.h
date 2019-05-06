@@ -350,6 +350,7 @@ extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 extern OCClassSettingsKey OCCoreOverrideReachabilitySignal;
 extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
+extern OCClassSettingsKey OCCoreActionConcurrencyBudgets;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;

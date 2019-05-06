@@ -32,6 +32,7 @@
 
 		_localizedDescription = NSStringFromClass([self class]);
 		_actionEventType = OCEventTypeNone;
+		_categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryActions ];
 	}
 
 	return (self);
@@ -274,6 +275,7 @@
 
 	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
 	[coder encodeInteger:_actionEventType forKey:@"actionEventType"];
+	[coder encodeObject:_categories forKey:@"categories"];
 
 	[self encodeActionData:coder];
 }
@@ -293,6 +295,7 @@
 
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
 		_actionEventType = [decoder decodeIntegerForKey:@"actionEventType"];
+		_categories = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"categories"];
 
 		[self decodeActionData:decoder];
 	}
@@ -331,3 +334,7 @@
 }
 
 @end
+
+OCSyncActionCategory OCSyncActionCategoryAll = @"all";
+OCSyncActionCategory OCSyncActionCategoryActions = @"actions";
+OCSyncActionCategory OCSyncActionCategoryTransfer = @"transfer";

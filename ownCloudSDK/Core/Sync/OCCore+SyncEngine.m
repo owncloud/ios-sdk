@@ -509,6 +509,28 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		__block NSArray <OCSyncLane *> *lanes = nil;
 		NSMutableSet<OCSyncLaneID> *activeLaneIDs = [NSMutableSet new];
 		NSUInteger activeLanes = 0;
+		NSDictionary<OCSyncActionCategory, NSNumber *> *actionBudgetsByCategory = [self classSettingForOCClassSettingsKey:OCCoreActionConcurrencyBudgets];
+		NSMutableDictionary<OCSyncActionCategory, NSNumber *> *runningActionsByCategory = [NSMutableDictionary new];
+		void (^UpdateRunningActionCategories)(NSArray <OCSyncActionCategory> *categories, NSInteger change) = ^(NSArray <OCSyncActionCategory> *categories, NSInteger change) {
+			for (OCSyncActionCategory category in categories)
+			{
+				runningActionsByCategory[category] = @(runningActionsByCategory[category].integerValue + change);
+			}
+		};
+		BOOL (^ShouldRunInActionCategories)(NSArray <OCSyncActionCategory> *categories) = ^(NSArray <OCSyncActionCategory> *categories){
+			for (OCSyncActionCategory category in categories)
+			{
+				NSUInteger totalBudget = actionBudgetsByCategory[category].integerValue;
+
+				if ((totalBudget > 0) && (runningActionsByCategory[category].integerValue >= totalBudget))
+				{
+					OCLogDebug(@"Budget limit of %lu reached for action category: %@", totalBudget, category);
+					return (NO);
+				}
+			}
+
+			return (YES);
+		};
 
 		[self.database retrieveSyncLanesWithCompletionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncLane *> *syncLanes) {
 			if (error != nil)
@@ -541,7 +563,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				if ([activeLaneIDs intersectsSet:lane.afterLanes])
 				{
 					// Preceding lanes still active => skip
-					if (OCLogger.logLevel <= OCLogLevelDebug)
+					if ([OCLogger logsForLevel:OCLogLevelDebug])
 					{
 						NSMutableSet *blockingLaneIDs = [NSMutableSet setWithSet:activeLaneIDs];
 						[blockingLaneIDs intersectSet:lane.afterLanes];
@@ -575,6 +597,22 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 					recordsOnLane++;
 
+					// Check available action category budget
+					NSArray <OCSyncActionCategory> *actionCategories = syncRecord.action.categories;
+
+					if (syncRecord.state == OCSyncRecordStateReady)
+					{
+						if (!ShouldRunInActionCategories(actionCategories))
+						{
+							OCLogDebug(@"Skipping processing sync record %@ due to lack of available budget in %@", syncRecord.recordID, actionCategories);
+							stopProcessing = YES;
+							return;
+						}
+					}
+
+					// Update budget usage
+					UpdateRunningActionCategories(actionCategories, 1);
+
 					// Process sync record
 					nextInstruction = [self processSyncRecord:syncRecord error:&error];
 
@@ -590,7 +628,6 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 							OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
 
 							stopProcessing = YES;
-
 							return;
 						break;
 
@@ -619,6 +656,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 							{
 								recordsOnLane--;
 							}
+
+							// Update budget usage
+							UpdateRunningActionCategories(actionCategories, -1);
 
 							// Process next
 							lastSyncRecordID = syncRecord.recordID;
@@ -1309,7 +1349,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 #pragma mark - Sync debugging
 - (void)dumpSyncJournalWithTags:(NSArray <OCLogTagName> *)tags
 {
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		OCSyncExec(journalDump, {
 			[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
@@ -1318,7 +1358,8 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				for (OCSyncRecord *record in syncRecords)
 				{
-					OCTLogDebug(tags, @"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+					OCTLogDebug(tags, @"%@ | %@ | %@ | %@", [[record.recordID stringValue] rightPaddedMinLength:5],
+										[[record.laneID stringValue] leftPaddedMinLength:5],
 										[record.actionIdentifier leftPaddedMinLength:20],
 										[[record.inProgressSince description] leftPaddedMinLength:20]);
 				}

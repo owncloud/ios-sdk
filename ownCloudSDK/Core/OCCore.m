@@ -44,6 +44,8 @@
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
 #import "OCRateLimiter.h"
+#import "OCSyncActionDownload.h"
+#import "OCSyncActionUpload.h"
 
 @interface OCCore ()
 {
@@ -108,7 +110,17 @@
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
 			@"*"
 		],
-		OCCoreAddAcceptLanguageHeader : @(YES)
+		OCCoreAddAcceptLanguageHeader : @(YES),
+		OCCoreActionConcurrencyBudgets : @{
+			// Concurrecy "budgets" available for sync actions by action category
+			OCSyncActionCategoryAll	: @(0), // No limit on the number of the total number of concurrent sync actions
+
+				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
+
+				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
+					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
+		}
 	});
 }
 
@@ -1445,6 +1457,7 @@ OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header"
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
 OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
 OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
+OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";

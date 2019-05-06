@@ -50,6 +50,7 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 #pragma mark - Core properties
 @property(weak,nullable) OCCore *core; //!< The core using this sync action.
 @property(strong) OCSyncActionIdentifier identifier; //!< Identifier of the action (persisted)
+@property(strong) NSArray<OCSyncActionCategory> *categories; //!< Categories this action belongs to.
 
 #pragma mark - Persisted properties
 @property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on (persisted)
@@ -112,6 +113,10 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 - (void)decodeActionData:(NSCoder *)decoder;	//!< Called by -initWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.
 
 @end
+
+extern OCSyncActionCategory OCSyncActionCategoryAll;		//!< Category for all (actions and transfers alike)
+extern OCSyncActionCategory OCSyncActionCategoryActions;	//!< Category for item actions (like delete, move, ..) - default
+extern OCSyncActionCategory OCSyncActionCategoryTransfer;	//!< Catagory for file transfers (like upload/download)
 
 NS_ASSUME_NONNULL_END
 
