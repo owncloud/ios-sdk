@@ -1007,6 +1007,20 @@
 	}]];
 }
 
+- (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT COUNT(*) AS cnt FROM syncJournal WHERE laneID=:laneID" withNamedParameters:@{ @"laneID" : laneID } resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+		[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, OCSQLiteRowDictionary  _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+			NSError *retrieveError = nil;
+			NSNumber *numberOfSyncRecordsOnLane = nil;
+
+			numberOfSyncRecordsOnLane = (NSNumber *)[resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
+
+			completionHandler(self, error, numberOfSyncRecordsOnLane);
+		} error:nil];
+	}]];
+}
+
 - (OCSyncRecord *)_syncRecordFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary
 {
 	OCSyncRecord *syncRecord = nil;

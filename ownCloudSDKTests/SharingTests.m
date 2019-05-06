@@ -151,7 +151,11 @@
 		XCTAssert(issue==nil);
 
 		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *passwordLessShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:nil expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+			XCTAssert(!passwordLessShare.protectedByPassword);
+
 			OCShare *createShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+			XCTAssert(createShare.protectedByPassword);
 
 			[expectList fulfill];
 

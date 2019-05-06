@@ -39,6 +39,7 @@ typedef void(^OCDatabaseRetrieveItemCompletionHandler)(OCDatabase *db, NSError *
 typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
 typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
+typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db, NSError *error, NSNumber *count);
 typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
@@ -119,6 +120,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;

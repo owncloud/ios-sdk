@@ -294,15 +294,10 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 
-		return (blockError);
-	} completionHandler:^(NSError *error) {
-		OCLogDebug(@"record %@ completed preflight with error=%@", record, error);
-
-		if (error == nil)
+		// Assign to lane
+		if (blockError == nil)
 		{
-			// Assign to lane
 			OCSyncLane *lane;
-			__block NSError *updateError = nil;
 
 			if ((lane = [self laneForTags:record.laneTags readOnly:NO]) != nil)
 			{
@@ -312,28 +307,34 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 					if (error != nil)
 					{
 						OCLogError(@"Error %@ updating sync record %@ after assigning lane", error, record);
-						updateError = error;
+						blockError = error;
 					}
 				}];
 			}
 
-			if (updateError == nil)
+			if (blockError == nil)
 			{
 				OCLogDebug(@"record %@ added to lane %@", record, lane);
 			}
-
-			error = updateError;
 		}
 
-		if (error != nil)
+		// Handle errors during pre-flight
+		if (blockError != nil)
 		{
-			// Error during pre-flight
+			OCLogDebug(@"record %@ completed preflight with error=%@", record, blockError);
+
 			if (record.recordID != nil)
 			{
 				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
 				[self removeSyncRecords:@[ record ] completionHandler:nil];
 			}
+		}
 
+		return (blockError);
+	} completionHandler:^(NSError *error) {
+
+		if (error != nil)
+		{
 			// Call result handler
 			[record completeWithError:error core:self item:record.action.localItem parameter:record];
 		}
@@ -658,16 +659,27 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 			if (recordsOnLane == 0)
 			{
-				OCLogDebug(@"Removing empty lane %@", lane);
+				__block BOOL laneIsEmpty = NO;
 
-				[activeLaneIDs removeObject:lane.identifier];
-
-				[self.database removeSyncLane:lane completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil)
-					{
-						OCLogError(@"Error removing lane %@: %@", lane, error);
-					}
+				// Double-verify there are no records left on lane
+				[self.database numberOfSyncRecordsOnSyncLaneID:lane.identifier completionHandler:^(OCDatabase *db, NSError *error, NSNumber *count) {
+					laneIsEmpty = ((count.integerValue == 0) && (error == nil));
 				}];
+
+				// Remove lane if empty
+				if (laneIsEmpty)
+				{
+					OCLogDebug(@"Removing empty lane %@", lane);
+
+					[activeLaneIDs removeObject:lane.identifier];
+
+					[self.database removeSyncLane:lane completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil)
+						{
+							OCLogError(@"Error removing lane %@: %@", lane, error);
+						}
+					}];
+				}
 			}
 		}
 
