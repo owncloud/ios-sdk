@@ -963,4 +963,66 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testSharingItemWithSpecialChars
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFolderCreated = [self expectationWithDescription:@"Created folder"];
+	XCTestExpectation *expectFolderDeleted = [self expectationWithDescription:@"Deleted folder"];
+	XCTestExpectation *expectShareCreated = [self expectationWithDescription:@"Created share"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Disconnected"];
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			NSString *folderName = [@"Test+" stringByAppendingString:[NSDate new].description];
+
+			[expectLists fulfill];
+
+			[connection createFolder:folderName inside:items[0] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				OCItem *newFolderItem = (OCItem *)event.result;
+
+				XCTAssert(event.error == nil);
+				XCTAssert(newFolderItem != nil);
+
+				OCLog(@"error=%@, newFolder=%@", event.error, event.result);
+
+				[expectFolderCreated fulfill];
+
+				[connection createShare:[OCShare shareWithPublicLinkToPath:newFolderItem.path linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					OCLog(@"error=%@, newShare=%@", event.error, event.result);
+
+					XCTAssert(event.error == nil);
+					XCTAssert(event.result != nil);
+
+					[expectShareCreated fulfill];
+
+					[connection deleteItem:newFolderItem requireMatch:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						XCTAssert(event.error == nil);
+
+						OCLog(@"error=%@, result=%@", event.error, event.result);
+
+						[expectFolderDeleted fulfill];
+
+						[connection disconnectWithCompletionHandler:^{
+							[expectDisconnect fulfill];
+						}];
+					} userInfo:nil ephermalUserInfo:nil]];
+				} userInfo:nil ephermalUserInfo:nil]];
+
+			} userInfo:nil ephermalUserInfo:nil]];
+		}];
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 @end
