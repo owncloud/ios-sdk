@@ -152,8 +152,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 @property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
-
 @property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
+
+@property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 

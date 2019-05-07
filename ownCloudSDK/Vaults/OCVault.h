@@ -58,14 +58,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
-#pragma mark - Operations
+#pragma mark - Open & Close
 - (void)openWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Opens the vault and its components
 - (void)closeWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
+#pragma mark - Offline operations
+- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files.
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
 - (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<fileID>/ pattern.
 - (nullable NSString *)relativePathForItem:(OCItem *)item;
 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;

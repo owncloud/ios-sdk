@@ -99,6 +99,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
+- (void)iterateCacheItemsWithIterator:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop))iterator; //!< Iterates through all cache items using the passed iterator block. Updates those items that are returned from the block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
+
 #pragma mark - Thumbnail interface
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
 - (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType specID:(NSString *)specID forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler;

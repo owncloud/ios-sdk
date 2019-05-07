@@ -359,6 +359,15 @@
 	return ((_permissions & OCItemPermissionShareable) == OCItemPermissionShareable);
 }
 
+#pragma mark - Compacting
+- (BOOL)compactingAllowed
+{
+	return (!_locallyModified && 						   // This is not a locally modified copy
+		(_syncActivity == OCItemSyncActivityNone) && 			   // No sync activity is going on
+		((_activeSyncRecordIDs==nil) || (_activeSyncRecordIDs.count == 0)) // No sync record references this item
+	       );
+}
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
 {

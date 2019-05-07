@@ -31,12 +31,16 @@
 #import "OCSyncLane.h"
 #import "OCProcessManager.h"
 #import "OCQueryCondition+SQLBuilder.h"
+#import "OCAsyncSequentialQueue.h"
 
 @interface OCDatabase ()
 {
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, NSDictionary<OCSyncActionParameter,id> *> *_ephermalParametersBySyncRecordID;
+
+	OCAsyncSequentialQueue *_openQueue;
+	NSInteger _openCount;
 }
 
 @end
@@ -65,6 +69,13 @@
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 		_eventsByDatabaseID = [NSMutableDictionary new];
 
+		_openQueue = [OCAsyncSequentialQueue new];
+		_openQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+				job(completionHandler);
+			});
+		};
+
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
 		[self addSchemas];
 	}
@@ -75,58 +86,99 @@
 #pragma mark - Open / Close
 - (void)openWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
-	[self.sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
-		self.sqlDB.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs wide changes
-
-		if (error == nil)
+	[_openQueue async:^(dispatch_block_t  _Nonnull openQueueCompletionHandler) {
+		if (self->_openCount > 0)
 		{
-			NSString *thumbnailsDBPath = [[[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"] path];
+			self->_openCount++;
 
-			[self.sqlDB executeQuery:[OCSQLiteQuery query:@"ATTACH DATABASE ? AS 'thumb'" withParameters:@[ thumbnailsDBPath ] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) { // relatedTo:OCDatabaseTableNameThumbnails
-				if (error == nil)
-				{
-					[self.sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, nil);
+			}
+
+			openQueueCompletionHandler();
+			return;
+		}
+
+		[self.sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
+			self.sqlDB.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs wide changes
+
+			if (error == nil)
+			{
+				NSString *thumbnailsDBPath = [[[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"] path];
+
+				self->_openCount++;
+
+				[self.sqlDB executeQuery:[OCSQLiteQuery query:@"ATTACH DATABASE ? AS 'thumb'" withParameters:@[ thumbnailsDBPath ] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) { // relatedTo:OCDatabaseTableNameThumbnails
+					if (error == nil)
+					{
+						[self.sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+							if (completionHandler!=nil)
+							{
+								completionHandler(self, error);
+							}
+
+							openQueueCompletionHandler();
+						}];
+					}
+					else
+					{
+						OCLogError(@"Error attaching thumbnail database: %@", error);
+
 						if (completionHandler!=nil)
 						{
 							completionHandler(self, error);
 						}
-					}];
-				}
-				else
-				{
-					OCLogError(@"Error attaching thumbnail database: %@", error);
 
-					if (completionHandler!=nil)
-					{
-						completionHandler(self, error);
+						openQueueCompletionHandler();
 					}
-				}
-			}]];
-		}
-		else
-		{
-			if (completionHandler!=nil)
-			{
-				completionHandler(self, error);
+				}]];
 			}
-		}
+			else
+			{
+				if (completionHandler!=nil)
+				{
+					completionHandler(self, error);
+				}
+
+				self->_openCount--;
+				openQueueCompletionHandler();
+			}
+		}];
 	}];
 }
 
 - (void)closeWithCompletionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"DETACH DATABASE thumb" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) { // relatedTo:OCDatabaseTableNameThumbnails
-		if (error != nil)
-		{
-			OCLogError(@"Error detaching thumbnail database: %@", error);
-		}
-	}]];
+	[_openQueue async:^(dispatch_block_t  _Nonnull openQueueCompletionHandler) {
+		self->_openCount--;
 
-	[self.sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
-		if (completionHandler != nil)
+		if (self->_openCount > 0)
 		{
-			completionHandler(self, error);
+			if (completionHandler!=nil)
+			{
+				completionHandler(self, nil);
+			}
+
+			openQueueCompletionHandler();
+			return;
 		}
+
+		[self.sqlDB executeQuery:[OCSQLiteQuery query:@"DETACH DATABASE thumb" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) { // relatedTo:OCDatabaseTableNameThumbnails
+			if (error != nil)
+			{
+				OCLogError(@"Error detaching thumbnail database: %@", error);
+			}
+		}]];
+
+		[self.sqlDB closeWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+
+			openQueueCompletionHandler();
+		}];
 	}];
 }
 
@@ -274,6 +326,29 @@
 	[self updateCacheItems:items syncAnchor:syncAnchor completionHandler:completionHandler];
 }
 
+- (OCItem *)_itemFromResultDict:(NSDictionary<NSString *,id<NSObject>> *)resultDict
+{
+	NSData *itemData;
+	OCItem *item = nil;
+
+	if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
+	{
+		if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
+		{
+			NSNumber *removed;
+
+			if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
+			{
+				item.removed = removed.boolValue;
+			}
+
+			item.databaseID = resultDict[@"mdID"];
+		}
+	}
+
+	return (item);
+}
+
 - (void)_completeRetrievalWithResultSet:(OCSQLiteResultSet *)resultSet completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSMutableArray <OCItem *> *items = [NSMutableArray new];
@@ -281,28 +356,15 @@
 	__block OCSyncAnchor syncAnchor = nil;
 
 	[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *resultDict, BOOL *stop) {
-		NSData *itemData;
-		OCSyncAnchor itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"];
+		OCSyncAnchor itemSyncAnchor;
+		OCItem *item;
 
-		if ((itemData = (NSData *)resultDict[@"itemData"]) != nil)
+		if ((item = [self _itemFromResultDict:resultDict]) != nil)
 		{
-			OCItem *item;
-
-			if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
-			{
-				NSNumber *removed;
-
-				[items addObject:item];
-
-				if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
-				{
-					item.removed = removed.boolValue;
-				}
-				item.databaseID = resultDict[@"mdID"];
-			}
+			[items addObject:item];
 		}
 
-		if (itemSyncAnchor != nil)
+		if ((itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"]) != nil)
 		{
 			if (syncAnchor != nil)
 			{
@@ -507,6 +569,26 @@
 	{
 		completionHandler(self, error, nil, nil);
 	}
+}
+
+- (void)iterateCacheItemsWithIterator:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop))iterator
+{
+	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData ORDER BY mdID ASC";
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *returnError = nil;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *resultDict, BOOL *stop) {
+			OCItem *item;
+
+			if ((item = [self _itemFromResultDict:resultDict]) != nil)
+			{
+				iterator(nil, (NSNumber *)resultDict[@"syncAnchor"], item, stop);
+			}
+		} error:&returnError];
+
+		iterator(returnError, nil, nil, NULL);
+	}]];
 }
 
 #pragma mark - Thumbnail interface

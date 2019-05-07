@@ -24,9 +24,7 @@
 #import "OCMacros.h"
 #import "OCCore+FileProvider.h"
 #import "OCHTTPPipelineManager.h"
-
-@interface OCVault () <NSFileManagerDelegate>
-@end
+#import "OCVault+Internal.h"
 
 @implementation OCVault
 
@@ -183,6 +181,13 @@
 	[self.database closeWithCompletionHandler:completionHandler];
 }
 
+- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	[self compactInContext:nil withSelector:^BOOL(OCSyncAnchor  _Nullable syncAnchor, OCItem * _Nonnull item) {
+		return (item.compactingAllowed && (item.localRelativePath != nil));
+	} completionHandler:completionHandler];
+}
+
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	if (self.rootURL != nil)
@@ -233,16 +238,17 @@
 	}
 }
 
-- (BOOL)fileManager:(NSFileManager *)fileManager shouldRemoveItemAtURL:(NSURL *)URL
-{
-	return (YES);
-}
-
 #pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<localID>/<fileName> pattern.
 	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
+}
+
+- (NSURL *)localFolderURLForItem:(OCItem *)item
+{
+	// Build the URL to where an item's folder should be stored. Follows <filesRootURL>/<localID>/ pattern.
+	return ([self.filesRootURL URLByAppendingPathComponent:item.localID isDirectory:YES]);
 }
 
 - (NSString *)relativePathForItem:(OCItem *)item

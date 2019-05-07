@@ -112,8 +112,8 @@
 		],
 		OCCoreAddAcceptLanguageHeader : @(YES),
 		OCCoreActionConcurrencyBudgets : @{
-			// Concurrecy "budgets" available for sync actions by action category
-			OCSyncActionCategoryAll	: @(0), // No limit on the number of the total number of concurrent sync actions
+			// Concurrency "budgets" available for sync actions by action category
+			OCSyncActionCategoryAll	: @(0), // No limit on the total number of concurrent sync actions
 
 				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
 
