@@ -22,17 +22,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCore (FileProvider)
 
-@property(class,nonatomic,readonly) BOOL hostHasFileProvider;
-
 #pragma mark - Fileprovider tools
 - (void)retrieveItemFromDatabaseForLocalID:(OCLocalID)localID completionHandler:(void(^)(NSError * __nullable error, OCSyncAnchor __nullable syncAnchor, OCItem * __nullable itemFromDatabase))completionHandler;
 
-#pragma mark - File provider manager
-- (nullable NSFileProviderManager *)fileProviderManager;
-
 #pragma mark - Signal changes for items
-- (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
-- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID;
+- (void)signalChangesToFileProviderForItems:(NSArray <OCItem *> *)changedItems;
 
 @end
 

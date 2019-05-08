@@ -530,7 +530,7 @@
 
 				if (addedUpdatedRemovedItems.count > 0)
 				{
-					[self signalChangesForItems:addedUpdatedRemovedItems];
+					[self signalChangesToFileProviderForItems:addedUpdatedRemovedItems];
 				}
 			}
 		}];

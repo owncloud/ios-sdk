@@ -157,11 +157,6 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
-	id _fileProviderManager;
-	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
-	id _fileProviderSignalCountByContainerItemIdentifiersLock;
-	BOOL _postFileProviderNotifications;
-
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	BOOL _automaticItemListUpdatesEnabled;
@@ -255,6 +250,9 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
+
+#pragma mark - Indicating activity requiring the core
+- (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description; //!< Runs a block in the current thread while making sure OCCore will not stop before the completionHandler has been called.
 
 @end
 

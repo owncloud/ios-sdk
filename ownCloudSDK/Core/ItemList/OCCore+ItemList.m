@@ -851,7 +851,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// File provider signaling
 	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0) && (taskRootItem!=nil))
 	{
-		[self signalChangesForItems:@[ taskRootItem ]];
+		[self signalChangesToFileProviderForItems:@[ taskRootItem ]];
 	}
 }
 

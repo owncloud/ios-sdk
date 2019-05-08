@@ -19,6 +19,7 @@
 #import "OCSyncAction+FileProvider.h"
 #import "OCHTTPPipelineTask.h"
 #import "NSURLSessionTaskMetrics+OCCompactSummary.h"
+#import "OCVault+Internal.h"
 
 @implementation OCSyncAction (FileProviderProgressReporting)
 

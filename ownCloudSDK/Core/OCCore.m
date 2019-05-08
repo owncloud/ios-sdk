@@ -46,6 +46,7 @@
 #import "OCRateLimiter.h"
 #import "OCSyncActionDownload.h"
 #import "OCSyncActionUpload.h"
+#import "OCBookmark+IPNotificationNames.h"
 
 @interface OCCore ()
 {
@@ -147,9 +148,6 @@
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
-
-		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
-		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
 		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
@@ -707,26 +705,16 @@
 }
 
 #pragma mark - Inter-Process change notification/handling
-- (NSString *)ipcNotificationName
-{
-	if (_ipNotificationName == nil)
-	{
-		_ipNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.bookmark.uuid.UUIDString];
-	}
-
-	return (_ipNotificationName);
-}
-
 - (void)startIPCObservation
 {
-	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.coreUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core handleIPCChangeNotification];
 	}];
 }
 
 - (void)stopIPCObserveration
 {
-	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.coreUpdateNotificationName];
 }
 
 - (void)postIPCChangeNotification
@@ -753,7 +741,7 @@
 					if (self->_pendingIPCChangeNotifications != 0)
 					{
 						self->_pendingIPCChangeNotifications = 0;
-						[self->_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+						[self->_ipNotificationCenter postNotificationForName:self.bookmark.coreUpdateNotificationName ignoreSelf:YES];
 
 						[self endActivity:@"Post IPC change notification"];
 					}
@@ -1290,6 +1278,23 @@
 
 		[self endActivity:@"Handling event"];
 	}];
+}
+
+#pragma mark - Indicating activity requiring the core
+- (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description
+{
+	if ((activityBlock != nil) && (description != nil))
+	{
+		[self beginActivity:description];
+
+		activityBlock(^{
+			[self endActivity:description];
+		});
+	}
+	else
+	{
+		OCLogError(@"Paramter(s) missing from %s call", __PRETTY_FUNCTION__);
+	}
 }
 
 #pragma mark - Busy count
