@@ -46,15 +46,11 @@
 			{
 				case OCShareTypeUserShare:
 				case OCShareTypeRemote:
-					if (shareWithAdditionalInfo != nil)
-					{
-						label = [label stringByAppendingString:[NSString stringWithFormat:@" (%@)", shareWithAdditionalInfo]];
-					}
-					recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]];
+					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				case OCShareTypeGroupShare:
-					recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]];
+					recipient = [[OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				default:
