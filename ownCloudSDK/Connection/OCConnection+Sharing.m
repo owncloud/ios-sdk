@@ -40,6 +40,8 @@
 
 @property(strong) NSString *message;
 
+@property(strong,nonatomic) NSError *error;
+
 @end
 
 @implementation OCSharingResponseStatus
@@ -67,6 +69,27 @@
 	return (nil);
 }
 
+- (instancetype)initWithHTTPStatus:(OCHTTPStatus *)status
+{
+	if ((self = [super init]) != nil)
+	{
+		_statusCode = @(status.code);
+		_error = status.error;
+	}
+
+	return (self);
+}
+
+- (NSError *)error
+{
+	if (_error == nil)
+	{
+		_error = OCErrorWithDescription(OCErrorUnknown, _message);
+	}
+
+	return (_error);
+}
+
 @end
 
 @interface OCShareSingle : OCShare
@@ -88,14 +111,6 @@
 {
 	OCXMLParser *parser = nil;
 	NSError *error;
-
-	if (response != nil)
-	{
-		if (!response.status.isSuccess)
-		{
-			error = response.status.error;
-		}
-	}
 
 	if (error == nil)
 	{
@@ -131,6 +146,11 @@
 				}
 			}
 		}
+	}
+
+	if ((response != nil) && !response.status.isSuccess && (error == nil))
+	{
+		error = statusErrorMapper([[OCSharingResponseStatus alloc] initWithHTTPStatus:response.status]);
 	}
 
 	if (outError != NULL)
@@ -226,6 +246,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -251,7 +272,7 @@
 
 							default:
 								// Unknown error
-								error = OCErrorWithDescription(OCErrorUnknown, status.message);
+								error = status.error;
 							break;
 						}
 					break;
@@ -289,7 +310,7 @@
 		OCSharingResponseStatus *status = nil;
 		NSArray <OCShare *> *shares = nil;
 
-		if (error == nil)
+		if (!((error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
 			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
@@ -297,6 +318,7 @@
 					switch (status.statusCode.integerValue)
 					{
 						case 100:
+						case 200:
 							// Successful
 						break;
 
@@ -307,7 +329,7 @@
 
 						default:
 							// Unknown error
-							error = OCErrorWithDescription(OCErrorUnknown, status.message);
+							error = status.error;
 						break;
 					}
 
@@ -377,7 +399,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -391,6 +413,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -411,7 +434,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -569,7 +592,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -584,6 +607,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -604,7 +628,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -678,7 +702,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -690,6 +714,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -700,7 +725,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -756,7 +781,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDecideOnShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -768,6 +793,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -778,7 +804,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 

@@ -128,6 +128,7 @@
 					switch (statusCode.integerValue)
 					{
 						case 100:
+						case 200:
 							// All is well
 						break;
 

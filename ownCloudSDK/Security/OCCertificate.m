@@ -19,6 +19,7 @@
 #import "OCCertificate.h"
 #import "OCAppIdentity.h"
 #import "NSData+OCHash.h"
+#import "OCLogger.h"
 
 static NSString *OCCertificateKeychainAccount = @"OCCertificateKeychainAccount";
 static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
@@ -746,12 +747,12 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 		}
 		else
 		{
-			NSLog(@"Failed to extract public key from otherCertificate with error=%@", publicKeyDataError);
+			OCLogError(@"Failed to extract public key from otherCertificate with error=%@", publicKeyDataError);
 		}
 	}
 	else
 	{
-		NSLog(@"Failed to extract public key from certificate with error=%@", publicKeyDataError);
+		OCLogError(@"Failed to extract public key from certificate with error=%@", publicKeyDataError);
 	}
 
 	if (error != NULL)

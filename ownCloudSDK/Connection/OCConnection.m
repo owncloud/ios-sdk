@@ -81,14 +81,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",
-		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
-		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
-		OCConnectionEndpointIDStatus 	    		: @"status.php",
-		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
-		OCConnectionEndpointIDShares			: @"ocs/v1.php/apps/files_sharing/api/v1/shares",
-		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
-		OCConnectionEndpointIDRecipients		: @"ocs/v1.php/apps/files_sharing/api/v1/sharees",
+		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",			// Requested once on login
+		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
+		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
+		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",		// Requested once per item thumbnail request
+		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
