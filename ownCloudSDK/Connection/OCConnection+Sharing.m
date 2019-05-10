@@ -32,6 +32,9 @@
 #import "NSDate+OCDateParser.h"
 #import "NSProgress+OCEvent.h"
 #import "OCMacros.h"
+#import "NSProgress+OCExtensions.h"
+#import "OCHTTPResponse+DAVError.h"
+#import "OCHTTPDAVRequest.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -845,6 +848,68 @@
 	if (event != nil)
 	{
 		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
+#pragma mark - Private Link
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler
+{
+	if (item.privateLink != nil)
+	{
+		// Private link already known for item
+		completionHandler(nil, item.privateLink);
+		return ([NSProgress indeterminateProgress]);
+	}
+	else
+	{
+		// Private link needs to be retrieved from server
+		NSProgress *progress = nil;
+		NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+		OCHTTPDAVRequest *davRequest;
+
+		davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[endpointURL URLByAppendingPathComponent:item.path] depth:0];
+		davRequest.requiredSignals = self.propFindSignals;
+
+		[davRequest.xmlRequestPropAttribute addChildren:@[
+			[OCXMLNode elementWithName:@"privatelink" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+		]];
+
+		progress = [self sendRequest:davRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			if ((error == nil) && (response.status.isSuccess))
+			{
+				NSArray <NSError *> *errors = nil;
+				NSArray <OCItem *> *items = nil;
+
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				{
+					NSURL *privateLink;
+
+					if ((privateLink = items.firstObject.privateLink) != nil)
+					{
+						item.privateLink = privateLink;
+
+						completionHandler(nil, privateLink);
+						return;
+					}
+				}
+			}
+			else
+			{
+				if (error == nil)
+				{
+					error = response.bodyParsedAsDAVError;
+				}
+
+				if (error == nil)
+				{
+					error = response.status.error;
+				}
+			}
+
+			completionHandler(error, nil);
+		}];
+
+		return (progress);
 	}
 }
 

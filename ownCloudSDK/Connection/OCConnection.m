@@ -95,7 +95,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular			: @(YES),
-		OCConnectionPlainHTTPPolicy			: @"warn"
+		OCConnectionPlainHTTPPolicy			: @"warn",
+		OCConnectionAlwaysRequestPrivateLink		: @(NO)
 	});
 }
 
@@ -985,7 +986,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
-		NSMutableArray <OCXMLNode *> *ocPropAtributes = [[NSMutableArray alloc] initWithObjects:
+		NSMutableArray <OCXMLNode *> *ocPropAttributes = [[NSMutableArray alloc] initWithObjects:
 			// WebDAV properties
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
@@ -1016,7 +1017,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			// [OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
 		nil];
 
-		[davRequest.xmlRequestPropAttribute addChildren:ocPropAtributes];
+		if ([[self classSettingForOCClassSettingsKey:OCConnectionAlwaysRequestPrivateLink] boolValue])
+		{
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"privatelink" attributes:ocNamespaceAttributes]];
+		}
+
+		[davRequest.xmlRequestPropAttribute addChildren:ocPropAttributes];
 
 		davRequest.requiredSignals = self.propFindSignals;
 	}
@@ -2378,6 +2384,7 @@ OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-ser
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
+OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

@@ -1021,7 +1021,7 @@
 	XCTestExpectation *expectFolderDeleted = [self expectationWithDescription:@"Deleted folder"];
 	XCTestExpectation *expectShareCreated = [self expectationWithDescription:@"Created share"];
 	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
-	XCTestExpectation *expectLists = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
 	OCConnection *connection = nil;
 
 	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
@@ -1068,6 +1068,52 @@
 				} userInfo:nil ephermalUserInfo:nil]];
 
 			} userInfo:nil ephermalUserInfo:nil]];
+		}];
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testRequestPrivateLink
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
+	XCTestExpectation *expectPrivateLink = [self expectationWithDescription:@"Private link retrieved"];
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[expectLists fulfill];
+
+			for (OCItem *item in items)
+			{
+				if ((item.type == OCItemTypeFile) && (item.privateLink == nil))
+				{
+					[connection retrievePrivateLinkForItem:item completionHandler:^(NSError * _Nullable error, NSURL * _Nullable privateLink) {
+						XCTAssert(error == nil);
+						XCTAssert(privateLink != nil);
+						XCTAssert(item.privateLink == privateLink);
+
+						OCLogDebug(@"error=%@, privateLink: %@", error, privateLink);
+
+						[expectPrivateLink fulfill];
+
+						[connection disconnectWithCompletionHandler:^{
+							[expectDisconnect fulfill];
+						}];
+					}];
+					break;
+				}
+			}
 		}];
 
 		[expectConnect fulfill];

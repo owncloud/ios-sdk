@@ -258,4 +258,10 @@
 	return ([[OCRecipientSearchController alloc] initWithCore:self item:item]);
 }
 
+#pragma mark - Private link
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler
+{
+	return ([_connection retrievePrivateLinkForItem:item completionHandler:completionHandler]);
+}
+
 @end
