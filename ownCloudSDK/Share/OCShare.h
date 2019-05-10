@@ -67,6 +67,8 @@ typedef NS_ENUM(NSUInteger, OCShareScope)
 typedef NSString* OCShareOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCShareOptionKey,id>* OCShareOptions;
 
+typedef NSString* OCShareState NS_TYPED_ENUM;
+
 typedef NSString* OCShareID;
 
 #import "OCItem.h"
@@ -106,7 +108,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
 
 @property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
-@property(nullable,strong) NSNumber *accepted; //!< Share has been accepted (federated sharing)
+@property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
+@property(nullable,strong) NSNumber *accepted; //!< Federated share has been accepted
 
 #pragma mark - Convenience constructors
 /**
@@ -133,5 +136,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
 
 @end
+
+extern OCShareState OCShareStateAccepted;
+extern OCShareState OCShareStatePending;
+extern OCShareState OCShareStateRejected;
 
 NS_ASSUME_NONNULL_END

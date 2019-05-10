@@ -193,6 +193,7 @@
 
 		case OCShareScopeSharedWithUser:
 			[request setValue:@"true" forParameter:@"shared_with_me"];
+			[request setValue:@"all" forParameter:@"state"];
 		break;
 
 		case OCShareScopePendingCloudShares:
@@ -679,6 +680,12 @@
 		}
 	}
 
+	if (share.identifier == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDeleteShare sender:self];
+		return (nil);
+	}
+
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.actionSignals;
@@ -747,15 +754,35 @@
 {
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
+	NSURL *endpointURL = nil;
 
-	// Only remote shares can a decision be made on
-	if (share.type != OCShareTypeRemote)
+	if (share.identifier == nil)
 	{
 		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
 		return (nil);
 	}
 
-	request = [OCHTTPRequest requestWithURL:[[[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
+	switch (share.type)
+	{
+		case OCShareTypeUserShare:
+		case OCShareTypeGroupShare:
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+		break;
+
+		case OCShareTypeRemote:
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
+		break;
+
+		default: break;
+	}
+
+	if (endpointURL == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
+		return (nil);
+	}
+
+	request = [OCHTTPRequest requestWithURL:[[endpointURL URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
 	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);
 	request.requiredSignals = self.actionSignals;
 

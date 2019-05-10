@@ -81,8 +81,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",			// Requested once on login
-		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
+		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
 		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
 		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",		// Requested once per item thumbnail request

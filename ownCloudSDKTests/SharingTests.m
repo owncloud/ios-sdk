@@ -334,29 +334,80 @@
 									{
 										[expectRecipientSharesContainNewShare fulfill];
 
-										[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-											XCTAssert(event.error == nil);
+										dispatch_block_t cleanup = ^{
+											[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+												XCTAssert(event.error == nil);
 
-											[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
-												XCTAssert(error==nil);
+												[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													XCTAssert(error==nil);
 
-												OCLog(@"Recipient shares after deletion: %@", shares);
+													OCLog(@"Recipient shares after deletion: %@", shares);
 
-												for (OCShare *share in shares)
-												{
-													if ([share.identifier isEqual:newShare.identifier])
+													for (OCShare *share in shares)
 													{
-														XCTFail(@"Deleted share still around");
+														if ([share.identifier isEqual:newShare.identifier])
+														{
+															XCTFail(@"Deleted share still around");
+														}
 													}
-												}
 
-												[recipientConnection disconnectWithCompletionHandler:^{
-													[connection disconnectWithCompletionHandler:^{
-														[expectDisconnect fulfill];
+													[recipientConnection disconnectWithCompletionHandler:^{
+														[connection disconnectWithCompletionHandler:^{
+															[expectDisconnect fulfill];
+														}];
 													}];
 												}];
-											}];
-										} userInfo:nil ephermalUserInfo:nil]];
+											} userInfo:nil ephermalUserInfo:nil]];
+										};
+
+										if (recipientConnection.capabilities.sharingAutoAcceptShare.boolValue)
+										{
+											// Server is set up to auto-accept user-to-user shares
+											XCTAssert([share.state isEqual:OCShareStateAccepted]);
+											cleanup();
+										}
+										else
+										{
+											// Server is set up to not auto-accept user-to-user shares
+											XCTAssert([share.state isEqual:OCShareStatePending]);
+
+											// Accept share
+											[recipientConnection makeDecisionOnShare:share accept:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+												OCLogDebug(@"Accepted with event.result=%@, .error=%@", event.result, event.error);
+
+												// Retrieve shares again ..
+												[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													for (OCShare *share in shares)
+													{
+														if ([share.identifier isEqual:newShare.identifier])
+														{
+															// .. and check that it's now accepted.
+															XCTAssert([share.state isEqual:OCShareStateAccepted]);
+														}
+													}
+
+													// Now reject share
+													[recipientConnection makeDecisionOnShare:share accept:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+														OCLogDebug(@"Rejected with event.result=%@, .error=%@", event.result, event.error);
+
+														// Retrieve shares again ..
+														[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+															for (OCShare *share in shares)
+															{
+																if ([share.identifier isEqual:newShare.identifier])
+																{
+																	// .. and check that it's now accepted.
+																	XCTAssert([share.state isEqual:OCShareStateRejected]);
+																}
+															}
+
+															// Finally clean up
+															cleanup();
+														}];
+													} userInfo:nil ephermalUserInfo:nil]];
+												}];
+											} userInfo:nil ephermalUserInfo:nil]];
+										}
 
 										break;
 									}

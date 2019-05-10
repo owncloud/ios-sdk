@@ -228,9 +228,22 @@
 	progress = [self.connection makeDecisionOnShare:share accept:accept resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
-			share.accepted = @(accept);
-			[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
-			[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
+			switch (share.type)
+			{
+				case OCShareTypeUserShare:
+				case OCShareTypeGroupShare:
+					share.state = accept ? OCShareStateAccepted : OCShareStateRejected;
+					[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil limitScope:@(OCShareScopeSharedWithUser)];
+				break;
+
+				case OCShareTypeRemote:
+					share.accepted = @(accept);
+					[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
+					[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
+				break;
+
+				default: break;
+			}
 		}
 
 		completionHandler(event.error);

@@ -275,6 +275,14 @@
 			{
 				share.accepted = @(accepted.integerValue);
 			}
+
+			// State
+			OCShareState state;
+
+			if ((state = shareNode.keyValues[@"state"]) != nil)
+			{
+				share.state = state;
+			}
 		}
 	}
 
