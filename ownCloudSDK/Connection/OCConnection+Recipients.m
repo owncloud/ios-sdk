@@ -38,6 +38,7 @@
 		NSDictionary <NSString *, id> *value = recipientDict[@"value"];
 		OCShareTypeID shareTypeID = value[@"shareType"];
 		NSString *shareWith = value[@"shareWith"];
+		NSString *shareWithAdditionalInfo = value[@"shareWithAdditionalInfo"];
 
 		if ((shareWith != nil) && (shareTypeID != nil))
 		{
@@ -45,6 +46,10 @@
 			{
 				case OCShareTypeUserShare:
 				case OCShareTypeRemote:
+					if (shareWithAdditionalInfo != nil)
+					{
+						label = [label stringByAppendingString:[NSString stringWithFormat:@" (%@)", shareWithAdditionalInfo]];
+					}
 					recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]];
 				break;
 
