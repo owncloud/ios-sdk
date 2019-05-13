@@ -47,6 +47,7 @@
 #import "OCSyncActionDownload.h"
 #import "OCSyncActionUpload.h"
 #import "OCBookmark+IPNotificationNames.h"
+#import "OCDeallocAction.h"
 
 @interface OCCore ()
 {
@@ -1041,6 +1042,89 @@
 
 
 #pragma mark - Item lookup and information
+- (OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+{
+	NSObject *trackingObject = [NSObject new];
+	__weak NSObject *weakTrackingObject = trackingObject;
+
+	[self queueBlock:^{
+		NSError *error = nil;
+		OCItem *item = nil;
+		OCQuery *query = nil;
+		NSObject *trackingObject = weakTrackingObject;
+		__block BOOL isFirstInvocation = YES;
+
+		if (trackingObject == nil)
+		{
+			return;
+		}
+
+		if ((item = [self cachedItemAtPath:path error:&error]) != nil)
+		{
+			// Item in cache - start custom query to track changes (won't touch network, but will provide updates)
+			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path]  inputFilter:nil];
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					if ((query.state == OCQueryStateContentsFromCache) || (query.state == OCQueryStateIdle))
+					{
+						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+				}
+			};
+		}
+		else
+		{
+			// Item not in cache - create full-fledged query
+			query = [OCQuery queryForPath:path];
+			query.includeRootItem = YES;
+
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					OCItem *item = query.queryResults.firstObject;
+
+					if (item != nil)
+					{
+						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+					else
+					{
+						if (query.state == OCQueryStateTargetRemoved)
+						{
+							trackingHandler(nil, nil, isFirstInvocation);
+							isFirstInvocation = NO;
+						}
+					}
+				}
+			};
+		}
+
+		if (query != nil)
+		{
+			__weak OCCore *weakCore = self;
+			__weak OCQuery *weakQuery = query;
+
+			[self startQuery:query];
+
+			// Stop query as soon as trackingObject is deallocated
+			[OCDeallocAction addAction:^{
+				OCCore *core = weakCore;
+				OCQuery *query = weakQuery;
+
+				if ((core != nil) && (query != nil))
+				{
+					[core stopQuery:query];
+				}
+			} forDeallocationOfObject:trackingObject];
+		}
+	}];
+
+	return (trackingObject);
+}
+
 - (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
 	__block OCItem *cachedItem = nil;
