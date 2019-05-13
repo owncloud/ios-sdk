@@ -66,7 +66,7 @@
 		_taskIDsInDelivery = [NSMutableSet new];
 		_partitionEmptyHandlers = [NSMutableDictionary new];
 
-		_insertXRequestID = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineInsertXRequestTracingID] boolValue];
+		_insertXRequestID = YES;
 
 		_attachedURLSessionsByIdentifier = [NSMutableDictionary new];
 		_sessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
@@ -950,7 +950,7 @@
 	}
 
 	// Log request
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
@@ -1039,7 +1039,7 @@
 	[self.backend updatePipelineTask:task];
 
 	// Log response
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
 		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
@@ -1657,7 +1657,7 @@
 	OCHTTPPipelineTask *task = nil;
 	NSError *backendError = nil;
 
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
@@ -2101,7 +2101,6 @@
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		  OCHTTPPipelineInsertXRequestTracingID : @(YES),
 	});
 }
 
@@ -2173,5 +2172,3 @@
 }
 
 @end
-
-OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID = @"insert-x-request-id";

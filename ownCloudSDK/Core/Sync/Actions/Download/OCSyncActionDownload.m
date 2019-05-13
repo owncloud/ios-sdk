@@ -34,6 +34,8 @@
 
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
+
+		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryDownload ];
 	}
 
 	return (self);
@@ -441,6 +443,14 @@
 	return (self.archivedServerItem);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
@@ -453,3 +463,5 @@
 }
 
 @end
+
+OCSyncActionCategory OCSyncActionCategoryDownload = @"download";

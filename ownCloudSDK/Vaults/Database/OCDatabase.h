@@ -29,6 +29,7 @@
 @class OCItem;
 @class OCItemVersionIdentifier;
 @class OCSyncRecord;
+@class OCSyncLane;
 @class OCFile;
 @class OCEvent;
 
@@ -38,6 +39,9 @@ typedef void(^OCDatabaseRetrieveItemCompletionHandler)(OCDatabase *db, NSError *
 typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
 typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
+typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db, NSError *error, NSNumber *count);
+typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
+typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
 typedef NSArray<OCItem *> *(^OCDatabaseItemFilter)(NSArray <OCItem *> *items);
@@ -95,6 +99,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
+- (void)iterateCacheItemsWithIterator:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop))iterator; //!< Iterates through all cache items using the passed iterator block. Updates those items that are returned from the block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
+
 #pragma mark - Thumbnail interface
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
 - (void)storeThumbnailData:(NSData *)thumbnailData withMIMEType:(NSString *)mimeType specID:(NSString *)specID forItemVersion:(OCItemVersionIdentifier *)itemVersion maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseCompletionHandler)completionHandler;
@@ -104,13 +110,22 @@ typedef NSString* OCDatabaseCounterIdentifier;
 //- (void)updateFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 //- (void)removeFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
-#pragma mark - Sync interface
+#pragma mark - Sync Lane interface
+- (void)addSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)retrieveSyncLaneForID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncLaneCompletionHandler)completionHandler;
+- (void)retrieveSyncLanesWithCompletionHandler:(OCDatabaseRetrieveSyncLanesCompletionHandler)completionHandler;
+- (OCSyncLane *)laneForTags:(NSSet <OCSyncLaneTag> *)tags updatedLanes:(BOOL *)outUpdatedLanes readOnly:(BOOL)readOnly;
+
+#pragma mark - Sync Journal interface
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
-- (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
+- (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
 #pragma mark - Event interface

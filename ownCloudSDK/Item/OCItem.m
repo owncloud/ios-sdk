@@ -113,6 +113,8 @@
 	[coder encodeInteger:_shareTypesMask 	forKey:@"shareTypesMask"];
 	[coder encodeObject:_owner 		forKey:@"owner"];
 
+	[coder encodeObject:_privateLink 	forKey:@"privateLink"];
+
 	[coder encodeObject:_databaseID		forKey:@"databaseID"];
 
 	[coder encodeObject:_quotaBytesRemaining forKey:@"quotaBytesRemaining"];
@@ -166,6 +168,8 @@
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
 		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
+
+		_privateLink = [decoder decodeObjectOfClass:[NSURL class] forKey:@"privateLink"];
 
 		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
 
@@ -359,6 +363,15 @@
 	return ((_permissions & OCItemPermissionShareable) == OCItemPermissionShareable);
 }
 
+#pragma mark - Compacting
+- (BOOL)compactingAllowed
+{
+	return (!_locallyModified && 						   // This is not a locally modified copy
+		(_syncActivity == OCItemSyncActivityNone) && 			   // No sync activity is going on
+		((_activeSyncRecordIDs==nil) || (_activeSyncRecordIDs.count == 0)) // No sync record references this item
+	       );
+}
+
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity
 {
@@ -507,7 +520,9 @@
 	CloneMetadata(@"shares");
 
 	CloneMetadata(@"shareTypesMask");
-	CloneMetadata(@"ownerDisplayName");
+	CloneMetadata(@"owner");
+
+	CloneMetadata(@"privateLink");
 
 	CloneMetadata(@"databaseID");
 
@@ -595,7 +610,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @"")]);
 }
 
 #pragma mark - Copying

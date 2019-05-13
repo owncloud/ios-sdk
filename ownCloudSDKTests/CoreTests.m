@@ -1014,4 +1014,77 @@
 	[self waitForExpectationsWithTimeout:20 handler:nil];
 }
 
+- (void)testItemTracking
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	XCTestExpectation *initialTrackingResponseFromCacheExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	__block id itemTracker = nil;
+	__block id itemTrackerFromCache = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCPath trackPath = @"/Documents/Example.odt";
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseFromServerExpectation fulfill];
+
+				itemTrackerFromCache = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable cachedItem, BOOL isInitial) {
+					OCLog(@"Tracked from cache: isInitial=%d error=%@ item=%@", isInitial, error, cachedItem);
+
+					XCTAssert([cachedItem.localID isEqual:serverItem.localID]);
+					XCTAssert([cachedItem.itemVersionIdentifier isEqual:serverItem.itemVersionIdentifier]);
+
+					if (isInitial)
+					{
+						[initialTrackingResponseFromCacheExpectation fulfill];
+					}
+					else
+					{
+						XCTFail(@"Unexpected non-initial tracking handler invocation (cache)");
+					}
+				}];
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+
+}
+
 @end

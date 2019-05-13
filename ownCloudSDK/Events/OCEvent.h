@@ -27,11 +27,11 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	OCEventTypeNone,
 
 	// Creation
-	OCEventTypeCreateFolder,
-	OCEventTypeCreateEmptyFile,
+	OCEventTypeCreateFolder = 1,
+	// reserved (previously the never used OCEventTypeCreateEmptyFile)
 
 	// Modification
-	OCEventTypeMove,
+	OCEventTypeMove = 3,
 	OCEventTypeCopy,
 	OCEventTypeDelete,
 

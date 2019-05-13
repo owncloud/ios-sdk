@@ -407,7 +407,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
 
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || ![retrievedItem.name isEqualToString:cacheItem.name])
+						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
+						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
+
+						    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
+						    (retrievedItem.permissions != cacheItem.permissions))				// Permissions mismatch
 						{
 							// Update item in the cache if the server has a different version
 							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
@@ -847,7 +851,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// File provider signaling
 	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0) && (taskRootItem!=nil))
 	{
-		[self signalChangesForItems:@[ taskRootItem ]];
+		[self signalChangesToFileProviderForItems:@[ taskRootItem ]];
 	}
 }
 

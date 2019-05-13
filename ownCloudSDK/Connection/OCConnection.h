@@ -108,6 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
+	NSSet<OCConnectionSignalID> *_propFindSignals;
 
 	BOOL _attachedToPipelines;
 
@@ -135,6 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,readonly,nonatomic) NSSet<OCHTTPPipeline *> *allHTTPPipelines; //!< A set of all HTTP pipelines used by the connection
 
 @property(nullable,strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
+@property(nullable,strong) NSSet<OCConnectionSignalID> *propFindSignals; //!< The set of signals to use for PROPFIND requests
 
 @property(assign,nonatomic) OCConnectionState state;
 
@@ -272,6 +274,9 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
  */
 - (nullable OCProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept resultTarget:(OCEventTarget *)eventTarget;
 
+#pragma mark - Private Link
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler;
+
 @end
 
 #pragma mark - RECIPIENTS
@@ -352,6 +357,7 @@ extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure co
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
+extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads

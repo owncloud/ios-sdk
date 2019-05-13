@@ -146,14 +146,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isShareable; //!< YES if this item can be shared (convenience accessor to check if .permissions has OCItemPermissionShareable set)
 @property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)
 
+@property(strong,nullable) NSURL *privateLink; //!< Private link for the item. This property is used as a cache. Please use -[OCCore retrievePrivateLinkForItem:..] to request the private link for an item.
+
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 
 @property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
-
 @property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
+
+@property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 

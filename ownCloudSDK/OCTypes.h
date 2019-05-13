@@ -41,7 +41,11 @@ typedef void(^OCConnectionAuthenticationAvailabilityHandler)(NSError *error, BOO
 
 typedef NSString* OCSyncActionIdentifier NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
+typedef NSString* OCSyncActionCategory NS_TYPED_ENUM;
 typedef NSNumber* OCSyncRecordID;
+
+typedef NSNumber* OCSyncLaneID;
+typedef NSString* OCSyncLaneTag;
 
 // typedef NSString* OCJobID; //!< Identifier uniquely identifying a job. Typically used as persistent ID across requests to track a job's connectivity status.
 

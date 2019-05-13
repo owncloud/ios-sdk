@@ -39,6 +39,8 @@
 
 		self.actionEventType = OCEventTypeUpload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
+
+		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
 	}
 
 	return (self);
@@ -487,6 +489,15 @@
 	return (self.localItem);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem),
+		OCSyncActionWrapNullableItem(self.replaceItem)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
@@ -517,3 +528,5 @@
 }
 
 @end
+
+OCSyncActionCategory OCSyncActionCategoryUpload = @"upload";

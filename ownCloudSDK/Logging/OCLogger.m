@@ -323,10 +323,16 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	}
 }
 
+#pragma mark - Conditions
++ (BOOL)logsForLevel:(OCLogLevel)level
+{
+	return (sOCLogLevel <= level);
+}
+
 #pragma mark - Logging
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
-	if (logLevel >= OCLogger.logLevel)
+	if ([OCLogger logsForLevel:logLevel])
 	{
 		va_list args;
 
@@ -338,7 +344,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
-	if (logLevel >= OCLogger.logLevel)
+	if ([OCLogger logsForLevel:logLevel])
 	{
 		NSString *logMessage;
 		NSDate *timestamp;
