@@ -24,6 +24,7 @@
 
 @synthesize isOpen = _isOpen;
 @synthesize writeHandler = _writeHandler;
+@synthesize rotationInterval = _rotationInterval;
 
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler
 {

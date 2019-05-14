@@ -20,9 +20,14 @@
 #import "OCAppIdentity.h"
 #import "OCMacros.h"
 
+NSUInteger const OCDefaultMaxLogFileCount = 10;
+NSTimeInterval const OCDefaultRotationTimeInterval = 60.0 * 60.0 * 24.0;
+
 @interface OCLogFileWriter ()
 {
 	int _logFileFD;
+	NSUInteger _maximumLogFileCount;
+
 }
 @end
 
@@ -55,6 +60,8 @@ static NSURL *sDefaultLogFileURL;
 	if ((self = [super initWithIdentifier:OCLogComponentIdentifierWriterFile]) != nil)
 	{
 		_logFileURL = url;
+		_maximumLogFileCount = OCDefaultMaxLogFileCount;
+		_rotationInterval = OCDefaultRotationTimeInterval;
 	}
 
 	return (self);
@@ -120,17 +127,17 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (nullable NSError *)eraseOrTruncate
+- (nullable NSError *)eraseOrTruncate:(NSURL*)url
 {
 	NSError *error = nil;
 
-	if ([[NSFileManager defaultManager] fileExistsAtPath:self.logFileURL.path])
+	if ([[NSFileManager defaultManager] fileExistsAtPath:url.path])
 	{
-		if (![[NSFileManager defaultManager] removeItemAtURL:self.logFileURL error:&error])
+		if (![[NSFileManager defaultManager] removeItemAtURL:url error:&error])
 		{
 			int truncateFD;
 
-			if ((truncateFD = open((const char *)_logFileURL.path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
+			if ((truncateFD = open((const char *)url.path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
 			{
 				close(truncateFD);
 			}
@@ -142,6 +149,85 @@ static NSURL *sDefaultLogFileURL;
 	}
 
 	return (error);
+}
+
+- (nullable NSError *)eraseOrTruncate
+{
+	return [self eraseOrTruncate:self.logFileURL];
+}
+
+- (NSDate*)fileCreationDateForPath:(NSString*)path
+{
+	NSDate* creationDate = nil;
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:self.logFileURL.path])
+	{
+		NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+		creationDate = attributes[NSFileCreationDate];
+	}
+
+	return creationDate;
+}
+
+- (NSString*)findFreeLogArchiveName
+{
+	NSInteger counter = 1;
+	NSString *currentPath = self.logFileURL.path;
+	NSString *newPath = nil;
+	BOOL fileExists = NO;
+
+	NSMutableArray *existingLogPaths = [NSMutableArray arrayWithCapacity:_maximumLogFileCount];
+	
+	do
+	{
+		newPath = [currentPath stringByAppendingPathExtension:[NSString stringWithFormat:@"%ld", counter]];
+		fileExists = [[NSFileManager defaultManager] fileExistsAtPath:newPath];
+		if (fileExists == YES)
+		{
+			[existingLogPaths addObject:newPath];
+		}
+	} while (fileExists || counter > _maximumLogFileCount);
+
+	// If all possible file-names are occupied, we will find the oldest one and truncate / delete it
+	if (fileExists)
+	{
+		[existingLogPaths sortUsingComparator:^NSComparisonResult(id  _Nonnull path1, id  _Nonnull path2) {
+			NSDate *creationDate1 = [self fileCreationDateForPath:path1];
+			NSDate *creationDate2 = [self fileCreationDateForPath:path2];
+			if (creationDate1 != nil && creationDate2 != nil)
+			{
+				return [creationDate1 compare:creationDate2];
+			}
+			else
+			{
+				return NSOrderedSame;
+			}
+		}];
+
+		// Set the file path to the one of the oldest log
+		newPath = [existingLogPaths firstObject];
+
+		// Erase or truncate old log
+		[self eraseOrTruncate:[NSURL URLWithString:newPath]];
+	}
+
+	return newPath;
+}
+
+- (void)rotateIfRequired
+{
+	// Check the age of current log
+	NSDate *logCreationDate = [self fileCreationDateForPath:self.logFileURL.path];
+	if (logCreationDate != nil)
+	{
+		NSTimeInterval age = [logCreationDate timeIntervalSinceNow];
+		if (age > self.rotationInterval)
+		{
+			NSString *arhivedLogPath = [self findFreeLogArchiveName];
+
+			// TODO: Rename current log and start new one
+		}
+	}
 }
 
 @end

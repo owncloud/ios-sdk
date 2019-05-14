@@ -29,6 +29,8 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 	BOOL _isOpen;
 
 	OCLogWriteHandler _writeHandler;
+
+	NSTimeInterval _rotationInterval;
 }
 
 @property(strong,readonly,nonatomic) NSString *name;
@@ -36,6 +38,8 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 @property(readonly) BOOL isOpen;
 
 @property(copy) OCLogWriteHandler writeHandler;
+
+@property (readwrite, assign) NSTimeInterval rotationInterval;
 
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler;
 
