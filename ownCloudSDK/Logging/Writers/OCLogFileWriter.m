@@ -233,20 +233,36 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (void)cleanUpLogs:(BOOL)removeAll
+- (NSArray*)logFiles
 {
 	NSError *error = nil;
 
 	// Get contents of directory
-	NSString *directoryPath = [self.logFileURL.path stringByDeletingLastPathComponent];
+	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupContainerURL] path];
 	NSArray *directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
-																  error:&error];
+																					 error:&error];
+
 	if (error == nil)
 	{
 		// Filter log files
 		NSString *logNamePattern = @"*.log.*";
 		NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF like[cd] %@", logNamePattern];
-		NSMutableArray *existingLogPaths = [NSMutableArray arrayWithArray:[directoryContents filteredArrayUsingPredicate:predicate]];
+		return [directoryContents filteredArrayUsingPredicate:predicate];
+	}
+	else
+	{
+		return nil;
+	}
+}
+
+- (void)cleanUpLogs:(BOOL)removeAll
+{
+	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupContainerURL] path];
+	NSArray *logFiles = [self logFiles];
+
+	if (logFiles != nil)
+	{
+		NSMutableArray *existingLogPaths = [NSMutableArray arrayWithArray:logFiles];
 
 		// Sort by creation date
 		[existingLogPaths sortUsingComparator:^NSComparisonResult(id  _Nonnull file1, id  _Nonnull file2) {

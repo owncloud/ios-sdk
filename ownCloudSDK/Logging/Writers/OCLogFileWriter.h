@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSError *)eraseOrTruncate;
 
+- (nullable NSArray*)logFiles;
+
 - (void)cleanUpLogs:(BOOL)removeAll;
 
 @end
