@@ -22,10 +22,14 @@
 
 NSUInteger const OCDefaultMaxLogFileCount = 10;
 NSTimeInterval const OCDefaultRotationTimeInterval = 60.0 * 60.0 * 24.0;
+int64_t const OCDefaultLogRotationFrequency = 60 * NSEC_PER_SEC;
 
 @interface OCLogFileWriter ()
 {
 	int _logFileFD;
+	dispatch_source_t _logFileVnodeSource;
+	dispatch_source_t _logRotationTimerSource;
+
 	NSUInteger _maximumLogFileCount;
 
 }
@@ -84,6 +88,39 @@ static NSURL *sDefaultLogFileURL;
 			_isOpen = YES;
 
 			OCLogDebug(@"Starting logging to %@", _logFileURL.path);
+
+			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME, [OCLogWriter queue]);
+
+			dispatch_source_set_event_handler(_logFileVnodeSource, ^{
+				// Close and re-open current file
+				NSError *error = nil;
+
+				if(fsync(self->_logFileFD) != 0)
+				{
+					error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+					NSLog(@"Error syncing log file %@: %@", self, error);
+				}
+
+				if ((error = [self close]) != nil)
+				{
+					NSLog(@"Error closing writer on re-name %@: %@", self, error);
+				}
+
+				if (self->_logFileVnodeSource)
+				{
+					dispatch_source_cancel(self->_logFileVnodeSource);
+					self->_logFileVnodeSource = nil;
+				}
+
+				if ((error = [self open]) != nil)
+				{
+					NSLog(@"Error re-opening writer %@: %@", self, error);
+				}
+			});
+
+			dispatch_resume(_logFileVnodeSource);
+
+			[self scheduleLogRotationTimer];
 		}
 		else
 		{
@@ -109,6 +146,8 @@ static NSURL *sDefaultLogFileURL;
 
 		_logFileFD = 0;
 		_isOpen = NO;
+
+		[self unscheduleLogRotationTimer];
 	}
 
 	return (error);
@@ -127,17 +166,18 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (nullable NSError *)eraseOrTruncate:(NSURL*)url
+- (nullable NSError *)eraseOrTruncate:(NSString*)path
 {
 	NSError *error = nil;
 
-	if ([[NSFileManager defaultManager] fileExistsAtPath:url.path])
+	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
 	{
-		if (![[NSFileManager defaultManager] removeItemAtURL:url error:&error])
+
+		if (![[NSFileManager defaultManager] removeItemAtPath:path error:&error])
 		{
 			int truncateFD;
 
-			if ((truncateFD = open((const char *)url.path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
+			if ((truncateFD = open((const char *)path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
 			{
 				close(truncateFD);
 			}
@@ -153,14 +193,14 @@ static NSURL *sDefaultLogFileURL;
 
 - (nullable NSError *)eraseOrTruncate
 {
-	return [self eraseOrTruncate:self.logFileURL];
+	return [self eraseOrTruncate:self.logFileURL.path];
 }
 
 - (NSDate*)fileCreationDateForPath:(NSString*)path
 {
 	NSDate* creationDate = nil;
 
-	if ([[NSFileManager defaultManager] fileExistsAtPath:self.logFileURL.path])
+	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
 	{
 		NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
 		creationDate = attributes[NSFileCreationDate];
@@ -169,31 +209,54 @@ static NSURL *sDefaultLogFileURL;
 	return creationDate;
 }
 
-- (NSString*)findFreeLogArchiveName
+- (void)scheduleLogRotationTimer
 {
-	NSInteger counter = 1;
-	NSString *currentPath = self.logFileURL.path;
-	NSString *newPath = nil;
-	BOOL fileExists = NO;
+	[self unscheduleLogRotationTimer];
+	_logRotationTimerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, [OCLogWriter queue]);
 
-	NSMutableArray *existingLogPaths = [NSMutableArray arrayWithCapacity:_maximumLogFileCount];
-	
-	do
-	{
-		newPath = [currentPath stringByAppendingPathExtension:[NSString stringWithFormat:@"%ld", counter]];
-		fileExists = [[NSFileManager defaultManager] fileExistsAtPath:newPath];
-		if (fileExists == YES)
-		{
-			[existingLogPaths addObject:newPath];
-		}
-	} while (fileExists || counter > _maximumLogFileCount);
+	__weak __auto_type weakSelf = self;
+	dispatch_source_set_event_handler(_logRotationTimerSource, ^{
+		[weakSelf rotateLogIfRequired];
+	});
 
-	// If all possible file-names are occupied, we will find the oldest one and truncate / delete it
-	if (fileExists)
+	dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, OCDefaultLogRotationFrequency);
+
+	dispatch_source_set_timer(_logRotationTimerSource, fireTime, DISPATCH_TIME_FOREVER, 1ull * NSEC_PER_SEC);
+	dispatch_resume(_logRotationTimerSource);
+}
+
+- (void)unscheduleLogRotationTimer
+{
+	if (_logRotationTimerSource) {
+		dispatch_source_cancel(_logRotationTimerSource);
+		_logRotationTimerSource = NULL;
+	}
+}
+
+- (void)cleanUpLogs:(BOOL)removeAll
+{
+	NSError *error = nil;
+
+	// Get contents of directory
+	NSString *directoryPath = [self.logFileURL.path stringByDeletingLastPathComponent];
+	NSArray *directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
+																  error:&error];
+	if (error == nil)
 	{
-		[existingLogPaths sortUsingComparator:^NSComparisonResult(id  _Nonnull path1, id  _Nonnull path2) {
+		// Filter log files
+		NSString *logNamePattern = @"*.log.*";
+		NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF like[cd] %@", logNamePattern];
+		NSMutableArray *existingLogPaths = [NSMutableArray arrayWithArray:[directoryContents filteredArrayUsingPredicate:predicate]];
+
+		// Sort by creation date
+		[existingLogPaths sortUsingComparator:^NSComparisonResult(id  _Nonnull file1, id  _Nonnull file2) {
+
+			NSString *path1 = [directoryPath stringByAppendingPathComponent:file1];
+			NSString *path2 = [directoryPath stringByAppendingPathComponent:file2];
+
 			NSDate *creationDate1 = [self fileCreationDateForPath:path1];
 			NSDate *creationDate2 = [self fileCreationDateForPath:path2];
+
 			if (creationDate1 != nil && creationDate2 != nil)
 			{
 				return [creationDate1 compare:creationDate2];
@@ -204,28 +267,44 @@ static NSURL *sDefaultLogFileURL;
 			}
 		}];
 
-		// Set the file path to the one of the oldest log
-		newPath = [existingLogPaths firstObject];
+		NSUInteger maxFileCountToKeep = removeAll ? 0 : _maximumLogFileCount;
 
-		// Erase or truncate old log
-		[self eraseOrTruncate:[NSURL URLWithString:newPath]];
+		// Remove old files which are exceeding maximum allowed file count
+		while ([existingLogPaths count] > maxFileCountToKeep) {
+			NSString *pathToDelete = [directoryPath stringByAppendingPathComponent:[existingLogPaths firstObject]];
+
+			[self eraseOrTruncate:pathToDelete];
+			[existingLogPaths removeObjectAtIndex:0];
+		}
 	}
-
-	return newPath;
 }
 
-- (void)rotateIfRequired
+- (void)rotateLogIfRequired
 {
-	// Check the age of current log
+	NSError *error = nil;
 	NSDate *logCreationDate = [self fileCreationDateForPath:self.logFileURL.path];
+
 	if (logCreationDate != nil)
 	{
+		// Check the age of current log
 		NSTimeInterval age = [logCreationDate timeIntervalSinceNow];
-		if (age > self.rotationInterval)
+		if (-age > self.rotationInterval)
 		{
-			NSString *arhivedLogPath = [self findFreeLogArchiveName];
+			// Construct path for the archived log
+			NSString *timeStamp = [OCLogWriter timestampStringFrom:[NSDate date]];
+			NSString *transformedTimestamp = [timeStamp stringByReplacingOccurrencesOfString:@"[ /:]+" withString:@"_" options:NSRegularExpressionSearch range:NSMakeRange(0, [timeStamp length])];
 
-			// TODO: Rename current log and start new one
+			NSString *arhivedLogPath = [self.logFileURL.path stringByAppendingFormat:@".%@", transformedTimestamp];
+
+			// Rename current log and start new one
+			[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:arhivedLogPath error:&error];
+
+			// Check if some old logs can be deleted
+			[self cleanUpLogs:NO];
+		}
+		else
+		{
+			[self scheduleLogRotationTimer];
 		}
 	}
 }

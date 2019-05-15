@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSError *)eraseOrTruncate;
 
+- (void)cleanUpLogs:(BOOL)removeAll;
+
 @end
 
 extern OCLogComponentIdentifier OCLogComponentIdentifierWriterFile;
