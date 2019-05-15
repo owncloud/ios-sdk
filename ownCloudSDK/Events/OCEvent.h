@@ -52,7 +52,10 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	OCEventTypeDecideOnShare,
 
 	// Issues
-	OCEventTypeIssueResponse
+	OCEventTypeIssueResponse,
+
+	// Report
+	OCEventTypeFilterFiles
 };
 
 @class OCEvent;

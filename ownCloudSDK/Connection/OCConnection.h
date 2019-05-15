@@ -35,6 +35,7 @@
 @class OCAuthenticationMethod;
 @class OCItem;
 @class OCConnection;
+@class OCXMLNode;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -183,6 +184,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(nullable NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler; //!< Sends a request to the ephermal pipeline and returns the result via the ephermalResultHandler.
+
+#pragma mark - Report API
+- (nullable OCProgress *)filterFilesWithRules:(nullable NSDictionary<OCItemPropertyName, id> *)filterRules properties:(nullable NSArray<OCXMLNode *> *)properties resultTarget:(OCEventTarget *)eventTarget;
 
 #pragma mark - Sending requests synchronously
 - (nullable NSError *)sendSynchronousRequest:(OCHTTPRequest *)request; //!< Send a request synchronously using the ephermal pipeline and returns the error.
