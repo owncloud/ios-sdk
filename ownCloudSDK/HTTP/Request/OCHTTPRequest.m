@@ -196,8 +196,10 @@
 			}];
 			
 			urlComponents.queryItems = queryItems;
-			
-			self.bodyData = [[urlComponents query] dataUsingEncoding:NSUTF8StringEncoding];
+
+			// NSURLComponents.percentEncodedQuery will NOT escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization
+			// (source: http://www.openradar.me/24076063)
+			self.bodyData = [[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding];
 
 			if (_headerFields[@"Content-Type"] == nil)
 			{

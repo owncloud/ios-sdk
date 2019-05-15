@@ -20,8 +20,6 @@
 
 @interface OCSyncActionUpload : OCSyncAction
 
-// .localItem == folder to import item into
-
 @property(strong) OCItem *parentItem;
 
 @property(strong) OCItem *replaceItem;
@@ -37,3 +35,5 @@
 - (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy;
 
 @end
+
+extern OCSyncActionCategory OCSyncActionCategoryUpload; //!< Action category for uploads

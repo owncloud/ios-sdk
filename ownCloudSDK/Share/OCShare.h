@@ -46,11 +46,11 @@ typedef NS_OPTIONS(NSInteger, OCShareTypesMask)
 typedef NS_OPTIONS(NSInteger, OCSharePermissionsMask)
 {
 	OCSharePermissionsMaskNone    	= 0,
-	OCSharePermissionsMaskRead    	= (1<<0),
-	OCSharePermissionsMaskUpdate  	= (1<<1),
-	OCSharePermissionsMaskCreate  	= (1<<2),
-	OCSharePermissionsMaskDelete  	= (1<<3),
-	OCSharePermissionsMaskShare 	= (1<<4)
+	OCSharePermissionsMaskRead    	= (1<<0),	// 1
+	OCSharePermissionsMaskUpdate  	= (1<<1),	// 2
+	OCSharePermissionsMaskCreate  	= (1<<2),	// 4
+	OCSharePermissionsMaskDelete  	= (1<<3),	// 8
+	OCSharePermissionsMaskShare 	= (1<<4)	// 16
 };
 
 typedef NS_ENUM(NSUInteger, OCShareScope)
@@ -66,6 +66,8 @@ typedef NS_ENUM(NSUInteger, OCShareScope)
 
 typedef NSString* OCShareOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCShareOptionKey,id>* OCShareOptions;
+
+typedef NSString* OCShareState NS_TYPED_ENUM;
 
 typedef NSString* OCShareID;
 
@@ -99,13 +101,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSDate *creationDate; //!< Creation date of the share
 @property(nullable,strong) NSDate *expirationDate; //!< Expiration date of the share
 
+@property(assign,nonatomic) BOOL protectedByPassword; //!< YES if the share is password protected (not always available)
 @property(nullable,strong) NSString *password; //!< Password of the share (not always available)
 
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
 @property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
 
 @property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
-@property(nullable,strong) NSNumber *accepted; //!< Share has been accepted (federated sharing)
+@property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
+@property(nullable,strong) NSNumber *accepted; //!< Federated share has been accepted
 
 #pragma mark - Convenience constructors
 /**
@@ -132,5 +136,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
 
 @end
+
+extern OCShareState OCShareStateAccepted;
+extern OCShareState OCShareStatePending;
+extern OCShareState OCShareStateRejected;
 
 NS_ASSUME_NONNULL_END

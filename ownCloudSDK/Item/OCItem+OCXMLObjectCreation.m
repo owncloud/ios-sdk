@@ -174,6 +174,13 @@
 				}
 			} copy],
 
+			@"oc:privatelink" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.privateLink = [[NSURL alloc] initWithString:value];
+				}
+			} copy],
+
 			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{

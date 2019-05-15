@@ -176,15 +176,26 @@
 	return (resultInstruction);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem),
+		OCSyncActionWrapNullableItem(self.archivedItemVersion)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
 	_updateProperties = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"updateProperties"];
+	_archivedItemVersion = [decoder decodeObjectOfClass:[OCItem class] forKey:@"archivedItemVersion"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
 {
 	[coder encodeObject:_updateProperties forKey:@"updateProperties"];
+	[coder encodeObject:_archivedItemVersion forKey:@"archivedItemVersion"];
 }
 
 @end

@@ -164,6 +164,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-extern OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]
-
 NS_ASSUME_NONNULL_END

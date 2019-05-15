@@ -16,10 +16,10 @@ This document provides an overview over the available sections and variables.
 - **Variables**:
 	- `endpoint-capabilities`: Endpoint to use for retrieving server capabilities
 		- type: string
-		- default: `ocs/v1.php/cloud/capabilities`
+		- default: `ocs/v2.php/cloud/capabilities`
 	- `endpoint-user`: Endpoint to use for retrieving information on logged in user
 		- type: string
-		- default: `ocs/v1.php/cloud/user`
+		- default: `ocs/v2.php/cloud/user`
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/dav/files`
@@ -67,15 +67,15 @@ This document provides an overview over the available sections and variables.
 	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `["*"]` turns on thumbnail loading for all items.
 		- type: array
 		- default: `["*"]`
-
-## HTTP
-
-- **Section ID**: `http`
-
-- **Variables**:
-	- `insert-x-request-id`: Insert a unique, random UUID in the `X-Request_ID` HTTP header with every request to enable server-side tracing ([Details](https://github.com/owncloud/ios-sdk/issues/1))
-		- type: boolean
+	- `add-accept-language-header`: Add an `Accept-Language` HTTP header using the preferred languages set on the device.
+		- type: bool
 		- default: `true`
+	- `override-reachability-signal`: Override the reachability signal, so the host is always considered reachable (`true`) or unreachable (`false`)
+		- type: bool
+		-default: -
+	- `override-availability-signal`: Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`) 
+		- type: bool
+		-default: -
 
 ## Logging
 

@@ -36,7 +36,7 @@
 
 	dispatch_once(&onceToken, ^{
 		sharedManager = [OCCoreManager new];
-		sharedManager.postFileProviderNotifications = OCCore.hostHasFileProvider;
+		sharedManager.postFileProviderNotifications = OCVault.hostHasFileProvider;
 	});
 
 	return (sharedManager);

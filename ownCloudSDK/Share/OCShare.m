@@ -27,6 +27,8 @@
 @dynamic canDelete;
 @dynamic canShare;
 
+@synthesize protectedByPassword = _protectedByPassword;
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -104,6 +106,26 @@ BIT_ACCESSOR(canCreate,	setCanCreate,	OCSharePermissionsMaskCreate);
 BIT_ACCESSOR(canDelete,	setCanDelete,	OCSharePermissionsMaskDelete);
 BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
+- (BOOL)protectedByPassword
+{
+	if ((_password != nil) && ![_password isEqual:@""])
+	{
+		_protectedByPassword = YES;
+	}
+
+	return (_protectedByPassword);
+}
+
+- (void)setProtectedByPassword:(BOOL)protectedByPassword
+{
+	if (!protectedByPassword)
+	{
+		self.password = nil;
+	}
+
+	_protectedByPassword = protectedByPassword;
+}
+
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
@@ -133,6 +155,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 			(otherShare->_permissions == _permissions) &&
 
+			(otherShare.protectedByPassword == self.protectedByPassword) &&
+
 			compareVar(_creationDate) &&
 			compareVar(_expirationDate) &&
 
@@ -140,7 +164,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 			compareVar(_recipient) &&
 
 			compareVar(_mountPoint) &&
-			compareVar(_accepted)
+			compareVar(_accepted) &&
+			compareVar(_state)
 		);
 	}
 
@@ -172,6 +197,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
+		_protectedByPassword = [decoder decodeBoolForKey:@"protectedByPassword"];
+
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 		_expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
 
@@ -180,6 +207,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 		_mountPoint = [decoder decodeObjectOfClass:[NSString class] forKey:@"mountPoint"];
 		_accepted = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"accepted"];
+		_state = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"state"];
 	}
 	
 	return (self);
@@ -202,6 +230,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 	[coder encodeInteger:_permissions forKey:@"permissions"];
 
+	[coder encodeBool:self.protectedByPassword forKey:@"protectedByPassword"];
+
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
 	[coder encodeObject:_expirationDate forKey:@"expirationDate"];
 
@@ -210,6 +240,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 	[coder encodeObject:_mountPoint forKey:@"mountPoint"];
 	[coder encodeObject:_accepted forKey:@"accepted"];
+	[coder encodeObject:_state forKey:@"state"];
 }
 
 #pragma mark - Description
@@ -259,7 +290,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		permissionsString = @"none";
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : @""), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemPath: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemPath, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateRejected] ? @", state: rejected" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
 }
 
 #pragma mark - Copying
@@ -285,6 +316,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	copiedShare->_expirationDate = _expirationDate;
 
 	copiedShare->_password = _password;
+	copiedShare->_protectedByPassword = _protectedByPassword;
 
 	copiedShare->_owner = _owner;
 	copiedShare->_recipient = _recipient;
@@ -292,7 +324,14 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	copiedShare->_mountPoint = _mountPoint;
 	copiedShare->_accepted = _accepted;
 
+	copiedShare->_state = _state;
+
 	return (copiedShare);
 }
 
 @end
+
+// Values via https://github.com/owncloud/core/blob/master/lib/private/Share/Constants.php
+OCShareState OCShareStateAccepted = @"0";
+OCShareState OCShareStatePending  = @"1";
+OCShareState OCShareStateRejected = @"2";

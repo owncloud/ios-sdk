@@ -41,12 +41,16 @@ typedef NS_ENUM(NSUInteger, OCRecipientMatchType) {
 @property(nullable,strong) OCUser *user;
 
 @property(nullable,strong,nonatomic) NSString *identifier; //!< Depending on type, returns user.userName or group.identifier
-@property(nullable,strong,nonatomic) NSString *displayName; //!< Depending on type, returns user.displayName or group.name
+@property(nullable,strong,nonatomic) NSString *displayName; //!< Depending on type, returns user.displayName or group.name. Adds " (shareWithAdditionalInfo)" if shareWithAdditionalInfo is available.
+
+@property(nullable,strong) NSString *searchResultName; //!< For recipient search results, the name provided from the server via "shareWithAdditionalInfo" where available
 
 @property(assign) OCRecipientMatchType matchType;
 
 + (instancetype)recipientWithUser:(OCUser *)user;
 + (instancetype)recipientWithGroup:(OCGroup *)group;
+
+- (instancetype)withSearchResultName:(nullable NSString *)searchResultName;
 
 @end
 

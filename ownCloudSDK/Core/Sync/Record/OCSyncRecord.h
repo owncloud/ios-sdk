@@ -64,6 +64,10 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,nullable) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
 @property(strong,readonly) OCProcessSession *originProcessSession; //!< The process session that this sync record originated in
 
+#pragma mark - Lane integration
+@property(strong,nullable) OCSyncLaneID laneID; //!< The ID of the sync lane this record is scheduled on.
+@property(readonly,strong,nullable,nonatomic) NSSet<OCSyncLaneTag> *laneTags; //!< The lane tags of the record that are used to schedule it on the right sync lane.
+
 #pragma mark - Action Definition
 @property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action
 @property(strong) OCSyncAction *action; //!< The sync action

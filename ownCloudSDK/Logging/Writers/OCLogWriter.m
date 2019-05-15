@@ -110,13 +110,13 @@ static dispatch_queue_t writerQueue;
 	{
 		if (tags.count < 3)
 		{
-			leadingTags = [NSString stringWithFormat:@"[%@] ", [tags componentsJoinedByString:@", "]];
+			leadingTags = [[NSString alloc] initWithFormat:@"[%@] ", [tags componentsJoinedByString:@", "]];
 			trailingTags = @"";
 		}
 		else
 		{
-			leadingTags = [NSString stringWithFormat:@"[%@, …] ", [[tags subarrayWithRange:NSMakeRange(0, 2)] componentsJoinedByString:@", "]];
-			trailingTags = [NSString stringWithFormat:@" [… %@]", [[tags subarrayWithRange:NSMakeRange(2, tags.count-2)] componentsJoinedByString:@", "]];
+			leadingTags = [[NSString alloc] initWithFormat:@"[%@, …] ", [[tags subarrayWithRange:NSMakeRange(0, 2)] componentsJoinedByString:@", "]];
+			trailingTags = [[NSString alloc] initWithFormat:@" [… %@]", [[tags subarrayWithRange:NSMakeRange(2, tags.count-2)] componentsJoinedByString:@", "]];
 		}
 	}
 	else
@@ -127,7 +127,7 @@ static dispatch_queue_t writerQueue;
 
 	timestampString = [dateFormatter stringFromDate:date];
 
-	[self appendMessage:[NSString stringWithFormat:@"%@ %@[%d%@%06llu] [%@] | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
+	[self appendMessage:[[NSString alloc] initWithFormat:@"%@ %@[%d%@%06llu] [%@] | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
 }
 
 - (void)appendMessage:(NSString *)message

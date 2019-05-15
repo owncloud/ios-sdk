@@ -276,7 +276,7 @@
 
 		OCLogDebug(@"Request for pipelineID=%@", pipelineID);
 
-		if (OCLogger.logLevel <= OCLogLevelDebug)
+		if ([OCLogger logsForLevel:OCLogLevelDebug])
 		{
 			completionHandler = ^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
 				OCLogDebug(@"Served request for pipelineID=%@ with pipeline=%@, error=%@", pipelineID, pipeline, error);

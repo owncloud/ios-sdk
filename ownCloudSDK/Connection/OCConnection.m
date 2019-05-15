@@ -62,6 +62,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 @synthesize capabilities = _capabilities;
 
 @synthesize actionSignals = _actionSignals;
+@synthesize propFindSignals = _propFindSignals;
 
 @synthesize state = _state;
 
@@ -80,21 +81,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",
-		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
-		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
-		OCConnectionEndpointIDStatus 	    		: @"status.php",
-		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
-		OCConnectionEndpointIDShares			: @"ocs/v1.php/apps/files_sharing/api/v1/shares",
-		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
-		OCConnectionEndpointIDRecipients		: @"ocs/v1.php/apps/files_sharing/api/v1/sharees",
+		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
+		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
+		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
+		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",		// Requested once per item thumbnail request
+		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular			: @(YES),
-		OCConnectionPlainHTTPPolicy			: @"warn"
+		OCConnectionPlainHTTPPolicy			: @"warn",
+		OCConnectionAlwaysRequestPrivateLink		: @(NO)
 	});
 }
 
@@ -181,6 +183,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		_propFindSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		_usersByUserID = [NSMutableDictionary new];
 
@@ -983,7 +986,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
 		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
-		NSMutableArray <OCXMLNode *> *ocPropAtributes = [[NSMutableArray alloc] initWithObjects:
+		NSMutableArray <OCXMLNode *> *ocPropAttributes = [[NSMutableArray alloc] initWithObjects:
 			// WebDAV properties
 			[OCXMLNode elementWithName:@"D:resourcetype"],
 			[OCXMLNode elementWithName:@"D:getlastmodified"],
@@ -1014,7 +1017,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			// [OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
 		nil];
 
-		[davRequest.xmlRequestPropAttribute addChildren:ocPropAtributes];
+		if ([[self classSettingForOCClassSettingsKey:OCConnectionAlwaysRequestPrivateLink] boolValue])
+		{
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"privatelink" attributes:ocNamespaceAttributes]];
+		}
+
+		[davRequest.xmlRequestPropAttribute addChildren:ocPropAttributes];
+
+		davRequest.requiredSignals = self.propFindSignals;
 	}
 
 	return (davRequest);
@@ -1059,7 +1069,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		davRequest.downloadRequest = YES;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
 		davRequest.forceCertificateDecisionDelegation = YES;
-		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -2375,6 +2384,7 @@ OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-ser
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
+OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

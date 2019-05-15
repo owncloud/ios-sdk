@@ -1,9 +1,9 @@
 //
-//  NSProgress+OCEvent.h
+//  OCBookmark+IPNotificationNames.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 24.02.18.
-//  Copyright © 2018 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 08.05.19.
+//  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
 /*
@@ -16,13 +16,15 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCEvent.h"
+#import "OCBookmark.h"
+#import "OCIPNotificationCenter.h"
 
-@interface NSProgress (OCEvent)
+NS_ASSUME_NONNULL_BEGIN
 
-@property(assign,nonatomic) OCEventType eventType;
-@property(assign,nonatomic) OCFileID fileID;
-@property(assign,nonatomic) OCLocalID localID;
+@interface OCBookmark (IPNotificationNames)
+
+@property(readonly,nonatomic) OCIPCNotificationName coreUpdateNotificationName;
 
 @end
+
+NS_ASSUME_NONNULL_END

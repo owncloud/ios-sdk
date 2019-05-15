@@ -215,6 +215,8 @@
 	{
 		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
 
+		_laneID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"laneID"];
+
 		_originProcessSession = [decoder decodeObjectOfClass:[OCProcessSession class] forKey:@"originProcessSession"];
 
 		_actionIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"actionID"];
@@ -236,6 +238,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_recordID forKey:@"recordID"];
+
+	[coder encodeObject:_laneID forKey:@"laneID"];
 
 	[coder encodeObject:_originProcessSession forKey:@"originProcessSession"];
 
@@ -285,6 +289,12 @@
 			progress.progress.eventType = _action.actionEventType;
 		}
 	}
+}
+
+#pragma mark - Sync Lane support
+- (NSSet<OCSyncLaneTag> *)laneTags
+{
+	return (self.action.laneTags);
 }
 
 #pragma mark - Description

@@ -38,6 +38,7 @@
 		NSDictionary <NSString *, id> *value = recipientDict[@"value"];
 		OCShareTypeID shareTypeID = value[@"shareType"];
 		NSString *shareWith = value[@"shareWith"];
+		NSString *shareWithAdditionalInfo = value[@"shareWithAdditionalInfo"];
 
 		if ((shareWith != nil) && (shareTypeID != nil))
 		{
@@ -45,11 +46,11 @@
 			{
 				case OCShareTypeUserShare:
 				case OCShareTypeRemote:
-					recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]];
+					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				case OCShareTypeGroupShare:
-					recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]];
+					recipient = [[OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				default:
@@ -127,6 +128,7 @@
 					switch (statusCode.integerValue)
 					{
 						case 100:
+						case 200:
 							// All is well
 						break;
 
