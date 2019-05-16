@@ -92,6 +92,8 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 - (void)addWriter:(OCLogWriter *)logWriter; //!< Adds a writer and opens it
 - (nullable OCLogWriter *)writerWithIdentifier:(OCLogComponentIdentifier)identifier;
 - (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock; //!< Pauses log writing: closes all writers, executes intermittentBlock, opens all writers, resumes logging
+- (void)pause;
+- (void)resume;
 
 #pragma mark - Toggles
 - (void)addToggle:(OCLogToggle *)logToggle; //!< Adds a toggle

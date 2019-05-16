@@ -48,7 +48,7 @@ static NSURL *sDefaultLogFileURL;
 {
 	if (sDefaultLogFileURL == nil)
 	{
-		sDefaultLogFileURL = [[OCAppIdentity.sharedAppIdentity appGroupContainerURL] URLByAppendingPathComponent:@"ownCloudApp.log"];
+		sDefaultLogFileURL = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] URLByAppendingPathComponent:@"ownCloudApp.log"];
 	}
 
 	return (sDefaultLogFileURL);
@@ -238,26 +238,15 @@ static NSURL *sDefaultLogFileURL;
 	NSError *error = nil;
 
 	// Get contents of directory
-	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupContainerURL] path];
+	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
 	NSArray *directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
 																					 error:&error];
-
-	if (error == nil)
-	{
-		// Filter log files
-		NSString *logNamePattern = @"*.log.*";
-		NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF like[cd] %@", logNamePattern];
-		return [directoryContents filteredArrayUsingPredicate:predicate];
-	}
-	else
-	{
-		return nil;
-	}
+	return directoryContents;
 }
 
 - (void)cleanUpLogs:(BOOL)removeAll
 {
-	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupContainerURL] path];
+	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
 	NSArray *logFiles = [self logFiles];
 
 	if (logFiles != nil)

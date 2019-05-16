@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_keychainAccessGroupIdentifier;
 	NSString *_appGroupIdentifier;
 	NSURL *_appGroupContainerURL;
+	NSURL *_appGroupLogsContainerURL;
 	NSString *_appName;
 	
 	OCKeychain *_keychain;
@@ -59,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - App Paths
 @property(strong,nonatomic,nullable) NSURL *appGroupContainerURL;
+@property(strong,nonatomic,nullable) NSURL *appGroupLogsContainerURL;
 
 #pragma mark - App Resources
 @property(strong,nonatomic,nullable) OCKeychain *keychain;

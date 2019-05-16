@@ -517,6 +517,20 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	});
 }
 
+- (void)pause
+{
+	dispatch_async([OCLogWriter queue], ^{
+		[self _closeAllWriters];
+	});
+}
+
+- (void)resume
+{
+	dispatch_async([OCLogWriter queue], ^{
+		[self _openAllWriters];
+	});
+}
+
 - (NSArray<OCLogWriter *> *)writers
 {
 	return ([NSArray arrayWithArray:_writers]);
