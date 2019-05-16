@@ -1017,7 +1017,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
-		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
 		NSMutableArray <OCXMLNode *> *ocPropAttributes = [self _davItemAttributes];
 
 		if (depth == 0)
@@ -2329,11 +2328,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Report API
 - (nullable OCProgress *)filterFilesWithRules:(nullable NSDictionary<OCItemPropertyName, id> *)filterRules properties:(nullable NSArray<OCXMLNode *> *)properties resultTarget:(OCEventTarget *)eventTarget
 {
-//	[self filterFilesWithRules:@{
-//		OCItemPropertyNameIsFavorite : @1 } properties:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-//		OCLogDebug(@"Favorites: %@, Error: %@", event.result, event.error);
-//	} userInfo:nil ephermalUserInfo:nil]];
-
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 	NSMutableArray<OCXMLNode *> *filterRulesXML = [NSMutableArray new];
 	OCHTTPDAVRequest *request;

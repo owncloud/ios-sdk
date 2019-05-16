@@ -1084,7 +1084,87 @@
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
+}
 
+- (void)testFavoriteRefresh
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	__block XCTestExpectation *trackingResponseFromFavoriteUpdateFirstExpectation = [self expectationWithDescription:@"Favorite update 1 tracking response"];
+	__block XCTestExpectation *trackingResponseFromFavoriteUpdateSecondExpectation = [self expectationWithDescription:@"Favorite update 2 tracking response"];
+	__block id itemTracker = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCPath trackPath = @"/Documents/Example.odt";
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				XCTAssert(!serverItem.isFavorite.boolValue); // Item needs to start as non-favorite for this test to work
+
+				[initialTrackingResponseFromServerExpectation fulfill];
+
+				serverItem.isFavorite = @(YES);
+
+				[core.connection updateItem:serverItem properties:@[ OCItemPropertyNameIsFavorite ] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					[core refreshFavoritesWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems) {
+						OCLog(@"Favorited items (after favoring): %@", favoritedItems);
+					}];
+				} userInfo:nil ephermalUserInfo:nil]];
+			}
+			else
+			{
+				if (serverItem.isFavorite.boolValue && (trackingResponseFromFavoriteUpdateFirstExpectation!=nil))
+				{
+					[trackingResponseFromFavoriteUpdateFirstExpectation fulfill];
+					trackingResponseFromFavoriteUpdateFirstExpectation = nil;
+
+					serverItem.isFavorite = @(NO);
+
+					[core.connection updateItem:serverItem properties:@[ OCItemPropertyNameIsFavorite ] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						[core refreshFavoritesWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems) {
+							OCLog(@"Favorited items (after de-favoring): %@", favoritedItems);
+						}];
+					} userInfo:nil ephermalUserInfo:nil]];
+				}
+				else if (trackingResponseFromFavoriteUpdateFirstExpectation == nil)
+				{
+					[trackingResponseFromFavoriteUpdateSecondExpectation fulfill];
+					trackingResponseFromFavoriteUpdateSecondExpectation = nil;
+
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				}
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
 }
 
 @end

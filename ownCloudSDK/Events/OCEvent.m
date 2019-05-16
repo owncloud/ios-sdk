@@ -179,3 +179,4 @@
 
 OCEventUserInfoKey OCEventUserInfoKeyItem = @"item";
 OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier = @"itemVersionIdentifier";
+OCEventUserInfoKey OCEventUserInfoKeySelector = @"selector";

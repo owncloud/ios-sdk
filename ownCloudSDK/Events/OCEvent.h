@@ -125,6 +125,7 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 extern OCEventUserInfoKey OCEventUserInfoKeyItem;
 extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
+extern OCEventUserInfoKey OCEventUserInfoKeySelector;
 
 NS_ASSUME_NONNULL_END
 

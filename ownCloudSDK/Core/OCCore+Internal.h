@@ -36,6 +36,9 @@
 #pragma mark - Sync Engine
 - (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
 
+#pragma mark - Event target tools
+- (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo;
+
 #pragma mark - Attempt Connect
 - (void)attemptConnect:(BOOL)doAttempt;
 - (void)_attemptConnect;

@@ -1339,25 +1339,62 @@
 	return (error);
 }
 
+#pragma mark - Event target tools
+- (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
+{
+	NSMutableDictionary *targetUserInfo = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+		NSStringFromSelector(selector), OCEventUserInfoKeySelector,
+	nil];
+
+	if (userInfo != nil)
+	{
+		[targetUserInfo addEntriesFromDictionary:userInfo];
+	}
+
+	return ([OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:targetUserInfo ephermalUserInfo:ephermalUserInfo]);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
 	[self beginActivity:@"Handling event"];
 
 	[self queueBlock:^{
-		switch (event.eventType)
+		NSString *selectorName;
+
+		if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
 		{
-			case OCEventTypeRetrieveThumbnail:
-				[self _handleRetrieveThumbnailEvent:event sender:sender];
-			break;
+			// Selector specified -> route event directly to selector
+			SEL eventHandlingSelector;
 
-			case OCEventTypeRetrieveItemList:
-				[self _handleRetrieveItemListEvent:event sender:sender];
-			break;
+			if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
+			{
+				// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
+				void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
 
-			default:
-				[self _handleSyncEvent:event sender:sender];
-			break;
+				if (impFunction != NULL)
+				{
+					impFunction(self, eventHandlingSelector, event, sender);
+				}
+			}
+		}
+		else
+		{
+			// Handle by event type
+			switch (event.eventType)
+			{
+				case OCEventTypeRetrieveThumbnail:
+					[self _handleRetrieveThumbnailEvent:event sender:sender];
+				break;
+
+				case OCEventTypeRetrieveItemList:
+					[self _handleRetrieveItemListEvent:event sender:sender];
+				break;
+
+				default:
+					[self _handleSyncEvent:event sender:sender];
+				break;
+			}
 		}
 
 		[self endActivity:@"Handling event"];

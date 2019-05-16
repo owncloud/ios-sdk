@@ -93,6 +93,7 @@ typedef void(^OCCoreDownloadResultHandler)(NSError * _Nullable error, OCCore *co
 typedef void(^OCCoreRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable retrievedObject, BOOL isOngoing, NSProgress * _Nullable progress);
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, OCItemThumbnail * _Nullable thumbnail, BOOL isOngoing, NSProgress * _Nullable progress);
 typedef void(^OCCorePlaceholderCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
+typedef void(^OCCoreFavoritesResultHandler)(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems);
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
@@ -268,6 +269,12 @@ typedef id<NSObject> OCCoreItemTracking;
 //- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
 //@end
+
+@interface OCCore (Favorites)
+
+- (nullable NSProgress *)refreshFavoritesWithCompletionHandler:(OCCoreFavoritesResultHandler)completionHandler; //!< Performs a search for favorites on the server and uses the results to update the favorite status of items in the meta data cache. This is a (hopefully temporary) band-aid for a wider issue (see https://github.com/owncloud/core/issues/16589#issuecomment-492577219 for details). The returned array of OCItems may be incomplete as it only contains OCItems already known by the database.
+
+@end
 
 @interface OCCore (Thumbnails)
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
