@@ -17,6 +17,7 @@
  */
 
 #import "OCLogWriter.h"
+#import "OCLogFileRecord.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,9 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init;
 - (instancetype)initWithLogFileURL:(NSURL *)url;
 
-- (nullable NSError *)eraseOrTruncate;
+- (NSArray<OCLogFileRecord*>*)logRecords;
 
-- (nullable NSArray*)logFiles;
+- (void)deleteLogRecord:(OCLogFileRecord*)record;
 
 - (void)cleanUpLogs:(BOOL)removeAll;
 

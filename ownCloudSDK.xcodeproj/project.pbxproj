@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
+		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D62195A11600C8875E /* OCCoreManager+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 5966C8D42195A11600C8875E /* OCCoreManager+OCMocking.m */; };
 		599A45AA218C566C003CAB00 /* OCConnection+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 599A45A8218C566C003CAB00 /* OCConnection+OCMocking.m */; };
@@ -560,6 +562,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
+		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
 		590CCF3D20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		590CCF3E20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
@@ -1099,6 +1103,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4C7295E6228DACE600FA4E68 /* Records */ = {
+			isa = PBXGroup;
+			children = (
+				4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */,
+				4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */,
+			);
+			path = Records;
+			sourceTree = "<group>";
+		};
 		DC0283652090A8EE005B6334 /* Images */ = {
 			isa = PBXGroup;
 			children = (
@@ -1936,6 +1949,7 @@
 			children = (
 				DC8556F5204F361100189B9A /* OCLogger.m */,
 				DC8556F4204F361100189B9A /* OCLogger.h */,
+				4C7295E6228DACE600FA4E68 /* Records */,
 				DC20DE8C21C104C60096000B /* Tags */,
 				DC20DE4821BFCB8D0096000B /* Component */,
 				DC20DE4D21BFCE8B0096000B /* Toggle */,
@@ -2458,6 +2472,7 @@
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
+				4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
@@ -2890,6 +2905,7 @@
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
+				4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,

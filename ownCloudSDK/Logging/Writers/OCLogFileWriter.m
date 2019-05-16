@@ -191,22 +191,16 @@ static NSURL *sDefaultLogFileURL;
 	return (error);
 }
 
-- (nullable NSError *)eraseOrTruncate
+- (NSDictionary*)attributesForPath:(NSString*)path
 {
-	return [self eraseOrTruncate:self.logFileURL.path];
-}
-
-- (NSDate*)fileCreationDateForPath:(NSString*)path
-{
-	NSDate* creationDate = nil;
+	NSDictionary *attributes = nil;
 
 	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
 	{
-		NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
-		creationDate = attributes[NSFileCreationDate];
+		attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
 	}
 
-	return creationDate;
+	return attributes;
 }
 
 - (void)scheduleLogRotationTimer
@@ -233,7 +227,7 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (NSArray*)logFiles
+- (NSArray<OCLogFileRecord*>*)logRecords
 {
 	NSError *error = nil;
 
@@ -241,53 +235,67 @@ static NSURL *sDefaultLogFileURL;
 	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
 	NSArray *directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
 																					 error:&error];
-	return directoryContents;
+
+	NSMutableArray<OCLogFileRecord*> *records = [NSMutableArray new];
+
+	// Create an array of log records
+	for (NSString *filename in directoryContents)
+	{
+		NSString *fullPath = [directoryPath stringByAppendingPathComponent:filename];
+		NSDictionary* attributes = [self attributesForPath:fullPath];
+		if(attributes)
+		{
+			NSDate *creationDate = attributes[NSFileCreationDate];
+			int64_t fileSize = [attributes[NSFileSize] longLongValue];
+			OCLogFileRecord *record = [[OCLogFileRecord alloc] initWithName:filename
+															   creationDate:creationDate
+																   fileSize:fileSize];
+			[records addObject:record];
+		}
+	}
+
+	// Sort by creation date
+	[records sortUsingComparator:^NSComparisonResult(OCLogFileRecord* _Nonnull record1, OCLogFileRecord* _Nonnull record2) {
+
+		if (record1.creationDate != nil && record2.creationDate != nil)
+		{
+			return [record1.creationDate compare:record2.creationDate];
+		}
+		else
+		{
+			return NSOrderedSame;
+		}
+	}];
+
+	return records;
+}
+
+- (void)deleteLogRecord:(OCLogFileRecord*)record
+{
+	if (record)
+	{
+		[self eraseOrTruncate:[record fullPath]];
+	}
 }
 
 - (void)cleanUpLogs:(BOOL)removeAll
 {
-	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
-	NSArray *logFiles = [self logFiles];
+	NSMutableArray<OCLogFileRecord*> *logRecords = [NSMutableArray arrayWithArray:[self logRecords]];
 
-	if (logFiles != nil)
-	{
-		NSMutableArray *existingLogPaths = [NSMutableArray arrayWithArray:logFiles];
+	NSUInteger maxFileCountToKeep = removeAll ? 0 : _maximumLogFileCount;
 
-		// Sort by creation date
-		[existingLogPaths sortUsingComparator:^NSComparisonResult(id  _Nonnull file1, id  _Nonnull file2) {
-
-			NSString *path1 = [directoryPath stringByAppendingPathComponent:file1];
-			NSString *path2 = [directoryPath stringByAppendingPathComponent:file2];
-
-			NSDate *creationDate1 = [self fileCreationDateForPath:path1];
-			NSDate *creationDate2 = [self fileCreationDateForPath:path2];
-
-			if (creationDate1 != nil && creationDate2 != nil)
-			{
-				return [creationDate1 compare:creationDate2];
-			}
-			else
-			{
-				return NSOrderedSame;
-			}
-		}];
-
-		NSUInteger maxFileCountToKeep = removeAll ? 0 : _maximumLogFileCount;
-
-		// Remove old files which are exceeding maximum allowed file count
-		while ([existingLogPaths count] > maxFileCountToKeep) {
-			NSString *pathToDelete = [directoryPath stringByAppendingPathComponent:[existingLogPaths firstObject]];
-
-			[self eraseOrTruncate:pathToDelete];
-			[existingLogPaths removeObjectAtIndex:0];
-		}
+	// Remove old files which are exceeding maximum allowed file count
+	while ([logRecords count] > maxFileCountToKeep) {
+		OCLogFileRecord *firstRecord = [logRecords firstObject];
+		[self deleteLogRecord:firstRecord];
+		[logRecords removeObjectAtIndex:0];
 	}
 }
 
 - (void)rotateLogIfRequired
 {
 	NSError *error = nil;
-	NSDate *logCreationDate = [self fileCreationDateForPath:self.logFileURL.path];
+	NSDate *logCreationDate = [self attributesForPath:self.logFileURL.path][NSFileCreationDate];
 
 	if (logCreationDate != nil)
 	{
