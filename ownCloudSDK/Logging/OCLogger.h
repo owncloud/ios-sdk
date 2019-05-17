@@ -52,7 +52,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 	NSMutableArray<OCLogSource *> *_sources;
 
 	NSMutableArray<OCLogWriter *> *_writers;
-	dispatch_queue_t _writerQueue;
+	dispatch_queue_t _writeQueue;
 
 	NSMutableArray <OCLogToggle *> *_toggles;
 	NSMutableDictionary<OCLogComponentIdentifier, OCLogToggle *> *_togglesByIdentifier;

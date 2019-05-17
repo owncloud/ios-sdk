@@ -32,8 +32,6 @@ static BOOL sOCLogLevelInitialized;
 static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
-static dispatch_queue_t _writeQueue;
-
 @interface OCLogger ()
 {
 	uint64_t _mainThreadThreadID;
@@ -284,7 +282,7 @@ static dispatch_queue_t _writeQueue;
 	if ((self = [super init]) != nil)
 	{
 		_writers = [NSMutableArray new];
-		_writerQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
+		_writeQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		_sources = [NSMutableArray new];
 

@@ -23,13 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCLogFileRecord : NSObject
 
-@property(strong) NSString *name;
-@property(strong, nullable) NSDate *creationDate;
-@property(assign) int64_t size;
+@property(readonly) NSURL *url;
+@property(readonly) NSString *name;
+@property(readonly, nullable) NSDate *creationDate;
+@property(readonly) int64_t size;
 
-- (instancetype)initWithName:(NSString*)name creationDate:(NSDate*)date fileSize:(int64_t)size;
-
-- (NSString*)fullPath;
+- (instancetype)initWithURL:(NSURL*)url;
 
 @end
 

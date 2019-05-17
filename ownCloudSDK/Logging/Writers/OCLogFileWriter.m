@@ -181,27 +181,19 @@ static NSURL *sDefaultLogFileURL;
 {
 	NSError *error = nil;
 
-	// Get contents of directory
-	NSString *directoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
-	NSArray *directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
-																					 error:&error];
+	// Get contents of log directory
+	NSArray *urls = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL]
+																			  includingPropertiesForKeys:@[NSURLCreationDateKey, NSURLFileSizeKey]
+																			  options:0
+																			  error:&error];
 
 	NSMutableArray<OCLogFileRecord*> *records = [NSMutableArray new];
 
 	// Create an array of log records
-	for (NSString *filename in directoryContents)
+	for (NSURL* url in urls)
 	{
-		NSString *fullPath = [directoryPath stringByAppendingPathComponent:filename];
-		NSDictionary* attributes = [self _attributesForPath:fullPath];
-		if(attributes)
-		{
-			NSDate *creationDate = attributes[NSFileCreationDate];
-			int64_t fileSize = [attributes[NSFileSize] longLongValue];
-			OCLogFileRecord *record = [[OCLogFileRecord alloc] initWithName:filename
-															   creationDate:creationDate
-																   fileSize:fileSize];
-			[records addObject:record];
-		}
+		OCLogFileRecord *record = [[OCLogFileRecord alloc] initWithURL:url];
+		[records addObject:record];
 	}
 
 	// Sort by creation date
@@ -224,7 +216,7 @@ static NSURL *sDefaultLogFileURL;
 {
 	if (record)
 	{
-		[self _eraseOrTruncate:[record fullPath]];
+		[self _eraseOrTruncate:record.url];
 	}
 }
 
@@ -257,18 +249,17 @@ static NSURL *sDefaultLogFileURL;
 	[[NSNotificationCenter defaultCenter] postNotificationName:OCLogFileWriterLogRecordsChangedNotification object:nil];
 }
 
-- (nullable NSError *)_eraseOrTruncate:(NSString*)path
+- (nullable NSError *)_eraseOrTruncate:(NSURL*)url
 {
 	NSError *error = nil;
 
-	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
+	if ([[NSFileManager defaultManager] fileExistsAtPath:url.path])
 	{
-
-		if (![[NSFileManager defaultManager] removeItemAtPath:path error:&error])
+		if (![[NSFileManager defaultManager] removeItemAtURL:url error:&error])
 		{
 			int truncateFD;
 
-			if ((truncateFD = open((const char *)path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
+			if ((truncateFD = open((const char *)url.path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
 			{
 				close(truncateFD);
 			}
@@ -333,10 +324,10 @@ static NSURL *sDefaultLogFileURL;
 			NSString *timeStamp = [OCLogWriter timestampStringFrom:[NSDate date]];
 			NSString *transformedTimestamp = [timeStamp stringByReplacingOccurrencesOfString:@"[ /:]+" withString:@"_" options:NSRegularExpressionSearch range:NSMakeRange(0, [timeStamp length])];
 
-			NSString *arhivedLogPath = [self.logFileURL.path stringByAppendingFormat:@".%@", transformedTimestamp];
+			NSString *archivedLogPath = [self.logFileURL.path stringByAppendingFormat:@".%@", transformedTimestamp];
 
 			// Rename current log and start new one
-			[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:arhivedLogPath error:&error];
+			[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:archivedLogPath error:&error];
 
 			// Notify about addition of a new file
 			[self _notifyAboutChangesInLogStorage];

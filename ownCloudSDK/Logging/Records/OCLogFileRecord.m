@@ -21,22 +21,46 @@
 
 @implementation OCLogFileRecord
 
-- (instancetype)initWithName:(NSString*)name creationDate:(NSDate*)date fileSize:(int64_t)size
+@synthesize size=_size;
+@synthesize creationDate=_creationDate;
+
+- (instancetype)initWithURL:(NSURL*)url
 {
 	if ((self = [super init]) != nil)
 	{
-		_name = name;
-		_creationDate = date;
-		_size = size;
+		_url = url;
+		_size = -1;
 	}
 
 	return(self);
 }
 
-- (NSString*)fullPath
+- (NSString*)name
 {
-	NSString *logDirectoryPath = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] path];
-	return [logDirectoryPath stringByAppendingPathComponent:_name];
+	return _url.lastPathComponent;
+}
+
+- (int64_t)size
+{
+	if(_size < 0)
+	{
+		NSNumber* value;
+		[_url getResourceValue:&value forKey:NSURLFileSizeKey error:nil];
+		_size = [value longLongValue];
+	}
+
+	return _size;
+}
+
+- (NSDate*)creationDate
+{
+	if(_creationDate == nil)
+	{
+		NSDate *date;
+		[_url getResourceValue:&date forKey:NSURLCreationDateKey error:nil];
+		_creationDate = date;
+	}
+	return _creationDate;
 }
 
 @end
