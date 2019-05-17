@@ -120,7 +120,7 @@ static NSURL *sDefaultLogFileURL;
 
 			dispatch_resume(_logFileVnodeSource);
 
-			[self scheduleLogRotationTimer];
+			[self _scheduleLogRotationTimer];
 		}
 		else
 		{
@@ -147,7 +147,7 @@ static NSURL *sDefaultLogFileURL;
 		_logFileFD = 0;
 		_isOpen = NO;
 
-		[self unscheduleLogRotationTimer];
+		[self _unscheduleLogRotationTimer];
 	}
 
 	return (error);
@@ -166,67 +166,6 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (nullable NSError *)eraseOrTruncate:(NSString*)path
-{
-	NSError *error = nil;
-
-	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
-	{
-
-		if (![[NSFileManager defaultManager] removeItemAtPath:path error:&error])
-		{
-			int truncateFD;
-
-			if ((truncateFD = open((const char *)path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
-			{
-				close(truncateFD);
-			}
-			else
-			{
-				error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
-			}
-		}
-	}
-
-	return (error);
-}
-
-- (NSDictionary*)attributesForPath:(NSString*)path
-{
-	NSDictionary *attributes = nil;
-
-	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
-	{
-		attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
-	}
-
-	return attributes;
-}
-
-- (void)scheduleLogRotationTimer
-{
-	[self unscheduleLogRotationTimer];
-	_logRotationTimerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, [OCLogWriter queue]);
-
-	__weak __auto_type weakSelf = self;
-	dispatch_source_set_event_handler(_logRotationTimerSource, ^{
-		[weakSelf rotateLogIfRequired];
-	});
-
-	dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, OCDefaultLogRotationFrequency);
-
-	dispatch_source_set_timer(_logRotationTimerSource, fireTime, DISPATCH_TIME_FOREVER, 1ull * NSEC_PER_SEC);
-	dispatch_resume(_logRotationTimerSource);
-}
-
-- (void)unscheduleLogRotationTimer
-{
-	if (_logRotationTimerSource) {
-		dispatch_source_cancel(_logRotationTimerSource);
-		_logRotationTimerSource = NULL;
-	}
-}
-
 - (NSArray<OCLogFileRecord*>*)logRecords
 {
 	NSError *error = nil;
@@ -242,7 +181,7 @@ static NSURL *sDefaultLogFileURL;
 	for (NSString *filename in directoryContents)
 	{
 		NSString *fullPath = [directoryPath stringByAppendingPathComponent:filename];
-		NSDictionary* attributes = [self attributesForPath:fullPath];
+		NSDictionary* attributes = [self _attributesForPath:fullPath];
 		if(attributes)
 		{
 			NSDate *creationDate = attributes[NSFileCreationDate];
@@ -274,7 +213,7 @@ static NSURL *sDefaultLogFileURL;
 {
 	if (record)
 	{
-		[self eraseOrTruncate:[record fullPath]];
+		[self _eraseOrTruncate:[record fullPath]];
 	}
 }
 
@@ -292,10 +231,73 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
-- (void)rotateLogIfRequired
+// Private methods
+
+- (nullable NSError *)_eraseOrTruncate:(NSString*)path
 {
 	NSError *error = nil;
-	NSDate *logCreationDate = [self attributesForPath:self.logFileURL.path][NSFileCreationDate];
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
+	{
+
+		if (![[NSFileManager defaultManager] removeItemAtPath:path error:&error])
+		{
+			int truncateFD;
+
+			if ((truncateFD = open((const char *)path.UTF8String, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) != -1)
+			{
+				close(truncateFD);
+			}
+			else
+			{
+				error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			}
+		}
+	}
+
+	return (error);
+}
+
+- (NSDictionary*)_attributesForPath:(NSString*)path
+{
+	NSDictionary *attributes = nil;
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:path])
+	{
+		attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+	}
+
+	return attributes;
+}
+
+- (void)_scheduleLogRotationTimer
+{
+	[self _unscheduleLogRotationTimer];
+	_logRotationTimerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, [OCLogWriter queue]);
+
+	__weak __auto_type weakSelf = self;
+	dispatch_source_set_event_handler(_logRotationTimerSource, ^{
+		[weakSelf _rotateLogIfRequired];
+	});
+
+	dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, OCDefaultLogRotationFrequency);
+
+	dispatch_source_set_timer(_logRotationTimerSource, fireTime, DISPATCH_TIME_FOREVER, 1ull * NSEC_PER_SEC);
+	dispatch_resume(_logRotationTimerSource);
+}
+
+- (void)_unscheduleLogRotationTimer
+{
+	if (_logRotationTimerSource) {
+		dispatch_source_cancel(_logRotationTimerSource);
+		_logRotationTimerSource = NULL;
+	}
+}
+
+- (void)_rotateLogIfRequired
+{
+	NSError *error = nil;
+	NSDate *logCreationDate = [self _attributesForPath:self.logFileURL.path][NSFileCreationDate];
 
 	if (logCreationDate != nil)
 	{
@@ -317,7 +319,7 @@ static NSURL *sDefaultLogFileURL;
 		}
 		else
 		{
-			[self scheduleLogRotationTimer];
+			[self _scheduleLogRotationTimer];
 		}
 	}
 }
