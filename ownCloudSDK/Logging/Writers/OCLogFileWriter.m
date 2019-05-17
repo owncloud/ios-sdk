@@ -66,6 +66,10 @@ static NSURL *sDefaultLogFileURL;
 		_logFileURL = url;
 		_maximumLogFileCount = OCDefaultMaxLogFileCount;
 		_rotationInterval = OCDefaultRotationTimeInterval;
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCRemoteLogRotationNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCLocalLogRotationNotificationName object:nil];
+		}];
 	}
 
 	return (self);
@@ -74,6 +78,11 @@ static NSURL *sDefaultLogFileURL;
 - (instancetype)init
 {
 	return ([self initWithLogFileURL:[self class].logFileURL]);
+}
+
+- (void)dealloc
+{
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCRemoteLogRotationNotificationName];
 }
 
 - (NSError *)open
@@ -316,6 +325,10 @@ static NSURL *sDefaultLogFileURL;
 
 			// Check if some old logs can be deleted
 			[self cleanUpLogs:NO];
+
+			// Notify observers that contents of the log storage have changed
+			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCRemoteLogRotationNotificationName ignoreSelf:YES];
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCLocalLogRotationNotificationName object:nil];
 		}
 		else
 		{
@@ -326,4 +339,6 @@ static NSURL *sDefaultLogFileURL;
 
 @end
 
+OCIPCNotificationName OCRemoteLogRotationNotificationName = @"org.owncloud.log.rotation";
+NSNotificationName OCLocalLogRotationNotificationName = @"OCLocalLogRotationNotificationName";
 OCLogComponentIdentifier OCLogComponentIdentifierWriterFile = @"writer.file";
