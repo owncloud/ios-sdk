@@ -24,8 +24,6 @@
 
 static NSString *processName;
 static NSDateFormatter *dateFormatter;
-static dispatch_queue_t writerQueue;
-
 
 @synthesize isOpen = _isOpen;
 @synthesize writeHandler = _writeHandler;
@@ -38,13 +36,7 @@ static dispatch_queue_t writerQueue;
 
 		dateFormatter = [NSDateFormatter new];
 		dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSSSSSZZZ";
-		writerQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 	});
-}
-
-+ (dispatch_queue_t)queue
-{
-	return writerQueue;
 }
 
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler

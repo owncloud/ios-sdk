@@ -52,6 +52,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 	NSMutableArray<OCLogSource *> *_sources;
 
 	NSMutableArray<OCLogWriter *> *_writers;
+	dispatch_queue_t _writerQueue;
 
 	NSMutableArray <OCLogToggle *> *_toggles;
 	NSMutableDictionary<OCLogComponentIdentifier, OCLogToggle *> *_togglesByIdentifier;
@@ -66,6 +67,8 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 @property(copy,readonly,nonatomic) NSArray<OCLogWriter *> *writers;
 
 @property(readonly,strong) NSArray<OCLogToggle *> *toggles;
+
+@property(readonly,strong,nonatomic) dispatch_queue_t writeQueue;
 
 @property(class,readonly,strong,nonatomic) OCLogger *sharedLogger;
 
@@ -92,8 +95,6 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 - (void)addWriter:(OCLogWriter *)logWriter; //!< Adds a writer and opens it
 - (nullable OCLogWriter *)writerWithIdentifier:(OCLogComponentIdentifier)identifier;
 - (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock; //!< Pauses log writing: closes all writers, executes intermittentBlock, opens all writers, resumes logging
-- (void)pause;
-- (void)resume;
 
 #pragma mark - Toggles
 - (void)addToggle:(OCLogToggle *)logToggle; //!< Adds a toggle

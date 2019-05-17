@@ -39,7 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern OCLogComponentIdentifier OCLogComponentIdentifierWriterFile;
-extern OCIPCNotificationName OCRemoteLogRotationNotificationName;
-extern NSNotificationName OCLocalLogRotationNotificationName;
+extern NSNotificationName OCLogFileWriterLogRecordsChangedNotification;
 
 NS_ASSUME_NONNULL_END

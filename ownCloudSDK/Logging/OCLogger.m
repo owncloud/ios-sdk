@@ -32,6 +32,8 @@ static BOOL sOCLogLevelInitialized;
 static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
+static dispatch_queue_t _writeQueue;
+
 @interface OCLogger ()
 {
 	uint64_t _mainThreadThreadID;
@@ -282,6 +284,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	if ((self = [super init]) != nil)
 	{
 		_writers = [NSMutableArray new];
+		_writerQueue = dispatch_queue_create("OCLogger writer queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		_sources = [NSMutableArray new];
 
@@ -377,7 +380,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	}
 	else
 	{
-		dispatch_async([OCLogWriter queue], ^{
+		dispatch_async(_writeQueue, ^{
 			[self _rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
 		});
 	}
@@ -501,32 +504,18 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 #pragma mark - Writers
 - (void)addWriter:(OCLogWriter *)logWriter
 {
-	dispatch_async([OCLogWriter queue], ^{
+	dispatch_async(_writeQueue, ^{
 		[self->_writers addObject:logWriter];
 	});
 }
 
 - (void)pauseWritersWithIntermittentBlock:(dispatch_block_t)intermittentBlock
 {
-	dispatch_async([OCLogWriter queue], ^{
+	dispatch_async(_writeQueue, ^{
 		[self _closeAllWriters];
 
 		intermittentBlock();
 
-		[self _openAllWriters];
-	});
-}
-
-- (void)pause
-{
-	dispatch_async([OCLogWriter queue], ^{
-		[self _closeAllWriters];
-	});
-}
-
-- (void)resume
-{
-	dispatch_async([OCLogWriter queue], ^{
 		[self _openAllWriters];
 	});
 }

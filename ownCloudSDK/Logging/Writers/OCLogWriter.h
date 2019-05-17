@@ -51,8 +51,6 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 
 + (NSString*)timestampStringFrom:(NSDate*)date;
 
-+ (dispatch_queue_t)queue;
-
 @end
 
 extern OCLogComponentIdentifier OCLogComponentIdentifierWriterStandardError;

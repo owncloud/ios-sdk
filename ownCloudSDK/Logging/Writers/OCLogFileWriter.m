@@ -24,6 +24,8 @@ NSUInteger const OCDefaultMaxLogFileCount = 10;
 NSTimeInterval const OCDefaultRotationTimeInterval = 60.0 * 60.0 * 24.0;
 int64_t const OCDefaultLogRotationFrequency = 60 * NSEC_PER_SEC;
 
+OCIPCNotificationName OCLogFileWriterLogRecordsChangedRemoteNotification = @"org.owncloud.log_records_remote_change";
+
 @interface OCLogFileWriter ()
 {
 	int _logFileFD;
@@ -67,8 +69,8 @@ static NSURL *sDefaultLogFileURL;
 		_maximumLogFileCount = OCDefaultMaxLogFileCount;
 		_rotationInterval = OCDefaultRotationTimeInterval;
 
-		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCRemoteLogRotationNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-			[[NSNotificationCenter defaultCenter] postNotificationName:OCLocalLogRotationNotificationName object:nil];
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCLogFileWriterLogRecordsChangedRemoteNotification withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCLogFileWriterLogRecordsChangedNotification object:nil];
 		}];
 	}
 
@@ -82,7 +84,7 @@ static NSURL *sDefaultLogFileURL;
 
 - (void)dealloc
 {
-	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCRemoteLogRotationNotificationName];
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCLogFileWriterLogRecordsChangedRemoteNotification];
 }
 
 - (NSError *)open
@@ -98,7 +100,7 @@ static NSURL *sDefaultLogFileURL;
 
 			OCLogDebug(@"Starting logging to %@", _logFileURL.path);
 
-			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME, [OCLogWriter queue]);
+			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME, OCLogger.sharedLogger.writeQueue);
 
 			dispatch_source_set_event_handler(_logFileVnodeSource, ^{
 				// Close and re-open current file
@@ -232,15 +234,28 @@ static NSURL *sDefaultLogFileURL;
 
 	NSUInteger maxFileCountToKeep = removeAll ? 0 : _maximumLogFileCount;
 
-	// Remove old files which are exceeding maximum allowed file count
-	while ([logRecords count] > maxFileCountToKeep) {
-		OCLogFileRecord *firstRecord = [logRecords firstObject];
-		[self deleteLogRecord:firstRecord];
-		[logRecords removeObjectAtIndex:0];
+	BOOL deletionRequired = [logRecords count] > maxFileCountToKeep;
+	if (deletionRequired)
+	{
+		// Remove old files which are exceeding maximum allowed file count
+		while ([logRecords count] > maxFileCountToKeep) {
+			OCLogFileRecord *firstRecord = [logRecords firstObject];
+			[self deleteLogRecord:firstRecord];
+			[logRecords removeObjectAtIndex:0];
+		}
+
+		[self _notifyAboutChangesInLogStorage];
 	}
 }
 
 // Private methods
+
+- (void)_notifyAboutChangesInLogStorage
+{
+	// Notify observers that contents of the log storage have changed
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCLogFileWriterLogRecordsChangedRemoteNotification ignoreSelf:YES];
+	[[NSNotificationCenter defaultCenter] postNotificationName:OCLogFileWriterLogRecordsChangedNotification object:nil];
+}
 
 - (nullable NSError *)_eraseOrTruncate:(NSString*)path
 {
@@ -282,7 +297,7 @@ static NSURL *sDefaultLogFileURL;
 - (void)_scheduleLogRotationTimer
 {
 	[self _unscheduleLogRotationTimer];
-	_logRotationTimerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, [OCLogWriter queue]);
+	_logRotationTimerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, OCLogger.sharedLogger.writeQueue);
 
 	__weak __auto_type weakSelf = self;
 	dispatch_source_set_event_handler(_logRotationTimerSource, ^{
@@ -323,12 +338,11 @@ static NSURL *sDefaultLogFileURL;
 			// Rename current log and start new one
 			[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:arhivedLogPath error:&error];
 
+			// Notify about addition of a new file
+			[self _notifyAboutChangesInLogStorage];
+
 			// Check if some old logs can be deleted
 			[self cleanUpLogs:NO];
-
-			// Notify observers that contents of the log storage have changed
-			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCRemoteLogRotationNotificationName ignoreSelf:YES];
-			[[NSNotificationCenter defaultCenter] postNotificationName:OCLocalLogRotationNotificationName object:nil];
 		}
 		else
 		{
@@ -339,6 +353,5 @@ static NSURL *sDefaultLogFileURL;
 
 @end
 
-OCIPCNotificationName OCRemoteLogRotationNotificationName = @"org.owncloud.log.rotation";
-NSNotificationName OCLocalLogRotationNotificationName = @"OCLocalLogRotationNotificationName";
+NSNotificationName OCLogFileWriterLogRecordsChangedNotification = @"OCLogFileWriterLogRecordsChangedNotification";
 OCLogComponentIdentifier OCLogComponentIdentifierWriterFile = @"writer.file";
