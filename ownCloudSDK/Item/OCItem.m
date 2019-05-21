@@ -222,6 +222,11 @@
 	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
 }
 
+- (BOOL)isRoot
+{
+	return ((_path != nil) && [_path isEqualToString:@"/"]);
+}
+
 #pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
