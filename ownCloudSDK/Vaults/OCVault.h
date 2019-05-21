@@ -36,11 +36,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSURL *_temporaryDownloadURL;
 
 	NSFileProviderDomain *_fileProviderDomain;
+	NSFileProviderManager *_fileProviderManager;
+	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
+	NSString *_fileProviderSignalCountByContainerItemIdentifiersLock;
 
 	OCDatabase *_database;
 }
 
+@property(class,nonatomic,readonly) BOOL hostHasFileProvider;
+
 @property(strong) NSUUID *uuid; //!< ID of the vault. Typically the same as the uuid of the OCBookmark it corresponds to.
+@property(strong) OCBookmark *bookmark;
 
 @property(nullable,readonly,nonatomic) OCDatabase *database; //!< The vault's database.
 
@@ -51,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //1< The vault's root address for temporarily downloaded files.
 
 @property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
+@property(nullable,readonly,nonatomic) NSFileProviderManager *fileProviderManager; //!< File provider manager for .fileProviderDomain
 
 + (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark;
 
@@ -58,14 +65,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
 
-#pragma mark - Operations
+#pragma mark - Open & Close
 - (void)openWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Opens the vault and its components
 - (void)closeWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
+#pragma mark - Offline operations
+- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files.
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
 - (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
+- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<fileID>/ pattern.
 - (nullable NSString *)relativePathForItem:(OCItem *)item;
 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;

@@ -215,10 +215,11 @@
 			// Recipient
 			if (shareType != nil)
 			{
-				NSString *recipientName, *recipientDisplayName;
+				NSString *recipientName, *recipientDisplayName, *share_with_additional_info;
 
 				recipientName = shareNode.keyValues[@"share_with"];
 				recipientDisplayName = shareNode.keyValues[@"share_with_displayname"];
+				share_with_additional_info = shareNode.keyValues[@"share_with_additional_info"];
 
 				if ((recipientName!=nil) || (recipientDisplayName!=nil))
 				{
@@ -226,11 +227,20 @@
 					{
 						case OCShareTypeUserShare:
 						case OCShareTypeRemote:
+							if (share_with_additional_info != nil)
+							{
+								recipientDisplayName = [recipientDisplayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", share_with_additional_info]];
+							}
 							share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
 						break;
 
 						case OCShareTypeGroupShare:
 							share.recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
+						break;
+
+						case OCShareTypeLink:
+							// for links, share_with or share_with_displayname only have values if protected by a password
+							share.protectedByPassword = YES;
 						break;
 
 						default:
@@ -264,6 +274,14 @@
 			if ((accepted = shareNode.keyValues[@"accepted"]) != nil)
 			{
 				share.accepted = @(accepted.integerValue);
+			}
+
+			// State
+			OCShareState state;
+
+			if ((state = shareNode.keyValues[@"state"]) != nil)
+			{
+				share.state = state;
 			}
 		}
 	}

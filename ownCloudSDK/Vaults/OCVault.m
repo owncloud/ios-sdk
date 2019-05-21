@@ -24,9 +24,7 @@
 #import "OCMacros.h"
 #import "OCCore+FileProvider.h"
 #import "OCHTTPPipelineManager.h"
-
-@interface OCVault () <NSFileManagerDelegate>
-@end
+#import "OCVault+Internal.h"
 
 @implementation OCVault
 
@@ -45,6 +43,28 @@
 	return ([[NSFileManager defaultManager] fileExistsAtPath:vaultRootURL.path]);
 }
 
+#pragma mark - Fileprovider capability
++ (BOOL)hostHasFileProvider
+{
+	static BOOL didAutoDetectFromInfoPlist = NO;
+	static BOOL hostHasFileProvider = NO;
+
+	if (!didAutoDetectFromInfoPlist)
+	{
+		NSNumber *hasFileProvider;
+
+		if ((hasFileProvider = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"OCHasFileProvider"]) != nil)
+		{
+			hostHasFileProvider = [hasFileProvider boolValue];
+		}
+
+		didAutoDetectFromInfoPlist = YES;
+	}
+
+	return (hostHasFileProvider);
+}
+
+
 #pragma mark - Init
 - (instancetype)init
 {
@@ -55,7 +75,11 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		_bookmark = bookmark;
 		_uuid = bookmark.uuid;
+
+		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
+		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 	}
 	
 	return (self);
@@ -90,7 +114,7 @@
 {
 	if (_filesRootURL == nil)
 	{
-		if (OCCore.hostHasFileProvider)
+		if (OCVault.hostHasFileProvider)
 		{
 			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
 		}
@@ -105,27 +129,40 @@
 
 - (NSFileProviderDomain *)fileProviderDomain
 {
-	if (_fileProviderDomain == nil)
+	if ((_fileProviderDomain == nil) && OCVault.hostHasFileProvider)
 	{
-		if (OCCore.hostHasFileProvider)
-		{
-			OCSyncExec(domainRetrieval, {
-				[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
-					for (NSFileProviderDomain *domain in domains)
+		OCSyncExec(domainRetrieval, {
+			[NSFileProviderManager getDomainsWithCompletionHandler:^(NSArray<NSFileProviderDomain *> * _Nonnull domains, NSError * _Nullable error) {
+				for (NSFileProviderDomain *domain in domains)
+				{
+					if ([domain.identifier isEqual:self.uuid.UUIDString])
 					{
-						if ([domain.identifier isEqual:self.uuid.UUIDString])
-						{
-							self->_fileProviderDomain = domain;
-						}
+						self->_fileProviderDomain = domain;
 					}
+				}
 
-					OCSyncExecDone(domainRetrieval);
-				}];
-			});
-		}
+				OCSyncExecDone(domainRetrieval);
+			}];
+		});
 	}
 
 	return (_fileProviderDomain);
+}
+
+- (NSFileProviderManager *)fileProviderManager
+{
+	if ((_fileProviderManager == nil) && OCVault.hostHasFileProvider)
+	{
+		@synchronized(self)
+		{
+			if ((_fileProviderManager == nil) && (self.fileProviderDomain != nil))
+			{
+				_fileProviderManager = [NSFileProviderManager managerForDomain:self.fileProviderDomain];
+			}
+		}
+	}
+
+	return (_fileProviderManager);
 }
 
 - (NSURL *)httpPipelineRootURL
@@ -183,6 +220,13 @@
 	[self.database closeWithCompletionHandler:completionHandler];
 }
 
+- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	[self compactInContext:nil withSelector:^BOOL(OCSyncAnchor  _Nullable syncAnchor, OCItem * _Nonnull item) {
+		return (item.compactingAllowed && (item.localRelativePath != nil));
+	} completionHandler:completionHandler];
+}
+
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	if (self.rootURL != nil)
@@ -233,16 +277,17 @@
 	}
 }
 
-- (BOOL)fileManager:(NSFileManager *)fileManager shouldRemoveItemAtURL:(NSURL *)URL
-{
-	return (YES);
-}
-
 #pragma mark - URL and path builders
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<localID>/<fileName> pattern.
 	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
+}
+
+- (NSURL *)localFolderURLForItem:(OCItem *)item
+{
+	// Build the URL to where an item's folder should be stored. Follows <filesRootURL>/<localID>/ pattern.
+	return ([self.filesRootURL URLByAppendingPathComponent:item.localID isDirectory:YES]);
 }
 
 - (NSString *)relativePathForItem:(OCItem *)item

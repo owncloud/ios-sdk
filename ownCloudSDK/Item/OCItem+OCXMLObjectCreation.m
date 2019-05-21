@@ -173,6 +173,27 @@
 					}
 				}
 			} copy],
+
+			@"oc:privatelink" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.privateLink = [[NSURL alloc] initWithString:value];
+				}
+			} copy],
+
+			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.quotaBytesRemaining = [NSNumber numberWithLongLong:((NSString *)value).longLongValue];
+				}
+			} copy],
+
+			@"d:quota-used-bytes" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.quotaBytesUsed = [NSNumber numberWithLongLong:((NSString *)value).longLongValue];
+				}
+			} copy],
 		};
 	});
 
@@ -282,6 +303,13 @@
 					}
 				}
 			}];
+
+			// Clean up quota
+			if (item.quotaBytesRemaining.integerValue < 0)
+			{
+				// A negative number for quotaBytesUsed indicates that no quota is in effect
+				item.quotaBytesRemaining = nil;
+			}
 		}
 	}
 

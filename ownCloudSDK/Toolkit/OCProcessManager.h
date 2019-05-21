@@ -29,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedProcessManager;
 
++ (BOOL)isProcessExtension; //!< Returns YES if this process is an extension.
+
 - (void)processDidFinishLaunching; //!< Signal that this process has finished launching
 - (void)processWillTerminate; //!< Signal that this process is about to terminate
 

@@ -38,7 +38,8 @@ typedef void(^OCShareQueryChangesAvailableNotificationHandler)(OCShareQuery *que
 
 @property(readonly,strong,nonatomic) NSArray <OCShare *> *queryResults; //!< KVO-observable array of OCShares resulting from the query
 
-@property(copy) OCShareQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler;
+@property(nullable,copy) OCShareQueryChangesAvailableNotificationHandler initialPopulationHandler; //!< If set, this block is called when the query results have been initially populated with the first server response triggered by the query. Once the block was called, this property is set to nil.
+@property(nullable,copy) OCShareQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler; //!< If set, this block is called whenever the .queryResults have changed.
 
 + (nullable instancetype)queryWithScope:(OCShareScope)scope item:(nullable OCItem *)item;
 

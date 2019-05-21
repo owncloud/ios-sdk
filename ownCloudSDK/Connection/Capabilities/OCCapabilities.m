@@ -78,6 +78,8 @@
 @dynamic publicSharingPasswordEnforcedForReadWrite;
 @dynamic publicSharingPasswordEnforcedForUploadOnly;
 @dynamic publicSharingExpireDateEnabled;
+@dynamic publicSharingExpireDateEnforced;
+@dynamic publicSharingDefaultExpireDateDays;
 @dynamic publicSharingSendMail;
 @dynamic publicSharingSocialShare;
 @dynamic publicSharingUpload;
@@ -301,6 +303,16 @@
 - (OCCapabilityBool)publicSharingExpireDateEnabled
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"enabled"], NSNumber));
+}
+
+- (OCCapabilityBool)publicSharingExpireDateEnforced
+{
+	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"enforced"], NSNumber));
+}
+
+- (NSNumber *)publicSharingDefaultExpireDateDays
+{
+	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"days"], NSNumber));
 }
 
 - (OCCapabilityBool)publicSharingSendMail

@@ -93,12 +93,14 @@ typedef void(^OCCoreDownloadResultHandler)(NSError * _Nullable error, OCCore *co
 typedef void(^OCCoreRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable retrievedObject, BOOL isOngoing, NSProgress * _Nullable progress);
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, OCItemThumbnail * _Nullable thumbnail, BOOL isOngoing, NSProgress * _Nullable progress);
 typedef void(^OCCorePlaceholderCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
+typedef void(^OCCoreFavoritesResultHandler)(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems);
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
 
 typedef NSString* OCCoreOption NS_TYPED_ENUM;
+typedef id<NSObject> OCCoreItemTracking;
 
 #pragma mark - Delegate
 @protocol OCCoreDelegate <NSObject>
@@ -157,19 +159,22 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
-	id _fileProviderManager;
-	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
-	id _fileProviderSignalCountByContainerItemIdentifiersLock;
-	BOOL _postFileProviderNotifications;
-
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	BOOL _automaticItemListUpdatesEnabled;
 	NSDate *_lastScheduledItemListUpdateDate;
 
+	NSUInteger _maximumSyncLanes;
+
 	NSMutableDictionary <OCLocalID, NSMutableArray<NSProgress *> *> *_progressByLocalID;
 
+	NSMutableArray <OCCertificate *> *_warnedCertificates;
+
 	__weak id <OCCoreDelegate> _delegate;
+
+	NSNumber *_rootQuotaBytesRemaining;
+	NSNumber *_rootQuotaBytesUsed;
+	NSNumber *_rootQuotaBytesTotal;
 }
 
 @property(readonly) OCBookmark *bookmark; //!< Bookmark identifying the server this core manages.
@@ -200,6 +205,12 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 @property(assign) BOOL automaticItemListUpdatesEnabled; //!< Whether OCCore should scan for item list updates automatically.
 
+@property(assign,nonatomic) NSUInteger maximumSyncLanes; //!< The maximum number of sync lanes, which limit how many sync actions can be executed at the same time. A value of 0 equals no limits (default: 0).
+
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesRemaining; //!< The remaining number of bytes available to the user.
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesUsed; //!< The number of bytes used by the user's content.
+@property(readonly,strong,nullable) NSNumber *rootQuotaBytesTotal; //!< The total amount of space assigned/available to the user.
+
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
@@ -213,7 +224,7 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 #pragma mark - Query
 - (void)startQuery:(OCCoreQuery *)query;	//!< Starts a query
 - (void)reloadQuery:(OCCoreQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
-- (void)stopQuery:(OCCoreQuery *)query;	//!< Stops a query
+- (void)stopQuery:(OCCoreQuery *)query;		//!< Stops a query
 
 #pragma mark - Commands
 - (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
@@ -225,11 +236,17 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 - (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
 
+#pragma mark - Item lookup and information
+- (nullable OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
+
+- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified path from the cache.
+- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
+- (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the parent directory represented by parentItem.
+- (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
+
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item;			//!< Returns the local URL of the item, including the file itself. Also returns a URL for items that don't have a local copy. Please use -localCopyOfItem: if you'd like to check for a local copy and retrive its URL in one go.
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item;	//!< Returns the local URL of the parent directory of the item.
-
-- (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString * _Nullable * _Nullable)returnFileName; //!< Returns a free local URL for a temporary file inside an item's directory. Returns the filename seperately if wanted.
 - (BOOL)isURL:(NSURL *)url temporaryAlongsideItem:(OCItem *)item; //!< Returns YES if url is a temporary URL pointing to a file alongside the item's file.
@@ -237,6 +254,9 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
+
+#pragma mark - Indicating activity requiring the core
+- (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description; //!< Runs a block in the current thread while making sure OCCore will not stop before the completionHandler has been called.
 
 @end
 
@@ -249,6 +269,12 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 //- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
 //- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
 //@end
+
+@interface OCCore (Favorites)
+
+- (nullable NSProgress *)refreshFavoritesWithCompletionHandler:(OCCoreFavoritesResultHandler)completionHandler; //!< Performs a search for favorites on the server and uses the results to update the favorite status of items in the meta data cache. This is a (hopefully temporary) band-aid for a wider issue (see https://github.com/owncloud/core/issues/16589#issuecomment-492577219 for details). The returned array of OCItems may be incomplete as it only contains OCItems already known by the database.
+
+@end
 
 @interface OCCore (Thumbnails)
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
@@ -296,6 +322,9 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 - (nullable NSProgress *)makeDecisionOnShare:(OCShare *)share accept:(BOOL)accept completionHandler:(void(^)(NSError * _Nullable error))completionHandler;
 
 - (OCRecipientSearchController *)recipientSearchControllerForItem:(OCItem *)item; //!< Returns a recipient search controller for the provided item
+
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
+
 @end
 
 @interface OCCore (CommandDownload)
@@ -330,6 +359,9 @@ typedef NSString* OCCoreOption NS_TYPED_ENUM;
 
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
+extern OCClassSettingsKey OCCoreOverrideReachabilitySignal;
+extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
+extern OCClassSettingsKey OCCoreActionConcurrencyBudgets;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
@@ -339,6 +371,7 @@ extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
 extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransformation] Transformation to be applied on local item before upload
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
+extern OCCoreOption OCCoreOptionPlaceholderCompletionHandler; //!< [OCCorePlaceholderCompletionHandler] For actions that support it: optional block that's invoked with the placeholder item if one is created by the action.
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.

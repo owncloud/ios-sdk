@@ -66,6 +66,11 @@
 	return (sharedProcessManager);
 }
 
++ (BOOL)isProcessExtension
+{
+	return ([NSBundle.mainBundle.bundlePath hasSuffix:@".appex"]);
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)

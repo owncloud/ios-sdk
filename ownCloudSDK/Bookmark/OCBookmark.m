@@ -18,6 +18,13 @@
 
 #import "OCBookmark.h"
 #import "OCAppIdentity.h"
+#import "OCBookmark+IPNotificationNames.h"
+
+@interface OCBookmark ()
+{
+	OCIPCNotificationName _coreUpdateNotificationName;
+}
+@end
 
 @implementation OCBookmark
 
@@ -242,6 +249,21 @@
 	[copiedBookmark setValuesFrom:self];
 
 	return (copiedBookmark);
+}
+
+@end
+
+#pragma mark - IPNotificationNames
+@implementation OCBookmark (IPNotificationNames)
+
+- (OCIPCNotificationName)coreUpdateNotificationName
+{
+	if (_coreUpdateNotificationName == nil)
+	{
+		_coreUpdateNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.uuid.UUIDString];
+	}
+
+	return (_coreUpdateNotificationName);
 }
 
 @end

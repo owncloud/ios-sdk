@@ -15,7 +15,6 @@
  * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
  *
  */
-
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCItemThumbnail.h"
@@ -149,12 +148,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isShareable; //!< YES if this item can be shared (convenience accessor to check if .permissions has OCItemPermissionShareable set)
 @property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)
 
+@property(strong,nullable) NSURL *privateLink; //!< Private link for the item. This property is used as a cache. Please use -[OCCore retrievePrivateLinkForItem:..] to request the private link for an item.
+
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
-@property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item (only provided in conjunction with dedicated sharing APIs)
-
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+
+@property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
+@property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
+
+@property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
@@ -175,7 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setValue:(nullable id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
 
 #pragma mark - File tools
-- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
+- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if the item doesn't reference a local file. To test local availability of a file, use -[OCCore localCopyOfItem:] instead of this method.
 
 #pragma mark - Serialization tools
 + (nullable instancetype)itemFromSerializedData:(NSData *)serializedData;

@@ -32,7 +32,7 @@
 		_bootTimestamp = [OCProcessManager bootTimestamp];
 
 		_processType = OCProcessTypeApp;
-		if ([NSBundle.mainBundle.bundlePath hasSuffix:@".appex"])
+		if ([OCProcessManager isProcessExtension])
 		{
 			_processType = OCProcessTypeExtension;
 		}

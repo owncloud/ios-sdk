@@ -44,6 +44,10 @@
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
 #import "OCRateLimiter.h"
+#import "OCSyncActionDownload.h"
+#import "OCSyncActionUpload.h"
+#import "OCBookmark+IPNotificationNames.h"
+#import "OCDeallocAction.h"
 
 @interface OCCore ()
 {
@@ -90,6 +94,12 @@
 
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
+@synthesize maximumSyncLanes = _maximumSyncLanes;
+
+@synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
+@synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
+@synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
@@ -102,7 +112,17 @@
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
 			@"*"
 		],
-		OCCoreAddAcceptLanguageHeader : @(YES)
+		OCCoreAddAcceptLanguageHeader : @(YES),
+		OCCoreActionConcurrencyBudgets : @{
+			// Concurrency "budgets" available for sync actions by action category
+			OCSyncActionCategoryAll	: @(0), // No limit on the total number of concurrent sync actions
+
+				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
+
+				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
+					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
+		}
 	});
 }
 
@@ -123,13 +143,12 @@
 
 		_automaticItemListUpdatesEnabled = YES;
 
+		_maximumSyncLanes = 0;
+
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
-
-		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
-		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
 		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
@@ -166,9 +185,12 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
+		_warnedCertificates = [NSMutableArray new];
+
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
+//		_connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
 		_connection.delegate = self;
 
 		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
@@ -188,13 +210,31 @@
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
-		if (@available(iOS 12, *))
+		NSNumber *override = nil;
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideAvailabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			// OCCore depends on OCCoreServerStatusSignalProvider interfaces, so we force-override this signal if told to
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateForceTrue : OCCoreConnectionStatusSignalStateForceFalse);
+
+			[self addSignalProvider:[[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalAvailable initialState:signalState stateProvider:nil]];
 		}
-		else
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideReachabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
+
+			_reachabilityStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:signalState stateProvider:nil];
+		}
+
+		if (_reachabilityStatusSignalProvider == nil)
+		{
+			if (@available(iOS 12, *))
+			{
+				_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			}
+			else
+			{
+				_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			}
 		}
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
@@ -666,26 +706,16 @@
 }
 
 #pragma mark - Inter-Process change notification/handling
-- (NSString *)ipcNotificationName
-{
-	if (_ipNotificationName == nil)
-	{
-		_ipNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.bookmark.uuid.UUIDString];
-	}
-
-	return (_ipNotificationName);
-}
-
 - (void)startIPCObservation
 {
-	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.coreUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core handleIPCChangeNotification];
 	}];
 }
 
 - (void)stopIPCObserveration
 {
-	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.coreUpdateNotificationName];
 }
 
 - (void)postIPCChangeNotification
@@ -712,7 +742,7 @@
 					if (self->_pendingIPCChangeNotifications != 0)
 					{
 						self->_pendingIPCChangeNotifications = 0;
-						[self->_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+						[self->_ipNotificationCenter postNotificationForName:self.bookmark.coreUpdateNotificationName ignoreSelf:YES];
 
 						[self endActivity:@"Post IPC change notification"];
 					}
@@ -1010,6 +1040,148 @@
 	return (resultProgressObjects);
 }
 
+
+#pragma mark - Item lookup and information
+- (OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+{
+	NSObject *trackingObject = [NSObject new];
+	__weak NSObject *weakTrackingObject = trackingObject;
+
+	[self queueBlock:^{
+		NSError *error = nil;
+		OCItem *item = nil;
+		OCQuery *query = nil;
+		NSObject *trackingObject = weakTrackingObject;
+		__block BOOL isFirstInvocation = YES;
+
+		if (trackingObject == nil)
+		{
+			return;
+		}
+
+		if ((item = [self cachedItemAtPath:path error:&error]) != nil)
+		{
+			// Item in cache - start custom query to track changes (won't touch network, but will provide updates)
+			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path]  inputFilter:nil];
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					if ((query.state == OCQueryStateContentsFromCache) || (query.state == OCQueryStateIdle))
+					{
+						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+				}
+			};
+		}
+		else
+		{
+			// Item not in cache - create full-fledged query
+			query = [OCQuery queryForPath:path];
+			query.includeRootItem = YES;
+
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					OCItem *item = query.queryResults.firstObject;
+
+					if (item != nil)
+					{
+						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+					else
+					{
+						if (query.state == OCQueryStateTargetRemoved)
+						{
+							trackingHandler(nil, nil, isFirstInvocation);
+							isFirstInvocation = NO;
+						}
+					}
+				}
+			};
+		}
+
+		if (query != nil)
+		{
+			__weak OCCore *weakCore = self;
+			__weak OCQuery *weakQuery = query;
+
+			[self startQuery:query];
+
+			// Stop query as soon as trackingObject is deallocated
+			[OCDeallocAction addAction:^{
+				OCCore *core = weakCore;
+				OCQuery *query = weakQuery;
+
+				if ((core != nil) && (query != nil))
+				{
+					[core stopQuery:query];
+				}
+			} forDeallocationOfObject:trackingObject];
+		}
+	}];
+
+	return (trackingObject);
+}
+
+- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	__block OCItem *cachedItem = nil;
+
+	if (path != nil)
+	{
+		OCSyncExec(retrieveCachedItem, {
+			[self.vault.database retrieveCacheItemsAtPath:path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				cachedItem = items.firstObject;
+
+				if (outError != NULL)
+				{
+					*outError = error;
+				}
+
+				OCSyncExecDone(retrieveCachedItem);
+			}];
+		});
+	}
+	else
+	{
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorInsufficientParameters);
+		}
+	}
+
+	return (cachedItem);
+}
+
+- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	NSString *path = [parentPath stringByAppendingPathComponent:name];
+
+	if (isDirectory && ![path hasSuffix:@"/"])
+	{
+		path = [path stringByAppendingString:@"/"];
+	}
+
+	return ([self cachedItemAtPath:path error:outError]);
+}
+
+- (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	return ([self cachedItemInParentPath:parentItem.path withName:name isDirectory:isDirectory error:outError]);
+}
+
+- (NSURL *)localCopyOfItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self localURLForItem:item]);
+	}
+
+	return (nil);
+}
+
 #pragma mark - Item location & directory lifecycle
 - (NSURL *)localURLForItem:(OCItem *)item
 {
@@ -1024,16 +1196,6 @@
 - (NSURL *)localParentDirectoryURLForItem:(OCItem *)item
 {
 	return ([[self localURLForItem:item] URLByDeletingLastPathComponent]);
-}
-
-- (NSURL *)localCopyOfItem:(OCItem *)item
-{
-	if (item.localRelativePath != nil)
-	{
-		return ([self localURLForItem:item]);
-	}
-
-	return (nil);
 }
 
 - (nullable NSURL *)availableTemporaryURLAlongsideItem:(OCItem *)item fileName:(__autoreleasing NSString **)returnFileName
@@ -1177,29 +1339,83 @@
 	return (error);
 }
 
+#pragma mark - Event target tools
+- (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
+{
+	NSMutableDictionary *targetUserInfo = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+		NSStringFromSelector(selector), OCEventUserInfoKeySelector,
+	nil];
+
+	if (userInfo != nil)
+	{
+		[targetUserInfo addEntriesFromDictionary:userInfo];
+	}
+
+	return ([OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:targetUserInfo ephermalUserInfo:ephermalUserInfo]);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
 	[self beginActivity:@"Handling event"];
 
 	[self queueBlock:^{
-		switch (event.eventType)
+		NSString *selectorName;
+
+		if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
 		{
-			case OCEventTypeRetrieveThumbnail:
-				[self _handleRetrieveThumbnailEvent:event sender:sender];
-			break;
+			// Selector specified -> route event directly to selector
+			SEL eventHandlingSelector;
 
-			case OCEventTypeRetrieveItemList:
-				[self _handleRetrieveItemListEvent:event sender:sender];
-			break;
+			if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
+			{
+				// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
+				void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
 
-			default:
-				[self _handleSyncEvent:event sender:sender];
-			break;
+				if (impFunction != NULL)
+				{
+					impFunction(self, eventHandlingSelector, event, sender);
+				}
+			}
+		}
+		else
+		{
+			// Handle by event type
+			switch (event.eventType)
+			{
+				case OCEventTypeRetrieveThumbnail:
+					[self _handleRetrieveThumbnailEvent:event sender:sender];
+				break;
+
+				case OCEventTypeRetrieveItemList:
+					[self _handleRetrieveItemListEvent:event sender:sender];
+				break;
+
+				default:
+					[self _handleSyncEvent:event sender:sender];
+				break;
+			}
 		}
 
 		[self endActivity:@"Handling event"];
 	}];
+}
+
+#pragma mark - Indicating activity requiring the core
+- (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description
+{
+	if ((activityBlock != nil) && (description != nil))
+	{
+		[self beginActivity:description];
+
+		activityBlock(^{
+			[self endActivity:description];
+		});
+	}
+	else
+	{
+		OCLogError(@"Paramter(s) missing from %s call", __PRETTY_FUNCTION__);
+	}
 }
 
 #pragma mark - Busy count
@@ -1365,6 +1581,9 @@
 
 OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header";
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
+OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
+OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
+OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
@@ -1374,6 +1593,7 @@ OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
+OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

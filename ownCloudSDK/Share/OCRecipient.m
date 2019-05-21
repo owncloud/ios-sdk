@@ -44,6 +44,13 @@
 	return (recipient);
 }
 
+- (instancetype)withSearchResultName:(NSString *)searchResultName
+{
+	self.searchResultName = searchResultName;
+
+	return (self);
+}
+
 - (NSString *)identifier
 {
 	switch (_type)
@@ -65,11 +72,11 @@
 	switch (_type)
 	{
 		case OCRecipientTypeUser:
-			return (_user.displayName);
+			return ((_searchResultName.length == 0) ? _user.displayName : [_user.displayName stringByAppendingFormat:@" (%@)", _searchResultName]);
 		break;
 
 		case OCRecipientTypeGroup:
-			return (_group.name);
+			return ((_searchResultName.length == 0) ? _group.name : [_group.name stringByAppendingFormat:@" (%@)", _searchResultName]);
 		break;
 	}
 
@@ -79,7 +86,7 @@
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
-	return (_type ^ (_user.hash << 3) ^ (_group.hash >> 3));
+	return (_type ^ (_user.hash << 3) ^ (_group.hash >> 3) ^ (_searchResultName.hash << 1));
 }
 
 - (BOOL)isEqual:(id)object
@@ -90,7 +97,7 @@
 	{
 		#define compareVar(var) ((otherRecipient->var == var) || [otherRecipient->var isEqual:var])
 
-		return ((otherRecipient.type == _type) && compareVar(_user) && compareVar(_group));
+		return ((otherRecipient.type == _type) && compareVar(_user) && compareVar(_group) && compareVar(_searchResultName));
 	}
 
 	return (NO);
@@ -104,6 +111,7 @@
 	recipient->_type = _type;
 	recipient->_user = _user;
 	recipient->_group = _group;
+	recipient->_searchResultName = _searchResultName;
 	recipient->_matchType = _matchType;
 
 	return (recipient);
@@ -124,6 +132,8 @@
 		_group = [decoder decodeObjectOfClass:[OCGroup class] forKey:@"group"];
 		_user = [decoder decodeObjectOfClass:[OCUser class] forKey:@"user"];
 
+		_searchResultName = [decoder decodeObjectOfClass:[NSString class] forKey:@"searchResultName"];
+
 		_matchType = [decoder decodeIntegerForKey:@"matchType"];
 	}
 
@@ -136,6 +146,8 @@
 
 	[coder encodeObject:_group forKey:@"group"];
 	[coder encodeObject:_user forKey:@"user"];
+
+	[coder encodeObject:_searchResultName forKey:@"searchResultName"];
 
 	[coder encodeInteger:_matchType forKey:@"matchType"];
 }
@@ -156,7 +168,7 @@
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_matchType!=OCRecipientMatchTypeUnknown) ? ((_matchType==OCRecipientMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_searchResultName!=nil)?[NSString stringWithFormat:@", searchResultName: %@", _searchResultName]:@""), ((_matchType!=OCRecipientMatchTypeUnknown) ? ((_matchType==OCRecipientMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
 }
 
 @end

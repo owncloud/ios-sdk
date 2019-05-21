@@ -743,7 +743,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/Photos" depth:1 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 				XCTAssert(event.result!=nil);
@@ -1035,7 +1035,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCItem *rootFolder = ((NSArray <OCItem *> *)event.result).firstObject;
 
 				for (NSUInteger i=0; i < scheduleCount; i++)
@@ -1073,7 +1073,7 @@
 								XCTAssert(items.firstObject.eTag != nil);
 							}];
 
-							[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 								OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 								XCTAssert(event.result!=nil);
@@ -1087,7 +1087,7 @@
 						} userInfo:nil ephermalUserInfo:nil]];
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+					[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 						OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 						XCTAssert(event.result!=nil);

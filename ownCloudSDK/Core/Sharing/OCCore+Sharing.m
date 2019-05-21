@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCCore+Internal.h"
+#import "OCCore+ItemList.h"
 #import "OCShareQuery+Internal.h"
 #import "OCRecipientSearchController.h"
 
@@ -160,6 +161,14 @@
 				[query _updateWithAddedShare:addedShare updatedShare:updatedShare removedShare:removedShare];
 			}
 		}
+
+		// Update OCItem representing item
+		OCShare *share = ((addedShare != nil) ? addedShare : ((updatedShare != nil) ? updatedShare : removedShare));
+
+		if (share != nil)
+		{
+			[self scheduleItemListTaskForPath:share.itemPath forQuery:YES];
+		}
 	}];
 }
 
@@ -219,9 +228,22 @@
 	progress = [self.connection makeDecisionOnShare:share accept:accept resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
-			share.accepted = @(accept);
-			[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
-			[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
+			switch (share.type)
+			{
+				case OCShareTypeUserShare:
+				case OCShareTypeGroupShare:
+					share.state = accept ? OCShareStateAccepted : OCShareStateRejected;
+					[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil limitScope:@(OCShareScopeSharedWithUser)];
+				break;
+
+				case OCShareTypeRemote:
+					share.accepted = @(accept);
+					[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
+					[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
+				break;
+
+				default: break;
+			}
 		}
 
 		completionHandler(event.error);
@@ -234,6 +256,12 @@
 - (OCRecipientSearchController *)recipientSearchControllerForItem:(OCItem *)item
 {
 	return ([[OCRecipientSearchController alloc] initWithCore:self item:item]);
+}
+
+#pragma mark - Private link
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler
+{
+	return ([_connection retrievePrivateLinkForItem:item completionHandler:completionHandler]);
 }
 
 @end

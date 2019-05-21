@@ -32,6 +32,9 @@
 #import "NSDate+OCDateParser.h"
 #import "NSProgress+OCEvent.h"
 #import "OCMacros.h"
+#import "NSProgress+OCExtensions.h"
+#import "OCHTTPResponse+DAVError.h"
+#import "OCHTTPDAVRequest.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -39,6 +42,8 @@
 @property(strong) NSNumber *statusCode;
 
 @property(strong) NSString *message;
+
+@property(strong,nonatomic) NSError *error;
 
 @end
 
@@ -67,6 +72,27 @@
 	return (nil);
 }
 
+- (instancetype)initWithHTTPStatus:(OCHTTPStatus *)status
+{
+	if ((self = [super init]) != nil)
+	{
+		_statusCode = @(status.code);
+		_error = status.error;
+	}
+
+	return (self);
+}
+
+- (NSError *)error
+{
+	if (_error == nil)
+	{
+		_error = OCErrorWithDescription(OCErrorUnknown, _message);
+	}
+
+	return (_error);
+}
+
 @end
 
 @interface OCShareSingle : OCShare
@@ -88,14 +114,6 @@
 {
 	OCXMLParser *parser = nil;
 	NSError *error;
-
-	if (response != nil)
-	{
-		if (!response.status.isSuccess)
-		{
-			error = response.status.error;
-		}
-	}
 
 	if (error == nil)
 	{
@@ -133,6 +151,11 @@
 		}
 	}
 
+	if ((response != nil) && !response.status.isSuccess && (error == nil))
+	{
+		error = statusErrorMapper([[OCSharingResponseStatus alloc] initWithHTTPStatus:response.status]);
+	}
+
 	if (outError != NULL)
 	{
 		*outError = error;
@@ -160,7 +183,7 @@
 		default:
 			if (item != nil)
 			{
-				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%d", item, scope);
+				OCLogWarning(@"item=%@ ignored for retrieval of shares with scope=%lu", item, scope);
 			}
 		break;
 	}
@@ -173,6 +196,7 @@
 
 		case OCShareScopeSharedWithUser:
 			[request setValue:@"true" forParameter:@"shared_with_me"];
+			[request setValue:@"all" forParameter:@"state"];
 		break;
 
 		case OCShareScopePendingCloudShares:
@@ -188,7 +212,7 @@
 		case OCShareScopeSubItems:
 			if (item == nil)
 			{
-				OCLogError(@"item required for retrieval of shares with scope=%d", scope);
+				OCLogError(@"item required for retrieval of shares with scope=%lu", scope);
 
 				if (completionHandler != nil)
 				{
@@ -226,6 +250,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -251,7 +276,7 @@
 
 							default:
 								// Unknown error
-								error = OCErrorWithDescription(OCErrorUnknown, status.message);
+								error = status.error;
 							break;
 						}
 					break;
@@ -289,7 +314,7 @@
 		OCSharingResponseStatus *status = nil;
 		NSArray <OCShare *> *shares = nil;
 
-		if (error == nil)
+		if (!((error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
 			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
@@ -297,6 +322,7 @@
 					switch (status.statusCode.integerValue)
 					{
 						case 100:
+						case 200:
 							// Successful
 						break;
 
@@ -307,7 +333,7 @@
 
 						default:
 							// Unknown error
-							error = OCErrorWithDescription(OCErrorUnknown, status.message);
+							error = status.error;
 						break;
 					}
 
@@ -360,6 +386,8 @@
 	request.resultHandlerAction = @selector(_handleCreateShareResult:error:);
 	request.eventTarget = eventTarget;
 
+	request.forceCertificateDecisionDelegation = YES;
+
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
 	requestProgress = request.progress;
@@ -375,7 +403,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -389,6 +417,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -409,7 +438,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -432,34 +461,69 @@
 	// Save previous values of editable properties
 	NSString *previousName = share.name;
 	NSString *previousPassword = share.password;
+	BOOL previousProtectedByPassword = share.protectedByPassword;
 	NSDate *previousExpirationDate = share.expirationDate;
 	OCSharePermissionsMask previousPermissions = share.permissions;
 	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
 	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+	BOOL returnLinkShareOnlyError = NO;
 
 	// Perform changes
 	share = [share copy];
 	performChanges(share);
 
 	// Compare and detect changes
-	if (![share.name isEqual:previousName])
+	if (OCNANotEqual(share.name, previousName))
 	{
-		changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
-	if (![share.password isEqual:previousPassword])
+	if ((OCNANotEqual(share.password, previousPassword)) || (share.protectedByPassword != previousProtectedByPassword))
 	{
-		changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+		if ((share.protectedByPassword != previousProtectedByPassword) && (previousProtectedByPassword))
+		{
+			// Remove password
+			share.password = @"";
+		}
+
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
-	if (![share.expirationDate isEqual:previousExpirationDate])
+	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
 	{
-		changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		if (share.type == OCShareTypeLink)
+		{
+			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+		}
+		else
+		{
+			returnLinkShareOnlyError = YES;
+		}
 	}
 
 	if (share.permissions != previousPermissions)
 	{
 		changedValuesByPropertyNames[@"permissions"] = [NSString stringWithFormat:@"%ld", share.permissions];
+	}
+
+	if (returnLinkShareOnlyError)
+	{
+		[eventTarget handleError:OCErrorWithDescription(OCErrorFeatureNotSupportedByServer, @"Updating the name, password and expiryDate is only supported for shares of type link") type:OCEventTypeUpdateShare sender:self];
+		return (nil);
 	}
 
 	if (changedValuesByPropertyNames.count == 0)
@@ -514,6 +578,8 @@
 		request.eventTarget = eventTarget;
 		request.userInfo = userInfo;
 
+		request.forceCertificateDecisionDelegation = YES;
+
 		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
@@ -530,7 +596,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -545,6 +611,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -565,7 +632,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -616,9 +683,16 @@
 		}
 	}
 
+	if (share.identifier == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDeleteShare sender:self];
+		return (nil);
+	}
+
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.actionSignals;
+	request.forceCertificateDecisionDelegation = YES;
 
 	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
 	request.eventTarget = eventTarget;
@@ -638,7 +712,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -650,6 +724,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -660,7 +735,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -682,15 +757,35 @@
 {
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
+	NSURL *endpointURL = nil;
 
-	// Only remote shares can a decision be made on
-	if (share.type != OCShareTypeRemote)
+	if (share.identifier == nil)
 	{
 		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
 		return (nil);
 	}
 
-	request = [OCHTTPRequest requestWithURL:[[[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
+	switch (share.type)
+	{
+		case OCShareTypeUserShare:
+		case OCShareTypeGroupShare:
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+		break;
+
+		case OCShareTypeRemote:
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
+		break;
+
+		default: break;
+	}
+
+	if (endpointURL == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
+		return (nil);
+	}
+
+	request = [OCHTTPRequest requestWithURL:[[endpointURL URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
 	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);
 	request.requiredSignals = self.actionSignals;
 
@@ -698,6 +793,8 @@
 
 	request.resultHandlerAction = @selector(_handleMakeDecisionOnShareResult:error:);
 	request.eventTarget = eventTarget;
+
+	request.forceCertificateDecisionDelegation = YES;
 
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
 
@@ -714,7 +811,7 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDecideOnShare attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -726,6 +823,7 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
+					case 200:
 						// Successful
 					break;
 
@@ -736,7 +834,7 @@
 
 					default:
 						// Unknown error
-						error = OCErrorWithDescription(OCErrorUnknown, status.message);
+						error = status.error;
 					break;
 				}
 
@@ -750,6 +848,68 @@
 	if (event != nil)
 	{
 		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
+#pragma mark - Private Link
+- (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler
+{
+	if (item.privateLink != nil)
+	{
+		// Private link already known for item
+		completionHandler(nil, item.privateLink);
+		return ([NSProgress indeterminateProgress]);
+	}
+	else
+	{
+		// Private link needs to be retrieved from server
+		NSProgress *progress = nil;
+		NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+		OCHTTPDAVRequest *davRequest;
+
+		davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[endpointURL URLByAppendingPathComponent:item.path] depth:0];
+		davRequest.requiredSignals = self.propFindSignals;
+
+		[davRequest.xmlRequestPropAttribute addChildren:@[
+			[OCXMLNode elementWithName:@"oc:privatelink"]
+		]];
+
+		progress = [self sendRequest:davRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			if ((error == nil) && (response.status.isSuccess))
+			{
+				NSArray <NSError *> *errors = nil;
+				NSArray <OCItem *> *items = nil;
+
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				{
+					NSURL *privateLink;
+
+					if ((privateLink = items.firstObject.privateLink) != nil)
+					{
+						item.privateLink = privateLink;
+
+						completionHandler(nil, privateLink);
+						return;
+					}
+				}
+			}
+			else
+			{
+				if (error == nil)
+				{
+					error = response.bodyParsedAsDAVError;
+				}
+
+				if (error == nil)
+				{
+					error = response.status.error;
+				}
+			}
+
+			completionHandler(error, nil);
+		}];
+
+		return (progress);
 	}
 }
 

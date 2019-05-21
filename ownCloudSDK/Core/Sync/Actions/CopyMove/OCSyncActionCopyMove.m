@@ -378,6 +378,11 @@
 			break;
 		}
 
+		if (issueDescription != nil)
+		{
+			event.error = OCErrorWithDescription(event.error.code, issueDescription);
+		}
+
 		// Action complete
 		[syncContext completeWithError:event.error core:self.core item:nil parameter:nil];
 
@@ -399,6 +404,15 @@
 	}
 
 	return (resultInstruction);
+}
+
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem),
+		OCSyncActionWrapNullableItem(self.processingItem),
+	]]);
 }
 
 #pragma mark - NSCoding

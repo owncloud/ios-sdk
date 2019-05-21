@@ -28,6 +28,7 @@
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
+#import "OCBackgroundManager.h"
 #import <objc/runtime.h>
 
 static const NSString *OCCoreItemListTaskForQueryKey = @"item-list-task-for-query";
@@ -61,6 +62,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}
 
+			if ((self.state == OCCoreStateStopping) || (self.state == OCCoreStateStopped))
+			{
+				putInQueue = YES;
+			}
+
 			if (putInQueue)
 			{
 				[_queuedItemListTaskPaths addObject:path];
@@ -89,7 +95,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	@synchronized(_queuedItemListTaskPaths)
 	{
-		if (_scheduledItemListTasks.count == 0)
+		if ((_scheduledItemListTasks.count == 0) && (self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
 		{
 			BOOL isForQuery = NO;
 
@@ -401,7 +407,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
 
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || ![retrievedItem.name isEqualToString:cacheItem.name])
+						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
+						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
+
+						    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
+						    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
+						    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
 						{
 							// Update item in the cache if the server has a different version
 							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
@@ -456,7 +467,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}];
 
-			// Preserve localID for remotely moved, known items
+			// Preserve localID for remotely moved, known items / preserve .removed status for locally removed items while deletion is in progress
 			{
 				NSMutableIndexSet *removeItemsFromDeletedItemsIndexes = nil;
 				NSMutableIndexSet *removeItemsFromNewItemsIndexes = nil;
@@ -466,9 +477,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				for (OCItem *newItem in newItems)
 				{
 					__block OCItem *knownItem = nil;
+					__block BOOL knownItemRemoved = NO;
 
 					[self.database retrieveCacheItemForFileID:newItem.fileID includingRemoved:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 						knownItem = item;
+						knownItemRemoved = knownItem.removed;
 						knownItem.removed = NO;
 					}];
 
@@ -490,6 +503,16 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						{
 							// If paths aren't identical => pass along metadata
 							newItem.previousPath = knownItem.path;
+						}
+						else
+						{
+							// Prevent files in process of deletion from re-appearing
+							if (knownItemRemoved && // known item was marked removed
+							   (knownItem.syncActivity & OCItemSyncActivityDeleting)) // known item is still in the process of removal
+							{
+								newItem.removed = knownItemRemoved; // carry over the removed status
+								[queryResults removeObject:newItem]; // remove from query results
+							}
 						}
 
 						// Remove from deletedCacheItems
@@ -829,7 +852,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// File provider signaling
 	if ((self.postFileProviderNotifications) && (queryResultsChangedItems!=nil) && (queryResultsChangedItems.count > 0) && (taskRootItem!=nil))
 	{
-		[self signalChangesForItems:@[ taskRootItem ]];
+		[self signalChangesToFileProviderForItems:@[ taskRootItem ]];
 	}
 }
 
@@ -848,21 +871,46 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (void)_checkForUpdatesNotBefore:(NSDate *)notBefore
 {
-	OCEventTarget *eventTarget;
-
 	if (self.state != OCCoreStateRunning)
 	{
 		return;
 	}
 
-	eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+	__weak OCCore *weakSelf = self;
 
-	[self.connection retrieveItemListAtPath:@"/" depth:0 notBefore:notBefore options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
+	[[OCBackgroundManager sharedBackgroundManager] scheduleBlock:^{
+		OCCore *strongSelf = weakSelf;
+
+		if (strongSelf != nil)
+		{
+			dispatch_block_t scheduleUpdateCheck = ^{
+				OCCore *strongSelf = weakSelf;
+
+				if (strongSelf != nil)
+				{
+					OCEventTarget *eventTarget;
+
+					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+					[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
+				}
+			};
+
+			if ((notBefore != nil) && ([notBefore timeIntervalSinceNow] > 0))
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)([notBefore timeIntervalSinceNow] * NSEC_PER_SEC)), strongSelf->_queue, scheduleUpdateCheck);
+			}
+			else
+			{
+				scheduleUpdateCheck();
+			}
+		}
+	} inBackground:NO];
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
 {
-	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%d, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
+	OCLogDebug(@"Handling background retrieved items: error=%@, path=%@, depth=%lu, items=%@", OCLogPrivate(event.error), OCLogPrivate(event.path), event.depth, OCLogPrivate(event.result));
 
 	// Handle result
 	if (event.error == nil)
@@ -874,8 +922,40 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			NSError *error = nil;
 			OCItem *cacheItem = nil;
 			OCItem *remoteItem = items.firstObject;
-
 			NSArray<OCItem*> *cacheItems = nil;
+			BOOL updateQuotaTotal = NO;
+
+			if ([remoteItem.path isEqual:@"/"])
+			{
+				// Update root quota properties
+
+				if (((_rootQuotaBytesRemaining != nil) != (remoteItem.quotaBytesRemaining != nil)) || (_rootQuotaBytesRemaining.integerValue != remoteItem.quotaBytesRemaining.integerValue))
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesRemaining"];
+					_rootQuotaBytesRemaining = remoteItem.quotaBytesRemaining;
+					[self didChangeValueForKey:@"rootQuotaBytesRemaining"];
+
+					updateQuotaTotal = YES;
+				}
+
+				if (((_rootQuotaBytesUsed != nil) != (remoteItem.quotaBytesUsed != nil)) || (_rootQuotaBytesUsed.integerValue != remoteItem.quotaBytesUsed.integerValue))
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesUsed"];
+					_rootQuotaBytesUsed = remoteItem.quotaBytesUsed;
+					[self didChangeValueForKey:@"rootQuotaBytesUsed"];
+
+					updateQuotaTotal = YES;
+				}
+
+				if (updateQuotaTotal)
+				{
+					[self willChangeValueForKey:@"rootQuotaBytesTotal"];
+					_rootQuotaBytesTotal = (_rootQuotaBytesRemaining != nil) ?
+							@(_rootQuotaBytesUsed.integerValue + _rootQuotaBytesRemaining.integerValue) :
+							nil;
+					[self didChangeValueForKey:@"rootQuotaBytesTotal"];
+				}
+			}
 
 			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{
@@ -889,6 +969,38 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					else
 					{
 						// No changes. We're done.
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// Handle certificate errors while connected
+		if (([event.error isOCErrorWithCode:OCErrorRequestServerCertificateRejected]) && (self.connectionStatus == OCCoreConnectionStatusOnline))
+		{
+			OCCertificate *certificate;
+			OCIssue *certificateIssue = event.error.embeddedIssue;
+
+			if ((certificateIssue != nil) && ((certificate = certificateIssue.certificate) != nil))
+			{
+				BOOL sendIssueToDelegate = NO;
+
+				@synchronized(_warnedCertificates)
+				{
+					if (![_warnedCertificates containsObject:certificate])
+					{
+						[_warnedCertificates addObject:certificate];
+
+						sendIssueToDelegate = YES;
+					}
+				}
+
+				if (sendIssueToDelegate)
+				{
+					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+					{
+						[self.delegate core:self handleError:event.error issue:certificateIssue];
 					}
 				}
 			}

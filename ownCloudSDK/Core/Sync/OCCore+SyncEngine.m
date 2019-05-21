@@ -33,6 +33,7 @@
 #import "OCIssue+SyncIssue.h"
 #import "OCWaitCondition.h"
 #import "OCProcessManager.h"
+#import "OCSyncLane.h"
 #import "OCSyncRecordActivity.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
@@ -191,6 +192,22 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	return(nil); // Stub implementation
 }
 
+#pragma mark - Sync Lanes
+- (OCSyncLane *)laneForTags:(NSSet <OCSyncLaneTag> *)tags readOnly:(BOOL)readOnly
+{
+	BOOL updatedLanes = NO;
+	OCSyncLane *lane;
+
+	lane = [self.database laneForTags:tags updatedLanes:&updatedLanes readOnly:readOnly];
+
+	if (updatedLanes)
+	{
+		[self setNeedsToProcessSyncRecords];
+	}
+
+	return (lane);
+}
+
 #pragma mark - Sync Record Scheduling
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler
 {
@@ -277,19 +294,47 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 
-		return (blockError);
-	} completionHandler:^(NSError *error) {
-		OCLogDebug(@"record %@ completed preflight with error=%@", record, error);
-
-		if (error != nil)
+		// Assign to lane
+		if (blockError == nil)
 		{
-			// Error during pre-flight
+			OCSyncLane *lane;
+
+			if ((lane = [self laneForTags:record.laneTags readOnly:NO]) != nil)
+			{
+				record.laneID = lane.identifier;
+
+				[self updateSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil)
+					{
+						OCLogError(@"Error %@ updating sync record %@ after assigning lane", error, record);
+						blockError = error;
+					}
+				}];
+			}
+
+			if (blockError == nil)
+			{
+				OCLogDebug(@"record %@ added to lane %@", record, lane);
+			}
+		}
+
+		// Handle errors during pre-flight
+		if (blockError != nil)
+		{
+			OCLogDebug(@"record %@ completed preflight with error=%@", record, blockError);
+
 			if (record.recordID != nil)
 			{
 				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
 				[self removeSyncRecords:@[ record ] completionHandler:nil];
 			}
+		}
 
+		return (blockError);
+	} completionHandler:^(NSError *error) {
+
+		if (error != nil)
+		{
 			// Call result handler
 			[record completeWithError:error core:self item:record.action.localItem parameter:record];
 		}
@@ -346,10 +391,6 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
 
-	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
-		error = removeError;
-	}];
-
 	if ((syncAction = syncRecord.action) != nil)
 	{
 		syncAction.core = self;
@@ -367,6 +408,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
+				// Sync record is about to be removed, so no need to try updating it
+				syncContext.updateStoredSyncRecordAfterItemUpdates = NO;
+
 				// Perform any descheduler-triggered updates
 				[self performSyncContextActions:syncContext];
 
@@ -374,6 +418,18 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 	}
+
+	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
+		if (removeError != nil)
+		{
+			OCLogError(@"Error removing sync record %@ from database: %@", syncRecord, removeError);
+
+			if (error == nil)
+			{
+				error = removeError;
+			}
+		}
+	}];
 
 	[syncRecord completeWithError:completionError core:self item:syncRecord.action.localItem parameter:parameter];
 
@@ -433,7 +489,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		}
 		else
 		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
+			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];
@@ -450,91 +506,224 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self dumpSyncJournalWithTags:@[@"BeforeProc"]];
 
 	[self performProtectedSyncBlock:^NSError *{
-		__block NSError *error = nil;
-		__block BOOL stopProcessing = NO;
-		__block OCSyncRecordID lastSyncRecordID = nil;
+		__block NSArray <OCSyncLane *> *lanes = nil;
+		NSMutableSet<OCSyncLaneID> *activeLaneIDs = [NSMutableSet new];
+		NSUInteger activeLanes = 0;
+		NSDictionary<OCSyncActionCategory, NSNumber *> *actionBudgetsByCategory = [self classSettingForOCClassSettingsKey:OCCoreActionConcurrencyBudgets];
+		NSMutableDictionary<OCSyncActionCategory, NSNumber *> *runningActionsByCategory = [NSMutableDictionary new];
+		void (^UpdateRunningActionCategories)(NSArray <OCSyncActionCategory> *categories, NSInteger change) = ^(NSArray <OCSyncActionCategory> *categories, NSInteger change) {
+			for (OCSyncActionCategory category in categories)
+			{
+				runningActionsByCategory[category] = @(runningActionsByCategory[category].integerValue + change);
+			}
+		};
+		BOOL (^ShouldRunInActionCategories)(NSArray <OCSyncActionCategory> *categories) = ^(NSArray <OCSyncActionCategory> *categories){
+			for (OCSyncActionCategory category in categories)
+			{
+				NSUInteger totalBudget = actionBudgetsByCategory[category].integerValue;
 
-		OCLogDebug(@"processing sync records");
-
-		while (!stopProcessing)
-		{
-			// Fetch next sync record
-			[self.database retrieveSyncRecordAfterID:lastSyncRecordID completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncRecord *syncRecord) {
-				OCCoreSyncInstruction nextInstruction;
-
-				if (syncRecord == nil)
+				if ((totalBudget > 0) && (runningActionsByCategory[category].integerValue >= totalBudget))
 				{
-					// There's no next sync record => we're done
-					stopProcessing = YES;
-					return;
+					OCLogDebug(@"Budget limit of %lu reached for action category: %@", totalBudget, category);
+					return (NO);
 				}
+			}
 
-				if (dbError != nil)
-				{
-					error = dbError;
-					stopProcessing = YES;
-					return;
-				}
-
-				// Process sync record
-				nextInstruction = [self processSyncRecord:syncRecord error:&error];
-
-				OCLogDebug(@"Processing of sync record finished with nextInstruction=%d", nextInstruction);
-
-				[self dumpSyncJournalWithTags:@[@"PostProc"]];
-
-				// Perform sync record result instruction
-				switch (nextInstruction)
-				{
-					case OCCoreSyncInstructionNone:
-						// Invalid instruction here
-						OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
-
-						stopProcessing = YES;
-
-						return;
-					break;
-
-					case OCCoreSyncInstructionStop:
-						// Stop processing
-						stopProcessing = YES;
-						return;
-					break;
-
-					case OCCoreSyncInstructionRepeatLast:
-						// Repeat processing of record
-						return;
-					break;
-
-					case OCCoreSyncInstructionDeleteLast:
-						// Delete record
-						[self removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
-							if (dbError != nil)
-							{
-								error = dbError;
-								stopProcessing = YES;
-							}
-						}];
-
-						// Process next
-						lastSyncRecordID = syncRecord.recordID;
-					break;
-
-					case OCCoreSyncInstructionProcessNext:
-						// Process next
-						lastSyncRecordID = syncRecord.recordID;
-					break;
-				}
-
-				// Log error
-				if (error != nil)
-				{
-					OCLogError(@"Error processing sync records: %@", error);
-				}
-			}];
+			return (YES);
 		};
 
-		return (error);
+		[self.database retrieveSyncLanesWithCompletionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncLane *> *syncLanes) {
+			if (error != nil)
+			{
+				OCLogError(@"Error retrieving sync lanes: %@", error);
+			}
+			else
+			{
+				lanes = syncLanes;
+			}
+		}];
+
+		for (OCSyncLane *lane in lanes)
+		{
+			[activeLaneIDs addObject:lane.identifier];
+		}
+
+		for (OCSyncLane *lane in lanes)
+		{
+			__block BOOL stopProcessing = NO;
+			__block OCSyncRecordID lastSyncRecordID = nil;
+			__block NSUInteger recordsOnLane = 0;
+			__block NSError *error = nil;
+
+			OCLogDebug(@"processing sync records on lane %@", lane);
+
+			if (lane.afterLanes.count > 0)
+			{
+				// Check if all preceding lanes this lane depends on have finished
+				if ([activeLaneIDs intersectsSet:lane.afterLanes])
+				{
+					// Preceding lanes still active => skip
+					if ([OCLogger logsForLevel:OCLogLevelDebug])
+					{
+						NSMutableSet *blockingLaneIDs = [NSMutableSet setWithSet:activeLaneIDs];
+						[blockingLaneIDs intersectSet:lane.afterLanes];
+
+						OCLogDebug(@"skipping lane %@ because lanes it is waiting for are still active: %@", lane, blockingLaneIDs);
+					}
+
+					continue;
+				}
+			}
+
+			while (!stopProcessing)
+			{
+				// Fetch next sync record
+				[self.database retrieveSyncRecordAfterID:lastSyncRecordID onLaneID:lane.identifier completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncRecord *syncRecord) {
+					OCCoreSyncInstruction nextInstruction;
+
+					if (syncRecord == nil)
+					{
+						// There's no next sync record => we're done
+						stopProcessing = YES;
+						return;
+					}
+
+					if (dbError != nil)
+					{
+						error = dbError;
+						stopProcessing = YES;
+						return;
+					}
+
+					recordsOnLane++;
+
+					// Check available action category budget
+					NSArray <OCSyncActionCategory> *actionCategories = syncRecord.action.categories;
+
+					if (syncRecord.state == OCSyncRecordStateReady)
+					{
+						if (!ShouldRunInActionCategories(actionCategories))
+						{
+							OCLogDebug(@"Skipping processing sync record %@ due to lack of available budget in %@", syncRecord.recordID, actionCategories);
+							stopProcessing = YES;
+							return;
+						}
+					}
+
+					// Update budget usage
+					UpdateRunningActionCategories(actionCategories, 1);
+
+					// Process sync record
+					nextInstruction = [self processSyncRecord:syncRecord error:&error];
+
+					OCLogDebug(@"Processing of sync record finished with nextInstruction=%lu", nextInstruction);
+
+					[self dumpSyncJournalWithTags:@[@"PostProc"]];
+
+					// Perform sync record result instruction
+					switch (nextInstruction)
+					{
+						case OCCoreSyncInstructionNone:
+							// Invalid instruction here
+							OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
+
+							stopProcessing = YES;
+							return;
+						break;
+
+						case OCCoreSyncInstructionStop:
+							// Stop processing
+							stopProcessing = YES;
+							return;
+						break;
+
+						case OCCoreSyncInstructionRepeatLast:
+							// Repeat processing of record
+							return;
+						break;
+
+						case OCCoreSyncInstructionDeleteLast:
+							// Delete record
+							[self removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+								if (dbError != nil)
+								{
+									error = dbError;
+									stopProcessing = YES;
+								}
+							}];
+
+							if (error == nil)
+							{
+								recordsOnLane--;
+							}
+
+							// Update budget usage
+							UpdateRunningActionCategories(actionCategories, -1);
+
+							// Process next
+							lastSyncRecordID = syncRecord.recordID;
+						break;
+
+						case OCCoreSyncInstructionProcessNext:
+							// Process next
+							lastSyncRecordID = syncRecord.recordID;
+						break;
+					}
+
+					// Log error
+					if (error != nil)
+					{
+						OCLogError(@"Error processing sync records: %@", error);
+					}
+				}];
+			};
+
+			OCLogDebug(@"done processing sync records on lane %@", lane);
+
+			if ((recordsOnLane > 0) || (error != nil))
+			{
+				activeLanes++;
+
+				if ((activeLanes > self.maximumSyncLanes) && (self.maximumSyncLanes != 0))
+				{
+					// Enforce active lane limit
+					break;
+				}
+			}
+
+			if (error != nil)
+			{
+				// Make sure not to proceed to removing seemingly empty lane on errors
+				continue;
+			}
+
+			if (recordsOnLane == 0)
+			{
+				__block BOOL laneIsEmpty = NO;
+
+				// Double-verify there are no records left on lane
+				[self.database numberOfSyncRecordsOnSyncLaneID:lane.identifier completionHandler:^(OCDatabase *db, NSError *error, NSNumber *count) {
+					laneIsEmpty = ((count.integerValue == 0) && (error == nil));
+				}];
+
+				// Remove lane if empty
+				if (laneIsEmpty)
+				{
+					OCLogDebug(@"Removing empty lane %@", lane);
+
+					[activeLaneIDs removeObject:lane.identifier];
+
+					[self.database removeSyncLane:lane completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil)
+						{
+							OCLogError(@"Error removing lane %@: %@", lane, error);
+						}
+					}];
+				}
+			}
+		}
+
+		return (nil);
 	} completionHandler:^(NSError *error) {
 //		// Ensure outstanding events are delivered
 //		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
@@ -645,7 +834,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 						break;
 					}
 
-					OCLogDebug(@"evaluated wait condition %@ with state=%d, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
+					OCLogDebug(@"evaluated wait condition %@ with state=%lu, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
 				}];
 
 				if (updateSyncRecordInDB)
@@ -728,7 +917,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				{
 					if (eventInstruction != OCCoreSyncInstructionNone)
 					{
-						OCLogDebug(@"event instruction %d overwritten with %d by later event=%@", eventInstruction, instruction, event);
+						OCLogDebug(@"event instruction %lu overwritten with %lu by later event=%@", eventInstruction, instruction, event);
 					}
 
 					eventInstruction = instruction;
@@ -822,7 +1011,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 					[self setNeedsToProcessSyncRecords];
 				}
 
-				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%d, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
+				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%lu, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
 			}
 			else
 			{
@@ -855,7 +1044,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		case OCSyncRecordStateCompleted:
 			// Sync record has completed => continue with next syncRecord
-			OCLogWarning(@"record %@ has completed and will be removed: %@", syncRecord);
+			OCLogWarning(@"record %@ has completed and will be removed", syncRecord);
 
 			doNext = OCCoreSyncInstructionDeleteLast;
 		break;
@@ -1160,7 +1349,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 #pragma mark - Sync debugging
 - (void)dumpSyncJournalWithTags:(NSArray <OCLogTagName> *)tags
 {
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		OCSyncExec(journalDump, {
 			[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
@@ -1169,7 +1358,8 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				for (OCSyncRecord *record in syncRecords)
 				{
-					OCTLogDebug(tags, @"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+					OCTLogDebug(tags, @"%@ | %@ | %@ | %@", [[record.recordID stringValue] rightPaddedMinLength:5],
+										[[record.laneID stringValue] leftPaddedMinLength:5],
 										[record.actionIdentifier leftPaddedMinLength:20],
 										[[record.inProgressSince description] leftPaddedMinLength:20]);
 				}

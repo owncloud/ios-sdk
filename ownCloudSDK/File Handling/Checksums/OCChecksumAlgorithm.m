@@ -18,6 +18,7 @@
 
 #import "OCChecksumAlgorithm.h"
 #import "NSError+OCError.h"
+#import "OCLogger.h"
 
 @implementation OCChecksumAlgorithm
 
@@ -114,6 +115,8 @@
 			if ((error==nil) && (inputStream.streamError != nil))
 			{
 				error = inputStream.streamError;
+
+				OCLogError(@"Checksum computation on %@ failed due to error=%@", fileURL, error);
 			}
 		}
 

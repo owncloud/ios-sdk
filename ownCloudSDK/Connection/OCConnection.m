@@ -37,6 +37,8 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse+DAVError.h"
+#import "OCCertificateRuleChecker.h"
+#import "OCProcessManager.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -60,6 +62,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 @synthesize capabilities = _capabilities;
 
 @synthesize actionSignals = _actionSignals;
+@synthesize propFindSignals = _propFindSignals;
 
 @synthesize state = _state;
 
@@ -78,20 +81,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDCapabilities  		: @"ocs/v1.php/cloud/capabilities",
-		OCConnectionEndpointIDUser			: @"ocs/v1.php/cloud/user",
-		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",
-		OCConnectionEndpointIDStatus 	    		: @"status.php",
-		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",
-		OCConnectionEndpointIDShares			: @"ocs/v1.php/apps/files_sharing/api/v1/shares",
-		OCConnectionEndpointIDRemoteShares		: @"ocs/v1.php/apps/files_sharing/api/v1/remote_shares",
-		OCConnectionEndpointIDRecipients		: @"ocs/v1.php/apps/files_sharing/api/v1/sharees",
+		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
+		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
+		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
+		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",		// Requested once per item thumbnail request
+		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
+		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
-		OCConnectionStrictBookmarkCertificateEnforcement: @(YES),
+		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
+		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionAllowCellular			: @(YES),
-		OCConnectionPlainHTTPPolicy			: @"warn"
+		OCConnectionPlainHTTPPolicy			: @"warn",
+		OCConnectionAlwaysRequestPrivateLink		: @(NO)
 	});
 }
 
@@ -178,6 +183,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		_propFindSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 		_usersByUserID = [NSMutableDictionary new];
 
@@ -191,12 +197,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 - (void)dealloc
 {
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
-//		OCSyncExec(waitForDetach, {
-//			[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
-//				OCSyncExecDone(waitForDetach);
-//			}];
-//		});
-
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
 }
@@ -411,14 +411,79 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
 	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
-	BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
 
-	// Strictly enfore bookmark certificate
-	if (strictBookmarkCertificateEnforcement)
+	// Enforce bookmark certificate
+	if (_bookmark.certificate != nil)
 	{
-		if (_bookmark.certificate != nil)
+		BOOL extendedValidationPassed = NO;
+		NSString *extendedValidationRule = nil;
+
+		if ((extendedValidationRule = [self classSettingForOCClassSettingsKey:OCConnectionCertificateExtendedValidationRule]) != nil)
 		{
-			fulfillsBookmarkRequirements = [_bookmark.certificate isEqual:certificate];
+			// Check extended validation rule
+			OCCertificateRuleChecker *ruleChecker = nil;
+
+			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:extendedValidationRule]) != nil)
+			{
+				extendedValidationPassed = [ruleChecker evaluateRule];
+			}
+		}
+		else
+		{
+			// Check if certificate SHA-256 fingerprints are identical
+			extendedValidationPassed = [_bookmark.certificate isEqual:certificate];
+		}
+
+		if (extendedValidationPassed)
+		{
+			fulfillsBookmarkRequirements = YES;
+		}
+		else
+		{
+			// Evaluate the renewal acceptance rule to determine if this certificate should be used instead
+			NSString *renewalAcceptanceRule = nil;
+
+			fulfillsBookmarkRequirements = NO;
+
+			OCLogWarning(@"Certificate %@ does not match bookmark certificate %@. Checking with rule: %@", OCLogPrivate(certificate), OCLogPrivate(_bookmark.certificate), OCLogPrivate(renewalAcceptanceRule));
+
+			if ((renewalAcceptanceRule = [self classSettingForOCClassSettingsKey:OCConnectionRenewedCertificateAcceptanceRule]) != nil)
+			{
+				OCCertificateRuleChecker *ruleChecker;
+
+				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:renewalAcceptanceRule]) != nil)
+				{
+					fulfillsBookmarkRequirements = [ruleChecker evaluateRule];
+
+					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
+					{
+						// Auto-accept successor to user-accepted certificate that also would prompt for confirmation
+						if ((_bookmark.certificate.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
+						{
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
+
+							validationResult = OCCertificateValidationResultUserAccepted;
+						}
+
+						// Update bookmark certificate
+						_bookmark.certificate = certificate;
+						_bookmark.certificateModificationDate = [NSDate date];
+
+						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
+
+						if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+						{
+							[_delegate connectionCertificateUserApproved:self];
+						}
+
+						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(_bookmark), certificate);
+					}
+
+					defaultWouldProceed = fulfillsBookmarkRequirements;
+				}
+			}
+
+			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
 		}
 	}
 
@@ -434,9 +499,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			NSError *errorIssue = nil;
 			BOOL doProceed = NO, changeUserAccepted = NO;
 
-			if (strictBookmarkCertificateEnforcement && defaultWouldProceed && request.forceCertificateDecisionDelegation)
+			if (defaultWouldProceed && request.forceCertificateDecisionDelegation)
 			{
-				// strictBookmarkCertificateEnforcement => enforce bookmark certificate where available
+				// enforce bookmark certificate where available
 				doProceed = fulfillsBookmarkRequirements;
 			}
 			else
@@ -451,18 +516,23 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
 				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:request.httpResponse.certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 					if (decision == OCIssueDecisionApprove)
 					{
 						if (changeUserAccepted)
 						{
-							certificate.userAccepted = YES;
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 						}
 
-						self->_bookmark.certificate = request.httpResponse.certificate;
+						self->_bookmark.certificate = certificate;
 						self->_bookmark.certificateModificationDate = [NSDate date];
 
 						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
+
+						if ((self.delegate!=nil) && [self.delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+						{
+							[self.delegate connectionCertificateUserApproved:self];
+						}
 					}
 				}]];
 			}
@@ -898,6 +968,38 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Metadata actions
+- (NSMutableArray <OCXMLNode *> *)_davItemAttributes
+{
+	NSMutableArray <OCXMLNode *> *ocPropAttributes = [[NSMutableArray alloc] initWithObjects:
+		// WebDAV properties
+		[OCXMLNode elementWithName:@"D:resourcetype"],
+		[OCXMLNode elementWithName:@"D:getlastmodified"],
+		[OCXMLNode elementWithName:@"D:getcontentlength"],
+		[OCXMLNode elementWithName:@"D:getcontenttype"],
+		[OCXMLNode elementWithName:@"D:getetag"],
+
+		// OC properties
+		[OCXMLNode elementWithName:@"oc:id"],
+		[OCXMLNode elementWithName:@"oc:size"],
+		[OCXMLNode elementWithName:@"oc:permissions"],
+		[OCXMLNode elementWithName:@"oc:favorite"],
+		[OCXMLNode elementWithName:@"oc:share-types"],
+
+		[OCXMLNode elementWithName:@"oc:owner-id"],
+		[OCXMLNode elementWithName:@"oc:owner-display-name"],
+
+		// [OCXMLNode elementWithName:@"D:creationdate"],
+		// [OCXMLNode elementWithName:@"D:displayname"],
+
+		// [OCXMLNode elementWithName:@"oc:tags"],
+		// [OCXMLNode elementWithName:@"oc:comments-count"],
+		// [OCXMLNode elementWithName:@"oc:comments-href"],
+		// [OCXMLNode elementWithName:@"oc:comments-unread"],
+	nil];
+
+	return (ocPropAttributes);
+}
+
 - (OCHTTPDAVRequest *)_propfindDAVRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
 	OCHTTPDAVRequest *davRequest;
@@ -915,36 +1017,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
-		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
+		NSMutableArray <OCXMLNode *> *ocPropAttributes = [self _davItemAttributes];
 
-		[davRequest.xmlRequestPropAttribute addChildren:@[
-			// WebDAV properties
-			[OCXMLNode elementWithName:@"D:resourcetype"],
-			[OCXMLNode elementWithName:@"D:getlastmodified"],
-			[OCXMLNode elementWithName:@"D:getcontentlength"],
-			[OCXMLNode elementWithName:@"D:getcontenttype"],
-			[OCXMLNode elementWithName:@"D:getetag"],
+		if (depth == 0)
+		{
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-available-bytes"]];
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-used-bytes"]];
+		}
 
-			// OC properties
-			[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
+		if ([[self classSettingForOCClassSettingsKey:OCConnectionAlwaysRequestPrivateLink] boolValue])
+		{
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"oc:privatelink"]];
+		}
 
-			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes]
+		[davRequest.xmlRequestPropAttribute addChildren:ocPropAttributes];
 
-//		 	[OCXMLNode elementWithName:@"D:creationdate"],
-//		 	[OCXMLNode elementWithName:@"D:displayname"],
-//			[OCXMLNode elementWithName:@"D:quota-available-bytes"],
-//			[OCXMLNode elementWithName:@"D:quota-used-bytes"],
-
-//			[OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
-//			[OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
-		]];
+		davRequest.requiredSignals = self.propFindSignals;
 	}
 
 	return (davRequest);
@@ -952,12 +1040,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth notBefore:nil options:nil completionHandler:completionHandler]);
+	return ([self retrieveItemListAtPath:path depth:depth options:nil completionHandler:completionHandler]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth notBefore:notBeforeDate options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+	return ([self retrieveItemListAtPath:path depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
 			{
 				completionHandler(event.error, nil);
@@ -969,7 +1057,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth notBefore:(NSDate *)notBeforeDate options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
@@ -987,9 +1075,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		davRequest.eventTarget = eventTarget;
 		davRequest.downloadRequest = YES;
-		davRequest.earliestBeginDate = notBeforeDate;
 		davRequest.priority = NSURLSessionTaskPriorityHigh;
-		davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		davRequest.forceCertificateDecisionDelegation = YES;
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -1010,7 +1097,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[self attachToPipelines];
 
 		// Enqueue request
-		[((notBeforeDate!=nil) ? self.longLivedPipeline : self.ephermalPipeline) enqueueRequest:davRequest forPartitionID:self.partitionID];
+		if (options[@"alternativeEventType"] != nil)
+		{
+			[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+		}
+		else
+		{
+			[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+		}
 
 		progress = davRequest.progress.progress;
 		progress.eventType = OCEventTypeRetrieveItemList;
@@ -1084,6 +1178,60 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
+}
+
+#pragma mark - Estimates
+- (NSNumber *)estimatedTimeForTransferRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength confidence:(double * _Nullable)outConfidence
+{
+	double longlivedConfidence = 0;
+	NSNumber *longLivedEstimatedTime = [self.longLivedPipeline estimatedTimeForRequest:request withExpectedResponseLength:expectedResponseLength confidence:&longlivedConfidence];
+
+	double commandConfidence = 0;
+	NSNumber *commandEstimatedTime = [self.commandPipeline estimatedTimeForRequest:request withExpectedResponseLength:expectedResponseLength confidence:&commandConfidence];
+
+	double estimationConfidence = 0;
+	NSNumber *estimatedTime = nil;
+
+	if ((commandEstimatedTime != nil) && (commandConfidence > longlivedConfidence))
+	{
+		estimatedTime = commandEstimatedTime;
+		estimationConfidence = commandConfidence;
+	}
+	else if ((longLivedEstimatedTime != nil) && (longlivedConfidence > commandConfidence))
+	{
+		estimatedTime = longLivedEstimatedTime;
+		estimationConfidence = longlivedConfidence;
+	}
+
+	if (outConfidence != NULL)
+	{
+		*outConfidence = estimationConfidence;
+	}
+
+	return (estimatedTime);
+}
+
+- (OCHTTPPipeline *)transferPipelineForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength
+{
+	double confidenceLevel = 0;
+	NSNumber *estimatedTime = nil;
+
+	if (!OCProcessManager.isProcessExtension)
+	{
+		if ((estimatedTime = [self estimatedTimeForTransferRequest:request withExpectedResponseLength:expectedResponseLength confidence:&confidenceLevel]) != nil)
+		{
+			BOOL useCommandPipeline = (estimatedTime.doubleValue <= 120.0) && (confidenceLevel >= 0.15);
+
+			OCLogDebug(@"Expected finish time: %@ (in %@ seconds, confidence %.02f) - pipeline: %@", [NSDate dateWithTimeIntervalSinceNow:estimatedTime.doubleValue], estimatedTime, confidenceLevel, (useCommandPipeline ? @"command" : @"longLived"));
+
+			if (useCommandPipeline)
+			{
+				return (self.commandPipeline);
+			}
+		}
+	}
+
+	return (self.longLivedPipeline);
 }
 
 #pragma mark - Actions
@@ -1205,6 +1353,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		request.eventTarget = eventTarget;
 		request.bodyURL = sourceURL;
+		request.forceCertificateDecisionDelegation = YES;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -1215,7 +1364,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
 		}
 
-		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
+		[[self transferPipelineForRequest:request withExpectedResponseLength:1000] enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeUpload;
@@ -1262,7 +1411,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		*/
 
 		// Retrieve item information and continue in _handleUploadFileItemResult:error:
-		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 notBefore:nil options:@{
+		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
 			@"alternativeEventType"  : @(OCEventTypeUpload),
 			@"_originalUserInfo"	: request.userInfo
 		} resultTarget:request.eventTarget];
@@ -1291,6 +1440,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							NSString *errorDescription = nil;
 
 							errorDescription = [NSString stringWithFormat:OCLocalized(@"Another item named %@ already exists in %@."), fileName, parentItem.name];
+							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+						}
+						break;
+
+						case OCHTTPStatusCodeINSUFFICIENT_STORAGE: {
+							NSString *errorDescription = nil;
+
+							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
 							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
 						}
 						break;
@@ -1343,6 +1500,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.eventTarget = eventTarget;
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
+		request.forceCertificateDecisionDelegation = YES;
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
@@ -1355,7 +1513,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[self attachToPipelines];
 
 		// Enqueue request
-		[self.longLivedPipeline enqueueRequest:request forPartitionID:self.partitionID];
+		[[self transferPipelineForRequest:request withExpectedResponseLength:item.size] enqueueRequest:request forPartitionID:self.partitionID];
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeDownload;
@@ -1495,6 +1653,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				};
 				patchRequest.eventTarget = eventTarget;
 				patchRequest.priority = NSURLSessionTaskPriorityHigh;
+				patchRequest.forceCertificateDecisionDelegation = YES;
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
@@ -1611,6 +1770,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		};
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
+		request.forceCertificateDecisionDelegation = YES;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -1772,6 +1932,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			};
 			request.priority = NSURLSessionTaskPriorityHigh;
 
+			request.forceCertificateDecisionDelegation = YES;
+
 			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
 			[request setValue:@"infinity" forHeaderField:@"Depth"];
 			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
@@ -1895,6 +2057,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.resultHandlerAction = @selector(_handleDeleteItemResult:error:);
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
+		request.forceCertificateDecisionDelegation = YES;
 
 		if (requireMatch && (item.eTag!=nil))
 		{
@@ -1988,8 +2151,23 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						event.error = OCError(OCErrorItemChanged);
 					break;
 
-					default:
-						event.error = request.httpResponse.status.error;
+					case OCHTTPStatusCodeLOCKED:
+						/*
+							Status code: 423
+							Content-Type: application/xml; charset=utf-8
+
+							<?xml version="1.0" encoding="utf-8"?>
+							<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+							  <s:exception>OCA\DAV\Connector\Sabre\Exception\FileLocked</s:exception>
+							  <s:message>"new folder/newfile.pdf" is locked</s:message>
+							</d:error>
+						*/
+
+					default: {
+						NSString *davMessage = [request.httpResponse bodyParsedAsDAVError].davExceptionMessage;
+
+						event.error = ((davMessage != nil) ? OCErrorWithDescription(OCErrorItemOperationForbidden, davMessage) : request.httpResponse.status.error);
+					}
 					break;
 				}
 			}
@@ -2009,6 +2187,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	OCHTTPRequest *request = nil;
 	NSError *error = nil;
 	NSProgress *progress = nil;
+
+	if (item.isPlaceholder)
+	{
+		// No remote thumbnails available for placeholders
+		[eventTarget handleError:OCError(OCErrorItemNotFound) type:OCEventTypeRetrieveThumbnail sender:self];
+		return (nil);
+	}
 
 	if (item.type != OCItemTypeCollection)
 	{
@@ -2074,6 +2259,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			request.downloadedFileURL = localThumbnailURL;
 		}
 
+		request.forceCertificateDecisionDelegation = YES;
+
 		// Attach to pipelines
 		[self attachToPipelines];
 
@@ -2138,7 +2325,93 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 }
 
-#pragma mark - Actions
+#pragma mark - Report API
+- (nullable OCProgress *)filterFilesWithRules:(nullable NSDictionary<OCItemPropertyName, id> *)filterRules properties:(nullable NSArray<OCXMLNode *> *)properties resultTarget:(OCEventTarget *)eventTarget
+{
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSMutableArray<OCXMLNode *> *filterRulesXML = [NSMutableArray new];
+	OCHTTPDAVRequest *request;
+
+	for (OCItemPropertyName propertyName in filterRules)
+	{
+		if ([propertyName isEqual:OCItemPropertyNameIsFavorite])
+		{
+			NSNumber *favoriteValue;
+
+			if ((favoriteValue = OCTypedCast(filterRules[propertyName], NSNumber)) != nil)
+			{
+				[filterRulesXML addObject:[OCXMLNode elementWithName:@"oc:favorite" stringValue:favoriteValue.stringValue]];
+			}
+		}
+	}
+
+	if (filterRulesXML.count == 0)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeFilterFiles sender:self];
+		return(nil);
+	}
+
+	if (properties == nil)
+	{
+		properties = [self _davItemAttributes];
+	}
+
+	request = [OCHTTPDAVRequest reportRequestWithURL:endpointURL rootElementName:@"oc:filter-files" content:[[NSArray alloc] initWithObjects:
+		[OCXMLNode elementWithName:@"oc:filter-rules" children:filterRulesXML],
+		(properties!=nil) ? [OCXMLNode elementWithName:@"D:prop" children:properties] : nil,
+	nil]];
+	request.eventTarget = eventTarget;
+	request.resultHandlerAction = @selector(_handleFilterFilesResult:error:);
+	request.requiredSignals = self.actionSignals;
+
+	// Attach to pipelines
+	[self attachToPipelines];
+
+	// Enqueue request
+	[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
+
+	return (request.progress);
+}
+
+- (void)_handleFilterFilesResult:(OCHTTPRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeFilterFiles attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.httpResponse.status.isSuccess)
+			{
+				NSArray<OCItem *> *items = nil;
+				NSArray <NSError *> *errors = nil;
+				NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				{
+					event.result = items;
+				}
+				else
+				{
+					event.error = errors.firstObject;
+				}
+			}
+			else
+			{
+				event.error = request.httpResponse.status.error;
+			}
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
 
 #pragma mark - Sending requests
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler
@@ -2148,15 +2421,10 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	request.ephermalResultHandler = ephermalResultHandler;
 
-	// Strictly enfore bookmark certificate ..
+	// Strictly enforce bookmark certificate ..
 	if (self.state != OCConnectionStateDisconnected) // .. for all requests if connecting or connected ..
 	{
-		BOOL strictBookmarkCertificateEnforcement = [(NSNumber *)[self classSettingForOCClassSettingsKey:OCConnectionStrictBookmarkCertificateEnforcement] boolValue];
-
-		if (strictBookmarkCertificateEnforcement) // .. and the option is turned on
-		{
-			request.forceCertificateDecisionDelegation = YES;
-		}
+		request.forceCertificateDecisionDelegation = YES;
 	}
 	
 	[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -2204,11 +2472,13 @@ OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients"
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
-OCClassSettingsKey OCConnectionStrictBookmarkCertificateEnforcement = @"connection-strict-bookmark-certificate-enforcement";
+OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"connection-certificate-extended-validation-rule";
+OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"connection-renewed-certificate-acceptance-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
+OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

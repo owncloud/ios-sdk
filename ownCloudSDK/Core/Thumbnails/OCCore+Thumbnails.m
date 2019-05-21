@@ -122,7 +122,7 @@
 				else
 				{
 					// No it's not => remove outdated version from cache
-					OCTLogDebug(thumbnailRequestTags, @"Removing outdated/different thumbnail from cache: item=(%@, %@), thumbnail=(%@, %@)", thumbnail, item.itemVersionIdentifier, item.thumbnailSpecID, thumbnail.itemVersionIdentifier, thumbnail.specID);
+					OCTLogDebug(thumbnailRequestTags, @"Removing outdated/different thumbnail %@ from cache: item=(%@, %@), thumbnail=(%@, %@)", thumbnail, item.itemVersionIdentifier, item.thumbnailSpecID, thumbnail.itemVersionIdentifier, thumbnail.specID);
 
 					[self->_thumbnailCache removeObjectForKey:item.fileID];
 
@@ -174,7 +174,7 @@
 						}
 						else
 						{
-							OCTLogDebug(thumbnailRequestTags, @"No matching thumbnail found in database", cachedThumbnail);
+							OCTLogDebug(thumbnailRequestTags, @"No matching thumbnail found in database");
 						}
 
 						// Update the retrieveHandler with a thumbnail if it doesn't already have one

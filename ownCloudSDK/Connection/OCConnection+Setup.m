@@ -131,7 +131,7 @@
 					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 						if (decision == OCIssueDecisionApprove)
 						{
-							certificate.userAccepted = YES;
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 
 							self->_bookmark.certificate = certificate;
 							self->_bookmark.certificateModificationDate = [NSDate date];

@@ -26,6 +26,8 @@
 @property(strong) NSString *title;
 @property(strong) NSString *value;
 
+@property(strong) OCCertificate *certificate;
+
 @property(strong) UIColor *valueColor;
 
 @property(strong) NSMutableArray *children;
@@ -33,7 +35,7 @@
 @property(readonly,nonatomic) BOOL useFixedWidthFont;
 
 #pragma mark - Parsing for presentation
-+ (NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)_certificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
++ (NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)certificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
 
 #pragma mark - Attributed string
 + (NSAttributedString *)attributedStringWithCertificateDetails:(NSArray <OCCertificateDetailsViewNode *> *)certificateDetails;

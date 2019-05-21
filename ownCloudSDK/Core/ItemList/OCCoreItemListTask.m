@@ -146,7 +146,7 @@
 				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
 					NSProgress *retrievalProgress;
 
-					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 notBefore:nil options:((self.groupID != nil) ? @{ OCConnectionOptionGroupIDKey : self.groupID } : nil) completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:((self.groupID != nil) ? @{ OCConnectionOptionGroupIDKey : self.groupID } : nil) completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 						[self->_core queueBlock:^{
 							// Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];

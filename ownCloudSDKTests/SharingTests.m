@@ -151,7 +151,11 @@
 		XCTAssert(issue==nil);
 
 		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *passwordLessShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:nil expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+			XCTAssert(!passwordLessShare.protectedByPassword);
+
 			OCShare *createShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+			XCTAssert(createShare.protectedByPassword);
 
 			[expectList fulfill];
 
@@ -170,6 +174,7 @@
 				XCTAssert(newShare.url != nil);
 				XCTAssert(newShare.token != nil);
 				XCTAssert(newShare.creationDate != nil);
+				XCTAssert(newShare.protectedByPassword);
 				XCTAssert(createShare.expirationDate.timeIntervalSinceNow >= (24*60*60));
 
 				[expectShareCreated fulfill];
@@ -177,10 +182,14 @@
 				[connection updateShare:newShare afterPerformingChanges:^(OCShare * _Nonnull share) {
 					share.name = @"iOS SDK CI Share (updated)";
 					share.permissions = OCSharePermissionsMaskRead|OCSharePermissionsMaskCreate|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskDelete;
-					share.password = @"testpassword";
+					share.protectedByPassword = NO;
 					share.expirationDate = [NSDate dateWithTimeIntervalSinceNow:(24*60*60 * 14)];
 				} resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					OCShare *updatedShare = (OCShare *)event.result;
+
 					OCLog(@"Updated share with error=%@, share=%@", event.error, event.result);
+
+					XCTAssert(!updatedShare.protectedByPassword);
 
 					[connection updateShare:newShare afterPerformingChanges:^(OCShare * _Nonnull share) {
 						// Change nothing => should return immediately
@@ -202,6 +211,7 @@
 							XCTAssert([share.url 		isEqual:newShare.url]);
 							XCTAssert([share.token 		isEqual:newShare.token]);
 							XCTAssert([share.creationDate 	isEqual:newShare.creationDate]);
+							XCTAssert(!share.protectedByPassword);
 							XCTAssert(share.expirationDate.timeIntervalSinceNow >= (24*60*60*12));
 							XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
 
@@ -324,29 +334,80 @@
 									{
 										[expectRecipientSharesContainNewShare fulfill];
 
-										[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-											XCTAssert(event.error == nil);
+										dispatch_block_t cleanup = ^{
+											[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+												XCTAssert(event.error == nil);
 
-											[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
-												XCTAssert(error==nil);
+												[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													XCTAssert(error==nil);
 
-												OCLog(@"Recipient shares after deletion: %@", shares);
+													OCLog(@"Recipient shares after deletion: %@", shares);
 
-												for (OCShare *share in shares)
-												{
-													if ([share.identifier isEqual:newShare.identifier])
+													for (OCShare *share in shares)
 													{
-														XCTFail(@"Deleted share still around");
+														if ([share.identifier isEqual:newShare.identifier])
+														{
+															XCTFail(@"Deleted share still around");
+														}
 													}
-												}
 
-												[recipientConnection disconnectWithCompletionHandler:^{
-													[connection disconnectWithCompletionHandler:^{
-														[expectDisconnect fulfill];
+													[recipientConnection disconnectWithCompletionHandler:^{
+														[connection disconnectWithCompletionHandler:^{
+															[expectDisconnect fulfill];
+														}];
 													}];
 												}];
-											}];
-										} userInfo:nil ephermalUserInfo:nil]];
+											} userInfo:nil ephermalUserInfo:nil]];
+										};
+
+										if (recipientConnection.capabilities.sharingAutoAcceptShare.boolValue)
+										{
+											// Server is set up to auto-accept user-to-user shares
+											XCTAssert([share.state isEqual:OCShareStateAccepted]);
+											cleanup();
+										}
+										else
+										{
+											// Server is set up to not auto-accept user-to-user shares
+											XCTAssert([share.state isEqual:OCShareStatePending]);
+
+											// Accept share
+											[recipientConnection makeDecisionOnShare:share accept:YES resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+												OCLogDebug(@"Accepted with event.result=%@, .error=%@", event.result, event.error);
+
+												// Retrieve shares again ..
+												[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+													for (OCShare *share in shares)
+													{
+														if ([share.identifier isEqual:newShare.identifier])
+														{
+															// .. and check that it's now accepted.
+															XCTAssert([share.state isEqual:OCShareStateAccepted]);
+														}
+													}
+
+													// Now reject share
+													[recipientConnection makeDecisionOnShare:share accept:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+														OCLogDebug(@"Rejected with event.result=%@, .error=%@", event.result, event.error);
+
+														// Retrieve shares again ..
+														[recipientConnection retrieveSharesWithScope:OCShareScopeSharedWithUser forItem:nil options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+															for (OCShare *share in shares)
+															{
+																if ([share.identifier isEqual:newShare.identifier])
+																{
+																	// .. and check that it's now accepted.
+																	XCTAssert([share.state isEqual:OCShareStateRejected]);
+																}
+															}
+
+															// Finally clean up
+															cleanup();
+														}];
+													} userInfo:nil ephermalUserInfo:nil]];
+												}];
+											} userInfo:nil ephermalUserInfo:nil]];
+										}
 
 										break;
 									}
@@ -948,6 +1009,114 @@
 				}];
 			}];
 		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testSharingItemWithSpecialChars
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectFolderCreated = [self expectationWithDescription:@"Created folder"];
+	XCTestExpectation *expectFolderDeleted = [self expectationWithDescription:@"Deleted folder"];
+	XCTestExpectation *expectShareCreated = [self expectationWithDescription:@"Created share"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			NSString *folderName = [@"Test+" stringByAppendingString:[NSDate new].description];
+
+			[expectLists fulfill];
+
+			[connection createFolder:folderName inside:items[0] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				OCItem *newFolderItem = (OCItem *)event.result;
+
+				XCTAssert(event.error == nil);
+				XCTAssert(newFolderItem != nil);
+
+				OCLog(@"error=%@, newFolder=%@", event.error, event.result);
+
+				[expectFolderCreated fulfill];
+
+				[connection createShare:[OCShare shareWithPublicLinkToPath:newFolderItem.path linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					OCLog(@"error=%@, newShare=%@", event.error, event.result);
+
+					XCTAssert(event.error == nil);
+					XCTAssert(event.result != nil);
+
+					[expectShareCreated fulfill];
+
+					[connection deleteItem:newFolderItem requireMatch:NO resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						XCTAssert(event.error == nil);
+
+						OCLog(@"error=%@, result=%@", event.error, event.result);
+
+						[expectFolderDeleted fulfill];
+
+						[connection disconnectWithCompletionHandler:^{
+							[expectDisconnect fulfill];
+						}];
+					} userInfo:nil ephermalUserInfo:nil]];
+				} userInfo:nil ephermalUserInfo:nil]];
+
+			} userInfo:nil ephermalUserInfo:nil]];
+		}];
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testRequestPrivateLink
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
+	XCTestExpectation *expectPrivateLink = [self expectationWithDescription:@"Private link retrieved"];
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[expectLists fulfill];
+
+			for (OCItem *item in items)
+			{
+				if ((item.type == OCItemTypeFile) && (item.privateLink == nil))
+				{
+					[connection retrievePrivateLinkForItem:item completionHandler:^(NSError * _Nullable error, NSURL * _Nullable privateLink) {
+						XCTAssert(error == nil);
+						XCTAssert(privateLink != nil);
+						XCTAssert(item.privateLink == privateLink);
+
+						OCLogDebug(@"error=%@, privateLink: %@", error, privateLink);
+
+						[expectPrivateLink fulfill];
+
+						[connection disconnectWithCompletionHandler:^{
+							[expectDisconnect fulfill];
+						}];
+					}];
+					break;
+				}
+			}
+		}];
+
+		[expectConnect fulfill];
 	}];
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
