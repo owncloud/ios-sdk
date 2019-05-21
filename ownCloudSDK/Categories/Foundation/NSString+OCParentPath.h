@@ -21,6 +21,7 @@
 
 @interface NSString (OCParentPath)
 
-- (OCPath)parentPath;
+@property(readonly,strong,nonatomic) OCPath parentPath;
+@property(readonly,nonatomic) BOOL isRootPath;
 
 @end
