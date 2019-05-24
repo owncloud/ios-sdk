@@ -29,6 +29,8 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 	BOOL _isOpen;
 
 	OCLogWriteHandler _writeHandler;
+	
+	NSTimeInterval _rotationInterval;
 }
 
 @property(strong,readonly,nonatomic) NSString *name;
@@ -37,6 +39,8 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 
 @property(copy) OCLogWriteHandler writeHandler;
 
+@property (readwrite, assign) NSTimeInterval rotationInterval;
+
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler;
 
 - (nullable NSError *)open;	//!< Opens the log for writing
@@ -44,6 +48,8 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 
 - (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)message; //!< By default composes the parameters and calls -appendMessage:
 - (void)appendMessage:(NSString *)message; //!< Called by the default implementation of -appendMessageWithLogLevel:functionName:file:line:message:
+
++ (NSString*)timestampStringFrom:(NSDate*)date;
 
 @end
 
