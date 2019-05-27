@@ -46,11 +46,11 @@ typedef NS_OPTIONS(NSInteger, OCShareTypesMask)
 typedef NS_OPTIONS(NSInteger, OCSharePermissionsMask)
 {
 	OCSharePermissionsMaskNone    	= 0,
-	OCSharePermissionsMaskRead    	= (1<<0),
-	OCSharePermissionsMaskUpdate  	= (1<<1),
-	OCSharePermissionsMaskCreate  	= (1<<2),
-	OCSharePermissionsMaskDelete  	= (1<<3),
-	OCSharePermissionsMaskShare 	= (1<<4)
+	OCSharePermissionsMaskRead    	= (1<<0),	// 1
+	OCSharePermissionsMaskUpdate  	= (1<<1),	// 2
+	OCSharePermissionsMaskCreate  	= (1<<2),	// 4
+	OCSharePermissionsMaskDelete  	= (1<<3),	// 8
+	OCSharePermissionsMaskShare 	= (1<<4)	// 16
 };
 
 typedef NS_ENUM(NSUInteger, OCShareScope)

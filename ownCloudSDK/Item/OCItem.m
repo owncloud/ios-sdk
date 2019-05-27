@@ -229,6 +229,11 @@
 	return ([self.eTag isEqualToString:OCFileETagPlaceholder] || [self.fileID hasPrefix:OCFileIDPlaceholderPrefix]);
 }
 
+- (BOOL)isRoot
+{
+	return ((_path != nil) && [_path isEqualToString:@"/"]);
+}
+
 #pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
@@ -610,7 +615,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @"")]);
 }
 
 #pragma mark - Copying

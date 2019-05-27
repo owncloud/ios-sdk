@@ -968,6 +968,38 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Metadata actions
+- (NSMutableArray <OCXMLNode *> *)_davItemAttributes
+{
+	NSMutableArray <OCXMLNode *> *ocPropAttributes = [[NSMutableArray alloc] initWithObjects:
+		// WebDAV properties
+		[OCXMLNode elementWithName:@"D:resourcetype"],
+		[OCXMLNode elementWithName:@"D:getlastmodified"],
+		[OCXMLNode elementWithName:@"D:getcontentlength"],
+		[OCXMLNode elementWithName:@"D:getcontenttype"],
+		[OCXMLNode elementWithName:@"D:getetag"],
+
+		// OC properties
+		[OCXMLNode elementWithName:@"oc:id"],
+		[OCXMLNode elementWithName:@"oc:size"],
+		[OCXMLNode elementWithName:@"oc:permissions"],
+		[OCXMLNode elementWithName:@"oc:favorite"],
+		[OCXMLNode elementWithName:@"oc:share-types"],
+
+		[OCXMLNode elementWithName:@"oc:owner-id"],
+		[OCXMLNode elementWithName:@"oc:owner-display-name"],
+
+		// [OCXMLNode elementWithName:@"D:creationdate"],
+		// [OCXMLNode elementWithName:@"D:displayname"],
+
+		// [OCXMLNode elementWithName:@"oc:tags"],
+		// [OCXMLNode elementWithName:@"oc:comments-count"],
+		// [OCXMLNode elementWithName:@"oc:comments-href"],
+		// [OCXMLNode elementWithName:@"oc:comments-unread"],
+	nil];
+
+	return (ocPropAttributes);
+}
+
 - (OCHTTPDAVRequest *)_propfindDAVRequestForPath:(OCPath)path endpointURL:(NSURL *)endpointURL depth:(NSUInteger)depth
 {
 	OCHTTPDAVRequest *davRequest;
@@ -985,41 +1017,17 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if ((davRequest = [OCHTTPDAVRequest propfindRequestWithURL:url depth:depth]) != nil)
 	{
-		NSArray <OCXMLNode *> *ocNamespaceAttributes = @[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]];
-		NSMutableArray <OCXMLNode *> *ocPropAttributes = [[NSMutableArray alloc] initWithObjects:
-			// WebDAV properties
-			[OCXMLNode elementWithName:@"D:resourcetype"],
-			[OCXMLNode elementWithName:@"D:getlastmodified"],
-			[OCXMLNode elementWithName:@"D:getcontentlength"],
-			[OCXMLNode elementWithName:@"D:getcontenttype"],
-			[OCXMLNode elementWithName:@"D:getetag"],
+		NSMutableArray <OCXMLNode *> *ocPropAttributes = [self _davItemAttributes];
 
-			// OC properties
-			[OCXMLNode elementWithName:@"id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"size" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"permissions" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"favorite" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"share-types" attributes:ocNamespaceAttributes],
-
-			[OCXMLNode elementWithName:@"owner-id" attributes:ocNamespaceAttributes],
-			[OCXMLNode elementWithName:@"owner-display-name" attributes:ocNamespaceAttributes],
-
-			// Quota
-			((depth == 0) ? [OCXMLNode elementWithName:@"D:quota-available-bytes"] : nil),
-			((depth == 0) ? [OCXMLNode elementWithName:@"D:quota-used-bytes"]      : nil),
-
-			// [OCXMLNode elementWithName:@"D:creationdate"],
-			// [OCXMLNode elementWithName:@"D:displayname"],
-
-			// [OCXMLNode elementWithName:@"tags" attributes:ocNamespaceAttributes],
-			// [OCXMLNode elementWithName:@"comments-count" attributes:ocNamespaceAttributes],
-			// [OCXMLNode elementWithName:@"comments-href" attributes:ocNamespaceAttributes],
-			// [OCXMLNode elementWithName:@"comments-unread" attributes:ocNamespaceAttributes],
-		nil];
+		if (depth == 0)
+		{
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-available-bytes"]];
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-used-bytes"]];
+		}
 
 		if ([[self classSettingForOCClassSettingsKey:OCConnectionAlwaysRequestPrivateLink] boolValue])
 		{
-			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"privatelink" attributes:ocNamespaceAttributes]];
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"oc:privatelink"]];
 		}
 
 		[davRequest.xmlRequestPropAttribute addChildren:ocPropAttributes];
@@ -2317,7 +2325,93 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 }
 
-#pragma mark - Actions
+#pragma mark - Report API
+- (nullable OCProgress *)filterFilesWithRules:(nullable NSDictionary<OCItemPropertyName, id> *)filterRules properties:(nullable NSArray<OCXMLNode *> *)properties resultTarget:(OCEventTarget *)eventTarget
+{
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSMutableArray<OCXMLNode *> *filterRulesXML = [NSMutableArray new];
+	OCHTTPDAVRequest *request;
+
+	for (OCItemPropertyName propertyName in filterRules)
+	{
+		if ([propertyName isEqual:OCItemPropertyNameIsFavorite])
+		{
+			NSNumber *favoriteValue;
+
+			if ((favoriteValue = OCTypedCast(filterRules[propertyName], NSNumber)) != nil)
+			{
+				[filterRulesXML addObject:[OCXMLNode elementWithName:@"oc:favorite" stringValue:favoriteValue.stringValue]];
+			}
+		}
+	}
+
+	if (filterRulesXML.count == 0)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeFilterFiles sender:self];
+		return(nil);
+	}
+
+	if (properties == nil)
+	{
+		properties = [self _davItemAttributes];
+	}
+
+	request = [OCHTTPDAVRequest reportRequestWithURL:endpointURL rootElementName:@"oc:filter-files" content:[[NSArray alloc] initWithObjects:
+		[OCXMLNode elementWithName:@"oc:filter-rules" children:filterRulesXML],
+		(properties!=nil) ? [OCXMLNode elementWithName:@"D:prop" children:properties] : nil,
+	nil]];
+	request.eventTarget = eventTarget;
+	request.resultHandlerAction = @selector(_handleFilterFilesResult:error:);
+	request.requiredSignals = self.actionSignals;
+
+	// Attach to pipelines
+	[self attachToPipelines];
+
+	// Enqueue request
+	[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
+
+	return (request.progress);
+}
+
+- (void)_handleFilterFilesResult:(OCHTTPRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeFilterFiles attributes:nil]) != nil)
+	{
+		if (request.error != nil)
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			if (request.httpResponse.status.isSuccess)
+			{
+				NSArray<OCItem *> *items = nil;
+				NSArray <NSError *> *errors = nil;
+				NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				{
+					event.result = items;
+				}
+				else
+				{
+					event.error = errors.firstObject;
+				}
+			}
+			else
+			{
+				event.error = request.httpResponse.status.error;
+			}
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
 
 #pragma mark - Sending requests
 - (NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler

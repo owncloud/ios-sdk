@@ -19,6 +19,7 @@
 #import "OCRecipientSearchController.h"
 #import "OCRateLimiter.h"
 #import "OCCore+Internal.h"
+#import "OCMacros.h"
 
 @interface OCRecipientSearchController ()
 {
@@ -50,7 +51,7 @@
 
 - (void)setSearchTerm:(NSString *)searchTerm
 {
-	if (![searchTerm isEqual:_searchTerm])
+	if (OCNANotEqual(searchTerm, _searchTerm))
 	{
 		_searchTerm = searchTerm;
 

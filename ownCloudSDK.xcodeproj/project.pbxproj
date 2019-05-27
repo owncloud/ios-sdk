@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
+		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D62195A11600C8875E /* OCCoreManager+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 5966C8D42195A11600C8875E /* OCCoreManager+OCMocking.m */; };
 		599A45AA218C566C003CAB00 /* OCConnection+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 599A45A8218C566C003CAB00 /* OCConnection+OCMocking.m */; };
@@ -117,6 +119,7 @@
 		DC2F6372223A39A40063C2DA /* CoreSharingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F6371223A39A40063C2DA /* CoreSharingTests.m */; };
 		DC2F6375223A61990063C2DA /* OCCoreQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F6373223A61990063C2DA /* OCCoreQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F6374223A61990063C2DA /* OCCoreQuery.m */; };
+		DC2FED61228D5589004FDEC6 /* OCCore+Favorites.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2FED5F228D5589004FDEC6 /* OCCore+Favorites.m */; };
 		DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = DC302AEC221EAC55003218C6 /* OCProxyProgress.h */; };
 		DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC302AED221EAC55003218C6 /* OCProxyProgress.m */; };
 		DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30947220542FA500189B9A /* OCConnection+Users.m */; };
@@ -560,6 +563,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
+		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
 		590CCF3D20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		590CCF3E20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
@@ -699,6 +704,7 @@
 		DC2F6371223A39A40063C2DA /* CoreSharingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreSharingTests.m; sourceTree = "<group>"; };
 		DC2F6373223A61990063C2DA /* OCCoreQuery.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreQuery.h; sourceTree = "<group>"; };
 		DC2F6374223A61990063C2DA /* OCCoreQuery.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreQuery.m; sourceTree = "<group>"; };
+		DC2FED5F228D5589004FDEC6 /* OCCore+Favorites.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+Favorites.m"; sourceTree = "<group>"; };
 		DC302AEC221EAC55003218C6 /* OCProxyProgress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCProxyProgress.h; sourceTree = "<group>"; };
 		DC302AED221EAC55003218C6 /* OCProxyProgress.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProxyProgress.m; sourceTree = "<group>"; };
 		DC30947220542FA500189B9A /* OCConnection+Users.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Users.m"; sourceTree = "<group>"; };
@@ -1099,6 +1105,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4C7295E6228DACE600FA4E68 /* Records */ = {
+			isa = PBXGroup;
+			children = (
+				4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */,
+				4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */,
+			);
+			path = Records;
+			sourceTree = "<group>";
+		};
 		DC0283652090A8EE005B6334 /* Images */ = {
 			isa = PBXGroup;
 			children = (
@@ -1373,6 +1388,14 @@
 				DC2F6373223A61990063C2DA /* OCCoreQuery.h */,
 			);
 			path = "Core Query";
+			sourceTree = "<group>";
+		};
+		DC2FED5D228D5577004FDEC6 /* Favorites */ = {
+			isa = PBXGroup;
+			children = (
+				DC2FED5F228D5589004FDEC6 /* OCCore+Favorites.m */,
+			);
+			path = Favorites;
 			sourceTree = "<group>";
 		};
 		DC3094852057358800189B9A /* ownCloudUI */ = {
@@ -1729,6 +1752,7 @@
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
 				DC2D646221C3D60900EB26FD /* Thumbnails */,
 				DC19BFE221CB9FAC007C20D1 /* FileProvider */,
+				DC2FED5D228D5577004FDEC6 /* Favorites */,
 				DC19BFE121CB9F4F007C20D1 /* Sync */,
 				DC2F6377223A61A60063C2DA /* Core Query */,
 			);
@@ -1936,6 +1960,7 @@
 			children = (
 				DC8556F5204F361100189B9A /* OCLogger.m */,
 				DC8556F4204F361100189B9A /* OCLogger.h */,
+				4C7295E6228DACE600FA4E68 /* Records */,
 				DC20DE8C21C104C60096000B /* Tags */,
 				DC20DE4821BFCB8D0096000B /* Component */,
 				DC20DE4D21BFCE8B0096000B /* Toggle */,
@@ -2458,6 +2483,7 @@
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
+				4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
@@ -2814,6 +2840,7 @@
 				DC359693223FA7CC00C4D6E6 /* OCQueryCondition.m in Sources */,
 				DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */,
 				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
+				DC2FED61228D5589004FDEC6 /* OCCore+Favorites.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */,
@@ -2890,6 +2917,7 @@
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
+				4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
 				DC545E7B203F7DD0006111FA /* OCUser.m in Sources */,

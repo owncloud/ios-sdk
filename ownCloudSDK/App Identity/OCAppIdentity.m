@@ -26,6 +26,7 @@
 
 @synthesize appGroupIdentifier = _appGroupIdentifier;
 @synthesize appGroupContainerURL = _appGroupContainerURL;
+@synthesize appGroupLogsContainerURL = _appGroupLogsContainerURL;
 
 @synthesize appName = _appName;
 
@@ -79,6 +80,23 @@
 	}
 	
 	return (_appGroupContainerURL);
+}
+
+- (NSURL *)appGroupLogsContainerURL
+{
+	if (_appGroupLogsContainerURL == nil)
+	{
+		_appGroupLogsContainerURL = [[self appGroupContainerURL] URLByAppendingPathComponent:@"logs"];
+		if (![[NSFileManager defaultManager] fileExistsAtPath:[_appGroupLogsContainerURL path]])
+		{
+			[[NSFileManager defaultManager] createDirectoryAtURL:_appGroupLogsContainerURL
+									 withIntermediateDirectories:NO
+													  attributes:nil
+														   error:nil];
+		}
+	}
+
+	return (_appGroupLogsContainerURL);
 }
 
 - (NSString *)appName

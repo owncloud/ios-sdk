@@ -22,8 +22,22 @@
 
 @implementation OCLogWriter
 
+static NSString *processName;
+static NSDateFormatter *dateFormatter;
+
 @synthesize isOpen = _isOpen;
 @synthesize writeHandler = _writeHandler;
+@synthesize rotationInterval = _rotationInterval;
+
++ (void)initialize {
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		processName = [NSProcessInfo processInfo].processName;
+
+		dateFormatter = [NSDateFormatter new];
+		dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSSSSSZZZ";
+	});
+}
 
 - (instancetype)initWithWriteHandler:(OCLogWriteHandler)writeHandler
 {
@@ -52,20 +66,14 @@
 	return (nil);
 }
 
++ (NSString*)timestampStringFrom:(NSDate*)date
+{
+	return [dateFormatter stringFromDate:date];
+}
+
 - (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)message
 {
 	NSString *logLevelName = nil, *timestampString = nil, *leadingTags = nil, *trailingTags = nil;
-
-	static NSString *processName;
-	static NSDateFormatter *dateFormatter;
-
-	if (processName == nil)
-	{
-		processName = [NSProcessInfo processInfo].processName;
-
-		dateFormatter = [NSDateFormatter new];
-		dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSSSSSZZZ";
-	}
 
 	switch (logLevel)
 	{
