@@ -24,6 +24,7 @@
 #import "OCSQLiteTableSchema.h"
 #import "OCLogTag.h"
 #import "OCQueryCondition.h"
+#import "OCCoreDirectoryUpdateJob.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -32,6 +33,7 @@
 @class OCSyncLane;
 @class OCFile;
 @class OCEvent;
+@class OCCoreDirectoryUpdateJob;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
@@ -42,6 +44,8 @@ typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NS
 typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db, NSError *error, NSNumber *count);
 typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
+typedef void(^OCDatabaseDirectoryUpdateJobCompletionHandler)(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob);
+typedef void(^OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
 typedef NSArray<OCItem *> *(^OCDatabaseItemFilter)(NSArray <OCItem *> *items);
@@ -109,6 +113,11 @@ typedef NSString* OCDatabaseCounterIdentifier;
 //- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 //- (void)updateFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 //- (void)removeFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+#pragma mark - Update Scan interface
+- (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateScanPath completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler;
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler;
+- (void)removeDirectoryUpdateJobWithID:(OCCoreDirectoryUpdateJobID)jobID completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - Sync Lane interface
 - (void)addSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler;

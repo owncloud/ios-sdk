@@ -44,6 +44,8 @@
 	[self addOrUpdateSyncLanesSchema];
 	[self addOrUpdateSyncJournalSchema];
 	[self addOrUpdateEvents];
+
+	[self addOrUpdateUpdateScanPaths];
 }
 
 - (void)addOrUpdateMetaDataSchema
@@ -811,6 +813,26 @@
 	];
 }
 
+- (void)addOrUpdateUpdateScanPaths
+{
+	/*** Update Scan Paths ***/
+
+	// Version 1
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameUpdateJobs
+		version:1
+		creationQueries:@[
+			/*
+				jobID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
+				path : TEXT			- path to scan as part of an update
+			*/
+			@"CREATE TABLE updateJobs (jobID INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL)",
+		]
+		openStatements:nil
+		upgradeMigrator:nil]
+	];
+}
+
 - (void)addOrUpdateEvents
 {
 	/*** Sync Events ***/
@@ -997,6 +1019,7 @@
 OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncLanes = @"syncLanes";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
+OCDatabaseTableName OCDatabaseTableNameUpdateJobs = @"updateJobs";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
 OCDatabaseTableName OCDatabaseTableNameEvents = @"events";
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";

@@ -167,7 +167,7 @@
 
 		if (share != nil)
 		{
-			[self scheduleItemListTaskForPath:share.itemPath forQuery:YES];
+			[self scheduleItemListTaskForPath:share.itemPath forDirectoryUpdateJob:nil];
 		}
 	}];
 }

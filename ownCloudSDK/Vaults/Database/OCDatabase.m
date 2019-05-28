@@ -727,6 +727,81 @@
 	}]];
 }
 
+#pragma mark - Directory Update Job interface
+- (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateJob completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler
+{
+	if ((updateJob != nil) && (updateJob.path != nil))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameUpdateJobs rowValues:@{
+			@"path" 		: updateJob.path
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			updateJob.identifier = rowID;
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error, updateJob);
+			}
+		}]];
+	}
+	else
+	{
+		OCLogError(@"updateScanPath=%@, updateScanPath.path=%@ => could not be stored in database", updateJob, updateJob.path);
+		completionHandler(self, OCError(OCErrorInsufficientParameters), nil);
+	}
+}
+
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:nil fromTable:OCDatabaseTableNameUpdateJobs where:@{
+		@"jobID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">=" value:jobID apply:(jobID!=nil)],
+		@"path" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path apply:(path!=nil)]
+	} orderBy:@"jobID ASC" limit:((maximumJobs == 0) ? nil : [NSString stringWithFormat:@"0,%ld",maximumJobs]) resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block NSMutableArray <OCCoreDirectoryUpdateJob *> *updateJobs = nil;
+		NSError *iterationError = error;
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				if ((rowDictionary[@"jobID"] != nil) && (rowDictionary[@"path"] != nil))
+				{
+					OCCoreDirectoryUpdateJob *updateJob;
+
+					if ((updateJob = [OCCoreDirectoryUpdateJob new]) != nil)
+					{
+						updateJob.identifier = (OCCoreDirectoryUpdateJobID)rowDictionary[@"jobID"];
+						updateJob.path = (OCPath)rowDictionary[@"path"];
+
+						if (updateJobs == nil) { updateJobs = [NSMutableArray new]; }
+
+						[updateJobs addObject:updateJob];
+					}
+
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, updateJobs);
+		}
+	}]];
+}
+
+- (void)removeDirectoryUpdateJobWithID:(OCCoreDirectoryUpdateJobID)jobID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (jobID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:jobID fromTable:OCDatabaseTableNameUpdateJobs completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not remove updateJob: jobID is nil");
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
 #pragma mark - Sync Lane interface
 - (void)addSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {

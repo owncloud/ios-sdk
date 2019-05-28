@@ -162,6 +162,8 @@
 		DC3C7FE221A6EDE00064D193 /* NSError+OCHTTPStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3C7FE021A6EDE00064D193 /* NSError+OCHTTPStatus.m */; };
 		DC3F2B4D204AED1900189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC3F2B4F204AED1900189B9A /* Localizable.strings */; };
 		DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3F2B50204AED8300189B9A /* OCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC3FE4BB229BD424002E009C /* OCCoreDirectoryUpdateJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */; };
 		DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */; };
 		DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */; };
 		DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */; };
@@ -742,6 +744,8 @@
 		DC3C7FE021A6EDE00064D193 /* NSError+OCHTTPStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCHTTPStatus.m"; sourceTree = "<group>"; };
 		DC3F2B4E204AED1900189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC3F2B50204AED8300189B9A /* OCMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMacros.h; sourceTree = "<group>"; };
+		DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreDirectoryUpdateJob.h; sourceTree = "<group>"; };
+		DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreDirectoryUpdateJob.m; sourceTree = "<group>"; };
 		DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCReachabilityMonitor.h; sourceTree = "<group>"; };
 		DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCReachabilityMonitor.m; sourceTree = "<group>"; };
 		DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandCreateFolder.m"; sourceTree = "<group>"; };
@@ -2091,6 +2095,8 @@
 				DCADC0422072CCC900DB8E83 /* OCCoreItemListTask.h */,
 				DCADC0472072CDEA00DB8E83 /* OCCoreItemList.m */,
 				DCADC0462072CDEA00DB8E83 /* OCCoreItemList.h */,
+				DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */,
+				DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */,
 			);
 			path = ItemList;
 			sourceTree = "<group>";
@@ -2419,6 +2425,7 @@
 				DCAEB07121FA67060067E147 /* OCActivityUpdate.h in Headers */,
 				DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */,
 				DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */,
+				DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */,
 				DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */,
 				DC75D30B214BF1BA00B6FB62 /* NSString+OCFormatting.h in Headers */,
 				DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */,
@@ -2968,6 +2975,7 @@
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
 				DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */,
+				DC3FE4BB229BD424002E009C /* OCCoreDirectoryUpdateJob.m in Sources */,
 				DCC8F9E72028556500EB6701 /* OCConnection.m in Sources */,
 				DCC8F9FC2028586900EB6701 /* OCAuthenticationMethod.m in Sources */,
 				DC19BFEA21CBACB0007C20D1 /* OCProcessSession.m in Sources */,

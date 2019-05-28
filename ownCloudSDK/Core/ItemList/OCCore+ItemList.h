@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forQuery:(BOOL)forQuery;
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 - (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob;
@@ -32,6 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)startCheckingForUpdates; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
+
+#pragma mark - Update Scans
+- (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle;
+- (void)recoverPendingUpdateJobs;
 
 @end
 

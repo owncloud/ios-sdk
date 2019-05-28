@@ -539,20 +539,18 @@
 	// - Fetch updated directory contents as needed
 	if (refreshPaths.count > 0)
 	{
-		// Ensure the sync anchor was updated following these updates before triggering a refresh
-		[self queueBlock:^{
-			for (OCPath path in refreshPaths)
+		for (OCPath path in refreshPaths)
+		{
+			OCPath refreshPath = path;
+
+			if (![refreshPath hasSuffix:@"/"])
 			{
-				OCPath refreshPath = path;
-
-				if (![refreshPath hasSuffix:@"/"])
-				{
-					refreshPath = [refreshPath stringByAppendingString:@"/"];
-				}
-
-				[self scheduleItemListTaskForPath:refreshPath forQuery:NO];
+				refreshPath = [refreshPath stringByAppendingString:@"/"];
 			}
-		}];
+
+			// Ensure the sync anchor was updated following these updates before triggering a refresh
+			[self scheduleUpdateScanForPath:refreshPath waitForNextQueueCycle:YES];
+		}
 	}
 
 	// Initiate an IPC change notification
