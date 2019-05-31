@@ -520,6 +520,34 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}];
 
+			// Delete items located in deleted folders
+			{
+				__block NSMutableArray <OCItem *> *recursivelyDeletedItems = nil;
+
+				for (OCItem *deletedItem in deletedCacheItems)
+				{
+					if (deletedItem.type == OCItemTypeCollection)
+					{
+						[self.database retrieveCacheItemsRecursivelyBelowPath:deletedItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+							if (items.count > 0)
+							{
+								if (recursivelyDeletedItems == nil)
+								{
+									recursivelyDeletedItems = [NSMutableArray new];
+								}
+
+								[recursivelyDeletedItems addObjectsFromArray:items];
+							}
+						}];
+					}
+				}
+
+				if (recursivelyDeletedItems != nil)
+				{
+					[deletedCacheItems addObjectsFromArray:recursivelyDeletedItems];
+				}
+			}
+
 			// Preserve localID for remotely moved, known items / preserve .removed status for locally removed items while deletion is in progress
 			{
 				NSMutableIndexSet *removeItemsFromDeletedItemsIndexes = nil;

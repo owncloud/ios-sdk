@@ -61,6 +61,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 	NSMutableDictionary <OCDatabaseID, OCEvent *> *_eventsByDatabaseID;
 
+	NSString *_selectItemRowsSQLQueryPrefix;
+
 	NSUInteger _removedItemRetentionLength;
 
 	OCDatabaseItemFilter _itemFilter;
@@ -98,6 +100,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
+
+- (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 

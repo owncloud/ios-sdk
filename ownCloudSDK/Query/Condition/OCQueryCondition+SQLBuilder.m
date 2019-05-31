@@ -19,6 +19,7 @@
 #import "OCQueryCondition+SQLBuilder.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
+#import "NSString+OCSQLTools.h"
 
 @implementation OCQueryCondition (SQLBuilder)
 
@@ -51,17 +52,17 @@
 
 		case OCQueryConditionOperatorPropertyHasPrefix:
 			query = [[NSString alloc] initWithFormat:@"(%@ LIKE ?)", propertyColumnNameMap[self.property]];
-			parameters = @[ [NSString stringWithFormat:@"%%%@", self.value] ];
+			parameters = @[ [NSString stringWithFormat:@"%%%@", [self.value stringBySQLLikeEscaping]] ];
 		break;
 
 		case OCQueryConditionOperatorPropertyHasSuffix:
 			query = [[NSString alloc] initWithFormat:@"(%@ LIKE ?)", propertyColumnNameMap[self.property]];
-			parameters = @[ [NSString stringWithFormat:@"%@%%", self.value] ];
+			parameters = @[ [NSString stringWithFormat:@"%@%%", [self.value stringBySQLLikeEscaping]] ];
 		break;
 
 		case OCQueryConditionOperatorPropertyContains:
 			query = [[NSString alloc] initWithFormat:@"(%@ LIKE ?)", propertyColumnNameMap[self.property]];
-			parameters = @[ [NSString stringWithFormat:@"%%%@%%", self.value] ];
+			parameters = @[ [NSString stringWithFormat:@"%%%@%%", [self.value stringBySQLLikeEscaping]] ];
 		break;
 
 		case OCQueryConditionOperatorAnd:

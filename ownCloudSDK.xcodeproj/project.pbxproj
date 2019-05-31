@@ -342,6 +342,8 @@
 		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */; };
+		DCB6D05822A13E7500CA47C5 /* NSString+OCSQLTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB6D05622A13E7500CA47C5 /* NSString+OCSQLTools.h */; };
+		DCB6D05922A13E7500CA47C5 /* NSString+OCSQLTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB6D05722A13E7500CA47C5 /* NSString+OCSQLTools.m */; };
 		DCC6563D20C979FB00110A97 /* TestTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6563C20C979FB00110A97 /* TestTools.m */; };
 		DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC6567220CA695600110A97 /* OCCoreManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6567320CA695600110A97 /* OCCoreManager.m */; };
@@ -939,6 +941,8 @@
 		DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreServerStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Schemas.h"; sourceTree = "<group>"; };
 		DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Schemas.m"; sourceTree = "<group>"; };
+		DCB6D05622A13E7500CA47C5 /* NSString+OCSQLTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCSQLTools.h"; sourceTree = "<group>"; };
+		DCB6D05722A13E7500CA47C5 /* NSString+OCSQLTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCSQLTools.m"; sourceTree = "<group>"; };
 		DCC6563B20C979FB00110A97 /* TestTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTools.h; sourceTree = "<group>"; };
 		DCC6563C20C979FB00110A97 /* TestTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestTools.m; sourceTree = "<group>"; };
 		DCC6567220CA695600110A97 /* OCCoreManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreManager.h; sourceTree = "<group>"; };
@@ -2115,6 +2119,15 @@
 			path = "Connection Status";
 			sourceTree = "<group>";
 		};
+		DCB6D05522A13E5800CA47C5 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				DCB6D05722A13E7500CA47C5 /* NSString+OCSQLTools.m */,
+				DCB6D05622A13E7500CA47C5 /* NSString+OCSQLTools.h */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
 		DCC6567120CA693700110A97 /* Resource Management */ = {
 			isa = PBXGroup;
 			children = (
@@ -2261,6 +2274,7 @@
 				DC3AE597207378B600FE8896 /* Schema */,
 				DC4AFABB206AEA8000189B9A /* Queries */,
 				DC4AFABA206AE94A00189B9A /* Internals */,
+				DCB6D05522A13E5800CA47C5 /* Tools */,
 			);
 			path = SQLite;
 			sourceTree = "<group>";
@@ -2334,6 +2348,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */,
+				DCB6D05822A13E7500CA47C5 /* NSString+OCSQLTools.h in Headers */,
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
@@ -2924,6 +2939,7 @@
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
+				DCB6D05922A13E7500CA47C5 /* NSString+OCSQLTools.m in Sources */,
 				4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
 				DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */,
