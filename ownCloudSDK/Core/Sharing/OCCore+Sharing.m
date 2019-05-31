@@ -38,10 +38,14 @@
 
 - (void)reloadShareQuery:(OCShareQuery *)shareQuery
 {
+	[self beginActivity:@"Reloading share query"];
+
 	[self queueBlock:^{
 		shareQuery.lastRefreshStarted = [NSDate new];
 
-		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:nil];
+		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:^{
+			[self endActivity:@"Reloading share query"];
+		}];
 	}];
 }
 
@@ -126,6 +130,8 @@
 #pragma mark - Updating share queries
 - (void)_pollForSharesWithScope:(OCShareScope)scope item:(OCItem *)item completionHandler:(dispatch_block_t)completionHandler
 {
+	[self beginActivity:@"Polling for shares with scope"];
+
 	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 		if (error == nil)
 		{
@@ -148,6 +154,8 @@
 				completionHandler();
 			}
 		}
+
+		[self endActivity:@"Polling for shares with scope"];
 	}];
 }
 

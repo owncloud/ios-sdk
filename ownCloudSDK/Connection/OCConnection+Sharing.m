@@ -171,7 +171,7 @@
 	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
 
 	request = [OCHTTPRequest new];
-	request.requiredSignals = self.actionSignals;
+	request.requiredSignals = self.propFindSignals;
 
 	switch (scope)
 	{
@@ -308,7 +308,7 @@
 	NSProgress *progress = nil;
 
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
-	request.requiredSignals = self.actionSignals;
+	request.requiredSignals = self.propFindSignals;
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		OCSharingResponseStatus *status = nil;
@@ -355,7 +355,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:nil]];
 	request.method = OCHTTPMethodPOST;
-	request.requiredSignals = self.actionSignals;
+	request.requiredSignals = self.propFindSignals;
 
 	if (share.name != nil)
 	{
@@ -570,7 +570,7 @@
 
 		request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
 		request.method = OCHTTPMethodPUT;
-		request.requiredSignals = self.actionSignals;
+		request.requiredSignals = self.propFindSignals;
 
 		[request setValue:updateValue forParameter:updateProperty];
 
@@ -585,6 +585,10 @@
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeUpdateShare;
 		requestProgress.progress.localizedDescription = OCLocalized(@"Updating share…");
+	}
+	else
+	{
+		[eventTarget handleError:OCErrorWithDescription(OCErrorInsufficientParameters, @"Nothing provided to update") type:OCEventTypeUpdateShare sender:self];
 	}
 
 	return (requestProgress);
@@ -691,7 +695,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
-	request.requiredSignals = self.actionSignals;
+	request.requiredSignals = self.propFindSignals;
 	request.forceCertificateDecisionDelegation = YES;
 
 	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
@@ -787,7 +791,7 @@
 
 	request = [OCHTTPRequest requestWithURL:[[endpointURL URLByAppendingPathComponent:@"pending"] URLByAppendingPathComponent:share.identifier]];
 	request.method = (accept ? OCHTTPMethodPOST : OCHTTPMethodDELETE);
-	request.requiredSignals = self.actionSignals;
+	request.requiredSignals = self.propFindSignals;
 
 	[request setValue:share.identifier forParameter:@"share_id"];
 

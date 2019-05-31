@@ -633,6 +633,8 @@
 {
 	if (coreQuery == nil) { return; }
 
+	if (self.state != OCCoreStateRunning) { return; }
+
 	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
 	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
 
