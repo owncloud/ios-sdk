@@ -126,6 +126,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
+@property(readonly,nonatomic) BOOL isRoot; //!< YES if this item is representing the root folder
+
 @property(readonly,nonatomic) BOOL hasLocalAttributes; //!< Returns YES if the item has any local attributes
 @property(nullable,strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
 @property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes

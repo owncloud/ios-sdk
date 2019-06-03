@@ -40,6 +40,7 @@
 
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth;
 + (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes;
++ (instancetype)reportRequestWithURL:(NSURL *)url rootElementName:(NSString *)rootElementName content:(NSArray <OCXMLNode *> *)contentNodes;
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 

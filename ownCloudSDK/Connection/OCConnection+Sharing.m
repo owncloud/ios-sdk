@@ -871,7 +871,7 @@
 		davRequest.requiredSignals = self.propFindSignals;
 
 		[davRequest.xmlRequestPropAttribute addChildren:@[
-			[OCXMLNode elementWithName:@"privatelink" attributes:@[[OCXMLNode namespaceWithName:nil stringValue:@"http://owncloud.org/ns"]]]
+			[OCXMLNode elementWithName:@"oc:privatelink"]
 		]];
 
 		progress = [self sendRequest:davRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {

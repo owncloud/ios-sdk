@@ -32,4 +32,9 @@
 	return (parentPath);
 }
 
+- (BOOL)isRootPath
+{
+	return ([self isEqualToString:@"/"]);
+}
+
 @end

@@ -411,7 +411,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
 
 						    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
-						    (retrievedItem.permissions != cacheItem.permissions))				// Permissions mismatch
+						    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
+						    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
 						{
 							// Update item in the cache if the server has a different version
 							if ([cacheItem.fileID isEqual:retrievedItem.fileID])

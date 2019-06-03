@@ -1,10 +1,11 @@
 //
-//  NSString+OCParentPath.h
+//  OCLogFileRecord.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 17.06.18.
-//  Copyright © 2018 ownCloud GmbH. All rights reserved.
+//  Created by Michael Neuwert on 16.05.2019.
+//  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
+
 
 /*
  * Copyright (C) 2018, ownCloud GmbH.
@@ -17,11 +18,18 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCTypes.h"
 
-@interface NSString (OCParentPath)
+NS_ASSUME_NONNULL_BEGIN
 
-@property(readonly,strong,nonatomic) OCPath parentPath;
-@property(readonly,nonatomic) BOOL isRootPath;
+@interface OCLogFileRecord : NSObject
+
+@property(readonly) NSURL *url;
+@property(readonly) NSString *name;
+@property(readonly, nullable) NSDate *creationDate;
+@property(readonly) int64_t size;
+
+- (instancetype)initWithURL:(NSURL*)url;
 
 @end
+
+NS_ASSUME_NONNULL_END

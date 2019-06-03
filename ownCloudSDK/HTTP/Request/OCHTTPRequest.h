@@ -125,6 +125,7 @@ extern OCHTTPMethod OCHTTPMethodMOVE;
 extern OCHTTPMethod OCHTTPMethodCOPY;
 extern OCHTTPMethod OCHTTPMethodPROPFIND;
 extern OCHTTPMethod OCHTTPMethodPROPPATCH;
+extern OCHTTPMethod OCHTTPMethodREPORT;
 extern OCHTTPMethod OCHTTPMethodLOCK;
 extern OCHTTPMethod OCHTTPMethodUNLOCK;
 
