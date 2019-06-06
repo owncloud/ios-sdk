@@ -757,6 +757,8 @@
 	];
 
 	// Version 5
+	__weak OCDatabase *weakSelf = self;
+
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameSyncJournal
 		version:5
@@ -787,9 +789,7 @@
 				OCSyncLane *transitionalLane = [OCSyncLane new];
 				transitionalLane.tags = [[NSMutableSet alloc] initWithObjects:@"/", nil]; // Catch-all
 
-				__weak OCDatabase *weakSelf = self;
-
-				[self addSyncLane:transitionalLane completionHandler:^(OCDatabase *database, NSError *error) {
+				[weakSelf addSyncLane:transitionalLane completionHandler:^(OCDatabase *database, NSError *error) {
 					if (error == nil)
 					{
 						if (transitionalLane.identifier != nil)
