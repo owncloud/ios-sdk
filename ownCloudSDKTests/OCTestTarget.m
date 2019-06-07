@@ -66,48 +66,44 @@
 	return (@"test");
 }
 
-+ (OCBookmark *)userBookmark
++ (OCBookmark *)bookmarkWithURL:(NSURL *)url username:(NSString *)username passphrase:(NSString *)passphrase
 {
 	OCBookmark *bookmark;
 
-	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword authenticationHeaderValue:NULL error:NULL];
+	bookmark = [OCBookmark bookmarkForURL:url];
+	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:username passphrase:passphrase authenticationHeaderValue:NULL error:NULL];
 	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
 
 	return (bookmark);
+}
+
++ (OCBookmark *)userBookmark
+{
+	return ([self bookmarkWithURL:OCTestTarget.secureTargetURL username:OCTestTarget.userLogin passphrase:OCTestTarget.userPassword]);
 }
 
 + (OCBookmark *)adminBookmark
 {
-	OCBookmark *bookmark;
-
-	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
-
-	return (bookmark);
+	return ([self bookmarkWithURL:OCTestTarget.secureTargetURL username:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword]);
 }
 
 + (OCBookmark *)demoBookmark
 {
-	OCBookmark *bookmark;
+	return ([self bookmarkWithURL:OCTestTarget.secureTargetURL username:OCTestTarget.demoLogin passphrase:OCTestTarget.demoPassword]);
+}
 
-	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.demoLogin passphrase:OCTestTarget.demoPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
-
-	return (bookmark);
++ (OCBookmark *)oidcBookmark
+{
+//	OCBookmark *bookmark=[OCBookmark bookmarkForURL:[NSURL URLWithString:@"http://10.0.5.69:8080/"]];
+//	bookmark.userInfo = (id) @{ OCBookmarkUserInfoKeyAllowHTTPConnection : NSDate.new };
+//
+//	return (bookmark);
+	return (nil);
 }
 
 + (OCBookmark *)federatedBookmark
 {
-	OCBookmark *bookmark;
-
-	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.federatedTargetURL];
-	bookmark.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:OCTestTarget.federatedLogin passphrase:OCTestTarget.federatedPassword authenticationHeaderValue:NULL error:NULL];
-	bookmark.authenticationMethodIdentifier = OCAuthenticationMethodIdentifierBasicAuth;
-
-	return (bookmark);
+	return ([self bookmarkWithURL:OCTestTarget.federatedTargetURL username:OCTestTarget.federatedLogin passphrase:OCTestTarget.federatedPassword]);
 }
 
 @end

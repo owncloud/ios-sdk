@@ -299,6 +299,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 #pragma mark - User info
 - (nullable NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError * _Nullable error, OCUser * _Nullable loggedInUser))completionHandler; //!< Retrieves information on the currently logged in user and returns it via the completion handler
+- (nullable NSProgress *)retrieveLoggedInUserWithRequestCustomization:(nullable void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError * _Nullable error, OCUser * _Nullable loggedInUser))completionHandler; //!< Retrieves information on the currently logged in user and returns it via the completion handler. Allows customization of the request with a block before scheduling.
 
 @end
 

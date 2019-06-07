@@ -1,8 +1,8 @@
 //
-//  OCAuthenticationMethodOpenIDConnect.h
+//  NSString+OCRandom.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 22.05.19.
+//  Created by Felix Schwarz on 05.06.19.
 //  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,14 @@
  *
  */
 
-#import "OCAuthenticationMethodOAuth2.h"
-#import "OCClassSettings.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCAuthenticationMethodOpenIDConnect : OCAuthenticationMethodOAuth2
-{
-	NSDictionary<NSString *, id> *_openIDConfig;
-}
+@interface NSString (OCRandom)
+
++ (instancetype)stringWithRandomCharactersOfLength:(NSUInteger)length allowedCharacters:(NSString *)allowedCharacters;
 
 @end
-
-extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect;
 
 NS_ASSUME_NONNULL_END
