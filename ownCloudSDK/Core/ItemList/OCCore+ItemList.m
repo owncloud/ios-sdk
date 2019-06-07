@@ -29,9 +29,8 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
 #import "OCBackgroundManager.h"
+#import "NSProgress+OCExtensions.h"
 #import <objc/runtime.h>
-
-static const NSString *OCCoreItemListTaskForQueryKey = @"item-list-task-for-query";
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroundItemListTasks";
@@ -39,15 +38,20 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 @implementation OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forQuery:(BOOL)forQuery
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob
 {
 	BOOL putInQueue = YES;
 
 	if (path != nil)
 	{
-		@synchronized(_queuedItemListTaskPaths)
+		if (directoryUpdateJob == nil)
 		{
-			objc_setAssociatedObject(path, (__bridge const void *)OCCoreItemListTaskForQueryKey, @(forQuery), OBJC_ASSOCIATION_RETAIN);
+			directoryUpdateJob = [OCCoreDirectoryUpdateJob withPath:path];
+		}
+
+		@synchronized(_queuedItemListTaskUpdateJobs)
+		{
+			BOOL forQuery = directoryUpdateJob.isForQuery;
 
 			if (forQuery)
 			{
@@ -69,13 +73,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			if (putInQueue)
 			{
-				[_queuedItemListTaskPaths addObject:path];
+				[_queuedItemListTaskUpdateJobs addObject:directoryUpdateJob];
 			}
 			else
 			{
 				OCCoreItemListTask *task;
 
-				if ((task = [self _scheduleItemListTaskForPath:path inGroup:OCCoreItemListTaskGroupQueryTasks]) != nil)
+				if ((task = [self _scheduleItemListTaskForDirectoryUpdateJob:directoryUpdateJob]) != nil)
 				{
 					[_scheduledItemListTasks addObject:task];
 				}
@@ -91,44 +95,57 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (void)scheduleNextItemListTask
 {
-	OCPath nextItemListTaskPath = nil;
+	OCCoreDirectoryUpdateJob *nextUpdateJob = nil;
 
-	@synchronized(_queuedItemListTaskPaths)
+	@synchronized(_queuedItemListTaskUpdateJobs)
 	{
 		if ((_scheduledItemListTasks.count == 0) && (self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
 		{
-			BOOL isForQuery = NO;
-
-			// Check for high-priority query item list paths
-			for (NSString *path in _queuedItemListTaskPaths)
+			// Check for high-priority query item list update jobs
+			for (OCCoreDirectoryUpdateJob *updateJob in _queuedItemListTaskUpdateJobs)
 			{
-				NSNumber *isItemListTaskForQuery = nil;
-
-				if (((isItemListTaskForQuery = objc_getAssociatedObject(path, (__bridge const void *)OCCoreItemListTaskForQueryKey)) != nil) && isItemListTaskForQuery.boolValue)
+				if (updateJob.isForQuery)
 				{
-					nextItemListTaskPath = path;
-					isForQuery = YES;
+					nextUpdateJob = updateJob;
 					break;
 				}
 			}
 
-			if (nextItemListTaskPath == nil)
+			if (nextUpdateJob == nil)
 			{
-				// If no high-priority query item list paths have been found => proceed with top of the list
-				nextItemListTaskPath = _queuedItemListTaskPaths.firstObject;
+				// If no high-priority query item list update job has been found => proceed with top of the list
+				nextUpdateJob = _queuedItemListTaskUpdateJobs.firstObject;
 			}
 
-			if (nextItemListTaskPath != nil)
+			if (nextUpdateJob != nil)
 			{
-				// Remove the path and any duplicates (effectively coalescating the tasks)
-				[_queuedItemListTaskPaths removeObject:nextItemListTaskPath];
+				// Remove the update job and any targeting the same path (effectively coalescating the tasks)
+				NSMutableIndexSet *removeIndexes = [NSMutableIndexSet new];
+
+				[_queuedItemListTaskUpdateJobs enumerateObjectsUsingBlock:^(OCCoreDirectoryUpdateJob * _Nonnull updateJob, NSUInteger idx, BOOL * _Nonnull stop) {
+					if (nextUpdateJob == updateJob)
+					{
+						[removeIndexes addIndex:idx];
+					}
+					else
+					{
+						if ([updateJob.path isEqual:nextUpdateJob.path])
+						{
+							// Add to represented array, so the database can be cleaned up properly
+							[nextUpdateJob addRepresentedJobID:updateJob.identifier];
+							[removeIndexes addIndex:idx];
+						}
+					}
+				}];
+
+				[_queuedItemListTaskUpdateJobs removeObjectsAtIndexes:removeIndexes];
 			}
 
-			if (nextItemListTaskPath != nil)
+			if (nextUpdateJob != nil)
 			{
 				OCCoreItemListTask *task;
 
-				if ((task = [self _scheduleItemListTaskForPath:nextItemListTaskPath inGroup:(isForQuery ? OCCoreItemListTaskGroupQueryTasks : OCCoreItemListTaskGroupBackgroundTasks)]) != nil)
+				if ((task = [self _scheduleItemListTaskForDirectoryUpdateJob:nextUpdateJob]) != nil)
 				{
 					[_scheduledItemListTasks addObject:task];
 				}
@@ -137,9 +154,20 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}
 }
 
-- (OCCoreItemListTask *)_scheduleItemListTaskForPath:(OCPath)path inGroup:(OCHTTPRequestGroupID)groupID
+- (OCCoreItemListTask *)_scheduleItemListTaskForDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateJob
 {
 	OCCoreItemListTask *task = nil;
+	OCHTTPRequestGroupID groupID = nil;
+	OCPath path = updateJob.path;
+
+	if (updateJob.identifier != nil)
+	{
+		 groupID = OCCoreItemListTaskGroupBackgroundTasks;
+	}
+	else
+	{
+		 groupID = OCCoreItemListTaskGroupQueryTasks;
+	}
 
 	if (path!=nil)
 	{
@@ -148,16 +176,31 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			// Don't start a new item list task if one is already running for the path
 			// Instead, "handle" the running task again so that a new query is immediately updated
 			[self handleUpdatedTask:task];
+
+			// Transfer represented job IDs to job of the task, so these job(s) will also finish
+			// and the database be updated respectively
+			for (OCCoreDirectoryUpdateJobID jobID in updateJob.representedJobIDs)
+			{
+				[task.updateJob addRepresentedJobID:jobID];
+			}
+
 			return (nil);
 		}
 
-		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path]) != nil)
+		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path updateJob:updateJob]) != nil)
 		{
 			task.groupID = groupID;
 
 			_itemListTasksByPath[task.path] = task;
 
-			[self.activityManager update:[OCActivityUpdate publishingActivityFor:task]];
+			if (updateJob.isForQuery)
+			{
+				[self.activityManager update:[OCActivityUpdate publishingActivityFor:task]];
+			}
+			else
+			{
+				[self _updateBackgroundScanActivityWithIncrement:NO currentPathChange:path];
+			}
 
 			// Start item list task
 			if (task.syncAnchorAtStart == nil)
@@ -188,7 +231,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 {
 	if (finishedTask != nil)
 	{
-		@synchronized(_queuedItemListTaskPaths)
+		@synchronized(_queuedItemListTaskUpdateJobs)
 		{
 			[_scheduledItemListTasks removeObject:finishedTask];
 
@@ -196,9 +239,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				[self scheduleNextItemListTask];
 			}
+
+			for (OCCoreDirectoryUpdateJobID doneJobID in finishedTask.updateJob.representedJobIDs)
+			{
+				[self.vault.database removeDirectoryUpdateJobWithID:doneJobID completionHandler:^(OCDatabase *db, NSError *error) {
+					[self _handleCompletionOfUpdateJobWithID:doneJobID];
+				}];
+			}
 		}
 
-		[self.activityManager update:[OCActivityUpdate unpublishActivityFor:finishedTask]];
+		if (finishedTask.updateJob.isForQuery)
+		{
+			[self.activityManager update:[OCActivityUpdate unpublishActivityFor:finishedTask]];
+		}
 	}
 }
 
@@ -466,6 +519,34 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					}
 				}
 			}];
+
+			// Delete items located in deleted folders
+			{
+				__block NSMutableArray <OCItem *> *recursivelyDeletedItems = nil;
+
+				for (OCItem *deletedItem in deletedCacheItems)
+				{
+					if (deletedItem.type == OCItemTypeCollection)
+					{
+						[self.database retrieveCacheItemsRecursivelyBelowPath:deletedItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+							if (items.count > 0)
+							{
+								if (recursivelyDeletedItems == nil)
+								{
+									recursivelyDeletedItems = [NSMutableArray new];
+								}
+
+								[recursivelyDeletedItems addObjectsFromArray:items];
+							}
+						}];
+					}
+				}
+
+				if (recursivelyDeletedItems != nil)
+				{
+					[deletedCacheItems addObjectsFromArray:recursivelyDeletedItems];
+				}
+			}
 
 			// Preserve localID for remotely moved, known items / preserve .removed status for locally removed items while deletion is in progress
 			{
@@ -964,7 +1045,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
 					{
 						// Folder's etag or fileID differ -> fetch full update for this folder
-						[self scheduleItemListTaskForPath:event.path forQuery:NO];
+						[self scheduleUpdateScanForPath:event.path waitForNextQueueCycle:NO];
 					}
 					else
 					{
@@ -1024,6 +1105,167 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval]];
 				}
 			}
+		}
+	}
+}
+
+#pragma mark - Update Scans
+- (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle
+{
+	OCCoreDirectoryUpdateJob *updateScanPath;
+
+	OCLogDebug(@"Scheduling scan for path=%@, waitForNextCycle: %d", path, waitForNextQueueCycle);
+
+	if ((updateScanPath = [OCCoreDirectoryUpdateJob withPath:path]) != nil)
+	{
+		[self beginActivity:@"Scheduling update scan"];
+
+		dispatch_block_t doneSchedulingPendingDirectoryUpdateJob = ^{
+			@synchronized(self->_scheduledDirectoryUpdateJobIDs)
+			{
+				self->_pendingScheduledDirectoryUpdateJobs--;
+			}
+
+			[self endActivity:@"Scheduling update scan"];
+		};
+
+		@synchronized(_scheduledDirectoryUpdateJobIDs)
+		{
+			_pendingScheduledDirectoryUpdateJobs++;
+		}
+
+		[self.database retrieveDirectoryUpdateJobsAfter:nil forPath:path maximumJobs:1 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
+			if (updateJobs.count > 0)
+			{
+				// Don't schedule
+				OCLogDebug(@"Skipping duplicate update job for path=%@", path);
+				doneSchedulingPendingDirectoryUpdateJob();
+				[self _checkForUpdateJobsCompletion];
+
+				return;
+			}
+
+			[self.database addDirectoryUpdateJob:updateScanPath completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *scanPath) {
+				if (error == nil)
+				{
+					if (waitForNextQueueCycle)
+					{
+						[self queueBlock:^{
+							[self _scheduleUpdateJob:updateScanPath];
+							doneSchedulingPendingDirectoryUpdateJob();
+						}];
+					}
+					else
+					{
+						[self _scheduleUpdateJob:updateScanPath];
+						doneSchedulingPendingDirectoryUpdateJob();
+					}
+				}
+			}];
+		}];
+	}
+}
+
+- (void)recoverPendingUpdateJobs
+{
+	[self.database retrieveDirectoryUpdateJobsAfter:nil forPath:nil maximumJobs:0 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
+		OCLogDebug(@"Recovering pending update jobs");
+
+		for (OCCoreDirectoryUpdateJob *job in updateJobs)
+		{
+			[self _scheduleUpdateJob:job];
+		}
+	}];
+}
+
+- (void)_scheduleUpdateJob:(OCCoreDirectoryUpdateJob *)job
+{
+	OCLogDebug(@"Scheduling update job %@", job);
+
+	@synchronized (_scheduledDirectoryUpdateJobIDs)
+	{
+		if (job.identifier != nil)
+		{
+			[_scheduledDirectoryUpdateJobIDs addObject:job.identifier];
+
+			[self _updateBackgroundScanActivityWithIncrement:YES currentPathChange:nil];
+		}
+	}
+
+	[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job];
+}
+
+- (void)_updateBackgroundScanActivityWithIncrement:(BOOL)increment currentPathChange:(OCPath)currentPathChange
+{
+	@synchronized(_scheduledDirectoryUpdateJobIDs)
+	{
+		NSUInteger activeScheduledJobsCount = _scheduledDirectoryUpdateJobIDs.count;
+
+		if ((activeScheduledJobsCount > 0) || (_pendingScheduledDirectoryUpdateJobs > 0))
+		{
+			const int64_t progressTotalUnitCount = 1000;
+
+			// Publish background scan activity
+			if (_scheduledDirectoryUpdateJobActivity == nil)
+			{
+				_scheduledDirectoryUpdateJobActivity = [OCActivity withIdentifier:@"_pendingUpdateJobsSummary" description:NSLocalizedString(@"Scanning server for changes…", @"") statusMessage:nil ranking:0];
+				_scheduledDirectoryUpdateJobActivity.state = OCActivityStateRunning;
+				_scheduledDirectoryUpdateJobActivity.progress = [NSProgress new];
+				_scheduledDirectoryUpdateJobActivity.isCancellable = NO;
+
+				_scheduledDirectoryUpdateJobActivity.progress.totalUnitCount = progressTotalUnitCount;
+				_scheduledDirectoryUpdateJobActivity.progress.completedUnitCount = 0;
+				_scheduledDirectoryUpdateJobActivity.progress.cancellable = NO;
+
+				[self.activityManager update:[OCActivityUpdate publishingActivity:_scheduledDirectoryUpdateJobActivity]];
+			}
+
+			// Update background scan activity
+			if (increment)
+			{
+				_totalScheduledDirectoryUpdateJobs++;
+			}
+
+			if (currentPathChange != nil)
+			{
+				[self.activityManager update:[[OCActivityUpdate updatingActivityForIdentifier:_scheduledDirectoryUpdateJobActivity.identifier] withStatusMessage:[NSString stringWithFormat:@"%lu/%lu – %@", (_totalScheduledDirectoryUpdateJobs - activeScheduledJobsCount), (unsigned long)_totalScheduledDirectoryUpdateJobs, currentPathChange.lastPathComponent]]];
+			}
+
+			_scheduledDirectoryUpdateJobActivity.progress.completedUnitCount = (((_totalScheduledDirectoryUpdateJobs + _pendingScheduledDirectoryUpdateJobs) - activeScheduledJobsCount) * progressTotalUnitCount) / (_totalScheduledDirectoryUpdateJobs + _pendingScheduledDirectoryUpdateJobs);
+		}
+		else
+		{
+			// Unpublish background scan activity
+			[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:_scheduledDirectoryUpdateJobActivity.identifier]];
+			_scheduledDirectoryUpdateJobActivity = nil;
+			_totalScheduledDirectoryUpdateJobs = 0;
+		}
+	}
+}
+
+- (void)_handleCompletionOfUpdateJobWithID:(OCCoreDirectoryUpdateJobID)doneJobID
+{
+	@synchronized (_scheduledDirectoryUpdateJobIDs)
+	{
+		[_scheduledDirectoryUpdateJobIDs removeObject:doneJobID];
+
+		[self _updateBackgroundScanActivityWithIncrement:NO currentPathChange:nil];
+	}
+
+	[self _checkForUpdateJobsCompletion];
+}
+
+- (void)_checkForUpdateJobsCompletion
+{
+	@synchronized(_scheduledDirectoryUpdateJobIDs)
+	{
+		OCLogDebug(@"Remaining scheduled directory update jobs: %@ - pendingScheduledDirectoryUpdateJobs: %lu", _scheduledDirectoryUpdateJobIDs, _pendingScheduledDirectoryUpdateJobs);
+
+		// Check local count
+		if ((_scheduledDirectoryUpdateJobIDs.count == 0) && (_pendingScheduledDirectoryUpdateJobs == 0))
+		{
+			// Check database
+			OCLogDebug(@"Completed scheduled directory update jobs!");
 		}
 	}
 }

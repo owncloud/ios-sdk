@@ -133,6 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
 
 @property(nullable,strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
+@property(nullable,strong,nonatomic) NSCountedSet <NSNumber *> *syncActivityCounts; //!< Counts of OCItemSyncActivity. Starts only when a OCItemSyncActivity has already been set in syncActivity
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
@@ -169,6 +170,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
+- (NSUInteger)countOfSyncRecordsWithSyncActivity:(OCItemSyncActivity)activity;
 
 - (void)prepareToReplace:(OCItem *)item;
 - (void)copyFilesystemMetadataFrom:(OCItem *)item;

@@ -112,6 +112,17 @@
 	return (self);
 }
 
+#pragma mark - Helpers
+- (NSNumber *)_castOrConvertToNumber:(id)value
+{
+	if ([value isKindOfClass:[NSString class]])
+	{
+		value = @([((NSString *)value) longLongValue]);
+	}
+
+	return (OCTypedCast(value, NSNumber));
+}
+
 #pragma mark - Version
 - (NSNumber *)majorVersion
 {
@@ -312,7 +323,7 @@
 
 - (NSNumber *)publicSharingDefaultExpireDateDays
 {
-	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"days"], NSNumber));
+	return ([self _castOrConvertToNumber:_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"days"]]);
 }
 
 - (OCCapabilityBool)publicSharingSendMail

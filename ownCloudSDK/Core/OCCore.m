@@ -159,8 +159,9 @@
 		_shareQueries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
-		_queuedItemListTaskPaths = [NSMutableArray new];
+		_queuedItemListTaskUpdateJobs = [NSMutableArray new];
 		_scheduledItemListTasks = [NSMutableArray new];
+		_scheduledDirectoryUpdateJobIDs = [NSMutableSet new];
 		_itemListTasksRequestQueue = [OCAsyncSequentialQueue new];
 		_itemListTasksRequestQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
 			OCCore *strongSelf;
@@ -488,6 +489,8 @@
 						{
 							[self startCheckingForUpdates];
 						}
+
+						[self recoverPendingUpdateJobs];
 					}
 
 					// Relay error and issues to delegate
@@ -519,14 +522,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath forQuery:YES];
+			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forQuery:YES];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil];
 			}
 		}
 	}];
@@ -629,6 +632,8 @@
 - (void)reloadQuery:(OCCoreQuery *)coreQuery
 {
 	if (coreQuery == nil) { return; }
+
+	if (self.state != OCCoreStateRunning) { return; }
 
 	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
 	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);

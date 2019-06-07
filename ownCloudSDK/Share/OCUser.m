@@ -39,20 +39,29 @@
 	return (user);
 }
 
-- (BOOL)isRemote
+- (NSRange)_atRemoteRange
 {
 	NSRange atRange;
 
-	atRange = [_userName rangeOfString:@"@"];
+	atRange = [_userName rangeOfString:@"@" options:NSBackwardsSearch];
 
-	return (atRange.location != NSNotFound);
+	if ((atRange.location == 0) || (atRange.location == (_userName.length-1)))
+	{
+		// Handle local user names starting or ending with "@" like "@example" or "example@" and make sure they aren't treated as remote
+		atRange.location = NSNotFound;
+	}
+
+	return (atRange);
+}
+
+- (BOOL)isRemote
+{
+	return ([self _atRemoteRange].location != NSNotFound);
 }
 
 - (NSString *)remoteUserName
 {
-	NSRange atRange;
-
-	atRange = [_userName rangeOfString:@"@"];
+	NSRange atRange = [self _atRemoteRange];
 
 	if (atRange.location != NSNotFound)
 	{
@@ -64,9 +73,7 @@
 
 - (NSString *)remoteHost
 {
-	NSRange atRange;
-
-	atRange = [_userName rangeOfString:@"@"];
+	NSRange atRange = [self _atRemoteRange];
 
 	if (atRange.location != NSNotFound)
 	{

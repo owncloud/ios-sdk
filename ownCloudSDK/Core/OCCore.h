@@ -150,9 +150,13 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSyncAnchor _latestSyncAnchor;
 
-	NSMutableDictionary <OCPath,OCCoreItemListTask*> *_itemListTasksByPath;
-	NSMutableArray <OCPath> *_queuedItemListTaskPaths;
-	NSMutableArray <OCCoreItemListTask*> *_scheduledItemListTasks;
+	NSMutableDictionary <OCPath, OCCoreItemListTask *> *_itemListTasksByPath;
+	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
+	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
+	NSMutableSet <OCCoreDirectoryUpdateJobID> *_scheduledDirectoryUpdateJobIDs;
+	OCActivity *_scheduledDirectoryUpdateJobActivity;
+	NSUInteger _totalScheduledDirectoryUpdateJobs;
+	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
 	BOOL _itemListTaskRunning;
 

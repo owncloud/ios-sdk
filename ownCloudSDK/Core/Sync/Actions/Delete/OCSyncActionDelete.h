@@ -18,10 +18,16 @@
 
 #import "OCSyncAction.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSyncActionDelete : OCSyncAction
 
 @property(assign) BOOL requireMatch;
+@property(nullable,strong) NSArray <OCLocalID> *associatedItemLocalIDs;
+@property(nullable,strong) NSSet <OCSyncLaneTag> *associatedItemLaneTags;
 
 - (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -99,6 +99,7 @@
 
 	[coder encodeObject:_activeSyncRecordIDs forKey:@"activeSyncRecordIDs"];
 	[coder encodeInteger:_syncActivity 	forKey:@"syncActivity"];
+	[coder encodeObject:_syncActivityCounts forKey:@"syncActivityCounts"];
 
 	[coder encodeInteger:_size  		forKey:@"size"];
 	[coder encodeObject:_creationDate	forKey:@"creationDate"];
@@ -155,6 +156,7 @@
 
 		_activeSyncRecordIDs = [decoder decodeObjectOfClass:[NSArray class] forKey:@"activeSyncRecordIDs"];
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
+		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], [NSNumber class], nil] forKey:@"syncActivityCounts"];
 
 		_size = [decoder decodeIntegerForKey:@"size"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
@@ -382,7 +384,19 @@
 {
 	if (activity != OCItemSyncActivityNone)
 	{
-		self.syncActivity |= activity;
+		if ((self.syncActivity & activity) == 0)
+		{
+			self.syncActivity |= activity;
+		}
+		else
+		{
+			if (_syncActivityCounts == nil)
+			{
+				_syncActivityCounts = [NSCountedSet new];
+			}
+
+			[_syncActivityCounts addObject:@(activity)];
+		}
 	}
 
 	if (syncRecordID == nil) { return; }
@@ -410,7 +424,19 @@
 {
 	if (activity != OCItemSyncActivityNone)
 	{
-		self.syncActivity &= ~activity;
+		if ((_syncActivityCounts != nil) && ([_syncActivityCounts countForObject:@(activity)] > 0))
+		{
+			[_syncActivityCounts removeObject:@(activity)];
+
+			if (_syncActivityCounts.count == 0)
+			{
+				_syncActivityCounts = nil;
+			}
+		}
+		else
+		{
+			self.syncActivity &= ~activity;
+		}
 	}
 
 	if (syncRecordID == nil) { return; }
@@ -438,12 +464,27 @@
 	[self didChangeValueForKey:@"activeSyncRecordIDs"];
 }
 
+- (NSUInteger)countOfSyncRecordsWithSyncActivity:(OCItemSyncActivity)activity
+{
+	NSUInteger count = 0;
+
+	count = ((_syncActivity & activity) == activity) ? 1 : 0;
+
+	if (_syncActivityCounts != nil)
+	{
+		count += [_syncActivityCounts countForObject:@(activity)];
+	}
+
+	return (count);
+}
+
 - (void)prepareToReplace:(OCItem *)item
 {
 	self.databaseID 	  = item.databaseID;
 
-	self.activeSyncRecordIDs  = item.activeSyncRecordIDs;
-	self.syncActivity 	  = item.syncActivity;
+	self.activeSyncRecordIDs  	= item.activeSyncRecordIDs;
+	self.syncActivity 	  	= item.syncActivity;
+	self.syncActivityCounts 	= item.syncActivityCounts;
 
 	if (self.parentFileID == nil)
 	{
@@ -512,6 +553,7 @@
 
 	CloneMetadata(@"activeSyncRecordIDs");
 	CloneMetadata(@"syncActivity");
+	CloneMetadata(@"syncActivityCounts");
 
 	CloneMetadata(@"size");
 	CloneMetadata(@"creationDate");

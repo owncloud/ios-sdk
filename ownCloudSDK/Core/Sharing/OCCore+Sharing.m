@@ -21,6 +21,7 @@
 #import "OCCore+ItemList.h"
 #import "OCShareQuery+Internal.h"
 #import "OCRecipientSearchController.h"
+#import "NSString+OCParentPath.h"
 
 @implementation OCCore (Sharing)
 
@@ -38,10 +39,14 @@
 
 - (void)reloadShareQuery:(OCShareQuery *)shareQuery
 {
+	[self beginActivity:@"Reloading share query"];
+
 	[self queueBlock:^{
 		shareQuery.lastRefreshStarted = [NSDate new];
 
-		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:nil];
+		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:^{
+			[self endActivity:@"Reloading share query"];
+		}];
 	}];
 }
 
@@ -55,6 +60,11 @@
 #pragma mark - Automatic polling
 - (void)_pollNextShareQuery
 {
+	if (self.state != OCCoreStateRunning)
+	{
+		return;
+	}
+
 	[self beginActivity:@"Poll next share query"];
 
 	[self queueBlock:^{
@@ -113,8 +123,15 @@
 
 			if (earliestRefresh != nil)
 			{
+				__weak OCCore *weakSelf = self;
+
 				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(earliestRefresh.timeIntervalSinceNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
-					[self _pollNextShareQuery];
+					OCCore *strongSelf;
+
+					if (((strongSelf = weakSelf) != nil) &&  (strongSelf.state == OCCoreStateRunning))
+					{
+						[weakSelf _pollNextShareQuery];
+					}
 				});
 			}
 		}
@@ -126,6 +143,8 @@
 #pragma mark - Updating share queries
 - (void)_pollForSharesWithScope:(OCShareScope)scope item:(OCItem *)item completionHandler:(dispatch_block_t)completionHandler
 {
+	[self beginActivity:@"Polling for shares with scope"];
+
 	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
 		if (error == nil)
 		{
@@ -148,6 +167,8 @@
 				completionHandler();
 			}
 		}
+
+		[self endActivity:@"Polling for shares with scope"];
 	}];
 }
 
@@ -163,11 +184,32 @@
 		}
 
 		// Update OCItem representing item
-		OCShare *share = ((addedShare != nil) ? addedShare : ((updatedShare != nil) ? updatedShare : removedShare));
-
-		if (share != nil)
+		if (removedShare != nil)
 		{
-			[self scheduleItemListTaskForPath:share.itemPath forQuery:YES];
+			// Update parent path of removed items to quickly bring the item back in sync
+			if (removedShare.itemPath.parentPath != nil)
+			{
+				[self scheduleItemListTaskForPath:removedShare.itemPath.parentPath forDirectoryUpdateJob:nil];
+			}
+		}
+		else if (updatedShare != nil)
+		{
+			// Update item metadata to quickly bring the item up-to-date
+			[self scheduleItemListTaskForPath:updatedShare.itemPath forDirectoryUpdateJob:nil];
+		}
+		else if (addedShare != nil)
+		{
+			// Retrieve item metadata to quickly bring the item up-to-date
+			if ([addedShare.owner isEqual:_connection.loggedInUser])
+			{
+				// Shared by user
+				[self scheduleItemListTaskForPath:addedShare.itemPath forDirectoryUpdateJob:nil];
+			}
+			else
+			{
+				// Shared with user (typically added to root dir. Should it ever not, will still trigger retrieval of updates.)
+				[self scheduleItemListTaskForPath:@"/" forDirectoryUpdateJob:nil];
+			}
 		}
 	}];
 }
@@ -238,8 +280,17 @@
 
 				case OCShareTypeRemote:
 					share.accepted = @(accept);
-					[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:(accept ? @(OCShareScopeAcceptedCloudShares) : @(OCShareScopePendingCloudShares))];
-					[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:(accept ? @(OCShareScopePendingCloudShares) :  @(OCShareScopeAcceptedCloudShares))];
+
+					if (accept)
+					{
+						[self _updateShareQueriesWithAddedShare:share updatedShare:nil removedShare:nil limitScope:@(OCShareScopeAcceptedCloudShares)];
+						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopePendingCloudShares)];
+					}
+					else
+					{
+						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopeAcceptedCloudShares)];
+						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopePendingCloudShares)];
+					}
 				break;
 
 				default: break;
