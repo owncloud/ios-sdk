@@ -194,13 +194,24 @@
 		}
 		else if (updatedShare != nil)
 		{
-			// Update item metadata to quickly bring the item up-to-date
-			[self scheduleItemListTaskForPath:updatedShare.itemPath forDirectoryUpdateJob:nil];
+			if ([updatedShare.state isEqual:OCShareStateRejected])
+			{
+				// Update parent path of removed items to quickly bring the item back in sync
+				if (updatedShare.itemPath.parentPath != nil)
+				{
+					[self scheduleItemListTaskForPath:updatedShare.itemPath.parentPath forDirectoryUpdateJob:nil];
+				}
+			}
+			else
+			{
+				// Update item metadata to quickly bring the item up-to-date
+				[self scheduleItemListTaskForPath:updatedShare.itemPath forDirectoryUpdateJob:nil];
+			}
 		}
 		else if (addedShare != nil)
 		{
 			// Retrieve item metadata to quickly bring the item up-to-date
-			if ([addedShare.owner isEqual:_connection.loggedInUser])
+			if ([addedShare.owner isEqual:self->_connection.loggedInUser])
 			{
 				// Shared by user
 				[self scheduleItemListTaskForPath:addedShare.itemPath forDirectoryUpdateJob:nil];
