@@ -44,6 +44,8 @@
 	[self addOrUpdateSyncLanesSchema];
 	[self addOrUpdateSyncJournalSchema];
 	[self addOrUpdateEvents];
+
+	[self addOrUpdateUpdateScanPaths];
 }
 
 - (void)addOrUpdateMetaDataSchema
@@ -755,6 +757,8 @@
 	];
 
 	// Version 5
+	__weak OCDatabase *weakSelf = self;
+
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameSyncJournal
 		version:5
@@ -785,9 +789,7 @@
 				OCSyncLane *transitionalLane = [OCSyncLane new];
 				transitionalLane.tags = [[NSMutableSet alloc] initWithObjects:@"/", nil]; // Catch-all
 
-				__weak OCDatabase *weakSelf = self;
-
-				[self addSyncLane:transitionalLane completionHandler:^(OCDatabase *database, NSError *error) {
+				[weakSelf addSyncLane:transitionalLane completionHandler:^(OCDatabase *database, NSError *error) {
 					if (error == nil)
 					{
 						if (transitionalLane.identifier != nil)
@@ -808,6 +810,26 @@
 				completionHandler(error);
 			}]];
 		}]
+	];
+}
+
+- (void)addOrUpdateUpdateScanPaths
+{
+	/*** Update Scan Paths ***/
+
+	// Version 1
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameUpdateJobs
+		version:1
+		creationQueries:@[
+			/*
+				jobID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
+				path : TEXT			- path to scan as part of an update
+			*/
+			@"CREATE TABLE updateJobs (jobID INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL)",
+		]
+		openStatements:nil
+		upgradeMigrator:nil]
 	];
 }
 
@@ -997,6 +1019,7 @@
 OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
 OCDatabaseTableName OCDatabaseTableNameSyncLanes = @"syncLanes";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
+OCDatabaseTableName OCDatabaseTableNameUpdateJobs = @"updateJobs";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
 OCDatabaseTableName OCDatabaseTableNameEvents = @"events";
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";

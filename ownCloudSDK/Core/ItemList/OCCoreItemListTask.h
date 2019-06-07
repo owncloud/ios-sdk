@@ -25,6 +25,7 @@
 
 @class OCCore;
 @class OCCoreItemListTask;
+@class OCCoreDirectoryUpdateJob;
 
 typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 {
@@ -39,6 +40,8 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 @property(weak) OCCore *core;
 @property(strong) OCPath path;
 
+@property(strong) OCCoreDirectoryUpdateJob *updateJob;
+
 @property(strong) OCHTTPRequestGroupID groupID;
 
 @property(strong) OCCoreItemList *cachedSet;
@@ -52,7 +55,7 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 @property(strong) OCCoreItemListTask *nextItemListTask;
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path;
+- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob;
 
 - (void)update;
 

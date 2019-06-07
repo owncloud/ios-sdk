@@ -27,6 +27,7 @@
 #import "OCCore+ItemList.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCCoreDirectoryUpdateJob.h"
 
 @interface OCCoreItemListTask ()
 {
@@ -49,12 +50,13 @@
 	return(self);
 }
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path
+- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob
 {
 	if ((self = [self init]) != nil)
 	{
 		self.core = core;
 		self.path = path;
+		self.updateJob = updateJob;
 	}
 
 	return (self);

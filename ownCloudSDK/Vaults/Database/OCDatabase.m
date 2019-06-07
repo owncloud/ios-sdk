@@ -32,6 +32,7 @@
 #import "OCProcessManager.h"
 #import "OCQueryCondition+SQLBuilder.h"
 #import "OCAsyncSequentialQueue.h"
+#import "NSString+OCSQLTools.h"
 
 @interface OCDatabase ()
 {
@@ -63,6 +64,8 @@
 		self.databaseURL = databaseURL;
 
 		self.removedItemRetentionLength = 100;
+
+		_selectItemRowsSQLQueryPrefix = @"SELECT mdID, syncAnchor, itemData";
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
@@ -390,17 +393,9 @@
 	}
 }
 
-- (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+- (void)_retrieveCacheItemForSQLQuery:(NSString *)sqlQuery parameters:(nullable NSArray<id> *)parameters completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
-	if (localID == nil)
-	{
-		OCLogError(@"Retrieval of localID==nil failed");
-
-		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
-		return;
-	}
-
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT mdID, syncAnchor, itemData FROM metaData WHERE localID=? AND removed=0" withParameters:@[localID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQuery withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil, nil);
@@ -412,6 +407,37 @@
 			}];
 		}
 	}]];
+
+}
+
+- (void)_retrieveCacheItemsForSQLQuery:(NSString *)sqlQuery parameters:(nullable NSArray<id> *)parameters completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQuery withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (error != nil)
+		{
+			completionHandler(self, error, nil, nil);
+		}
+		else
+		{
+			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
+		}
+	}]];
+}
+
+
+- (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+{
+	if (localID == nil)
+	{
+		OCLogError(@"Retrieval of localID==nil failed");
+
+		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
+		return;
+	}
+
+	[self _retrieveCacheItemForSQLQuery:[_selectItemRowsSQLQueryPrefix stringByAppendingString:@" FROM metaData WHERE localID=? AND removed=0"]
+				 parameters:@[localID]
+			  completionHandler:completionHandler];
 }
 
 - (void)retrieveCacheItemForFileID:(OCFileID)fileID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
@@ -429,18 +455,39 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:(includingRemoved ? @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE fileID=?" : @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE fileID=? AND removed=0") withParameters:@[fileID] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-		if (error != nil)
-		{
-			completionHandler(self, error, nil, nil);
-		}
-		else
-		{
-			[self _completeRetrievalWithResultSet:resultSet completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
-				completionHandler(db, error, syncAnchor, items.firstObject);
-			}];
-		}
-	}]];
+	[self _retrieveCacheItemForSQLQuery:(includingRemoved ? [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE fileID=?"] : [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE fileID=? AND removed=0"])
+				 parameters:@[fileID]
+			  completionHandler:completionHandler];
+}
+
+- (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+{
+	NSMutableArray *parameters = [NSMutableArray new];
+
+	if (path.length == 0)
+	{
+		OCLogError(@"Retrieval below zero-length/nil path failed");
+
+		completionHandler(self, OCError(OCErrorInsufficientParameters), nil, nil);
+		return;
+	}
+
+	[parameters addObject:[[path stringBySQLLikeEscaping] stringByAppendingString:@"%"]];
+
+	NSString *sqlStatement = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE path LIKE ?"];
+
+	if (includingRemoved)
+	{
+		sqlStatement = [sqlStatement stringByAppendingString:@" AND removed=0"];
+	}
+
+	if (!includingPathItself)
+	{
+		sqlStatement = [sqlStatement stringByAppendingString:@" AND path!=?"];
+		[parameters addObject:path];
+	}
+
+	[self _retrieveCacheItemsForSQLQuery:sqlStatement parameters:parameters completionHandler:completionHandler];
 }
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
@@ -456,25 +503,16 @@
 
 	if (itemOnly)
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE path=? AND removed=0";
+		sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@" FROM metaData WHERE path=? AND removed=0"];
 		parameters = @[path];
 	}
 	else
 	{
-		sqlQueryString = @"SELECT mdID, syncAnchor, itemData FROM metaData WHERE (parentPath=? OR path=?) AND removed=0";
+		sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@" FROM metaData WHERE (parentPath=? OR path=?) AND removed=0"];
 		parameters = @[path, path];
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-		if (error != nil)
-		{
-			completionHandler(self, error, nil, nil);
-		}
-		else
-		{
-			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
-		}
-	}]];
+	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters completionHandler:completionHandler];
 }
 
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
@@ -497,23 +535,14 @@
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE syncAnchor > ?";
+	NSString *sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE syncAnchor > ?"];
 
 	if (foldersOnly)
 	{
 		sqlQueryString = [sqlQueryString stringByAppendingFormat:@" AND type == %ld", (long)OCItemTypeCollection];
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:@[synchAnchor] resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-		if (error != nil)
-		{
-			completionHandler(self, error, nil, nil);
-		}
-		else
-		{
-			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
-		}
-	}]];
+	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:@[synchAnchor] completionHandler:completionHandler];
 }
 
 + (NSDictionary<OCItemPropertyName, NSString *> *)columnNameByPropertyName
@@ -545,7 +574,7 @@
 
 - (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData WHERE removed=0 AND ";
+	NSString *sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE removed=0 AND "];
 	NSString *sqlWhereString = nil;
 	NSArray *parameters = nil;
 	NSError *error = nil;
@@ -554,16 +583,7 @@
 	{
 		sqlQueryString = [sqlQueryString stringByAppendingString:sqlWhereString];
 
-		[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-			if (error != nil)
-			{
-				completionHandler(self, error, nil, nil);
-			}
-			else
-			{
-				[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
-			}
-		}]];
+		[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters completionHandler:completionHandler];
 	}
 	else
 	{
@@ -573,7 +593,7 @@
 
 - (void)iterateCacheItemsWithIterator:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop))iterator
 {
-	NSString *sqlQueryString = @"SELECT mdID, syncAnchor, itemData, removed FROM metaData ORDER BY mdID ASC";
+	NSString *sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData ORDER BY mdID ASC"];
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *returnError = nil;
@@ -725,6 +745,81 @@
 			completionHandler(self, returnError, CGSizeZero, nil, nil);
 		}
 	}]];
+}
+
+#pragma mark - Directory Update Job interface
+- (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateJob completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler
+{
+	if ((updateJob != nil) && (updateJob.path != nil))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameUpdateJobs rowValues:@{
+			@"path" 		: updateJob.path
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			updateJob.identifier = rowID;
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error, updateJob);
+			}
+		}]];
+	}
+	else
+	{
+		OCLogError(@"updateScanPath=%@, updateScanPath.path=%@ => could not be stored in database", updateJob, updateJob.path);
+		completionHandler(self, OCError(OCErrorInsufficientParameters), nil);
+	}
+}
+
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:nil fromTable:OCDatabaseTableNameUpdateJobs where:@{
+		@"jobID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">=" value:jobID apply:(jobID!=nil)],
+		@"path" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path apply:(path!=nil)]
+	} orderBy:@"jobID ASC" limit:((maximumJobs == 0) ? nil : [NSString stringWithFormat:@"0,%ld",maximumJobs]) resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block NSMutableArray <OCCoreDirectoryUpdateJob *> *updateJobs = nil;
+		NSError *iterationError = error;
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				if ((rowDictionary[@"jobID"] != nil) && (rowDictionary[@"path"] != nil))
+				{
+					OCCoreDirectoryUpdateJob *updateJob;
+
+					if ((updateJob = [OCCoreDirectoryUpdateJob new]) != nil)
+					{
+						updateJob.identifier = (OCCoreDirectoryUpdateJobID)rowDictionary[@"jobID"];
+						updateJob.path = (OCPath)rowDictionary[@"path"];
+
+						if (updateJobs == nil) { updateJobs = [NSMutableArray new]; }
+
+						[updateJobs addObject:updateJob];
+					}
+
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, updateJobs);
+		}
+	}]];
+}
+
+- (void)removeDirectoryUpdateJobWithID:(OCCoreDirectoryUpdateJobID)jobID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (jobID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:jobID fromTable:OCDatabaseTableNameUpdateJobs completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not remove updateJob: jobID is nil");
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
 }
 
 #pragma mark - Sync Lane interface

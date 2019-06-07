@@ -487,9 +487,9 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			OCLogFilter newFilter = filter;
 
 			filter = [^BOOL(OCLogger * _Nonnull logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> ** _Nullable pTags, NSString *__autoreleasing *pLogMessage, uint64_t threadID, NSDate * _Nonnull timestamp) {
-				if (previousFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp))
+				if (newFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp))
 				{
-					return newFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp);
+					return previousFilter(logger, logLevel, functionName, file, line, pTags, pLogMessage, threadID, timestamp);
 				}
 				return (NO);
 			} copy];

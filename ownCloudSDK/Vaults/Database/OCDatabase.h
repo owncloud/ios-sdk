@@ -24,6 +24,7 @@
 #import "OCSQLiteTableSchema.h"
 #import "OCLogTag.h"
 #import "OCQueryCondition.h"
+#import "OCCoreDirectoryUpdateJob.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -32,6 +33,7 @@
 @class OCSyncLane;
 @class OCFile;
 @class OCEvent;
+@class OCCoreDirectoryUpdateJob;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
@@ -42,6 +44,8 @@ typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NS
 typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db, NSError *error, NSNumber *count);
 typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
+typedef void(^OCDatabaseDirectoryUpdateJobCompletionHandler)(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob);
+typedef void(^OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
 
 typedef NSArray<OCItem *> *(^OCDatabaseItemFilter)(NSArray <OCItem *> *items);
@@ -56,6 +60,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
 
 	NSMutableDictionary <OCDatabaseID, OCEvent *> *_eventsByDatabaseID;
+
+	NSString *_selectItemRowsSQLQueryPrefix;
 
 	NSUInteger _removedItemRetentionLength;
 
@@ -95,6 +101,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
 
+- (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
@@ -109,6 +117,11 @@ typedef NSString* OCDatabaseCounterIdentifier;
 //- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 //- (void)updateFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 //- (void)removeFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+#pragma mark - Update Scan interface
+- (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateScanPath completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler;
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler;
+- (void)removeDirectoryUpdateJobWithID:(OCCoreDirectoryUpdateJobID)jobID completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - Sync Lane interface
 - (void)addSyncLane:(OCSyncLane *)lane completionHandler:(OCDatabaseCompletionHandler)completionHandler;
