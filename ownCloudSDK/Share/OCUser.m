@@ -43,11 +43,11 @@
 {
 	NSRange atRange;
 
-	atRange = [_userName rangeOfString:@"@"];
+	atRange = [_userName rangeOfString:@"@" options:NSBackwardsSearch];
 
-	if (atRange.location == 0)
+	if ((atRange.location == 0) || (atRange.location == (_userName.length-1)))
 	{
-		// Handle local user names starting with "@" like "@example" and make sure they aren't treated as remote
+		// Handle local user names starting or ending with "@" like "@example" or "example@" and make sure they aren't treated as remote
 		atRange.location = NSNotFound;
 	}
 
