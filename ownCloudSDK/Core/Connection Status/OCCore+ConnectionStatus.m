@@ -319,7 +319,16 @@
 {
 	if (error != nil)
 	{
-		if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCannotConnectToHost))
+		if ([error.domain isEqual:NSURLErrorDomain] && (
+			(error.code == NSURLErrorDNSLookupFailed) ||
+			(error.code == NSURLErrorCannotFindHost) ||
+			(error.code == NSURLErrorCannotConnectToHost) ||
+			(error.code == NSURLErrorNotConnectedToInternet) ||
+			(error.code == NSURLErrorNetworkConnectionLost) ||
+			(error.code == NSURLErrorDataNotAllowed) ||
+			(error.code == NSURLErrorInternationalRoamingOff) ||
+			(error.code == NSURLErrorCallIsActive)
+		    ))
 		{
 			[_serverStatusSignalProvider reportConnectionRefusedError];
 
