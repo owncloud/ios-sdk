@@ -2183,6 +2183,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Action: Retrieve Thumbnail
 - (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget
 {
+	return ([self retrieveThumbnailFor:item to:localThumbnailURL maximumSize:size waitForConnectivity:YES resultTarget:eventTarget]);
+}
+
+- (NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(NSURL *)localThumbnailURL maximumSize:(CGSize)size waitForConnectivity:(BOOL)waitForConnectivity resultTarget:(OCEventTarget *)eventTarget
+{
 	NSURL *url = nil;
 	OCHTTPRequest *request = nil;
 	NSError *error = nil;
@@ -2245,7 +2250,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (request != nil)
 	{
-		request.requiredSignals = self.actionSignals;
+		request.requiredSignals = waitForConnectivity ? self.actionSignals : self.propFindSignals;
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
 			item.itemVersionIdentifier,	OCEventUserInfoKeyItemVersionIdentifier,
