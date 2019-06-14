@@ -189,7 +189,8 @@
 
 					OCLog(@"Updated share with error=%@, share=%@", event.error, event.result);
 
-					XCTAssert(!updatedShare.protectedByPassword);
+					#warning Temporarily removed due to https://github.com/owncloud/core/issues/35541
+					// XCTAssert(!updatedShare.protectedByPassword);
 
 					[connection updateShare:newShare afterPerformingChanges:^(OCShare * _Nonnull share) {
 						// Change nothing => should return immediately
@@ -211,7 +212,8 @@
 							XCTAssert([share.url 		isEqual:newShare.url]);
 							XCTAssert([share.token 		isEqual:newShare.token]);
 							XCTAssert([share.creationDate 	isEqual:newShare.creationDate]);
-							XCTAssert(!share.protectedByPassword);
+							#warning Temporarily removed due to https://github.com/owncloud/core/issues/35541
+							// XCTAssert(!share.protectedByPassword);
 							XCTAssert(share.expirationDate.timeIntervalSinceNow >= (24*60*60*12));
 							XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
 
