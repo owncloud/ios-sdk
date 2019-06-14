@@ -1023,6 +1023,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		{
 			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-available-bytes"]];
 			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"D:quota-used-bytes"]];
+			[ocPropAttributes addObject:[OCXMLNode elementWithName:@"oc:checksums"]];
 		}
 
 		if ([[self classSettingForOCClassSettingsKey:OCConnectionAlwaysRequestPrivateLink] boolValue])
@@ -1159,7 +1160,27 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			switch (eventType)
 			{
 				case OCEventTypeUpload:
-					event.result = items.firstObject;
+					{
+						OCItem *uploadedItem = items.firstObject;
+						OCChecksum *expectedChecksum = OCTypedCast(options[@"checksumExpected"], OCChecksum);
+						NSError *expectedChecksumMismatchError = OCTypedCast(options[@"checksumMismatchError"], NSError);
+
+						if (expectedChecksum != nil)
+						{
+							if ([uploadedItem.checksums containsObject:expectedChecksum])
+							{
+								event.result = uploadedItem;
+							}
+							else
+							{
+								event.error = expectedChecksumMismatchError;
+							}
+						}
+						else
+						{
+							event.result = uploadedItem;
+						}
+					}
 				break;
 
 				default:
@@ -1349,7 +1370,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			@"fileName" : fileName,
 			@"parentItem" : newParentDirectory,
 			@"modDate" : modDate,
-			@"fileSize" : fileSize
+			@"fileSize" : fileSize,
+			@"checksum" : (checksum!=nil) ? checksum : @""
 		};
 		request.eventTarget = eventTarget;
 		request.bodyURL = sourceURL;
@@ -1438,9 +1460,28 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					{
 						case OCHTTPStatusCodePRECONDITION_FAILED: {
 							NSString *errorDescription = nil;
+							OCChecksum *expectedChecksum = OCTypedCast(request.userInfo[@"checksum"], OCChecksum);
 
 							errorDescription = [NSString stringWithFormat:OCLocalized(@"Another item named %@ already exists in %@."), fileName, parentItem.name];
 							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+
+							if (expectedChecksum != nil)
+							{
+								// Sometimes, a file uploads correctly but the connection is cut off just as the success response is transmitted back to the client,
+								// whose request may then be re-scheduled at a later time and receive a "PRECONDITION FAILED" response because a file already exists
+								// in this place. In order not to return an error if the file on the server equals the file to be uploaded, we first perform a PROPFIND
+								// check and compare the checksums
+
+								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
+									@"alternativeEventType"  : @(OCEventTypeUpload),
+
+									// Return an error if checksum of local and remote file mismatch
+									@"checksumExpected" 	 : expectedChecksum,
+									@"checksumMismatchError" : event.error
+								} resultTarget:request.eventTarget];
+
+								return; // Do not deliver the event error just yet
+							}
 						}
 						break;
 
