@@ -50,7 +50,8 @@ static NSURL *sDefaultLogFileURL;
 {
 	if (sDefaultLogFileURL == nil)
 	{
-		sDefaultLogFileURL = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", [[OCAppIdentity sharedAppIdentity] appName]]];
+		NSString *logFileName = [[[OCAppIdentity sharedAppIdentity] appGroupIdentifier] stringByReplacingOccurrencesOfString:@"group." withString:@""];
+		sDefaultLogFileURL = [[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", logFileName]];
 	}
 
 	return (sDefaultLogFileURL);
