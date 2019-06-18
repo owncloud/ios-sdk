@@ -241,6 +241,26 @@ static NSURL *sDefaultLogFileURL;
 	}
 }
 
+- (void)rotate
+{
+	NSError *error = nil;
+
+	// Construct path for the archived log
+	NSString *timeStamp = [OCLogWriter timestampStringFrom:[NSDate date]];
+	NSString *transformedTimestamp = [timeStamp stringByReplacingOccurrencesOfString:@"[ /:]+" withString:@"_" options:NSRegularExpressionSearch range:NSMakeRange(0, [timeStamp length])];
+
+	NSString *archivedLogPath = [self.logFileURL.path stringByAppendingFormat:@".%@", transformedTimestamp];
+
+	// Rename current log and start new one
+	[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:archivedLogPath error:&error];
+
+	// Notify about addition of a new file
+	[self _notifyAboutChangesInLogStorage];
+
+	// Check if some old logs can be deleted
+	[self cleanUpLogs:NO];
+}
+
 // Private methods
 
 - (void)_notifyAboutChangesInLogStorage
@@ -312,7 +332,6 @@ static NSURL *sDefaultLogFileURL;
 
 - (void)_rotateLogIfRequired
 {
-	NSError *error = nil;
 	NSDate *logCreationDate = [self _attributesForPath:self.logFileURL.path][NSFileCreationDate];
 
 	if (logCreationDate != nil)
@@ -321,20 +340,7 @@ static NSURL *sDefaultLogFileURL;
 		NSTimeInterval age = [logCreationDate timeIntervalSinceNow];
 		if (-age > self.rotationInterval)
 		{
-			// Construct path for the archived log
-			NSString *timeStamp = [OCLogWriter timestampStringFrom:[NSDate date]];
-			NSString *transformedTimestamp = [timeStamp stringByReplacingOccurrencesOfString:@"[ /:]+" withString:@"_" options:NSRegularExpressionSearch range:NSMakeRange(0, [timeStamp length])];
-
-			NSString *archivedLogPath = [self.logFileURL.path stringByAppendingFormat:@".%@", transformedTimestamp];
-
-			// Rename current log and start new one
-			[[NSFileManager defaultManager] moveItemAtPath:self.logFileURL.path toPath:archivedLogPath error:&error];
-
-			// Notify about addition of a new file
-			[self _notifyAboutChangesInLogStorage];
-
-			// Check if some old logs can be deleted
-			[self cleanUpLogs:NO];
+			[self rotate];
 		}
 		else
 		{
