@@ -116,7 +116,7 @@
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:OCLocalized(@"\"%@\" has been modified locally") description:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.") metaData:nil choices:@[
+				issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil choices:@[
 						// Delete local representation and reschedule download
 						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
 

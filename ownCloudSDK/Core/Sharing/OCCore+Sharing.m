@@ -21,7 +21,7 @@
 #import "OCCore+ItemList.h"
 #import "OCShareQuery+Internal.h"
 #import "OCRecipientSearchController.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 
 @implementation OCCore (Sharing)
 

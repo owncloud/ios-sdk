@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)cleanUpLogs:(BOOL)removeAll;
 
+- (void)rotate;
+
 @end
 
 extern OCLogComponentIdentifier OCLogComponentIdentifierWriterFile;

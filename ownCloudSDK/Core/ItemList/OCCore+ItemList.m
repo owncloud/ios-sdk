@@ -24,7 +24,7 @@
 #import "OCMacros.h"
 #import "OCQuery.h"
 #import "NSError+OCError.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"

@@ -182,6 +182,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable OCProgress *)updateItem:(OCItem *)item properties:(nullable NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(nullable NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(nullable NSURL *)localThumbnailURL maximumSize:(CGSize)size waitForConnectivity:(BOOL)waitForConnectivity resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable NSProgress *)sendRequest:(OCHTTPRequest *)request ephermalCompletionHandler:(OCHTTPRequestEphermalResultHandler)ephermalResultHandler; //!< Sends a request to the ephermal pipeline and returns the result via the ephermalResultHandler.
 

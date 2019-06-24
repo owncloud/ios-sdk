@@ -67,6 +67,11 @@
 #pragma mark - Command: Retrieve Thumbnail
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
+	return ([self retrieveThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:YES retrieveHandler:retrieveHandler]);
+}
+
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
+{
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;
 	OCItemVersionIdentifier *versionIdentifier = item.itemVersionIdentifier;
@@ -233,7 +238,7 @@
 									}];
 
 									// Request thumbnail from connection
-									retrieveProgress = [self.connection retrieveThumbnailFor:item to:nil maximumSize:requestedMaximumSizeInPixels resultTarget:target];
+									retrieveProgress = [self.connection retrieveThumbnailFor:item to:nil maximumSize:requestedMaximumSizeInPixels waitForConnectivity:waitForConnectivity resultTarget:target];
 
 									if (retrieveProgress != nil)
 									{

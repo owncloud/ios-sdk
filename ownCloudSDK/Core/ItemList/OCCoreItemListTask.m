@@ -20,7 +20,7 @@
 #import "OCCore.h"
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCLogger.h"
 #import "NSError+OCDAVError.h"
 #import "OCCore+ConnectionStatus.h"

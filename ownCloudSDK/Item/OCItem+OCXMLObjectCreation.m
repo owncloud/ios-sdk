@@ -19,6 +19,7 @@
 #import "OCXMLParserNode.h"
 #import "OCItem+OCXMLObjectCreation.h"
 #import "OCHTTPStatus.h"
+#import "OCChecksum.h"
 
 @implementation OCItem (OCXMLObjectCreation)
 
@@ -174,6 +175,30 @@
 				}
 			} copy],
 
+			@"oc:checksum" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					NSArray<NSString*> *checksumStrings = [((NSString *)value) componentsSeparatedByString:@" "];
+
+					if (checksumStrings.count > 0)
+					{
+						NSMutableArray<OCChecksum *> *checksums = (item.checksums!=nil) ? [[NSMutableArray alloc] initWithArray:item.checksums] : [[NSMutableArray alloc] initWithCapacity:checksumStrings.count];
+
+						for (NSString *checksumString in checksumStrings)
+						{
+							OCChecksum *checksum;
+
+							if ((checksum = [[OCChecksum alloc] initFromHeaderString:checksumString]) != nil)
+							{
+								[checksums addObject:checksum];
+							}
+						}
+
+						item.checksums = checksums;
+					}
+				}
+			} copy],
+
 			@"oc:privatelink" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{
@@ -251,11 +276,15 @@
 								}];
 							}];
 
+							item.type = isCollection ? OCItemTypeCollection : OCItemTypeFile;
+
 							[propNode enumerateChildNodesWithName:@"oc:share-types" usingBlock:^(OCXMLParserNode *shareTypesNode) {
 								[shareTypesNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];
 							}];
 
-							item.type = isCollection ? OCItemTypeCollection : OCItemTypeFile;
+							[propNode enumerateChildNodesWithName:@"oc:checksums" usingBlock:^(OCXMLParserNode *shareTypesNode) {
+								[shareTypesNode enumerateKeyValuesForTarget:item withBlockForKeys:[[self class] _sharedKeyValueEnumeratorDict]];
+							}];
 
 							// Share OCUser instances for owner
 							ownerDisplayName = propNode.keyValues[@"oc:owner-display-name"];
@@ -416,6 +445,9 @@ Example response:
             <oc:size>5097391</oc:size>
             <oc:id>00000010ocre5kavbk8j</oc:id>
             <oc:permissions>RDNVW</oc:permissions>
+            <oc:checksums>
+            	<oc:checksum>SHA1:b6e74385099c208fa310ee7d0168e270e40de4c9 MD5:2dc1a2fc2aa833b00b92dc4388a86139 ADLER32:0edff753</oc:checksum>
+	    </oc:checksums>
         </d:prop>
         <d:status>HTTP/1.1 200 OK</d:status>
     </d:propstat>

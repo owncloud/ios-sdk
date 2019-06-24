@@ -283,6 +283,7 @@ typedef id<NSObject> OCCoreItemTracking;
 @interface OCCore (Thumbnails)
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
+- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 @end
 
 @interface OCCore (Sharing)
