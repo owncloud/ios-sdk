@@ -39,6 +39,7 @@
 #import "OCHTTPResponse+DAVError.h"
 #import "OCCertificateRuleChecker.h"
 #import "OCProcessManager.h"
+#import "NSString+OCPath.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOAuth2.h"
@@ -1794,7 +1795,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		return(nil);
 	}
 
-	fullFolderPath =  [parentItem.path stringByAppendingPathComponent:folderName];
+	fullFolderPath =  [parentItem.path pathForSubdirectoryWithName:folderName];
 
 	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:fullFolderPath]) != nil)
 	{
@@ -2015,9 +2016,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			NSString *newName = request.userInfo[@"newName"];
 			NSString *newFullPath = [parentItem.path stringByAppendingPathComponent:newName];
 
-			if ((item.type == OCItemTypeCollection) && (![newFullPath hasSuffix:@"/"]))
+			if (item.type == OCItemTypeCollection)
 			{
-				newFullPath = [newFullPath stringByAppendingString:@"/"];
+				newFullPath = [newFullPath normalizedDirectoryPath];
 			}
 
 			if (request.httpResponse.status.code == OCHTTPStatusCodeCREATED)

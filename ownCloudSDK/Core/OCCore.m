@@ -28,7 +28,7 @@
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
 #import "OCSyncRecord.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "OCCoreManager.h"
@@ -1164,9 +1164,9 @@
 {
 	NSString *path = [parentPath stringByAppendingPathComponent:name];
 
-	if (isDirectory && ![path hasSuffix:@"/"])
+	if (isDirectory)
 	{
-		path = [path stringByAppendingString:@"/"];
+		path = [path normalizedDirectoryPath];
 	}
 
 	return ([self cachedItemAtPath:path error:outError]);

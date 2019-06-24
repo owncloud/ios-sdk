@@ -24,7 +24,7 @@
 #import "OCItem.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCSyncRecord.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCSyncAction.h"

@@ -21,7 +21,7 @@
 #import "OCDatabase.h"
 #import "OCCore.h"
 #import "OCLogger.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 
 @implementation OCVault (Internal)
 

@@ -1,5 +1,5 @@
 //
-//  NSString+OCParentPath.m
+//  NSString+OCPath.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 17.06.18.
@@ -16,25 +16,33 @@
  *
  */
 
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 
-@implementation NSString (OCParentPath)
+@implementation NSString (OCPath)
 
 - (OCPath)parentPath
 {
-	NSString *parentPath = [self stringByDeletingLastPathComponent];
-
-	if (![parentPath hasSuffix:@"/"])
-	{
-		parentPath = [parentPath stringByAppendingString:@"/"];
-	}
-
-	return (parentPath);
+	return ([[self stringByDeletingLastPathComponent] normalizedDirectoryPath]);
 }
 
 - (BOOL)isRootPath
 {
 	return ([self isEqualToString:@"/"]);
+}
+
+- (OCPath)normalizedDirectoryPath
+{
+	if (![self hasSuffix:@"/"])
+	{
+		return ([self stringByAppendingString:@"/"]);
+	}
+
+	return (self);
+}
+
+- (OCPath)pathForSubdirectoryWithName:(NSString *)subDirectoryName
+{
+	return ([[self stringByAppendingPathComponent:subDirectoryName] normalizedDirectoryPath]);
 }
 
 @end

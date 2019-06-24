@@ -167,8 +167,8 @@
 		DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */; };
 		DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */; };
 		DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */; };
-		DC434D0E20D68C3000740056 /* NSString+OCParentPath.h in Headers */ = {isa = PBXBuildFile; fileRef = DC434D0C20D68C3000740056 /* NSString+OCParentPath.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC434D0F20D68C3000740056 /* NSString+OCParentPath.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0D20D68C3000740056 /* NSString+OCParentPath.m */; };
+		DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */ = {isa = PBXBuildFile; fileRef = DC434D0C20D68C3000740056 /* NSString+OCPath.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0D20D68C3000740056 /* NSString+OCPath.m */; };
 		DC446C84206B8DB500189B9A /* OCRunLoopThread.m in Sources */ = {isa = PBXBuildFile; fileRef = DC446C82206B8DB500189B9A /* OCRunLoopThread.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		DC446C85206B8DB500189B9A /* OCRunLoopThread.h in Headers */ = {isa = PBXBuildFile; fileRef = DC446C83206B8DB500189B9A /* OCRunLoopThread.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC446C8A206B8FBF00189B9A /* ISRunLoopThread.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */; };
@@ -751,8 +751,8 @@
 		DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCReachabilityMonitor.h; sourceTree = "<group>"; };
 		DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCReachabilityMonitor.m; sourceTree = "<group>"; };
 		DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandCreateFolder.m"; sourceTree = "<group>"; };
-		DC434D0C20D68C3000740056 /* NSString+OCParentPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCParentPath.h"; sourceTree = "<group>"; };
-		DC434D0D20D68C3000740056 /* NSString+OCParentPath.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCParentPath.m"; sourceTree = "<group>"; };
+		DC434D0C20D68C3000740056 /* NSString+OCPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCPath.h"; sourceTree = "<group>"; };
+		DC434D0D20D68C3000740056 /* NSString+OCPath.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCPath.m"; sourceTree = "<group>"; };
 		DC446C82206B8DB500189B9A /* OCRunLoopThread.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OCRunLoopThread.m; sourceTree = "<group>"; };
 		DC446C83206B8DB500189B9A /* OCRunLoopThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCRunLoopThread.h; sourceTree = "<group>"; };
 		DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = ISRunLoopThread.LICENSE; sourceTree = "<group>"; };
@@ -1192,8 +1192,8 @@
 				DC8913622092088600028999 /* NSString+OCVersionCompare.h */,
 				DC179CD420948DF30018DF7F /* NSProgress+OCExtensions.m */,
 				DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */,
-				DC434D0D20D68C3000740056 /* NSString+OCParentPath.m */,
-				DC434D0C20D68C3000740056 /* NSString+OCParentPath.h */,
+				DC434D0D20D68C3000740056 /* NSString+OCPath.m */,
+				DC434D0C20D68C3000740056 /* NSString+OCPath.h */,
 				DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */,
 				DC75D309214BF1BA00B6FB62 /* NSString+OCFormatting.h */,
 				DC3521772251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m */,
@@ -2385,7 +2385,7 @@
 				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
 				DC576EC6226484E30087316D /* OCBackgroundManager.h in Headers */,
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
-				DC434D0E20D68C3000740056 /* NSString+OCParentPath.h in Headers */,
+				DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
@@ -3009,7 +3009,7 @@
 				DC4A2C5F20D4608100A47260 /* OCIssueChoice.m in Sources */,
 				DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */,
 				DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */,
-				DC434D0F20D68C3000740056 /* NSString+OCParentPath.m in Sources */,
+				DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCDD9B19222989E50052A001 /* OCRecipient.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,

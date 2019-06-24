@@ -25,6 +25,7 @@
 #import "OCCore+ItemList.h"
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
+#import "NSString+OCPath.h"
 
 @implementation OCCore (ItemUpdates)
 
@@ -541,15 +542,8 @@
 	{
 		for (OCPath path in refreshPaths)
 		{
-			OCPath refreshPath = path;
-
-			if (![refreshPath hasSuffix:@"/"])
-			{
-				refreshPath = [refreshPath stringByAppendingString:@"/"];
-			}
-
 			// Ensure the sync anchor was updated following these updates before triggering a refresh
-			[self scheduleUpdateScanForPath:refreshPath waitForNextQueueCycle:YES];
+			[self scheduleUpdateScanForPath:[path normalizedDirectoryPath] waitForNextQueueCycle:YES];
 		}
 	}
 

@@ -19,7 +19,7 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+Internal.h"
 #import "OCVault+Internal.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
 

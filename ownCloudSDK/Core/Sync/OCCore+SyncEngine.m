@@ -23,7 +23,7 @@
 #import "OCSyncAction.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCQuery+Internal.h"
 #import "OCSyncContext.h"
 #import "OCCore+FileProvider.h"
