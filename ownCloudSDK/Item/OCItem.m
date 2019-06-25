@@ -93,6 +93,8 @@
 	[coder encodeObject:_parentLocalID 	forKey:@"parentLocalID"];
 	[coder encodeObject:_localID 		forKey:@"localID"];
 
+	[coder encodeObject:_checksums 		forKey:@"checksums"];
+
 	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
 	[coder encodeObject:_fileID 		forKey:@"fileID"];
 	[coder encodeObject:_eTag 		forKey:@"eTag"];
@@ -149,6 +151,8 @@
 
 		_parentLocalID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentLocalID"];
 		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
+
+		_checksums = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [OCChecksum class], nil] forKey:@"checksums"];
 
 		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
@@ -571,6 +575,8 @@
 
 	CloneMetadata(@"privateLink");
 
+	CloneMetadata(@"checksums");
+
 	CloneMetadata(@"databaseID");
 
 	CloneMetadata(@"quotaBytesRemaining");
@@ -657,7 +663,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @"")]);
 }
 
 #pragma mark - Copying

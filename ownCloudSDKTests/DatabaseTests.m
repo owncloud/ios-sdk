@@ -68,7 +68,7 @@
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:3 handler:nil];
+	[self waitForExpectationsWithTimeout:15 handler:nil];
 }
 
 - (void)testCounterPrimitiveHighLocalConcurrency
@@ -188,6 +188,7 @@
 	NSMutableArray <NSMutableArray<NSNumber *> *> *previousCounterValues = [NSMutableArray new];
 	NSUInteger concurrencyLevel = 10;
 	NSUInteger transactions = 100;
+	NSMutableArray <OCDatabase *> *databases = [NSMutableArray new];
 
 	OCDatabaseCounterIdentifier counterIdentifier = @"counter";
 
@@ -215,6 +216,8 @@
 			dispatch_group_enter(waitGroup);
 
 			OCDatabase *database = [[OCDatabase alloc] initWithURL:databaseURL];
+
+			[databases addObject:database];
 
 			database.sqlDB.maxBusyRetryTimeInterval = 10;
 
@@ -253,6 +256,7 @@
 
 	if (dispatch_group_wait(waitGroup, DISPATCH_TIME_FOREVER) == 0)
 	{
+		databases = nil;
 		[operationsCompleteExpectation fulfill];
 	}
 
@@ -288,7 +292,7 @@
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:3 handler:nil];
+	[self waitForExpectationsWithTimeout:15 handler:nil];
 }
 
 - (void)testConsistentOperationMechanics

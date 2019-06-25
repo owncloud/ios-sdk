@@ -124,7 +124,7 @@ NS_ASSUME_NONNULL_END
 #import "OCCore+SyncEngine.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
 #import "OCFile.h"

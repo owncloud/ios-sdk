@@ -79,6 +79,12 @@
 
 /* Download */
 "Downloading %@…" = "Downloading %@…";
+"\"%@\" has been modified locally" = "\"%@\" has been modified locally";
+"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.";
+"Invalid checksum" = "Invalid checksum";
+"The downloaded file's checksum does not match the checksum provided by the server." = "The downloaded file's checksum does not match the checksum provided by the server.";
+"File modified locally" = "File modified locally";
+"\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";

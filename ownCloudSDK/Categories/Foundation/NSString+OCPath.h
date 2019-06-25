@@ -1,5 +1,5 @@
 //
-//  NSString+OCParentPath.h
+//  NSString+OCPath.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 17.06.18.
@@ -19,9 +19,13 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 
-@interface NSString (OCParentPath)
+@interface NSString (OCPath)
 
 @property(readonly,strong,nonatomic) OCPath parentPath;
 @property(readonly,nonatomic) BOOL isRootPath;
+
+@property(readonly,strong,nonatomic) OCPath normalizedDirectoryPath;
+
+- (OCPath)pathForSubdirectoryWithName:(NSString *)subDirectoryName;
 
 @end

@@ -145,12 +145,13 @@
 	XCTAssert(RunCheck(demoCertOld, demoCertNew, @"check.evaluateRule == true") == NO);
 
 	NSLog(@"certificate.publicKeyData.sha256Hash.asFingerPrintString=%@", demoCertNew.publicKeyData.sha256Hash.asFingerPrintString);
+	NSLog(@"certificate.commonName=%@", demoCertNew.commonName);
 
-	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AE EE 54 3F 49 E2 06 64 5E 8E F1 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"40 BC C5 E8 E5 F4 D5 4C 6B B5 0E D2 51 B5 5B 33 D3 16 73 1C D9 49 93 1C 7B 45 CB 99 40 9E A9 16\"") == YES);
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AA BB CC DD EE FF 00 11 22 33 44 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == NO);
 
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.passedValidationOrIsUserAccepted == true") == YES);
-	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.commonName == \"demo.owncloud.org\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.commonName == \"owncloud.org\"") == YES);
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.rootCertificate.commonName == \"DST Root CA X3\"") == YES);
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.parentCertificate.commonName == \"Let's Encrypt Authority X3\"") == YES);
 

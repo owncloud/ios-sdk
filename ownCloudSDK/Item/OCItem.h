@@ -23,6 +23,7 @@
 @class OCFile;
 @class OCCore;
 @class OCShare;
+@class OCChecksum;
 
 typedef NS_ENUM(NSInteger, OCItemType)
 {
@@ -119,6 +120,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCLocalID parentLocalID; //!< Unique local identifier of the parent folder (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
 @property(nullable,strong) OCLocalID localID; //!< Unique local identifier of the item (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
+
+@property(nullable,strong) NSArray<OCChecksum *> *checksums; //!< (Optional) checksums of the item. Typically only requested for uploaded files.
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
