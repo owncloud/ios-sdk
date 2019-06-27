@@ -1167,4 +1167,79 @@
 	}];
 }
 
+- (void)testFetchChanges
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *fetchCompletionExpectation = [self expectationWithDescription:@"Fetch completed"];
+	XCTestExpectation *fetchCompletionStoppingExpectation = [self expectationWithDescription:@"Fetch completed stopping"];
+	XCTestExpectation *fetchCompletionSecondaryExpectation = [self expectationWithDescription:@"Fetch completed secondary"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			OCLogDebug(@"Initial(I) fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+				OCLogDebug(@"Second fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+				XCTAssert(error==nil);
+				XCTAssert(!didFindChanges);
+
+				[core stopWithCompletionHandler:^(id sender, NSError *error) {
+					[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+						OCLogDebug(@"Stopped fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+						XCTAssert(error!=nil);
+						XCTAssert([error isOCErrorWithCode:OCErrorInternal]);
+						XCTAssert(!didFindChanges);
+
+						[fetchCompletionExpectation fulfill];
+					}];
+
+					[coreStoppedExpectation fulfill];
+				}];
+
+				[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+					OCLogDebug(@"Stopping fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+					XCTAssert(error!=nil);
+					XCTAssert([error isOCErrorWithCode:OCErrorCancelled] || [error isOCErrorWithCode:OCErrorInternal]);
+					XCTAssert(!didFindChanges);
+
+					[fetchCompletionStoppingExpectation fulfill];
+				}];
+			}];
+		}];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			OCLogDebug(@"Initial(II) fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			[fetchCompletionSecondaryExpectation fulfill];
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+
+}
+
 @end

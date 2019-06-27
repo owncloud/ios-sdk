@@ -66,9 +66,9 @@
 		DC19BFD321CA6C15007C20D1 /* OCSyncIssueChoice.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFD121CA6C15007C20D1 /* OCSyncIssueChoice.m */; };
 		DC19BFDE21CB99D1007C20D1 /* OCIssue+SyncIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFDC21CB99D1007C20D1 /* OCIssue+SyncIssue.h */; };
 		DC19BFDF21CB99D1007C20D1 /* OCIssue+SyncIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFDD21CB99D1007C20D1 /* OCIssue+SyncIssue.m */; };
-		DC19BFE921CBACB0007C20D1 /* OCProcessSession.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFE721CBACB0007C20D1 /* OCProcessSession.h */; };
+		DC19BFE921CBACB0007C20D1 /* OCProcessSession.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFE721CBACB0007C20D1 /* OCProcessSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFEA21CBACB0007C20D1 /* OCProcessSession.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFE821CBACB0007C20D1 /* OCProcessSession.m */; };
-		DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEB21CBACBC007C20D1 /* OCProcessManager.h */; };
+		DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEB21CBACBC007C20D1 /* OCProcessManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */; };
 		DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFF221CBE28B007C20D1 /* OCWaitCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */; };

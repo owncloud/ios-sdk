@@ -13,17 +13,17 @@
 
 + (NSURL *)secureTargetURL
 {
-	return ([NSURL URLWithString:@"http://localhost/"]);
+	return ([NSURL URLWithString:@"https://demo.owncloud.org/"]);
 }
 
 + (NSURL *)insecureTargetURL
 {
-	return ([NSURL URLWithString:@"http://localhost/"]);
+	return ([NSURL URLWithString:@"http://demo.owncloud.org/"]);
 }
 
 + (NSURL *)federatedTargetURL
 {
-	return ([NSURL URLWithString:@"http://localhost/"]);
+	return ([NSURL URLWithString:@"https://demo.owncloud.com/"]);
 }
 
 + (NSString *)adminLogin

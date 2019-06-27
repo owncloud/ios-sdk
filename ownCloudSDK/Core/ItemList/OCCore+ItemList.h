@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Check for updates
 - (void)startCheckingForUpdates; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.
+- (void)fetchUpdatesWithCompletionHandler:(nullable OCCoreItemListFetchUpdatesCompletionHandler)completionHandler; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items. Calls a completionHandler when done.
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
 

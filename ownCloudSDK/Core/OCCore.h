@@ -97,6 +97,8 @@ typedef void(^OCCoreFavoritesResultHandler)(NSError * _Nullable error, NSArray<O
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
+
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
 
 typedef NSString* OCCoreOption NS_TYPED_ENUM;
@@ -159,6 +161,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
 	BOOL _itemListTaskRunning;
+	NSMutableArray<OCCoreItemListFetchUpdatesCompletionHandler> *_fetchUpdatesCompletionHandlers;
 
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;

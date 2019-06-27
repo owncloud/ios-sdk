@@ -160,5 +160,51 @@
 	return ([self writeData:nil toKeychainItemForAccount:account path:path]);
 }
 
+- (id)readObjectFromKeychainItemForAccount:(NSString *)account path:(NSString *)path allowedClasses:(NSSet<Class> *)allowedClasses rootClass:(Class)rootClass error:(NSError **)outError
+{
+	NSData *data;
+	id decodedObject = nil;
+
+	if ((data = [self readDataFromKeychainItemForAccount:account path:path]) != nil)
+	{
+		NSError *error = nil;
+
+		decodedObject = [NSKeyedUnarchiver unarchivedObjectOfClasses:allowedClasses fromData:data error:&error];
+
+		if (![decodedObject isKindOfClass:rootClass])
+		{
+			decodedObject = nil;
+		}
+
+		if (outError != nil)
+		{
+			*outError = error;
+		}
+	}
+
+	return (decodedObject);
+}
+
+- (NSError *)writeObject:(id)object toKeychainItemForAccount:(NSString *)account path:(NSString *)path
+{
+	NSError *error = nil;
+
+	if (object != nil)
+	{
+		NSData *data;
+
+		if ((data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:YES error:&error]) != nil)
+		{
+			[self writeData:data toKeychainItemForAccount:account path:path];
+		}
+	}
+	else
+	{
+		[self removeKeychainItemForAccount:account path:path];
+	}
+
+	return (error);
+}
+
 @end
 
