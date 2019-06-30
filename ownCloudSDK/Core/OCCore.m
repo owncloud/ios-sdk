@@ -1619,6 +1619,7 @@ OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
+OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

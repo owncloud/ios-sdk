@@ -51,6 +51,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCoreItemList.h>
 #import <ownCloudSDK/OCCore+ItemList.h>
 #import <ownCloudSDK/OCCore+ItemUpdates.h>
+#import <ownCloudSDK/OCCore+NameConflicts.h>
+#import <ownCloudSDK/NSString+NameConflicts.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
 #import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>

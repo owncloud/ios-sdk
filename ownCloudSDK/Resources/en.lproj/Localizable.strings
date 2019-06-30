@@ -37,6 +37,9 @@
 "Server down for maintenance" = "Server down for maintenance";
 "Online" = "Online";
 
+/* Copies */
+"copy" = "copy";
+
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
 "%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";

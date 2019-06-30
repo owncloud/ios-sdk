@@ -380,6 +380,7 @@ extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether 
 extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransformation] Transformation to be applied on local item before upload
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
 extern OCCoreOption OCCoreOptionPlaceholderCompletionHandler; //!< [OCCorePlaceholderCompletionHandler] For actions that support it: optional block that's invoked with the placeholder item if one is created by the action.
+extern OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle; //!< [OCCoreDuplicateNameStyleNone] Automatically resolves conflicts while performing the action. For import, that means automatic rename of the file to upload if a file with the same name already exists, using the provided naming style.
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.

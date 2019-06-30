@@ -1239,7 +1239,131 @@
 	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
+}
 
+- (void)testDuplicateNameSuggestions
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *fetchCompletionExpectation = [self expectationWithDescription:@"Fetch completed"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			dispatch_group_t suggestionWaitGroups = dispatch_group_create();
+
+			[fetchCompletionExpectation fulfill];
+
+			OCLogDebug(@"Initial fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			// Test suggestions
+
+			// - style: copy
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: bracketed
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual (1).pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: copy + filter first suggestion
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return ![suggestedName isEqual:@"ownCloud Manual copy.pdf"];
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy 2.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 2);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: unused
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Unused.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Unused.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 0);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 2"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory 0
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos 0" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos 0"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 1"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory 1
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos 1" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos 1"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 2"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory (1) - usage of different style
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos (1)" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos (1)"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos (2)"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// Stop when returned
+			dispatch_group_notify(suggestionWaitGroups, dispatch_get_main_queue(), ^{
+				[core stopWithCompletionHandler:^(id sender, NSError *error) {
+					[coreStoppedExpectation fulfill];
+				}];
+			});
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
 }
 
 @end

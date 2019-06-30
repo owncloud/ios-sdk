@@ -19,6 +19,7 @@
 #import "OCCore.h"
 #import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
+#import "OCCore+NameConflicts.h"
 
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -40,6 +41,26 @@
 	if (newFileName == nil)
 	{
 		newFileName = inputFileURL.lastPathComponent;
+	}
+
+	// Alternative name pick
+	NSNumber *nameStyleNumber = nil;
+
+	if ((nameStyleNumber = options[OCCoreOptionAutomaticConflictResolutionNameStyle]) != nil)
+	{
+		__block NSString *outSuggestedName = nil;
+
+		OCSyncExec(checkForExistingItems, {
+			[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				outSuggestedName = suggestedName;
+				OCSyncExecDone(checkForExistingItems);
+			}];
+		});
+
+		if (outSuggestedName != nil)
+		{
+			newFileName = outSuggestedName;
+		}
 	}
 
 	// Create placeholder item and fill fields required by -[NSFileProviderExtension importDocumentAtURL:toParentItemIdentifier:completionHandler:] completion handler
