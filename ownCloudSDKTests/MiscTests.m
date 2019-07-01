@@ -594,4 +594,189 @@
 	OCLog(@"%@ received %ld notifications, %@ awaits: %@", otherNotificationCenter, receivedNotifications, ipNotificationCenter, [ipNotificationCenter valueForKey:@"_ignoreCountsByNotificationName"]);
 }
 
+#pragma mark - NSString+NameConflicts
+- (void)testNameConflictDetectionWithExtension
+{
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2a.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base 2a.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2a).ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base (2a).ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2).ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleBracketed);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base 2.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+}
+
+- (void)testNameConflictDetectionWithoutExtension
+{
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2a" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base 2a"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2a)" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base (2a)"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2)" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleBracketed);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNumbered);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+}
+
+- (void)testDuplicateNameComposition
+{
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(1)] isEqual:@"Base copy"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(2)] isEqual:@"Base copy 2"]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(1)] isEqual:[@"Base " stringByAppendingString:OCLocalized(@"copy")]]);
+	NSString *expectedName = [NSString stringWithFormat:@"Base %@ 2", OCLocalized(@"copy")];
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(2)] isEqual:expectedName]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleBracketed duplicateCount:@(1)] isEqual:@"Base (1)"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleBracketed duplicateCount:@(2)] isEqual:@"Base (2)"]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleNumbered duplicateCount:@(1)] isEqual:@"Base 1"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleNumbered duplicateCount:@(2)] isEqual:@"Base 2"]);
+}
+
 @end

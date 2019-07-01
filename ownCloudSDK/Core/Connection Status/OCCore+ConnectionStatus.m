@@ -22,6 +22,7 @@
 #import "OCCore+SyncEngine.h"
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCMacros.h"
+#import "NSError+OCError.h"
 
 @implementation OCCore (ConnectionStatus)
 
@@ -319,10 +320,29 @@
 {
 	if (error != nil)
 	{
-		if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCannotConnectToHost))
+		// Connection dropped errors
+		if ([error.domain isEqual:NSURLErrorDomain] && (
+			(error.code == NSURLErrorDNSLookupFailed) ||
+			(error.code == NSURLErrorCannotFindHost) ||
+			(error.code == NSURLErrorCannotConnectToHost) ||
+			(error.code == NSURLErrorNotConnectedToInternet) ||
+			(error.code == NSURLErrorNetworkConnectionLost) ||
+			(error.code == NSURLErrorDataNotAllowed) ||
+			(error.code == NSURLErrorInternationalRoamingOff) ||
+			(error.code == NSURLErrorCallIsActive)
+		    ))
 		{
 			[_serverStatusSignalProvider reportConnectionRefusedError];
 
+			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+			{
+				return (OCHTTPRequestInstructionReschedule);
+			}
+		}
+
+		// Request dropped error
+		if ([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession])
+		{
 			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{
 				return (OCHTTPRequestInstructionReschedule);

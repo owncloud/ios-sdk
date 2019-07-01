@@ -35,7 +35,7 @@
 		{
 			placeholderItem.parentFileID = parentItem.fileID;
 			placeholderItem.parentLocalID = parentItem.localID;
-			placeholderItem.path = [parentItem.path stringByAppendingPathComponent:folderName];
+			placeholderItem.path = [parentItem.path pathForSubdirectoryWithName:folderName];
 			placeholderItem.lastModified = [NSDate date];
 
 			self.placeholderItem = placeholderItem;

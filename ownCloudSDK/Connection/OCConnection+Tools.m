@@ -43,6 +43,10 @@
 				{
 					endpointPath = [endpointPath stringByAppendingPathComponent:bookmarkUsername];
 				}
+				else
+				{
+					endpointPath = nil;
+				}
 			}
 		}
 		else

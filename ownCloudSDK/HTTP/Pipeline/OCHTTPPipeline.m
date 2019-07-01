@@ -246,6 +246,8 @@
 							task.request.progress.progress.totalUnitCount += 200;
 							[task.request.progress.progress addChild:[OCProxyProgress cloneProgress:urlSessionTask.progress] withPendingUnitCount:200];
 						}
+
+						OCLogDebug(@"Recovered urlSession=%@: task=%@", urlSession, task);
 					}
 				}
 				else
@@ -263,6 +265,8 @@
 					[droppedTasks addObject:pipelineTask];
 				}
 			}];
+
+			OCLogDebug(@"Recovered urlSession=%@: droppedTasks=%@", urlSession, droppedTasks);
 
 			// Drop identified tasks
 			for (OCHTTPPipelineTask *task in droppedTasks)

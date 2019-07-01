@@ -187,7 +187,20 @@
 
 - (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
 {
+	NSError *error = nil;
+	NSDictionary<NSString *, NSString *> *authHeaders;
+
+	if ((authHeaders = [self authorizationHeadersForConnection:connection error:&error]) != nil)
+	{
+		[request addHeaderFields:authHeaders];
+	}
+
 	return (request);
+}
+
+- (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
+{
+	return (nil);
 }
 
 #pragma mark - Generate bookmark authentication data

@@ -28,7 +28,7 @@
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
 #import "OCSyncRecord.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "OCCoreManager.h"
@@ -173,6 +173,8 @@
 				}];
 			}
 		};
+
+		_fetchUpdatesCompletionHandlers = [NSMutableArray new];
 
 		_progressByLocalID = [NSMutableDictionary new];
 
@@ -368,6 +370,24 @@
 
 				// Wait for running operations to finish
 				self->_runningActivitiesCompleteBlock = ^{
+					// Shut down fetch updates
+					{
+						OCCore *strongSelf = weakSelf;
+
+						@synchronized(strongSelf->_fetchUpdatesCompletionHandlers)
+						{
+							NSMutableArray <OCCoreItemListFetchUpdatesCompletionHandler> *fetchUpdatesCompletionHandlers = strongSelf->_fetchUpdatesCompletionHandlers;
+							strongSelf->_fetchUpdatesCompletionHandlers = [NSMutableArray new];
+
+							for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in fetchUpdatesCompletionHandlers)
+							{
+								completionHandler(OCError(OCErrorCancelled), NO);
+							}
+
+							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
+						}
+					}
+
 					// Shut down Sync Engine
 					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
@@ -1164,9 +1184,9 @@
 {
 	NSString *path = [parentPath stringByAppendingPathComponent:name];
 
-	if (isDirectory && ![path hasSuffix:@"/"])
+	if (isDirectory)
 	{
-		path = [path stringByAppendingString:@"/"];
+		path = [path normalizedDirectoryPath];
 	}
 
 	return ([self cachedItemAtPath:path error:outError]);
@@ -1599,6 +1619,7 @@ OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
+OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

@@ -19,6 +19,7 @@
 #import "OCShare+OCXMLObjectCreation.h"
 #import "OCXMLParserNode.h"
 #import "NSDate+OCDateParser.h"
+#import "NSString+OCPath.h"
 
 @implementation OCShare (OCXMLObjectCreation)
 
@@ -109,10 +110,7 @@
 			if (share.itemType == OCItemTypeCollection)
 			{
 				// Ensure itemPath conforms to OCPath convention that directories end with a "/"
-				if (![share.itemPath hasSuffix:@"/"])
-				{
-					share.itemPath = [share.itemPath stringByAppendingString:@"/"];
-				}
+				share.itemPath = [share.itemPath normalizedDirectoryPath];
 			}
 
 			// Item owner

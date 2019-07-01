@@ -66,10 +66,7 @@
 		if (sourceItem.type == OCItemTypeCollection)
 		{
 			// Ensure directory paths end with a slash
-			if (![targetPath hasSuffix:@"/"])
-			{
-				targetPath = [targetPath stringByAppendingString:@"/"];
-			}
+			targetPath = [targetPath normalizedDirectoryPath];
 		}
 
 		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
