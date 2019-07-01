@@ -68,21 +68,41 @@
 #pragma mark - Version
 - (NSString *)serverVersion
 {
+	if (self.capabilities.version != nil)
+	{
+		return (self.capabilities.version);
+	}
+
 	return (_serverStatus[@"version"]);
 }
 
 - (NSString *)serverVersionString
 {
+	if (self.capabilities.versionString != nil)
+	{
+		return (self.capabilities.versionString);
+	}
+
 	return (_serverStatus[@"versionstring"]);
 }
 
 - (NSString *)serverProductName
 {
+	if (self.capabilities.productName != nil)
+	{
+		return (self.capabilities.productName);
+	}
+
 	return (_serverStatus[@"productname"]);
 }
 
 - (NSString *)serverEdition
 {
+	if (self.capabilities.edition != nil)
+	{
+		return (self.capabilities.edition);
+	}
+
 	return (_serverStatus[@"edition"]);
 }
 
@@ -115,6 +135,11 @@
 
 - (NSString *)serverLongProductVersionString
 {
+	if (self.capabilities.longProductVersionString != nil)
+	{
+		return (self.capabilities.longProductVersionString);
+	}
+
 	if (_serverStatus == nil) { return (nil); }
 	return ([OCConnection serverLongProductVersionStringFromServerStatus:_serverStatus]);
 }
@@ -131,7 +156,7 @@
 }
 
 #pragma mark - Checks
-- (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion
+- (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion
 {
 	NSString *minimumVersion;
 
@@ -140,6 +165,12 @@
 		return ([NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
 			NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"Server software %@ not supported.", @""), longVersion]
 		}]);
+	}
+
+	if ((([serverVersion isEqual:@""]) || (serverVersion == nil)) && allowHiddenVersion)
+	{
+		// Server may be using "version.hidden" option
+		return (nil);
 	}
 
 	if ((minimumVersion = [self classSettingForOCClassSettingsKey:OCConnectionMinimumVersionRequired]) != nil)

@@ -45,6 +45,8 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSString *productName;
 @property(readonly,nullable,nonatomic) NSString *hostName;
 
+@property(readonly,nullable,nonatomic) NSString *longProductVersionString;
+
 #pragma mark - Checksums
 @property(readonly,nullable,nonatomic) NSArray<OCChecksumAlgorithmIdentifier> *supportedChecksumTypes;
 @property(readonly,nullable,nonatomic) OCChecksumAlgorithmIdentifier preferredUploadChecksumType;
