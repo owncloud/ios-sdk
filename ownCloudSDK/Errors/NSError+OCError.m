@@ -256,6 +256,10 @@
 				case OCErrorInsufficientStorage:
 					unlocalizedString = @"Insufficient storage.";
 				break;
+
+				case OCErrorNotAvailableOffline:
+					unlocalizedString = @"Not available offline.";
+				break;
 			}
 		}
 	}

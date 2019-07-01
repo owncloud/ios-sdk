@@ -85,21 +85,23 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
-- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
+- (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
 {
 	NSDictionary *authSecret;
 
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSString *authorizationHeaderValue;
-		
+
 		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
 		{
-			[request setValue:authorizationHeaderValue forHeaderField:@"Authorization"];
+			return (@{
+				@"Authorization" : authorizationHeaderValue
+			});
 		}
 	}
 
-	return(request);
+	return (nil);
 }
 
 #pragma mark - Authentication Method Detection

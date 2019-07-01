@@ -154,6 +154,8 @@
 		DC381FC822C80BA400284699 /* OCCore+NameConflicts.m in Sources */ = {isa = PBXBuildFile; fileRef = DC381FC622C80BA400284699 /* OCCore+NameConflicts.m */; };
 		DC381FCB22C8146F00284699 /* NSString+NameConflicts.h in Headers */ = {isa = PBXBuildFile; fileRef = DC381FC922C8146F00284699 /* NSString+NameConflicts.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC381FCC22C8146F00284699 /* NSString+NameConflicts.m in Sources */ = {isa = PBXBuildFile; fileRef = DC381FCA22C8146F00284699 /* NSString+NameConflicts.m */; };
+		DC381FD522C9E77500284699 /* OCCore+DirectURL.h in Headers */ = {isa = PBXBuildFile; fileRef = DC381FD322C9E77500284699 /* OCCore+DirectURL.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */ = {isa = PBXBuildFile; fileRef = DC381FD422C9E77500284699 /* OCCore+DirectURL.m */; };
 		DC38F88F20C8211100A30DE1 /* CoreSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */; };
 		DC39DC462041A03300189B9A /* OCAuthenticationMethodBasicAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */; };
@@ -742,6 +744,8 @@
 		DC381FC622C80BA400284699 /* OCCore+NameConflicts.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+NameConflicts.m"; sourceTree = "<group>"; };
 		DC381FC922C8146F00284699 /* NSString+NameConflicts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+NameConflicts.h"; sourceTree = "<group>"; };
 		DC381FCA22C8146F00284699 /* NSString+NameConflicts.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+NameConflicts.m"; sourceTree = "<group>"; };
+		DC381FD322C9E77500284699 /* OCCore+DirectURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+DirectURL.h"; sourceTree = "<group>"; };
+		DC381FD422C9E77500284699 /* OCCore+DirectURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+DirectURL.m"; sourceTree = "<group>"; };
 		DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreSyncTests.m; sourceTree = "<group>"; };
 		DC39DC442041A03300189B9A /* OCAuthenticationMethodBasicAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationMethodBasicAuth.h; sourceTree = "<group>"; };
 		DC39DC452041A03300189B9A /* OCAuthenticationMethodBasicAuth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationMethodBasicAuth.m; sourceTree = "<group>"; };
@@ -1459,6 +1463,15 @@
 			path = NameConflicts;
 			sourceTree = "<group>";
 		};
+		DC381FD222C9E75400284699 /* DirectURL */ = {
+			isa = PBXGroup;
+			children = (
+				DC381FD422C9E77500284699 /* OCCore+DirectURL.m */,
+				DC381FD322C9E77500284699 /* OCCore+DirectURL.h */,
+			);
+			path = DirectURL;
+			sourceTree = "<group>";
+		};
 		DC3AE597207378B600FE8896 /* Schema */ = {
 			isa = PBXGroup;
 			children = (
@@ -1778,6 +1791,7 @@
 				DCB0A46121B9227400FAC4E9 /* Connection Status */,
 				DCADC04A2072D0FB00DB8E83 /* ItemList */,
 				DC381FC422C80B7C00284699 /* NameConflicts */,
+				DC381FD222C9E75400284699 /* DirectURL */,
 				DC2D646221C3D60900EB26FD /* Thumbnails */,
 				DC19BFE221CB9FAC007C20D1 /* FileProvider */,
 				DC2FED5D228D5577004FDEC6 /* Favorites */,
@@ -2463,6 +2477,7 @@
 				DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */,
 				DCEEB2DC20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h in Headers */,
 				DC75D30B214BF1BA00B6FB62 /* NSString+OCFormatting.h in Headers */,
+				DC381FD522C9E77500284699 /* OCCore+DirectURL.h in Headers */,
 				DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */,
 				DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */,
 				DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */,
@@ -3006,6 +3021,7 @@
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
+				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,

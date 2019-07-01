@@ -1366,4 +1366,106 @@
 	}];
 }
 
+- (void)testDirectURL
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block XCTestExpectation *queryCompletionExpectation = [self expectationWithDescription:@"Query completed"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if ((query.state == OCQueryStateIdle) && (queryCompletionExpectation != nil))
+			{
+				OCItem *fileItem = nil;
+				OCItem *folderItem = nil;
+
+				[queryCompletionExpectation fulfill];
+				queryCompletionExpectation = nil;
+
+				for (OCItem *item in query.queryResults)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						fileItem = item;
+					}
+					else
+					{
+						folderItem = item;
+					}
+				}
+
+				if (folderItem != nil)
+				{
+					[core provideDirectURLForItem:folderItem allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+						OCLogDebug(@"provideDirectURL (D): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+						XCTAssert([error isOCErrorWithCode:OCErrorFeatureNotSupportedForItem]);
+						XCTAssert(url == nil);
+						XCTAssert(httpAuthHeaders == nil);
+					}];
+				}
+
+				if (fileItem != nil)
+				{
+					[core provideDirectURLForItem:fileItem allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+						OCLogDebug(@"provideDirectURL (F1): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+						XCTAssert(error == nil);
+						XCTAssert(url != nil);
+						XCTAssert(!url.isFileURL);
+						XCTAssert(httpAuthHeaders != nil);
+						XCTAssert(httpAuthHeaders.count > 0);
+					}];
+
+					[core downloadItem:fileItem options:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, OCFile * _Nullable file) {
+						[core provideDirectURLForItem:item allowFileURL:NO completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+							OCLogDebug(@"provideDirectURL (F2): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+							XCTAssert(error == nil);
+							XCTAssert(url != nil);
+							XCTAssert(!url.isFileURL);
+							XCTAssert(httpAuthHeaders != nil);
+							XCTAssert(httpAuthHeaders.count > 0);
+						}];
+
+						[core provideDirectURLForItem:item allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+							OCLogDebug(@"provideDirectURL (F3): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+							XCTAssert(error == nil);
+							XCTAssert(url != nil);
+							XCTAssert(url.isFileURL);
+							XCTAssert(httpAuthHeaders == nil);
+						}];
+
+						// Stop when returned
+						[core stopWithCompletionHandler:^(id sender, NSError *error) {
+							[coreStoppedExpectation fulfill];
+						}];
+					}];
+				}
+			}
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
 @end
