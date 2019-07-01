@@ -151,7 +151,7 @@
 		}
 	}
 
-	if ((response != nil) && !response.status.isSuccess && (error == nil))
+	if ((response != nil) && !response.status.isSuccess && (error == nil) && (statusErrorMapper != nil))
 	{
 		error = statusErrorMapper([[OCSharingResponseStatus alloc] initWithHTTPStatus:response.status]);
 	}
