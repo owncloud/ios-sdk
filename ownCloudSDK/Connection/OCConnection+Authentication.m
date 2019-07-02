@@ -287,7 +287,7 @@
 
 - (OCAuthenticationMethod *)authenticationMethod
 {
-	if ((_authenticationMethod == nil) || ([[[_authenticationMethod class] identifier] isEqual:_bookmark.authenticationMethodIdentifier]))
+	if ((_authenticationMethod == nil) || (![[[_authenticationMethod class] identifier] isEqual:_bookmark.authenticationMethodIdentifier]))
 	{
 		self.authenticationMethod = [self _authenticationMethodWithIdentifier:_bookmark.authenticationMethodIdentifier];
 	}

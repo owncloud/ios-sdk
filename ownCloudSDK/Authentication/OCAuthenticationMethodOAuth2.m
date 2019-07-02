@@ -313,8 +313,6 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Handle responses before they are delivered to the request senders
 - (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
 {
-	NSError *error = nil;
-
 	if ((error = [super handleRequest:request response:response forConnection:connection withError:error]) != nil)
 	{
 		if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
@@ -370,10 +368,19 @@ OCAuthenticationMethodAutoRegister
 						[self flushCachedAuthenticationSecret];
 					}
 
-					if (_receivedUnauthorizedResponse && (error!=nil))
+					if (self->_receivedUnauthorizedResponse)
 					{
-						// Token refresh following UNAUTHORIZED response failed
-						_tokenRefreshFollowingUnauthorizedResponseFailed = YES;
+						if (error != nil)
+						{
+							// Token refresh following UNAUTHORIZED response failed
+							self->_tokenRefreshFollowingUnauthorizedResponseFailed = YES;
+						}
+						else
+						{
+							// Token refresh fixed the issue
+							self->_receivedUnauthorizedResponse = NO;
+							self->_tokenRefreshFollowingUnauthorizedResponseFailed = NO;
+						}
 					}
 				
 					availabilityHandler(error, (error==nil));

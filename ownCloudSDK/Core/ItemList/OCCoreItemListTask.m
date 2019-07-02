@@ -139,8 +139,6 @@
 	// Request item list from server
 	if (_core != nil)
 	{
-		[_core beginActivity:@"update retrieved set"];
-
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
 		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
@@ -149,6 +147,15 @@
 					NSProgress *retrievalProgress;
 
 					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:((self.groupID != nil) ? @{ OCConnectionOptionGroupIDKey : self.groupID } : nil) completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+						if (self.core.state != OCCoreStateRunning)
+						{
+							// Skip processing thre response if the core is not running
+							self.retrievedSet.state = OCCoreItemListStateNew;
+							return;
+						}
+
+						[self->_core beginActivity:@"update retrieved set"];
+
 						[self->_core queueBlock:^{
 							// Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];

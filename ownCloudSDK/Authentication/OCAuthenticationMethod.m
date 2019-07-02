@@ -82,12 +82,12 @@
 
 + (OCAuthenticationMethodIdentifier)identifier
 {
-	return (nil);
+	return ((id _Nonnull) nil); // Needs to be overridden by all subclasses. If one does not, let it crash.
 }
 
 + (NSString *)name
 {
-	return(nil);
+	return((id _Nonnull) nil); // Needs to be overridden by all subclasses. If one does not, let it crash.
 }
 
 - (NSString *)name
