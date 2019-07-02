@@ -606,6 +606,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
 
+	if ([error isOCErrorWithCode:OCErrorAuthorizationRetry])
+	{
+		// Reschedule requested by auth method
+		instruction = OCHTTPRequestInstructionReschedule;
+	}
+
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
 	{
 		instruction = [_delegate connection:self instructionForFinishedRequest:task.request withResponse:task.response error:error defaultsTo:instruction];
