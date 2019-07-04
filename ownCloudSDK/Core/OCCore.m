@@ -174,6 +174,8 @@
 			}
 		};
 
+		_fetchUpdatesCompletionHandlers = [NSMutableArray new];
+
 		_progressByLocalID = [NSMutableDictionary new];
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
@@ -368,6 +370,24 @@
 
 				// Wait for running operations to finish
 				self->_runningActivitiesCompleteBlock = ^{
+					// Shut down fetch updates
+					{
+						OCCore *strongSelf = weakSelf;
+
+						@synchronized(strongSelf->_fetchUpdatesCompletionHandlers)
+						{
+							NSMutableArray <OCCoreItemListFetchUpdatesCompletionHandler> *fetchUpdatesCompletionHandlers = strongSelf->_fetchUpdatesCompletionHandlers;
+							strongSelf->_fetchUpdatesCompletionHandlers = [NSMutableArray new];
+
+							for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in fetchUpdatesCompletionHandlers)
+							{
+								completionHandler(OCError(OCErrorCancelled), NO);
+							}
+
+							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
+						}
+					}
+
 					// Shut down Sync Engine
 					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
@@ -1599,6 +1619,7 @@ OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
+OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

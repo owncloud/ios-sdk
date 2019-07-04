@@ -651,8 +651,14 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				// Fully merged => use for updating existing queries that have already gone through their complete, initial update
 				NSMutableArray <OCPath> *refreshPaths = nil;
+				BOOL fetchUpdatesRunning = NO;
 
-				if (self.automaticItemListUpdatesEnabled)
+				@synchronized(self->_fetchUpdatesCompletionHandlers)
+				{
+					fetchUpdatesRunning = (self->_fetchUpdatesCompletionHandlers.count > 0);
+				}
+
+				if (self.automaticItemListUpdatesEnabled || fetchUpdatesRunning)
 				{
 					refreshPaths = [NSMutableArray new];
 
@@ -946,15 +952,65 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 - (void)startCheckingForUpdates
 {
 	[self queueBlock:^{
-		[self _checkForUpdatesNotBefore:nil];
+		[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:nil];
 	}];
 }
 
-- (void)_checkForUpdatesNotBefore:(NSDate *)notBefore
+- (void)fetchUpdatesWithCompletionHandler:(OCCoreItemListFetchUpdatesCompletionHandler)completionHandler
+{
+	completionHandler = [completionHandler copy];
+
+	[self queueConnectivityBlock:^{	// Make sure _attemptConnect has finished
+		if (self.state != OCCoreStateRunning)
+		{
+			// Core not running even after waiting on connectivity queue / any pending _attemptConnect has finished
+			if (completionHandler != nil)
+			{
+				completionHandler(OCError(OCErrorInternal), nil);
+			}
+			return;
+		}
+
+		[self queueBlock:^{
+			@synchronized(self->_scheduledDirectoryUpdateJobIDs)
+			{
+				if (self->_scheduledDirectoryUpdateJobActivity == nil)
+				{
+					// If none is ongoing, start a new check for updates
+					[self _checkForUpdatesNotBefore:nil inBackground:OCBackgroundManager.sharedBackgroundManager.isBackgrounded completionHandler:completionHandler];
+				}
+				else
+				{
+					if (completionHandler != nil)
+					{
+						@synchronized(self->_fetchUpdatesCompletionHandlers)
+						{
+							[self->_fetchUpdatesCompletionHandlers addObject:completionHandler];
+						}
+					}
+				}
+			}
+		}];
+	}];
+}
+
+- (void)_checkForUpdatesNotBefore:(NSDate *)notBefore inBackground:(BOOL)inBackground completionHandler:(OCCoreItemListFetchUpdatesCompletionHandler)completionHandler
 {
 	if (self.state != OCCoreStateRunning)
 	{
+		if (completionHandler != nil)
+		{
+			completionHandler(OCError(OCErrorInternal), NO);
+		}
 		return;
+	}
+
+	if (completionHandler != nil)
+	{
+		@synchronized(self->_fetchUpdatesCompletionHandlers)
+		{
+			[self->_fetchUpdatesCompletionHandlers addObject:completionHandler];
+		}
 	}
 
 	__weak OCCore *weakSelf = self;
@@ -986,7 +1042,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				scheduleUpdateCheck();
 			}
 		}
-	} inBackground:NO];
+	} inBackground:inBackground];
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender
@@ -1040,16 +1096,41 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{
+				BOOL doSchedule = NO;
+
 				if ((cacheItem = cacheItems.firstObject) != nil)
 				{
 					if (![cacheItem.itemVersionIdentifier isEqual:remoteItem.itemVersionIdentifier])
 					{
 						// Folder's etag or fileID differ -> fetch full update for this folder
-						[self scheduleUpdateScanForPath:event.path waitForNextQueueCycle:NO];
+						doSchedule = YES;
 					}
-					else
+				}
+				else
+				{
+					// Root item not yet known in database
+					if (event.path.isRootPath)
 					{
-						// No changes. We're done.
+						doSchedule = YES;
+					}
+				}
+
+				if (doSchedule)
+				{
+					[self scheduleUpdateScanForPath:event.path waitForNextQueueCycle:NO];
+				}
+				else
+				{
+					// No changes. We're done.
+					if (event.path.isRootPath)
+					{
+						@synchronized(_scheduledDirectoryUpdateJobIDs)
+						{
+							if (_scheduledDirectoryUpdateJobActivity == nil)
+							{
+								[self _finishedUpdateScanWithError:nil foundChanges:NO];
+							}
+						}
 					}
 				}
 			}
@@ -1102,10 +1183,27 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				{
 					_lastScheduledItemListUpdateDate = [NSDate date];
 
-					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval]];
+					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval] inBackground:NO completionHandler:nil];
 				}
 			}
 		}
+	}
+}
+
+#pragma mark - Update Scan finish
+- (void)_finishedUpdateScanWithError:(nullable NSError *)error foundChanges:(BOOL)foundChanges
+{
+	NSArray<OCCoreItemListFetchUpdatesCompletionHandler> *completionHandlers = nil;
+
+	@synchronized(self->_fetchUpdatesCompletionHandlers)
+	{
+		completionHandlers = [_fetchUpdatesCompletionHandlers copy];
+		[_fetchUpdatesCompletionHandlers removeAllObjects];
+	}
+
+	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)
+	{
+		completionHandler(error, foundChanges);
 	}
 }
 
@@ -1239,6 +1337,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:_scheduledDirectoryUpdateJobActivity.identifier]];
 			_scheduledDirectoryUpdateJobActivity = nil;
 			_totalScheduledDirectoryUpdateJobs = 0;
+
+			[self _finishedUpdateScanWithError:nil foundChanges:YES];
 		}
 	}
 }

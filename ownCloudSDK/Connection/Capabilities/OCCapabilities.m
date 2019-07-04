@@ -18,6 +18,7 @@
 
 #import "OCCapabilities.h"
 #import "OCMacros.h"
+#import "OCConnection.h"
 
 @interface OCCapabilities()
 {
@@ -48,6 +49,7 @@
 @dynamic hostName;
 @dynamic supportedChecksumTypes;
 @dynamic preferredUploadChecksumType;
+@dynamic longProductVersionString;
 
 #pragma mark - DAV
 @dynamic davChunkingVersion;
@@ -189,6 +191,18 @@
 - (NSString *)hostName
 {
 	return (OCTypedCast(_capabilities[@"core"][@"status"][@"hostname"], NSString));
+}
+
+- (NSString *)longProductVersionString
+{
+	NSDictionary *statusDict;
+
+	if ((statusDict = OCTypedCast(_capabilities[@"core"][@"status"], NSDictionary)) != nil)
+	{
+		return ([OCConnection serverLongProductVersionStringFromServerStatus:_capabilities[@"core"][@"status"]]);
+	}
+
+	return (nil);
 }
 
 #pragma mark - Checksums

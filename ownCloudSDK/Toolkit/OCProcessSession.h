@@ -30,7 +30,7 @@ typedef NS_ENUM(NSInteger, OCProcessType)
 
 @property(strong) NSUUID *uuid; //!< Process session UUID. This is used to distinguish between two runs of the same app.
 @property(strong) NSString *bundleIdentifier; //!< Bundle identifier of the main bundle of this session. This is used to distinguish between processes.
-@property(strong) NSDate *lastActive; //!<
+@property(strong) NSDate *lastActive; //!< Time at which the session's process was launched and/or last updated its session data (f.ex. following a ping)
 @property(strong) NSNumber *bootTimestamp; //!< Time of boot of the system this session was created on
 @property(assign) OCProcessType processType; //!< Type of process (extension, app, ..)
 

@@ -86,7 +86,11 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorShareUnknownType,   //!< Unknown share type.
 	OCErrorSharePublicUploadDisabled, //!< Public upload was disabled by the administrator.
 
-	OCErrorInsufficientStorage //!< Insufficient storage
+	OCErrorInsufficientStorage, //!< Insufficient storage
+
+	OCErrorNotAvailableOffline, //!< API not available offline.
+
+	OCErrorAuthorizationRetry //!< Authorization failed. Retry the request.
 };
 
 @class OCIssue;

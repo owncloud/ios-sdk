@@ -340,8 +340,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 - (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
 
 #pragma mark - Checks
-- (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion;
-
+- (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
 @end
 
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;

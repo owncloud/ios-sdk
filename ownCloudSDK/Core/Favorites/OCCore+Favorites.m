@@ -92,9 +92,11 @@
 						[self.database retrieveCacheItemForFileID:rawItem.fileID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 							localItem = item;
 
-							// Update status
-							localItem.isFavorite = @(YES);
-							[updateItems addObject:localItem];
+							if (localItem != nil) {
+								// Update status
+								localItem.isFavorite = @(YES);
+								[updateItems addObject:localItem];
+							}
 						}];
 					}
 

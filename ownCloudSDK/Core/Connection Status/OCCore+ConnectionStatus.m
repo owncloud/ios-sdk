@@ -348,6 +348,15 @@
 				return (OCHTTPRequestInstructionReschedule);
 			}
 		}
+
+		// Authorization failed
+		if ([error isOCErrorWithCode:OCErrorAuthorizationFailed])
+		{
+			if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
+			{
+				[_delegate core:self handleError:error issue:nil];
+			}
+		}
 	}
 
 	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
@@ -359,6 +368,7 @@
 			return (OCHTTPRequestInstructionReschedule);
 		}
 	}
+
 
 	return (defaultInstruction);
 }

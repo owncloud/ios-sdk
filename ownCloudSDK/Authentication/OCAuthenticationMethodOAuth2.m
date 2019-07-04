@@ -42,7 +42,9 @@ static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 
 @interface OCAuthenticationMethodOAuth2 ()
 {
-	id authenticationSession;
+	id _authenticationSession;
+	BOOL _receivedUnauthorizedResponse;
+	BOOL _tokenRefreshFollowingUnauthorizedResponseFailed;
 }
 @end
 
@@ -85,21 +87,23 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
-- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
+- (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
 {
 	NSDictionary *authSecret;
 
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSString *authorizationHeaderValue;
-		
+
 		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
 		{
-			[request setValue:authorizationHeaderValue forHeaderField:@"Authorization"];
+			return (@{
+				@"Authorization" : authorizationHeaderValue
+			});
 		}
 	}
 
-	return(request);
+	return (nil);
 }
 
 #pragma mark - Authentication Method Detection
@@ -213,7 +217,7 @@ OCAuthenticationMethodAutoRegister
 				}
 
 				// Release Authentication Session
-				self->authenticationSession = nil;
+				self->_authenticationSession = nil;
 			};
 
 			// Create and start authentication session on main thread
@@ -224,9 +228,9 @@ OCAuthenticationMethodAutoRegister
 
 			authSessionDidStart = [self.class startAuthenticationSession:&authSession forURL:authorizationRequestURL scheme:[[NSURL URLWithString:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]] scheme] completionHandler:oauth2CompletionHandler];
 
-			self->authenticationSession = authSession;
+			self->_authenticationSession = authSession;
 
-			OCLogDebug(@"Started (%d) auth session %@", authSessionDidStart, self->authenticationSession);
+			OCLogDebug(@"Started (%d) auth session %@", authSessionDidStart, self->_authenticationSession);
 		});
 	}
 	else
@@ -288,7 +292,7 @@ OCAuthenticationMethodAutoRegister
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
 
 		// Get a new token up to 2 minutes before the old one expires
-		if (timeLeftUntilExpiration < 120)
+		if ((timeLeftUntilExpiration < 120) || _receivedUnauthorizedResponse)
 		{
 			OCLogDebug(@"OAuth2 token expired %@ - refreshing token for connection..", authSecret[OA2ExpirationDate])
 			[self _refreshTokenForConnection:connection availabilityHandler:availabilityHandler];
@@ -304,6 +308,32 @@ OCAuthenticationMethodAutoRegister
 	availabilityHandler(OCError(OCErrorAuthorizationNoMethodData), NO);
 
 	return (NO);
+}
+
+#pragma mark - Handle responses before they are delivered to the request senders
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
+{
+	if ((error = [super handleRequest:request response:response forConnection:connection withError:error]) != nil)
+	{
+		if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
+		{
+			// Token invalid. Attempt token refresh. If that fails, too, the token has become invalid and an error should be issued to the user.
+			if (!_receivedUnauthorizedResponse)
+			{
+				// Unexpected 401 response - request a retry that'll also invoke canSendAuthenticatedRequestsForConnection:withAvailabilityHandler:
+				// which will attempt a token refresh
+				_receivedUnauthorizedResponse = YES;
+				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d", _tokenRefreshFollowingUnauthorizedResponseFailed);
+			}
+
+			if (!_tokenRefreshFollowingUnauthorizedResponseFailed)
+			{
+				error = OCError(OCErrorAuthorizationRetry);
+			}
+		}
+	}
+
+	return (error);
 }
 
 #pragma mark - Token management
@@ -336,6 +366,21 @@ OCAuthenticationMethodAutoRegister
 						connection.bookmark.authenticationData = authenticationData;
 
 						[self flushCachedAuthenticationSecret];
+					}
+
+					if (self->_receivedUnauthorizedResponse)
+					{
+						if (error != nil)
+						{
+							// Token refresh following UNAUTHORIZED response failed
+							self->_tokenRefreshFollowingUnauthorizedResponseFailed = YES;
+						}
+						else
+						{
+							// Token refresh fixed the issue
+							self->_receivedUnauthorizedResponse = NO;
+							self->_tokenRefreshFollowingUnauthorizedResponseFailed = NO;
+						}
 					}
 				
 					availabilityHandler(error, (error==nil));
