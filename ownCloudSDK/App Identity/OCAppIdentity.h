@@ -58,6 +58,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nonatomic,nullable) NSString *appName;
 
+@property(strong,nonatomic,readonly,nullable) NSString *sdkCommit;
+@property(strong,nonatomic,readonly,nullable) NSString *sdkVersionString;
+
 #pragma mark - App Paths
 @property(strong,nonatomic,nullable) NSURL *appGroupContainerURL;
 @property(strong,nonatomic,nullable) NSURL *appGroupLogsContainerURL;

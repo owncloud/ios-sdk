@@ -45,6 +45,14 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 - (NSString *)privacyMaskedDescription;
 @end
 
+@protocol OCLogIntroFormat <NSObject>
+- (NSString *)logIntroFormat; //!< Format of line to log at the beginning of logs. "{{stdIntro}}" gets replaced with the standard intro line. Omitting that tag will replace the standard intro line entirely.
+
+@optional
+- (nullable NSString *)logHostCommit; //!< Commit of the host process
+
+@end
+
 @interface OCLogger : NSObject <OCClassSettingsSupport>
 {
 	BOOL _maskPrivateData;
@@ -99,6 +107,9 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 #pragma mark - Toggles
 - (void)addToggle:(OCLogToggle *)logToggle; //!< Adds a toggle
 - (BOOL)isToggleEnabled:(OCLogComponentIdentifier)toggleIdentifier; //!< Returns YES if the toggle is enabled, NO otherwise
+
+#pragma mark - Log intro
+- (NSString *)logIntro; //!< Introductory lines to start logging (and new log files) with. Allows for app-side injection of additions via OCLogger OCLogAdditionalIntro conformance.
 
 @end
 

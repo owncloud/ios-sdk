@@ -2645,6 +2645,7 @@
 				DCC8F9A7202852A200EB6701 /* Frameworks */,
 				DCC8F9A8202852A200EB6701 /* Headers */,
 				DCC8F9A9202852A200EB6701 /* Resources */,
+				DC102FAD22D3E0F300DEBC38 /* Update LastGitCommit key in Info.plist */,
 			);
 			buildRules = (
 			);
@@ -2835,6 +2836,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		DC102FAD22D3E0F300DEBC38 /* Update LastGitCommit key in Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}",
+			);
+			name = "Update LastGitCommit key in Info.plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "LASTGITCOMMIT=$(git rev-parse --short HEAD)\ndefaults write \"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH%.*}\" \"LastGitCommit\" \"${LASTGITCOMMIT}\"\necho defaults write \"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH%.*}\" \"LastGitCommit\" \"${LASTGITCOMMIT}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		DC30947F2057358800189B9A /* Sources */ = {

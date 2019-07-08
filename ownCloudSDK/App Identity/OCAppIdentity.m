@@ -109,6 +109,35 @@
 	return (_appName);
 }
 
+- (NSString *)sdkCommit
+{
+	NSBundle *sdkBundle;
+	NSString *commit = nil;
+
+	if ((sdkBundle = [NSBundle bundleForClass:self.class]) != nil)
+	{
+		commit = [sdkBundle objectForInfoDictionaryKey:@"LastGitCommit"];
+	}
+
+	return ((commit != nil) ? commit : @"unknown");
+}
+
+- (NSString *)sdkVersionString
+{
+	NSBundle *sdkBundle;
+
+	if ((sdkBundle = [NSBundle bundleForClass:self.class]) != nil)
+	{
+		return ([NSString stringWithFormat:@"%@ (%@) #%@",
+				[sdkBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"], // Version
+				[sdkBundle objectForInfoDictionaryKey:(__bridge NSString *)kCFBundleVersionKey], // Build version
+				[self sdkCommit] // Last git commit
+			]);
+	}
+
+	return (nil);
+}
+
 - (OCKeychain *)keychain
 {
 	if (_keychain == nil)
