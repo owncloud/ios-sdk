@@ -311,6 +311,7 @@
 @end
 
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal = @"deleteLocal";
+OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocalCopy = @"deleteLocalCopy";
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote = @"deleteRemote";
 OCSyncActionIdentifier OCSyncActionIdentifierMove = @"move";
 OCSyncActionIdentifier OCSyncActionIdentifierCopy = @"copy";

@@ -30,6 +30,7 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCBackgroundManager.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCCore+ItemPolicies.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -459,6 +460,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 						retrievedItem.localRelativePath = cacheItem.localRelativePath;
 						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
+						retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
 
 						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
 						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
@@ -579,6 +581,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						newItem.locallyModified = knownItem.locallyModified; // Keep metadata on local copy
 						newItem.localRelativePath = knownItem.localRelativePath;
 						newItem.localCopyVersionIdentifier = knownItem.localCopyVersionIdentifier;
+						newItem.downloadTriggerIdentifier = knownItem.downloadTriggerIdentifier;
 
 						if (![knownItem.path isEqual:newItem.path])
 						{
@@ -1204,6 +1207,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)
 	{
 		completionHandler(error, foundChanges);
+	}
+
+	if (foundChanges || !_itemPoliciesAppliedInitially)
+	{
+		_itemPoliciesAppliedInitially = YES;
+
+		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompleted];
 	}
 }
 

@@ -307,6 +307,8 @@
 					item.localRelativePath = vaultItemLocalRelativePath;
 					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
 
+					item.downloadTriggerIdentifier = self.options[OCCoreOptionDownloadTriggerID];
+
 					downloadedFile.url = vaultItemURL;
 				}
 
@@ -418,6 +420,7 @@
 								latestItem.locallyModified = NO;
 								latestItem.localRelativePath = nil;
 								latestItem.localCopyVersionIdentifier = nil;
+								latestItem.downloadTriggerIdentifier = nil;
 
 								syncContext.updatedItems = @[ latestItem ];
 							}

@@ -33,6 +33,7 @@
 #import "OCQueryCondition+SQLBuilder.h"
 #import "OCAsyncSequentialQueue.h"
 #import "NSString+OCSQLTools.h"
+#import "OCItemPolicy.h"
 
 @interface OCDatabase ()
 {
@@ -231,6 +232,7 @@
 			@"removed"		: @(0),
 			@"locallyModified" 	: @(item.locallyModified),
 			@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
+			@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
 			@"path" 		: item.path,
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
@@ -282,6 +284,7 @@
 				@"removed"		: @(item.removed),
 				@"locallyModified" 	: @(item.locallyModified),
 				@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
+				@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
@@ -339,10 +342,16 @@
 		if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
 		{
 			NSNumber *removed;
+			NSString *downloadTrigger;
 
 			if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
 			{
 				item.removed = removed.boolValue;
+			}
+
+			if ((downloadTrigger = (NSString *)resultDict[@"downloadTrigger"]) != nil)
+			{
+				item.downloadTriggerIdentifier = downloadTrigger;
 			}
 
 			item.databaseID = resultDict[@"mdID"];
@@ -554,6 +563,9 @@
 		columnNameByPropertyName = @{
 			OCItemPropertyNameType : @"type",
 
+			OCItemPropertyNameLocalID : @"localID",
+			OCItemPropertyNameFileID : @"fileID",
+
 			OCItemPropertyNameName : @"name",
 			OCItemPropertyNamePath : @"path",
 
@@ -565,7 +577,11 @@
 			OCItemPropertyNameIsFavorite 		: @"favorite",
 			OCItemPropertyNameCloudStatus 		: @"cloudStatus",
 			OCItemPropertyNameHasLocalAttributes 	: @"hasLocalAttributes",
-			OCItemPropertyNameLastUsed 		: @"lastUsedDate"
+			OCItemPropertyNameLastUsed 		: @"lastUsedDate",
+
+			OCItemPropertyNameDownloadTrigger	: @"downloadTrigger",
+
+			OCItemPropertyNameRemoved		: @"removed"
 		};
 	});
 
@@ -596,6 +612,47 @@
 	NSString *sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData ORDER BY mdID ASC"];
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *returnError = nil;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *resultDict, BOOL *stop) {
+			OCItem *item;
+
+			if ((item = [self _itemFromResultDict:resultDict]) != nil)
+			{
+				iterator(nil, (NSNumber *)resultDict[@"syncAnchor"], item, stop);
+			}
+		} error:&returnError];
+
+		iterator(returnError, nil, nil, NULL);
+	}]];
+}
+
+- (void)iterateCacheItemsForQueryCondition:(nullable OCQueryCondition *)queryCondition excludeRemoved:(BOOL)excludeRemoved withIterator:(OCDatabaseItemIterator)iterator
+{
+	NSString *sqlQueryString = nil;
+	NSString *sqlWhereString = nil;
+	NSArray *parameters = nil;
+	NSError *error = nil;
+
+	if (queryCondition != nil)
+	{
+		if ((sqlWhereString = [queryCondition buildSQLQueryWithPropertyColumnNameMap:[[self class] columnNameByPropertyName] parameters:&parameters error:&error]) != nil)
+		{
+			sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingFormat:@", removed FROM metaData WHERE %@%@", (excludeRemoved ? @"removed=0 AND " : @""), sqlWhereString];
+		}
+	}
+	else
+	{
+		sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData ORDER BY mdID ASC"];
+	}
+
+	if (sqlQueryString == nil)
+	{
+		iterator(OCError(OCErrorInsufficientParameters), nil, nil, NULL);
+		return;
+	}
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *returnError = nil;
 
 		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *resultDict, BOOL *stop) {
@@ -1425,6 +1482,103 @@
 	}
 
 	return (error);
+}
+
+#pragma mark - Item policy interface
+- (void)addItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *itemPolicyData = [NSKeyedArchiver archivedDataWithRootObject:itemPolicy];
+
+	if (itemPolicyData != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameItemPolicies rowValues:@{
+			@"identifier"	: OCSQLiteNullProtect(itemPolicy.identifier),
+			@"path"		: OCSQLiteNullProtect(itemPolicy.path),
+			@"localID"	: OCSQLiteNullProtect(itemPolicy.localID),
+			@"kind"		: itemPolicy.kind,
+			@"policyData"	: itemPolicyData,
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			itemPolicy.databaseID = rowID;
+
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not serialize itemPolicy=%@ to itemPolicyData=%@", itemPolicy, itemPolicyData);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)updateItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	NSData *itemPolicyData = [NSKeyedArchiver archivedDataWithRootObject:itemPolicy];
+
+	if ((itemPolicy.databaseID != nil) && (itemPolicyData != nil))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:itemPolicy.databaseID inTable:OCDatabaseTableNameItemPolicies withRowValues:@{
+			@"identifier"	: OCSQLiteNullProtect(itemPolicy.identifier),
+			@"path"		: OCSQLiteNullProtect(itemPolicy.path),
+			@"localID"	: OCSQLiteNullProtect(itemPolicy.localID),
+			@"kind"		: itemPolicy.kind,
+			@"policyData"	: itemPolicyData,
+		} completionHandler:^(OCSQLiteDB *db, NSError *error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not update item policy: serialize itemPolicy=%@ to itemPolicyData=%@ failed - or itemPolicy.databaseID=%@ is nil", itemPolicy, itemPolicyData, itemPolicy.databaseID);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)removeItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (itemPolicy.databaseID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowWithID:itemPolicy.databaseID fromTable:OCDatabaseTableNameItemPolicies completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			completionHandler(self, error);
+		}]];
+	}
+	else
+	{
+		OCLogError(@"Could not remove item policy: itemPolicy.databaseID is nil");
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)retrieveItemPoliciesForKind:(OCItemPolicyKind)kind path:(OCPath)path localID:(OCLocalID)localID identifier:(OCItemPolicyIdentifier)identifier completionHandler:(OCDatabaseRetrieveItemPoliciesCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"policyID", @"policyData" ] fromTable:OCDatabaseTableNameItemPolicies where:@{
+		@"identifier"	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:identifier 	apply:(identifier!=nil)],
+		@"path"		: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:path		apply:(path!=nil)],
+		@"localID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:localID 	apply:(localID!=nil)],
+		@"kind"		: [OCSQLiteQueryCondition queryConditionWithOperator:@"=" value:kind		apply:(kind!=nil)]
+	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSMutableArray<OCItemPolicy *> *itemPolicies = [NSMutableArray new];
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			NSData *policyData;
+
+			if ((policyData = (id)rowDictionary[@"policyData"]) != nil)
+			{
+				OCItemPolicy *itemPolicy = nil;
+
+				if ((itemPolicy = [NSKeyedUnarchiver unarchiveObjectWithData:policyData]) != nil)
+				{
+					itemPolicy.databaseID = rowDictionary[@"policyID"];
+					[itemPolicies addObject:itemPolicy];
+				}
+			}
+		} error:&iterationError];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, itemPolicies);
+		}
+	}]];
 }
 
 #pragma mark - Integrity / Synchronization primitives

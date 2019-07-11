@@ -45,6 +45,7 @@ typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
 	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
 	OCItemSyncActivityUpdating	= (1<<4),	//!< This item is being updated, or scheduled to be updated (both files and folders)
+	OCItemSyncActivityDeletingLocal	= (1<<5)	//!< This item is being deleted locally, or scheduled to be deleted locally
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -109,6 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
 @property(assign) BOOL locallyModified; //!< YES if the file at .localRelativePath was created or modified locally. NO if the file at .localRelativePath was downloaded from the server and not modified since.
 @property(nullable,strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
+@property(nullable,strong) OCItemDownloadTriggerID downloadTriggerIdentifier;
 
 @property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
@@ -198,6 +200,9 @@ extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items t
 extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
 extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
 
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDUser; //!< the download was triggered by the user
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline; //!< the download was triggered by the available offline policy
+
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
 extern OCItemPropertyName OCItemPropertyNameLastModified;
 
@@ -213,5 +218,10 @@ extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryC
 extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocalID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameFileID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameDownloadTrigger; //!< Supported by OCQueryCondition SQLBuilder
+
+extern OCItemPropertyName OCItemPropertyNameRemoved; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)
 
 NS_ASSUME_NONNULL_END

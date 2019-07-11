@@ -48,6 +48,7 @@
 #import "OCSyncActionUpload.h"
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCDeallocAction.h"
+#import "OCCore+ItemPolicies.h"
 
 @interface OCCore ()
 {
@@ -180,6 +181,9 @@
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
+
+		_itemPolicies = [NSMutableArray new];
+		_itemPolicyProcessors = [NSMutableArray new];
 
 		_thumbnailCache = [OCCache new];
 
@@ -322,6 +326,9 @@
 				// Setup sync engine
 				[self setupSyncEngine];
 
+				// Setup item policies
+				[self setupItemPolicies];
+
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
@@ -387,6 +394,9 @@
 							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
 						}
 					}
+
+					// Tear down item policies
+					[weakSelf teardownItemPolicies];
 
 					// Shut down Sync Engine
 					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
@@ -892,15 +902,6 @@
 }
 
 #pragma mark - ## Commands
-- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
 
 #pragma mark - Progress tracking
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item
@@ -1345,6 +1346,7 @@
 					toItem.locallyModified = fromItem.locallyModified;
 					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 					toItem.localRelativePath = [_vault relativePathForItem:toItem];
+					toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
 				}
 			}
 			else if (adjustLocalMetadata)
@@ -1353,6 +1355,7 @@
 				toItem.locallyModified = fromItem.locallyModified;
 				toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 				toItem.localRelativePath = fromItem.localRelativePath;
+				toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
 			}
 		}
 	}
@@ -1620,6 +1623,8 @@ OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
+OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
+OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

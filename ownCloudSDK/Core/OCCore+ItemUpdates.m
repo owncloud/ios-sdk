@@ -25,6 +25,7 @@
 #import "OCCore+ItemList.h"
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemPolicies.h"
 #import "NSString+OCPath.h"
 
 @implementation OCCore (ItemUpdates)
@@ -77,6 +78,7 @@
 				// delete local copy
 				NSURL *deleteFileURL;
 
+				#warning => move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
 				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
 				{
 					NSError *deleteError = nil;
@@ -85,6 +87,7 @@
 
 					updateItem.localRelativePath = nil;
 					updateItem.localCopyVersionIdentifier = nil;
+					updateItem.downloadTriggerIdentifier = nil;
 
 					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
 					{
@@ -551,6 +554,31 @@
 	if (!skipDatabase)
 	{
 		[self postIPCChangeNotification];
+	}
+
+	// Trigger item policies
+	NSArray <OCItem *> *newChangedAndDeletedItems = nil;
+
+	#define AddArrayToNewAndChanged(itemArray) \
+		if (itemArray.count > 0) \
+		{ \
+			if (newChangedAndDeletedItems == nil) \
+			{ \
+				newChangedAndDeletedItems = itemArray; \
+			} \
+			else \
+			{ \
+				newChangedAndDeletedItems = [newChangedAndDeletedItems arrayByAddingObjectsFromArray:itemArray]; \
+			} \
+		} \
+
+	AddArrayToNewAndChanged(addedItems);
+	AddArrayToNewAndChanged(updatedItems);
+//	AddArrayToNewAndChanged(removedItems);
+
+	if (newChangedAndDeletedItems.count > 0)
+	{
+		[self runPolicyProcessorsOnNewUpdatedAndDeletedItems:newChangedAndDeletedItems forTrigger:OCItemPolicyProcessorTriggerItemsChanged];
 	}
 
 	[self endActivity:@"Perform item and query updates"];
