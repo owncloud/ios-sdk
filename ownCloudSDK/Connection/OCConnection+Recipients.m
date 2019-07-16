@@ -45,8 +45,11 @@
 			switch ((OCShareType)shareTypeID.integerValue)
 			{
 				case OCShareTypeUserShare:
+					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:NO]] withSearchResultName:shareWithAdditionalInfo];
+				break;
+
 				case OCShareTypeRemote:
-					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label]] withSearchResultName:shareWithAdditionalInfo];
+					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:YES]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				case OCShareTypeGroupShare:

@@ -39,6 +39,17 @@
 	return (user);
 }
 
++ (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote
+{
+	OCUser *user = [OCUser new];
+
+	user.userName = userName;
+	user.displayName = displayName;
+	user->_forceIsRemote = @(isRemote);
+
+	return (user);
+}
+
 - (NSRange)_atRemoteRange
 {
 	NSRange atRange;
@@ -48,6 +59,12 @@
 	if ((atRange.location == 0) || (atRange.location == (_userName.length-1)))
 	{
 		// Handle local user names starting or ending with "@" like "@example" or "example@" and make sure they aren't treated as remote
+		atRange.location = NSNotFound;
+	}
+
+	if ((atRange.location != NSNotFound) && (_forceIsRemote != nil) && !_forceIsRemote.boolValue)
+	{
+		// Handle local user names containing an "@", like "guest@domain.com" correctly if explicit information for the remote status is available
 		atRange.location = NSNotFound;
 	}
 
@@ -89,7 +106,7 @@
 	{
 		_avatar = [UIImage imageWithData:self.avatarData];
 	}
-	
+
 	return (_avatar);
 }
 
@@ -142,7 +159,7 @@
 		self.emailAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"emailAddress"];
 		self.avatarData = [decoder decodeObjectOfClass:[NSData class] forKey:@"avatarData"];
 	}
-	
+
 	return (self);
 }
 
