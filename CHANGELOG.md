@@ -1,3 +1,7 @@
+## 1.0.2 version
+
+- add support for local users with @ inside their username
+
 ## 1.0.1 version
 
 - fixed crash in Favourites fetching
