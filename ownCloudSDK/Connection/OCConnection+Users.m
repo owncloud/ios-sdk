@@ -54,12 +54,13 @@
 
 			if (userInfoDict != nil)
 			{
-				OCUser *user = [OCUser new];
-
 				#define IgnoreNull(obj) ([obj isKindOfClass:[NSNull class]] ? nil : obj)
 
-				user.userName = IgnoreNull(userInfoDict[@"id"]);
-				user.displayName = IgnoreNull(userInfoDict[@"display-name"]);
+				OCUser *user;
+
+				user = [OCUser userWithUserName:IgnoreNull(userInfoDict[@"id"])
+						    displayName:IgnoreNull(userInfoDict[@"display-name"])
+						       isRemote:NO];
 				user.emailAddress = IgnoreNull(userInfoDict[@"email"]);
 
 				completionHandler(nil, user);
