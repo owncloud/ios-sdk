@@ -21,6 +21,7 @@
 #import "OCAuthenticationMethod.h"
 #import "OCBookmark.h"
 #import "OCHTTPRequest.h"
+#import "OCHTTPResponse+DAVError.h"
 #import "NSError+OCError.h"
 
 @implementation OCAuthenticationMethod
@@ -30,7 +31,7 @@
 {
 	static dispatch_once_t onceToken;
 	static NSMutableSet <Class> *registeredAuthenticationMethodClasses;
-	
+
 	dispatch_once(&onceToken, ^{
 		registeredAuthenticationMethodClasses = [NSMutableSet new];
 	});
@@ -62,7 +63,7 @@
 + (Class)registeredAuthenticationMethodForIdentifier:(OCAuthenticationMethodIdentifier)identifier
 {
 	NSArray <Class> *classes = [self registeredAuthenticationMethodClasses];
-	
+
 	for (Class authenticationMethodClass in classes)
 	{
 		if ([[authenticationMethodClass identifier] isEqual:identifier])
@@ -70,7 +71,7 @@
 			return (authenticationMethodClass);
 		}
 	}
-	
+
 	return (Nil);
 }
 
@@ -122,7 +123,7 @@
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_bookmarkChanged:)   name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 	}
-	
+
 	return(self);
 }
 
@@ -217,13 +218,13 @@
 - (id)cachedAuthenticationSecretForConnection:(OCConnection *)connection
 {
 	id cachedAuthenticationSecret = nil;
-	
+
 	@synchronized(self)
 	{
 		if (_cachedAuthenticationSecret == nil)
 		{
 			cachedAuthenticationSecret = [self loadCachedAuthenticationSecretForConnection:connection];
-			
+
 			if ([self respondsToSelector:@selector(cacheSecrets)])
 			{
 				dispatch_async(dispatch_get_main_queue(), ^{
@@ -245,7 +246,7 @@
 			cachedAuthenticationSecret = _cachedAuthenticationSecret;
 		}
 	}
-	
+
 	return (cachedAuthenticationSecret);
 }
 
@@ -276,7 +277,16 @@
 	{
 		if (error == nil)
 		{
-			error = OCError(OCErrorAuthorizationFailed);
+			NSError *davError;
+
+			if ((davError = [response bodyParsedAsDAVError]) != nil)
+			{
+				error = OCErrorFromError(OCErrorAuthorizationFailed, davError);
+			}
+			else
+			{
+				error = OCError(OCErrorAuthorizationFailed);
+			}
 		}
 	}
 
