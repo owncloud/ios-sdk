@@ -645,21 +645,21 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "]  // Localizations
 			];
 
-			if ([self conformsToProtocol:@protocol(OCLogIntroFormat)])
-			{
-				NSString *logIntroFormat;
-
-				if ((logIntroFormat = [((id<OCLogIntroFormat>)self) logIntroFormat]) != nil)
-				{
-					logIntro = [logIntroFormat stringByReplacingOccurrencesOfString:@"{{stdIntro}}" withString:logIntro];
-				}
-			}
-
 			cachedLogIntro = logIntro;
 		}
 		else
 		{
 			logIntro = cachedLogIntro;
+		}
+
+		if ([self conformsToProtocol:@protocol(OCLogIntroFormat)])
+		{
+			NSString *logIntroFormat;
+
+			if ((logIntroFormat = [((id<OCLogIntroFormat>)self) logIntroFormat]) != nil)
+			{
+				logIntro = [logIntroFormat stringByReplacingOccurrencesOfString:@"{{stdIntro}}" withString:logIntro];
+			}
 		}
 	}
 
