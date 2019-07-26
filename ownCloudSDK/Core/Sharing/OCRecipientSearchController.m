@@ -44,6 +44,7 @@
 		_itemType = item.type;
 		_rateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.5];
 		_maximumResultCount = 50;
+		_minimumSearchTermLength = 0;
 	}
 
 	return (self);
@@ -55,7 +56,10 @@
 	{
 		_searchTerm = searchTerm;
 
-		[self search];
+		if ([_searchTerm length] >= _minimumSearchTermLength)
+		{
+			[self search];
+		}
 	}
 }
 

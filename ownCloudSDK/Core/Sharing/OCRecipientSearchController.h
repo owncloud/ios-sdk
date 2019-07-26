@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,weak) OCCore *core;
 
+@property(assign,nonatomic) NSUInteger minimumSearchTermLength; //!< If the string stored in the searchTerm property has lesser length, search won't be triggered
 @property(nullable,strong,nonatomic) NSString *searchTerm; //!< The search term to search for
 @property(nullable,strong,nonatomic) NSArray <OCShareTypeID> *shareTypes; //!< The share types to consider in the search
 
