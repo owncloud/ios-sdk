@@ -65,6 +65,8 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 		_liveStatements = [NSHashTable weakObjectsHashTable];
 
+		_journalMode = OCSQLiteJournalModeDelete; // (SQLite default)
+
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
 		#endif /* TARGET_OS_IOS */
@@ -243,9 +245,32 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 			if ((sqErr = sqlite3_open_v2(filename, &self->_db, flags, NULL)) == SQLITE_OK)
 			{
-				// Success
+				// Set max busy retry time interval
 				self.maxBusyRetryTimeInterval = self->_maxBusyRetryTimeInterval;
-				self->_opened = YES;
+
+				// Journal mode
+				if (self->_journalMode != nil)
+				{
+					if ((error = [self _executeSimpleSQLQuery:[@"PRAGMA journal_mode=" stringByAppendingString:self->_journalMode]]) != nil)
+					{
+						if ((error.code == SQLITE_ROW) || (error.code != SQLITE_OK))
+						{
+							error = nil;
+						}
+
+						if (error != nil)
+						{
+							OCLogDebug(@"Attempt to switch journal_mode to %@ resulted in error=%@", self->_journalMode, error);
+							[self _close];
+						}
+					}
+				}
+
+				// Success
+				if (error == nil)
+				{
+					self->_opened = YES;
+				}
 			}
 			else
 			{
@@ -720,6 +745,17 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	}
 }
 
+#pragma mark - Debug tools
+- (void)executeQueryString:(NSString *)queryString //!< Runs a query and logs the result. Meant to simplify debugging.
+{
+	[self executeQuery:[OCSQLiteQuery query:queryString resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+		OCLogDebug(@"Result for '%@':", queryString);
+		[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, OCSQLiteRowDictionary  _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+			OCLogDebug(@"%lu | %@", (unsigned long)line, rowDictionary);
+		} error:NULL];
+	}]];
+}
+
 #pragma mark - Error handling
 - (NSError *)lastError
 {
@@ -788,3 +824,6 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 NSErrorDomain OCSQLiteErrorDomain = @"SQLite";
 NSErrorDomain OCSQLiteDBErrorDomain = @"OCSQLiteDB";
+
+OCSQLiteJournalMode OCSQLiteJournalModeDelete = @"delete";
+OCSQLiteJournalMode OCSQLiteJournalModeWAL = @"wal";
