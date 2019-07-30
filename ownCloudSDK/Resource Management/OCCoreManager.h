@@ -33,6 +33,9 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 	BOOL _postFileProviderNotifications;
 
 	NSMutableDictionary <NSUUID *, dispatch_queue_t> *_adminQueueByUUID;
+
+	NSMutableArray<OCCoreRunIdentifier> *_activeCoresRunIdentifiers;
+	NSArray<OCCoreRunIdentifier> *_activeCoresRunIdentifiersReadOnly;
 }
 
 #pragma mark - Shared instance
@@ -40,6 +43,8 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 
 @property(assign) BOOL postFileProviderNotifications;
 @property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+
+@property(readonly, nonatomic, strong) NSArray<OCCoreRunIdentifier> *activeRunIdentifiers;
 
 #pragma mark - Requesting and returning cores
 - (void)requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore * _Nullable core, NSError * _Nullable error))setupHandler completionHandler:(void (^)(OCCore * _Nullable core, NSError * _Nullable  error))completionHandler; //!< Request the core for this bookmark. The core is started as the first user requests it. The core has completed starting once the completionHandler was called.

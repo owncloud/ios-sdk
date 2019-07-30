@@ -28,12 +28,13 @@
 	{
 		self.localizedName = OCLocalized(@"Available Offline");
 
-		// Show item if: !removed && type==file && localCopy && downloadTrigger==availableOffline
+		// Show item if: !removed && type==file && localCopy // && downloadTrigger==availableOffline
+		// (show all local copies, as it provides more utility than showing just the files downloaded through available offline)
 		self.customQueryCondition = [OCQueryCondition require:@[
 			[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)],
 			[OCQueryCondition where:OCItemPropertyNameType isEqualTo:@(OCItemTypeFile)],
-			[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusLocalCopy)],
-			[OCQueryCondition where:OCItemPropertyNameDownloadTrigger isEqualTo:OCItemDownloadTriggerIDAvailableOffline]
+			[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusLocalCopy)]
+			// [OCQueryCondition where:OCItemPropertyNameDownloadTrigger isEqualTo:OCItemDownloadTriggerIDAvailableOffline]
 		]];
 	}
 
@@ -115,3 +116,5 @@
 }
 
 @end
+
+OCItemPolicyKind OCItemPolicyKindAvailableOffline = @"availableOffline";

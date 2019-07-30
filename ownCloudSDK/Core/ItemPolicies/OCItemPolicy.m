@@ -92,6 +92,4 @@
 
 @end
 
-OCItemPolicyKind OCItemPolicyKindAvailableOffline = @"availableOffline";
-
 OCItemPolicyIdentifier OCItemPolicyIdentifierInternalPrefix = @"_sys.";

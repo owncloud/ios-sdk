@@ -74,8 +74,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
-- (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
-- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<fileID>/ pattern.
+- (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<localID>/<fileName> pattern.
+- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<localID>/ pattern.
 - (nullable NSString *)relativePathForItem:(OCItem *)item;
 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;

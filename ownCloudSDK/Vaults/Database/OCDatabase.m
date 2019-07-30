@@ -66,7 +66,7 @@
 
 		self.removedItemRetentionLength = 100;
 
-		_selectItemRowsSQLQueryPrefix = @"SELECT mdID, syncAnchor, itemData";
+		_selectItemRowsSQLQueryPrefix = @"SELECT mdID, mdTimestamp, syncAnchor, itemData";
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
@@ -81,6 +81,7 @@
 		};
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
+		self.sqlDB.journalMode = OCSQLiteJournalModeWAL;
 		[self addSchemas];
 	}
 
@@ -122,6 +123,8 @@
 								completionHandler(self, error);
 							}
 
+							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
+							
 							openQueueCompletionHandler();
 						}];
 					}
@@ -205,9 +208,30 @@
 }
 
 #pragma mark - Meta data interface
+- (OCDatabaseTimestamp)_timestampForSyncAnchor:(OCSyncAnchor)syncAnchor
+{
+	// Ensure a consistent timestamp for every sync anchor, so that matching for mdTimestamp will also match on the entirety of all included sync anchors, not just parts of it (worst case)
+	@synchronized(self)
+	{
+		if (syncAnchor != nil)
+		{
+			if ((_lastSyncAnchor==nil) || ((_lastSyncAnchor!=nil) && ![_lastSyncAnchor isEqual:syncAnchor]))
+			{
+				_lastSyncAnchor = syncAnchor;
+				_lastSyncAnchorTimestamp = @((NSUInteger)NSDate.timeIntervalSinceReferenceDate);
+			}
+
+			return (_lastSyncAnchorTimestamp);
+		}
+	}
+
+	return @((NSUInteger)NSDate.timeIntervalSinceReferenceDate);
+}
+
 - (void)addCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
+	OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
 
 	if (_itemFilter != nil)
 	{
@@ -230,6 +254,7 @@
 			@"type" 		: @(item.type),
 			@"syncAnchor"		: syncAnchor,
 			@"removed"		: @(0),
+			@"mdTimestamp"		: mdTimestamp,
 			@"locallyModified" 	: @(item.locallyModified),
 			@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 			@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
@@ -247,6 +272,7 @@
 			@"itemData"		: [item serializedData]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
+			item.databaseTimestamp = mdTimestamp;
 		}]];
 	}
 
@@ -258,6 +284,7 @@
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
+	OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
 
 	if (_itemFilter != nil)
 	{
@@ -282,6 +309,7 @@
 				@"type" 		: @(item.type),
 				@"syncAnchor"		: syncAnchor,
 				@"removed"		: @(item.removed),
+				@"mdTimestamp"		: mdTimestamp,
 				@"locallyModified" 	: @(item.locallyModified),
 				@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 				@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
@@ -298,6 +326,8 @@
 				@"localID"		: OCSQLiteNullProtect(item.localID),
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil]];
+
+			item.databaseTimestamp = mdTimestamp;
 		}
 		else
 		{
@@ -332,6 +362,33 @@
 	[self updateCacheItems:items syncAnchor:syncAnchor completionHandler:completionHandler];
 }
 
+- (void)purgeCacheItemsWithDatabaseIDs:(NSArray <OCDatabaseID> *)databaseIDs completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (databaseIDs.count == 0)
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+	}
+	else
+	{
+		NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:databaseIDs.count];
+
+		for (OCDatabaseID databaseID in databaseIDs)
+		{
+			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:databaseID fromTable:OCDatabaseTableNameMetaData completionHandler:nil]];
+		}
+
+		[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	}
+}
+
 - (OCItem *)_itemFromResultDict:(NSDictionary<NSString *,id<NSObject>> *)resultDict
 {
 	NSData *itemData;
@@ -341,12 +398,17 @@
 	{
 		if ((item = [OCItem itemFromSerializedData:itemData]) != nil)
 		{
-			NSNumber *removed;
+			NSNumber *removed, *mdTimestamp;
 			NSString *downloadTrigger;
 
 			if ((removed = (NSNumber *)resultDict[@"removed"]) != nil)
 			{
 				item.removed = removed.boolValue;
+			}
+
+			if ((mdTimestamp = (NSNumber *)resultDict[@"mdTimestamp"]) != nil)
+			{
+				item.databaseTimestamp = mdTimestamp;
 			}
 
 			if ((downloadTrigger = (NSString *)resultDict[@"downloadTrigger"]) != nil)
@@ -581,7 +643,8 @@
 
 			OCItemPropertyNameDownloadTrigger	: @"downloadTrigger",
 
-			OCItemPropertyNameRemoved		: @"removed"
+			OCItemPropertyNameRemoved		: @"removed",
+			OCItemPropertyNameDatabaseTimestamp	: @"mdTimestamp"
 		};
 	});
 
@@ -651,6 +714,8 @@
 		iterator(OCError(OCErrorInsufficientParameters), nil, nil, NULL);
 		return;
 	}
+
+	// OCLogDebug(@"Iterating result for %@ with parameters %@", sqlQueryString, parameters);
 
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQueryString withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *returnError = nil;

@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSObject (OCClassSettings)
 
++ (void)registerOCClassSettingsDefaults:(NSDictionary<OCClassSettingsKey, id> *)additionalDefaults;
+
 - (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key;
 
 @end

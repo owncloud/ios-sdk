@@ -46,7 +46,7 @@
 		break;
 
 		case OCQueryConditionOperatorPropertyNotEqualToValue:
-			query = [[NSString alloc] initWithFormat:@"(%@ != ?)", propertyColumnNameMap[self.property]];
+			query = [[NSString alloc] initWithFormat:@"(%@ IS NOT ?)", propertyColumnNameMap[self.property]];
 			parameters = @[ self.value ];
 		break;
 

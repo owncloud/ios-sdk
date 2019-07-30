@@ -64,10 +64,10 @@
 
 	if ((item = self.localItem) != nil)
 	{
-		if (item.locallyModified)
+		if (item.locallyModified || item.fileClaim.isValid)
 		{
-			 // don't delete local modified versions
-			OCLogError(@"Skipping deletion of local copy of locally modified item: %@", item);
+			// don't delete local modified versions or items that are still in use
+			OCLogError(@"Skipping deletion of local copy of locally modified or in-use item: %@", item);
 		}
 		else
 		{
@@ -94,6 +94,7 @@
 					item.localRelativePath = nil;
 					item.localCopyVersionIdentifier = nil;
 					item.downloadTriggerIdentifier = nil;
+					item.fileClaim = nil;
 				}
 			}
 		}

@@ -71,6 +71,9 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 	OCDatabaseItemFilter _itemFilter;
 
+	OCSyncAnchor _lastSyncAnchor;
+	OCDatabaseTimestamp _lastSyncAnchorTimestamp;
+
 	OCSQLiteDB *_sqlDB;
 }
 
@@ -96,6 +99,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)addCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)purgeCacheItemsWithDatabaseIDs:(NSArray <OCDatabaseID> *)databaseIDs completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 

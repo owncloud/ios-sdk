@@ -22,6 +22,8 @@
 #import "OCQueryCondition+SQLBuilder.h"
 #import "OCItemPolicyProcessor.h"
 #import "OCItemPolicyProcessorAvailableOffline.h"
+#import "OCItemPolicyProcessorDownloadExpiration.h"
+#import "OCItemPolicyProcessorVacuum.h"
 #import "OCCore+SyncEngine.h"
 #import "OCItemPolicy.h"
 
@@ -29,6 +31,8 @@
 
 - (void)addItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
 {
+	[self beginActivity:@"Adding item policy"];
+
 	[self.database addItemPolicy:policy completionHandler:^(OCDatabase *db, NSError *error) {
 		@synchronized (self->_itemPolicies)
 		{
@@ -40,6 +44,7 @@
 		}
 
 		[self postItemPoliciesChangedNotification];
+		[self postInternalItemPoliciesChangedNotificationForPolicy:policy];
 
 		if (completionHandler != nil)
 		{
@@ -47,11 +52,15 @@
 		}
 
 		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+
+		[self endActivity:@"Adding item policy"];
 	}];
 }
 
 - (void)updateItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
 {
+	[self beginActivity:@"Updating item policy"];
+
 	[self.database updateItemPolicy:policy completionHandler:^(OCDatabase *db, NSError *error) {
 		@synchronized (self->_itemPolicies)
 		{
@@ -70,6 +79,7 @@
 		}
 
 		[self postItemPoliciesChangedNotification];
+		[self postInternalItemPoliciesChangedNotificationForPolicy:policy];
 
 		if (completionHandler != nil)
 		{
@@ -77,11 +87,15 @@
 		}
 
 		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+
+		[self endActivity:@"Updating item policy"];
 	}];
 }
 
 - (void)removeItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
 {
+	[self beginActivity:@"Removing item policy"];
+
 	[self.database removeItemPolicy:policy completionHandler:^(OCDatabase *db, NSError *error) {
 		@synchronized (self->_itemPolicies)
 		{
@@ -99,6 +113,7 @@
 		}
 
 		[self postItemPoliciesChangedNotification];
+		[self postInternalItemPoliciesChangedNotificationForPolicy:policy];
 
 		if (completionHandler != nil)
 		{
@@ -106,6 +121,8 @@
 		}
 
 		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+
+		[self endActivity:@"Removing item policy"];
 	}];
 }
 
@@ -175,10 +192,14 @@
 #pragma mark - Policy processors
 - (void)runProtectedPolicyProcessorsForTrigger:(OCItemPolicyProcessorTrigger)triggerMask
 {
+	[self beginActivity:@"Run policy processors"];
+
 	[self performProtectedSyncBlock:^NSError *{
 		[self runPolicyProcessorsForTrigger:triggerMask];
 		return (nil);
-	} completionHandler:nil];
+	} completionHandler:^(NSError *error) {
+		[self endActivity:@"Run policy processors"];
+	}];
 }
 
 - (void)runPolicyProcessorsForTrigger:(OCItemPolicyProcessorTrigger)triggerMask
@@ -191,6 +212,8 @@
 			{
 				OCQueryCondition *matchCondition;
 				OCQueryCondition *cleanupCondition;
+
+				[policyProcessor willEnterTrigger:triggerMask];
 
 				if ((matchCondition = policyProcessor.matchCondition) != nil)
 				{
@@ -254,6 +277,8 @@
 			{
 				OCQueryCondition *matchCondition;
 				OCQueryCondition *cleanupCondition;
+
+				[policyProcessor willEnterTrigger:triggerMask];
 
 				if ((matchCondition = policyProcessor.matchCondition) != nil)
 				{
@@ -330,24 +355,11 @@
 {
 	// Add item policy processors
 	[self addItemPolicyProcessor:[[OCItemPolicyProcessorAvailableOffline alloc] initWithCore:self]];
+	[self addItemPolicyProcessor:[[OCItemPolicyProcessorDownloadExpiration alloc] initWithCore:self]];
+	[self addItemPolicyProcessor:[[OCItemPolicyProcessorVacuum alloc] initWithCore:self]];
 
 	// Load item policies to update processors
-	[self loadItemPoliciesWithCompletionHandler:^{
-//		@synchronized(self->_itemPolicies)
-//		{
-//			if ([self->_itemPolicies indexOfObjectPassingTest:^BOOL(OCItemPolicy * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-//				return ([obj.identifier isEqual:@"PhotosOffline"]);
-//			}] == NSNotFound)
-//			{
-//				OCItemPolicy *itemPolicy;
-//
-//				itemPolicy = [[OCItemPolicy alloc] initWithKind:OCItemPolicyKindAvailableOffline condition:[OCQueryCondition where:OCItemPropertyNamePath startsWith:@"/Photos/"]];
-//				itemPolicy.identifier = @"PhotosOffline";
-//
-//				[self addItemPolicy:itemPolicy completionHandler:nil];
-//			}
-//		}
-	}];
+	[self loadItemPoliciesWithCompletionHandler:nil];
 
 	// Listen to change notifications
 	[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:self.itemPoliciesChangedNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
@@ -363,6 +375,20 @@
 - (void)teardownItemPolicies
 {
 	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:self.itemPoliciesChangedNotificationName];
+}
+
+#pragma mark - Change notification
+- (void)postInternalItemPoliciesChangedNotificationForPolicy:(OCItemPolicy *)policy
+{
+	if ([policy.kind isEqual:OCItemPolicyKindAvailableOffline])
+	{
+		@synchronized(_availableOfflineFolderPaths)
+		{
+			_availableOfflineCacheValid = NO;
+		}
+	}
+
+	[NSNotificationCenter.defaultCenter postNotificationName:OCCoreItemPoliciesChangedNotification object:policy.kind];
 }
 
 #pragma mark - Invalidation and lazy loading
@@ -415,5 +441,7 @@
 @end
 
 OCIPCNotificationName OCIPCNotificationNameItemPoliciesChangedPrefix = @"org.owncloud.itempolicies.changed";
+
+NSNotificationName OCCoreItemPoliciesChangedNotification = @"OCCoreItemPoliciesChangedNotification";
 
 NSErrorUserInfoKey OCErrorItemPoliciesKey = @"item-policies";

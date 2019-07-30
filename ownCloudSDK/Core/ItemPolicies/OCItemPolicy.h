@@ -55,7 +55,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-extern OCItemPolicyKind OCItemPolicyKindAvailableOffline; //!< Available Offline: items covered by this policy are pre-downloaded to be available offline.
-extern OCItemPolicyIdentifier OCItemPolicyIdentifierInternalPrefix; //!< Prefix of internally used item policies
+extern OCItemPolicyIdentifier OCItemPolicyIdentifierInternalPrefix; //!< Prefix for identifier of internally used item policies
 
 NS_ASSUME_NONNULL_END

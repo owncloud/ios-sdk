@@ -1,8 +1,8 @@
 //
-//  OCItemPolicyProcessorAvailableOffline.h
+//  OCItemPolicyProcessorVacuum.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 15.07.19.
+//  Created by Felix Schwarz on 24.07.19.
 //  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,16 +16,16 @@
  *
  */
 
-#import "OCItemPolicyProcessor.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCItemPolicyProcessorAvailableOffline : OCItemPolicyProcessor
+@interface OCItemPolicyProcessorVacuum : OCItemPolicyProcessor
 
 - (instancetype)initWithCore:(OCCore *)core;
 
 @end
 
-extern OCItemPolicyKind OCItemPolicyKindAvailableOffline; //!< Available Offline: items covered by this policy are pre-downloaded to be available offline.
+extern OCItemPolicyKind OCItemPolicyKindVacuum; //!< Vacuum: takes care of deleting deleted files
 
 NS_ASSUME_NONNULL_END

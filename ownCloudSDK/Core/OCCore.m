@@ -140,6 +140,8 @@
 	{
 		__weak OCCore *weakSelf = self;
 
+		_runIdentifier = [NSUUID new];
+
 		_bookmark = bookmark;
 
 		_automaticItemListUpdatesEnabled = YES;
@@ -184,6 +186,11 @@
 
 		_itemPolicies = [NSMutableArray new];
 		_itemPolicyProcessors = [NSMutableArray new];
+
+		_availableOfflineFolderPaths = [NSMutableSet new];
+		_availableOfflineIDs = [NSMutableSet new];
+
+		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
 
 		_thumbnailCache = [OCCache new];
 
@@ -282,13 +289,21 @@
 	}
 }
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged
+{
+	_isManaged = isManaged;
+}
+
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"START"], @"queuing start request in work queue");
+	NSArray<OCLogTagName> *startTags = @[@"START",OCLogTagTypedID(@"RunID", _runIdentifier)];
+
+	OCTLogDebug(startTags, @"queuing start request in work queue");
 
 	[self queueBlock:^{
-		OCTLogDebug(@[@"START"], @"performing start request");
+		OCTLogDebug(startTags, @"performing start request");
 
 		if (self->_state == OCCoreStateStopped)
 		{
@@ -355,15 +370,17 @@
 
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"STOP"], @"queuing stop request in connectivity queue");
+	NSArray<OCLogTagName> *stopTags = @[@"STOP",OCLogTagTypedID(@"RunID", _runIdentifier)];
+
+	OCTLogDebug(stopTags, @"queuing stop request in connectivity queue");
 
 	[self queueConnectivityBlock:^{
-		OCTLogDebug(@[@"STOP"], @"queuing stop request in work queue");
+		OCTLogDebug(stopTags, @"queuing stop request in work queue");
 
 		[self queueBlock:^{
 			__block NSError *stopError = nil;
 
-			OCTLogDebug(@[@"STOP"], @"performing stop request");
+			OCTLogDebug(stopTags, @"performing stop request");
 
 			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
 			{
@@ -372,7 +389,7 @@
 				[self _updateState:OCCoreStateStopping];
 
 				// Cancel non-critical requests
-				OCTLogDebug(@[@"STOP"], @"cancelling non-critical requests");
+				OCTLogDebug(stopTags, @"cancelling non-critical requests");
 				[self.connection cancelNonCriticalRequests];
 
 				// Wait for running operations to finish
@@ -399,15 +416,15 @@
 					[weakSelf teardownItemPolicies];
 
 					// Shut down Sync Engine
-					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
+					OCWTLogDebug(stopTags, @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
 
 					// Shut down progress
-					OCWTLogDebug(@[@"STOP"], @"shutting down progress observation");
+					OCWTLogDebug(stopTags, @"shutting down progress observation");
 					[weakSelf _shutdownProgressObservation];
 
 					// Close connection
-					OCWTLogDebug(@[@"STOP"], @"connection: disconnecting");
+					OCWTLogDebug(stopTags, @"connection: disconnecting");
 					OCCore *strongSelf;
 					if ((strongSelf = weakSelf) != nil)
 					{
@@ -415,18 +432,18 @@
 					}
 
 					[weakSelf.connection disconnectWithCompletionHandler:^{
-						OCWTLogDebug(@[@"STOP"], @"connection: disconnected");
+						OCWTLogDebug(stopTags, @"connection: disconnected");
 
 						[weakSelf queueBlock:^{
 							// Close vault (incl. database)
-							OCWTLogDebug(@[@"STOP"], @"vault: closing");
+							OCWTLogDebug(stopTags, @"vault: closing");
 
 							OCSyncExec(waitForVaultClosing, {
 								[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-									OCWTLogDebug(@[@"STOP"], @"vault: closed");
+									OCWTLogDebug(stopTags, @"vault: closed");
 									stopError = error;
 
-									OCWTLogDebug(@[@"STOP"], @"STOPPED");
+									OCWTLogDebug(stopTags, @"STOPPED");
 									[weakSelf _updateState:OCCoreStateStopped];
 
 									OCSyncExecDone(waitForVaultClosing);
@@ -443,7 +460,7 @@
 
 				if (self->_runningActivities == 0)
 				{
-					OCTLogDebug(@[@"STOP"], @"No running activities left. Proceeding.");
+					OCTLogDebug(stopTags, @"No running activities left. Proceeding.");
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
 						dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;
@@ -454,12 +471,12 @@
 				}
 				else
 				{
-					OCTLogDebug(@[@"STOP"], @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
+					OCTLogDebug(stopTags, @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
 				}
 			}
 			else if (self->_state != OCCoreStateStopping)
 			{
-				OCTLogError(@[@"STOP"], @"core already in the process of stopping");
+				OCTLogError(stopTags, @"core already in the process of stopping");
 				if (completionHandler != nil)
 				{
 					completionHandler(self, OCError(OCErrorRunningOperation));
@@ -467,7 +484,7 @@
 			}
 			else if (completionHandler != nil)
 			{
-				OCTLogWarning(@[@"STOP"], @"core already stopped");
+				OCTLogWarning(stopTags, @"core already stopped");
 				completionHandler(self, stopError);
 			}
 		}];
@@ -1347,6 +1364,7 @@
 					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 					toItem.localRelativePath = [_vault relativePathForItem:toItem];
 					toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+					toItem.fileClaim = fromItem.fileClaim;
 				}
 			}
 			else if (adjustLocalMetadata)
@@ -1356,6 +1374,7 @@
 				toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 				toItem.localRelativePath = fromItem.localRelativePath;
 				toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+				toItem.fileClaim = fromItem.fileClaim;
 			}
 		}
 	}
@@ -1624,6 +1643,8 @@ OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmed
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
 OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
+OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
+OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";

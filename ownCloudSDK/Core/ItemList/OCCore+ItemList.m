@@ -1215,6 +1215,10 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompleted];
 	}
+	else
+	{
+		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges];
+	}
 }
 
 #pragma mark - Update Scans

@@ -20,6 +20,7 @@
 #import "OCMacros.h"
 #import "OCCore.h"
 #import "OCCore+ItemPolicies.h"
+#import "OCLogger.h"
 
 @implementation OCItemPolicyProcessor
 
@@ -103,6 +104,11 @@
 }
 
 #pragma mark - Events
+- (void)willEnterTrigger:(OCItemPolicyProcessorTrigger)trigger
+{
+
+}
+
 - (void)didPassTrigger:(OCItemPolicyProcessorTrigger)trigger
 {
 
@@ -165,6 +171,19 @@
 	}
 }
 
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierItemPolicy);
+}
+
++ (nullable NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	return (@{});
+}
+
 @end
 
 NSNotificationName OCCoreItemPolicyProcessorUpdated = @"org.owncloud.item-policy-processor-update";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierItemPolicy = @"item-policy";

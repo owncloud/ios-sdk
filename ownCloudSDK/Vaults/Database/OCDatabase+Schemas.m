@@ -596,16 +596,19 @@
 		}]
 	];
 
-	// Version 9
+	// Version 9: internal development only
+
+	// Version 10
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameMetaData
-		version:9
+		version:10
 		creationQueries:@[
 			/*
 				mdID : INTEGER	  		- unique ID used to uniquely identify and efficiently update a row
 				type : INTEGER    		- OCItemType value to indicate if this is a file or a collection/folder
 				syncAnchor: INTEGER		- sync anchor, a number that increases its value with every change to an entry. For files, higher sync anchor values indicate the file changed (incl. creation, content or meta data changes). For collections/folders, higher sync anchor values indicate the list of items in the collection/folder changed in a way not covered by file entries (i.e. rename, deletion, but not creation of files).
 				removed : INTEGER		- value indicating if this file or folder has been removed: 1 if it was, 0 if not (default). Removed entries are kept around until their delta to the latest syncAnchor value exceeds -[OCDatabase removedItemRetentionLength].
+				mdTimestamp: INTEGER		- NSDate.timeIntervalSinceReferenceDate value of creation or last update of this record
 				locallyModified: INTEGER	- value indicating if this is a file that's been created or modified locally
 				localRelativePath: TEXT		- path of the local copy of the item, relative to the rootURL of the vault that stores it
 				path : TEXT	  		- full path of the item (e.g. "/example/file.txt")
@@ -622,7 +625,7 @@
 				localID : TEXT			- OCLocalID identifying the item
 				itemData : BLOB	  		- data of the serialized OCItem
 			*/
-			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
+			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
 
 			// Create indexes over path and parentPath
 			@"CREATE INDEX idx_metaData_path ON metaData (path)",
@@ -637,21 +640,25 @@
 			@"CREATE TEMPORARY TRIGGER temp_delete_associated_thumbnails AFTER DELETE ON metaData BEGIN DELETE FROM thumb.thumbnails WHERE fileID = OLD.fileID; END" // relatedTo:OCDatabaseTableNameThumbnails
 		]
 		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
-			// Migrate to version 9
+			// Migrate to version 10
 			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
 				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
 
 				// Create new table (with new downloadTrigger column)
 				[db executeQuery:[OCSQLiteQuery query:
-				@"CREATE TABLE metaData_new (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)" resultHandler:resultHandler]];
+				@"CREATE TABLE metaData_new (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)" resultHandler:resultHandler]];
 				if (transactionError != nil) { return(transactionError); }
 
 				// Migrate data to new table
-				[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO metaData_new (mdID, type, syncAnchor, removed, locallyModified, localRelativePath, path, parentPath, name, mimeType, size, favorite, cloudStatus, hasLocalAttributes, lastUsedDate, fileID, localID, itemData) SELECT mdID, type, syncAnchor, removed, locallyModified, localRelativePath, path, parentPath, name, mimeType, size, favorite, cloudStatus, hasLocalAttributes, lastUsedDate, fileID, localID, itemData FROM metaData" resultHandler:resultHandler]];
+				[db executeQuery:[OCSQLiteQuery query:@"INSERT INTO metaData_new (mdID, type, syncAnchor, removed, mdTimestamp, locallyModified, localRelativePath, path, parentPath, name, mimeType, size, favorite, cloudStatus, hasLocalAttributes, lastUsedDate, fileID, localID, itemData) SELECT mdID, type, syncAnchor, removed, 0, locallyModified, localRelativePath, path, parentPath, name, mimeType, size, favorite, cloudStatus, hasLocalAttributes, lastUsedDate, fileID, localID, itemData FROM metaData" resultHandler:resultHandler]];
 				if (transactionError != nil) { return(transactionError); }
 
 				// Add user download trigger to all existing downloaded files
 				[db executeQuery:[OCSQLiteQuery query:@"UPDATE metaData_new SET downloadTrigger=? WHERE cloudStatus=?" withParameters:@[ OCItemDownloadTriggerIDUser, @(OCItemCloudStatusLocalCopy) ] resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Add mdTimestamp to all existing reocrds
+				[db executeQuery:[OCSQLiteQuery query:@"UPDATE metaData_new SET mdTimestamp=?" withParameters:@[ @((NSUInteger)[NSDate timeIntervalSinceReferenceDate]) ] resultHandler:resultHandler]];
 				if (transactionError != nil) { return(transactionError); }
 
 				// Drop old table

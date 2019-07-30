@@ -48,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern OCIPCNotificationName OCIPCNotificationNameItemPoliciesChangedPrefix;
+extern NSNotificationName OCCoreItemPoliciesChangedNotification;
 
 extern NSErrorUserInfoKey OCErrorItemPoliciesKey;
 

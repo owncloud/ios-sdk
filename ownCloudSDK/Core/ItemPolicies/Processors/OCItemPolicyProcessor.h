@@ -18,19 +18,22 @@
 
 #import <Foundation/Foundation.h>
 #import "OCItemPolicy.h"
+#import "OCClassSettings.h"
+#import "OCClassSettingsUserPreferences.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 {
 	OCItemPolicyProcessorTriggerItemsChanged = (1<<0),		//!< Triggered whenever items change (f.ex. following sync actions, PROPFINDs, etc.)
-	OCItemPolicyProcessorTriggerItemListUpdateCompleted = (1<<1),	//!< Triggered whenever an item list update was completed and the database of cache items is considered consistent with server contents
-	OCItemPolicyProcessorTriggerPoliciesChanged = (1<<2),		//!< Triggered whenever an item policy was added, removed or updated
+	OCItemPolicyProcessorTriggerItemListUpdateCompleted = (1<<1),	//!< Triggered whenever an item list update was completed with changes and the database of cache items is considered consistent with server contents
+	OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges = (1<<2),	//!< Triggered whenever an item list update was completed without changes and the database of cache items is considered consistent with server contents
+	OCItemPolicyProcessorTriggerPoliciesChanged = (1<<3),		//!< Triggered whenever an item policy was added, removed or updated
 
 	OCItemPolicyProcessorTriggerAll = NSUIntegerMax
 };
 
-@interface OCItemPolicyProcessor : NSObject
+@interface OCItemPolicyProcessor : NSObject <OCClassSettingsSupport, OCClassSettingsUserPreferencesSupport>
 {
 	OCQueryCondition *_policyCondition;
 }
@@ -66,6 +69,7 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 - (void)endCleanupWithTrigger:(OCItemPolicyProcessorTrigger)trigger;
 
 #pragma mark - Events
+- (void)willEnterTrigger:(OCItemPolicyProcessorTrigger)trigger;
 - (void)didPassTrigger:(OCItemPolicyProcessorTrigger)trigger;
 
 #pragma mark - Cleanup polices
@@ -73,23 +77,16 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 
 /*
 	Ideas for policies:
-	- Available Offline
-		- Download if: matchCondition && !isLocalCopy && !removed
-		- Cleanup if: !matchCondition && isLocalCopy && downloadTrigger==availableOffline && !removed
-	- Download expiry
+	- BurnAfterReading (BAR => to bar, probably nice wordplay here)
 		- No matchCondition
-		- Cleanup if: isLocalCopy && downloadTrigger==user && lastUsedDate<oldestKeepDate && !removed
-	- BurnAfterReading
-		- No matchCondition
-		- Cleanup if: matchingPolicies && isLocalCopy + retainer==0 check
-		- resurrect OCRetainer (=> with download action integration?!) to allow FP and viewer to retain files affected by BurnAfterReading policy
-	- Remove removed
-		- No matchCondition
-		- Cleanup if: removed
+		- Cleanup if: matchingPolicies && isLocalCopy + claims==0 check
+		- use OCClaim to allow FP and viewer to claim files affected by BurnAfterReading policy
 */
 
 @end
 
 extern NSNotificationName OCCoreItemPolicyProcessorUpdated; //!< Notification sent when an item policy processor was updated. The object is the OCItemPolicyProcessor.
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierItemPolicy;
 
 NS_ASSUME_NONNULL_END

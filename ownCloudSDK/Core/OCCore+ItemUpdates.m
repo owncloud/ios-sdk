@@ -73,12 +73,13 @@
 			if ((!updateItem.locallyModified) && // don't delete local modified versions
 			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
 			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
-			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier])) // different versions?
+			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier]) &&  // different versions?
+			    (!updateItem.fileClaim.isValid)) // don't delete claimed files
 			{
 				// delete local copy
 				NSURL *deleteFileURL;
 
-				#warning => move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
+				// TODO: evaluate move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
 				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
 				{
 					NSError *deleteError = nil;
@@ -88,6 +89,7 @@
 					updateItem.localRelativePath = nil;
 					updateItem.localCopyVersionIdentifier = nil;
 					updateItem.downloadTriggerIdentifier = nil;
+					updateItem.fileClaim = nil;
 
 					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
 					{

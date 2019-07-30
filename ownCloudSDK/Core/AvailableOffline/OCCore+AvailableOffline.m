@@ -21,6 +21,7 @@
 #import "OCItemPolicy.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
+#import "OCItemPolicyProcessorAvailableOffline.h"
 
 @implementation OCCore (AvailableOffline)
 
@@ -169,6 +170,69 @@
 - (void)removeAvailableOfflinePolicy:(OCItemPolicy *)itemPolicy completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
 	[self removeItemPolicy:itemPolicy completionHandler:completionHandler];
+}
+
+- (void)_updateAvailableOfflineCaches
+{
+	if (!_availableOfflineCacheValid)
+	{
+		NSArray <OCItemPolicy *> *availableOfflinePolicies = [self retrieveAvailableOfflinePoliciesCoveringItem:nil completionHandler:nil];
+
+		[_availableOfflineFolderPaths removeAllObjects];
+		[_availableOfflineIDs removeAllObjects];
+
+		for (OCItemPolicy *policy in availableOfflinePolicies)
+		{
+			if (policy.path != nil)
+			{
+				[_availableOfflineFolderPaths addObject:policy.path];
+			}
+
+			if (policy.localID != nil)
+			{
+				[_availableOfflineIDs addObject:policy.localID];
+			}
+		}
+
+		_availableOfflineCacheValid = YES;
+	}
+}
+
+- (OCCoreAvailableOfflineCoverage)availableOfflinePolicyCoverageOfItem:(OCItem *)item
+{
+	OCCoreAvailableOfflineCoverage coverage = OCCoreAvailableOfflineCoverageNone;
+
+	@synchronized(_availableOfflineFolderPaths)
+	{
+		[self _updateAvailableOfflineCaches];
+
+		if ((item.localID!=nil) && [_availableOfflineIDs containsObject:item.localID])
+		{
+			coverage = OCCoreAvailableOfflineCoverageDirect;
+		}
+		else
+		{
+			OCPath itemPath;
+
+			if ((itemPath = item.path) != nil)
+			{
+				for (OCPath folderPath in _availableOfflineFolderPaths)
+				{
+					if ([folderPath isEqualToString:itemPath])
+					{
+						coverage = OCCoreAvailableOfflineCoverageDirect;
+						break;
+					}
+					else if ([itemPath hasPrefix:folderPath])
+					{
+						coverage = OCCoreAvailableOfflineCoverageIndirect;
+					}
+				}
+			}
+		}
+	}
+
+	return (coverage);
 }
 
 @end
