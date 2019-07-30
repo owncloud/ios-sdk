@@ -124,7 +124,7 @@
 							}
 
 							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
-							
+
 							openQueueCompletionHandler();
 						}];
 					}

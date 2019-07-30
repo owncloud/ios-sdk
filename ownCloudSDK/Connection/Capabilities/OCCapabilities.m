@@ -20,6 +20,8 @@
 #import "OCMacros.h"
 #import "OCConnection.h"
 
+static NSInteger _defaultSharingSearchMinLength = 2;
+
 @interface OCCapabilities()
 {
 	NSDictionary<NSString *, id> *_capabilities;
@@ -297,6 +299,11 @@
 - (NSNumber *)sharingSearchMinLength
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"search_min_length"], NSNumber));
+}
+
++ (NSInteger)defaultSharingSearchMinLength
+{
+	return _defaultSharingSearchMinLength;
 }
 
 #pragma mark - Sharing : Public
