@@ -80,6 +80,7 @@
 		};
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
+		self.sqlDB.journalMode = OCSQLiteJournalModeWAL;
 		[self addSchemas];
 	}
 
@@ -120,6 +121,8 @@
 							{
 								completionHandler(self, error);
 							}
+
+							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
 
 							openQueueCompletionHandler();
 						}];

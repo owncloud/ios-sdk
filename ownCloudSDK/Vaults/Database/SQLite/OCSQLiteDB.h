@@ -43,6 +43,8 @@ typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 	OCSQLiteDBErrorAlreadyOpenedInInstance //!< Instance has already opened file
 };
 
+typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError * _Nullable error);
@@ -67,6 +69,8 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 }
 
 @property(class,nonatomic) BOOL allowConcurrentFileAccess; //!< Makes every OCSQLiteDB use a different OCRunLoopThread, so concurrent file access can occur. NO by default. Use this only for implementing concurrency tests.
+
+@property(strong) OCSQLiteJournalMode journalMode; //!< SQLite journaling mode to use (defaults to "delete").
 
 @property(nullable,strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
 
@@ -97,6 +101,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 - (void)executeOperation:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
 - (nullable NSError *)executeOperationSync:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock; //!< Executes a block in the internal context synchronously. WARNING: This call may block or deadlock. Use with caution!
 
+#pragma mark - Debug tools
+- (void)executeQueryString:(NSString *)queryString; //!< Runs a query and logs the result. Meant to simplify debugging.
+
 #pragma mark - Error handling
 - (nullable NSError *)lastError;
 
@@ -112,6 +119,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 extern NSErrorDomain OCSQLiteErrorDomain; //!< Native SQLite errors
 
 extern NSErrorDomain OCSQLiteDBErrorDomain; //!< OCSQLiteDB errors
+
+extern OCSQLiteJournalMode OCSQLiteJournalModeDelete; 	//!< Delete Journal Mode (SQLite default)
+extern OCSQLiteJournalMode OCSQLiteJournalModeWAL; 	//!< Write-Ahead-Log Journal Mode
 
 NS_ASSUME_NONNULL_END
 

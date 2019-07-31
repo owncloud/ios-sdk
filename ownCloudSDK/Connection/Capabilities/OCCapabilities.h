@@ -72,6 +72,7 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool sharingAllowed;
 @property(readonly,nonatomic) OCSharePermissionsMask sharingDefaultPermissions;
 @property(readonly,nullable,nonatomic) NSNumber *sharingSearchMinLength;
+@property(readonly,class,nonatomic) NSInteger defaultSharingSearchMinLength;
 
 #pragma mark - Sharing : Public
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingEnabled;

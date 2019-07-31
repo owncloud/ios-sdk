@@ -155,6 +155,11 @@
 
 		if (core != nil)
 		{
+			if (setupHandler != nil)
+			{
+				setupHandler(core, nil);
+			}
+
 			if (completionHandler != nil)
 			{
 				completionHandler(core, nil);
