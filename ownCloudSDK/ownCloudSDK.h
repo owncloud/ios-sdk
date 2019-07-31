@@ -61,6 +61,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCItemPolicyProcessor.h>
 #import <ownCloudSDK/OCItemPolicyProcessorAvailableOffline.h>
 #import <ownCloudSDK/OCItemPolicyProcessorDownloadExpiration.h>
+#import <ownCloudSDK/OCItemPolicyProcessorVacuum.h>
 
 #import <ownCloudSDK/OCCore+Claims.h>
 #import <ownCloudSDK/OCClaim.h>

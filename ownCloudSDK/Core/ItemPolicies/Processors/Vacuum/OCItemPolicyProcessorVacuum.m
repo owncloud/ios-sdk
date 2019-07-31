@@ -18,8 +18,6 @@
 
 #import "OCItemPolicyProcessorVacuum.h"
 
-#define OCSyncAnchorTimeToLiveInSeconds 60
-
 @interface OCItemPolicyProcessorVacuum ()
 {
 	NSMutableArray<OCDatabaseID> *_purgeDatabaseIDs;
@@ -27,6 +25,13 @@
 @end
 
 @implementation OCItemPolicyProcessorVacuum
+
++ (void)load
+{
+	[self registerOCClassSettingsDefaults:@{
+		OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL : @(OCSyncAnchorTimeToLiveInSeconds)
+	}];
+}
 
 - (instancetype)initWithCore:(OCCore *)core
 {
@@ -41,13 +46,24 @@
 #pragma mark - Condition creation and refresh
 - (void)_refreshCleanupCondition
 {
+	NSNumber *vacuumSyncAnchorTTLNumber;
+	NSUInteger syncAnchorTTL = OCSyncAnchorTimeToLiveInSeconds;
+
+	if ((vacuumSyncAnchorTTLNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL]) != nil)
+	{
+		if (vacuumSyncAnchorTTLNumber.integerValue > 0)
+		{
+			syncAnchorTTL = vacuumSyncAnchorTTLNumber.unsignedIntegerValue;
+		}
+	}
+
 	// Cleanup if: removed && (mdTimestamp < (now-SyncAnchorTTL))
 	self.cleanupCondition = [OCQueryCondition require:@[
 		// Item is "removed" from database
 		[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(YES)],
 
 		// Last change to the item (incl. switching to "removed" is at least OCSyncAnchorTimeToLiveInSeconds ago
-		[OCQueryCondition where:OCItemPropertyNameDatabaseTimestamp isLessThan:@(((NSUInteger)NSDate.timeIntervalSinceReferenceDate)-OCSyncAnchorTimeToLiveInSeconds)]
+		[OCQueryCondition where:OCItemPropertyNameDatabaseTimestamp isLessThan:@(((NSUInteger)NSDate.timeIntervalSinceReferenceDate)-syncAnchorTTL)]
 	]];
 }
 
@@ -111,3 +127,5 @@
 @end
 
 OCItemPolicyKind OCItemPolicyKindVacuum = @"vacuum";
+
+OCClassSettingsKey OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL = @"vacuum-sync-anchor-ttl";

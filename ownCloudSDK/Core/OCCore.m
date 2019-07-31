@@ -298,7 +298,8 @@
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	NSArray<OCLogTagName> *startTags = @[@"START",OCLogTagTypedID(@"RunID", _runIdentifier)];
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *startTags = (runIDTag != nil) ? @[@"START", runIDTag] : @[@"START"];
 
 	OCTLogDebug(startTags, @"queuing start request in work queue");
 
@@ -370,7 +371,8 @@
 
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	NSArray<OCLogTagName> *stopTags = @[@"STOP",OCLogTagTypedID(@"RunID", _runIdentifier)];
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *stopTags = (runIDTag != nil) ? @[@"STOP", runIDTag] : @[@"STOP"];
 
 	OCTLogDebug(stopTags, @"queuing stop request in connectivity queue");
 

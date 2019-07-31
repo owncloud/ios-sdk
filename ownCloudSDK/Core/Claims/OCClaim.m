@@ -128,7 +128,10 @@
 		}
 	}
 
-	_explicitIdentifier = explicitIdentifier;
+	if (self != nil)
+	{
+		_explicitIdentifier = explicitIdentifier;
+	}
 
 	return(self);
 }

@@ -22,11 +22,23 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCItemPolicyProcessorAvailableOffline.h"
+#import "OCLogger.h"
 
 @implementation OCCore (AvailableOffline)
 
 - (void)makeAvailableOffline:(OCItem *)item options:(nullable NSDictionary <OCCoreOption, id> *)options completionHandler:(nullable OCCoreItemPolicyCompletionHandler)completionHandler
 {
+	if (item == nil)
+	{
+		OCLogError(@"Can't make nil item available offline");
+
+		if (completionHandler != nil)
+		{
+			completionHandler(OCError(OCErrorInsufficientParameters), nil);
+		}
+		return;
+	}
+
 	if (OCTypedCast(options[OCCoreOptionSkipRedundancyChecks], NSNumber).boolValue)
 	{
 		// Skip redundancy checks

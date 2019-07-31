@@ -20,6 +20,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#define OCSyncAnchorTimeToLiveInSeconds 60
+
 @interface OCItemPolicyProcessorVacuum : OCItemPolicyProcessor
 
 - (instancetype)initWithCore:(OCCore *)core;
@@ -27,5 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern OCItemPolicyKind OCItemPolicyKindVacuum; //!< Vacuum: takes care of deleting deleted files
+
+extern OCClassSettingsKey OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL;
 
 NS_ASSUME_NONNULL_END
