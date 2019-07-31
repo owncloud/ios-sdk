@@ -1,3 +1,7 @@
+## 1.0.4 version
+
+## 1.0.3 version
+
 ## 1.0.2 version
 
 - add support for local users with @ inside their username
