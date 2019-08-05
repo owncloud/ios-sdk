@@ -446,18 +446,17 @@
 							OCPath queryItemPath = query.queryItem.path;
 							OCLocalID queryItemLocalID = query.queryItem.localID;
 							OCItem *resultItem = nil;
+							OCItem *setNewItem = nil;
 
 							if (addedItemList!=nil)
 							{
 								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 							}
 
@@ -465,22 +464,29 @@
 							{
 								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 							}
 
-							if (removedItemList!=nil)
+							if (setNewItem != nil)
 							{
-								if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
+								query.state = OCQueryStateIdle;
+								query.queryItem = setNewItem;
+								query.fullQueryResults = [NSMutableArray arrayWithObject:setNewItem];
+							}
+							else
+							{
+								if (removedItemList!=nil)
 								{
-									query.state = OCQueryStateTargetRemoved;
-									query.fullQueryResults = [NSMutableArray new];
+									if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
+									{
+										query.state = OCQueryStateTargetRemoved;
+										query.fullQueryResults = [NSMutableArray new];
+									}
 								}
 							}
 						}
