@@ -253,11 +253,6 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				{
 					if ((error = [self _executeSimpleSQLQuery:[@"PRAGMA journal_mode=" stringByAppendingString:self->_journalMode]]) != nil)
 					{
-						if ((error.code == SQLITE_ROW) || (error.code != SQLITE_OK))
-						{
-							error = nil;
-						}
-
 						if (error != nil)
 						{
 							OCLogDebug(@"Attempt to switch journal_mode to %@ resulted in error=%@", self->_journalMode, error);
@@ -502,15 +497,28 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	{
 		if (error == nil)
 		{
-			int sqErr;
+			int sqErr = SQLITE_ROW;
 
-			sqErr = sqlite3_step(statement.sqlStatement);
+			do {
+				sqErr = sqlite3_step(statement.sqlStatement);
+
+				#if OCSQLITE_RAWLOG_ENABLED
+				if (sqErr == SQLITE_ROW)
+				{
+					OCTLogDebug(@[@"SQLLog"], @"%@ (stepping)", sqlQuery);
+				}
+				#endif /* OCSQLITE_RAWLOG_ENABLED */
+			} while (sqErr == SQLITE_ROW);
 
 			if ((sqErr != SQLITE_OK) && (sqErr != SQLITE_DONE))
 			{
 				error = OCSQLiteLastDBError(_db);
 			}
 		}
+
+		#if OCSQLITE_RAWLOG_ENABLED
+		OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+		#endif /* OCSQLITE_RAWLOG_ENABLED */
 	}
 
 	return (error);
@@ -552,6 +560,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				break;
 			}
 		}
+
+		#if OCSQLITE_RAWLOG_ENABLED
+		OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+		#endif /* OCSQLITE_RAWLOG_ENABLED */
 
 		if (query.resultHandler != nil)
 		{
