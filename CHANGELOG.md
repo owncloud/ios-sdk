@@ -1,6 +1,8 @@
-## 1.0.4 version
-
 ## 1.0.3 version
+
+- Authentication improvements
+- Fixed background crash
+- Log file improvements
 
 ## 1.0.2 version
 
