@@ -1,3 +1,9 @@
+## 1.0.3 version
+
+- Authentication improvements
+- Fixed background crash
+- Log file improvements
+
 ## 1.0.2 version
 
 - add support for local users with @ inside their username
