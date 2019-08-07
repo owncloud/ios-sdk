@@ -117,12 +117,12 @@
 					if (error == nil)
 					{
 						[self.sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
+
 							if (completionHandler!=nil)
 							{
 								completionHandler(self, error);
 							}
-
-							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
 
 							openQueueCompletionHandler();
 						}];
