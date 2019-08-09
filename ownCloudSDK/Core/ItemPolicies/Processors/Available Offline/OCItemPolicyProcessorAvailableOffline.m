@@ -19,6 +19,8 @@
 #import "OCItemPolicyProcessorAvailableOffline.h"
 #import "OCCore.h"
 #import "OCMacros.h"
+#import "OCCore+ItemPolicies.h"
+#import "OCLogger.h"
 
 @implementation OCItemPolicyProcessorAvailableOffline
 
@@ -46,6 +48,50 @@
 	return (OCItemPolicyProcessorTriggerItemsChanged |
 		OCItemPolicyProcessorTriggerItemListUpdateCompleted |
 		OCItemPolicyProcessorTriggerPoliciesChanged);
+}
+
+- (void)performPreflightOnPoliciesWithTrigger:(OCItemPolicyProcessorTrigger)trigger withItems:(NSArray<OCItem *> *)newUpdatedAndRemovedItems
+{
+	if (newUpdatedAndRemovedItems != nil)
+	{
+		OCCoreItemList *itemList = [OCCoreItemList itemListWithItems:newUpdatedAndRemovedItems];
+
+		NSArray<OCItemPolicy *> *policies = [self.policies copy];
+
+		for (OCItemPolicy *policy in policies)
+		{
+			if (policy.localID != nil)
+			{
+				OCItem *changedItem;
+
+				if (((changedItem = itemList.itemsByLocalID[policy.localID]) != nil) &&	// Look for item with same localID ..
+				    !changedItem.removed &&						// .. that's not removed ..
+				    (changedItem.type == OCItemTypeCollection)				// .. and a directory
+				   )
+				{
+					if (![changedItem.path isEqual:policy.path])
+					{
+						if ((policy.condition.operator == OCQueryConditionOperatorPropertyHasPrefix) &&
+						    ([policy.condition.property isEqual:OCItemPropertyNamePath]) &&
+						    ([policy.condition.value isEqual:policy.path]))
+						{
+							OCLogDebug(@"Updating existing policy from path %@ to %@", policy.path, changedItem.path);
+
+							policy.condition.value = changedItem.path;
+							policy.path = changedItem.path;
+
+							OCSyncExec(waitForPolicyUpdate, {
+								[self.core updateItemPolicy:policy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:^(NSError * _Nullable error) {
+									OCLogDebug(@"Updated %@ with error=%@", policy, error);
+									OCSyncExecDone(waitForPolicyUpdate);
+								}];
+							});
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 - (void)setPolicyCondition:(OCQueryCondition *)policyCondition
@@ -101,7 +147,9 @@
 - (void)performCleanupOn:(OCItem *)cleanupItem withTrigger:(OCItemPolicyProcessorTrigger)trigger
 {
 	if (((cleanupItem.syncActivity & OCItemSyncActivityDeletingLocal) == 0) &&	// Local deletion is not yet underway
-	    (cleanupItem.type == OCItemTypeFile))					// Can only delete local copies of files
+	    (cleanupItem.type == OCItemTypeFile) && 					// Can only delete local copies of files
+	    (trigger & (OCItemPolicyProcessorTriggerItemListUpdateCompleted|OCItemPolicyProcessorTriggerPoliciesChanged)) // Act only on consistent database or when policies change (where user expects immediate action)
+	   )
 	{
 		[self.core deleteLocalCopyOfItem:cleanupItem resultHandler:nil];
 	}

@@ -680,7 +680,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						{
 							OCItem *cacheItem = cacheItemsByFileID[item.fileID];
 
-							// Do not trigger refreshes if only the name changed (TODO: update database of items contained in folder on name changes)
+							// Do not trigger refreshes if only the name changed
+							#warning (TODO: update database of items contained in folder on name changes: here, to also cover external renames; test plan must include failed renames)
 							if ((cacheItem==nil) || ((cacheItem != nil) && ![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier]))
 							{
 								[refreshPaths addObject:item.path];
@@ -1064,6 +1065,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			OCItem *remoteItem = items.firstObject;
 			NSArray<OCItem*> *cacheItems = nil;
 			BOOL updateQuotaTotal = NO;
+			BOOL doSchedule = NO;
 
 			if ([remoteItem.path isEqual:@"/"])
 			{

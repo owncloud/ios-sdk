@@ -558,12 +558,6 @@
 		}
 	}
 
-	// Initiate an IPC change notification
-	if (!skipDatabase)
-	{
-		[self postIPCChangeNotification];
-	}
-
 	// Trigger item policies
 	NSArray <OCItem *> *newChangedAndDeletedItems = nil;
 
@@ -587,6 +581,12 @@
 	if (newChangedAndDeletedItems.count > 0)
 	{
 		[self runPolicyProcessorsOnNewUpdatedAndDeletedItems:newChangedAndDeletedItems forTrigger:OCItemPolicyProcessorTriggerItemsChanged];
+	}
+
+	// Initiate an IPC change notification
+	if (!skipDatabase)
+	{
+		[self postIPCChangeNotification];
 	}
 
 	[self endActivity:@"Perform item and query updates"];

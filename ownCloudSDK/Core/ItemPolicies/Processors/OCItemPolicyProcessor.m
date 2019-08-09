@@ -57,6 +57,11 @@
 	[[NSNotificationCenter defaultCenter] postNotificationName:OCCoreItemPolicyProcessorUpdated object:self];
 }
 
+- (void)performPreflightOnPoliciesWithTrigger:(OCItemPolicyProcessorTrigger)trigger withItems:(nullable NSArray<OCItem *> *)newUpdatedAndRemovedItems
+{
+	
+}
+
 - (void)setPolicies:(NSArray<OCItemPolicy *> *)policies
 {
 	@synchronized(self)
@@ -152,6 +157,24 @@
 
 			if (removePolicy)
 			{
+				OCItemPolicy *updatedItemPolicy;
+
+				if ((updatedItemPolicy = [self attemptRecoveryOfPolicy:policy]) != nil)
+				{
+					if (updatedItemPolicy.databaseID != nil)
+					{
+						[self.core updateItemPolicy:updatedItemPolicy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:nil];
+						removePolicy = NO;
+					}
+					else
+					{
+						[self.core addItemPolicy:updatedItemPolicy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:nil];
+					}
+				}
+			}
+
+			if (removePolicy)
+			{
 				if (removeItemPolicies == nil)
 				{
 					removeItemPolicies = [[NSMutableArray alloc] initWithObjects:policy, nil];
@@ -167,8 +190,13 @@
 
 	for (OCItemPolicy *removePolicy in removeItemPolicies)
 	{
-		[self.core removeItemPolicy:removePolicy completionHandler:nil];
+		[self.core removeItemPolicy:removePolicy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:nil];
 	}
+}
+
+- (nullable OCItemPolicy *)attemptRecoveryOfPolicy:(OCItemPolicy *)itemPolicy
+{
+	return (nil);
 }
 
 #pragma mark - Class settings

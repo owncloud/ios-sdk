@@ -176,6 +176,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSMutableArray <OCItemPolicy *> *_itemPolicies;
 	NSMutableArray <OCItemPolicyProcessor *> *_itemPolicyProcessors;
+	NSMutableArray <OCItemPolicyKind> *_activePolicyKinds;
 	BOOL _itemPoliciesAppliedInitially;
 	BOOL _itemPoliciesValid;
 
@@ -403,6 +404,7 @@ extern OCCoreOption OCCoreOptionDownloadTriggerID; //!< [OCItemDownloadTriggerID
 extern OCCoreOption OCCoreOptionAddFileClaim; //!< [OCClaim] A claim to add to an item as part of an action (typically upload/download)
 extern OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose; //!< [OCCoreClaimPurpose] Adds a temporary claim to the returned OCFile object (download) generated for the provided purpose. Makes sure the claim is automatically removed if the OCCore is still running when the object is deallocated. (default is OCCoreClaimPurposeNone)
 extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whether AvailableOffline should skip redundancy checks.
+extern OCCoreOption OCCoreOptionConvertExistingLocalDownloads; //!< [BOOL] Determines whether AvailableOffline should convert existing local copies to Available Offline managed items if they fall under a new Available Offline rule
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.

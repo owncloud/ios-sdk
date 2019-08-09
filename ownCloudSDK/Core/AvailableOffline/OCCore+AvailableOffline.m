@@ -22,9 +22,31 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 #import "OCItemPolicyProcessorAvailableOffline.h"
+#import "OCCore+SyncEngine.h"
+#import "OCCore+Internal.h"
 #import "OCLogger.h"
+#import "OCCore+ItemUpdates.h"
 
 @implementation OCCore (AvailableOffline)
+
+- (OCItemPolicy *)_createAvailableOfflinePolicyForItem:(OCItem *)item
+{
+	OCItemPolicy *newItemPolicy;
+
+	if ((newItemPolicy = [[OCItemPolicy alloc] initWithKind:OCItemPolicyKindAvailableOffline item:item]) != nil)
+	{
+		newItemPolicy.path = item.path;
+		newItemPolicy.localID = item.localID;
+
+		newItemPolicy.policyAutoRemovalMethod = OCItemPolicyAutoRemovalMethodNoItems;
+		newItemPolicy.policyAutoRemovalCondition = [OCQueryCondition require:@[
+			[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)],
+			[OCQueryCondition where:OCItemPropertyNameLocalID isEqualTo:item.localID]
+		]];
+	}
+
+	return (newItemPolicy);
+}
 
 - (void)makeAvailableOffline:(OCItem *)item options:(nullable NSDictionary <OCCoreOption, id> *)options completionHandler:(nullable OCCoreItemPolicyCompletionHandler)completionHandler
 {
@@ -39,26 +61,63 @@
 		return;
 	}
 
+	if (OCTypedCast(options[OCCoreOptionConvertExistingLocalDownloads], NSNumber).boolValue)
+	{
+		// Convert existing local downloads to ones managed by available offline
+		completionHandler = ^(NSError * _Nullable error, OCItemPolicy * _Nullable itemPolicy) {
+			if ((error == nil) && (itemPolicy != nil))
+			{
+				[self beginActivity:@"Convert existing local copies"];
+
+				[self performProtectedSyncBlock:^NSError *{
+					NSMutableArray<OCItem *> *updateItems = [NSMutableArray new];
+
+					[self.vault.database iterateCacheItemsForQueryCondition:[OCQueryCondition require:@[
+						[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)], // not removed
+						[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusLocalCopy)], // local copy
+						[OCQueryCondition where:OCItemPropertyNameType isEqualTo:@(OCItemTypeFile)], // file
+						[OCQueryCondition where:OCItemPropertyNameDownloadTrigger isNotEqualTo:OCItemDownloadTriggerIDAvailableOffline], // not already marked as available offline
+						itemPolicy.condition
+					]] excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop) {
+						if (item != nil)
+						{
+							if (item.activeSyncRecordIDs.count == 0)
+							{
+								item.downloadTriggerIdentifier = OCItemDownloadTriggerIDAvailableOffline;
+							}
+							[updateItems addObject:item];
+						}
+						else
+						{
+							if (updateItems.count > 0)
+							{
+								[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+							}
+						}
+					}];
+
+					return (nil);
+				} completionHandler:^(NSError *error) {
+					[self endActivity:@"Convert existing local copies"];
+				}];
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(error, itemPolicy);
+			}
+		};
+	}
+
 	if (OCTypedCast(options[OCCoreOptionSkipRedundancyChecks], NSNumber).boolValue)
 	{
 		// Skip redundancy checks
 		OCItemPolicy *newItemPolicy;
 
-		if ((newItemPolicy = [[OCItemPolicy alloc] initWithKind:OCItemPolicyKindAvailableOffline item:item]) != nil)
+		if ((newItemPolicy = [self _createAvailableOfflinePolicyForItem:item]) != nil)
 		{
-			newItemPolicy.path = item.path;
-			newItemPolicy.localID = item.localID;
-
-			newItemPolicy.policyAutoRemovalMethod = OCItemPolicyAutoRemovalMethodNoItems;
- 			newItemPolicy.policyAutoRemovalCondition = [OCQueryCondition require:@[
- 				[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)],
- 				(item.type == OCItemTypeFile) ?
- 					newItemPolicy.condition : // File condition == policy.condition
- 					[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:item.path] // Folder condition == exact path match
- 			]];
-
 			// Add item policy
-			[self addItemPolicy:newItemPolicy completionHandler:^(NSError * _Nullable error) {
+			[self addItemPolicy:newItemPolicy options:OCCoreItemPolicyOptionNone completionHandler:^(NSError * _Nullable error) {
 				if (completionHandler != nil)
 				{
 					completionHandler(error, (error == nil) ? newItemPolicy : nil);
@@ -75,12 +134,12 @@
 				// Item not yet covered
 				OCItemPolicy *newItemPolicy;
 
-				if ((newItemPolicy = [[OCItemPolicy alloc] initWithKind:OCItemPolicyKindAvailableOffline item:item]) != nil)
+				if ((newItemPolicy = [self _createAvailableOfflinePolicyForItem:item]) != nil)
 				{
 					OCCore *core = self;
 
 					// Add item policy
-					[self addItemPolicy:newItemPolicy completionHandler:^(NSError * _Nullable error) {
+					[self addItemPolicy:newItemPolicy options:OCCoreItemPolicyOptionNone completionHandler:^(NSError * _Nullable error) {
 						// Item policy added
 						if (error != nil)
 						{
@@ -181,7 +240,7 @@
 
 - (void)removeAvailableOfflinePolicy:(OCItemPolicy *)itemPolicy completionHandler:(nullable OCCoreCompletionHandler)completionHandler
 {
-	[self removeItemPolicy:itemPolicy completionHandler:completionHandler];
+	[self removeItemPolicy:itemPolicy options:OCCoreItemPolicyOptionNone completionHandler:completionHandler];
 }
 
 - (void)_updateAvailableOfflineCaches

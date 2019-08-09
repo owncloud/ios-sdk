@@ -58,6 +58,8 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 #pragma mark - Policy updates
 - (void)updateWithPolicies:(nullable NSArray<OCItemPolicy *> *)policies; //!< Called whenever policies have been updated. The processor is responsible for filtering and using them.
 
+- (void)performPreflightOnPoliciesWithTrigger:(OCItemPolicyProcessorTrigger)trigger withItems:(nullable NSArray<OCItem *> *)newUpdatedAndRemovedItems; //!< Called on matching triggers, before -willEnterTrigger:, to give the OCItemPolicyProcessor an opportunity to refresh the policies without triggering an OCItemPolicyProcessorTriggerPoliciesChanged event
+
 #pragma mark - Match handling
 - (void)beginMatchingWithTrigger:(OCItemPolicyProcessorTrigger)trigger;
 - (void)performActionOn:(OCItem *)matchingItem withTrigger:(OCItemPolicyProcessorTrigger)trigger;
@@ -72,8 +74,9 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 - (void)willEnterTrigger:(OCItemPolicyProcessorTrigger)trigger;
 - (void)didPassTrigger:(OCItemPolicyProcessorTrigger)trigger;
 
-#pragma mark - Cleanup polices
+#pragma mark - Cleanup policies
 - (void)performPoliciesAutoRemoval;
+- (nullable OCItemPolicy *)attemptRecoveryOfPolicy:(OCItemPolicy *)itemPolicy; //!< Return nil to remove the policy, an updated/replacement OCItemPolicy to keep the policy
 
 /*
 	Ideas for policies:

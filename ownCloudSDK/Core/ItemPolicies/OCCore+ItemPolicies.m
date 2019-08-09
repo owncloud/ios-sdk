@@ -29,7 +29,7 @@
 
 @implementation OCCore (ItemPolicies)
 
-- (void)addItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
+- (void)addItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(OCCoreCompletionHandler)completionHandler
 {
 	[self beginActivity:@"Adding item policy"];
 
@@ -51,13 +51,16 @@
 			completionHandler(error);
 		}
 
-		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		if ((options & OCCoreItemPolicyOptionSkipTrigger) == 0)
+		{
+			[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		}
 
 		[self endActivity:@"Adding item policy"];
 	}];
 }
 
-- (void)updateItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
+- (void)updateItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(OCCoreCompletionHandler)completionHandler
 {
 	[self beginActivity:@"Updating item policy"];
 
@@ -86,13 +89,16 @@
 			completionHandler(error);
 		}
 
-		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		if ((options & OCCoreItemPolicyOptionSkipTrigger) == 0)
+		{
+			[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		}
 
 		[self endActivity:@"Updating item policy"];
 	}];
 }
 
-- (void)removeItemPolicy:(OCItemPolicy *)policy completionHandler:(OCCoreCompletionHandler)completionHandler
+- (void)removeItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(OCCoreCompletionHandler)completionHandler
 {
 	[self beginActivity:@"Removing item policy"];
 
@@ -120,7 +126,10 @@
 			completionHandler(error);
 		}
 
-		[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		if ((options & OCCoreItemPolicyOptionSkipTrigger) == 0)
+		{
+			[self runPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerPoliciesChanged];
+		}
 
 		[self endActivity:@"Removing item policy"];
 	}];
@@ -213,6 +222,8 @@
 				OCQueryCondition *matchCondition;
 				OCQueryCondition *cleanupCondition;
 
+				[policyProcessor performPreflightOnPoliciesWithTrigger:triggerMask withItems:nil];
+
 				[policyProcessor willEnterTrigger:triggerMask];
 
 				if ((matchCondition = policyProcessor.matchCondition) != nil)
@@ -277,6 +288,8 @@
 			{
 				OCQueryCondition *matchCondition;
 				OCQueryCondition *cleanupCondition;
+
+				[policyProcessor performPreflightOnPoliciesWithTrigger:triggerMask withItems:items];
 
 				[policyProcessor willEnterTrigger:triggerMask];
 

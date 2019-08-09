@@ -1648,6 +1648,7 @@ OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
 OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
 OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
+OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

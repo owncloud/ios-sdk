@@ -21,12 +21,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_OPTIONS(NSUInteger, OCCoreItemPolicyOption)
+{
+	OCCoreItemPolicyOptionNone = 0,
+	OCCoreItemPolicyOptionSkipTrigger = 1<<0
+};
+
 @interface OCCore (ItemPolicies)
 
 #pragma mark - Administration
-- (void)addItemPolicy:(OCItemPolicy *)policy completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
-- (void)updateItemPolicy:(OCItemPolicy *)policy completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
-- (void)removeItemPolicy:(OCItemPolicy *)policy completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
+- (void)addItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
+- (void)updateItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
+- (void)removeItemPolicy:(OCItemPolicy *)policy options:(OCCoreItemPolicyOption)options completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
 
 - (void)addItemPolicyProcessor:(OCItemPolicyProcessor *)processor;
 - (void)removeItemPolicyProcessor:(OCItemPolicyProcessor *)processor;
