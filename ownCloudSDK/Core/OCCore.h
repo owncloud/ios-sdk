@@ -176,7 +176,6 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSMutableArray <OCItemPolicy *> *_itemPolicies;
 	NSMutableArray <OCItemPolicyProcessor *> *_itemPolicyProcessors;
-	NSMutableArray <OCItemPolicyKind> *_activePolicyKinds;
 	BOOL _itemPoliciesAppliedInitially;
 	BOOL _itemPoliciesValid;
 

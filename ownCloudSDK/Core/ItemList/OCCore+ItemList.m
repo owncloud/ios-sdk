@@ -1065,7 +1065,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			OCItem *remoteItem = items.firstObject;
 			NSArray<OCItem*> *cacheItems = nil;
 			BOOL updateQuotaTotal = NO;
-			BOOL doSchedule = NO;
 
 			if ([remoteItem.path isEqual:@"/"])
 			{
