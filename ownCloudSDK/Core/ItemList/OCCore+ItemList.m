@@ -653,7 +653,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			if (queryState == OCQueryStateIdle)
 			{
 				// Fully merged => use for updating existing queries that have already gone through their complete, initial update
-				NSMutableArray <OCPath> *refreshPaths = nil;
+				NSMutableArray<OCPath> *refreshPaths = [NSMutableArray new];
+				NSMutableArray<OCItem *> *movedItems = [NSMutableArray new];
 				BOOL fetchUpdatesRunning = NO;
 
 				@synchronized(self->_fetchUpdatesCompletionHandlers)
@@ -661,40 +662,93 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					fetchUpdatesRunning = (self->_fetchUpdatesCompletionHandlers.count > 0);
 				}
 
-				if (self.automaticItemListUpdatesEnabled || fetchUpdatesRunning)
-				{
-					refreshPaths = [NSMutableArray new];
+				BOOL allowRefreshPathAddition = (self.automaticItemListUpdatesEnabled || fetchUpdatesRunning);
 
-					// Determine refreshPaths if automatic item list updates are enabled
-					for (OCItem *item in newItems)
+				// Determine refreshPaths if automatic item list updates are enabled
+				for (OCItem *item in newItems)
+				{
+					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
 					{
-						if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
+						// Moved items are removed from newItems, updated and moved to changedCacheItems above, so that
+						// such items should not end up ending up their item.path to refreshPaths here. Only truly new-
+						// discovered collections will.
+						if (allowRefreshPathAddition)
 						{
 							[refreshPaths addObject:item.path];
 						}
 					}
+				}
 
-					for (OCItem *item in changedCacheItems)
+				for (OCItem *item in changedCacheItems)
+				{
+					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
 					{
-						if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
-						{
-							OCItem *cacheItem = cacheItemsByFileID[item.fileID];
+						__block OCItem *cacheItem = cacheItemsByFileID[item.fileID];
 
-							// Do not trigger refreshes if only the name changed
-							#warning (TODO: update database of items contained in folder on name changes: here, to also cover external renames; test plan must include failed renames)
-							if ((cacheItem==nil) || ((cacheItem != nil) && ![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier]))
+						if (cacheItem == nil)
+						{
+							[self.database retrieveCacheItemForFileID:item.fileID includingRemoved:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+								cacheItem = item;
+							}];
+						}
+
+						// Do not trigger refreshes if only the name changed
+						if ((cacheItem==nil) || ((cacheItem != nil) && ![cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier]))
+						{
+							if (allowRefreshPathAddition)
 							{
 								[refreshPaths addObject:item.path];
 							}
 						}
-					}
 
-					if (refreshPaths.count == 0)
-					{
-						refreshPaths = nil;
+						// Check for (remotely) moved folders
+						if ((cacheItem != nil) && [cacheItem.itemVersionIdentifier isEqual:item.itemVersionIdentifier] && // Folder unmodified
+						    (![cacheItem.path isEqual:item.path]) && // Folder path changed
+						    (cacheItem.activeSyncRecordIDs.count == 0)) // Folder has no ongoing sync activity (=> skips LOCALLY moved/renamed folders)
+						{
+							// Folder contents didn't change, but folder path did change
+							// => update all contained items' path in the database
+							[self.database iterateCacheItemsForQueryCondition:[OCQueryCondition where:OCItemPropertyNamePath startsWith:cacheItem.path] excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *containedItem, BOOL *stop) {
+								if ((containedItem != nil) && (containedItem.path != nil) && (containedItem.fileID != nil))
+								{
+									if (![containedItem.fileID isEqual:cacheItem.fileID])
+									{
+										if (item.activeSyncRecordIDs.count == 0)
+										{
+											// Item has no sync activity
+											containedItem.previousPath = containedItem.path;
+											containedItem.path = [item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]];
+
+											if ([containedItem countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
+											{
+												containedItem.removed = NO;
+											}
+
+											[movedItems addObject:containedItem];
+										}
+										else
+										{
+											// Item with sync activity => skip
+										}
+									}
+								}
+							}];
+						}
 					}
 				}
 
+				if (refreshPaths.count == 0)
+				{
+					refreshPaths = nil;
+				}
+
+				if (movedItems.count > 0)
+				{
+					OCLogDebug(@"Moved items: %@", OCLogPrivate(movedItems));
+					[changedCacheItems addObjectsFromArray:movedItems];
+				}
+
+				// Perform updates
 				[self performUpdatesForAddedItems:newItems
 						     removedItems:deletedCacheItems
 						     updatedItems:changedCacheItems

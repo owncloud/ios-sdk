@@ -59,6 +59,8 @@
 				{
 					[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 
+					OCLogDebug(@"Preflight: delete contained %@", OCLogPrivate(item.path));
+
 					[removedItems addObject:item];
 					[removedLocalIDs addObject:item.localID];
 				}
@@ -102,6 +104,8 @@
 					[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 						if (item != nil)
 						{
+							OCLogDebug(@"Deschedule: restore delete contained %@", OCLogPrivate(item.path));
+
 							[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 
 							if ([item countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
@@ -200,6 +204,7 @@
 				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:self.localItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					for (OCItem *item in items)
 					{
+						OCLogDebug(@"Success: remove delete contained %@", OCLogPrivate(item.path));
 						[item removeSyncRecordID:syncRecordID activity:OCItemSyncActivityDeleting];
 						[removedItems addObject:item];
 					}
@@ -212,6 +217,7 @@
 				[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 					if (item != nil)
 					{
+						OCLogDebug(@"Success: restore delete contained %@", OCLogPrivate(item.path));
 						[item removeSyncRecordID:syncRecordID activity:OCItemSyncActivityDeleting];
 
 						[updatedItems addObject:item];
@@ -355,8 +361,8 @@
 - (void)encodeActionData:(NSCoder *)coder
 {
 	[coder encodeBool:_requireMatch forKey:@"requireMatch"];
-	[coder encodeBool:_associatedItemLocalIDs forKey:@"associatedItemLocalIDs"];
-	[coder encodeBool:_associatedItemLaneTags forKey:@"associatedItemLaneTags"];
+	[coder encodeObject:_associatedItemLocalIDs forKey:@"associatedItemLocalIDs"];
+	[coder encodeObject:_associatedItemLaneTags forKey:@"associatedItemLaneTags"];
 }
 
 @end
