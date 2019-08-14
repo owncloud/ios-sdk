@@ -29,6 +29,7 @@
 #import "OCLogTag.h"
 #import "OCIPNotificationCenter.h"
 #import "OCHTTPTypes.h"
+#import "OCHTTPCookieStorage.h"
 #import "OCCapabilities.h"
 
 @class OCBookmark;
@@ -133,6 +134,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCHTTPPipeline *ephermalPipeline; //!< Pipeline for requests whose response is only interesting for the instance making them (f.ex. login, status, PROPFINDs)
 @property(nullable,strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
 @property(nullable,strong) OCHTTPPipeline *longLivedPipeline; //!< Pipeline for requests whose response may take a while (like uploads, downloads) or that may not be dropped - not even temporarily.
+
+@property(strong,nullable) OCHTTPCookieStorage *cookieStorage; //!< Cookie storage. Must be set externally if it should be used.
 
 @property(strong,readonly,nonatomic) NSSet<OCHTTPPipeline *> *allHTTPPipelines; //!< A set of all HTTP pipelines used by the connection
 

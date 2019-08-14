@@ -368,6 +368,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 }
 
+#pragma mark - Cookies
+- (OCHTTPCookieStorage *)partitionCookieStorage
+{
+	return (_cookieStorage);
+}
+
 #pragma mark - Prepare request
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request
 {
