@@ -220,10 +220,10 @@
 	[self.database closeWithCompletionHandler:completionHandler];
 }
 
-- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
+- (void)compactWithSelector:(nullable OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self compactInContext:nil withSelector:^BOOL(OCSyncAnchor  _Nullable syncAnchor, OCItem * _Nonnull item) {
-		return (item.compactingAllowed && (item.localRelativePath != nil));
+		return (item.compactingAllowed && (item.localRelativePath != nil) && ((selector != nil) ? selector(syncAnchor, item) : YES));
 	} completionHandler:completionHandler];
 }
 

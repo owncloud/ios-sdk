@@ -25,6 +25,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem *item);
+
 @interface OCVault : NSObject
 {
 	NSUUID *_uuid;
@@ -70,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)closeWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
 #pragma mark - Offline operations
-- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files.
+- (void)compactWithSelector:(nullable OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files. If a selector is provided, only files for which it ALSO returns YES are disposed off.
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
