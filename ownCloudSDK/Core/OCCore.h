@@ -282,6 +282,9 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
 
+#pragma mark - Item usage
+- (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Registers that the item has been used by the user, updating the locally tracked OCItem.lastUsed date with the current date and time.
+
 #pragma mark - Indicating activity requiring the core
 - (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description; //!< Runs a block in the current thread while making sure OCCore will not stop before the completionHandler has been called.
 

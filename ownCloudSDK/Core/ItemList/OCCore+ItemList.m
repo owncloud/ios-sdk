@@ -1259,11 +1259,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		[_fetchUpdatesCompletionHandlers removeAllObjects];
 	}
 
-	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)
-	{
-		completionHandler(error, foundChanges);
-	}
-
 	if (foundChanges || !_itemPoliciesAppliedInitially)
 	{
 		_itemPoliciesAppliedInitially = YES;
@@ -1273,6 +1268,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	else
 	{
 		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges];
+	}
+
+	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)
+	{
+		completionHandler(error, foundChanges);
 	}
 }
 

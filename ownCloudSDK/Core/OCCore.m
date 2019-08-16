@@ -1450,6 +1450,25 @@
 	}];
 }
 
+#pragma mark - Item usage
+- (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	[self beginActivity:@"Registering item usage"];
+
+	[self queueBlock:^{
+		item.lastUsed = [NSDate date];
+
+		[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ item ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+
+		[self endActivity:@"Registering item usage"];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+	}];
+}
+
 #pragma mark - Indicating activity requiring the core
 - (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description
 {
