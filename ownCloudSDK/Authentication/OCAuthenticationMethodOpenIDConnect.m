@@ -81,11 +81,8 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Method Detection
 + (NSURL *)_openIDConfigurationURLForConnection:(OCConnection *)connection
 {
-	#warning Temporary workaround for .well-known redirecting instead of returning config JSON
-	return ([connection.bookmark.url URLByAppendingPathComponent:@"index.php/apps/openidconnect/config"]);
-//	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
+	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
 }
-
 
 + (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
 {

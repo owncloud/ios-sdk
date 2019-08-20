@@ -210,7 +210,7 @@ OCAuthenticationMethodAutoRegister
 							}
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
-								completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, authenticationData);
+								completionHandler(error, self.class.identifier, authenticationData);
 							}
 						];
 					}
@@ -244,7 +244,7 @@ OCAuthenticationMethodAutoRegister
 					}
 
 					// Return errors
-					completionHandler(error, OCAuthenticationMethodIdentifierOAuth2, nil);
+					completionHandler(error, self.class.identifier, nil);
 
 					OCLogDebug(@"Auth session concluded with error=%@", error);
 				}
@@ -268,7 +268,7 @@ OCAuthenticationMethodAutoRegister
 	}
 	else
 	{
-		completionHandler(OCError(OCErrorInsufficientParameters), OCAuthenticationMethodIdentifierOAuth2, nil);
+		completionHandler(OCError(OCErrorInsufficientParameters), self.class.identifier, nil);
 	}
 }
 
@@ -478,7 +478,7 @@ OCAuthenticationMethodAutoRegister
 					{
 						// Handle errors coming from JSON response
 						NSDictionary *errorInfo = @{
-							@"authMethod" : OCAuthenticationMethodIdentifierOAuth2,
+							@"authMethod" : self.class.identifier,
 							@"jsonError" : jsonError
 						};
 
