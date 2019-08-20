@@ -18,6 +18,9 @@
 
 #import "OCCapabilities.h"
 #import "OCMacros.h"
+#import "OCConnection.h"
+
+static NSInteger _defaultSharingSearchMinLength = 2;
 
 @interface OCCapabilities()
 {
@@ -48,6 +51,7 @@
 @dynamic hostName;
 @dynamic supportedChecksumTypes;
 @dynamic preferredUploadChecksumType;
+@dynamic longProductVersionString;
 
 #pragma mark - DAV
 @dynamic davChunkingVersion;
@@ -191,6 +195,18 @@
 	return (OCTypedCast(_capabilities[@"core"][@"status"][@"hostname"], NSString));
 }
 
+- (NSString *)longProductVersionString
+{
+	NSDictionary *statusDict;
+
+	if ((statusDict = OCTypedCast(_capabilities[@"core"][@"status"], NSDictionary)) != nil)
+	{
+		return ([OCConnection serverLongProductVersionStringFromServerStatus:_capabilities[@"core"][@"status"]]);
+	}
+
+	return (nil);
+}
+
 #pragma mark - Checksums
 - (NSArray<OCChecksumAlgorithmIdentifier> *)supportedChecksumTypes
 {
@@ -283,6 +299,11 @@
 - (NSNumber *)sharingSearchMinLength
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"search_min_length"], NSNumber));
+}
+
++ (NSInteger)defaultSharingSearchMinLength
+{
+	return _defaultSharingSearchMinLength;
 }
 
 #pragma mark - Sharing : Public

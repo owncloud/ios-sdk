@@ -121,9 +121,7 @@
 
 			if ((userNameFileOwner != nil) || (displayNameFileOwner != nil))
 			{
-				share.itemOwner = [OCUser new];
-				share.itemOwner.userName = userNameFileOwner;
-				share.itemOwner.displayName = displayNameFileOwner;
+				share.itemOwner = [OCUser userWithUserName:userNameFileOwner displayName:displayNameFileOwner];
 			}
 
 			// Item MIME Type
@@ -179,9 +177,7 @@
 
 			if ((userNameShareOwner != nil) || (displayNameShareOwner != nil))
 			{
-				share.owner = [OCUser new];
-				share.owner.userName = userNameShareOwner;
-				share.owner.displayName = displayNameShareOwner;
+				share.owner = [OCUser userWithUserName:userNameShareOwner displayName:displayNameShareOwner];
 			}
 			else
 			{
@@ -205,8 +201,7 @@
 						owner = [owner stringByAppendingFormat:@"@%@", remoteHost];
 					}
 
-					share.owner = [OCUser new];
-					share.owner.userName = owner;
+					share.owner = [OCUser userWithUserName:owner displayName:nil];
 				}
 			}
 

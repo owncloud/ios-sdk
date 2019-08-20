@@ -1124,4 +1124,39 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testUserIDParsing
+{
+	OCUser *user;
+
+	user = [OCUser userWithUserName:@"admin" displayName:@"admin"];
+	XCTAssert(!user.isRemote);
+	XCTAssert([user.userName isEqual:@"admin"]);
+	XCTAssert(user.remoteUserName == nil);
+	XCTAssert(user.remoteHost == nil);
+
+	user = [OCUser userWithUserName:@"admin@localhost" displayName:@"admin" isRemote:NO];
+	XCTAssert(!user.isRemote);
+	XCTAssert([user.userName isEqual:@"admin@localhost"]);
+	XCTAssert(user.remoteUserName == nil);
+	XCTAssert(user.remoteHost == nil);
+
+	user = [OCUser userWithUserName:@"admin@localhost" displayName:@"admin" isRemote:YES];
+	XCTAssert(user.isRemote);
+	XCTAssert([user.userName isEqual:@"admin@localhost"]);
+	XCTAssert([user.remoteUserName isEqual:@"admin"]);
+	XCTAssert([user.remoteHost isEqual:@"localhost"]);
+
+	user = [OCUser userWithUserName:@"admin@localhost@remote" displayName:@"admin"];
+	XCTAssert(user.isRemote);
+	XCTAssert([user.userName isEqual:@"admin@localhost@remote"]);
+	XCTAssert([user.remoteUserName isEqual:@"admin@localhost"]);
+	XCTAssert([user.remoteHost isEqual:@"remote"]);
+
+	user = [OCUser userWithUserName:@"admin@localhost@remote" displayName:@"admin" isRemote:NO];
+	XCTAssert(!user.isRemote);
+	XCTAssert([user.userName isEqual:@"admin@localhost@remote"]);
+	XCTAssert(user.remoteUserName == nil);
+	XCTAssert(user.remoteHost == nil);
+}
+
 @end

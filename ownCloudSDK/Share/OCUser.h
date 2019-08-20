@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCUser : NSObject <NSSecureCoding, NSCopying>
 {
 	UIImage *_avatar;
+	NSNumber *_forceIsRemote;
 }
 
 @property(nullable,strong) NSString *displayName; //!< Display name of the user (f.ex. "John Appleseed")
@@ -40,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
 
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
++ (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote;
 
 @end
 

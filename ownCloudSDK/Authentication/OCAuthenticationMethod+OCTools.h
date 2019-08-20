@@ -16,14 +16,19 @@
  *
  */
 
-#import <ownCloudSDK/ownCloudSDK.h>
+#import "OCConnection.h"
+#import "OCAuthenticationMethod.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface OCAuthenticationMethod (OCTools)
 
 + (NSString *)basicAuthorizationValueForUsername:(NSString *)username passphrase:(NSString *)passPhrase;
 
-+ (NSArray <NSURL *> *)detectionURLsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection;
++ (nullable NSArray <NSURL *> *)detectionURLsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection;
 
-+ (void)detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler;
++ (void)detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier _Nullable identifier, BOOL supported))completionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END

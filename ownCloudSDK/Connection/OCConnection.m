@@ -370,6 +370,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 }
 
+#pragma mark - Cookies
+- (OCHTTPCookieStorage *)partitionCookieStorage
+{
+	return (_cookieStorage);
+}
+
 #pragma mark - Prepare request
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request
 {
@@ -608,6 +614,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
 
+	if ([error isOCErrorWithCode:OCErrorAuthorizationRetry])
+	{
+		// Reschedule requested by auth method
+		instruction = OCHTTPRequestInstructionReschedule;
+	}
+
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
 	{
 		instruction = [_delegate connection:self instructionForFinishedRequest:task.request withResponse:task.response error:error defaultsTo:instruction];
@@ -764,7 +776,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						// Check minimum version
 						NSError *minimumVersionError;
 
-						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion product:self.serverProductName longVersion:self.serverLongProductVersionString]) != nil)
+						if ((minimumVersionError = [self supportsServerVersion:self.serverVersion product:self.serverProductName longVersion:self.serverLongProductVersionString allowHiddenVersion:YES]) != nil)
 						{
 							completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 
@@ -818,6 +830,16 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 										[self retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
 											if (error == nil)
 											{
+												// Check minimum version
+												NSError *minimumVersionError;
+
+												if ((minimumVersionError = [self supportsServerVersion:capabilities.version product:capabilities.productName longVersion:capabilities.longProductVersionString allowHiddenVersion:NO]) != nil)
+												{
+													completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
+
+													return;
+												}
+
 												// Get user info
 												connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 

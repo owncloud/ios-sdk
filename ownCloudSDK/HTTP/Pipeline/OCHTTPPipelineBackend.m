@@ -51,6 +51,10 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 		if (sqlDB != nil)
 		{
 			_sqlDB = sqlDB;
+			if (_sqlDB.databaseURL != nil)
+			{
+				_sqlDB.journalMode = OCSQLiteJournalModeWAL;
+			}
 		}
 		else
 		{

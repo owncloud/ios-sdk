@@ -88,7 +88,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorInsufficientStorage, //!< Insufficient storage
 
-	OCErrorNotAvailableOffline //!< API not available offline.
+	OCErrorNotAvailableOffline, //!< API not available offline.
+
+	OCErrorAuthorizationRetry //!< Authorization failed. Retry the request.
 };
 
 @class OCIssue;

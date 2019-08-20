@@ -80,6 +80,7 @@
 		};
 
 		self.sqlDB = [[OCSQLiteDB alloc] initWithURL:databaseURL];
+		self.sqlDB.journalMode = OCSQLiteJournalModeWAL;
 		[self addSchemas];
 	}
 
@@ -116,6 +117,8 @@
 					if (error == nil)
 					{
 						[self.sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
+							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
+
 							if (completionHandler!=nil)
 							{
 								completionHandler(self, error);

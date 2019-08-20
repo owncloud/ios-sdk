@@ -16,6 +16,9 @@
  *
  */
 
+#import <UIKit/UIKit.h>
+#import <sys/utsname.h>
+
 #import "OCLogger.h"
 #import "OCLogWriter.h"
 #import "OCLogFileWriter.h"
@@ -599,6 +602,71 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		return (_togglesByIdentifier[toggleIdentifier].enabled);
 	}
 }
+
+#pragma mark - Log intro
+- (NSString *)logIntro
+{
+	static NSString *cachedLogIntro;
+	NSString *logIntro = nil;
+
+	@synchronized(self)
+	{
+		if (cachedLogIntro == nil)
+		{
+			NSBundle *mainBundle = [NSBundle mainBundle];
+
+			NSString *deviceModelID = @"";
+			NSString *logHostCommit = @"";
+			struct utsname utsNames;
+			if (uname(&utsNames) >= 0)
+			{
+				deviceModelID = [NSString stringWithFormat:@" (%@)", [NSString stringWithUTF8String:utsNames.machine]];
+			}
+
+			if ([self respondsToSelector:@selector(logHostCommit)])
+			{
+				NSString *hostCommit;
+
+				if ((hostCommit = [((id<OCLogIntroFormat>)self) logHostCommit]) != nil)
+				{
+					logHostCommit = [NSString stringWithFormat:@" #%@", hostCommit];
+				}
+			}
+
+			logIntro = [NSString stringWithFormat:@"Host: %@ %@ (%@)%@; SDK: %@; OS: %@ %@; Device: %@%@; Localizations: [%@]",
+				[mainBundle bundleIdentifier], // Bundle ID
+				[mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"], // Version
+				[mainBundle objectForInfoDictionaryKey:(__bridge NSString *)kCFBundleVersionKey], // Build version
+				logHostCommit,
+				OCAppIdentity.sharedAppIdentity.sdkVersionString, // SDK version
+				UIDevice.currentDevice.systemName, UIDevice.currentDevice.systemVersion, // OS name + version
+				UIDevice.currentDevice.model, // Device model
+				deviceModelID, // Device model ID
+				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "]  // Localizations
+			];
+
+			cachedLogIntro = logIntro;
+		}
+		else
+		{
+			logIntro = cachedLogIntro;
+		}
+
+		if ([self conformsToProtocol:@protocol(OCLogIntroFormat)])
+		{
+			NSString *logIntroFormat;
+
+			if ((logIntroFormat = [((id<OCLogIntroFormat>)self) logIntroFormat]) != nil)
+			{
+				logIntro = [logIntroFormat stringByReplacingOccurrencesOfString:@"{{stdIntro}}" withString:logIntro];
+			}
+		}
+	}
+
+	return (logIntro);
+}
+
+; //!< Introductory lines to start logging (and new log files) with. Allows for app-side injection of additions via OCLogger<OCLogAdditionalIntro> conformance.
 
 @end
 

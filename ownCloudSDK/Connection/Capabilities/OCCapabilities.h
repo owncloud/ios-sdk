@@ -45,6 +45,8 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSString *productName;
 @property(readonly,nullable,nonatomic) NSString *hostName;
 
+@property(readonly,nullable,nonatomic) NSString *longProductVersionString;
+
 #pragma mark - Checksums
 @property(readonly,nullable,nonatomic) NSArray<OCChecksumAlgorithmIdentifier> *supportedChecksumTypes;
 @property(readonly,nullable,nonatomic) OCChecksumAlgorithmIdentifier preferredUploadChecksumType;
@@ -70,6 +72,7 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool sharingAllowed;
 @property(readonly,nonatomic) OCSharePermissionsMask sharingDefaultPermissions;
 @property(readonly,nullable,nonatomic) NSNumber *sharingSearchMinLength;
+@property(readonly,class,nonatomic) NSInteger defaultSharingSearchMinLength;
 
 #pragma mark - Sharing : Public
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingEnabled;

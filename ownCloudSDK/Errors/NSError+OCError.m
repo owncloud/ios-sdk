@@ -260,6 +260,10 @@
 				case OCErrorNotAvailableOffline:
 					unlocalizedString = @"Not available offline.";
 				break;
+
+				case OCErrorAuthorizationRetry:
+					unlocalizedString = @"Authorization needs to be retried.";
+				break;
 			}
 		}
 	}

@@ -67,3 +67,25 @@ Pre-requisites:
 `mitmweb --web-port 10001 --listen-port 443 --mode reverse:http://localhost:36080 --set keep_host_header --cert "*=cert-pkey-B-cert1.pem"`
 
 The OC instance is then accessible via `https://localhost:443/` by the app in the Simulator.
+
+## Testing OAuth2
+Pre-requisites:
+- running a simple instance as described above
+- install OAuth2 plugin in the instance via OC Market
+- create new OAuth2-based bookmark for instance
+
+### Listing access tokens
+`docker-compose exec owncloud sqlite3 /mnt/data/files/owncloud.db "SELECT * FROM oc_oauth2_access_tokens"`
+
+### Listing refresh tokens
+`docker-compose exec owncloud sqlite3 /mnt/data/files/owncloud.db "SELECT * FROM oc_oauth2_refresh_tokens"`
+
+### Deleting access tokens
+`docker-compose exec owncloud sqlite3 /mnt/data/files/owncloud.db "DELETE FROM oc_oauth2_access_tokens"`
+
+### Deleting refresh tokens
+`docker-compose exec owncloud sqlite3 /mnt/data/files/owncloud.db "DELETE FROM oc_oauth2_refresh_tokens"`
+
+### Deleting all tokens
+`docker-compose exec owncloud sqlite3 /mnt/data/files/owncloud.db "DELETE FROM oc_oauth2_access_tokens; DELETE FROM oc_oauth2_refresh_tokens;"`
+
