@@ -66,6 +66,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCore+Claims.h>
 #import <ownCloudSDK/OCClaim.h>
 
+#import <ownCloudSDK/OCKeyValueStore.h>
+
 #import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>
 
 #import <ownCloudSDK/OCBookmark.h>

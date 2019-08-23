@@ -269,6 +269,7 @@
 @end
 
 NSString *OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
+// NSString *OCBookmarkUserInfoKeySkipAvailableOffline = @"OCSkipAvailableOffline";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";
