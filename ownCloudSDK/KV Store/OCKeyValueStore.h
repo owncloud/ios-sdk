@@ -61,7 +61,9 @@ typedef NSString* OCKeyValueStoreIdentifier;
 typedef NSString* OCKeyValueStoreKey;
 typedef NSString* OCKeyValueStoreCollectionEntryID;
 
-typedef void(^OCKeyValueStoreObserver)(id _Nullable owner, id _Nullable newValue);
+@class OCKeyValueStore;
+
+typedef void(^OCKeyValueStoreObserver)(OCKeyValueStore *store, id _Nullable owner, OCKeyValueStoreKey key, id _Nullable newValue);
 
 @interface OCKeyValueStore : NSObject <OCLogTagging>
 
@@ -82,8 +84,8 @@ typedef void(^OCKeyValueStoreObserver)(id _Nullable owner, id _Nullable newValue
 #pragma mark - Storing plain values
 - (void)storeObject:(nullable id<NSSecureCoding>)object forKey:(OCKeyValueStoreKey)key;
 
-#pragma mark - Exclusive value updates
-- (void)updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(id _Nullable(^)(id _Nullable existingObject, BOOL * _Nullable outDidModify))modifier;
+#pragma mark - Atomic value updates
+- (void)updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(id _Nullable(^)(id _Nullable existingObject, BOOL *outDidModify))modifier;
 
 #pragma mark - Storing values in stacks
 - (void)pushObject:(nullable id<NSSecureCoding>)object onStackForKey:(OCKeyValueStoreKey)key withClaim:(OCClaim *)claim;

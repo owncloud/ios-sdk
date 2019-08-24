@@ -38,6 +38,8 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	NSOperationQueue *_coordinationQueue;
 
 	OCRateLimiter *_rateLimiter;
+
+	NSString *_cachedKeyUpdateNotificationName;
 }
 @end
 
@@ -146,42 +148,20 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 }
 
 #pragma mark - Storing plain values
-- (void)storeObject:(nullable id<NSSecureCoding>)object forKey:(OCKeyValueStoreKey)key
-{
-	[self updateStoreContentsWithModifications:^(OCKeyValueStoreDictionary storeContents) {
-		OCKeyValueRecord *record;
-
-		if (object != nil)
-		{
-			if ((record = storeContents[key]) != nil)
-			{
-				// Update existing record
-				[record updateWithObject:object];
-			}
-			else
-			{
-				// Add new record
-				storeContents[key] = [[OCKeyValueRecord alloc] initWithValue:object];
-			}
-		}
-		else
-		{
-			// Remove record
-			storeContents[key] = nil;
-		}
-
-		return (YES);
-	}];
-}
-
-- (void)updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(id _Nullable(^)(id _Nullable existingObject, BOOL * _Nullable outDidModify))modifier
+- (void)_updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(nullable id _Nullable(^)(id _Nullable existingObject, BOOL * _Nullable outDidModify))modifier object:(nullable id<NSSecureCoding>)newObject
 {
 	[self updateStoreContentsWithModifications:^(OCKeyValueStoreDictionary storeContents) {
 		OCKeyValueRecord *record = storeContents[key];
-		id object = [record decodeObjectWithClasses:[self _classesForKey:key]];
-		BOOL didModify = NO;
+		id object = newObject;
+		BOOL didModify = YES;
 
-		object = modifier(object, &didModify);
+		if (modifier != nil)
+		{
+			object = [record decodeObjectWithClasses:[self _classesForKey:key]];
+			didModify = NO;
+
+			object = modifier(object, &didModify);
+		}
 
 		if (didModify)
 		{
@@ -207,6 +187,16 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		return (didModify);
 	}];
+}
+
+- (void)storeObject:(nullable id<NSSecureCoding>)object forKey:(OCKeyValueStoreKey)key
+{
+	[self _updateObjectForKey:key usingModifier:nil object:object];
+}
+
+- (void)updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(id _Nullable(^)(id _Nullable existingObject, BOOL *outDidModify))modifier
+{
+	[self _updateObjectForKey:key usingModifier:modifier object:nil];
 }
 
 #pragma mark - Storing values in stacks
@@ -264,7 +254,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 	if (initial)
 	{
-		observer(owner, [self readObjectForKey:key]);
+		observer(self, owner, key, [self readObjectForKey:key]);
 	}
 }
 
@@ -284,13 +274,15 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	{
 		if ((observersByOwner = _observersByOwnerByKey[key]) != nil)
 		{
+			observersByOwner = [observersByOwner copy];
+
 			for (id owner in observersByOwner)
 			{
 				OCKeyValueStoreObserver observer;
 
 				if ((observer = [observersByOwner objectForKey:owner]) != nil)
 				{
-					observer(owner, newValue);
+					observer(self, owner, key, newValue);
 				}
 			}
 		}
@@ -310,7 +302,12 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 #pragma mark - Update notifications
 - (NSString *)_updateNotificationName
 {
-	return (self.identifier);
+	if (_cachedKeyUpdateNotificationName == nil)
+	{
+		_cachedKeyUpdateNotificationName = [@"com.owncloud.keyvalueupdate." stringByAppendingString:self.identifier];
+	}
+
+	return (_cachedKeyUpdateNotificationName);
 }
 
 - (void)_setupUpdateNotifications
@@ -458,84 +455,95 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 - (void)updateFromStoreContentsAtURL:(NSURL *)url
 {
-	NSError *error = nil;
+	__weak OCKeyValueStore *weakSelf = self;
 
-	[_coordinator coordinateReadingItemAtURL:url options:0 error:&error byAccessor:^(NSURL * _Nonnull newURL) {
+	[_coordinationQueue addOperationWithBlock:^{
 		NSError *error = nil;
+		OCKeyValueStore *strongSelf = weakSelf;
 
-		// OCLogDebug(@"Read from %@", newURL);
+		if (strongSelf == nil) { return; }
 
-		if ([[NSFileManager defaultManager] fileExistsAtPath:newURL.path])
-		{
-			// File exists, read and apply updates
-			OCKeyValueStoreDictionary latestStoreContents;
+		[strongSelf->_coordinator coordinateReadingItemAtURL:url options:0 error:&error byAccessor:^(NSURL * _Nonnull newURL) {
+			// OCLogDebug(@"Read from %@", newURL);
 
-			if ((latestStoreContents = [self _readStoreContentsAtURL:url]) != nil)
+			OCKeyValueStore *strongSelf = weakSelf;
+
+			if (strongSelf == nil) { return; }
+
+			if ([[NSFileManager defaultManager] fileExistsAtPath:newURL.path])
 			{
-				[self _updateFromStoreContents:latestStoreContents];
-			}
-		}
-		else
-		{
-			// No file, initiate a new dictionary
-			[self _updateFromStoreContents:[NSMutableDictionary new]];
+				// File exists, read and apply updates
+				OCKeyValueStoreDictionary latestStoreContents;
 
-			OCLogError(@"Couldn't read last modified date of %@: %@", newURL, error);
-		}
+				if ((latestStoreContents = [strongSelf _readStoreContentsAtURL:url]) != nil)
+				{
+					[strongSelf _updateFromStoreContents:latestStoreContents];
+				}
+			}
+			else
+			{
+				// No file, initiate a new dictionary
+				[strongSelf _updateFromStoreContents:[NSMutableDictionary new]];
+
+				OCWTLogError(nil, @"File doesn't exist at %@", newURL);
+			}
+		}];
 	}];
 }
 
 - (void)updateStoreContentsWithModifications:(BOOL(^)(OCKeyValueStoreDictionary storeContents))modifier
 {
-	NSError *error = nil;
+	[_coordinationQueue addOperationWithBlock:^{
+		NSError *error = nil;
 
-	[_coordinator coordinateReadingItemAtURL:self.url options:0 writingItemAtURL:self.url options:NSFileCoordinatorWritingForReplacing error:&error byAccessor:^(NSURL * _Nonnull newReadingURL, NSURL * _Nonnull newWritingURL) {
-		OCKeyValueStoreDictionary latestStoreContents;
+		[self->_coordinator coordinateReadingItemAtURL:self.url options:0 writingItemAtURL:self.url options:NSFileCoordinatorWritingForReplacing error:&error byAccessor:^(NSURL * _Nonnull newReadingURL, NSURL * _Nonnull newWritingURL) {
+			OCKeyValueStoreDictionary latestStoreContents;
 
-		// OCLog(@"Read from %@, write to %@", newReadingURL, newWritingURL);
+			// OCLog(@"Read from %@, write to %@", newReadingURL, newWritingURL);
 
-		// Read the latest store contents
-		if ((latestStoreContents = [self _readStoreContentsAtURL:newReadingURL]) == nil)
-		{
-			// Create new one if none exists yet
-			latestStoreContents = [NSMutableDictionary new];
-		}
-
-		if (latestStoreContents != nil)
-		{
-			// Apply modification
-			if (modifier(latestStoreContents))
+			// Read the latest store contents
+			if ((latestStoreContents = [self _readStoreContentsAtURL:newReadingURL]) == nil)
 			{
-				// Save
-				NSData *storeContentsData = nil;
-
-				if ((storeContentsData = [NSKeyedArchiver archivedDataWithRootObject:latestStoreContents]) != nil)
-				{
-					[storeContentsData writeToURL:newWritingURL atomically:YES];
-				}
-
-				// Update local copy
-				[self _updateFromStoreContents:latestStoreContents];
-
-				[self->_coordinationQueue addOperationWithBlock: ^{
-					// OCLogDebug(@"Post notification");
-					[self _postUpdateNotifications];
-				}];
+				// Create new one if none exists yet
+				latestStoreContents = [NSMutableDictionary new];
 			}
-			else
-			{
-				// Make sure there's a copy at newWritingURL
-				if (![newReadingURL isEqual:newWritingURL])
-				{
-					NSError *error = nil;
 
-					if (![[NSFileManager defaultManager] copyItemAtURL:newReadingURL toURL:newWritingURL error:&error])
+			if (latestStoreContents != nil)
+			{
+				// Apply modification
+				if (modifier(latestStoreContents))
+				{
+					// Save
+					NSData *storeContentsData = nil;
+
+					if ((storeContentsData = [NSKeyedArchiver archivedDataWithRootObject:latestStoreContents]) != nil)
 					{
-						OCLogError(@"Error copying file after not making changes: %@", error);
+						[storeContentsData writeToURL:newWritingURL atomically:YES];
+					}
+
+					// Update local copy
+					[self _updateFromStoreContents:latestStoreContents];
+
+					[self->_coordinationQueue addOperationWithBlock: ^{
+						// OCLogDebug(@"Post notification");
+						[self _postUpdateNotifications];
+					}];
+				}
+				else
+				{
+					// Make sure there's a copy at newWritingURL
+					if (![newReadingURL isEqual:newWritingURL])
+					{
+						NSError *error = nil;
+
+						if (![[NSFileManager defaultManager] copyItemAtURL:newReadingURL toURL:newWritingURL error:&error])
+						{
+							OCLogError(@"Error copying file after not making changes: %@", error);
+						}
 					}
 				}
 			}
-		}
+		}];
 	}];
 }
 
