@@ -72,9 +72,9 @@
 
 - (void)tearDown
 {
-//	OCLogDebug(@"Deleting keyValueStoreURL=%@", keyValueStoreURL);
-//
-//	[[NSFileManager defaultManager] removeItemAtURL:keyValueStoreURL error:NULL];
+	OCLogDebug(@"Deleting keyValueStoreURL=%@", keyValueStoreURL);
+
+	[[NSFileManager defaultManager] removeItemAtURL:keyValueStoreURL error:NULL];
 	keyValueStoreURL = nil;
 }
 
@@ -90,6 +90,12 @@
 		XCTestExpectation *expect2Value2Update = [self expectationWithDescription:@"Expect value 2 update [2]"];
 		XCTestExpectation *expect2Value3Update = [self expectationWithDescription:@"Expect value 3 update [2]"];
 		XCTestExpectation *expect2Value4Update = [self expectationWithDescription:@"Expect value 4 update [2]"];
+
+		__block XCTestExpectation *expect1ValueT1Update = [self expectationWithDescription:@"Expect value t1 update [1]"];
+		__block XCTestExpectation *expect1ValueT1Removal = [self expectationWithDescription:@"Expect value t1 removal [1]"];
+
+		__block XCTestExpectation *expect2ValueT1Update = [self expectationWithDescription:@"Expect value t1 update [2]"];
+		__block XCTestExpectation *expect2ValueT1Removal = [self expectationWithDescription:@"Expect value t1 removal [2]"];
 
 		OCKeyValueStore *keyValueStore1 = [[OCKeyValueStore alloc] initWithURL:keyValueStoreURL identifier:@"test.kvs1"];
 		OCKeyValueStore *keyValueStore2 = [[OCKeyValueStore alloc] initWithURL:keyValueStoreURL identifier:@"test.kvs1"];
@@ -142,20 +148,73 @@
 			}
 		} forKey:@"test" withOwner:self initial:YES];
 
+
+		[keyValueStore1 addObserver:^(OCKeyValueStore *store, id  _Nullable owner, OCKeyValueStoreKey key, id  _Nullable newValue) {
+			OCLog(@"[1] New value: %@", newValue);
+
+			if (expect1ValueT1Update != nil)
+			{
+				if ([newValue isEqual:@"t1"])
+				{
+					[expect1ValueT1Update fulfill];
+					expect1ValueT1Update = nil;
+				}
+			}
+			else
+			{
+				if (newValue == nil)
+				{
+					[expect1ValueT1Removal fulfill];
+					expect1ValueT1Removal = nil;
+				}
+			}
+		} forKey:@"test2" withOwner:self initial:YES];
+
+		[keyValueStore2 addObserver:^(OCKeyValueStore *store, id  _Nullable owner, OCKeyValueStoreKey key, id  _Nullable newValue) {
+			OCLog(@"[2] New value: %@", newValue);
+
+			if (expect2ValueT1Update != nil)
+			{
+				if ([newValue isEqual:@"t1"])
+				{
+					[expect2ValueT1Update fulfill];
+					expect2ValueT1Update = nil;
+				}
+			}
+			else
+			{
+				if (newValue == nil)
+				{
+					[expect2ValueT1Removal fulfill];
+					expect2ValueT1Removal = nil;
+				}
+			}
+		} forKey:@"test2" withOwner:self initial:YES];
+
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-			[keyValueStore1 storeObject:@"1" forKey:@"test"];
+			[keyValueStore1 storeObject:@"1"  forKey:@"test"];
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@"1"]);
+
+			[keyValueStore1 storeObject:@"t1" forKey:@"test2"];
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test2"] isEqual:@"t1"]);
 		});
 
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			[keyValueStore1 storeObject:@"2" forKey:@"test"];
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@"2"]);
 		});
 
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			[keyValueStore2 storeObject:@"3" forKey:@"test"];
+			XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@"3"]);
+
+			[keyValueStore2 storeObject:nil  forKey:@"test2"];
+			XCTAssert([keyValueStore2 readObjectForKey:@"test2"] == nil);
 		});
 
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(4.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			[keyValueStore2 storeObject:@"4" forKey:@"test"];
+			XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@"4"]);
 		});
 
 		[self waitForExpectationsWithTimeout:10.0 handler:nil];
@@ -197,14 +256,17 @@
 				if ((i % 3) == 0)
 				{
 					[keyValueStore1 storeObject:@(i) forKey:@"test"];
+					XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(i)]);
 				}
 				else
 				{
 					[keyValueStore2 storeObject:@(i) forKey:@"test"];
+					XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@(i)]);
 				}
 			}
 
 			[keyValueStore2 storeObject:@"final" forKey:@"test"];
+			XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@"final"]);
 		});
 
 		[self waitForExpectationsWithTimeout:10.0 handler:nil];
@@ -224,9 +286,6 @@
 		NSMutableArray<OCKeyValueStore *> *keyValueStores = [NSMutableArray new];
 
 		XCTestExpectation *expectAllFilled = [self expectationWithDescription:@"All sets fully filled"];
-
-		NSURL *temporaryDirectoryURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
-		keyValueStoreURL = [temporaryDirectoryURL URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
 
 		__block BOOL storeZeroDidFulfill = NO;
 
@@ -294,6 +353,7 @@
 
 						return (existingObject);
 					}];
+					XCTAssert([((AtomicTestSet *)[keyValueStores[store] readObjectForKey:@"test"]).sets[store] containsIndex:idx]);
 				}
 			});
 		}
@@ -301,6 +361,52 @@
 		[self waitForExpectationsWithTimeout:10.0 * concurrentStores handler:nil];
 
 		NSLog(@"%@", keyValueStores);
+	}
+}
+
+- (void)testKeyValueStack
+{
+	@autoreleasepool {
+		XCTestExpectation *expectTimeout = [self expectationWithDescription:@"Timeout reached"];
+
+		OCKeyValueStore *keyValueStore1 = [[OCKeyValueStore alloc] initWithURL:keyValueStoreURL identifier:@"test.kvs4"];
+		OCClaim *claim10 = nil;
+
+		[keyValueStore1 pushObject:@(0) onStackForKey:@"test" withClaim:(claim10 = [OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:10.0]])];
+		[keyValueStore1 pushObject:@(1) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:6.0]]];
+		[keyValueStore1 pushObject:@(2) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:4.0]]];
+		[keyValueStore1 pushObject:@(3) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2.0]]];
+
+		XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(3)]);
+		OCLogDebug(@"(0) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(3)]);
+			OCLogDebug(@"(1) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);
+		});
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			[keyValueStore1 popObjectWithClaimID:claim10.identifier fromStackForKey:@"test"];
+		});
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(2)]);
+			OCLogDebug(@"(2) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);
+		});
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(1)]);
+			OCLogDebug(@"(3) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);
+		});
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(7.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			XCTAssert([keyValueStore1 readObjectForKey:@"test"] == nil);
+			OCLogDebug(@"(4) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);
+
+			[expectTimeout fulfill];
+		});
+
+		[self waitForExpectationsWithTimeout:10.0 handler:nil];
 	}
 }
 

@@ -58,7 +58,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCKeyValueStoreIdentifier;
-typedef NSString* OCKeyValueStoreKey;
+typedef NSString* OCKeyValueStoreKey NS_TYPED_ENUM;
 typedef NSString* OCKeyValueStoreCollectionEntryID;
 
 @class OCKeyValueStore;

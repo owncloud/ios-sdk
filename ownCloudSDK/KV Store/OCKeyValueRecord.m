@@ -18,6 +18,7 @@
 
 #import "OCKeyValueRecord.h"
 #import "OCLogger.h"
+#import "OCKeyValueStack.h"
 
 @implementation OCKeyValueRecord
 
@@ -27,6 +28,17 @@
 	{
 		_type = OCKeyValueRecordTypeValue;
 		[self updateWithObject:value];
+	}
+
+	return (self);
+}
+
+- (instancetype)initWithKeyValueStack
+{
+	if ((self = [self init]) != nil)
+	{
+		_type = OCKeyValueRecordTypeStack;
+		[self updateWithObject:[OCKeyValueStack new]];
 	}
 
 	return (self);

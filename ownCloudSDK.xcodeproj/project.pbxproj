@@ -38,6 +38,8 @@
 		DC07C29C2124526000B815A4 /* OCExtensionContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DC07C29A2124525F00B815A4 /* OCExtensionContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC07C29D2124526000B815A4 /* OCExtensionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DC07C29B2124525F00B815A4 /* OCExtensionContext.m */; };
 		DC0AE4572310793100428681 /* KeyValueStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0AE4562310793100428681 /* KeyValueStoreTests.m */; };
+		DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0AE4F02311C75300428681 /* OCKeyValueStack.h */; };
+		DC0AE4F32311C75300428681 /* OCKeyValueStack.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0AE4F12311C75300428681 /* OCKeyValueStack.m */; };
 		DC139CC820DBB8440090175A /* OCChecksum.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CC620DBB8440090175A /* OCChecksum.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC139CC920DBB8440090175A /* OCChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CC720DBB8440090175A /* OCChecksum.m */; };
 		DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -661,6 +663,8 @@
 		DC07C29A2124525F00B815A4 /* OCExtensionContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCExtensionContext.h; sourceTree = "<group>"; };
 		DC07C29B2124525F00B815A4 /* OCExtensionContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCExtensionContext.m; sourceTree = "<group>"; };
 		DC0AE4562310793100428681 /* KeyValueStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyValueStoreTests.m; sourceTree = "<group>"; };
+		DC0AE4F02311C75300428681 /* OCKeyValueStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueStack.h; sourceTree = "<group>"; };
+		DC0AE4F12311C75300428681 /* OCKeyValueStack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueStack.m; sourceTree = "<group>"; };
 		DC139CC620DBB8440090175A /* OCChecksum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCChecksum.h; sourceTree = "<group>"; };
 		DC139CC720DBB8440090175A /* OCChecksum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCChecksum.m; sourceTree = "<group>"; };
 		DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCChecksumAlgorithm.h; sourceTree = "<group>"; };
@@ -1430,6 +1434,8 @@
 				DC2C3F30230E8C5100D2282A /* OCKeyValueStore.h */,
 				DC45ABAD231018250065669D /* OCKeyValueRecord.m */,
 				DC45ABAC231018250065669D /* OCKeyValueRecord.h */,
+				DC0AE4F12311C75300428681 /* OCKeyValueStack.m */,
+				DC0AE4F02311C75300428681 /* OCKeyValueStack.h */,
 			);
 			path = "KV Store";
 			sourceTree = "<group>";
@@ -2547,6 +2553,7 @@
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DC8556ED204DEA2900189B9A /* OCHTTPDAVRequest.h in Headers */,
 				DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */,
+				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
@@ -3155,6 +3162,7 @@
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DC0AE4F32311C75300428681 /* OCKeyValueStack.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
 				DCB6D05922A13E7500CA47C5 /* NSString+OCSQLTools.m in Sources */,
 				4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */,

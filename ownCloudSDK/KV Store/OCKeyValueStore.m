@@ -24,6 +24,7 @@
 #import "OCLogger.h"
 #import "OCIPNotificationCenter.h"
 #import "OCRateLimiter.h"
+#import "OCKeyValueStack.h"
 
 typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValueStoreDictionary;
 
@@ -133,10 +134,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 - (void)registerClass:(Class)objectClass forKey:(OCKeyValueStoreKey)key
 {
-	@synchronized(self)
-	{
-		[_classesForKey setObject:[NSSet setWithObject:objectClass] forKey:key];
-	}
+	[self registerClasses:[NSSet setWithObject:objectClass] forKey:key];
 }
 
 - (NSSet<Class> *)registeredClassesForKey:(OCKeyValueStoreKey)key
@@ -150,6 +148,8 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 #pragma mark - Storing plain values
 - (void)_updateObjectForKey:(OCKeyValueStoreKey)key usingModifier:(nullable id _Nullable(^)(id _Nullable existingObject, BOOL * _Nullable outDidModify))modifier object:(nullable id<NSSecureCoding>)newObject
 {
+	OCWaitInitAndStartTask(waitForUpdateToFinish);
+
 	[self updateStoreContentsWithModifications:^(OCKeyValueStoreDictionary storeContents) {
 		OCKeyValueRecord *record = storeContents[key];
 		id object = newObject;
@@ -186,7 +186,11 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		}
 
 		return (didModify);
+	} completionHandler:^{
+		OCWaitDidFinishTask(waitForUpdateToFinish);
 	}];
+
+	OCWaitForCompletion(waitForUpdateToFinish);
 }
 
 - (void)storeObject:(nullable id<NSSecureCoding>)object forKey:(OCKeyValueStoreKey)key
@@ -202,14 +206,66 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 #pragma mark - Storing values in stacks
 - (void)pushObject:(nullable id<NSSecureCoding>)object onStackForKey:(OCKeyValueStoreKey)key withClaim:(OCClaim *)claim
 {
+	NSData *objectData = (object != nil) ? [NSKeyedArchiver archivedDataWithRootObject:object] : nil;
+
+	OCWaitInitAndStartTask(waitForUpdateToFinish);
+
+	[self updateStoreContentsWithModifications:^BOOL(OCKeyValueStoreDictionary storeContents) {
+		OCKeyValueRecord *record = nil;
+		OCKeyValueStack *stack;
+
+		if ((record = storeContents[key]) == nil)
+		{
+			record = [[OCKeyValueRecord alloc] initWithKeyValueStack];
+			storeContents[key] = record;
+		}
+
+		if ((record != nil) && (record.type == OCKeyValueRecordTypeStack) &&
+		    ((stack = (OCKeyValueStack *)[record decodeObjectWithClasses:[NSSet setWithObject:[OCKeyValueStack class]]]) != nil))
+		{
+			[stack pushObject:objectData withClaim:claim];
+			[record updateWithObject:stack];
+			return (YES);
+		}
+		else
+		{
+			OCLogError(@"Failed to push object on stack for key=%@", key);
+		}
+
+		return (NO);
+	} completionHandler:^{
+		OCWaitDidFinishTask(waitForUpdateToFinish);
+	}];
+
+	OCWaitForCompletion(waitForUpdateToFinish);
 }
 
 - (void)popObjectWithClaimID:(OCClaimIdentifier)claimIdentifier fromStackForKey:(OCKeyValueStoreKey)key
 {
+	OCWaitInitAndStartTask(waitForUpdateToFinish);
+
+	[self updateStoreContentsWithModifications:^BOOL(OCKeyValueStoreDictionary storeContents) {
+		OCKeyValueRecord *record = storeContents[key];
+		OCKeyValueStack *stack;
+
+		if ((record != nil) && (record.type == OCKeyValueRecordTypeStack) && ((stack = (OCKeyValueStack *)[record decodeObjectWithClasses:[NSSet setWithObject:[OCKeyValueStack class]]]) != nil))
+		{
+			[stack popObjectWithClaimID:claimIdentifier];
+			[record updateWithObject:stack];
+			return (YES);
+		}
+
+		return (NO);
+	} completionHandler:^{
+		OCWaitDidFinishTask(waitForUpdateToFinish);
+	}];
+
+	OCWaitForCompletion(waitForUpdateToFinish);
 }
 
 - (void)flushStackForKey:(OCKeyValueStoreKey)key
 {
+	[self storeObject:nil forKey:key];
 }
 
 #pragma mark - Reading values
@@ -232,8 +288,71 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 {
 	@synchronized(self)
 	{
-		return ([_recordsByKey[key] decodeObjectWithClasses:[self _classesForKey:key]]);
+		OCKeyValueRecord *record = _recordsByKey[key];
+
+		switch (record.type)
+		{
+			case OCKeyValueRecordTypeValue:
+				return ([record decodeObjectWithClasses:[self _classesForKey:key]]);
+			break;
+
+			case OCKeyValueRecordTypeStack: {
+				OCKeyValueStack *stack;
+
+				if ((stack = (OCKeyValueStack *)[record decodeObjectWithClasses:[NSSet setWithObject:[OCKeyValueStack class]]]) != nil)
+				{
+					id firstValidObjectData = nil;
+					BOOL removedInvalidEntries = NO;
+					BOOL hasValidEntry = NO;
+
+					hasValidEntry = [stack determineFirstValidObject:&firstValidObjectData claimIdentifier:nil removedInvalidEntries:&removedInvalidEntries];
+
+					if (removedInvalidEntries)
+					{
+						[self updateStoreContentsWithModifications:^BOOL(OCKeyValueStoreDictionary storeContents) {
+							OCKeyValueRecord *record = storeContents[key];
+
+							if (record != nil)
+							{
+								OCKeyValueStack *stack;
+
+								if ((stack = (OCKeyValueStack *)[record decodeObjectWithClasses:[NSSet setWithObject:[OCKeyValueStack class]]]) != nil)
+								{
+									BOOL removedInvalidEntries = NO;
+
+									if ([stack determineFirstValidObject:NULL claimIdentifier:NULL removedInvalidEntries:&removedInvalidEntries])
+									{
+										// Update the stack if one or more entries have become invalid
+										if (removedInvalidEntries)
+										{
+											// Update stored record, so all observers get notifies with the latest value, too
+											return (YES);
+										}
+									}
+									else
+									{
+										// Remove stack that no longer has any valid entries
+										storeContents[key] = nil;
+										return (YES);
+									}
+								}
+							}
+
+							return (NO);
+						}  completionHandler:nil];
+					}
+
+					if (hasValidEntry && (firstValidObjectData != nil))
+					{
+						return ([NSKeyedUnarchiver unarchivedObjectOfClasses:[self _classesForKey:key] fromData:firstValidObjectData error:NULL]);
+					}
+				}
+			}
+			break;
+		}
 	}
+
+	return (nil);
 }
 
 #pragma mark - Observation
@@ -491,13 +610,14 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	}];
 }
 
-- (void)updateStoreContentsWithModifications:(BOOL(^)(OCKeyValueStoreDictionary storeContents))modifier
+- (void)updateStoreContentsWithModifications:(BOOL(^)(OCKeyValueStoreDictionary storeContents))modifier completionHandler:(dispatch_block_t)inCompletionHandler
 {
 	[_coordinationQueue addOperationWithBlock:^{
 		NSError *error = nil;
 
 		[self->_coordinator coordinateReadingItemAtURL:self.url options:0 writingItemAtURL:self.url options:NSFileCoordinatorWritingForReplacing error:&error byAccessor:^(NSURL * _Nonnull newReadingURL, NSURL * _Nonnull newWritingURL) {
 			OCKeyValueStoreDictionary latestStoreContents;
+			dispatch_block_t completionHandler = inCompletionHandler;
 
 			// OCLog(@"Read from %@, write to %@", newReadingURL, newWritingURL);
 
@@ -524,9 +644,17 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 					// Update local copy
 					[self _updateFromStoreContents:latestStoreContents];
 
+					dispatch_block_t postCompletionHandler = completionHandler;
+					completionHandler = nil;
+
 					[self->_coordinationQueue addOperationWithBlock: ^{
 						// OCLogDebug(@"Post notification");
 						[self _postUpdateNotifications];
+
+						if (postCompletionHandler != nil)
+						{
+							postCompletionHandler();
+						}
 					}];
 				}
 				else
@@ -542,6 +670,11 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 						}
 					}
 				}
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler();
 			}
 		}];
 	}];

@@ -45,6 +45,12 @@
 
 - (OCItemPolicyProcessorTrigger)triggerMask
 {
+	if (((NSNumber *)[self.core.vault.keyValueStore readObjectForKey:OCCoreSkipAvailableOfflineKey]).boolValue)
+	{
+		// Skip available offline
+		return (0);
+	}
+
 	return (OCItemPolicyProcessorTriggerItemsChanged |
 		OCItemPolicyProcessorTriggerItemListUpdateCompleted |
 		OCItemPolicyProcessorTriggerPoliciesChanged);

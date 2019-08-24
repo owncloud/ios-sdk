@@ -336,7 +336,7 @@
 
 		_explicitIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"explicitIdentifier"];
 
-		_expiryDate = [decoder decodeObjectOfClass:[NSString class] forKey:@"expiryDate"];
+		_expiryDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expiryDate"];
 
 		_coreRunIdentifier = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"coreRunIdentifier"];
 

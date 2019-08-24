@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import <FileProvider/FileProvider.h>
 #import "OCBookmark.h"
+#import "OCKeyValueStore.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -51,9 +52,11 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(strong) OCBookmark *bookmark;
 
 @property(nullable,readonly,nonatomic) OCDatabase *database; //!< The vault's database.
+@property(nullable,readonly,nonatomic) OCKeyValueStore *keyValueStore; //!< Key-value store (lazily allocated), available independant of opening/closing the vault
 
 @property(nullable,readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
-@property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
+@property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database location
+@property(nullable,readonly,nonatomic) NSURL *keyValueStoreURL; //!< The vault's key value store location
 @property(nullable,readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //1< The vault's root address for temporarily downloaded files.

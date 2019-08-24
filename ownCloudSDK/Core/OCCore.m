@@ -1669,6 +1669,8 @@ OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPur
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 
+OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
+
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";
 NSNotificationName OCCoreItemStopsHavingProgress = @"OCCoreItemStopsHavingProgress";
