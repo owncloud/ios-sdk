@@ -35,6 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (OCBookmark *)userBookmark;
 + (OCBookmark *)demoBookmark;
 
++ (OCBookmark *)oidcBookmark;
+
 + (OCBookmark *)federatedBookmark;
 
 @end

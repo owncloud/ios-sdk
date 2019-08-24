@@ -42,6 +42,7 @@
 #import "NSString+OCPath.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
+#import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethodBasicAuth.h"
 
@@ -82,6 +83,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
+		OCConnectionEndpointIDWellKnown			: @"/.well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
@@ -90,7 +92,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
-		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
+		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
@@ -366,6 +368,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		[_delegate connectionChangedState:self];
 	}
+}
+
+#pragma mark - Cookies
+- (OCHTTPCookieStorage *)partitionCookieStorage
+{
+	return (_cookieStorage);
 }
 
 #pragma mark - Prepare request
@@ -2523,6 +2531,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 @end
 
+OCConnectionEndpointID OCConnectionEndpointIDWellKnown = @"well-known";
 OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilities";
 OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
@@ -2532,6 +2541,8 @@ OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
+
+OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

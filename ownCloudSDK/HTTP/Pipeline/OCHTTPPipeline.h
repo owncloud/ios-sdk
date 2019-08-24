@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCHTTPPipelineBackend.h"
 #import "OCHTTPTypes.h"
+#import "OCHTTPCookieStorage.h"
 #import "OCProgress.h"
 #import "OCCertificate.h"
 #import "OCClassSettings.h"
@@ -68,6 +69,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Mocking
 @optional
 - (BOOL)pipeline:(OCHTTPPipeline *)pipeline partitionID:(OCHTTPPipelinePartitionID)partitionID simulateRequestHandling:(OCHTTPRequest *)request completionHandler:(void(^)(OCHTTPResponse *response))completionHandler; //!< Return YES if the pipeline should handle the request. NO if the pipelineHandler will take care of it and return the response via the completionHandler.
+
+#pragma mark - Cookie storage
+@property(strong,nullable,nonatomic,readonly) OCHTTPCookieStorage *partitionCookieStorage; //!< If provided, used to store and retrieve cookies for the partition
 
 #pragma mark - Pipeline events
 - (void)pipelineWillStop:(OCHTTPPipeline *)pipeline; //!< Called when the pipeline is about to be stopped

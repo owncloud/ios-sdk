@@ -75,6 +75,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAuthenticationMethod.h>
 #import <ownCloudSDK/OCAuthenticationMethodBasicAuth.h>
 #import <ownCloudSDK/OCAuthenticationMethodOAuth2.h>
+#import <ownCloudSDK/OCAuthenticationMethodOpenIDConnect.h>
 
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCCapabilities.h>
@@ -82,6 +83,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPRequest.h>
 #import <ownCloudSDK/OCHTTPResponse.h>
 #import <ownCloudSDK/OCHTTPDAVRequest.h>
+
+#import <ownCloudSDK/OCHTTPCookieStorage.h>
+#import <ownCloudSDK/NSHTTPCookie+OCCookies.h>
 
 #import <ownCloudSDK/OCHTTPPipelineManager.h>
 #import <ownCloudSDK/OCHTTPPipeline.h>

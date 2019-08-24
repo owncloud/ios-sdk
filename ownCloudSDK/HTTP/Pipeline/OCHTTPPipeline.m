@@ -812,6 +812,13 @@
 			// Apply authentication and other pipeline-level changes
 			request = [partitionHandler pipeline:self prepareRequestForScheduling:request];
 
+			// Add cookies
+			if ((partitionHandler != nil) && [partitionHandler respondsToSelector:@selector(partitionCookieStorage)])
+			{
+				[partitionHandler.partitionCookieStorage addCookiesForPipeline:self partitionID:partitionID toRequest:request];
+			}
+
+			// Save request to task
 			task.request = request;
 
 			updateTask = YES;
@@ -984,7 +991,7 @@
 	}];
 }
 
-- (void)_finishedTask:(OCHTTPPipelineTask *)task withResponse:(OCHTTPResponse *)response // allowRescheduling:(BOOL)reschedulingAllowed
+- (void)_finishedTask:(OCHTTPPipelineTask *)task withResponse:(OCHTTPResponse *)response
 {
 	OCHTTPRequest *request = task.request;
 
@@ -997,6 +1004,22 @@
 	}
 
 	task.finished = YES;
+
+	// Extract & store cookies from response
+	if (task.partitionID != nil)
+	{
+		id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
+
+		@synchronized(self)
+		{
+			partitionHandler = [_partitionHandlersByID objectForKey:task.partitionID];
+		}
+
+		if ((partitionHandler != nil) && [partitionHandler respondsToSelector:@selector(partitionCookieStorage)])
+		{
+			[partitionHandler.partitionCookieStorage extractCookiesForPipeline:self partitionID:task.partitionID fromResponse:response];
+		}
+	}
 
 	// Check if this request should have a responseCertificate ..
 	if ((response.error == nil) && (response.httpError == nil))

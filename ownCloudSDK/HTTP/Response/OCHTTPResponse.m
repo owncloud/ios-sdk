@@ -97,6 +97,23 @@
 	return (nil);
 }
 
+- (nullable NSString *)contentType
+{
+	NSString *contentType;
+
+	if ((contentType = self.headerFields[@"Content-Type"]) != nil)
+	{
+		contentType = [contentType componentsSeparatedByString:@";"].firstObject;
+
+		if (contentType.length == 0)
+		{
+			contentType = nil;
+		}
+	}
+
+	return (contentType);
+}
+
 #pragma mark - Convenience body conversions
 - (NSStringEncoding)bodyStringEncoding
 {

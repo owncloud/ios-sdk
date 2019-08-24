@@ -60,13 +60,25 @@
 	return (nil);
 }
 
-- (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <NSString *,id> *)options
+- (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <OCConnectionEndpointURLOption,id> *)options
 {
 	NSString *endpointPath;
 	
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
-		return ([self URLForEndpointPath:endpointPath]);
+		NSURL *url = [self URLForEndpointPath:endpointPath];
+
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWellKnown])
+		{
+			NSString *subPath;
+
+			if ((subPath = options[OCConnectionEndpointURLOptionWellKnownSubPath]) != nil)
+			{
+				url = [url URLByAppendingPathComponent:subPath isDirectory:NO];
+			}
+		}
+
+		return (url);
 	}
 
 	return (nil);

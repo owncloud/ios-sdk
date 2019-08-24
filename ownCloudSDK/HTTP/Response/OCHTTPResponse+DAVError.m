@@ -27,7 +27,7 @@
 	NSString *contentType = nil;
 	NSError *error = nil;
 
-	if ((contentType = self.headerFields[@"Content-Type"]) != nil)
+	if ((contentType = self.contentType) != nil)
 	{
 		if ([contentType hasPrefix:@"application/xml"])
 		{
