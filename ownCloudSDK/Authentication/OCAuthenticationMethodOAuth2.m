@@ -449,6 +449,18 @@ OCAuthenticationMethodAutoRegister
 
 	OCLogDebug(@"Sending token request with parameters: %@", OCLogPrivate(parameters));
 
+	// Remove nil values
+	NSMutableDictionary *sanitizedParameters = [NSMutableDictionary new];
+
+	for (NSString *key in parameters)
+	{
+		if (![parameters[key] isKindOfClass:[NSNull class]])
+		{
+			sanitizedParameters[key] = parameters[key];
+		}
+	}
+
+	parameters = sanitizedParameters;
 	// Compose Token Request
 	if ((tokenRequest = [OCHTTPRequest requestWithURL:[self tokenEndpointURLForConnection:connection]]) != nil)
 	{
