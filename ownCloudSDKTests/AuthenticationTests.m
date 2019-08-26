@@ -182,6 +182,13 @@
 
 			OCLogDebug(@"headerFields[Authorization]=%@", request.headerFields[@"Authorization"]);
 
+			if ([request.url.absoluteString hasSuffix:@"ocs/v2.php/cloud/user"])
+			{
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeOK headers:@{} contentType:@"application/json; charset=utf-8" body:@"{\"ocs\":{\"meta\":{\"status\":\"ok\",\"statuscode\":200,\"message\":\"OK\",\"totalitems\":\"\",\"itemsperpage\":\"\"},\"data\":{\"id\":\"demo\",\"display-name\":\"demo\",\"email\":null}}}"]);
+
+				return (YES);
+			}
+
 			if ([request.url.absoluteString hasSuffix:@"index.php/apps/oauth2/api/v1/token"])
 			{
 				NSString *requestGrantType = nil, *requestCode = nil, *requestRedirectURI = nil;
