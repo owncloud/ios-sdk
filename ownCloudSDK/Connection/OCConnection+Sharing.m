@@ -314,7 +314,7 @@
 		OCSharingResponseStatus *status = nil;
 		NSArray <OCShare *> *shares = nil;
 
-		if (!((error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain]))
+		if (!((response.error != nil) && ![response.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
 			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
