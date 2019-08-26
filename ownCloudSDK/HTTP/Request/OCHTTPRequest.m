@@ -179,6 +179,11 @@
 	}
 }
 
+- (NSError *)error
+{
+	return (_httpResponse.error);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {

@@ -78,7 +78,7 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *re
 
 @property(assign) BOOL cancelled;
 
-@property(strong) NSError *error;
+@property(strong,readonly,nonatomic) NSError *error;	//!< Convenience accessor for .httpResponse.error
 
 #pragma mark - Init
 + (instancetype)requestWithURL:(NSURL *)url;

@@ -1167,6 +1167,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			event.error = request.error;
 		}
 
+		if (!request.httpResponse.status.isSuccess && (event.error == nil))
+		{
+			event.error = request.httpResponse.status.error;
+		}
+
 		if (event.error == nil)
 		{
 			NSURL *endpointURL = request.userInfo[@"endpointURL"];

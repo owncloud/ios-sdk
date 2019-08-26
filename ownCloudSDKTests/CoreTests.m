@@ -1020,8 +1020,8 @@
 	OCCore *core;
 	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
 	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
-	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response"];
-	XCTestExpectation *initialTrackingResponseFromCacheExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response from server"];
+	XCTestExpectation *initialTrackingResponseFromCacheExpectation = [self expectationWithDescription:@"Initial tracking response from cache"];
 	__block id itemTracker = nil;
 	__block id itemTrackerFromCache = nil;
 
@@ -1085,6 +1085,65 @@
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
+
+- (void)testItemTrackingNonExistant
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseForNonExistantItemExpectation = [self expectationWithDescription:@"Initial tracking response for non-existant item"];
+	__block id itemTrackerNonExistantItem = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		});
+
+		itemTrackerNonExistantItem = [core trackItemAtPath:@"/does.not.exist" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseForNonExistantItemExpectation fulfill];
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+
+			if (serverItem == nil)
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
 
 - (void)testFavoriteRefresh
 {
