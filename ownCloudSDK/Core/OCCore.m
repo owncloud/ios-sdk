@@ -122,7 +122,8 @@
 				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
 					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
 					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
-		}
+		},
+		OCCoreCookieSupportEnabled : @(NO)
 	});
 }
 
@@ -191,15 +192,19 @@
 		_warnedCertificates = [NSMutableArray new];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
-		_connection.cookieStorage = [OCHTTPCookieStorage new];
-		_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
-			if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
-			{
-				return (NO);
-			}
+		if (OCTypedCast([self classSettingForOCClassSettingsKey:OCCoreCookieSupportEnabled], NSNumber).boolValue == YES)
+		{
+			// Adding cookie storage enabled cookie support
+			_connection.cookieStorage = [OCHTTPCookieStorage new];
+			_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
+				if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
+				{
+					return (NO);
+				}
 
-			return (YES);
-		};
+				return (YES);
+			};
+		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 //		_connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
@@ -1618,6 +1623,7 @@ OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-ava
 OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
 OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
 OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
+OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
