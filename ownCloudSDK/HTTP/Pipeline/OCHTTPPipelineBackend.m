@@ -619,5 +619,4 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	});
 }
 
-
 @end

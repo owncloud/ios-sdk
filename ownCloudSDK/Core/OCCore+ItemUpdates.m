@@ -25,6 +25,7 @@
 #import "OCCore+ItemList.h"
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemPolicies.h"
 #import "NSString+OCPath.h"
 
 @implementation OCCore (ItemUpdates)
@@ -72,11 +73,13 @@
 			if ((!updateItem.locallyModified) && // don't delete local modified versions
 			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
 			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
-			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier])) // different versions?
+			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier]) &&  // different versions?
+			    (!updateItem.fileClaim.isValid)) // don't delete claimed files
 			{
 				// delete local copy
 				NSURL *deleteFileURL;
 
+				// TODO: evaluate move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
 				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
 				{
 					NSError *deleteError = nil;
@@ -85,6 +88,8 @@
 
 					updateItem.localRelativePath = nil;
 					updateItem.localCopyVersionIdentifier = nil;
+					updateItem.downloadTriggerIdentifier = nil;
+					updateItem.fileClaim = nil;
 
 					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
 					{
@@ -551,6 +556,31 @@
 			// Ensure the sync anchor was updated following these updates before triggering a refresh
 			[self scheduleUpdateScanForPath:[path normalizedDirectoryPath] waitForNextQueueCycle:YES];
 		}
+	}
+
+	// Trigger item policies
+	NSArray <OCItem *> *newChangedAndDeletedItems = nil;
+
+	#define AddArrayToNewAndChanged(itemArray) \
+		if (itemArray.count > 0) \
+		{ \
+			if (newChangedAndDeletedItems == nil) \
+			{ \
+				newChangedAndDeletedItems = itemArray; \
+			} \
+			else \
+			{ \
+				newChangedAndDeletedItems = [newChangedAndDeletedItems arrayByAddingObjectsFromArray:itemArray]; \
+			} \
+		} \
+
+	AddArrayToNewAndChanged(addedItems);
+	AddArrayToNewAndChanged(updatedItems);
+//	AddArrayToNewAndChanged(removedItems);
+
+	if (newChangedAndDeletedItems.count > 0)
+	{
+		[self runPolicyProcessorsOnNewUpdatedAndDeletedItems:newChangedAndDeletedItems forTrigger:OCItemPolicyProcessorTriggerItemsChanged];
 	}
 
 	// Initiate an IPC change notification

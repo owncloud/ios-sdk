@@ -48,7 +48,6 @@
 				if ([value isKindOfClass:[NSDate class]])
 				{
 					item.lastModified = value;
-					item.lastUsed = value;
 				}
 			} copy],
 

@@ -18,6 +18,7 @@
 
 #import "OCCore.h"
 #import "OCSyncActionDelete.h"
+#import "OCSyncActionLocalCopyDelete.h"
 
 @implementation OCCore (CommandDelete)
 
@@ -25,6 +26,11 @@
 - (nullable NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
 	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionDelete alloc] initWithItem:item requireMatch:requireMatch] cancellable:NO resultHandler:resultHandler]);
+}
+
+- (nullable NSProgress *)deleteLocalCopyOfItem:(OCItem *)item resultHandler:(nullable OCCoreActionResultHandler)resultHandler
+{
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionLocalCopyDelete alloc] initWithItem:item] cancellable:NO resultHandler:resultHandler]);
 }
 
 @end

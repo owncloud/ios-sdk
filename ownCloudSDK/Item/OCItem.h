@@ -19,6 +19,7 @@
 #import "OCTypes.h"
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
+#import "OCClaim.h"
 
 @class OCFile;
 @class OCCore;
@@ -31,12 +32,6 @@ typedef NS_ENUM(NSInteger, OCItemType)
 	OCItemTypeCollection	//!< This item is a collection (usually a directory)
 };
 
-typedef NS_ENUM(NSInteger, OCItemStatus)
-{
-	OCItemStatusAtRest,	//!< This item exists / is at rest
-	OCItemStatusTransient	//!< This item is transient (i.e. the item is a placeholder while its actual content is still uploading to the server)
-};
-
 typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 {
 	OCItemSyncActivityNone,
@@ -45,6 +40,7 @@ typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
 	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
 	OCItemSyncActivityUpdating	= (1<<4),	//!< This item is being updated, or scheduled to be updated (both files and folders)
+	OCItemSyncActivityDeletingLocal	= (1<<5)	//!< This item is being deleted locally, or scheduled to be deleted locally
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -97,18 +93,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
-@property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
-
 @property(readonly,nonatomic) OCItemCloudStatus cloudStatus; //!< the cloud status of the item (computed using the item's metadata)
 
 @property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
-@property(nullable,strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
 @property(nullable,strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
 @property(assign) BOOL locallyModified; //!< YES if the file at .localRelativePath was created or modified locally. NO if the file at .localRelativePath was downloaded from the server and not modified since.
 @property(nullable,strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
+@property(nullable,strong) OCItemDownloadTriggerID downloadTriggerIdentifier; //!< The DownloadTriggerID describing what triggered the download of this item.
+@property(nullable,strong) OCClaim *fileClaim; //!< Claim representing the claim(s) on the local file represented by this item.
 
 @property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
@@ -158,6 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+@property(nullable,strong) OCDatabaseTimestamp databaseTimestamp; //!< OCDatabase-specific: ((NSUInteger)NSDate.timeIntervalSinceReferenceDate) value this item was added or last updated in the database (most useful when reading items from the database). Not preserved (ephermal!), read-only.
 
 @property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
 @property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
@@ -198,6 +194,9 @@ extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items t
 extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
 extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
 
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDUser; //!< the download was triggered by the user
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline; //!< the download was triggered by the available offline policy
+
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
 extern OCItemPropertyName OCItemPropertyNameLastModified;
 
@@ -213,5 +212,11 @@ extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryC
 extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocalID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameFileID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameDownloadTrigger; //!< Supported by OCQueryCondition SQLBuilder
+
+extern OCItemPropertyName OCItemPropertyNameRemoved; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)
+extern OCItemPropertyName OCItemPropertyNameDatabaseTimestamp; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)
 
 NS_ASSUME_NONNULL_END

@@ -90,7 +90,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorNotAvailableOffline, //!< API not available offline.
 
-	OCErrorAuthorizationRetry //!< Authorization failed. Retry the request.
+	OCErrorAuthorizationRetry, //!< Authorization failed. Retry the request.
+
+	OCErrorItemPolicyRedundant, //!< Another item policy of the same kind already includes the item, making the addition of this item policy redundant. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
+	OCErrorItemPolicyMakesRedundant, //!< Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
 };
 
 @class OCIssue;
@@ -118,6 +121,8 @@ NS_ASSUME_NONNULL_BEGIN
 #define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
 
 #define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
+
+#define OCErrorWithDescriptionAndUserInfo(errorCode,description,userInfoKey,userInfoValue) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, userInfoValue, userInfoKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
 
 #define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
 

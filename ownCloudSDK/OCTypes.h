@@ -31,9 +31,13 @@ typedef NSString* OCLocalAttribute NS_TYPED_ENUM; //!< Identifier uniquely ident
 typedef NSNumber* OCItemFavorite; //!< Favorite status of an item (boolean)
 typedef NSString* OCItemPropertyName NS_TYPED_ENUM; //!< Name of an item property
 
+typedef NSString* OCItemDownloadTriggerID NS_TYPED_ENUM; //!< Identifier of what triggered the download of an item
+
 typedef id OCDatabaseID; //!< Object referencing the item in the database (OCDatabase-specific, OCItem's NSSecureCoding support assumes NSValue or NSValue subclass).
+typedef NSNumber* OCDatabaseTimestamp; //!< ((NSUInteger)NSDate.timeIntervalSinceReferenceDate) value an entry was added to or last updated in the database.
 
 typedef NSNumber* OCSyncAnchor; //!< Sync Anchor (running number, increasing in value with every change made)
+typedef NSUUID* OCCoreRunIdentifier;
 
 typedef void(^OCCompletionHandler)(id sender, NSError *error);
 

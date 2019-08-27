@@ -22,6 +22,7 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+Internal.h"
 #import "OCMacros.h"
 
 @implementation OCCoreManager
@@ -52,6 +53,8 @@
 		_queuedOfflineOperationsByUUID = [NSMutableDictionary new];
 
 		_adminQueueByUUID = [NSMutableDictionary new];
+
+		_activeCoresRunIdentifiers = [NSMutableArray new];
 	}
 
 	return(self);
@@ -107,12 +110,19 @@
 		// Create and start core
 		if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 		{
+			core.isManaged = YES;
+
 			core.postFileProviderNotifications = self.postFileProviderNotifications;
 
+			[self willChangeValueForKey:@"activeCoresRunIdentifiers"];
 			@synchronized(self)
 			{
 				_coresByUUID[bookmark.uuid] = core;
+
+				[_activeCoresRunIdentifiers addObject:core.runIdentifier];
+				_activeCoresRunIdentifiersReadOnly = nil;
 			}
+			[self didChangeValueForKey:@"activeCoresRunIdentifiers"];
 
 			if (setupHandler != nil)
 			{
@@ -214,6 +224,8 @@
 			@synchronized(self)
 			{
 				[_coresByUUID removeObjectForKey:bookmark.uuid];
+				[_activeCoresRunIdentifiers removeObject:core.runIdentifier];
+				_activeCoresRunIdentifiersReadOnly = nil;
 			}
 
 			// Stop core
@@ -411,6 +423,20 @@
 		}
 
 	}
+}
+
+#pragma mark - Active run identifiers
+- (NSArray<OCCoreRunIdentifier> *)activeRunIdentifiers
+{
+	@synchronized(self)
+	{
+		if (_activeCoresRunIdentifiersReadOnly == nil)
+		{
+			_activeCoresRunIdentifiersReadOnly = [_activeCoresRunIdentifiers copy];
+		}
+	}
+
+	return (_activeCoresRunIdentifiersReadOnly);
 }
 
 #pragma mark - Log tagging

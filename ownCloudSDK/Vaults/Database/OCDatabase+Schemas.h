@@ -32,3 +32,4 @@ extern OCDatabaseTableName OCDatabaseTableNameUpdateJobs;
 extern OCDatabaseTableName OCDatabaseTableNameThumbnails;
 extern OCDatabaseTableName OCDatabaseTableNameCounters;
 extern OCDatabaseTableName OCDatabaseTableNameEvents;
+extern OCDatabaseTableName OCDatabaseTableNameItemPolicies;

@@ -22,6 +22,9 @@
 
 @interface OCCore (Internal)
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged;
+
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block;
 - (void)queueConnectivityBlock:(dispatch_block_t)block;

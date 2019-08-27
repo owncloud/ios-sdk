@@ -461,6 +461,7 @@ OCAuthenticationMethodAutoRegister
 	}
 
 	parameters = sanitizedParameters;
+
 	// Compose Token Request
 	if ((tokenRequest = [OCHTTPRequest requestWithURL:[self tokenEndpointURLForConnection:connection]]) != nil)
 	{

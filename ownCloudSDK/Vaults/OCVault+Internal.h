@@ -20,8 +20,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem *item);
-
 @interface OCVault (Internal) <NSFileManagerDelegate>
 
 #pragma mark - Compacting

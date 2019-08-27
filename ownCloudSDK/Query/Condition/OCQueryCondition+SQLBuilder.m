@@ -46,18 +46,18 @@
 		break;
 
 		case OCQueryConditionOperatorPropertyNotEqualToValue:
-			query = [[NSString alloc] initWithFormat:@"(%@ != ?)", propertyColumnNameMap[self.property]];
+			query = [[NSString alloc] initWithFormat:@"(%@ IS NOT ?)", propertyColumnNameMap[self.property]];
 			parameters = @[ self.value ];
 		break;
 
 		case OCQueryConditionOperatorPropertyHasPrefix:
 			query = [[NSString alloc] initWithFormat:@"(%@ LIKE ?)", propertyColumnNameMap[self.property]];
-			parameters = @[ [NSString stringWithFormat:@"%%%@", [self.value stringBySQLLikeEscaping]] ];
+			parameters = @[ [NSString stringWithFormat:@"%@%%", [self.value stringBySQLLikeEscaping]] ];
 		break;
 
 		case OCQueryConditionOperatorPropertyHasSuffix:
 			query = [[NSString alloc] initWithFormat:@"(%@ LIKE ?)", propertyColumnNameMap[self.property]];
-			parameters = @[ [NSString stringWithFormat:@"%@%%", [self.value stringBySQLLikeEscaping]] ];
+			parameters = @[ [NSString stringWithFormat:@"%%%@", [self.value stringBySQLLikeEscaping]] ];
 		break;
 
 		case OCQueryConditionOperatorPropertyContains:

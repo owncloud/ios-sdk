@@ -264,6 +264,14 @@
 				case OCErrorAuthorizationRetry:
 					unlocalizedString = @"Authorization needs to be retried.";
 				break;
+
+				case OCErrorItemPolicyRedundant:
+					unlocalizedString = @"Another item policy of the same kind already includes the item, making the addition of this item policy redundant.";
+				break;
+
+				case OCErrorItemPolicyMakesRedundant:
+					unlocalizedString = @"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy.";
+				break;
 			}
 		}
 	}
