@@ -65,6 +65,21 @@ typedef NSString* OCHTTPCookieName;
 
 		if (((cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:response.headerFields forURL:response.httpURLResponse.URL]) != nil) && (cookies.count > 0))
 		{
+			if ((_cookieFilter != nil) && (cookies.count > 0))
+			{
+				NSMutableArray<NSHTTPCookie *> *filteredCookies = [[NSMutableArray alloc] initWithCapacity:cookies.count];
+
+				for (NSHTTPCookie *cookie in cookies)
+				{
+					if (_cookieFilter(cookie))
+					{
+						[filteredCookies addObject:cookie];
+					}
+				}
+
+				cookies = filteredCookies;
+			}
+
 			[self storeCookies:cookies forPipeline:pipeline partitionID:partitionID];
 		}
 	}

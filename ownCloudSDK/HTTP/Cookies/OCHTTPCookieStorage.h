@@ -25,7 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class OCHTTPPipeline;
 
+typedef BOOL(^OCHTTPCookieStorageCookieFilter)(NSHTTPCookie *cookie); //!< Cookie storage filter block: cookies for which YES is returned are used, a NO return value discards it.
+
 @interface OCHTTPCookieStorage : NSObject
+
+@property(nullable,copy) OCHTTPCookieStorageCookieFilter cookieFilter;
 
 #pragma mark - HTTP
 - (void)addCookiesForPipeline:(nullable OCHTTPPipeline *)pipeline partitionID:(nullable OCHTTPPipelinePartitionID)partitionID toRequest:(OCHTTPRequest *)request;

@@ -144,6 +144,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSSet<OCConnectionSignalID> *propFindSignals; //!< The set of signals to use for PROPFIND requests
 
 @property(assign,nonatomic) OCConnectionState state;
+@property(assign) BOOL connectionInitializationPhaseCompleted; //!< Indiciates whether the connection initialization phase has been completed.
 
 @property(nullable,weak) id <OCConnectionDelegate> delegate;
 
