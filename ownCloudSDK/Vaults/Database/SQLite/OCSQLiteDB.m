@@ -209,6 +209,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 - (void)setMaxBusyRetryTimeInterval:(NSTimeInterval)maxBusyRetryTimeInterval
 {
+	if (_db == NULL) { return; }
+
 	_maxBusyRetryTimeInterval = maxBusyRetryTimeInterval;
 
 	if (_maxBusyRetryTimeInterval == 0)
@@ -493,6 +495,11 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	OCSQLiteStatement *statement;
 	NSError *error = nil;
 
+	if (_db == NULL)
+	{
+		return (OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened));
+	}
+
 	if ((statement = [self _statementForSQLQuery:sqlQuery error:&error]) != nil)
 	{
 		if (error == nil)
@@ -529,6 +536,11 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	OCSQLiteStatement *statement;
 	NSError *error = nil;
 	BOOL hasRows = NO;
+
+	if (_db == NULL)
+	{
+		return (OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened));
+	}
 
 	if ((statement = [self _statementForSQLQuery:query.sqlQuery error:&error]) != nil)
 	{
@@ -612,6 +624,17 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 - (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
 {
 	// This is a hook for caching statements in the future
+
+	if (_db == NULL)
+	{
+		if (outError != NULL)
+		{
+			*outError = OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened);
+		}
+
+		return (nil);
+	}
+
 	return ([OCSQLiteStatement statementFromQuery:sqlQuery database:self error:outError]);
 }
 
@@ -777,6 +800,11 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 #pragma mark - Insertion Row ID
 - (NSNumber *)lastInsertRowID
 {
+	if (_db == NULL)
+	{
+		return (nil);
+	}
+
 	if ([self isOnSQLiteThread])
 	{
 		// May only be used within query and transaction completionHandlers.
@@ -800,6 +828,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 #pragma mark - Miscellaneous
 - (void)shrinkMemory
 {
+	if (_db == NULL) { return; }
+
 	if ([self isOnSQLiteThread])
 	{
 		sqlite3_db_release_memory(_db);

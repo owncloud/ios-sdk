@@ -40,7 +40,8 @@ typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
 
 typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 {
-	OCSQLiteDBErrorAlreadyOpenedInInstance //!< Instance has already opened file
+	OCSQLiteDBErrorAlreadyOpenedInInstance, //!< Instance has already opened file
+	OCSQLiteDBErrorDatabaseNotOpened	//!< SQLite database not opened
 };
 
 typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
