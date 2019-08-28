@@ -539,7 +539,14 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	if (_db == NULL)
 	{
-		return (OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened));
+		error = OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened);
+
+		if (query.resultHandler != nil)
+		{
+			query.resultHandler(self, error, transaction, nil);
+		}
+
+		return (error);
 	}
 
 	if ((statement = [self _statementForSQLQuery:query.sqlQuery error:&error]) != nil)
