@@ -31,7 +31,7 @@
 @class OCSQLiteQuery;
 @class OCSQLiteTableSchema;
 
-typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
+typedef NS_ENUM(int, OCSQLiteOpenFlags)
 {
 	OCSQLiteOpenFlagsReadOnly = SQLITE_OPEN_READONLY,
 	OCSQLiteOpenFlagsReadWrite = SQLITE_OPEN_READWRITE,
