@@ -106,7 +106,8 @@
 		}
 
 		[self.sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB *db, NSError *error) {
-			self.sqlDB.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs wide changes
+			db.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs large changes
+			[db executeQueryString:@"PRAGMA synchronous=FULL"]; // Force checkpoint / synchronization after every transaction
 
 			if (error == nil)
 			{

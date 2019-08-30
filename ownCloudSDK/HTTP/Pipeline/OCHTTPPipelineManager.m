@@ -239,6 +239,8 @@
 		sessionConfiguration.URLCredentialStorage = nil; // Do not use credential store at all
 		sessionConfiguration.URLCache = nil; // Do not cache responses
 		sessionConfiguration.HTTPCookieStorage = nil; // Do not store cookies
+
+		sessionConfiguration.shouldUseExtendedBackgroundIdleMode = YES;
 	}
 
 	if ([pipelineID isEqual:OCHTTPPipelineIDLocal])
@@ -434,25 +436,30 @@
 {
 	NSArray <NSString *> *idComponents;
 
+	OCLogDebug(@"Handling events for backgroundURLSession %@", sessionIdentifier);
+
 	if (((idComponents = [sessionIdentifier componentsSeparatedByString:@";"]) != nil) && (idComponents.count == 2))
 	{
 		OCHTTPPipelineID pipelineID = [idComponents firstObject];
 		NSString *bundleIdentifier = [idComponents lastObject];
 		__weak OCHTTPPipelineManager *weakSelf = self;
 		dispatch_block_t returnPipelineAndCallCompletionHandlerBlock = ^{
+			OCLogDebug(@"Done handling events for backgroundURLSession %@", sessionIdentifier);
 			if (completionHandler != nil)
 			{
 				completionHandler();
 			}
 
 			[weakSelf returnPipelineWithIdentifier:pipelineID completionHandler:^{
-				OCLogDebug(@"Returned background event handling pipe for %@", sessionIdentifier);
+				OCLogDebug(@"Returned background event handling pipeline %@ for %@", pipelineID, sessionIdentifier);
 			}];
 		};
 
 		if ([bundleIdentifier isEqual:self.backend.bundleIdentifier])
 		{
 			// This queue belongs to this process
+			OCLogDebug(@"Handling backgroundURLSession requests for app");
+
 			[self setEventHandlingFinishedBlock:returnPipelineAndCallCompletionHandlerBlock forURLSessionIdentifier:sessionIdentifier];
 
 			[self requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
@@ -462,12 +469,19 @@
 		else
 		{
 			// This queue belongs to another process (likely an extension)
+			OCLogDebug(@"Handling backgroundURLSession requests for extension");
+
 			[self requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
 				OCLogDebug(@"Request for background event handling pipeline for %@ returned with pipeline=%@, error=%@", sessionIdentifier, pipeline, error);
 
 				[pipeline attachBackgroundURLSessionWithConfiguration:[self _backgroundURLSessionConfigurationWithIdentifier:sessionIdentifier] handlingCompletionHandler:returnPipelineAndCallCompletionHandlerBlock];
 			}];
 		}
+	}
+	else
+	{
+		OCLogDebug(@"Can't handle events for unknown formatted backgroundURLSession %@", sessionIdentifier);
+		completionHandler();
 	}
 }
 

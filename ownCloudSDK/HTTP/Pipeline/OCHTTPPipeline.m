@@ -262,7 +262,7 @@
 				    (pipelineTask.urlSessionTask == nil) && // No URL Session task known for this pipeline task
 				    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
 				{
-					[droppedTasks addObject:pipelineTask];
+			 		[droppedTasks addObject:pipelineTask];
 				}
 			}];
 
@@ -344,7 +344,12 @@
 	{
 		pipelineTask.requestFinal = isFinal;
 
-		[_backend addPipelineTask:pipelineTask];
+		NSError *error;
+
+		if ((error = [_backend addPipelineTask:pipelineTask]) != nil)
+		{
+			OCLogError(@"Error adding pipelineTask=%@: %@", pipelineTask.taskID, error);
+		}
 
 		[self setPipelineNeedsScheduling];
 	}

@@ -183,7 +183,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, taskID: %@, pipelineID: %@, bundleID: %@, urlSessionID: %@, urlSessionTaskID: %@, urlSessionTask: %@, partitionID: %@, groupID: %@, sate: %lu, requestID: %@, request: %@, response: %@, metrics: %@, finished: %d>", NSStringFromClass(self.class), self, _taskID, _pipelineID, _bundleID, _urlSessionID, _urlSessionTaskID, _urlSessionTask, _partitionID, _groupID, (unsigned long)_state, _requestID, _request.requestDescription, _response.responseDescription, _metrics, _finished]);
+	return ([NSString stringWithFormat:@"<%@: %p, taskID: %@, pipelineID: %@, bundleID: %@, urlSessionID: %@, urlSessionTaskID: %@, urlSessionTask: %@, partitionID: %@, groupID: %@, state: %lu, requestID: %@, request: %@, response: %@, metrics: %@, finished: %d>", NSStringFromClass(self.class), self, _taskID, _pipelineID, _bundleID, _urlSessionID, _urlSessionTaskID, _urlSessionTask, _partitionID, _groupID, (unsigned long)_state, _requestID, _request.requestDescription, _response.responseDescription, _metrics, _finished]);
 }
 
 @end

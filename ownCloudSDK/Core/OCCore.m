@@ -548,6 +548,8 @@
 					{
 						[self _updateState:OCCoreStateRunning];
 
+						[self setNeedsToProcessSyncRecords];
+
 						if (self.automaticItemListUpdatesEnabled)
 						{
 							[self startCheckingForUpdates];

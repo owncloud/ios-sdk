@@ -24,6 +24,8 @@
 #import "OCRunLoopThread.h"
 #import "OCLogTag.h"
 
+// #define OCSQLITE_RAWLOG_ENABLED 1
+
 @class OCSQLiteDB;
 @class OCSQLiteTransaction;
 @class OCSQLiteQuery;
@@ -85,6 +87,10 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
 
+#if OCSQLITE_RAWLOG_ENABLED
+@property(assign) BOOL logStatements;
+#endif /* OCSQLITE_RAWLOG_ENABLED */
+
 #pragma mark - Init
 - (instancetype)initWithURL:(nullable NSURL *)sqliteDatabaseFileURL;
 
@@ -104,6 +110,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - Debug tools
 - (void)executeQueryString:(NSString *)queryString; //!< Runs a query and logs the result. Meant to simplify debugging.
+
+#pragma mark - WAL checkpointing
+- (void)checkpoint;
 
 #pragma mark - Error handling
 - (nullable NSError *)lastError;

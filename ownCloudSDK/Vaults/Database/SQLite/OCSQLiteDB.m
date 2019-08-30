@@ -510,7 +510,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				sqErr = sqlite3_step(statement.sqlStatement);
 
 				#if OCSQLITE_RAWLOG_ENABLED
-				if (sqErr == SQLITE_ROW)
+				if ((sqErr == SQLITE_ROW) && _logStatements)
 				{
 					OCTLogDebug(@[@"SQLLog"], @"%@ (stepping)", sqlQuery);
 				}
@@ -524,7 +524,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		}
 
 		#if OCSQLITE_RAWLOG_ENABLED
-		OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+		if (_logStatements)
+		{
+			OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 	}
 
@@ -581,7 +584,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		}
 
 		#if OCSQLITE_RAWLOG_ENABLED
-		OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+		if (_logStatements)
+		{
+			OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 
 		if (query.resultHandler != nil)
@@ -631,6 +637,13 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 - (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
 {
 	// This is a hook for caching statements in the future
+
+	#if OCSQLITE_RAWLOG_ENABLED
+	if (_logStatements)
+	{
+		OCTLogDebug(@[@"SQL_Log"], @"%@", sqlQuery);
+	}
+	#endif /* OCSQLITE_RAWLOG_ENABLED */
 
 	if (_db == NULL)
 	{
@@ -796,6 +809,32 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			OCLogDebug(@"%lu | %@", (unsigned long)line, rowDictionary);
 		} error:NULL];
 	}]];
+}
+
+#pragma mark - WAL checkpointing
+- (void)checkpoint
+{
+	if ([self isOnSQLiteThread])
+	{
+		[self _checkpoint];
+	}
+	else
+	{
+		OCSyncExec(waitForCheckpoint, {
+			[self queueBlock:^{
+				[self _checkpoint];
+				OCSyncExecDone(waitForCheckpoint);
+			}];
+		});
+	}
+}
+
+- (void)_checkpoint
+{
+	int walReturn, pngLog = 0, pnCkpt = 0;
+
+	walReturn = sqlite3_wal_checkpoint_v2(_db, NULL, SQLITE_CHECKPOINT_RESTART, &pngLog, &pnCkpt);
+	OCLogDebug(@"Checkpoint result=%d, pngLog=%d, pnCkpt=%d", walReturn, pngLog, pnCkpt);
 }
 
 #pragma mark - Error handling
