@@ -184,7 +184,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			OCClassSettingsKeyLogPrivacyMask	   : @(NO),
 			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
-			OCClassSettingsKeyLogBlankFilteredMessages : @(NO)
+			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
+			OCClassSettingsKeyLogColored		   : @(NO)
 		});
 	}
 
@@ -260,6 +261,18 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:maskPrivateData forKey:OCClassSettingsKeyLogPrivacyMask];
 
 	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+}
+
++ (BOOL)coloredLogging
+{
+	static BOOL coloredLog;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		coloredLog = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogColored] boolValue];
+	});
+
+	return (coloredLog);
 }
 
 + (BOOL)synchronousLoggingEnabled
@@ -676,6 +689,7 @@ OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log-level";
 OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log-privacy-mask";
 OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"log-enabled-components";
 OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"log-synchronous";
+OCClassSettingsKey OCClassSettingsKeyLogColored = @"log-colored";
 OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"log-only-tags";
 OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
 OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";

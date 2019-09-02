@@ -119,19 +119,23 @@
 				_state = OCHTTPPipelineStateStarting;
 
 				[self.backend openWithCompletionHandler:^(id sender, NSError *error) {
-					@synchronized(self)
-					{
-						self->_state = OCHTTPPipelineStateStarted;
-					}
-
 					if (error == nil)
 					{
+						@synchronized(self)
+						{
+							self->_state = OCHTTPPipelineStateStarted;
+						}
+
 						// Start URLSession
 						self->_urlSession = [NSURLSession sessionWithConfiguration:self->_sessionConfiguration delegate:self delegateQueue:nil];
 
 						[self _recoverQueueForURLSession:self->_urlSession completionHandler:^{
 							completionHandler(self, error);
 						}];
+					}
+					else
+					{
+						OCLogError(@"Error opening backend: %@", error);
 					}
 				}];
 			}
@@ -257,16 +261,21 @@
 			}
 
 			// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
-			[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
+			NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
 				if (([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] || ((pipelineTask.urlSessionID == nil) && (urlSessionIdentifier == nil))) && // URL Session ID identical, or both not having any
 				    (pipelineTask.urlSessionTask == nil) && // No URL Session task known for this pipeline task
 				    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
 				{
+					OCLogDebug(@"Stored task dropped: %@", pipelineTask);
 			 		[droppedTasks addObject:pipelineTask];
+				}
+				else
+				{
+					OCLogDebug(@"Stored task recovered: %@", pipelineTask);
 				}
 			}];
 
-			OCLogDebug(@"Recovered urlSession=%@: droppedTasks=%@", urlSession, droppedTasks);
+			OCLogDebug(@"Recovered urlSession=%@: droppedTasks=%@, enumerationError=%@", urlSession, droppedTasks, enumerationError);
 
 			// Drop identified tasks
 			for (OCHTTPPipelineTask *task in droppedTasks)
@@ -504,8 +513,9 @@
 	if (self.maximumConcurrentRequests != 0)
 	{
 		NSNumber *runningRequestsCount;
+		NSError *error = nil;
 
-		if ((runningRequestsCount = [_backend numberOfRequestsWithState:OCHTTPPipelineTaskStateRunning inPipeline:self partition:nil error:NULL]) != nil)
+		if ((runningRequestsCount = [_backend numberOfRequestsWithState:OCHTTPPipelineTaskStateRunning inPipeline:self partition:nil error:&error]) != nil)
 		{
 			if (runningRequestsCount.unsignedIntegerValue >= self.maximumConcurrentRequests)
 			{
@@ -518,14 +528,19 @@
 				remainingSlots = self.maximumConcurrentRequests - runningRequestsCount.unsignedIntegerValue;
 			}
 		}
+		else if (error != nil)
+		{
+			OCLogError(@"Error retrieving number of requests in running state: %@", error);
+		}
 	}
 
 	// Enumerate tasks in pipeline and pick ones for scheduling
 	__block NSMutableDictionary <OCHTTPRequestGroupID, NSMutableArray<OCHTTPPipelineTask *> *> *schedulableTasksByGroupID = [NSMutableDictionary new];
 	__block NSMutableSet <OCHTTPRequestGroupID> *blockedGroupIDs = [NSMutableSet new];
 	const OCHTTPRequestGroupID defaultGroupID = @"_default_";
+	NSError *enumerationError;
 
-	[_backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+	enumerationError = [_backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 		BOOL isRelevant = YES;
 		OCHTTPPipelinePartitionID partitionID = nil;
 		id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
@@ -665,6 +680,11 @@
 			}
 		}
 	}];
+
+	if (enumerationError != nil)
+	{
+		OCLogError(@"Error enumerating tasks during scheduling: enumerationError=%@", enumerationError);
+	}
 
 	// OCLogDebug(@"Scheduler state: schedulableTasksByGroupID=%@, blockedGroupIDs=%@, remainingSlots=%d, recentlyScheduledGroupIDs=%@", schedulableTasksByGroupID, blockedGroupIDs, remainingSlots, _recentlyScheduledGroupIDs);
 
@@ -1363,7 +1383,16 @@
 {
 	if (partitionID != nil)
 	{
-		return ([[self.backend numberOfRequestsWithState:OCHTTPPipelineTaskStateCompleted inPipeline:self partition:partitionID error:NULL] unsignedIntegerValue]);
+		NSError *error = nil;
+
+		NSUInteger pendingDeliveryCount = ([[self.backend numberOfRequestsWithState:OCHTTPPipelineTaskStateCompleted inPipeline:self partition:partitionID error:&error] unsignedIntegerValue]);
+
+		if (error != nil)
+		{
+			OCLogError(@"Error retrieving number of requests pending delivery: %@", error)
+		}
+
+		return (pendingDeliveryCount);
 	}
 
 	return (0);
@@ -1465,7 +1494,9 @@
 	{
 		for (OCHTTPPipelinePartitionID partitionID in partitionIDs)
 		{
-			if ([self.backend numberOfRequestsInPipeline:self partition:partitionID error:NULL].integerValue == 0)
+			NSError *error = nil;
+
+			if ([self.backend numberOfRequestsInPipeline:self partition:partitionID error:&error].integerValue == 0)
 			{
 				@synchronized(_partitionEmptyHandlers)
 				{
@@ -1482,6 +1513,11 @@
 						}];
 					}
 				}
+			}
+
+			if (error != nil)
+			{
+				OCLogError(@"Error retrieving number of requests in pipeline: %@", error);
 			}
 		}
 	}
@@ -1514,24 +1550,34 @@
 {
 	[self queueBlock:^{
 		// Find and cancel non-critical requests
-		[self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+		NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 			if (((partitionID==nil) || ((partitionID!=nil) && [task.partitionID isEqual:partitionID])) && task.request.isNonCritial)
 			{
 				[self _cancelTask:task];
 			}
 		}];
+
+		if (enumerationError != nil)
+		{
+			OCLogError(@"Error enumerating requests: %@", enumerationError);
+		}
 	}];
 }
 
 - (void)finishPendingRequestsForPartitionID:(OCHTTPPipelinePartitionID)partitionID withError:(NSError *)error filter:(BOOL(^)(OCHTTPPipeline *pipeline, OCHTTPPipelineTask *task))filter
 {
 	[self queueInline:^{
-		[self.backend enumerateTasksForPipeline:self partition:partitionID enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
+		NSError *enumerationError = [self.backend enumerateTasksForPipeline:self partition:partitionID enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 			if (filter(self, task))
 			{
 				[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:error]];
 			}
 		}];
+
+		if (enumerationError != nil)
+		{
+			OCLogError(@"Error enumerating requests: %@", enumerationError);
+		}
 	}];
 }
 
@@ -1675,7 +1721,7 @@
 	}
 	else
 	{
-		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
+		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@, backendError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), error, backendError);
 	}
 }
 
@@ -1700,6 +1746,10 @@
 	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
 	{
 		task.metrics = [[OCHTTPPipelineTaskMetrics alloc] initWithURLSessionTaskMetrics:metrics];
+	}
+	else
+	{
+		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics, backendError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), backendError);
 	}
 }
 
@@ -1821,7 +1871,7 @@
 			}
 			else
 			{
-				OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] task:didReceiveChallenge=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge));
+				OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] task:didReceiveChallenge=%@, dbError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge), dbError);
 				[_backend dumpDBTable];
 			}
 		}
@@ -1859,7 +1909,7 @@
 		}
 		else
 		{
-			OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] dataTask:didReceiveDate:", urlSessionDataTask.taskIdentifier, OCLogPrivate(urlSessionDataTask.currentRequest.URL));
+			OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@, dbError=%@] dataTask:didReceiveDate:", urlSessionDataTask.taskIdentifier, OCLogPrivate(urlSessionDataTask.currentRequest.URL), dbError);
 		}
 	}];
 }
@@ -1940,7 +1990,7 @@
 		[self.backend updatePipelineTask:task];
 	}
 
-	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: downloadTask:didFinishDownloadingToURL: %@", urlSessionDownloadTask.currentRequest.URL, urlSessionDownloadTask.taskIdentifier, location);
+	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: downloadTask:didFinishDownloadingToURL: %@, dbError=%@", urlSessionDownloadTask.currentRequest.URL, urlSessionDownloadTask.taskIdentifier, location, dbError);
 	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 

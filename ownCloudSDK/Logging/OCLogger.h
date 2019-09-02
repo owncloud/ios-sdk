@@ -71,6 +71,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 @property(assign,class) OCLogLevel logLevel;
 @property(assign,class) BOOL maskPrivateData;
 @property(readonly,class) BOOL synchronousLoggingEnabled;
+@property(readonly,class) BOOL coloredLogging;
 
 @property(copy,readonly,nonatomic) NSArray<OCLogWriter *> *writers;
 
@@ -119,6 +120,7 @@ extern OCClassSettingsKey OCClassSettingsKeyLogLevel;
 extern OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask;
 extern OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents;
 extern OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging;
+extern OCClassSettingsKey OCClassSettingsKeyLogColored;
 extern OCClassSettingsKey OCClassSettingsKeyLogOnlyTags;
 extern OCClassSettingsKey OCClassSettingsKeyLogOmitTags;
 extern OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching;
