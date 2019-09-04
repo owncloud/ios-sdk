@@ -151,7 +151,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
 #pragma mark - Event interface
-- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID processSession:(OCProcessSession *)processSession completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
+- (BOOL)queueContainsEvent:(OCEvent *)event; //!< Checks if an event with the same UUID already exists in the database
 - (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)syncRecordID afterEventID:(OCDatabaseID)eventID; //!< Requests the oldest available event for the OCSyncRecordID.
 - (NSError *)removeEvent:(OCEvent *)event; //!< Deletes the row for the OCEvent from the database.
 

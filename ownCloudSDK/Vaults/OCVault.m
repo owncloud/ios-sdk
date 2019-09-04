@@ -25,6 +25,8 @@
 #import "OCCore+FileProvider.h"
 #import "OCHTTPPipelineManager.h"
 #import "OCVault+Internal.h"
+#import "OCEventQueue.h"
+#import "OCCore+SyncEngine.h"
 
 @implementation OCVault
 
@@ -212,6 +214,7 @@
 	if (_keyValueStore == nil)
 	{
 		_keyValueStore = [[OCKeyValueStore alloc] initWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString];
+		[_keyValueStore registerClass:[OCEventQueue class] forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
 	}
 
 	return (_keyValueStore);

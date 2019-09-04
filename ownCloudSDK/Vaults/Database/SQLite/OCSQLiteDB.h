@@ -23,6 +23,7 @@
 #import "OCSQLiteResultSet.h"
 #import "OCRunLoopThread.h"
 #import "OCLogTag.h"
+#import "OCBackgroundTask.h"
 
 // #define OCSQLITE_RAWLOG_ENABLED 1
 
@@ -58,6 +59,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 {
 	NSURL *_databaseURL;
 	OCRunLoopThread *_sqliteThread;
+
+	OCBackgroundTask *_backgroundTask;
+	NSInteger _processingCount;
 
 	NSTimeInterval _maxBusyRetryTimeInterval;
 	NSTimeInterval _firstBusyRetryTime;
@@ -113,6 +117,10 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - WAL checkpointing
 - (void)checkpoint;
+
+#pragma mark - Background task interface
+- (void)enterProcessing;
+- (void)leaveProcessing;
 
 #pragma mark - Error handling
 - (nullable NSError *)lastError;

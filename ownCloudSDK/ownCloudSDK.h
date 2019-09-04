@@ -176,6 +176,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCIPNotificationCenter.h>
 
+#import <ownCloudSDK/OCBackgroundTask.h>
+
 #import <ownCloudSDK/OCProcessManager.h>
 #import <ownCloudSDK/OCProcessSession.h>
 

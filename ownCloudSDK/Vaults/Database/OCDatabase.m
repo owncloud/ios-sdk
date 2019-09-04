@@ -1426,17 +1426,19 @@
 }
 
 #pragma mark - Event interface
-- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID processSession:(OCProcessSession *)processSession completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	NSData *eventData = [event serializedData];
 
 	if ((eventData != nil) && (syncRecordID!=nil))
 	{
-		NSData *processSessionData = OCProcessManager.sharedProcessManager.processSession.serializedData;
+		if (processSession == nil) { processSession = OCProcessManager.sharedProcessManager.processSession; }
+		NSData *processSessionData = processSession.serializedData;
 
 		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameEvents rowValues:@{
 			@"recordID" 		: syncRecordID,
 			@"processSession"	: (processSessionData!=nil) ? processSessionData : [NSData new],
+			@"uuid"			: OCSQLiteNullProtect(event.uuid),
 			@"eventData"		: eventData
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			event.databaseID = rowID;
@@ -1451,6 +1453,35 @@
 		OCLogError(@"Could not serialize event=%@ to eventData=%@ or missing recordID=%@", event, eventData, syncRecordID);
 		completionHandler(self, OCError(OCErrorInsufficientParameters));
 	}
+}
+
+- (BOOL)queueContainsEvent:(OCEvent *)event
+{
+	if (!self.sqlDB.isOnSQLiteThread)
+	{
+		OCLogError(@"%@ may only be called on the SQLite thread. Returning nil.", @(__PRETTY_FUNCTION__));
+		return (NO);
+	}
+
+	if (event.uuid == nil)
+	{
+		return (NO);
+	}
+
+	__block BOOL eventExistsInDatabase = NO;
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID" ] fromTable:OCDatabaseTableNameEvents where:@{
+		@"uuid"	: event.uuid
+	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			eventExistsInDatabase = YES;
+			*stop = YES;
+		} error:&iterationError];
+	}]];
+
+	return (eventExistsInDatabase);
 }
 
 - (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID afterEventID:(OCDatabaseID)afterEventID
@@ -1508,7 +1539,10 @@
 		if (!doProcess)
 		{
 			// Skip this event
-			return ([self nextEventForSyncRecordID:recordID afterEventID:event.databaseID]);
+			// return ([self nextEventForSyncRecordID:recordID afterEventID:event.databaseID]);
+
+			// Do not skip and look for the next event… because this is about the events for a single sync record - and out of order execution should not happen (?)
+			return (nil);
 		}
 	}
 

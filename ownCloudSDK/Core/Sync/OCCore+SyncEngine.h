@@ -84,3 +84,5 @@ extern OCEventUserInfoKey OCEventUserInfoKeySyncRecordID;
 
 extern OCProgressPathElementIdentifier OCCoreGlobalRootPath;
 extern OCProgressPathElementIdentifier OCCoreSyncRecordPath;
+
+extern OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue;

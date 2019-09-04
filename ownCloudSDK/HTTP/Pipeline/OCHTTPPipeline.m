@@ -942,9 +942,8 @@
 							// Register background task
 							[[[OCBackgroundTask backgroundTaskWithName:[NSString stringWithFormat:@"OCHTTPPipeline <%ld>: %@", urlSessionTaskID, absoluteURLString] expirationHandler:^(OCBackgroundTask *backgroundTask){
 								// Task needs to end in the expiration handler - or the app will be terminated by iOS
-								[backgroundTask end];
-
 								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
+								[backgroundTask end];
 							}] start] endWhenDeallocating:task];
 						}
 

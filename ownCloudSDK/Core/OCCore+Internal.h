@@ -37,7 +37,7 @@
 - (OCDatabase *)database;
 
 #pragma mark - Sync Engine
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
+- (void)queueSyncEvent:(OCEvent *)event sender:(id)sender;
 
 #pragma mark - Event target tools
 - (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo;

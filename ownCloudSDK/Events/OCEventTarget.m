@@ -82,9 +82,9 @@
 }
 
 #pragma mark - Convenience
-- (void)handleError:(NSError *)error type:(OCEventType)type sender:(id)sender
+- (void)handleError:(NSError *)error type:(OCEventType)type uuid:(nullable OCEventUUID)uuid sender:(id)sender
 {
-	OCEvent *event = [OCEvent eventForEventTarget:self type:type attributes:nil];
+	OCEvent *event = [OCEvent eventForEventTarget:self type:type uuid:uuid attributes:nil];
 
 	event.error = error;
 

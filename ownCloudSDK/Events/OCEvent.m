@@ -23,6 +23,7 @@
 @implementation OCEvent
 
 @synthesize eventType = _eventType;
+@synthesize uuid = _uuid;
 
 @synthesize userInfo = _userInfo;
 @synthesize ephermalUserInfo = _ephermalUserInfo;
@@ -36,6 +37,16 @@
 @synthesize result = _result;
 
 @synthesize databaseID = _databaseID;
+
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_uuid = NSUUID.UUID.UUIDString;
+	}
+
+	return (self);
+}
 
 + (NSMutableDictionary <OCEventHandlerIdentifier, id <OCEventHandler>> *)_eventHandlerDictionary
 {
@@ -78,9 +89,9 @@
 	return (nil);
 }
 
-+ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes
++ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType uuid:(nullable OCEventUUID)uuid  attributes:(NSDictionary *)attributes
 {
-	return ([[self alloc] initForEventTarget:eventTarget type:eventType attributes:attributes]);
+	return ([[self alloc] initForEventTarget:eventTarget type:eventType uuid:uuid attributes:attributes]);
 }
 
 + (instancetype)eventWithType:(OCEventType)eventType userInfo:(NSDictionary<OCEventUserInfoKey,id> *)userInfo ephermalUserInfo:(NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(id)result
@@ -96,11 +107,16 @@
 	return (event);
 }
 
-- (instancetype)initForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(NSDictionary *)attributes
+- (instancetype)initForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType uuid:(OCEventUUID)uuid attributes:(NSDictionary *)attributes
 {
-	if ((self = [super init]) != nil)
+	if ((self = [self init]) != nil)
 	{
 		_eventType = eventType;
+
+		if (uuid != nil)
+		{
+			_uuid = uuid;
+		}
 
 		_userInfo = eventTarget.userInfo;
 		_ephermalUserInfo = eventTarget.ephermalUserInfo;
@@ -135,6 +151,11 @@
 	return (serializedData);
 }
 
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result]);
+}
+
 #pragma mark - Secure coding
 + (BOOL)supportsSecureCoding
 {
@@ -145,6 +166,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		_uuid = [decoder decodeObjectOfClass:[NSString class] forKey:@"uuid"];
+
 		_eventType = [decoder decodeIntegerForKey:@"eventType"];
 		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
 
@@ -162,6 +185,8 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeObject:_uuid forKey:@"uuid"];
+
 	[coder encodeInteger:_eventType forKey:@"eventType"];
 
 	[coder encodeObject:_userInfo forKey:@"userInfo"];

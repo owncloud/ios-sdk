@@ -1422,48 +1422,69 @@
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	[self beginActivity:@"Handling event"];
+	dispatch_block_t queueBlock = nil, completionHandler = nil;
+	NSString *eventActivityString = [[NSString alloc] initWithFormat:@"Handling event %@", event];
 
-	[self queueBlock:^{
-		NSString *selectorName;
+	[self beginActivity:eventActivityString];
 
-		if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
+	completionHandler = ^{
+		[self endActivity:eventActivityString];
+	};
+
+	NSString *selectorName;
+
+	if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
+	{
+		// Selector specified -> route event directly to selector
+		SEL eventHandlingSelector;
+
+		if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
 		{
-			// Selector specified -> route event directly to selector
-			SEL eventHandlingSelector;
+			// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
+			void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
 
-			if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
-			{
-				// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
-				void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
-
+			queueBlock = ^{
 				if (impFunction != NULL)
 				{
 					impFunction(self, eventHandlingSelector, event, sender);
 				}
-			}
+			};
 		}
-		else
+	}
+	else
+	{
+		// Handle by event type
+		switch (event.eventType)
 		{
-			// Handle by event type
-			switch (event.eventType)
-			{
-				case OCEventTypeRetrieveThumbnail:
+			case OCEventTypeRetrieveThumbnail: {
+				queueBlock = ^{
 					[self _handleRetrieveThumbnailEvent:event sender:sender];
-				break;
-
-				case OCEventTypeRetrieveItemList:
-					[self _handleRetrieveItemListEvent:event sender:sender];
-				break;
-
-				default:
-					[self _handleSyncEvent:event sender:sender];
-				break;
+				};
 			}
-		}
+			break;
 
-		[self endActivity:@"Handling event"];
-	}];
+			case OCEventTypeRetrieveItemList: {
+				queueBlock = ^{
+					[self _handleRetrieveItemListEvent:event sender:sender];
+				};
+			}
+			break;
+
+			default:
+				// Critical event - queue synchronously
+				[self queueSyncEvent:event sender:sender];
+				completionHandler();
+			break;
+		}
+	}
+
+	if (queueBlock != nil)
+	{
+		[self queueBlock:^{
+			queueBlock();
+			completionHandler();
+		}];
+	}
 }
 
 #pragma mark - Item usage

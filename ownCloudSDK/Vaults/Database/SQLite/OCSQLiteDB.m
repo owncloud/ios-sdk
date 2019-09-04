@@ -500,6 +500,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		return (OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened));
 	}
 
+	[self enterProcessing];
+
 	if ((statement = [self _statementForSQLQuery:sqlQuery error:&error]) != nil)
 	{
 		if (error == nil)
@@ -531,6 +533,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 	}
 
+	[self leaveProcessing];
+
 	return (error);
 }
 
@@ -551,6 +555,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 		return (error);
 	}
+
+	[self enterProcessing];
 
 	if ((statement = [self _statementForSQLQuery:query.sqlQuery error:&error]) != nil)
 	{
@@ -595,6 +601,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			query.resultHandler(self, error, transaction, ((error==nil) ? (hasRows ? [[OCSQLiteResultSet alloc] initWithStatement:statement] : nil) : nil));
 		}
 	}
+
+	[self leaveProcessing];
 
 	return (error);
 }
@@ -662,6 +670,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 {
 	NSError *error = nil;
 	NSString *savePointName = nil;
+
+	[self enterProcessing];
 
 	// Increase transaction nesting level
 	_transactionNestingLevel++;
@@ -798,6 +808,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 		transaction.completionHandler(self, transaction, error);
 	}
+
+	[self leaveProcessing];
 }
 
 #pragma mark - Debug tools
@@ -835,6 +847,47 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	walReturn = sqlite3_wal_checkpoint_v2(_db, NULL, SQLITE_CHECKPOINT_RESTART, &pngLog, &pnCkpt);
 	OCLogDebug(@"Checkpoint result=%d, pngLog=%d, pnCkpt=%d", walReturn, pngLog, pnCkpt);
+}
+
+#pragma mark - Background kill protection
+- (void)enterProcessing
+{
+	// Create background task if entering processing for the first time since leaving it (or at all)
+	if (_backgroundTask == nil)
+	{
+		_backgroundTask = [OCBackgroundTask backgroundTaskWithName:@"OCSQLiteDB query" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+			// Task needs to end in the expiration handler - or the app will be terminated by iOS
+			OCTLogError(@[@"SQLBackground"], @"OCSQLiteDB background task expired!");
+			[task end];
+		}];
+
+		OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
+	}
+
+	// Increase processing count
+	_processingCount++;
+}
+
+- (void)leaveProcessing
+{
+	// Decrease processing count
+	_processingCount--;
+
+	// If nothing is currently processing, attempt to end the background task with the next runloop run
+	if (_processingCount == 0)
+	{
+		[self queueBlock:^{
+			// If there's still nothing processing, end the backgroundTask
+			// This delayed handling is used to avoid starting and ending background tasks too frequent
+			if ((self->_processingCount == 0) && (self->_backgroundTask != nil))
+			{
+				[self->_backgroundTask end];
+				self->_backgroundTask = nil;
+
+				OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB left background task");
+			}
+		}];
+	}
 }
 
 #pragma mark - Error handling
