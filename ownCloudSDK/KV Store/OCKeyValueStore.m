@@ -88,10 +88,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		_coordinationQueue = [[NSOperationQueue alloc] init];
 		_coordinationQueue.maxConcurrentOperationCount = 1;
 
-		OCBackgroundTask *backgroundTask = [OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore initial read" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore initial read" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCLogWarning(@"%@ background task expired", task.name);
 			[task end];
-		}];
+		}] start];
 
 		OCSyncExec(waitForCoordinator, {
 			[_coordinationQueue addOperationWithBlock:^{
@@ -590,10 +590,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		if (strongSelf == nil) { return; }
 
-		OCBackgroundTask *backgroundTask = [OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateFromStoreContentsAtURL" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateFromStoreContentsAtURL" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCLogWarning(@"%@ background task expired", task.name);
 			[task end];
-		}];
+		}] start];
 
 		[strongSelf->_coordinator coordinateReadingItemAtURL:url options:0 error:&error byAccessor:^(NSURL * _Nonnull newURL) {
 			// OCLogDebug(@"Read from %@", newURL);
@@ -630,10 +630,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	[_coordinationQueue addOperationWithBlock:^{
 		NSError *error = nil;
 
-		OCBackgroundTask *backgroundTask = [OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateStoreContentsWithModifications" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateStoreContentsWithModifications" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCLogWarning(@"%@ background task expired", task.name);
 			[task end];
-		}];
+		}] start];
 
 		[self->_coordinator coordinateReadingItemAtURL:self.url options:0 writingItemAtURL:self.url options:NSFileCoordinatorWritingForReplacing error:&error byAccessor:^(NSURL * _Nonnull newReadingURL, NSURL * _Nonnull newWritingURL) {
 			OCKeyValueStoreDictionary latestStoreContents;

@@ -38,6 +38,7 @@
 #import "OCEventRecord.h"
 #import "OCEventQueue.h"
 #import "OCSQLiteTransaction.h"
+#import "OCBackgroundManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
@@ -477,24 +478,36 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
 
-		if (self.connectionStatus == OCCoreConnectionStatusOnline)
+//		if (OCBackgroundManager.sharedBackgroundManager.isBackgrounded && (OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining < 3.0))
+//		{
+//			OCLogDebug(@"processSyncRecordsIfNeeded skipped because backgroundTimeRemaining=%f", OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining);
+//			__weak OCCore *weakSelf = self;
+//
+//			[OCBackgroundManager.sharedBackgroundManager scheduleBlock:^{
+//				[weakSelf processSyncRecordsIfNeeded];
+//			} inBackground:NO];
+//		}
+//		else
 		{
-			@synchronized(self)
+			if (self.connectionStatus == OCCoreConnectionStatusOnline)
 			{
-				needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
-				self->_needsToProcessSyncRecords = NO;
+				@synchronized(self)
+				{
+					needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
+					self->_needsToProcessSyncRecords = NO;
+				}
+
+				OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
+
+				if (needsToProcessSyncRecords)
+				{
+					[self processSyncRecords];
+				}
 			}
-
-			OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
-
-			if (needsToProcessSyncRecords)
+			else
 			{
-				[self processSyncRecords];
+				OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 			}
-		}
-		else
-		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];

@@ -855,13 +855,14 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	// Create background task if entering processing for the first time since leaving it (or at all)
 	if (_backgroundTask == nil)
 	{
-		_backgroundTask = [OCBackgroundTask backgroundTaskWithName:@"OCSQLiteDB query" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+		if ((_backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCSQLiteDB query" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			// Task needs to end in the expiration handler - or the app will be terminated by iOS
 			OCTLogError(@[@"SQLBackground"], @"OCSQLiteDB background task expired!");
 			[task end];
-		}];
-
-		OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
+		}] start]) != nil)
+		{
+			OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
+		}
 	}
 
 	// Increase processing count

@@ -38,7 +38,7 @@ typedef void(^OCBackgroundTaskExpirationHandler)(OCBackgroundTask *task);
 
 - (instancetype)initWithName:(nullable NSString *)name expirationHandler:(OCBackgroundTaskExpirationHandler)expirationHandler;
 
-- (instancetype)start;
+- (nullable instancetype)start;
 
 - (void)end;
 - (void)endWhenDeallocating:(id)object;

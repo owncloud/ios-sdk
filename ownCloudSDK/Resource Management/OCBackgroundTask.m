@@ -42,9 +42,12 @@
 #pragma mark - Start and end
 - (instancetype)start
 {
-	[OCBackgroundManager.sharedBackgroundManager startTask:self];
+	if ([OCBackgroundManager.sharedBackgroundManager startTask:self])
+	{
+		return (self);
+	}
 
-	return (self);
+	return (nil);
 }
 
 - (void)end

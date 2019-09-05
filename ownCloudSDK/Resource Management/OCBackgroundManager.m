@@ -203,9 +203,22 @@
 	}
 }
 
-#pragma mark - Start and end background tasks
-- (void)startTask:(OCBackgroundTask *)task
+#pragma mark - Remaining time
+- (NSTimeInterval)backgroundTimeRemaining
 {
+	if (_delegate != nil)
+	{
+		return ([_delegate backgroundTimeRemaining]);
+	}
+
+	return (NSTimeIntervalSince1970);
+}
+
+#pragma mark - Start and end background tasks
+- (BOOL)startTask:(OCBackgroundTask *)task
+{
+	BOOL taskStarted = NO;
+
 	@synchronized(self)
 	{
 		if ([_tasks indexOfObjectIdenticalTo:task] == NSNotFound)
@@ -217,7 +230,9 @@
 
 			if (_delegate != nil)
 			{
-				task.identifier = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
+				UIBackgroundTaskIdentifier taskID;
+
+				taskID = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
 					if (task.expirationHandler != nil)
 					{
 						task.expirationHandler(task);
@@ -227,9 +242,23 @@
 						[self endTask:task];
 					}
 				}];
+
+
+				if (taskID != UIBackgroundTaskInvalid)
+				{
+					task.identifier = taskID;
+					taskStarted = YES;
+				}
+				else
+				{
+					task.started = NO;
+					[_tasks removeObjectIdenticalTo:task];
+				}
 			}
 		}
 	}
+
+	return (taskStarted);
 }
 
 - (void)endTask:(OCBackgroundTask *)task
