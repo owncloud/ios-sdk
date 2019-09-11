@@ -505,15 +505,16 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		if ((data = [[NSData alloc] initWithContentsOfURL:url]) != nil)
 		{
 			NSError *error = nil;
-			// Temporarily remove secure coding checks until all secure coding compliant OC classes have unit tests verifiying their secure coding implementations does not loose any data
-			// storeContents = [NSKeyedUnarchiver unarchivedObjectOfClasses:[[NSSet alloc] initWithObjects:[NSMutableDictionary class], [OCKeyValueRecord class], [NSString class], nil] fromData:data error:&error];
-			storeContents = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:data error:&error];
+			storeContents = [NSKeyedUnarchiver unarchivedObjectOfClasses:[[NSSet alloc] initWithObjects:[NSMutableDictionary class], [OCKeyValueRecord class], [NSString class], nil] fromData:data error:&error];
 
-			if ((storeContents != nil) && ![storeContents isKindOfClass:[NSMutableDictionary class]])
-			{
-				OCLogError(@"Store contents not a NSMutableDictionary, but instead a %@", NSStringFromClass(storeContents.class));
-				storeContents = [NSMutableDictionary new];
-			}
+			// ~~ Temporarily remove secure coding checks until all secure coding compliant OC classes have unit tests verifiying their secure coding implementations does not loose any data ~~
+			// storeContents = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:data error:&error];
+			//
+			// if ((storeContents != nil) && ![storeContents isKindOfClass:[NSMutableDictionary class]])
+			// {
+			// 	OCLogError(@"Store contents not a NSMutableDictionary, but instead a %@", NSStringFromClass(storeContents.class));
+			// 	storeContents = [NSMutableDictionary new];
+			// }
 
 			if (storeContents == nil)
 			{
