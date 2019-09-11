@@ -102,7 +102,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_eventHandlerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"eventHandlerIdentifier"];
-		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 	}
 
 	return (self);

@@ -509,7 +509,7 @@
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
-	_options = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"options"];
+	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder

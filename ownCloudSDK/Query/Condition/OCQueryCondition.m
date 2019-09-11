@@ -17,6 +17,7 @@
  */
 
 #import "OCQueryCondition.h"
+#import "OCEvent.h"
 
 @implementation OCQueryCondition
 
@@ -110,7 +111,7 @@
 		_operator = [decoder decodeIntegerForKey:@"operator"];
 
 		_property = [decoder decodeObjectOfClass:[NSString class] forKey:@"property"];
-		_value = [decoder decodeObjectOfClass:[NSObject class] forKey:@"value"];
+		_value = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"value"];
 
 		_sortBy = [decoder decodeObjectOfClass:[NSString class] forKey:@"sortBy"];
 		_sortAscending = [decoder decodeBoolForKey:@"sortAscending"];

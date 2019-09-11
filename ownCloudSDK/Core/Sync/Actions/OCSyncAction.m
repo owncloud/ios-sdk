@@ -289,7 +289,7 @@
 		_localItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"localItem"];
 		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
-		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
+		_parameters = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"parameters"];
 
 		_laneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"laneTags"];
 

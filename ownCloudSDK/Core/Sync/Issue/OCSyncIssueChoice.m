@@ -18,6 +18,7 @@
 
 #import "OCSyncIssueChoice.h"
 #import "OCMacros.h"
+#import "OCEvent.h"
 
 @implementation OCSyncIssueChoice
 
@@ -63,7 +64,7 @@
 		_impact = [decoder decodeIntegerForKey:@"impact"];
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 		_label = [decoder decodeObjectOfClass:[NSString class] forKey:@"label"];
-		_metaData = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"metaData"];
+		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
 	}
 
 	return (self);

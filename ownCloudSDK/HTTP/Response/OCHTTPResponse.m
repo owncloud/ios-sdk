@@ -216,7 +216,7 @@
 		_certificateValidationError	= [decoder decodeObjectOfClass:[NSError class] forKey:@"certificateValidationError"];
 
 		_status				= [decoder decodeObjectOfClass:[OCHTTPStatus class] forKey:@"status"];
-		_headerFields			= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"headerFields"];
+		_headerFields			= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSDictionary.class, NSString.class, nil] forKey:@"headerFields"];
 
 		_httpURLResponse 		= [decoder decodeObjectOfClass:[NSHTTPURLResponse class] forKey:@"httpURLResponse"];
 

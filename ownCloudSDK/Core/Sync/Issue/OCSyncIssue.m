@@ -71,8 +71,8 @@
 		_level = [decoder decodeIntegerForKey:@"level"];
 		_localizedTitle = [decoder decodeObjectOfClass:[NSString class] forKey:@"title"];
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"desc"];
-		_metaData = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"metaData"];
-		_choices = [decoder decodeObjectOfClass:[NSArray class] forKey:@"choices"];
+		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
+		_choices = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCSyncIssueChoice.class, nil] forKey:@"choices"];
 	}
 
 	return (self);

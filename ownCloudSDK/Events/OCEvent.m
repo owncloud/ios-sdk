@@ -20,6 +20,31 @@
 #import "OCEventTarget.h"
 #import "OCLogger.h"
 
+#import "OCBookmark.h"
+#import "OCCertificate.h"
+#import "OCChecksum.h"
+#import "OCClaim.h"
+#import "OCEventRecord.h"
+#import "OCFile.h"
+#import "OCGroup.h"
+#import "OCHTTPPipelineTaskMetrics.h"
+#import "OCHTTPRequest.h"
+#import "OCHTTPResponse.h"
+#import "OCHTTPStatus.h"
+#import "OCImage.h"
+#import "OCItem.h"
+#import "OCItemPolicy.h"
+#import "OCItemThumbnail.h"
+#import "OCItemVersionIdentifier.h"
+#import "OCProcessSession.h"
+#import "OCRecipient.h"
+#import "OCQueryCondition.h"
+#import "OCShare.h"
+#import "OCSyncIssue.h"
+#import "OCSyncIssueChoice.h"
+#import "OCUser.h"
+#import "OCWaitCondition.h"
+
 @implementation OCEvent
 
 @synthesize eventType = _eventType;
@@ -37,6 +62,63 @@
 @synthesize result = _result;
 
 @synthesize databaseID = _databaseID;
+
++ (NSSet<Class> *)safeClasses
+{
+	static dispatch_once_t onceToken;
+	static NSSet<Class> *safeClasses;
+
+	dispatch_once(&onceToken, ^{
+		safeClasses = [[NSSet alloc] initWithObjects:
+				// OC classes
+				OCBookmark.class,
+				OCCertificate.class,
+				OCChecksum.class,
+				OCClaim.class,
+				OCEvent.class,
+				OCEventTarget.class,
+				OCEventRecord.class,
+				OCFile.class,
+				OCGroup.class,
+				OCHTTPPipelineTaskMetrics.class,
+				OCHTTPRequest.class,
+				OCHTTPResponse.class,
+				OCHTTPStatus.class,
+				OCImage.class,
+				OCItem.class,
+				OCItemPolicy.class,
+				OCItemThumbnail.class,
+				OCItemVersionIdentifier.class,
+				OCProcessSession.class,
+				OCProgress.class,
+				OCRecipient.class,
+				OCQueryCondition.class,
+				OCShare.class,
+				OCSyncIssue.class,
+				OCSyncIssueChoice.class,
+				OCUser.class,
+				OCWaitCondition.class,
+
+				// Foundation classes
+				NSSet.class,
+				NSArray.class,
+				NSDictionary.class,
+				NSDate.class,
+				NSString.class,
+				NSNumber.class,
+				NSURL.class,
+				NSData.class,
+
+				NSURLRequest.class,
+				NSURLResponse.class,
+				NSHTTPCookie.class,
+
+				NSError.class,
+		nil];
+	});
+
+	return (safeClasses);
+}
 
 - (instancetype)init
 {
@@ -169,7 +251,7 @@
 		_uuid = [decoder decodeObjectOfClass:[NSString class] forKey:@"uuid"];
 
 		_eventType = [decoder decodeIntegerForKey:@"eventType"];
-		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
 		_depth = [decoder decodeIntegerForKey:@"depth"];
@@ -177,7 +259,7 @@
 		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
 		_data = [decoder decodeObjectOfClass:[NSString class] forKey:@"data"];
 		_error = [decoder decodeObjectOfClass:[NSError class] forKey:@"error"];
-		_result = [decoder decodeObjectOfClass:[NSObject class] forKey:@"result"];
+		_result = [decoder decodeObjectOfClasses:[OCEvent safeClasses] forKey:@"result"];
 	}
 
 	return (self);

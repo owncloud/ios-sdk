@@ -158,7 +158,7 @@
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
 
-		_activeSyncRecordIDs = [decoder decodeObjectOfClass:[NSArray class] forKey:@"activeSyncRecordIDs"];
+		_activeSyncRecordIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSNumber.class, nil] forKey:@"activeSyncRecordIDs"];
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
 		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], [NSNumber class], nil] forKey:@"syncActivityCounts"];
 
@@ -169,7 +169,7 @@
 
 		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
 
-		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
+		_localAttributes = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];

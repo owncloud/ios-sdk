@@ -19,6 +19,7 @@
 #import "OCBookmark.h"
 #import "OCAppIdentity.h"
 #import "OCBookmark+IPNotificationNames.h"
+#import "OCEvent.h"
 
 @interface OCBookmark ()
 {
@@ -193,7 +194,7 @@
 
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"authenticationMethodIdentifier"];
 
-		_userInfo = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"userInfo"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
 	}

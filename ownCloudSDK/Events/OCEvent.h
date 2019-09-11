@@ -92,6 +92,8 @@ typedef NSString* OCEventUUID;
 	OCDatabaseID _databaseID;
 }
 
+@property(nonatomic,class,readonly,strong) NSSet<Class> *safeClasses;
+
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
 @property(nullable,strong,readonly) OCEventUUID uuid; //!< Unique UUID used to prevent OCEvent duplicates
 
