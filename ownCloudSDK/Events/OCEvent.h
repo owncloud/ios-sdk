@@ -85,7 +85,6 @@ typedef NSString* OCEventUUID;
 	NSUInteger _depth;
 
 	NSString *_mimeType;
-	NSData *_data;
 	NSError *_error;
 	id<NSObject,NSSecureCoding>  _result;
 
@@ -104,7 +103,6 @@ typedef NSString* OCEventUUID;
 @property(assign) NSUInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
 
 @property(nullable,strong) NSString *mimeType;
-@property(nullable,strong) NSData *data;
 @property(nullable,strong) OCFile *file;
 
 @property(nullable,strong) NSError *error;

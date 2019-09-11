@@ -57,7 +57,8 @@
 @synthesize depth = _depth;
 
 @synthesize mimeType = _mimeType;
-@synthesize data = _data;
+@synthesize file = _file;
+
 @synthesize error = _error;
 @synthesize result = _result;
 
@@ -243,7 +244,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result]);
+	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file]);
 }
 
 #pragma mark - Secure coding
@@ -265,7 +266,8 @@
 		_depth = [decoder decodeIntegerForKey:@"depth"];
 
 		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
-		_data = [decoder decodeObjectOfClass:[NSString class] forKey:@"data"];
+		_file = [decoder decodeObjectOfClass:OCFile.class forKey:@"file"];
+
 		_error = [decoder decodeObjectOfClass:[NSError class] forKey:@"error"];
 		_result = [decoder decodeObjectOfClasses:[OCEvent safeClasses] forKey:@"result"];
 	}
@@ -285,7 +287,8 @@
 	[coder encodeInteger:_depth forKey:@"depth"];
 
 	[coder encodeObject:_mimeType forKey:@"mimeType"];
-	[coder encodeObject:_data forKey:@"data"];
+	[coder encodeObject:_file forKey:@"file"];
+
 	[coder encodeObject:_error forKey:@"error"];
 	[coder encodeObject:_result forKey:@"result"];
 }
