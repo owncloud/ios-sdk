@@ -110,6 +110,7 @@
 		}
 
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
+		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 	}
 }
 
@@ -265,6 +266,11 @@
 	}
 
 	return (_coreUpdateNotificationName);
+}
+
++ (OCIPCNotificationName)bookmarkAuthUpdateNotificationName
+{
+	return (@"com.owncloud.bookmark.auth-update");
 }
 
 @end
