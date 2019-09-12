@@ -26,6 +26,7 @@
 #import "NSError+OCError.h"
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
+#import "OCMacros.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -39,6 +40,42 @@ static OA2DictKeyPath OA2ExpiresInSecs  = @"tokenResponse.expires_in";
 static OA2DictKeyPath OA2TokenType      = @"tokenResponse.token_type";
 static OA2DictKeyPath OA2MessageURL     = @"tokenResponse.message_url";
 static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
+
+#ifndef __IPHONE_13_0
+#define __IPHONE_13_0    130000
+#endif /* __IPHONE_13_0 */
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+@interface OCAuthenticationMethodOAuth2ContextProvider : NSObject <ASWebAuthenticationPresentationContextProviding>
+
+@property(readonly,class,strong,nonatomic) OCAuthenticationMethodOAuth2ContextProvider* sharedContextProvider;
+
+@property(nullable,weak) UIWindow *window;
+
+@end
+
+@implementation OCAuthenticationMethodOAuth2ContextProvider
+
++ (OCAuthenticationMethodOAuth2ContextProvider *)sharedContextProvider
+{
+	static dispatch_once_t onceToken;
+	static OCAuthenticationMethodOAuth2ContextProvider *sharedContextProvider;
+
+	dispatch_once(&onceToken, ^{
+		sharedContextProvider = [self new];
+	});
+
+	return (sharedContextProvider);
+}
+
+- (ASPresentationAnchor)presentationAnchorForWebAuthenticationSession:(ASWebAuthenticationSession *)session API_AVAILABLE(ios(12.0))
+{
+	return (self.window);
+}
+
+@end
+
+#endif /* __IPHONE_13_0 */
 
 @interface OCAuthenticationMethodOAuth2 ()
 {
@@ -259,7 +296,7 @@ OCAuthenticationMethodAutoRegister
 
 			OCLogDebug(@"Starting auth session with URL %@", authorizationRequestURL);
 
-			authSessionDidStart = [self.class startAuthenticationSession:&authSession forURL:authorizationRequestURL scheme:[[NSURL URLWithString:[self redirectURIForConnection:connection]] scheme] completionHandler:oauth2CompletionHandler];
+			authSessionDidStart = [self.class startAuthenticationSession:&authSession forURL:authorizationRequestURL scheme:[[NSURL URLWithString:[self redirectURIForConnection:connection]] scheme] options:options completionHandler:oauth2CompletionHandler];
 
 			self->_authenticationSession = authSession;
 
@@ -272,7 +309,7 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
-+ (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
++ (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
 {
 	BOOL authSessionDidStart;
 
@@ -281,6 +318,23 @@ OCAuthenticationMethodAutoRegister
 		ASWebAuthenticationSession *webAuthenticationSession;
 
 		webAuthenticationSession = [[ASWebAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme completionHandler:oauth2CompletionHandler];
+
+		#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+		if (@available(iOS 13, *))
+		{
+			UIWindow *window = OCTypedCast(options[OCAuthenticationMethodPresentingViewControllerKey], UIViewController).view.window;
+
+			if (window == nil)
+			{
+				Class uiApplicationClass = NSClassFromString(@"UIApplication");
+				UIApplication *sharedApplication = [uiApplicationClass valueForKey:@"sharedApplication"];
+				window = sharedApplication.delegate.window;
+			}
+
+			OCAuthenticationMethodOAuth2ContextProvider.sharedContextProvider.window = window;
+			webAuthenticationSession.presentationContextProvider = OCAuthenticationMethodOAuth2ContextProvider.sharedContextProvider;
+		}
+		#endif /* __IPHONE_13_0 */
 
 		*authenticationSession = webAuthenticationSession;
 
