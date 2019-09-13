@@ -242,7 +242,7 @@
 
 		OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock mockBlock;
 
-		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
+		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
 
 			NSLog(@"authenticationSession=%@, authorizationRequestURL=%@, scheme=%@", *authenticationSession, authorizationRequestURL, scheme);
 

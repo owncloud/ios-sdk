@@ -20,6 +20,7 @@
 #import "OCCore.h"
 #import "OCMacros.h"
 #import "OCCore+ItemPolicies.h"
+#import "OCCore+ItemUpdates.h"
 #import "OCLogger.h"
 
 @implementation OCItemPolicyProcessorAvailableOffline
@@ -118,10 +119,19 @@
 	}
 	else
 	{
-		// Download if: !removed && cloudOnly && policyCondition
+		// Download if: !removed && (cloudOnly || (localCopy && downloadTrigger!=availableOffline)) && policyCondition
 		self.matchCondition = [OCQueryCondition require:@[
 			[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)],
-			[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusCloudOnly)],
+			[OCQueryCondition anyOf:@[
+				// Cloud only
+				[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusCloudOnly)],
+
+				// Local copy, but not available offline
+				[OCQueryCondition require:@[
+					[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusLocalCopy)],
+					[OCQueryCondition where:OCItemPropertyNameDownloadTrigger isNotEqualTo:OCItemDownloadTriggerIDAvailableOffline]
+				]]
+			]],
 			_policyCondition
 		]];
 
@@ -144,9 +154,21 @@
 	    (matchingItem.removed == NO)						// Not removed
 	   )
 	{
-		[self.core downloadItem:matchingItem options:@{
-			OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline
-		} resultHandler:nil];
+		if (matchingItem.cloudStatus == OCItemCloudStatusCloudOnly)
+		{
+			[self.core downloadItem:matchingItem options:@{
+				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline
+			} resultHandler:nil];
+		}
+		else if (matchingItem.cloudStatus == OCItemCloudStatusLocalCopy)
+		{
+			if (![matchingItem.downloadTriggerIdentifier isEqualToString:OCItemDownloadTriggerIDAvailableOffline])
+			{
+				matchingItem.downloadTriggerIdentifier = OCItemDownloadTriggerIDAvailableOffline;
+
+				[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ matchingItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+			}
+		}
 	}
 }
 
