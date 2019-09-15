@@ -16,7 +16,9 @@
  *
  */
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#if !TARGET_OS_UIKITFORMAC
+//#import <MobileCoreServices/MobileCoreServices.h>
+#endif
 
 #import "OCConnection.h"
 #import "OCHTTPRequest.h"

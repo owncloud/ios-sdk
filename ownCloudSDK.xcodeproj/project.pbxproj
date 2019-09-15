@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		023BA6E123223C3200A21EF4 /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 023BA6E023223C3200A21EF4 /* SafariServices.framework */; };
 		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
 		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -618,6 +619,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		023BA6E023223C3200A21EF4 /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SafariServices.framework; sourceTree = DEVELOPER_DIR; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
 		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
 		590CCF3D20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1193,6 +1195,7 @@
 			files = (
 				DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */,
 				DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */,
+				023BA6E123223C3200A21EF4 /* SafariServices.framework in Frameworks */,
 				DCC8FA082029BB1200EB6701 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2470,6 +2473,7 @@
 		DCC8FA062029BB1100EB6701 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				023BA6E023223C3200A21EF4 /* SafariServices.framework */,
 				DC98BDF721E73EFF003B5658 /* Network.framework */,
 				DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */,
 				DCA8922020F5EFBB00AEFF98 /* libobjc.tbd */,

@@ -262,7 +262,7 @@ OCAuthenticationMethodAutoRegister
 				{
 					if (error!=nil)
 					{
-						if (@available(iOS 12.0, *))
+						if (@available(iOS 12.0, macOS 10.15, *))
 						{
 							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
 							{
@@ -270,6 +270,7 @@ OCAuthenticationMethodAutoRegister
 								error = OCError(OCErrorAuthorizationCancelled);
 							}
 						}
+                        /*
 						else
 						{
 							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
@@ -278,6 +279,7 @@ OCAuthenticationMethodAutoRegister
 								error = OCError(OCErrorAuthorizationCancelled);
 							}
 						}
+                         */
 					}
 
 					// Return errors
@@ -313,7 +315,7 @@ OCAuthenticationMethodAutoRegister
 {
 	BOOL authSessionDidStart;
 
-	if (@available(iOS 12, *))
+	if (@available(iOS 12,macOS 10.15, *))
 	{
 		ASWebAuthenticationSession *webAuthenticationSession;
 
@@ -341,6 +343,7 @@ OCAuthenticationMethodAutoRegister
 		// Start authentication session
 		authSessionDidStart = [webAuthenticationSession start];
 	}
+    /*
 	else
 	{
 		SFAuthenticationSession *sfAuthenticationSession;
@@ -351,7 +354,7 @@ OCAuthenticationMethodAutoRegister
 
 		// Start authentication session
 		authSessionDidStart = [sfAuthenticationSession start];
-	}
+	}*/
 
 	return (authSessionDidStart);
 }

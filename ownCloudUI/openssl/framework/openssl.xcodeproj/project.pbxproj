@@ -3,13 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		023BA6DE2322357B00A21EF4 /* libcrypto_Mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 023BA6DD2322356A00A21EF4 /* libcrypto_Mac.a */; platformFilter = maccatalyst; };
+		023BA6DF2322357B00A21EF4 /* libssl_Mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 023BA6DC2322356A00A21EF4 /* libssl_Mac.a */; platformFilter = maccatalyst; };
 		DC3094A2205749EA00189B9A /* openssl.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094A0205749EA00189B9A /* openssl.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC3094AA20574A4D00189B9A /* libssl_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094A820574A4D00189B9A /* libssl_iOS.a */; };
-		DC3094AB20574A4D00189B9A /* libcrypto_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094A920574A4D00189B9A /* libcrypto_iOS.a */; };
+		DC3094AA20574A4D00189B9A /* libssl_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094A820574A4D00189B9A /* libssl_iOS.a */; platformFilter = ios; };
+		DC3094AB20574A4D00189B9A /* libcrypto_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094A920574A4D00189B9A /* libcrypto_iOS.a */; platformFilter = ios; };
 		DC3094F820574AA200189B9A /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094AD20574AA200189B9A /* aes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3094F920574AA200189B9A /* asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094AE20574AA200189B9A /* asn1.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3094FA20574AA200189B9A /* asn1_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3094AF20574AA200189B9A /* asn1_mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -89,6 +91,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		023BA6DB2322355200A21EF4 /* ios-sdk */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ios-sdk"; path = ../../..; sourceTree = "<group>"; };
+		023BA6DC2322356A00A21EF4 /* libssl_Mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl_Mac.a; path = ../lib/libssl_Mac.a; sourceTree = "<group>"; };
+		023BA6DD2322356A00A21EF4 /* libcrypto_Mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto_Mac.a; path = ../lib/libcrypto_Mac.a; sourceTree = "<group>"; };
 		DC30949D205749EA00189B9A /* openssl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = openssl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC3094A0205749EA00189B9A /* openssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = openssl.h; sourceTree = "<group>"; };
 		DC3094A1205749EA00189B9A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -177,19 +182,32 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				023BA6DF2322357B00A21EF4 /* libssl_Mac.a in Frameworks */,
 				DC3094AB20574A4D00189B9A /* libcrypto_iOS.a in Frameworks */,
 				DC3094AA20574A4D00189B9A /* libssl_iOS.a in Frameworks */,
+				023BA6DE2322357B00A21EF4 /* libcrypto_Mac.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		023BA6DA2322355100A21EF4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				023BA6DD2322356A00A21EF4 /* libcrypto_Mac.a */,
+				023BA6DC2322356A00A21EF4 /* libssl_Mac.a */,
+				023BA6DB2322355200A21EF4 /* ios-sdk */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DC309493205749EA00189B9A = {
 			isa = PBXGroup;
 			children = (
 				DC30949F205749EA00189B9A /* openssl */,
 				DC30949E205749EA00189B9A /* Products */,
+				023BA6DA2322355100A21EF4 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -513,6 +531,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -566,6 +585,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -585,7 +605,11 @@
 				INFOPLIST_FILE = openssl/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../lib\"";
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.openssl;
@@ -610,7 +634,11 @@
 				INFOPLIST_FILE = openssl/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../lib\"";
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.openssl;
@@ -677,6 +705,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -695,7 +724,11 @@
 				INFOPLIST_FILE = openssl/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../lib\"";
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.openssl;
