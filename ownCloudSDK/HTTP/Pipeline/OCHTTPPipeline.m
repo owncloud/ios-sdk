@@ -1131,12 +1131,15 @@
 			}];
 		};
 
+		OCLogDebug(@"Delivering result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
+
 		// Add to _taskIDsInDelivery, so delivery isn't retried until async work has finished.
 		// (=> since this tracked in-memory, a crash/app termination will automatically result in delivery being retried)
 		@synchronized(taskIDsInDelivery)
 		{
 			if ([taskIDsInDelivery containsObject:task.taskID])
 			{
+				OCLogDebug(@"Skipping delivering result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
 				return (NO);
 			}
 
@@ -1161,6 +1164,8 @@
 
 			[self evaluateCertificate:task.response.certificate forTask:task proceedHandler:proceedHandler];
 
+			OCLogDebug(@"Certificate evaluation during delivery of taskID=%@ to partition handler %@ halted delivery", task.taskID, partitionHandler);
+
 			return (NO);
 		}
 
@@ -1177,6 +1182,8 @@
 			}
 		}
 
+		OCLogDebug(@"Entering post-processing of result for taskID=%@ with error=%@", task.taskID, error);
+
 		// Give connection a chance to pass it off to authentication methods / interpret the error before delivery to the sender
 		if ([partitionHandler respondsToSelector:@selector(pipeline:postProcessFinishedTask:error:)])
 		{
@@ -1190,6 +1197,8 @@
 		{
 			requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task error:error];
 		}
+
+		OCLogDebug(@"Leaving post-processing of result for taskID=%@ with requestInstruction=%lu, error=%@", task.taskID, (unsigned long)requestInstruction, error);
 
 		// Deliver to target
 		if (requestInstruction == OCHTTPRequestInstructionDeliver)
@@ -1207,6 +1216,8 @@
 					impFunction(partitionHandler, task.request.resultHandlerAction, task.request, error);
 					removeTask = YES;
 					undeliverable = NO;
+
+					OCLogDebug(@"Delivered result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
 				}
 			}
 			else
@@ -1216,6 +1227,8 @@
 					task.request.ephermalResultHandler(task.request, task.response, error);
 					removeTask = YES;
 					undeliverable = NO;
+
+					OCLogDebug(@"Delivered result for taskID=%@ to ephermal result handler %@", task.taskID, task.request.ephermalResultHandler);
 				}
 			}
 
@@ -1264,6 +1277,12 @@
 		{
 			[taskIDsInDelivery removeObject:task.taskID];
 		}
+
+		OCLogDebug(@"Delivery result for taskID=%@: requestInstruction=%lu, removeTask=%d", task.taskID, (unsigned long)requestInstruction, removeTask);
+	}
+	else
+	{
+		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d", task.taskID, removeTask);
 	}
 
 	return (removeTask);

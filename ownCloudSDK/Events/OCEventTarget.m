@@ -17,6 +17,7 @@
  */
 
 #import "OCEventTarget.h"
+#import "OCLogger.h"
 
 @interface OCEventTarget ()
 {
@@ -73,7 +74,16 @@
 {
 	if (_eventHandlerBlock == nil)
 	{
-		[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+		id <OCEventHandler> eventHandler = [OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier];
+
+		if (eventHandler != nil)
+		{
+			[eventHandler handleEvent:event sender:sender];
+		}
+		else
+		{
+			OCLogError(@"DROPPING EVENT: event handler with identifier %@ not found - dropping event %@ from sender %@", _eventHandlerIdentifier, event, sender);
+		}
 	}
 	else
 	{

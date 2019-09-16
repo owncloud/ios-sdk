@@ -1437,6 +1437,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	NSString *fileName = request.userInfo[@"fileName"];
 	OCItem *parentItem = request.userInfo[@"parentItem"];
 
+	OCLogDebug(@"Handling file upload result with error=%@: %@", error, request);
+
 	if (request.httpResponse.status.isSuccess)
 	{
 		/*
