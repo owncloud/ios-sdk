@@ -28,6 +28,8 @@
 		DC03650620AAEFBD00F62732 /* DatabaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03650520AAEFBD00F62732 /* DatabaseTests.m */; };
 		DC03AC472229598E006901DC /* OCConnection+Sharing.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03AC452229598E006901DC /* OCConnection+Sharing.m */; };
 		DC03AC4922295AA6006901DC /* SharingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03AC4822295AA6006901DC /* SharingTests.m */; };
+		DC04A4942330290A006285AC /* OCCoreProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = DC04A4922330290A006285AC /* OCCoreProxy.h */; };
+		DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = DC04A4932330290A006285AC /* OCCoreProxy.m */; };
 		DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC07C28C21244FC800B815A4 /* OCExtensionManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC07C28F21244FC800B815A4 /* OCExtensionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC07C28D21244FC800B815A4 /* OCExtensionManager.m */; };
 		DC07C29221244FD800B815A4 /* OCExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = DC07C29021244FD800B815A4 /* OCExtension.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -669,6 +671,8 @@
 		DC03650520AAEFBD00F62732 /* DatabaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DatabaseTests.m; sourceTree = "<group>"; };
 		DC03AC452229598E006901DC /* OCConnection+Sharing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Sharing.m"; sourceTree = "<group>"; };
 		DC03AC4822295AA6006901DC /* SharingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharingTests.m; sourceTree = "<group>"; };
+		DC04A4922330290A006285AC /* OCCoreProxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreProxy.h; sourceTree = "<group>"; };
+		DC04A4932330290A006285AC /* OCCoreProxy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreProxy.m; sourceTree = "<group>"; };
 		DC07C28C21244FC800B815A4 /* OCExtensionManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCExtensionManager.h; sourceTree = "<group>"; };
 		DC07C28D21244FC800B815A4 /* OCExtensionManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCExtensionManager.m; sourceTree = "<group>"; };
 		DC07C29021244FD800B815A4 /* OCExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCExtension.h; sourceTree = "<group>"; };
@@ -2342,6 +2346,8 @@
 			children = (
 				DCC6567320CA695600110A97 /* OCCoreManager.m */,
 				DCC6567220CA695600110A97 /* OCCoreManager.h */,
+				DC04A4932330290A006285AC /* OCCoreProxy.m */,
+				DC04A4922330290A006285AC /* OCCoreProxy.h */,
 				DCC6567720CA696A00110A97 /* OCBookmarkManager.m */,
 				DCC6567620CA696A00110A97 /* OCBookmarkManager.h */,
 				DC576EC5226484E30087316D /* OCBackgroundManager.m */,
@@ -2684,6 +2690,7 @@
 				DC114A9422A7A87C00CBD597 /* NSData+OCRandom.h in Headers */,
 				DC114A9822A7AA2E00CBD597 /* NSString+OCRandom.h in Headers */,
 				DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */,
+				DC04A4942330290A006285AC /* OCCoreProxy.h in Headers */,
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
 				DC20DE4B21BFCBC20096000B /* OCLogComponent.h in Headers */,
 				DCADC0482072CDEA00DB8E83 /* OCCoreItemList.h in Headers */,
@@ -3162,6 +3169,7 @@
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DC2AA57A22DDD005001D5C39 /* OCSyncActionLocalCopyDelete.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
+				DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */,
 				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,

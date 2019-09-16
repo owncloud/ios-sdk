@@ -281,9 +281,14 @@
 
 - (void)dealloc
 {
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *deallocTags = (runIDTag != nil) ? @[@"DEALLOC", runIDTag] : @[@"DEALLOC"];
+
 	[self stopIPCObserveration];
 
 	[self removeSignalProviders];
+
+	OCTLogDebug(deallocTags, @"core deallocated");
 }
 
 - (void)unregisterEventHandler

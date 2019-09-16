@@ -202,6 +202,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
+
+	OCTLogDebug(@[@"DEALLOC"], @"connection deallocated");
 }
 
 #pragma mark - Pipelines
