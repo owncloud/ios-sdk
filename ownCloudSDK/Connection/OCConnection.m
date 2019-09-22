@@ -40,6 +40,8 @@
 #import "OCCertificateRuleChecker.h"
 #import "OCProcessManager.h"
 #import "NSString+OCPath.h"
+#import "OCMacros.h"
+#import "OCCore.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -256,6 +258,21 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (attach)
 	{
+		OCCore *delegateCore = OCTypedCast(_delegate, OCCore);
+		if (delegateCore != nil)
+		{
+			OCLogDebug(@"Attach pipelines for connection %@ with core.state = %lu via %@", self, (unsigned long)delegateCore.state, [NSThread callStackSymbols]);
+
+			if (delegateCore.state == OCCoreStateStopped)
+			{
+				OCLogError(@"Connection %@ was prompted to attach to pipelines while core is stopped via %@", self, [NSThread callStackSymbols]);
+				attach = NO;
+			}
+		}
+	}
+
+	if (attach)
+	{
 		[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL *stop) {
 			OCSyncExec(waitForAttach, {
 				[pipeline attachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
@@ -269,7 +286,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 - (void)detachFromPipelinesWithCompletionHandler:(dispatch_block_t)completionHandler
 {
 	dispatch_group_t waitPipelineDetachGroup = dispatch_group_create();
-	NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
+	NSSet<OCHTTPPipeline *> *pipelines = nil;
 	BOOL returnImmediately = NO;
 
 	@synchronized (self)
@@ -291,17 +308,18 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	// Detach from all pipelines
-	pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
+	pipelines = self.allHTTPPipelines;
 
 	for (OCHTTPPipeline *pipeline in pipelines)
 	{
-		OCLogDebug(@"detaching from pipeline %@", pipeline);
+		OCLogDebug(@"detaching from pipeline %@ (connection=%@)", pipeline, self);
 
 		dispatch_group_enter(waitPipelineDetachGroup);
 
 		// Cancel non-critical requests and detach from the pipeline
 		[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
 		[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+			OCLogDebug(@"detach from pipeline %@ (connection=%@) returned with error=%@", pipeline, self, error);
 			dispatch_group_leave(waitPipelineDetachGroup);
 		}];
 	}

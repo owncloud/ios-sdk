@@ -1344,9 +1344,11 @@
 - (void)detachPartitionHandler:(id<OCHTTPPipelinePartitionHandler>)partitionHandler completionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self queueInline:^{
-		OCHTTPPipelinePartitionID partitionID;
+		OCHTTPPipelinePartitionID partitionID = [partitionHandler partitionID];
 
-		if ((partitionID = [partitionHandler partitionID]) != nil)
+		OCLogDebug(@"Enter detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
+
+		if (partitionID != nil)
 		{
 			@synchronized(self)
 			{
@@ -1360,6 +1362,12 @@
 				}
 			}
 		}
+		else
+		{
+			OCLogError(@"Can't detach handler (%@) since no partition could be retrieved from it: %@", partitionHandler, partitionID);
+		}
+
+		OCLogDebug(@"Leave detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
 
 		if (completionHandler != nil)
 		{

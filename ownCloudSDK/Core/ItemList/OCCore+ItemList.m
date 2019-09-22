@@ -1081,7 +1081,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			dispatch_block_t scheduleUpdateCheck = ^{
 				OCCore *strongSelf = weakSelf;
 
-				if (strongSelf != nil)
+				if ((strongSelf != nil) && (strongSelf.state == OCCoreStateRunning))
 				{
 					OCEventTarget *eventTarget;
 
