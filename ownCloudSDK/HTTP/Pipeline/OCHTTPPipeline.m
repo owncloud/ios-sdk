@@ -1070,7 +1070,14 @@
 						}
 						else
 						{
-							response.httpError = OCError(OCErrorCertificateMissing);
+							// Certificates can be entirely missing if:
+							// A) the simulator is used but not set up fully
+							// B) a request started on the background session
+							//  & a request providing a certificate on the background session
+							//  & process being terminated
+							//  & result of the request being provided to the new process
+							OCLogError(@"Certificate missing for %@: %@", response, OCError(OCErrorCertificateMissing));
+							// response.httpError = OCError(OCErrorCertificateMissing);
 						}
 					}
 				}

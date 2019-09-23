@@ -16,6 +16,8 @@
  *
  */
 
+#import <pthread/pthread.h>
+
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
 #import "OCShareQuery.h"
@@ -140,6 +142,13 @@
 	if ((self = [super init]) != nil)
 	{
 		__weak OCCore *weakSelf = self;
+
+		int pthreadKeyError;
+
+		if ((pthreadKeyError = pthread_key_create(&_queueKey, NULL)) != 0)
+		{
+			OCLogError(@"Error creating pthread key: %d", pthreadKeyError);
+		}
 
 		_runIdentifier = [NSUUID new];
 
@@ -1592,10 +1601,29 @@
 #pragma mark - Queues
 - (void)queueBlock:(dispatch_block_t)block
 {
-	if (block != nil)
+	[self queueBlock:block allowInlining:NO];
+}
+
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining
+{
+	if (block == nil) { return; }
+
+	if (allowInlining)
 	{
-		dispatch_async(_queue, block);
+		if (pthread_getspecific(_queueKey) == (__bridge void *)self)
+		{
+			block();
+			return;
+		}
 	}
+
+	dispatch_async(_queue, ^{
+		pthread_setspecific(self->_queueKey, (__bridge void *)self);
+
+		block();
+
+		pthread_setspecific(self->_queueKey, NULL);
+	});
 }
 
 - (void)queueConnectivityBlock:(dispatch_block_t)block

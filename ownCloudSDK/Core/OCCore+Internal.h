@@ -27,6 +27,7 @@
 
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block;
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining;
 - (void)queueConnectivityBlock:(dispatch_block_t)block;
 
 #pragma mark - Busy count

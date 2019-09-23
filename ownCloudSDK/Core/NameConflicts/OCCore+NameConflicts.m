@@ -28,7 +28,7 @@
 {
 	[self queueBlock:^{
 		[self _suggestUnusedNameBasedOn:itemName atPath:path isDirectory:isDirectory usingNameStyle:style filteredBy:filter resultHandler:resultHandler];
-	}];
+	} allowInlining:YES];
 }
 
 - (void)_suggestUnusedNameBasedOn:(NSString *)itemName atPath:(OCPath)path isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)style filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler

@@ -138,6 +138,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray <OCShareQuery *> *_shareQueries;
 	OCShareQuery *_pollingQuery;
 
+	pthread_key_t _queueKey;
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
 
