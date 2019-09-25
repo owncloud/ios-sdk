@@ -314,7 +314,7 @@
 		OCSharingResponseStatus *status = nil;
 		NSArray <OCShare *> *shares = nil;
 
-		if (!((error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain]))
+		if (!((response.error != nil) && ![response.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
 			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
@@ -401,7 +401,7 @@
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare uuid:request.identifier attributes:nil]) != nil)
 	{
 		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -522,14 +522,14 @@
 
 	if (returnLinkShareOnlyError)
 	{
-		[eventTarget handleError:OCErrorWithDescription(OCErrorFeatureNotSupportedByServer, @"Updating the name, password and expiryDate is only supported for shares of type link") type:OCEventTypeUpdateShare sender:self];
+		[eventTarget handleError:OCErrorWithDescription(OCErrorFeatureNotSupportedByServer, @"Updating the name, password and expiryDate is only supported for shares of type link") type:OCEventTypeUpdateShare uuid:nil sender:self];
 		return (nil);
 	}
 
 	if (changedValuesByPropertyNames.count == 0)
 	{
 		// No changes => return immediately
-		[eventTarget handleEvent:[OCEvent eventForEventTarget:eventTarget type:OCEventTypeUpdateShare attributes:nil] sender:self];
+		[eventTarget handleEvent:[OCEvent eventForEventTarget:eventTarget type:OCEventTypeUpdateShare uuid:nil attributes:nil] sender:self];
 		return (nil);
 	}
 	else
@@ -588,7 +588,7 @@
 	}
 	else
 	{
-		[eventTarget handleError:OCErrorWithDescription(OCErrorInsufficientParameters, @"Nothing provided to update") type:OCEventTypeUpdateShare sender:self];
+		[eventTarget handleError:OCErrorWithDescription(OCErrorInsufficientParameters, @"Nothing provided to update") type:OCEventTypeUpdateShare uuid:nil sender:self];
 	}
 
 	return (requestProgress);
@@ -598,7 +598,7 @@
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare uuid:request.identifier attributes:nil]) != nil)
 	{
 		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -689,7 +689,7 @@
 
 	if (share.identifier == nil)
 	{
-		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDeleteShare sender:self];
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDeleteShare uuid:nil sender:self];
 		return (nil);
 	}
 
@@ -714,7 +714,7 @@
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare uuid:request.identifier attributes:nil]) != nil)
 	{
 		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -765,7 +765,7 @@
 
 	if (share.identifier == nil)
 	{
-		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare uuid:nil sender:self];
 		return (nil);
 	}
 
@@ -785,7 +785,7 @@
 
 	if (endpointURL == nil)
 	{
-		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare sender:self];
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeDecideOnShare uuid:nil sender:self];
 		return (nil);
 	}
 
@@ -813,7 +813,7 @@
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDecideOnShare attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDecideOnShare uuid:request.identifier attributes:nil]) != nil)
 	{
 		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{

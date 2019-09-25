@@ -29,6 +29,7 @@
 #import "OCLogTag.h"
 #import "OCIPNotificationCenter.h"
 #import "OCHTTPTypes.h"
+#import "OCHTTPCookieStorage.h"
 #import "OCCapabilities.h"
 
 @class OCBookmark;
@@ -39,6 +40,7 @@
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
+typedef NSString* OCConnectionEndpointURLOption NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
@@ -134,12 +136,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
 @property(nullable,strong) OCHTTPPipeline *longLivedPipeline; //!< Pipeline for requests whose response may take a while (like uploads, downloads) or that may not be dropped - not even temporarily.
 
+@property(strong,nullable) OCHTTPCookieStorage *cookieStorage; //!< Cookie storage. Must be set externally if it should be used.
+
 @property(strong,readonly,nonatomic) NSSet<OCHTTPPipeline *> *allHTTPPipelines; //!< A set of all HTTP pipelines used by the connection
 
 @property(nullable,strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
 @property(nullable,strong) NSSet<OCConnectionSignalID> *propFindSignals; //!< The set of signals to use for PROPFIND requests
 
 @property(assign,nonatomic) OCConnectionState state;
+@property(assign) BOOL connectionInitializationPhaseCompleted; //!< Indiciates whether the connection initialization phase has been completed.
 
 @property(nullable,weak) id <OCConnectionDelegate> delegate;
 
@@ -299,6 +304,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 #pragma mark - User info
 - (nullable NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError * _Nullable error, OCUser * _Nullable loggedInUser))completionHandler; //!< Retrieves information on the currently logged in user and returns it via the completion handler
+- (nullable NSProgress *)retrieveLoggedInUserWithRequestCustomization:(nullable void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError * _Nullable error, OCUser * _Nullable loggedInUser))completionHandler; //!< Retrieves information on the currently logged in user and returns it via the completion handler. Allows customization of the request with a block before scheduling.
 
 @end
 
@@ -307,7 +313,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 #pragma mark - Endpoints
 - (nullable NSString *)pathForEndpoint:(OCConnectionEndpointID)endpoint; //!< Returns the path of an endpoint identified by its OCConnectionEndpointID
-- (nullable NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(nullable NSDictionary <NSString *,id> *)options; //!< Returns the URL of an endpoint identified by its OCConnectionEndpointID, allowing additional options (reserved for future use)
+- (nullable NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(nullable NSDictionary <OCConnectionEndpointURLOption,id> *)options; //!< Returns the URL of an endpoint identified by its OCConnectionEndpointID, allowing additional options (reserved for future use)
 - (nullable NSURL *)URLForEndpointPath:(OCPath)endpointPath; //!< Returns the URL of the endpoint at the supplied endpointPath
 
 #pragma mark - Base URL Extract
@@ -343,6 +349,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
 @end
 
+extern OCConnectionEndpointID OCConnectionEndpointIDWellKnown;
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
@@ -352,6 +359,8 @@ extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
+
+extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]

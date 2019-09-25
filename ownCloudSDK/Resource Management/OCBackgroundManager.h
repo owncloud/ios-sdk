@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (UIApplicationState)applicationState;
 
+- (NSTimeInterval)backgroundTimeRemaining;
+
 - (UIBackgroundTaskIdentifier)beginBackgroundTaskWithName:(nullable NSString *)taskName expirationHandler:(void(^ __nullable)(void))expirationHandler;
 - (void)endBackgroundTask:(UIBackgroundTaskIdentifier)identifier;
 
@@ -41,11 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - State-based execution
 @property(readonly) BOOL isBackgrounded;
+@property(readonly,nonatomic) NSTimeInterval backgroundTimeRemaining;
 
 - (void)scheduleBlock:(dispatch_block_t)block inBackground:(BOOL)inBackground; //!< Schedule a block for background or foreground execution. If the app is currently in that state, the block gets executed immediately. If the app is in a different state, the block is queued until the app returns to the desired state.
 
 #pragma mark - Start and end background tasks
-- (void)startTask:(OCBackgroundTask *)task;
+- (BOOL)startTask:(OCBackgroundTask *)task;
 - (void)endTask:(OCBackgroundTask *)task;
 
 @end

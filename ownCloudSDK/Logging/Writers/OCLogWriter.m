@@ -77,20 +77,20 @@ static NSDateFormatter *dateFormatter;
 
 	switch (logLevel)
 	{
-		case OCLogLevelInfo:
-			logLevelName = @"info";
+		case OCLogLevelDebug:
+			logLevelName = OCLogger.coloredLogging ? @"⚪️" : @"[dbug]";
 		break;
 
-		case OCLogLevelDebug:
-			logLevelName = @"dbug";
+		case OCLogLevelInfo:
+			logLevelName = OCLogger.coloredLogging ? @"🔵" : @"[info]";
 		break;
 
 		case OCLogLevelWarning:
-			logLevelName = @"WARN";
+			logLevelName = OCLogger.coloredLogging ? @"⚠️" : @"[WARN]";
 		break;
 
 		case OCLogLevelError:
-			logLevelName = @"ERRO";
+			logLevelName = OCLogger.coloredLogging ? @"🛑" : @"[ERRO]";
 		break;
 
 		case OCLogLevelOff:
@@ -119,7 +119,7 @@ static NSDateFormatter *dateFormatter;
 
 	timestampString = [dateFormatter stringFromDate:date];
 
-	[self appendMessage:[[NSString alloc] initWithFormat:@"%@ %@[%d%@%06llu] [%@] | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
+	[self appendMessage:[[NSString alloc] initWithFormat:@"%@ %@[%d%@%06llu] %@ | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
 }
 
 - (void)appendMessage:(NSString *)message

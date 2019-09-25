@@ -97,6 +97,23 @@
 	return (nil);
 }
 
+- (nullable NSString *)contentType
+{
+	NSString *contentType;
+
+	if ((contentType = self.headerFields[@"Content-Type"]) != nil)
+	{
+		contentType = [contentType componentsSeparatedByString:@";"].firstObject;
+
+		if (contentType.length == 0)
+		{
+			contentType = nil;
+		}
+	}
+
+	return (contentType);
+}
+
 #pragma mark - Convenience body conversions
 - (NSStringEncoding)bodyStringEncoding
 {
@@ -199,7 +216,7 @@
 		_certificateValidationError	= [decoder decodeObjectOfClass:[NSError class] forKey:@"certificateValidationError"];
 
 		_status				= [decoder decodeObjectOfClass:[OCHTTPStatus class] forKey:@"status"];
-		_headerFields			= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"headerFields"];
+		_headerFields			= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSDictionary.class, NSString.class, nil] forKey:@"headerFields"];
 
 		_httpURLResponse 		= [decoder decodeObjectOfClass:[NSHTTPURLResponse class] forKey:@"httpURLResponse"];
 

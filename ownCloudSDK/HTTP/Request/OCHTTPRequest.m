@@ -179,6 +179,11 @@
 	}
 }
 
+- (NSError *)error
+{
+	return (_httpResponse.error);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
@@ -383,16 +388,16 @@
 		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 		self.effectiveURL 	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"effectiveURL"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
-		self.headerFields 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"headerFields"];
-		self.parameters 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"parameters"];
+		self.headerFields 	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSString.class, nil] forKey:@"headerFields"];
+		self.parameters 	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSString.class, nil] forKey:@"parameters"];
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
-		self.requiredSignals    = [decoder decodeObjectOfClass:[NSSet class] forKey:@"requiredSignals"];
+		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
 
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
-		self.userInfo	 	= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		self.userInfo	 	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];

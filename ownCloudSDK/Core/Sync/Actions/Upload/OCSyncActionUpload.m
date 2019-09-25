@@ -16,6 +16,7 @@
  *
  */
 
+#import "OCCore.h"
 #import "OCSyncActionUpload.h"
 #import "OCSyncAction+FileProvider.h"
 #import "OCChecksum.h"
@@ -235,6 +236,15 @@
 			if (!uploadedItem.locallyModified)
 			{
 				uploadedItem.localCopyVersionIdentifier = uploadedItem.itemVersionIdentifier;
+			}
+
+			// Set download trigger to available offline if the item is targeted by available offline, as it might
+			// otherwise be removed and re-downloaded
+			NSArray<OCItemPolicy *> *availableOfflineItemPoliciesCoveringItem;
+
+			if (((availableOfflineItemPoliciesCoveringItem =  [self.core retrieveAvailableOfflinePoliciesCoveringItem:uploadedItem completionHandler:nil]) != nil) && (availableOfflineItemPoliciesCoveringItem.count > 0))
+			{
+				uploadedItem.downloadTriggerIdentifier = OCItemDownloadTriggerIDAvailableOffline;
 			}
 
 			// Remove sync record from placeholder

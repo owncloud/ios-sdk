@@ -188,7 +188,7 @@
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
-	_updateProperties = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"updateProperties"];
+	_updateProperties = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSString.class, nil] forKey:@"updateProperties"];
 	_archivedItemVersion = [decoder decodeObjectOfClass:[OCItem class] forKey:@"archivedItemVersion"];
 }
 

@@ -19,6 +19,7 @@
 #import "OCBookmark.h"
 #import "OCAppIdentity.h"
 #import "OCBookmark+IPNotificationNames.h"
+#import "OCEvent.h"
 
 @interface OCBookmark ()
 {
@@ -109,6 +110,7 @@
 		}
 
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
+		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 	}
 }
 
@@ -193,7 +195,7 @@
 
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"authenticationMethodIdentifier"];
 
-		_userInfo = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"userInfo"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
 	}
@@ -264,6 +266,11 @@
 	}
 
 	return (_coreUpdateNotificationName);
+}
+
++ (OCIPCNotificationName)bookmarkAuthUpdateNotificationName
+{
+	return (@"com.owncloud.bookmark.auth-update");
 }
 
 @end

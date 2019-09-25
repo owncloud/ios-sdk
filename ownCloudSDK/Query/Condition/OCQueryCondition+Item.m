@@ -64,7 +64,14 @@
 		case OCQueryConditionOperatorPropertyHasPrefix:
 			if ([propertyValue respondsToSelector:@selector(hasPrefix:)])
 			{
-				isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+				if (operatorValue != nil)
+				{
+					isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+				}
+				else
+				{
+					OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasPrefix: check not possible");
+				}
 			}
 			else
 			{
@@ -75,7 +82,14 @@
 		case OCQueryConditionOperatorPropertyHasSuffix:
 			if ([propertyValue respondsToSelector:@selector(hasSuffix:)])
 			{
-				isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+				if (operatorValue != nil)
+				{
+					isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+				}
+				else
+				{
+					OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasSuffix: check not possible");
+				}
 			}
 			else
 			{

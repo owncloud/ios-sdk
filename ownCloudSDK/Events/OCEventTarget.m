@@ -17,6 +17,7 @@
  */
 
 #import "OCEventTarget.h"
+#import "OCLogger.h"
 
 @interface OCEventTarget ()
 {
@@ -73,7 +74,16 @@
 {
 	if (_eventHandlerBlock == nil)
 	{
-		[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+		id <OCEventHandler> eventHandler = [OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier];
+
+		if (eventHandler != nil)
+		{
+			[eventHandler handleEvent:event sender:sender];
+		}
+		else
+		{
+			OCLogError(@"DROPPING EVENT: event handler with identifier %@ not found - dropping event %@ from sender %@", _eventHandlerIdentifier, event, sender);
+		}
 	}
 	else
 	{
@@ -82,9 +92,9 @@
 }
 
 #pragma mark - Convenience
-- (void)handleError:(NSError *)error type:(OCEventType)type sender:(id)sender
+- (void)handleError:(NSError *)error type:(OCEventType)type uuid:(nullable OCEventUUID)uuid sender:(id)sender
 {
-	OCEvent *event = [OCEvent eventForEventTarget:self type:type attributes:nil];
+	OCEvent *event = [OCEvent eventForEventTarget:self type:type uuid:uuid attributes:nil];
 
 	event.error = error;
 
@@ -102,7 +112,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_eventHandlerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"eventHandlerIdentifier"];
-		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 	}
 
 	return (self);

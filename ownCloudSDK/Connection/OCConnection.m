@@ -40,8 +40,11 @@
 #import "OCCertificateRuleChecker.h"
 #import "OCProcessManager.h"
 #import "NSString+OCPath.h"
+#import "OCMacros.h"
+#import "OCCore.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
+#import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethodBasicAuth.h"
 
@@ -82,6 +85,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
+		OCConnectionEndpointIDWellKnown			: @"/.well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
@@ -90,7 +94,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
-		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
+		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
@@ -200,6 +204,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
+
+	OCTLogDebug(@[@"DEALLOC"], @"connection deallocated");
 }
 
 #pragma mark - Pipelines
@@ -252,6 +258,21 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (attach)
 	{
+		OCCore *delegateCore = OCTypedCast(_delegate, OCCore);
+		if (delegateCore != nil)
+		{
+			OCLogDebug(@"Attach pipelines for connection %@ with core.state = %lu via %@", self, (unsigned long)delegateCore.state, [NSThread callStackSymbols]);
+
+			if (delegateCore.state == OCCoreStateStopped)
+			{
+				OCLogError(@"Connection %@ was prompted to attach to pipelines while core is stopped via %@", self, [NSThread callStackSymbols]);
+				attach = NO;
+			}
+		}
+	}
+
+	if (attach)
+	{
 		[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL *stop) {
 			OCSyncExec(waitForAttach, {
 				[pipeline attachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
@@ -265,7 +286,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 - (void)detachFromPipelinesWithCompletionHandler:(dispatch_block_t)completionHandler
 {
 	dispatch_group_t waitPipelineDetachGroup = dispatch_group_create();
-	NSMutableSet<OCHTTPPipeline *> *pipelines = nil;
+	NSSet<OCHTTPPipeline *> *pipelines = nil;
 	BOOL returnImmediately = NO;
 
 	@synchronized (self)
@@ -287,17 +308,18 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	// Detach from all pipelines
-	pipelines = [[NSMutableSet alloc] initWithSet:self.allHTTPPipelines];
+	pipelines = self.allHTTPPipelines;
 
 	for (OCHTTPPipeline *pipeline in pipelines)
 	{
-		OCLogDebug(@"detaching from pipeline %@", pipeline);
+		OCLogDebug(@"detaching from pipeline %@ (connection=%@)", pipeline, self);
 
 		dispatch_group_enter(waitPipelineDetachGroup);
 
 		// Cancel non-critical requests and detach from the pipeline
 		[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
 		[pipeline detachPartitionHandler:self completionHandler:^(id sender, NSError *error) {
+			OCLogDebug(@"detach from pipeline %@ (connection=%@) returned with error=%@", pipeline, self, error);
 			dispatch_group_leave(waitPipelineDetachGroup);
 		}];
 	}
@@ -366,6 +388,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		[_delegate connectionChangedState:self];
 	}
+}
+
+#pragma mark - Cookies
+- (OCHTTPCookieStorage *)partitionCookieStorage
+{
+	return (_cookieStorage);
 }
 
 #pragma mark - Prepare request
@@ -748,6 +776,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
 			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+				self.connectionInitializationPhaseCompleted = YES;
+
 				if ((error == nil) && (response.status.isSuccess))
 				{
 					NSError *jsonError = nil;
@@ -1130,7 +1160,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
 	}
 
 	return(progress);
@@ -1147,7 +1177,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		eventType = (OCEventType)[options[@"alternativeEventType"] integerValue];
 	}
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (error != nil)
 		{
@@ -1157,6 +1187,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		if (request.error != nil)
 		{
 			event.error = request.error;
+		}
+
+		if (!request.httpResponse.status.isSuccess && (event.error == nil))
+		{
+			event.error = request.httpResponse.status.error;
 		}
 
 		if (event.error == nil)
@@ -1299,7 +1334,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (![[NSFileManager defaultManager] fileExistsAtPath:sourceURL.path])
 	{
-		[eventTarget handleError:OCError(OCErrorFileNotFound) type:OCEventTypeUpload sender:self];
+		[eventTarget handleError:OCError(OCErrorFileNotFound) type:OCEventTypeUpload uuid:nil sender:self];
 
 		return(nil);
 	}
@@ -1375,7 +1410,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
 		{
-			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload sender:self];
+			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
 			return(nil);
 		}
 
@@ -1411,7 +1446,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
 	}
 
 	return(requestProgress);
@@ -1421,6 +1456,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	NSString *fileName = request.userInfo[@"fileName"];
 	OCItem *parentItem = request.userInfo[@"parentItem"];
+
+	OCLogDebug(@"Handling file upload result with error=%@: %@", error, request);
 
 	if (request.httpResponse.status.isSuccess)
 	{
@@ -1459,7 +1496,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		OCEvent *event = nil;
 
-		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload attributes:nil]) != nil)
+		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload uuid:request.identifier attributes:nil]) != nil)
 		{
 			if (error != nil)
 			{
@@ -1579,7 +1616,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload uuid:nil sender:self];
 	}
 
 	return(requestProgress);
@@ -1589,7 +1626,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDownload uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.cancelled)
 		{
@@ -1728,12 +1765,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		}
 		else
 		{
-			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpdate sender:self];
+			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpdate uuid:nil sender:self];
 		}
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate uuid:nil sender:self];
 	}
 
 	return (requestProgress);
@@ -1744,7 +1781,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	OCEvent *event;
 	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -1842,7 +1879,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder uuid:nil sender:self];
 	}
 
 	return(requestProgress);
@@ -1853,7 +1890,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	OCEvent *event;
 	BOOL postEvent = YES;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateFolder attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateFolder uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -2007,7 +2044,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:eventType sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:eventType uuid:nil sender:self];
 	}
 
 	return(requestProgress);
@@ -2019,7 +2056,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	BOOL postEvent = YES;
 	OCEventType eventType = (OCEventType) ((NSNumber *)request.userInfo[@"eventType"]).integerValue;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -2138,7 +2175,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete sender:self];
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete uuid:nil sender:self];
 	}
 
 	return(requestProgress);
@@ -2148,7 +2185,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDelete attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDelete uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -2254,7 +2291,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	if (item.isPlaceholder)
 	{
 		// No remote thumbnails available for placeholders
-		[eventTarget handleError:OCError(OCErrorItemNotFound) type:OCEventTypeRetrieveThumbnail sender:self];
+		[eventTarget handleError:OCError(OCErrorItemNotFound) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
 		return (nil);
 	}
 
@@ -2335,7 +2372,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (error != nil)
 	{
-		[eventTarget handleError:error type:OCEventTypeRetrieveThumbnail sender:self];
+		[eventTarget handleError:error type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
 	}
 
 	return(progress);
@@ -2345,7 +2382,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveThumbnail attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveThumbnail uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -2410,7 +2447,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (filterRulesXML.count == 0)
 	{
-		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeFilterFiles sender:self];
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeFilterFiles uuid:nil sender:self];
 		return(nil);
 	}
 
@@ -2440,7 +2477,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCEvent *event;
 
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeFilterFiles attributes:nil]) != nil)
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeFilterFiles uuid:request.identifier attributes:nil]) != nil)
 	{
 		if (request.error != nil)
 		{
@@ -2523,6 +2560,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 @end
 
+OCConnectionEndpointID OCConnectionEndpointIDWellKnown = @"well-known";
 OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilities";
 OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
@@ -2532,6 +2570,8 @@ OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
+
+OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

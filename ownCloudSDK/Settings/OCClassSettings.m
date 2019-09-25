@@ -19,11 +19,14 @@
 #import "OCClassSettings.h"
 #import "OCClassSettingsFlatSourceManagedConfiguration.h"
 #import "OCClassSettingsFlatSourceEnvironment.h"
+#import "OCClassSettingsUserPreferences.h"
 
 @interface OCClassSettings ()
 {
 	NSMutableArray <id <OCClassSettingsSource>> *_sources;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_overrideValuesByKeyByIdentifier;
+
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_registeredDefaultValuesByKeyByIdentifier;
 }
 
 @end
@@ -39,10 +42,52 @@
 		sharedClassSettings = [OCClassSettings new];
 
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourceManagedConfiguration new]];
+		[sharedClassSettings addSource:[OCClassSettingsUserPreferences sharedUserPreferences]];
 		[sharedClassSettings addSource:[[OCClassSettingsFlatSourceEnvironment alloc] initWithPrefix:@"oc:"]];
 	});
 	
 	return(sharedClassSettings);
+}
+
+- (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults forClass:(Class<OCClassSettingsSupport>)theClass
+{
+	OCClassSettingsIdentifier identifier;
+
+	if ((identifier = [theClass classSettingsIdentifier]) != nil)
+	{
+		@synchronized(self)
+		{
+			NSMutableDictionary<OCClassSettingsKey,id> *registeredDefaultValuesByKey = nil;
+
+			if (_registeredDefaultValuesByKeyByIdentifier == nil)
+			{
+				_registeredDefaultValuesByKeyByIdentifier = [NSMutableDictionary new];
+			}
+
+			if ((registeredDefaultValuesByKey = _registeredDefaultValuesByKeyByIdentifier[identifier]) == nil)
+			{
+				registeredDefaultValuesByKey = [NSMutableDictionary new];
+				_registeredDefaultValuesByKeyByIdentifier[identifier] = registeredDefaultValuesByKey;
+			}
+
+			[registeredDefaultValuesByKey addEntriesFromDictionary:defaults];
+		}
+	}
+}
+
+- (nullable NSDictionary<OCClassSettingsKey, id> *)registeredDefaultsForClass:(Class<OCClassSettingsSupport>)theClass
+{
+	@synchronized(self)
+	{
+		OCClassSettingsIdentifier identifier;
+
+		if ((identifier = [theClass classSettingsIdentifier]) != nil)
+		{
+			return (_registeredDefaultValuesByKeyByIdentifier[identifier]);
+		}
+	}
+
+	return (nil);
 }
 
 - (void)addSource:(id <OCClassSettingsSource>)source
@@ -58,7 +103,7 @@
 
 		[_sources addObject:source];
 
-		[_overrideValuesByKeyByIdentifier removeAllObjects];
+		[self clearSourceCache];
 	}
 }
 
@@ -72,8 +117,16 @@
 		{
 			[_sources removeObjectIdenticalTo:source];
 
-			[_overrideValuesByKeyByIdentifier removeAllObjects];
+			[self clearSourceCache];
 		}
+	}
+}
+
+- (void)clearSourceCache
+{
+	@synchronized(self)
+	{
+		[_overrideValuesByKeyByIdentifier removeAllObjects];
 	}
 }
 
@@ -119,7 +172,8 @@
 
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)settingsClass
 {
-	NSDictionary<NSString *, id> *classSettings = nil;
+	NSDictionary<OCClassSettingsKey, id> *classSettings = nil;
+	NSDictionary<OCClassSettingsKey, id> *registeredDefaults = nil;
 	OCClassSettingsIdentifier classSettingsIdentifier;
 
 	if ((classSettingsIdentifier = [settingsClass classSettingsIdentifier]) != nil)
@@ -128,6 +182,15 @@
 
 		// Use defaults provided by class
 		classSettings = [settingsClass defaultSettingsForIdentifier:classSettingsIdentifier];
+
+		// Merge with registered defaults (f.ex. added by subclasses)
+		if (((registeredDefaults = [self registeredDefaultsForClass:settingsClass]) != nil) && (registeredDefaults.count > 0))
+		{
+			NSMutableDictionary<OCClassSettingsKey, id> *mergedSettings = [classSettings mutableCopy];
+			[mergedSettings addEntriesFromDictionary:registeredDefaults];
+
+			classSettings = mergedSettings;
+		}
 
 		// Merge override values from sources (if any)
 		if ((overrideSettings = [self _overrideDictionaryForSettingsIdentifier:classSettingsIdentifier]) != nil)

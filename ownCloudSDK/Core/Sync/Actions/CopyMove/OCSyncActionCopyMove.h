@@ -28,6 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCItem *processingItem;
 
 @property(assign) BOOL isRename;
+@property(nullable,strong) NSArray <OCLocalID> *associatedItemLocalIDs;
+@property(nullable,strong) NSSet <OCSyncLaneTag> *associatedItemLaneTags;
 
 - (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename;
 

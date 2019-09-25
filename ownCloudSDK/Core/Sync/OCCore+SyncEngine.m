@@ -35,9 +35,15 @@
 #import "OCProcessManager.h"
 #import "OCSyncLane.h"
 #import "OCSyncRecordActivity.h"
+#import "OCEventRecord.h"
+#import "OCEventQueue.h"
+#import "OCSQLiteTransaction.h"
+#import "OCBackgroundManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
+
+OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 
 @implementation OCCore (SyncEngine)
 
@@ -472,24 +478,36 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
 
-		if (self.connectionStatus == OCCoreConnectionStatusOnline)
+//		if (OCBackgroundManager.sharedBackgroundManager.isBackgrounded && (OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining < 3.0))
+//		{
+//			OCLogDebug(@"processSyncRecordsIfNeeded skipped because backgroundTimeRemaining=%f", OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining);
+//			__weak OCCore *weakSelf = self;
+//
+//			[OCBackgroundManager.sharedBackgroundManager scheduleBlock:^{
+//				[weakSelf processSyncRecordsIfNeeded];
+//			} inBackground:NO];
+//		}
+//		else
 		{
-			@synchronized(self)
+			if (self.connectionStatus == OCCoreConnectionStatusOnline)
 			{
-				needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
-				self->_needsToProcessSyncRecords = NO;
+				@synchronized(self)
+				{
+					needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
+					self->_needsToProcessSyncRecords = NO;
+				}
+
+				OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
+
+				if (needsToProcessSyncRecords)
+				{
+					[self processSyncRecords];
+				}
 			}
-
-			OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
-
-			if (needsToProcessSyncRecords)
+			else
 			{
-				[self processSyncRecords];
+				OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 			}
-		}
-		else
-		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];
@@ -501,6 +519,49 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 {
 	[self beginActivity:@"process sync records"];
 
+	// Transfer incoming OCEvents from KVS to the OCCore database
+	OCWaitInitAndStartTask(transferIncomingEvents);
+
+	[self.database.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError * _Nullable(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction) {
+		// Read incoming OCEvents from KVS and add them to the database if they don't already exist there
+		// Note how we do just read the value here instead of entering a full lock of the KVS. Since the removal of events also
+		// occurs only inside Sync Engine global lock protection, we're not in danger of re-adding an event that's just been removed.
+		// On the other end, even if an event is added right after reading it, the addition of the event will trigger a new run of
+		// processSyncRecords, at which time the event will be transfered over to the database
+		OCEventQueue *eventQueue = [self.vault.keyValueStore readObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+
+		for (OCEventRecord *eventRecord in eventQueue.records)
+		{
+			// Avoid double-transfer
+			if (![self.database queueContainsEvent:eventRecord.event])
+			{
+				// Add to database
+				OCTLogDebug(@[@"EventRecord"], @"Queuing in the database: %@", eventRecord.event);
+
+				[self.database queueEvent:eventRecord.event
+					  forSyncRecordID:eventRecord.syncRecordID
+					   processSession:eventRecord.processSession
+					completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil)
+					{
+						OCTLogError(@[@"EventRecord"], @"Error queuing event %@: %@", eventRecord.event, error);
+					}
+				}];
+			}
+			else
+			{
+				OCTLogWarning(@[@"EventRecord"], @"Skipping duplicate event - not inserting into the database: %@", eventRecord.event);
+			}
+		}
+
+		return (nil);
+	} type:OCSQLiteTransactionTypeExclusive completionHandler:^(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction, NSError * _Nullable error) {
+		OCWaitDidFinishTask(transferIncomingEvents);
+	}]];
+
+	OCWaitForCompletion(transferIncomingEvents);
+
+	// Process sync records
 	OCWaitInitAndStartTask(processSyncRecords);
 
 	[self dumpSyncJournalWithTags:@[@"BeforeProc"]];
@@ -896,8 +957,23 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		while ((event = [self.database nextEventForSyncRecordID:syncRecordID afterEventID:nil]) != nil)
 		{
+			// Remove from KVS (if exists), now that we can be sure the OCEvent is in the database
+			[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue usingModifier:^id _Nullable(OCEventQueue * _Nullable eventQueue, BOOL * _Nonnull outDidModify) {
+ 				BOOL didRemove;
+
+ 				didRemove = [eventQueue removeEventRecordForEventUUID:event.uuid];
+
+				OCTLogDebug(@[@"EventRecord"], @"Removing from KVS (didRemove=%d): %@", didRemove, event);
+
+				*outDidModify = didRemove;
+
+				return (eventQueue);
+			}];
+
 			// Process event
 			OCSyncContext *syncContext;
+
+			OCTLogDebug(@[@"EventRecord"], @"Handling event %@", event);
 
 			if ((syncContext = [OCSyncContext eventHandlingContextWith:syncRecord event:event]) != nil)
 			{
@@ -1113,24 +1189,102 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 }
 
-#pragma mark - Sync event handling
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
+#pragma mark - Sync event queueing
+- (void)queueSyncEvent:(OCEvent *)event sender:(id)sender
 {
+	// Sync Events arriving here typically arrive through OCHTTPPipeline -> OCConnection -> OCCore.handleEvent() - and
+	// OCHTTPPipeline drops the request after this method returns. Therefore it's essential to ensure the OCEvent can't
+	// be lost and it is stored safely before this method returns.
+
+	/*
+		Methodology:
+		1) HTTP Pipeline -> OCConnection -> OCCore Event Handling
+		-> save event to KVS
+			- makes sure the event is persisted on disk before returning
+			- use request.identifier as event.uuid, so that, if the process is terminated after saving to KVS, but before removal from OCHTTP, it can be recognized as duplicate
+			- simple, fast storage operation - decoupled from the load and tasks carried by OCDatabase' SQLite db (avoiding dead-locks)
+
+		2) KVS -> OCCore Event Queue DB
+		- needs to be stored in OCCore DB before processing to maintain a consistent view of the entire database (changes caused by a processed event could be dropped otherwise, f.ex. if a process termination occurs mid-transaction)
+		- goal: avoid dropping events and processing events multiple time even when process is terminated mid-transaction
+		- strategy:
+			- each OCEvent has a unique UUID
+
+			- transfer HTTP Pipeline -> KVS
+				- re-use HTTP RequestID as event UUID
+				- in KVS context
+					- check that an event with the same UUID doesn't already exist in the queue and is not among the UUIDs of the last 100 events removed from the queue (so an event doesn't get added multiple times if the process was terminated after the event was added to KVS, but before removal from the HTTP Pipeline)
+				- remove from HTTP Pipeline DB after KVS call returns
+
+			- transfer KVS -> DB:
+				- db transaction begin
+					- KVS context
+						- read events, check if event with same UUID already exists in db, add to db otherwise
+						- leave events in KVS unchanged (so they aren't lost if the transaction is rolled back due to a process termination)
+				- db transaction commits
+
+			- removal from KVS:
+				- in sync event processing
+					- event is retrieved from database
+						- we now have the certainty that the event arrived in the db
+					- in KVS context: remove event from KVS
+						- if the process is terminated here, the event will still be in the db, unprocessed
+						- if KVS operation completes, the event is still in the database, but removed from KVS so there can't be a duplicate
+					- process event
+						- only reaches this point after event is guaranteed in database and guaranteed to no longer be in KVS
+						- by existing in the DB up to this point, it ensured that no event could be transfered twice from KVS
+
+		3) Integration into existing structures
+			- OCCore receives event for queueing:
+				- save to KVS
+				- call setNeedsToProcessSyncRecords
+
+			- in OCCore.processSyncRecords:
+				- before entering db transaction protected context: transfer KVS -> DB
+				- in db transaction protected context: iterate events, removal from KVS before processing event
+	 */
+
 	OCSyncRecordID recordID;
 
 	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
 		[self beginActivity:@"Queuing sync event"];
 
-		[self.database queueEvent:event forSyncRecordID:recordID completionHandler:^(OCDatabase *db, NSError *error) {
-			[self setNeedsToProcessSyncRecords];
+		// Store in KVS
+		OCTLogDebug(@[@"EventRecord"], @"Queuing in KVS: %@", event);
+		[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue usingModifier:^id _Nullable(OCEventQueue * _Nullable eventQueue, BOOL * _Nonnull outDidModify) {
+			OCEventRecord *eventRecord;
 
-			[self endActivity:@"Queuing sync event"];
+			if (eventQueue == nil) { eventQueue = [OCEventQueue new]; }
+
+			if ((eventRecord = [[OCEventRecord alloc] initWithEvent:event syncRecordID:recordID]) != nil)
+			{
+				// Checks for duplicate entries (in case process was terminated after the OCEvent was saved in KVS, but before the HTTP request was removed from the pipeline db)
+				if ([eventQueue addEventRecord:eventRecord])
+				{
+					*outDidModify = YES;
+					OCTLogDebug(@[@"EventRecord"], @"Added to KVS: %@", event);
+				}
+				else
+				{
+					OCTLogDebug(@[@"EventRecord"], @"Not adding to KVS (duplicate event): %@", event);
+				}
+			}
+			else
+			{
+				OCTLogError(@[@"EventRecord"], @"Allocation of OCEventRecord failed");
+			}
+
+			return (eventQueue);
 		}];
+
+		[self setNeedsToProcessSyncRecords];
+
+		[self endActivity:@"Queuing sync event"];
 	}
 	else
 	{
-		OCLogError(@"Can't handle event %@ from sender %@ due to missing recordID", event, sender);
+		OCTLogError(@[@"EventRecord"], @"Can't handle event %@ from sender %@ due to missing recordID", event, sender);
 	}
 }
 

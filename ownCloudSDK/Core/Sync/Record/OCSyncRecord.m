@@ -229,7 +229,7 @@
 
 		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
-		_waitConditions = [decoder decodeObjectOfClass:[NSArray class] forKey:@"waitConditions"];
+		_waitConditions = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCWaitCondition.class, nil] forKey:@"waitConditions"];
 	}
 	
 	return (self);
@@ -311,6 +311,7 @@
 @end
 
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal = @"deleteLocal";
+OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocalCopy = @"deleteLocalCopy";
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote = @"deleteRemote";
 OCSyncActionIdentifier OCSyncActionIdentifierMove = @"move";
 OCSyncActionIdentifier OCSyncActionIdentifierCopy = @"copy";

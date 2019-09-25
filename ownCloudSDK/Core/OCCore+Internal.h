@@ -22,8 +22,12 @@
 
 @interface OCCore (Internal)
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged;
+
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block;
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining;
 - (void)queueConnectivityBlock:(dispatch_block_t)block;
 
 #pragma mark - Busy count
@@ -34,7 +38,7 @@
 - (OCDatabase *)database;
 
 #pragma mark - Sync Engine
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
+- (void)queueSyncEvent:(OCEvent *)event sender:(id)sender;
 
 #pragma mark - Event target tools
 - (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo;

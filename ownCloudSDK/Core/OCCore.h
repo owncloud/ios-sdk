@@ -41,6 +41,7 @@
 @class OCIPNotificationCenter;
 @class OCRecipientSearchController;
 @class OCCoreQuery;
+@class OCItemPolicyProcessor;
 
 @class OCCoreConnectionStatusSignalProvider;
 @class OCCoreServerStatusSignalProvider;
@@ -85,6 +86,13 @@ typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
 	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
 };
 
+typedef NS_ENUM(NSUInteger,OCCoreAvailableOfflineCoverage)
+{
+	OCCoreAvailableOfflineCoverageNone,	//!< Item is not targeted by available offline item policy
+	OCCoreAvailableOfflineCoverageIndirect,	//!< Item is indirectly targeted by available offline item policy (f.ex. returned for /Photos/Paris.jpg if /Photos/ is available offline
+	OCCoreAvailableOfflineCoverageDirect	//!< Item is directly targeted by available offline item policy
+};
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCCoreActionResultHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, id _Nullable parameter);
@@ -94,6 +102,9 @@ typedef void(^OCCoreRetrieveHandler)(NSError * _Nullable error, OCCore *core, OC
 typedef void(^OCCoreThumbnailRetrieveHandler)(NSError * _Nullable error, OCCore *core, OCItem * _Nullable item, OCItemThumbnail * _Nullable thumbnail, BOOL isOngoing, NSProgress * _Nullable progress);
 typedef void(^OCCorePlaceholderCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
 typedef void(^OCCoreFavoritesResultHandler)(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems);
+typedef void(^OCCoreItemPolicyCompletionHandler)(NSError * _Nullable error, OCItemPolicy * _Nullable itemPolicy);
+typedef void(^OCCoreItemPoliciesCompletionHandler)(NSError * _Nullable error, NSArray <OCItemPolicy *> * _Nullable itemPolicies);
+typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
@@ -127,6 +138,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray <OCShareQuery *> *_shareQueries;
 	OCShareQuery *_pollingQuery;
 
+	pthread_key_t _queueKey;
 	dispatch_queue_t _queue;
 	dispatch_queue_t _connectivityQueue;
 
@@ -163,6 +175,16 @@ typedef id<NSObject> OCCoreItemTracking;
 	BOOL _itemListTaskRunning;
 	NSMutableArray<OCCoreItemListFetchUpdatesCompletionHandler> *_fetchUpdatesCompletionHandlers;
 
+	NSMutableArray <OCItemPolicy *> *_itemPolicies;
+	NSMutableArray <OCItemPolicyProcessor *> *_itemPolicyProcessors;
+	BOOL _itemPoliciesAppliedInitially;
+	BOOL _itemPoliciesValid;
+
+	NSMutableSet <OCPath> *_availableOfflineFolderPaths;
+	NSMutableSet <OCLocalID> *_availableOfflineIDs;
+	BOOL _availableOfflineCacheValid;
+	NSMapTable <OCClaimIdentifier, NSObject *> *_claimTokensByClaimIdentifier;
+
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
@@ -183,6 +205,9 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSNumber *_rootQuotaBytesUsed;
 	NSNumber *_rootQuotaBytesTotal;
 }
+
+@property(readonly) OCCoreRunIdentifier runIdentifier; //!< UUID that's unique for every OCCore instance (also differs between two cores for the same bookmarks)
+@property(readonly,nonatomic) BOOL isManaged; //!< YES if this OCCore is managed by OCCoreManager.
 
 @property(readonly) OCBookmark *bookmark; //!< Bookmark identifying the server this core manages.
 
@@ -233,10 +258,6 @@ typedef id<NSObject> OCCoreItemTracking;
 - (void)reloadQuery:(OCCoreQuery *)query;	//!< Asks the core to reach out to the server and request a new list of items for the query
 - (void)stopQuery:(OCCoreQuery *)query;		//!< Stops a query
 
-#pragma mark - Commands
-- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
-- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler;
-
 #pragma mark - Progress tracking
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item;   //!< Registers a progress object for an item. Once the progress is finished, it's unregistered automatically.
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item; //!< Unregisters a progress object for an item
@@ -262,20 +283,13 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
 
+#pragma mark - Item usage
+- (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Registers that the item has been used by the user, updating the locally tracked OCItem.lastUsed date with the current date and time.
+
 #pragma mark - Indicating activity requiring the core
 - (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description; //!< Runs a block in the current thread while making sure OCCore will not stop before the completionHandler has been called.
 
 @end
-
-//@interface OCCore (FileManagement)
-//- (void)performFile:(OCFile *)file retainerOperation:(void(^)(OCCore *core, OCFile *file, OCRetainerCollection *retainers))retainerOperation;
-//
-//- (BOOL)retainFile:(OCFile *)file with:(OCRetainer *)retainer;
-//- (BOOL)releaseFile:(OCFile *)file from:(OCRetainer *)retainer;
-//
-//- (OCRetainer *)retainFile:(OCFile *)file withExplicitIdentifier:(NSString *)explicitIdentifier;
-//- (BOOL)releaseFile:(OCFile *)file fromExplicitIdentifier:(NSString *)explicitIdentifier;
-//@end
 
 @interface OCCore (Favorites)
 
@@ -335,6 +349,13 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @end
 
+@interface OCCore (AvailableOffline)
+- (void)makeAvailableOffline:(OCItem *)item options:(nullable NSDictionary <OCCoreOption, id> *)options completionHandler:(nullable OCCoreItemPolicyCompletionHandler)completionHandler; //!< Request offline availablity for an item. Pass OCCoreOptionSkipRedundancyChecks in options to skip redundancy tests.
+- (nullable NSArray <OCItemPolicy *> *)retrieveAvailableOfflinePoliciesCoveringItem:(nullable OCItem *)item completionHandler:(nullable OCCoreItemPoliciesCompletionHandler)completionHandler; //!< Retrieves an array of item policies that request offline availability for this item. Passing nil for completionHandler makes this call return results synchronously. Passing nil for item returns all available offline policies.
+- (void)removeAvailableOfflinePolicy:(OCItemPolicy *)itemPolicy completionHandler:(nullable OCCoreCompletionHandler)completionHandler; //!< Removes the provided available offline item policy.
+- (OCCoreAvailableOfflineCoverage)availableOfflinePolicyCoverageOfItem:(OCItem *)item; //!< Determines the available offline coverage for an item. Meant to be used for displaying coverage status.
+@end
+
 @interface OCCore (CommandDownload)
 - (nullable NSProgress *)downloadItem:(OCItem *)item options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreDownloadResultHandler)resultHandler;
 @end
@@ -353,6 +374,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @interface OCCore (CommandDelete)
 - (nullable NSProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)deleteLocalCopyOfItem:(OCItem *)item resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandCopyMove)
@@ -370,6 +392,7 @@ extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 extern OCClassSettingsKey OCCoreOverrideReachabilitySignal;
 extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
 extern OCClassSettingsKey OCCoreActionConcurrencyBudgets;
+extern OCClassSettingsKey OCCoreCookieSupportEnabled;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
@@ -381,6 +404,13 @@ extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransfor
 extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [BOOL] Determines whether -[OCCore downloadItem:..] should return immediately if the core is currently offline or unavailable.
 extern OCCoreOption OCCoreOptionPlaceholderCompletionHandler; //!< [OCCorePlaceholderCompletionHandler] For actions that support it: optional block that's invoked with the placeholder item if one is created by the action.
 extern OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle; //!< [OCCoreDuplicateNameStyleNone] Automatically resolves conflicts while performing the action. For import, that means automatic rename of the file to upload if a file with the same name already exists, using the provided naming style.
+extern OCCoreOption OCCoreOptionDownloadTriggerID; //!< [OCItemDownloadTriggerID] An ID of what triggered the download (f.ex. "AvailableOffline" or "User")
+extern OCCoreOption OCCoreOptionAddFileClaim; //!< [OCClaim] A claim to add to an item as part of an action (typically upload/download)
+extern OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose; //!< [OCCoreClaimPurpose] Adds a temporary claim to the returned OCFile object (download) generated for the provided purpose. Makes sure the claim is automatically removed if the OCCore is still running when the object is deallocated. (default is OCCoreClaimPurposeNone)
+extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whether AvailableOffline should skip redundancy checks.
+extern OCCoreOption OCCoreOptionConvertExistingLocalDownloads; //!< [BOOL] Determines whether AvailableOffline should convert existing local copies to Available Offline managed items if they fall under a new Available Offline rule
+
+extern OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey; //!< Vault.KVS-key with a NSNumber Boolean value. If the value is YES, available offline item policies are skipped.
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.

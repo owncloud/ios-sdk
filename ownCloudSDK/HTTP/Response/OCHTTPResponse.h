@@ -61,6 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Convenience accessors
 - (nullable NSURL *)redirectURL; //!< URL contained in the response's Location header field
+- (nullable NSString *)contentType; //!< Content-Type (stripped of charset and other parameters)
 
 #pragma mark - Convenience body conversions
 - (NSStringEncoding)bodyStringEncoding; //!< Returns the body's string encoding

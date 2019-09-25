@@ -24,12 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCAuthenticationMethodOAuth2 (OCMocking)
 
 // Counterparts of mockable methods
-+ (BOOL)ocm_oa2_startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler;
++ (BOOL)ocm_oa2_startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler;
 
 @end
 
 // Block and mock location for every mockable method
-typedef BOOL(^OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock)(__autoreleasing id _Nonnull * _Nullable authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error));
+typedef BOOL(^OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock)(__autoreleasing id _Nonnull * _Nullable authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable options, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error));
 extern OCMockLocation OCMockLocationAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandler;
 
 NS_ASSUME_NONNULL_END

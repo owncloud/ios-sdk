@@ -209,6 +209,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 - (void)setMaxBusyRetryTimeInterval:(NSTimeInterval)maxBusyRetryTimeInterval
 {
+	if (_db == NULL) { return; }
+
 	_maxBusyRetryTimeInterval = maxBusyRetryTimeInterval;
 
 	if (_maxBusyRetryTimeInterval == 0)
@@ -493,6 +495,13 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	OCSQLiteStatement *statement;
 	NSError *error = nil;
 
+	if (_db == NULL)
+	{
+		return (OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened));
+	}
+
+	[self enterProcessing];
+
 	if ((statement = [self _statementForSQLQuery:sqlQuery error:&error]) != nil)
 	{
 		if (error == nil)
@@ -503,7 +512,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				sqErr = sqlite3_step(statement.sqlStatement);
 
 				#if OCSQLITE_RAWLOG_ENABLED
-				if (sqErr == SQLITE_ROW)
+				if ((sqErr == SQLITE_ROW) && _logStatements)
 				{
 					OCTLogDebug(@[@"SQLLog"], @"%@ (stepping)", sqlQuery);
 				}
@@ -517,9 +526,14 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		}
 
 		#if OCSQLITE_RAWLOG_ENABLED
-		OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+		if (_logStatements)
+		{
+			OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 	}
+
+	[self leaveProcessing];
 
 	return (error);
 }
@@ -529,6 +543,20 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	OCSQLiteStatement *statement;
 	NSError *error = nil;
 	BOOL hasRows = NO;
+
+	if (_db == NULL)
+	{
+		error = OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened);
+
+		if (query.resultHandler != nil)
+		{
+			query.resultHandler(self, error, transaction, nil);
+		}
+
+		return (error);
+	}
+
+	[self enterProcessing];
 
 	if ((statement = [self _statementForSQLQuery:query.sqlQuery error:&error]) != nil)
 	{
@@ -562,7 +590,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		}
 
 		#if OCSQLITE_RAWLOG_ENABLED
-		OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+		if (_logStatements)
+		{
+			OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 
 		if (query.resultHandler != nil)
@@ -570,6 +601,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			query.resultHandler(self, error, transaction, ((error==nil) ? (hasRows ? [[OCSQLiteResultSet alloc] initWithStatement:statement] : nil) : nil));
 		}
 	}
+
+	[self leaveProcessing];
 
 	return (error);
 }
@@ -612,6 +645,24 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 - (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
 {
 	// This is a hook for caching statements in the future
+
+	#if OCSQLITE_RAWLOG_ENABLED
+	if (_logStatements)
+	{
+		OCTLogDebug(@[@"SQL_Log"], @"%@", sqlQuery);
+	}
+	#endif /* OCSQLITE_RAWLOG_ENABLED */
+
+	if (_db == NULL)
+	{
+		if (outError != NULL)
+		{
+			*outError = OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened);
+		}
+
+		return (nil);
+	}
+
 	return ([OCSQLiteStatement statementFromQuery:sqlQuery database:self error:outError]);
 }
 
@@ -619,6 +670,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 {
 	NSError *error = nil;
 	NSString *savePointName = nil;
+
+	[self enterProcessing];
 
 	// Increase transaction nesting level
 	_transactionNestingLevel++;
@@ -755,6 +808,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 		transaction.completionHandler(self, transaction, error);
 	}
+
+	[self leaveProcessing];
 }
 
 #pragma mark - Debug tools
@@ -768,6 +823,74 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	}]];
 }
 
+#pragma mark - WAL checkpointing
+- (void)checkpoint
+{
+	if ([self isOnSQLiteThread])
+	{
+		[self _checkpoint];
+	}
+	else
+	{
+		OCSyncExec(waitForCheckpoint, {
+			[self queueBlock:^{
+				[self _checkpoint];
+				OCSyncExecDone(waitForCheckpoint);
+			}];
+		});
+	}
+}
+
+- (void)_checkpoint
+{
+	int walReturn, pngLog = 0, pnCkpt = 0;
+
+	walReturn = sqlite3_wal_checkpoint_v2(_db, NULL, SQLITE_CHECKPOINT_RESTART, &pngLog, &pnCkpt);
+	OCLogDebug(@"Checkpoint result=%d, pngLog=%d, pnCkpt=%d", walReturn, pngLog, pnCkpt);
+}
+
+#pragma mark - Background kill protection
+- (void)enterProcessing
+{
+	// Create background task if entering processing for the first time since leaving it (or at all)
+	if (_backgroundTask == nil)
+	{
+		if ((_backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCSQLiteDB query" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+			// Task needs to end in the expiration handler - or the app will be terminated by iOS
+			OCTLogError(@[@"SQLBackground"], @"OCSQLiteDB background task expired!");
+			[task end];
+		}] start]) != nil)
+		{
+			OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
+		}
+	}
+
+	// Increase processing count
+	_processingCount++;
+}
+
+- (void)leaveProcessing
+{
+	// Decrease processing count
+	_processingCount--;
+
+	// If nothing is currently processing, attempt to end the background task with the next runloop run
+	if (_processingCount == 0)
+	{
+		[self queueBlock:^{
+			// If there's still nothing processing, end the backgroundTask
+			// This delayed handling is used to avoid starting and ending background tasks too frequent
+			if ((self->_processingCount == 0) && (self->_backgroundTask != nil))
+			{
+				[self->_backgroundTask end];
+				self->_backgroundTask = nil;
+
+				OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB left background task");
+			}
+		}];
+	}
+}
+
 #pragma mark - Error handling
 - (NSError *)lastError
 {
@@ -777,6 +900,11 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 #pragma mark - Insertion Row ID
 - (NSNumber *)lastInsertRowID
 {
+	if (_db == NULL)
+	{
+		return (nil);
+	}
+
 	if ([self isOnSQLiteThread])
 	{
 		// May only be used within query and transaction completionHandlers.
@@ -800,6 +928,8 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 #pragma mark - Miscellaneous
 - (void)shrinkMemory
 {
+	if (_db == NULL) { return; }
+
 	if ([self isOnSQLiteThread])
 	{
 		sqlite3_db_release_memory(_db);

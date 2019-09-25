@@ -41,6 +41,7 @@
 	[super tearDown];
 }
 
+#pragma mark - Infrastructure
 - (void)testAuthenticatioMethodAutoRegistration
 {
 	NSArray <Class> *authenticationMethodClasses;
@@ -61,6 +62,7 @@
 	}
 }
 
+#pragma mark - Basic auth
 - (void)_performBasicAuthenticationTestWithURL:(NSURL *)url user:(NSString *)user password:(NSString *)password allowUpgrades:(BOOL)allowUpgrades expectsSuccess:(BOOL)expectsSuccess
 {
 	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
@@ -152,6 +154,7 @@
 	[self _performBasicAuthenticationTestWithURL:OCTestTarget.secureTargetURL user:@"nosuchuser" password:@"nosuchpass" allowUpgrades:YES expectsSuccess:NO];
 }
 
+#pragma mark - OAuth2
 - (void)testOAuth2TokenGeneration
 {
 	XCTestExpectation *expectAuthControllerInvocation = [self expectationWithDescription:@"Auth controller invocation"];
@@ -178,6 +181,13 @@
 			BOOL fixAuthentication = YES;
 
 			OCLogDebug(@"headerFields[Authorization]=%@", request.headerFields[@"Authorization"]);
+
+			if ([request.url.absoluteString hasSuffix:@"ocs/v2.php/cloud/user"])
+			{
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeOK headers:@{} contentType:@"application/json; charset=utf-8" body:@"{\"ocs\":{\"meta\":{\"status\":\"ok\",\"statuscode\":200,\"message\":\"OK\",\"totalitems\":\"\",\"itemsperpage\":\"\"},\"data\":{\"id\":\"demo\",\"display-name\":\"demo\",\"email\":null}}}"]);
+
+				return (YES);
+			}
 
 			if ([request.url.absoluteString hasSuffix:@"index.php/apps/oauth2/api/v1/token"])
 			{
@@ -232,7 +242,7 @@
 
 		OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock mockBlock;
 
-		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
+		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
 
 			NSLog(@"authenticationSession=%@, authorizationRequestURL=%@, scheme=%@", *authenticationSession, authorizationRequestURL, scheme);
 
@@ -432,6 +442,34 @@
 	OCLogDebug(@"hostSimulator=%@", hostSimulator);
 }
 
+#pragma mark - OpenID Connect
+- (void)testOpenIDConnect
+{
+	// Ensure OIDC test target is available
+	OCBookmark *bookmark = OCTestTarget.oidcBookmark;
+	if (bookmark == nil) { return; }
+
+	XCTestExpectation *detectionExpectation = [self expectationWithDescription:@"OIDC detected"];
+	OCConnection *connection;
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		connection.delegate = self;
+
+		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods) {
+			OCLog(@"preferredAuthenticationMethods: %@ supportedMethods: %@", preferredAuthenticationMethods, supportedMethods);
+
+			if ([preferredAuthenticationMethods.firstObject isEqual:OCAuthenticationMethodIdentifierOpenIDConnect])
+			{
+				[detectionExpectation fulfill];
+			}
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+#pragma mark - Detection
 - (void)testAuthenticationMethodDetection
 {
 	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
@@ -562,6 +600,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+#pragma mark - Sorting and filtering
 - (void)testAuthenticationMethodSorting
 {
 	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodIdentifierBasicAuth, @"other-method", OCAuthenticationMethodIdentifierOAuth2 ];

@@ -112,6 +112,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal; //!< Locally triggered deletion
 extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote; //!< Remotely triggered deletion
+extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocalCopy; //!< Deletion of local copy
 extern OCSyncActionIdentifier OCSyncActionIdentifierMove;
 extern OCSyncActionIdentifier OCSyncActionIdentifierCopy;
 extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;

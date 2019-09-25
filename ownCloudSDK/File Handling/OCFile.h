@@ -20,20 +20,11 @@
 #import "OCChecksum.h"
 #import "OCItem.h"
 #import "OCTypes.h"
+#import "OCClaim.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCFile : NSObject <NSSecureCoding>
-{
-	OCFileID _fileID;
-	OCFileETag _eTag;
-
-	OCItem *_item;
-
-	NSURL *_url;
-
-	OCChecksum *_checksum;
-}
 
 @property(nullable,strong) OCFileID fileID;
 @property(nullable,strong) OCFileETag eTag;
@@ -41,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCItem *item;
 @property(nullable,strong) NSURL *url;
 @property(nullable,strong) OCChecksum *checksum;
+
+@property(nullable,strong) OCClaim *claim;
 
 @end
 

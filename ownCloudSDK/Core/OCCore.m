@@ -16,6 +16,8 @@
  *
  */
 
+#import <pthread/pthread.h>
+
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
 #import "OCShareQuery.h"
@@ -48,6 +50,7 @@
 #import "OCSyncActionUpload.h"
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCDeallocAction.h"
+#import "OCCore+ItemPolicies.h"
 
 @interface OCCore ()
 {
@@ -122,7 +125,8 @@
 				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
 					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
 					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
-		}
+		},
+		OCCoreCookieSupportEnabled : @(NO)
 	});
 }
 
@@ -138,6 +142,15 @@
 	if ((self = [super init]) != nil)
 	{
 		__weak OCCore *weakSelf = self;
+
+		int pthreadKeyError;
+
+		if ((pthreadKeyError = pthread_key_create(&_queueKey, NULL)) != 0)
+		{
+			OCLogError(@"Error creating pthread key: %d", pthreadKeyError);
+		}
+
+		_runIdentifier = [NSUUID new];
 
 		_bookmark = bookmark;
 
@@ -181,6 +194,14 @@
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
 
+		_itemPolicies = [NSMutableArray new];
+		_itemPolicyProcessors = [NSMutableArray new];
+
+		_availableOfflineFolderPaths = [NSMutableSet new];
+		_availableOfflineIDs = [NSMutableSet new];
+
+		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
+
 		_thumbnailCache = [OCCache new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
@@ -191,6 +212,19 @@
 		_warnedCertificates = [NSMutableArray new];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
+		if (OCTypedCast([self classSettingForOCClassSettingsKey:OCCoreCookieSupportEnabled], NSNumber).boolValue == YES)
+		{
+			// Adding cookie storage enabled cookie support
+			_connection.cookieStorage = [OCHTTPCookieStorage new];
+			_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
+				if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
+				{
+					return (NO);
+				}
+
+				return (YES);
+			};
+		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 //		_connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
@@ -256,9 +290,14 @@
 
 - (void)dealloc
 {
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *deallocTags = (runIDTag != nil) ? @[@"DEALLOC", runIDTag] : @[@"DEALLOC"];
+
 	[self stopIPCObserveration];
 
 	[self removeSignalProviders];
+
+	OCTLogDebug(deallocTags, @"core deallocated");
 }
 
 - (void)unregisterEventHandler
@@ -278,13 +317,22 @@
 	}
 }
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged
+{
+	_isManaged = isManaged;
+}
+
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"START"], @"queuing start request in work queue");
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *startTags = (runIDTag != nil) ? @[@"START", runIDTag] : @[@"START"];
+
+	OCTLogDebug(startTags, @"queuing start request in work queue");
 
 	[self queueBlock:^{
-		OCTLogDebug(@[@"START"], @"performing start request");
+		OCTLogDebug(startTags, @"performing start request");
 
 		if (self->_state == OCCoreStateStopped)
 		{
@@ -322,6 +370,9 @@
 				// Setup sync engine
 				[self setupSyncEngine];
 
+				// Setup item policies
+				[self setupItemPolicies];
+
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
@@ -348,15 +399,18 @@
 
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"STOP"], @"queuing stop request in connectivity queue");
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *stopTags = (runIDTag != nil) ? @[@"STOP", runIDTag] : @[@"STOP"];
+
+	OCTLogDebug(stopTags, @"queuing stop request in connectivity queue");
 
 	[self queueConnectivityBlock:^{
-		OCTLogDebug(@[@"STOP"], @"queuing stop request in work queue");
+		OCTLogDebug(stopTags, @"queuing stop request in work queue");
 
 		[self queueBlock:^{
 			__block NSError *stopError = nil;
 
-			OCTLogDebug(@[@"STOP"], @"performing stop request");
+			OCTLogDebug(stopTags, @"performing stop request");
 
 			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
 			{
@@ -365,7 +419,7 @@
 				[self _updateState:OCCoreStateStopping];
 
 				// Cancel non-critical requests
-				OCTLogDebug(@[@"STOP"], @"cancelling non-critical requests");
+				OCTLogDebug(stopTags, @"cancelling non-critical requests");
 				[self.connection cancelNonCriticalRequests];
 
 				// Wait for running operations to finish
@@ -388,16 +442,19 @@
 						}
 					}
 
+					// Tear down item policies
+					[weakSelf teardownItemPolicies];
+
 					// Shut down Sync Engine
-					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
+					OCWTLogDebug(stopTags, @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
 
 					// Shut down progress
-					OCWTLogDebug(@[@"STOP"], @"shutting down progress observation");
+					OCWTLogDebug(stopTags, @"shutting down progress observation");
 					[weakSelf _shutdownProgressObservation];
 
 					// Close connection
-					OCWTLogDebug(@[@"STOP"], @"connection: disconnecting");
+					OCWTLogDebug(stopTags, @"connection: disconnecting");
 					OCCore *strongSelf;
 					if ((strongSelf = weakSelf) != nil)
 					{
@@ -405,18 +462,18 @@
 					}
 
 					[weakSelf.connection disconnectWithCompletionHandler:^{
-						OCWTLogDebug(@[@"STOP"], @"connection: disconnected");
+						OCWTLogDebug(stopTags, @"connection: disconnected");
 
 						[weakSelf queueBlock:^{
 							// Close vault (incl. database)
-							OCWTLogDebug(@[@"STOP"], @"vault: closing");
+							OCWTLogDebug(stopTags, @"vault: closing");
 
 							OCSyncExec(waitForVaultClosing, {
 								[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-									OCWTLogDebug(@[@"STOP"], @"vault: closed");
+									OCWTLogDebug(stopTags, @"vault: closed");
 									stopError = error;
 
-									OCWTLogDebug(@[@"STOP"], @"STOPPED");
+									OCWTLogDebug(stopTags, @"STOPPED");
 									[weakSelf _updateState:OCCoreStateStopped];
 
 									OCSyncExecDone(waitForVaultClosing);
@@ -433,7 +490,7 @@
 
 				if (self->_runningActivities == 0)
 				{
-					OCTLogDebug(@[@"STOP"], @"No running activities left. Proceeding.");
+					OCTLogDebug(stopTags, @"No running activities left. Proceeding.");
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
 						dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;
@@ -444,12 +501,12 @@
 				}
 				else
 				{
-					OCTLogDebug(@[@"STOP"], @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
+					OCTLogDebug(stopTags, @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
 				}
 			}
 			else if (self->_state != OCCoreStateStopping)
 			{
-				OCTLogError(@[@"STOP"], @"core already in the process of stopping");
+				OCTLogError(stopTags, @"core already in the process of stopping");
 				if (completionHandler != nil)
 				{
 					completionHandler(self, OCError(OCErrorRunningOperation));
@@ -457,7 +514,7 @@
 			}
 			else if (completionHandler != nil)
 			{
-				OCTLogWarning(@[@"STOP"], @"core already stopped");
+				OCTLogWarning(stopTags, @"core already stopped");
 				completionHandler(self, stopError);
 			}
 		}];
@@ -504,6 +561,8 @@
 					if (error == nil)
 					{
 						[self _updateState:OCCoreStateRunning];
+
+						[self setNeedsToProcessSyncRecords];
 
 						if (self.automaticItemListUpdatesEnabled)
 						{
@@ -892,15 +951,6 @@
 }
 
 #pragma mark - ## Commands
-- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
 
 #pragma mark - Progress tracking
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item
@@ -1345,6 +1395,8 @@
 					toItem.locallyModified = fromItem.locallyModified;
 					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 					toItem.localRelativePath = [_vault relativePathForItem:toItem];
+					toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+					toItem.fileClaim = fromItem.fileClaim;
 				}
 			}
 			else if (adjustLocalMetadata)
@@ -1353,6 +1405,8 @@
 				toItem.locallyModified = fromItem.locallyModified;
 				toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 				toItem.localRelativePath = fromItem.localRelativePath;
+				toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+				toItem.fileClaim = fromItem.fileClaim;
 			}
 		}
 	}
@@ -1382,47 +1436,87 @@
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	[self beginActivity:@"Handling event"];
+	dispatch_block_t queueBlock = nil, completionHandler = nil;
+	NSString *eventActivityString = [[NSString alloc] initWithFormat:@"Handling event %@", event];
 
-	[self queueBlock:^{
-		NSString *selectorName;
+	[self beginActivity:eventActivityString];
 
-		if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
+	completionHandler = ^{
+		[self endActivity:eventActivityString];
+	};
+
+	NSString *selectorName;
+
+	if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
+	{
+		// Selector specified -> route event directly to selector
+		SEL eventHandlingSelector;
+
+		if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
 		{
-			// Selector specified -> route event directly to selector
-			SEL eventHandlingSelector;
+			// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
+			void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
 
-			if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
-			{
-				// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
-				void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
-
+			queueBlock = ^{
 				if (impFunction != NULL)
 				{
 					impFunction(self, eventHandlingSelector, event, sender);
 				}
-			}
+			};
 		}
-		else
+	}
+	else
+	{
+		// Handle by event type
+		switch (event.eventType)
 		{
-			// Handle by event type
-			switch (event.eventType)
-			{
-				case OCEventTypeRetrieveThumbnail:
+			case OCEventTypeRetrieveThumbnail: {
+				queueBlock = ^{
 					[self _handleRetrieveThumbnailEvent:event sender:sender];
-				break;
-
-				case OCEventTypeRetrieveItemList:
-					[self _handleRetrieveItemListEvent:event sender:sender];
-				break;
-
-				default:
-					[self _handleSyncEvent:event sender:sender];
-				break;
+				};
 			}
-		}
+			break;
 
-		[self endActivity:@"Handling event"];
+			case OCEventTypeRetrieveItemList: {
+				queueBlock = ^{
+					[self _handleRetrieveItemListEvent:event sender:sender];
+				};
+			}
+			break;
+
+			default:
+				// Critical event - queue synchronously
+				[self queueSyncEvent:event sender:sender];
+				completionHandler();
+			break;
+		}
+	}
+
+	if (queueBlock != nil)
+	{
+		[self queueBlock:^{
+			queueBlock();
+			completionHandler();
+		}];
+	}
+}
+
+#pragma mark - Item usage
+- (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	[self beginActivity:@"Registering item usage"];
+
+	[self queueBlock:^{
+		item.lastUsed = [NSDate date];
+
+		[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ item ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+
+		[self endActivity:@"Registering item usage"];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
 	}];
 }
 
@@ -1507,10 +1601,29 @@
 #pragma mark - Queues
 - (void)queueBlock:(dispatch_block_t)block
 {
-	if (block != nil)
+	[self queueBlock:block allowInlining:NO];
+}
+
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining
+{
+	if (block == nil) { return; }
+
+	if (allowInlining)
 	{
-		dispatch_async(_queue, block);
+		if (pthread_getspecific(_queueKey) == (__bridge void *)self)
+		{
+			block();
+			return;
+		}
 	}
+
+	dispatch_async(_queue, ^{
+		pthread_setspecific(self->_queueKey, (__bridge void *)self);
+
+		block();
+
+		pthread_setspecific(self->_queueKey, NULL);
+	});
 }
 
 - (void)queueConnectivityBlock:(dispatch_block_t)block
@@ -1609,6 +1722,7 @@ OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-ava
 OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
 OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
 OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
+OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
@@ -1620,6 +1734,13 @@ OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
+OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
+OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
+OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
+OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
+OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
+
+OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

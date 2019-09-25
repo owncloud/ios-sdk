@@ -1,3 +1,15 @@
+## 1.1.0 version
+
+- Background Upload Support
+- Item Policies and Available Offline Support
+- Open ID Connect Support
+- OAuth2 improvements
+- iOS 13 fixes
+- SQLite fixes for background threads
+- Additional Logging
+- New Key-Value Store Class
+- Bug fixes
+
 ## 1.0.3 version
 
 - Authentication improvements

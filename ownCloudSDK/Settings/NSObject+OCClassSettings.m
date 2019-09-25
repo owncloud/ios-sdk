@@ -20,6 +20,13 @@
 
 @implementation NSObject (OCClassSettings)
 
++ (void)registerOCClassSettingsDefaults:(NSDictionary<OCClassSettingsKey, id> *)additionalDefaults
+{
+	if (additionalDefaults==nil) { return; }
+
+	[OCClassSettings.sharedSettings registerDefaults:additionalDefaults forClass:self];
+}
+
 - (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key
 {
 	if (key==nil) { return(nil); }

@@ -25,6 +25,11 @@
 #pragma mark - User info
 - (NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
+	return ([self retrieveLoggedInUserWithRequestCustomization:nil completionHandler:completionHandler]);
+}
+
+- (NSProgress *)retrieveLoggedInUserWithRequestCustomization:(void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
+{
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 
@@ -32,6 +37,11 @@
 	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 	[request setValue:@"json" forParameter:@"format"];
+
+	if (requestCustomizer != nil)
+	{
+		requestCustomizer(request);
+	}
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)

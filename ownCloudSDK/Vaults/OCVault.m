@@ -25,6 +25,8 @@
 #import "OCCore+FileProvider.h"
 #import "OCHTTPPipelineManager.h"
 #import "OCVault+Internal.h"
+#import "OCEventQueue.h"
+#import "OCCore+SyncEngine.h"
 
 @implementation OCVault
 
@@ -32,9 +34,11 @@
 
 @synthesize rootURL = _rootURL;
 @synthesize databaseURL = _databaseURL;
+@synthesize keyValueStoreURL = _keyValueStoreURL;
 @synthesize filesRootURL = _filesRootURL;
 
 @synthesize database = _database;
+@synthesize keyValueStore = _keyValueStore;
 
 + (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark
 {
@@ -108,6 +112,16 @@
 	}
 
 	return (_databaseURL);
+}
+
+- (NSURL *)keyValueStoreURL
+{
+	if (_keyValueStoreURL == nil)
+	{
+		_keyValueStoreURL = [self.rootURL URLByAppendingPathComponent:[OCVault keyValueStoreFilePathRelativeToRootPathForVaultUUID:_uuid]];
+	}
+
+	return (_keyValueStoreURL);
 }
 
 - (NSURL *)filesRootURL
@@ -195,6 +209,17 @@
 	return (_database);
 }
 
+- (OCKeyValueStore *)keyValueStore
+{
+	if (_keyValueStore == nil)
+	{
+		_keyValueStore = [[OCKeyValueStore alloc] initWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString];
+		[_keyValueStore registerClass:[OCEventQueue class] forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+	}
+
+	return (_keyValueStore);
+}
+
 #pragma mark - Operations
 - (void)openWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
@@ -220,10 +245,10 @@
 	[self.database closeWithCompletionHandler:completionHandler];
 }
 
-- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
+- (void)compactWithSelector:(nullable OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler
 {
 	[self compactInContext:nil withSelector:^BOOL(OCSyncAnchor  _Nullable syncAnchor, OCItem * _Nonnull item) {
-		return (item.compactingAllowed && (item.localRelativePath != nil));
+		return (item.compactingAllowed && (item.localRelativePath != nil) && ((selector != nil) ? selector(syncAnchor, item) : YES));
 	} completionHandler:completionHandler];
 }
 
@@ -304,6 +329,11 @@
 + (NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
 {
 	return ([uuid.UUIDString stringByAppendingString:@".db"]);
+}
+
++ (NSString *)keyValueStoreFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
+{
+	return ([uuid.UUIDString stringByAppendingString:@".ockvs"]);
 }
 
 @end

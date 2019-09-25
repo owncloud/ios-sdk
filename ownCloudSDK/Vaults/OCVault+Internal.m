@@ -192,6 +192,8 @@
 									__block NSError *updateError = nil;
 
 									item.localRelativePath = nil;
+									item.downloadTriggerIdentifier = nil;
+									item.fileClaim = nil;
 
 									[self.database updateCacheItems:@[item] syncAnchor:newAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 										updateError = error;

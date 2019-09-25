@@ -20,6 +20,7 @@
 #import "OCSyncAction+FileProvider.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
+#import "OCCore+Claims.h"
 
 @implementation OCSyncActionDownload
 
@@ -60,7 +61,36 @@
 			// Make sure the lastUsed property is updated regardless
 			syncContext.updatedItems = @[ item ];
 
-			[syncContext completeWithError:nil core:self.core item:item parameter:[item fileWithCore:self.core]];
+			OCFile *file = [item fileWithCore:self.core];
+
+			// Add / generate claim according to options
+			OCClaim *addClaim = self.options[OCCoreOptionAddFileClaim];
+			OCCoreClaimPurpose claimPurpose = OCCoreClaimPurposeNone;
+
+			if (self.options[OCCoreOptionAddTemporaryClaimForPurpose] != nil)
+			{
+				claimPurpose = ((NSNumber *)self.options[OCCoreOptionAddTemporaryClaimForPurpose]).integerValue;
+			}
+
+			if (claimPurpose != OCCoreClaimPurposeNone)
+			{
+				OCClaim *temporaryClaim;
+
+				if ((temporaryClaim = [self.core generateTemporaryClaimForPurpose:claimPurpose]) != nil)
+				{
+					addClaim = [OCClaim combining:addClaim with:temporaryClaim usingOperator:OCClaimGroupOperatorOR];
+					file.claim = temporaryClaim;
+
+					[self.core removeClaim:temporaryClaim onItem:item afterDeallocationOf:@[file]];
+				}
+			}
+
+			if (addClaim != nil)
+			{
+				[self.core addClaim:addClaim onItem:item completionHandler:nil];
+			}
+
+			[syncContext completeWithError:nil core:self.core item:item parameter:file];
 		}
 		else if (returnImmediately && (self.core.connectionStatus != OCCoreConnectionStatusOnline))
 		{
@@ -307,7 +337,31 @@
 					item.localRelativePath = vaultItemLocalRelativePath;
 					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
 
+					item.downloadTriggerIdentifier = self.options[OCCoreOptionDownloadTriggerID];
+					item.fileClaim = self.options[OCCoreOptionAddFileClaim];
+
 					downloadedFile.url = vaultItemURL;
+
+					// Add temporary claim
+					OCCoreClaimPurpose claimPurpose = OCCoreClaimPurposeNone;
+
+					if (self.options[OCCoreOptionAddTemporaryClaimForPurpose] != nil)
+					{
+						claimPurpose = ((NSNumber *)self.options[OCCoreOptionAddTemporaryClaimForPurpose]).integerValue;
+					}
+
+					if (claimPurpose != OCCoreClaimPurposeNone)
+					{
+						OCClaim *temporaryClaim;
+
+						if ((temporaryClaim = [self.core generateTemporaryClaimForPurpose:claimPurpose]) != nil)
+						{
+							item.fileClaim = [OCClaim combining:item.fileClaim with:temporaryClaim usingOperator:OCClaimGroupOperatorOR];
+							event.file.claim = temporaryClaim;
+
+							[self.core removeClaim:temporaryClaim onItem:item afterDeallocationOf:@[event.file]];
+						}
+					}
 				}
 
 				// Remove any previously existing file
@@ -418,6 +472,7 @@
 								latestItem.locallyModified = NO;
 								latestItem.localRelativePath = nil;
 								latestItem.localCopyVersionIdentifier = nil;
+								latestItem.downloadTriggerIdentifier = nil;
 
 								syncContext.updatedItems = @[ latestItem ];
 							}
@@ -454,7 +509,7 @@
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
-	_options = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"options"];
+	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder

@@ -19,11 +19,14 @@
 #import <Foundation/Foundation.h>
 #import <FileProvider/FileProvider.h>
 #import "OCBookmark.h"
+#import "OCKeyValueStore.h"
 
 @class OCDatabase;
 @class OCItem;
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem *item);
 
 @interface OCVault : NSObject
 {
@@ -49,12 +52,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCBookmark *bookmark;
 
 @property(nullable,readonly,nonatomic) OCDatabase *database; //!< The vault's database.
+@property(nullable,readonly,nonatomic) OCKeyValueStore *keyValueStore; //!< Key-value store (lazily allocated), available independant of opening/closing the vault
 
 @property(nullable,readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory
-@property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database
+@property(nullable,readonly,nonatomic) NSURL *databaseURL; //!< The vault's SQLite database location
+@property(nullable,readonly,nonatomic) NSURL *keyValueStoreURL; //!< The vault's key value store location
 @property(nullable,readonly,nonatomic) NSURL *filesRootURL; //!< The vault's root URL for file storage
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
-@property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //1< The vault's root address for temporarily downloaded files.
+@property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
 
 @property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
 @property(nullable,readonly,nonatomic) NSFileProviderManager *fileProviderManager; //!< File provider manager for .fileProviderDomain
@@ -70,12 +75,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)closeWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Closes the vault and its components
 
 #pragma mark - Offline operations
-- (void)compactWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files.
+- (void)compactWithSelector:(nullable OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files. If a selector is provided, only files for which it ALSO returns YES are disposed off.
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
 #pragma mark - URL and path builders
-- (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<fileID>/<fileName> pattern.
-- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<fileID>/ pattern.
+- (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<localID>/<fileName> pattern.
+- (nullable NSURL *)localFolderURLForItem:(OCItem *)item; //!< Builds the URL to where an item's folder should be stored. Follows <filesRootURL>/<localID>/ pattern.
 - (nullable NSString *)relativePathForItem:(OCItem *)item;
 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;

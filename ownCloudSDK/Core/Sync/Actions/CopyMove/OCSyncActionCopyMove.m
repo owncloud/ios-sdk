@@ -151,6 +151,36 @@
 
 			// Update
 			syncContext.updatedItems = @[ updatedItem ];
+
+			// Contained (associated) items
+			if (sourceItem.type == OCItemTypeCollection)
+			{
+				NSMutableArray <OCItem *> *updatedItems = [syncContext.updatedItems mutableCopy];
+				NSMutableArray <OCLocalID> *updatedLocalIDs = [NSMutableArray new];
+
+				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:sourceItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+					for (OCItem *item in items)
+					{
+						item.previousPath = item.path;
+						item.path = [targetPath stringByAppendingPathComponent:[item.path substringFromIndex:sourceItem.path.length]];
+
+						OCLogDebug(@"Preflight: move contained item %@ => %@", OCLogPrivate(item.previousPath), OCLogPrivate(item.path));
+
+						[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
+
+						[updatedItems addObject:item];
+						[updatedLocalIDs addObject:item.localID];
+					}
+				}];
+
+				if (updatedItems.count > 0)
+				{
+					syncContext.updatedItems = updatedItems;
+
+					self.associatedItemLocalIDs = updatedLocalIDs;
+					self.associatedItemLaneTags = [self generateLaneTagsFromItems:updatedItems];
+				}
+			}
 		}
 
 		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated placeHolderItem (now with databaseID) will be stored in the database and can later be used to remove the placeHolderItem again.
@@ -214,6 +244,37 @@
 			sourceItem.previousPath = updatedItem.path;
 
 			syncContext.updatedItems = @[ sourceItem ];
+
+			// Contained (associated) items
+			if (self.associatedItemLocalIDs.count > 0)
+			{
+				NSMutableArray <OCItem *> *updatedItems;
+
+				if ((updatedItems = [syncContext.updatedItems mutableCopy]) != nil)
+				{
+					for (OCLocalID associatedItemLocalID in self.associatedItemLocalIDs)
+					{
+						[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+							if (item != nil)
+							{
+								[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
+
+								if ([item.path hasPrefix:updatedItem.path])
+								{
+									item.previousPath = item.path;
+									item.path = [sourceItem.path stringByAppendingPathComponent:[item.path substringFromIndex:updatedItem.path.length]];
+
+									OCLogDebug(@"Deschedule: move contained item %@ => %@", OCLogPrivate(item.previousPath), OCLogPrivate(item.path));
+								}
+
+								[updatedItems addObject:item];
+							}
+						}];
+					}
+
+					syncContext.updatedItems = updatedItems;
+				}
+			}
 		}
 	}
 }
@@ -271,6 +332,31 @@
 			syncContext.updatedItems = @[ updatedItem ];
 
 			resultItem = updatedItem;
+
+			// Contained (associated) items
+			if (self.associatedItemLocalIDs.count > 0)
+			{
+				NSMutableArray <OCItem *> *updatedItems;
+
+				if ((updatedItems = [syncContext.updatedItems mutableCopy]) != nil)
+				{
+					for (OCLocalID associatedItemLocalID in self.associatedItemLocalIDs)
+					{
+						[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+							if (item != nil)
+							{
+								[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
+
+								OCLogDebug(@"Success: move contained item persisted: %@ => %@", OCLogPrivate(item.previousPath), OCLogPrivate(item.path));
+
+								[updatedItems addObject:item];
+							}
+						}];
+					}
+
+					syncContext.updatedItems = updatedItems;
+				}
+			}
 		}
 
 		// Action complete
@@ -406,10 +492,17 @@
 #pragma mark - Lane tags
 - (NSSet<OCSyncLaneTag> *)generateLaneTags
 {
-	return ([self generateLaneTagsFromItems:@[
+	NSSet<OCSyncLaneTag> *laneTags = [self generateLaneTagsFromItems:@[
 		OCSyncActionWrapNullableItem(self.localItem),
 		OCSyncActionWrapNullableItem(self.processingItem),
-	]]);
+	]];
+
+	if (self.associatedItemLaneTags != nil)
+	{
+		laneTags = [laneTags setByAddingObjectsFromSet:self.associatedItemLaneTags];
+	}
+
+	return (laneTags);
 }
 
 #pragma mark - NSCoding
@@ -421,6 +514,8 @@
 	_processingItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"processingItem"];
 
 	_isRename = [decoder decodeBoolForKey:@"isRename"];
+	_associatedItemLocalIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"associatedItemLocalIDs"];
+	_associatedItemLaneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"associatedItemLaneTags"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -431,6 +526,8 @@
 	[coder encodeObject:_processingItem forKey:@"processingItem"];
 
 	[coder encodeBool:_isRename forKey:@"isRename"];
+	[coder encodeObject:_associatedItemLocalIDs forKey:@"associatedItemLocalIDs"];
+	[coder encodeObject:_associatedItemLaneTags forKey:@"associatedItemLaneTags"];
 }
 
 @end

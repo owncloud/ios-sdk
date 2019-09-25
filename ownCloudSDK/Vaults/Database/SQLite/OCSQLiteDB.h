@@ -23,13 +23,16 @@
 #import "OCSQLiteResultSet.h"
 #import "OCRunLoopThread.h"
 #import "OCLogTag.h"
+#import "OCBackgroundTask.h"
+
+// #define OCSQLITE_RAWLOG_ENABLED 1
 
 @class OCSQLiteDB;
 @class OCSQLiteTransaction;
 @class OCSQLiteQuery;
 @class OCSQLiteTableSchema;
 
-typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
+typedef NS_ENUM(int, OCSQLiteOpenFlags)
 {
 	OCSQLiteOpenFlagsReadOnly = SQLITE_OPEN_READONLY,
 	OCSQLiteOpenFlagsReadWrite = SQLITE_OPEN_READWRITE,
@@ -40,7 +43,8 @@ typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
 
 typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 {
-	OCSQLiteDBErrorAlreadyOpenedInInstance //!< Instance has already opened file
+	OCSQLiteDBErrorAlreadyOpenedInInstance, //!< Instance has already opened file
+	OCSQLiteDBErrorDatabaseNotOpened	//!< SQLite database not opened
 };
 
 typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
@@ -55,6 +59,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 {
 	NSURL *_databaseURL;
 	OCRunLoopThread *_sqliteThread;
+
+	OCBackgroundTask *_backgroundTask;
+	NSInteger _processingCount;
 
 	NSTimeInterval _maxBusyRetryTimeInterval;
 	NSTimeInterval _firstBusyRetryTime;
@@ -84,6 +91,10 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
 
+#if OCSQLITE_RAWLOG_ENABLED
+@property(assign) BOOL logStatements;
+#endif /* OCSQLITE_RAWLOG_ENABLED */
+
 #pragma mark - Init
 - (instancetype)initWithURL:(nullable NSURL *)sqliteDatabaseFileURL;
 
@@ -103,6 +114,13 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - Debug tools
 - (void)executeQueryString:(NSString *)queryString; //!< Runs a query and logs the result. Meant to simplify debugging.
+
+#pragma mark - WAL checkpointing
+- (void)checkpoint;
+
+#pragma mark - Background task interface
+- (void)enterProcessing;
+- (void)leaveProcessing;
 
 #pragma mark - Error handling
 - (nullable NSError *)lastError;

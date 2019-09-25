@@ -56,6 +56,18 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSString+NameConflicts.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
+#import <ownCloudSDK/OCCore+ItemPolicies.h>
+#import <ownCloudSDK/OCItemPolicy.h>
+#import <ownCloudSDK/OCItemPolicyProcessor.h>
+#import <ownCloudSDK/OCItemPolicyProcessorAvailableOffline.h>
+#import <ownCloudSDK/OCItemPolicyProcessorDownloadExpiration.h>
+#import <ownCloudSDK/OCItemPolicyProcessorVacuum.h>
+
+#import <ownCloudSDK/OCCore+Claims.h>
+#import <ownCloudSDK/OCClaim.h>
+
+#import <ownCloudSDK/OCKeyValueStore.h>
+
 #import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>
 
 #import <ownCloudSDK/OCBookmark.h>
@@ -63,6 +75,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAuthenticationMethod.h>
 #import <ownCloudSDK/OCAuthenticationMethodBasicAuth.h>
 #import <ownCloudSDK/OCAuthenticationMethodOAuth2.h>
+#import <ownCloudSDK/OCAuthenticationMethodOpenIDConnect.h>
 
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCCapabilities.h>
@@ -70,6 +83,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPRequest.h>
 #import <ownCloudSDK/OCHTTPResponse.h>
 #import <ownCloudSDK/OCHTTPDAVRequest.h>
+
+#import <ownCloudSDK/OCHTTPCookieStorage.h>
+#import <ownCloudSDK/NSHTTPCookie+OCCookies.h>
 
 #import <ownCloudSDK/OCHTTPPipelineManager.h>
 #import <ownCloudSDK/OCHTTPPipeline.h>
@@ -139,8 +155,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCChecksumAlgorithmSHA1.h>
 
 #import <ownCloudSDK/OCFile.h>
-//#import <ownCloudSDK/OCRetainer.h>
-//#import <ownCloudSDK/OCRetainerCollection.h>
 
 #import <ownCloudSDK/OCProgress.h>
 
@@ -161,6 +175,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCExtension+License.h>
 
 #import <ownCloudSDK/OCIPNotificationCenter.h>
+
+#import <ownCloudSDK/OCBackgroundTask.h>
 
 #import <ownCloudSDK/OCProcessManager.h>
 #import <ownCloudSDK/OCProcessSession.h>

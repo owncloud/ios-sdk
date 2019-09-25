@@ -23,6 +23,8 @@
 #import "OCHTTPRequest.h"
 #import "OCHTTPResponse+DAVError.h"
 #import "NSError+OCError.h"
+#import "OCIPNotificationCenter.h"
+#import "OCBookmark+IPNotificationNames.h"
 
 @implementation OCAuthenticationMethod
 
@@ -122,6 +124,10 @@
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_bookmarkChanged:)   name:OCBookmarkAuthenticationDataChangedNotification object:nil];
+
+		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCAuthenticationMethod *authMethod, OCIPCNotificationName  _Nonnull notificationName) {
+			[authMethod _bookmarkChanged:nil];
+		}];
 	}
 
 	return(self);
@@ -129,6 +135,8 @@
 
 - (void)dealloc
 {
+	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
+
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];

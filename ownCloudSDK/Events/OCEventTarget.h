@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)handleEvent:(OCEvent *)event sender:(id)sender; //!< Resolves the eventHandlerIdentifier and sends the event to the resolved event handler. Subclasses can use different mechanisms (like f.ex. deliver the event to a block it keeps).
 
-- (void)handleError:(NSError *)error type:(OCEventType)type sender:(id)sender; //!< Convenience method that builds an OCEvent with the provided error and sends it to the event target.
+- (void)handleError:(NSError *)error type:(OCEventType)type uuid:(nullable OCEventUUID)uuid sender:(id)sender; //!< Convenience method that builds an OCEvent with the provided error and sends it to the event target.
 
 @end
 

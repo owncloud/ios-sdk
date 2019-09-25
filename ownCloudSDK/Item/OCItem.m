@@ -78,13 +78,13 @@
 
 	[coder encodeObject:_mimeType 		forKey:@"mimeType"];
 
-	[coder encodeInteger:_status  		forKey:@"status"];
-
 	[coder encodeInteger:_permissions  	forKey:@"permissions"];
 
 	[coder encodeObject:_localRelativePath	forKey:@"localRelativePath"];
 	[coder encodeBool:_locallyModified      forKey:@"locallyModified"];
 	[coder encodeObject:_localCopyVersionIdentifier forKey:@"localCopyVersionIdentifier"];
+	[coder encodeObject:_downloadTriggerIdentifier forKey:@"downloadTriggerIdentifier"];
+	[coder encodeObject:_fileClaim 		forKey:@"fileClaim"];
 
 	[coder encodeObject:_remoteItem		forKey:@"remoteItem"];
 
@@ -137,13 +137,13 @@
 
 		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
 
-		_status = [decoder decodeIntegerForKey:@"status"];
-
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
 		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
 		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
+		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"downloadTriggerIdentifier"];
+		_fileClaim = [decoder decodeObjectOfClass:[OCClaim class] forKey:@"fileClaim"];
 
 		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
 
@@ -158,7 +158,7 @@
 		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
 		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
 
-		_activeSyncRecordIDs = [decoder decodeObjectOfClass:[NSArray class] forKey:@"activeSyncRecordIDs"];
+		_activeSyncRecordIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSNumber.class, nil] forKey:@"activeSyncRecordIDs"];
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
 		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], [NSNumber class], nil] forKey:@"syncActivityCounts"];
 
@@ -169,7 +169,7 @@
 
 		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
 
-		_localAttributes = [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"localAttributes"];
+		_localAttributes = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
@@ -377,9 +377,10 @@
 #pragma mark - Compacting
 - (BOOL)compactingAllowed
 {
-	return (!_locallyModified && 						   // This is not a locally modified copy
-		(_syncActivity == OCItemSyncActivityNone) && 			   // No sync activity is going on
-		((_activeSyncRecordIDs==nil) || (_activeSyncRecordIDs.count == 0)) // No sync record references this item
+	return (!_locallyModified && 						   	// This is not a locally modified copy
+		(_syncActivity == OCItemSyncActivityNone) && 			   	// No sync activity is going on
+		((_activeSyncRecordIDs==nil) || (_activeSyncRecordIDs.count == 0)) && 	// No sync record references this item
+		![_fileClaim isValid]							// Nobody holds onto this item
 	       );
 }
 
@@ -506,6 +507,12 @@
 		self.localAttributesLastModified = item.localAttributesLastModified;
 	}
 
+	// Make sure to use latest version of the fileClaim
+	if (self.fileClaim.creationTimestamp < item.fileClaim.creationTimestamp)
+	{
+		self.fileClaim = item.fileClaim;
+	}
+
 	// Make sure to use the most recent lastUsed date
 	if (self.lastUsed.timeIntervalSinceReferenceDate < item.lastUsed.timeIntervalSinceReferenceDate)
 	{
@@ -542,6 +549,8 @@
 	CloneMetadata(@"localRelativePath");
 	CloneMetadata(@"locallyModified");
 	CloneMetadata(@"localCopyVersionIdentifier");
+	CloneMetadata(@"downloadTriggerIdentifier");
+	CloneMetadata(@"fileClaim");
 
 	CloneMetadata(@"remoteItem");
 
@@ -663,7 +672,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), (_fileClaim ? [NSString stringWithFormat:@", fileClaim: %@", _fileClaim] : @"")]);
 }
 
 #pragma mark - Copying
@@ -688,6 +697,11 @@ OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 OCItemPropertyName OCItemPropertyNameCloudStatus = @"cloudStatus";
 OCItemPropertyName OCItemPropertyNameHasLocalAttributes = @"hasLocalAttributes";
 
+OCItemPropertyName OCItemPropertyNameDownloadTrigger = @"downloadTriggerIdentifier";
+
+OCItemDownloadTriggerID OCItemDownloadTriggerIDUser = @"user";
+OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOffline";
+
 OCItemPropertyName OCItemPropertyNameType = @"type"; //!< Supported by OCQueryCondition SQLBuilder
 OCItemPropertyName OCItemPropertyNamePath = @"path"; //!< Supported by OCQueryCondition SQLBuilder
 OCItemPropertyName OCItemPropertyNameName = @"name"; //!< Supported by OCQueryCondition SQLBuilder
@@ -695,3 +709,10 @@ OCItemPropertyName OCItemPropertyNameSize = @"size";
 OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
 OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified"; //!< Supported by OCQueryCondition SQLBuilder
 OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath"; //!< Supported by OCQueryCondition SQLBuilder
+
+OCItemPropertyName OCItemPropertyNameLocalID = @"localID";
+OCItemPropertyName OCItemPropertyNameFileID = @"fileID";
+
+OCItemPropertyName OCItemPropertyNameRemoved = @"removed";
+OCItemPropertyName OCItemPropertyNameDatabaseTimestamp = @"databaseTimestamp";
+

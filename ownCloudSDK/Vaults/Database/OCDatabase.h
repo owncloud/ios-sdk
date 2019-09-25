@@ -25,6 +25,7 @@
 #import "OCLogTag.h"
 #import "OCQueryCondition.h"
 #import "OCCoreDirectoryUpdateJob.h"
+#import "OCItemPolicy.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -34,6 +35,7 @@
 @class OCFile;
 @class OCEvent;
 @class OCCoreDirectoryUpdateJob;
+@class OCItemPolicy;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
@@ -47,6 +49,8 @@ typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSEr
 typedef void(^OCDatabaseDirectoryUpdateJobCompletionHandler)(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob);
 typedef void(^OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
+typedef void(^OCDatabaseRetrieveItemPoliciesCompletionHandler)(OCDatabase *db, NSError *error, NSArray<OCItemPolicy *> *itemPolicies);
+typedef void(^OCDatabaseItemIterator)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop);
 
 typedef NSArray<OCItem *> *(^OCDatabaseItemFilter)(NSArray <OCItem *> *items);
 
@@ -66,6 +70,9 @@ typedef NSString* OCDatabaseCounterIdentifier;
 	NSUInteger _removedItemRetentionLength;
 
 	OCDatabaseItemFilter _itemFilter;
+
+	OCSyncAnchor _lastSyncAnchor;
+	OCDatabaseTimestamp _lastSyncAnchorTimestamp;
 
 	OCSQLiteDB *_sqlDB;
 }
@@ -92,6 +99,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)addCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)purgeCacheItemsWithDatabaseIDs:(NSArray <OCDatabaseID> *)databaseIDs completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 
@@ -107,7 +115,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
-- (void)iterateCacheItemsWithIterator:(void(^)(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop))iterator; //!< Iterates through all cache items using the passed iterator block. Updates those items that are returned from the block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
+- (void)iterateCacheItemsWithIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through all cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
+- (void)iterateCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition excludeRemoved:(BOOL)excludeRemoved withIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through matching cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
 
 #pragma mark - Thumbnail interface
 - (void)retrieveThumbnailDataForItemVersion:(OCItemVersionIdentifier *)itemVersion specID:(NSString *)specID maximumSizeInPixels:(CGSize)maximumSizeInPixels completionHandler:(OCDatabaseRetrieveThumbnailCompletionHandler)completionHandler;
@@ -142,9 +151,17 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
 
 #pragma mark - Event interface
-- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
+- (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID processSession:(OCProcessSession *)processSession completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).
+- (BOOL)queueContainsEvent:(OCEvent *)event; //!< Checks if an event with the same UUID already exists in the database
 - (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)syncRecordID afterEventID:(OCDatabaseID)eventID; //!< Requests the oldest available event for the OCSyncRecordID.
 - (NSError *)removeEvent:(OCEvent *)event; //!< Deletes the row for the OCEvent from the database.
+
+#pragma mark - Item policy interface
+- (void)addItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeItemPolicy:(OCItemPolicy *)itemPolicy completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+
+- (void)retrieveItemPoliciesForKind:(OCItemPolicyKind)kind path:(OCPath)path localID:(OCLocalID)localID identifier:(OCItemPolicyIdentifier)identifier completionHandler:(OCDatabaseRetrieveItemPoliciesCompletionHandler)completionHandler;
 
 #pragma mark - Integrity / Synchronization primitives
 - (void)retrieveValueForCounter:(OCDatabaseCounterIdentifier)counterIdentifier completionHandler:(void(^)(NSError *error, NSNumber *counterValue))completionHandler;

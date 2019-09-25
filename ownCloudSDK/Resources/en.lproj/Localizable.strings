@@ -11,6 +11,9 @@
 "itemProperty.isFavorite" = "Favorite";
 "itemProperty.localAttributes" = "Local attributes";
 
+/* Item policy */
+"Available Offline" = "Available Offline";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -111,6 +114,7 @@
 /* Logging */
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
+"Log HTTP requests and responses" = "Log HTTP requests and responses";
 
 /* Errors */
 "Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
@@ -259,5 +263,14 @@
 // OCErrorSharePublicUploadDisabled
 "Public upload was disabled by the administrator." = "Public upload was disabled by the administrator.";
 
-// OCErrorInsufficientStorage
-"Insufficient storage." = "Insufficient storage.";
+// OCErrorNotAvailableOffline
+"Not available offline." = "Not available offline.";
+
+// OCErrorAuthorizationRetry
+"Authorization needs to be retried." = "Authorization needs to be retried.";
+
+// OCErrorItemPolicyRedundant
+"Another item policy of the same kind already includes the item, making the addition of this item policy redundant." = "Another item policy of the same kind already includes the item, making the addition of this item policy redundant.";
+
+// OCErrorItemPolicyMakesRedundant
+"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy.";
