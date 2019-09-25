@@ -11,6 +11,9 @@
 "itemProperty.isFavorite" = "Favorite";
 "itemProperty.localAttributes" = "Local attributes";
 
+/* Item policy */
+"Available Offline" = "Available Offline";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -111,6 +114,7 @@
 /* Logging */
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
+"Log HTTP requests and responses" = "Log HTTP requests and responses";
 
 /* Errors */
 "Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
