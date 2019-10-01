@@ -28,4 +28,7 @@
 
 - (OCPath)pathForSubdirectoryWithName:(NSString *)subDirectoryName;
 
+@property(readonly,nonatomic) BOOL isUnnormalizedPath;
+@property(readonly,nonatomic) BOOL isNormalizedDirectoryPath;
+
 @end

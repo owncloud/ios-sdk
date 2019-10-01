@@ -45,4 +45,33 @@
 	return ([[self stringByAppendingPathComponent:subDirectoryName] normalizedDirectoryPath]);
 }
 
+- (BOOL)isUnnormalizedPath
+{
+	NSArray<NSString *> *pathComponents = [self componentsSeparatedByString:@"/"];
+	NSUInteger idx = 0;
+
+	if (![self hasPrefix:@"/"])
+	{
+		return (YES);
+	}
+
+	for (NSString *pathComponent in pathComponents)
+	{
+		if (([pathComponent isEqual:@""] && (idx!=0) && (idx!=(pathComponents.count-1))) || // Multi-slash "//"
+ 		    [pathComponent isEqual:@"."] || [pathComponent isEqual:@".."]) // ".." or "."
+		{
+			return (YES);
+		}
+
+		idx++;
+	}
+
+	return (NO);
+}
+
+- (BOOL)isNormalizedDirectoryPath
+{
+	return (![self isUnnormalizedPath] && [self hasSuffix:@"/"]);
+}
+
 @end

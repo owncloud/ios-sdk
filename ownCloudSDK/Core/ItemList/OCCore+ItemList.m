@@ -937,6 +937,38 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			OCPath queryItemPath = nil;
 			OCSyncAnchor syncAnchor = nil;
 
+			// Queries targeting an item in a subdirectory of taskPath: check if that subdirectory exists
+			if (taskPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:taskPath] &&
+			    (task.cachedSet.state == OCCoreItemListStateSuccess) && (task.retrievedSet.state == OCCoreItemListStateSuccess)
+			   )
+			{
+				if (query.state != OCQueryStateIdle)
+				{
+					NSString *queryPathSubfolder;
+
+					if ((queryPathSubfolder = [[query.queryPath substringFromIndex:taskPath.length] componentsSeparatedByString:@"/"].firstObject) != nil)
+					{
+						NSString *queryPathSubpath;
+
+						if (queryResultItemsByPath == nil)
+						{
+							queryResultItemsByPath = [OCCoreItemList itemListWithItems:queryResults].itemsByPath;
+						}
+
+						if ((queryPathSubpath = [taskPath stringByAppendingPathComponent:queryPathSubfolder]) != nil)
+						{
+							if ((queryResultItemsByPath[queryPathSubpath] == nil) &&
+							    (queryResultItemsByPath[queryPathSubpath.normalizedDirectoryPath] == nil))
+							{
+								// Relevant parent folder is missing
+								useQueryResults = [NSMutableArray new];
+								setQueryState = OCQueryStateTargetRemoved;
+							}
+						}
+					}
+				}
+			}
+
 			// Queries targeting a particular item
 			if ((queryItemPath = query.queryItem.path) != nil)
 			{

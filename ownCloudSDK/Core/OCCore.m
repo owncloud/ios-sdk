@@ -1122,6 +1122,13 @@
 	NSObject *trackingObject = [NSObject new];
 	__weak NSObject *weakTrackingObject = trackingObject;
 
+	// Detect unnormalized path
+	if ([path isUnnormalizedPath])
+	{
+		trackingHandler(OCError(OCErrorUnnormalizedPath), nil, YES);
+		return (nil);
+	}
+
 	[self queueBlock:^{
 		NSError *error = nil;
 		OCItem *item = nil;
