@@ -779,4 +779,28 @@
 	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleNumbered duplicateCount:@(2)] isEqual:@"Base 2"]);
 }
 
+- (void)testPathNormalization
+{
+	XCTAssert([@"//path/" isUnnormalizedPath]);
+	XCTAssert([@"/path//" isUnnormalizedPath]);
+
+	XCTAssert([@"/path/../documents/" isUnnormalizedPath]);
+	XCTAssert([@"/path/../documents" isUnnormalizedPath]);
+	XCTAssert([@"./path/" isUnnormalizedPath]);
+	XCTAssert([@"../path/" isUnnormalizedPath]);
+	XCTAssert([@"/path/.." isUnnormalizedPath]);
+	XCTAssert([@"/path/." isUnnormalizedPath]);
+
+	XCTAssert([@"//path/two//" isUnnormalizedPath]);
+	XCTAssert([@"//path/two/" isUnnormalizedPath]);
+	XCTAssert([@"//path/two" isUnnormalizedPath]);
+	XCTAssert([@"/path/two//" isUnnormalizedPath]);
+
+	XCTAssert(![@"/path/" isUnnormalizedPath]);
+	XCTAssert(![@"/path" isUnnormalizedPath]);
+	XCTAssert(![@"/path/two" isUnnormalizedPath]);
+	XCTAssert(![@"/path/two/" isUnnormalizedPath]);
+
+}
+
 @end
