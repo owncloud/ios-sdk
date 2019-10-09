@@ -73,9 +73,41 @@ OCAuthenticationMethodAutoRegister
 	return (@"oc.ios://ios.owncloud.com");
 }
 
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
+{
+	NSURL *openidConfigURL;
+
+	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection]) != nil)
+	{
+		[connection sendRequest:[OCHTTPRequest requestWithURL:openidConfigURL] ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			NSError *jsonError;
+
+			if ((self->_openIDConfig = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+			{
+				self.pkce = [OCPKCE new]; // Enable PKCE
+
+				completionHandler(nil);
+			}
+			else
+			{
+				completionHandler(error);
+			}
+		}];
+	}
+	else
+	{
+		completionHandler(OCError(OCErrorInsufficientParameters));
+	}
+}
+
 - (NSString *)scope
 {
-	return (@"openid");
+	return (@"openid offline_access");
+}
+
+- (NSString *)prompt
+{
+	return (@"consent");
 }
 
 #pragma mark - Authentication Method Detection
@@ -158,29 +190,16 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
-	NSURL *openidConfigURL;
-
-	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection]) != nil)
-	{
-		[connection sendRequest:[OCHTTPRequest requestWithURL:openidConfigURL] ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
-			NSError *jsonError;
-
-			if ((self->_openIDConfig = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
-			{
-				self.pkce = [OCPKCE new]; // Enable PKCE
-
-				[super generateBookmarkAuthenticationDataWithConnection:connection options:options completionHandler:completionHandler];
-			}
-			else
-			{
-				completionHandler(error, nil, nil);
-			}
-		}];
-	}
-	else
-	{
-		completionHandler(OCError(OCErrorInsufficientParameters), nil, nil);
-	}
+	[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
+		if (error == nil)
+		{
+			[super generateBookmarkAuthenticationDataWithConnection:connection options:options completionHandler:completionHandler];
+		}
+		else
+		{
+			completionHandler(error, nil, nil);
+		}
+	}];
 }
 
 @end

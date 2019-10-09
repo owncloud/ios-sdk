@@ -139,7 +139,17 @@ OCAuthenticationMethodAutoRegister
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]);
 }
 
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
+{
+	completionHandler(OCError(OCErrorFeatureNotImplemented));
+}
+
 - (nullable NSString *)scope
+{
+	return (nil);
+}
+
+- (nullable NSString *)prompt
 {
 	return (nil);
 }
@@ -216,7 +226,8 @@ OCAuthenticationMethodAutoRegister
 						@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
 
 						// OIDC
-						@"scope"	  	 : (self.scope != nil) ? self.scope : ((NSString *)NSNull.null)
+						@"scope"	  	 : (self.scope != nil)  ? self.scope  : ((NSString *)NSNull.null),
+						@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
 					  } replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -516,8 +527,32 @@ OCAuthenticationMethodAutoRegister
 
 	parameters = sanitizedParameters;
 
+	// Check for endpoint
+	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection];
+
+	if (tokenEndpointURL == nil)
+	{
+		// No token endpoint URL known => retrieve it first.
+		[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
+			if (error == nil)
+			{
+				[self _sendTokenRequestToConnection:connection withParameters:parameters completionHandler:completionHandler];
+			}
+			else
+			{
+				if (completionHandler != nil)
+				{
+					completionHandler(error, nil, nil);
+				}
+			}
+		}];
+
+		// Don't proceed past this point
+		return;
+	}
+
 	// Compose Token Request
-	if ((tokenRequest = [OCHTTPRequest requestWithURL:[self tokenEndpointURLForConnection:connection]]) != nil)
+	if ((tokenRequest = [OCHTTPRequest requestWithURL:tokenEndpointURL]) != nil)
 	{
 		tokenRequest.method = OCHTTPMethodPOST; // Use POST
 		
