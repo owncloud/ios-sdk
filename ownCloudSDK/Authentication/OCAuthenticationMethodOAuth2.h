@@ -33,7 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
 - (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;
 - (nullable NSString *)scope;
+- (nullable NSString *)prompt;
 
 @end
 

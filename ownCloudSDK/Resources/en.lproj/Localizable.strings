@@ -274,3 +274,6 @@
 
 // OCErrorItemPolicyMakesRedundant
 "Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy.";
+
+// OCErrorUnnormalizedPath
+"The provided path is not normalized." = "The provided path is not normalized.";

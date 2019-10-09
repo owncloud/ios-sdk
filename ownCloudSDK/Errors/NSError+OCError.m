@@ -272,6 +272,10 @@
 				case OCErrorItemPolicyMakesRedundant:
 					unlocalizedString = @"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy.";
 				break;
+
+				case OCErrorUnnormalizedPath:
+					unlocalizedString = @"The provided path is not normalized.";
+				break;
 			}
 		}
 	}

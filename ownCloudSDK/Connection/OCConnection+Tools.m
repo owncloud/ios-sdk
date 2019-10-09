@@ -88,7 +88,21 @@
 {
 	if (endpointPath != nil)
 	{
-		return ([[_bookmark.url URLByAppendingPathComponent:endpointPath] absoluteURL]);
+		NSURL *bookmarkURL = _bookmark.url;
+
+		if ([endpointPath hasPrefix:@"/"]) // Absolute path
+		{
+			// Remove leading "/"
+			endpointPath = [endpointPath substringFromIndex:1];
+
+			// Strip subpaths from bookmarkURL
+			while ((![[bookmarkURL path] isEqual:@"/"]) && (![[bookmarkURL path] isEqual:@""]))
+			{
+				bookmarkURL = [bookmarkURL URLByDeletingLastPathComponent];
+			};
+		}
+
+		return ([[bookmarkURL URLByAppendingPathComponent:endpointPath] absoluteURL]);
 	}
 	
 	return (_bookmark.url);
