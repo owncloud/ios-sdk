@@ -231,7 +231,7 @@
 		DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC5226484E30087316D /* OCBackgroundManager.m */; };
 		DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576EC8226484F50087316D /* OCBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC576ECB226484F50087316D /* OCBackgroundTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC9226484F50087316D /* OCBackgroundTask.m */; };
-		DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576ECC2264894E0087316D /* OCDeallocAction.h */; };
+		DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576ECC2264894E0087316D /* OCDeallocAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576ECD2264894E0087316D /* OCDeallocAction.m */; };
 		DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1021EF4B2900B882C4 /* OCAsyncSequentialQueue.m */; };
