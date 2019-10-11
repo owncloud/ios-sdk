@@ -40,6 +40,37 @@
 	return (self);
 }
 
+- (OCPath)normalizedFilePath
+{
+	if ([self hasSuffix:@"/"])
+	{
+		return ([self substringWithRange:NSMakeRange(0, self.length-1)]);
+	}
+
+	return (self);
+}
+
+- (OCItemType)itemTypeByPath
+{
+	return ([self hasSuffix:@"/"] ? OCItemTypeCollection : OCItemTypeFile);
+}
+
+- (OCPath)normalizedPathForItemType:(OCItemType)itemType
+{
+	switch (itemType)
+	{
+		case OCItemTypeCollection:
+			return ([self normalizedDirectoryPath]);
+		break;
+
+		case OCItemTypeFile:
+			return ([self normalizedFilePath]);
+		break;
+	}
+
+	return (self);
+}
+
 - (OCPath)pathForSubdirectoryWithName:(NSString *)subDirectoryName
 {
 	return ([[self stringByAppendingPathComponent:subDirectoryName] normalizedDirectoryPath]);

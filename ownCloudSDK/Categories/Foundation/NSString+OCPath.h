@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
+#import "OCItem.h"
 
 @interface NSString (OCPath)
 
@@ -25,6 +26,10 @@
 @property(readonly,nonatomic) BOOL isRootPath;
 
 @property(readonly,strong,nonatomic) OCPath normalizedDirectoryPath;
+@property(readonly,strong,nonatomic) OCPath normalizedFilePath;
+
+@property(readonly,nonatomic) OCItemType itemTypeByPath;
+- (OCPath)normalizedPathForItemType:(OCItemType)itemType;
 
 - (OCPath)pathForSubdirectoryWithName:(NSString *)subDirectoryName;
 

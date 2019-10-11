@@ -1117,19 +1117,20 @@
 
 
 #pragma mark - Item lookup and information
-- (OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+- (OCCoreItemTracking)trackItemAtPath:(OCPath)inPath trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
 {
 	NSObject *trackingObject = [NSObject new];
 	__weak NSObject *weakTrackingObject = trackingObject;
 
 	// Detect unnormalized path
-	if ([path isUnnormalizedPath])
+	if ([inPath isUnnormalizedPath])
 	{
 		trackingHandler(OCError(OCErrorUnnormalizedPath), nil, YES);
 		return (nil);
 	}
 
 	[self queueBlock:^{
+		OCPath path = inPath;
 		NSError *error = nil;
 		OCItem *item = nil;
 		OCQuery *query = nil;
@@ -1141,10 +1142,32 @@
 			return;
 		}
 
-		if ((item = [self cachedItemAtPath:path error:&error]) != nil)
+		if ((item = [self cachedItemAtPath:path error:&error]) == nil)
 		{
-			// Item in cache - start custom query to track changes (won't touch network, but will provide updates)
-			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path]  inputFilter:nil];
+			// No item for this path found in cache
+			if (path.itemTypeByPath == OCItemTypeFile)
+			{
+				// This path indicates a file - but maybe that's what what's wanted: retry by looking for a folder at that location instead.
+				if ((item = [self cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
+				{
+					path = path.normalizedDirectoryPath;
+				}
+			}
+		}
+
+		if (item != nil)
+		{
+			// Item in cache
+
+			// Check if path type matches item type
+			if (path.itemTypeByPath != item.type)
+			{
+				// Path type doesn't match path normalization -> fix the path
+				path = [path normalizedPathForItemType:item.type];
+			}
+
+			// Start custom query to track changes (won't touch network, but will provide updates)
+			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path] inputFilter:nil];
 			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 				if (weakTrackingObject != nil)
 				{
