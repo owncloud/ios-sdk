@@ -289,6 +289,9 @@ typedef id<NSObject> OCCoreItemTracking;
 #pragma mark - Indicating activity requiring the core
 - (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description; //!< Runs a block in the current thread while making sure OCCore will not stop before the completionHandler has been called.
 
+#pragma mark - Schedule work in the core's queue
+- (void)scheduleInCoreQueue:(dispatch_block_t)block; //!< Performs a block on the core's internal queue, effectively pausing the core for the duration the block runs. Use this only if you know what you're doing.
+
 @end
 
 @interface OCCore (Favorites)
