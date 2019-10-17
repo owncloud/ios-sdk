@@ -1567,6 +1567,12 @@
 	}
 }
 
+#pragma mark - Schedule work in the core's queue
+- (void)scheduleInCoreQueue:(dispatch_block_t)block
+{
+	[self queueBlock:block];
+}
+
 #pragma mark - Busy count
 - (void)beginActivity:(NSString *)description
 {
