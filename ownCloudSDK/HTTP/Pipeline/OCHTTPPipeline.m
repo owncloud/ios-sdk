@@ -307,14 +307,14 @@
 	{
 		if (_state != OCHTTPPipelineStateStarted)
 		{
-			OCLogError(@"Attempt to enqueue request before pipeline is started");
+			OCLogError(@"Attempt to enqueue request before pipeline is started: %@", request);
 			return;
 		}
 
 		// Check if partition is being destroyed
 		if ([self->_partitionsInDestruction containsObject:partitionID])
 		{
-			OCLogError(@"Attempt to enqueue request for partitionID=%@ that's being destroyed", partitionID);
+			OCLogError(@"Attempt to enqueue request for partitionID=%@ that's being destroyed: %@", partitionID, request);
 			return;
 		}
 	}
