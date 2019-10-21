@@ -107,6 +107,20 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 + (BOOL)backgroundURLSessionsAllowed
 {
+	if (@available(iOS 13.1, *))
+	{
+		if (OCVault.hostHasFileProvider && !OCProcessManager.isProcessExtension)
+		{
+			// Under iOS 13.1.3, the app's background NSURLSession is receiving
+			// penalties (in the form of long delays) despite not meeting the
+			// criteria for them - and even if running in the foreground. Either
+			// this is a bug in general - or background NSURLSession usage of the
+			// FileProvider is assessed as if the FileProvider was the app (always in
+			// background) and then penalties applied to the app's session.
+			return (NO);
+		}
+	}
+
 	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowBackgroundURLSessions] boolValue]);
 }
 
@@ -1596,6 +1610,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.downloadRequest = YES;
 		request.downloadedFileURL = targetURL;
 		request.forceCertificateDecisionDelegation = YES;
+		request.autoResume = YES;
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
