@@ -861,7 +861,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			[task end];
 		}] start]) != nil)
 		{
-			OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
+			// OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
 		}
 	}
 
@@ -885,7 +885,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				[self->_backgroundTask end];
 				self->_backgroundTask = nil;
 
-				OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB left background task");
+				// OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB left background task");
 			}
 		}];
 	}

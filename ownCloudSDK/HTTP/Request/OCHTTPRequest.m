@@ -344,6 +344,10 @@
 	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
 
 	[requestDescription appendFormat:@"%@ %@ HTTP/1.1\nHost: %@\n", self.method, self.url.path, self.url.hostAndPort];
+	if (_autoResume && (_autoResumeInfo != nil))
+	{
+		[requestDescription appendFormat:@"[Auto-Resume: %lu | Info: %@]\n", (unsigned long)_autoResume, _autoResumeInfo.allKeys];
+	}
 	if (_bodyData != nil)
 	{
 		[requestDescription appendFormat:@"Content-Length: %lu\n", (unsigned long)_bodyData.length];
@@ -396,6 +400,9 @@
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
 
+		self.autoResume 	= [decoder decodeBoolForKey:@"autoResume"];
+		self.autoResumeInfo	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoResumeInfo"];
+
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
 		self.userInfo	 	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
@@ -437,6 +444,9 @@
 
 	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
 
+	[coder encodeBool:_autoResume 		forKey:@"autoResume"];
+	[coder encodeObject:_autoResumeInfo	forKey:@"autoResumeInfo"];
+
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];
 
@@ -471,3 +481,5 @@ OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
 OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 
 OCProgressPathElementIdentifier OCHTTPRequestGlobalPath = @"_httpRequest";
+
+OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData = @"_systemResumeData";

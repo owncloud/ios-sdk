@@ -307,14 +307,14 @@
 	{
 		if (_state != OCHTTPPipelineStateStarted)
 		{
-			OCLogError(@"Attempt to enqueue request before pipeline is started");
+			OCLogError(@"Attempt to enqueue request before pipeline is started: %@", request);
 			return;
 		}
 
 		// Check if partition is being destroyed
 		if ([self->_partitionsInDestruction containsObject:partitionID])
 		{
-			OCLogError(@"Attempt to enqueue request for partitionID=%@ that's being destroyed", partitionID);
+			OCLogError(@"Attempt to enqueue request for partitionID=%@ that's being destroyed: %@", partitionID, request);
 			return;
 		}
 	}
@@ -875,7 +875,18 @@
 						if (request.downloadRequest)
 						{
 							// Request is a download request. Make it a download task.
-							urlSessionTask = [_urlSession downloadTaskWithRequest:urlRequest];
+							NSData *resumeData = nil;
+
+							if (request.autoResume && ((resumeData = request.autoResumeInfo[OCHTTPRequestResumeInfoKeySystemResumeData]) != nil))
+							{
+								// Resume download
+								urlSessionTask = [_urlSession downloadTaskWithResumeData:resumeData];
+							}
+							else
+							{
+								// Start new download
+								urlSessionTask = [_urlSession downloadTaskWithRequest:urlRequest];
+							}
 						}
 						else if (request.bodyURL != nil)
 						{
@@ -940,9 +951,46 @@
 							}
 
 							// Register background task
+
+//							 BOOL autoResume = request.autoResume;
+//							 __weak OCHTTPPipeline *weakPipeline = self;
+//							 OCHTTPRequestID resumeRequestID = request.identifier;
+
 							[[[OCBackgroundTask backgroundTaskWithName:[NSString stringWithFormat:@"OCHTTPPipeline <%ld>: %@", urlSessionTaskID, absoluteURLString] expirationHandler:^(OCBackgroundTask *backgroundTask){
 								// Task needs to end in the expiration handler - or the app will be terminated by iOS
 								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
+
+								// Cancel resumeable download and store resume data
+								// (commented out for now as it raises additional issues/questions, like f.ex. preventing a restart right away while the app transitions to the background - letting iOS cancel the connection on our behalf works better as we won't get notified until after the app has been woken up again, at which point rescheduling is just fine)
+//								OCHTTPPipeline *pipeline = weakPipeline;
+//
+//								[pipeline.backend queueBlock:^{
+//									OCHTTPPipelineTask *task;
+//
+//									if ((task = [pipeline.backend retrieveTaskForRequestID:resumeRequestID error:NULL]) != nil)
+//									{
+//										NSURLSessionDownloadTask *downloadTask;
+//
+//										if (((downloadTask = OCTypedCast(task.urlSessionTask, NSURLSessionDownloadTask)) != nil) &&
+//										    (downloadTask.state == NSURLSessionTaskStateRunning))
+//										{
+//											// Cancel to resume later
+//											[downloadTask cancelByProducingResumeData:^(NSData * _Nullable resumeData) {
+//												if (resumeData != nil)
+//												{
+//													task.request.autoResumeInfo = @{
+//														OCHTTPRequestResumeInfoKeySystemResumeData : resumeData
+//													};
+//
+//													// TO ADD: reset request for rescheduling
+//
+//													[pipeline.backend updatePipelineTask:task];
+//												}
+//											}];
+//										}
+//									}
+//								}];
+
 								[backgroundTask end];
 							}] start] endWhenDeallocating:task];
 						}
@@ -1137,6 +1185,7 @@
 				[self _deliverResultForTask:task];
 			}];
 		};
+		BOOL skipPartitionInstructionDecision = NO;
 
 		OCLogDebug(@"Delivering result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
 
@@ -1189,7 +1238,35 @@
 			}
 		}
 
-		OCLogDebug(@"Entering post-processing of result for taskID=%@ with error=%@", task.taskID, error);
+		// Deliver request by default
+		OCHTTPRequestInstruction requestInstruction = OCHTTPRequestInstructionDeliver;
+
+		// Manage auto-resume
+		if (task.request.autoResume)
+		{
+			NSData *resumeData = nil;
+
+			if ((resumeData = error.userInfo[NSURLSessionDownloadTaskResumeData]) != nil)
+			{
+				// If error contains resume data and auto-resume is allowed, add it to the task's request
+				task.request.autoResumeInfo = @{
+					OCHTTPRequestResumeInfoKeySystemResumeData : resumeData
+				};
+
+				requestInstruction = OCHTTPRequestInstructionReschedule;
+				skipPartitionInstructionDecision = YES;
+			}
+			else
+			{
+				// Remove resume data in case the last response didn't have any
+				if (task.request.autoResumeInfo != nil)
+				{
+					task.request.autoResumeInfo = nil;
+				}
+			}
+		}
+
+		OCLogDebug(@"Entering post-processing of result for taskID=%@ with skipPartitionInstructionDecision=%d, error=%@", task.taskID, skipPartitionInstructionDecision, error);
 
 		// Give connection a chance to pass it off to authentication methods / interpret the error before delivery to the sender
 		if ([partitionHandler respondsToSelector:@selector(pipeline:postProcessFinishedTask:error:)])
@@ -1198,11 +1275,12 @@
 		}
 
 		// Determine request instruction
-		OCHTTPRequestInstruction requestInstruction = OCHTTPRequestInstructionDeliver;
-
-		if ([partitionHandler respondsToSelector:@selector(pipeline:instructionForFinishedTask:error:)])
+		if (!skipPartitionInstructionDecision)
 		{
-			requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task error:error];
+			if ([partitionHandler respondsToSelector:@selector(pipeline:instructionForFinishedTask:error:)])
+			{
+				requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task error:error];
+			}
 		}
 
 		OCLogDebug(@"Leaving post-processing of result for taskID=%@ with requestInstruction=%lu, error=%@", task.taskID, (unsigned long)requestInstruction, error);

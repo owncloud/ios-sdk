@@ -34,6 +34,9 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestObserverEvent)
 
 typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
 
+typedef NSString* OCHTTPRequestResumeInfoKey;
+typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
+
 @interface OCHTTPRequest : NSObject <NSSecureCoding>
 {
 	NSData *_bodyData;
@@ -56,6 +59,9 @@ typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *re
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
 @property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
+
+@property(assign) BOOL autoResume;				//!< For GET requests, try to automatically resume transfer if connection is cut off
+@property(strong) OCHTTPRequestResumeInfo autoResumeInfo;	//!< Resume information for auto resume
 
 @property(assign) OCHTTPRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCHTTPRequestEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
@@ -130,3 +136,5 @@ extern OCHTTPMethod OCHTTPMethodLOCK;
 extern OCHTTPMethod OCHTTPMethodUNLOCK;
 
 extern OCProgressPathElementIdentifier OCHTTPRequestGlobalPath;
+
+extern OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData; //!< NSURLSessionDownloadTaskResumeData data provided by the OS

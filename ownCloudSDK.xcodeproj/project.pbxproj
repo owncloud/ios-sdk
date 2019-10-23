@@ -81,8 +81,6 @@
 		DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */; };
 		DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFF221CBE28B007C20D1 /* OCWaitCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */; };
-		DC19BFFE21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFFC21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h */; };
-		DC19BFFF21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFFD21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m */; };
 		DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3520DBD58E005A3DFC /* OCFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3620DBD58E005A3DFC /* OCFile.m */; };
 		DC20DE4B21BFCBC20096000B /* OCLogComponent.h in Headers */ = {isa = PBXBuildFile; fileRef = DC20DE4921BFCBC20096000B /* OCLogComponent.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -724,8 +722,6 @@
 		DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProcessManager.m; sourceTree = "<group>"; };
 		DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCWaitCondition.h; sourceTree = "<group>"; };
 		DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitCondition.m; sourceTree = "<group>"; };
-		DC19BFFC21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCWaitConditionPendingRequest.h; sourceTree = "<group>"; };
-		DC19BFFD21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionPendingRequest.m; sourceTree = "<group>"; };
 		DC1D4D3520DBD58E005A3DFC /* OCFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFile.h; sourceTree = "<group>"; };
 		DC1D4D3620DBD58E005A3DFC /* OCFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCFile.m; sourceTree = "<group>"; };
 		DC1D4D3D20DC2281005A3DFC /* OCClaim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClaim.h; sourceTree = "<group>"; };
@@ -1394,8 +1390,6 @@
 				DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */,
 				DC24F8E721E2B3EF00C9119C /* OCWaitConditionIssue.m */,
 				DC24F8E621E2B3EF00C9119C /* OCWaitConditionIssue.h */,
-				DC19BFFD21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m */,
-				DC19BFFC21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h */,
 			);
 			path = "Wait Condition";
 			sourceTree = "<group>";
@@ -2751,7 +2745,6 @@
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
 				DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */,
 				DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */,
-				DC19BFFE21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.h in Headers */,
 				DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */,
 				DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
@@ -3337,7 +3330,6 @@
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
 				DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */,
-				DC19BFFF21CBE6CD007C20D1 /* OCWaitConditionPendingRequest.m in Sources */,
 				DC2AA57122DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m in Sources */,
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
