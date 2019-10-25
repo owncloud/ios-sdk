@@ -893,6 +893,41 @@
 			}]];
 		}]
 	];
+
+	// Version 6
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameSyncJournal
+		version:6
+		creationQueries:@[
+			/*
+				recordID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
+				laneID : INTEGER		- ID of the sync lane this record is scheduled on
+				revision : INTEGER		- revision of the record, increments with every update
+				timestampDate : REAL		- NSDate.timeIntervalSince1970 at the time the record was added to the journal
+				inProgressSinceDate : REAL	- NSDate.timeIntervalSince1970 at the time the record was beginning to be processed
+				action : TEXT			- action to perform
+				localID : TEXT			- localID of the item targeted by the operation
+				path : TEXT			- path of the item targeted by the operation
+				recordData : BLOB		- archived OCSyncRecord data
+			*/
+			@"CREATE TABLE syncJournal (recordID INTEGER PRIMARY KEY AUTOINCREMENT, laneID INTEGER, revision INTEGER, timestampDate REAL NOT NULL, inProgressSinceDate REAL, action TEXT NOT NULL, localID TEXT NOT NULL, path TEXT NOT NULL, recordData BLOB)",
+		]
+		openStatements:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 5
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *sqlDB, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Add revision column
+				[sqlDB executeQuery:[OCSQLiteQuery query:@"ALTER TABLE syncJournal ADD COLUMN revision INTEGER" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
+	];
 }
 
 - (void)addOrUpdateUpdateScanPaths
