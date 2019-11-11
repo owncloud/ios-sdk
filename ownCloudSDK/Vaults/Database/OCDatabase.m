@@ -1179,11 +1179,6 @@
 				syncRecord.revision = @(0);
 			}
 
-			if (syncRecord.localID == nil)
-			{
-				NSLog(@"Ouch");
-			}
-
 			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
 				@"laneID"		: OCSQLiteNullProtect(syncRecord.laneID),
 				@"revision"		: syncRecord.revision,

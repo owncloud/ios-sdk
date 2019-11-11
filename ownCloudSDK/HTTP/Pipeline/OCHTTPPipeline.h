@@ -108,6 +108,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<OCLogTagName> *_cachedLogTags;
 }
 
+@property(nullable,strong,readonly,class) NSString *userAgent; //!< Custom User-Agent to use (if any)
+
 @property(strong,readonly) OCHTTPPipelineID identifier;
 @property(strong,readonly) NSString *bundleIdentifier;
 
@@ -167,5 +169,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)queueBlock:(dispatch_block_t)block withBusy:(BOOL)withBusy; //!< Add a block for execution on the internal job queue.
 
 @end
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP;
+extern OCClassSettingsKey OCHTTPPipelineSettingUserAgent;
 
 NS_ASSUME_NONNULL_END

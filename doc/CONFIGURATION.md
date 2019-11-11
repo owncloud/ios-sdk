@@ -7,13 +7,13 @@ The ownCloud iOS SDK provides a flexible mechanism for configuration that allows
 - classes to provide default values
 - injection of settings from managed configuration (MDM)
 
-This document provides an overview over the available sections and variables.
+This document provides an overview over the available sections and their settings.
 
 ## Connection
 
 - **Section ID**: `connection`
 
-- **Variables**:
+- **Settings**:
 	- `endpoint-capabilities`: Endpoint to use for retrieving server capabilities
 		- type: string
 		- default: `ocs/v2.php/cloud/capabilities`
@@ -63,7 +63,7 @@ This document provides an overview over the available sections and variables.
 
 - **Section ID**: `core`
 
-- **Variables**:
+- **Settings**:
 	- `thumbnail-available-for-mime-type-prefixes`: Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `["*"]` turns on thumbnail loading for all items.
 		- type: array
 		- default: `["*"]`
@@ -76,12 +76,29 @@ This document provides an overview over the available sections and variables.
 	- `override-availability-signal`: Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`) 
 		- type: bool
 		-default: -
+		
+## HTTP
+
+- **Section ID**: `http`
+
+- **Settings**:
+	- `user-agent`:  A custom `User-Agent` to send with every HTTP request.
+		- The following placeholders can be used to make it dynamic:
+			- `{{app.build}}`: the build number of the app (f.ex. `123`)
+			- `{{app.version}}`: the version of the app (f.ex. `1.2`)
+			- `{{app.part}}`: the part of the app (more exactly: the name of the main bundle) from which the request was sent (f.ex. `App`, `ownCloud File Provider`)
+			- `{{device.model}}`: the model of the device running the app (f.ex. `iPhone`, `iPad`)
+			- `{{device.model-id}}`: the model identifier of the device running the app (f.ex. `iPhone8,1`)
+			- `{{os.name}}` : the name of the operating system running on the device (f.ex. `iOS`, `iPadOS`)
+			- `{{os.version}}`: the version of operating system running on the device (f.ex. `13.2.2`)
+		- type: string
+		- default: `ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})`
 
 ## Logging
 
 - **Section ID**: `log`
 
-- **Variables**:
+- **Settings**:
 	- `log-level`: Log level. `0` for `debug`, `1` for `info`, `2` for `warning`, `3` for `error`, `4` for `off`,
 		- type: number
 		- default: `4` (`off`)
@@ -114,7 +131,7 @@ This document provides an overview over the available sections and variables.
 
 - **Section ID**: `authentication-oauth2`
 
-- **Variables**:
+- **Settings**:
 	- `oa2-authorization-endpoint`: OAuth2 authorization endpoint
 		- type: string
 		- default: `index.php/apps/oauth2/authorize`
@@ -135,4 +152,4 @@ This document provides an overview over the available sections and variables.
 
 ## Keys
 
-The key names in the managed configuration dictionary are built from the section ID and the variable name, i.e. a Section ID of `connection` and a variable name of `endpoint-user` results in the key name  `connection.endpoint-user` for use in managed configuration dictionaries.
+The key names in the managed configuration dictionary are built from the section ID and the setting name, i.e. a Section ID of `connection` and a setting name of `endpoint-user` results in the key name  `connection.endpoint-user` for use in managed configuration dictionaries.
