@@ -56,6 +56,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		fallbackClasses = [[NSSet alloc] initWithObjects:
 			[NSArray class],
 			[NSDictionary class],
+			[NSSet class],
 
 			[NSString class],
 			[NSNumber class],
