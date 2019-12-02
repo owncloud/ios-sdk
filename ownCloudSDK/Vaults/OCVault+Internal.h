@@ -17,6 +17,7 @@
  */
 
 #import "OCVault.h"
+#import "OCFeatureAvailability.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,7 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - File Provider
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
 - (void)signalChangesInDirectoriesWithLocalIDs:(NSSet <OCLocalID> *)changedDirectoriesLocalIDs;
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 - (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID;
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @end
 

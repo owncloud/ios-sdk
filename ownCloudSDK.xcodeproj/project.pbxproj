@@ -325,6 +325,7 @@
 		DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8913632092088600028999 /* NSString+OCVersionCompare.m */; };
 		DC8B7B3922D88FFD00E63657 /* OCItemPolicyProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8B7B3722D88FFD00E63657 /* OCItemPolicyProcessor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8B7B3A22D88FFD00E63657 /* OCItemPolicyProcessor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8B7B3822D88FFD00E63657 /* OCItemPolicyProcessor.m */; };
+		DC8EB2FB23950B54009148F9 /* OCFeatureAvailability.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8EB2FA23950B54009148F9 /* OCFeatureAvailability.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8FE6FF221CAF280016BDEE /* OCProgressManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8FE6FD221CAF280016BDEE /* OCProgressManager.h */; };
 		DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */; };
 		DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -972,6 +973,7 @@
 		DC8913632092088600028999 /* NSString+OCVersionCompare.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCVersionCompare.m"; sourceTree = "<group>"; };
 		DC8B7B3722D88FFD00E63657 /* OCItemPolicyProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemPolicyProcessor.h; sourceTree = "<group>"; };
 		DC8B7B3822D88FFD00E63657 /* OCItemPolicyProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemPolicyProcessor.m; sourceTree = "<group>"; };
+		DC8EB2FA23950B54009148F9 /* OCFeatureAvailability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFeatureAvailability.h; sourceTree = "<group>"; };
 		DC8FE6FD221CAF280016BDEE /* OCProgressManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCProgressManager.h; sourceTree = "<group>"; };
 		DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProgressManager.m; sourceTree = "<group>"; };
 		DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteQueryCondition.h; sourceTree = "<group>"; };
@@ -2394,6 +2396,7 @@
 				DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */,
 				DCC8FA112029D5EC00EB6701 /* OCTypes.h */,
 				DC3F2B50204AED8300189B9A /* OCMacros.h */,
+				DC8EB2FA23950B54009148F9 /* OCFeatureAvailability.h */,
 				DC855701204FE9AB00189B9A /* App Identity */,
 				DC2EF1BD20ED776300BA2A3E /* Security */,
 				DCC6567120CA693700110A97 /* Resource Management */,
@@ -2615,6 +2618,7 @@
 				DCC6567820CA696A00110A97 /* OCBookmarkManager.h in Headers */,
 				DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */,
 				DC8FE6FF221CAF280016BDEE /* OCProgressManager.h in Headers */,
+				DC8EB2FB23950B54009148F9 /* OCFeatureAvailability.h in Headers */,
 				DC2C3F32230E8C5100D2282A /* OCKeyValueStore.h in Headers */,
 				DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */,
 				DC07C296212450DC00B815A4 /* OCExtensionLocation.h in Headers */,

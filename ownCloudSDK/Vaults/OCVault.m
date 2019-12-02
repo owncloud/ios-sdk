@@ -27,6 +27,7 @@
 #import "OCVault+Internal.h"
 #import "OCEventQueue.h"
 #import "OCCore+SyncEngine.h"
+#import "OCFeatureAvailability.h"
 
 @implementation OCVault
 
@@ -82,8 +83,10 @@
 		_bookmark = bookmark;
 		_uuid = bookmark.uuid;
 
+		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
 		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
+		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 	}
 	
 	return (self);
@@ -128,11 +131,13 @@
 {
 	if (_filesRootURL == nil)
 	{
+		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		if (OCVault.hostHasFileProvider)
 		{
 			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
 		}
 		else
+		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 		{
 			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
 		}
@@ -141,6 +146,7 @@
 	return (_filesRootURL);
 }
 
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 - (NSFileProviderDomain *)fileProviderDomain
 {
 	if ((_fileProviderDomain == nil) && OCVault.hostHasFileProvider)
@@ -178,6 +184,7 @@
 
 	return (_fileProviderManager);
 }
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 - (NSURL *)httpPipelineRootURL
 {

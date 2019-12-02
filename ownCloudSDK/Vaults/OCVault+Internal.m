@@ -22,6 +22,7 @@
 #import "OCCore.h"
 #import "OCLogger.h"
 #import "NSString+OCPath.h"
+#import "OCFeatureAvailability.h"
 
 @implementation OCVault (Internal)
 
@@ -212,7 +213,9 @@
 
 										if ([parentPath isEqualToString:@"/"] || [parentPath isEqualToString:@""])
 										{
+											#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 											[updateDirectoryLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+											#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 										}
 										else if (item.parentLocalID != nil)
 										{
@@ -310,7 +313,9 @@
 	// Add root directory localID
 	if (addRoot)
 	{
+		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		[changedDirectoriesLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 	}
 
 	// Signal NSFileProviderManager
@@ -319,6 +324,7 @@
 
 - (void)signalChangesInDirectoriesWithLocalIDs:(NSSet <OCLocalID> *)changedDirectoriesLocalIDs
 {
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 	dispatch_async(dispatch_get_main_queue(), ^{
 		NSFileProviderManager *fileProviderManager = [self fileProviderManager];
 
@@ -329,8 +335,10 @@
 			[self signalEnumeratorForContainerItemIdentifier:changedDirectoryLocalID];
 		}
 	});
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 }
 
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 - (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID
 {
 	@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
@@ -403,5 +411,6 @@
 		}
 	});
 }
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @end
