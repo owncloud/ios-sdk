@@ -80,7 +80,7 @@
 {
 	if (_pathMonitor == nil)
 	{
-		if (@available(iOS 12,*))
+		if (@available(iOS 12, tvOS 12, *))
 		{
 			// Create path monitor for all interfaces
 			_pathMonitor = nw_path_monitor_create();
@@ -126,7 +126,7 @@
 {
 	if (_pathMonitor != nil)
 	{
-		if (@available(iOS 12,*))
+		if (@available(iOS 12, tvOS 12, *))
 		{
 			// Stop listening for connection settings changes
 			[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameConnectionSettingsChanged];

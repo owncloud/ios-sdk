@@ -17,10 +17,13 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <FileProvider/FileProvider.h>
+#import "OCFeatureAvailability.h"
 #import "OCBookmark.h"
 #import "OCKeyValueStore.h"
-#import "OCFeatureAvailability.h"
+
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+#import <FileProvider/FileProvider.h>
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @class OCDatabase;
 @class OCItem;

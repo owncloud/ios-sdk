@@ -141,7 +141,7 @@
 						}
 						else
 						{
-							OCLogWarning(@"Environment variable %@=%@ could not be parsed.", varName, valueString)
+							NSLog(@"Environment variable %@=%@ could not be parsed.", varName, valueString);
 						}
 					}
 				}];

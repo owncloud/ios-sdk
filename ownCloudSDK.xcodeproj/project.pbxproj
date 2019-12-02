@@ -326,6 +326,10 @@
 		DC8B7B3922D88FFD00E63657 /* OCItemPolicyProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8B7B3722D88FFD00E63657 /* OCItemPolicyProcessor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC8B7B3A22D88FFD00E63657 /* OCItemPolicyProcessor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8B7B3822D88FFD00E63657 /* OCItemPolicyProcessor.m */; };
 		DC8EB2FB23950B54009148F9 /* OCFeatureAvailability.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8EB2FA23950B54009148F9 /* OCFeatureAvailability.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8EB2FC23951AAB009148F9 /* OCAuthenticationBrowserSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC8EB2FF23951AAB009148F9 /* OCAuthenticationBrowserSession.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8EB2FD23951AAB009148F9 /* OCAuthenticationBrowserSession.m */; };
+		DC8EB30423952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8EB30223952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h */; };
+		DC8EB30523952085009148F9 /* OCAuthenticationBrowserSessionUIWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8EB30323952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.m */; };
 		DC8FE6FF221CAF280016BDEE /* OCProgressManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC8FE6FD221CAF280016BDEE /* OCProgressManager.h */; };
 		DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */; };
 		DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -974,6 +978,10 @@
 		DC8B7B3722D88FFD00E63657 /* OCItemPolicyProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemPolicyProcessor.h; sourceTree = "<group>"; };
 		DC8B7B3822D88FFD00E63657 /* OCItemPolicyProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemPolicyProcessor.m; sourceTree = "<group>"; };
 		DC8EB2FA23950B54009148F9 /* OCFeatureAvailability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCFeatureAvailability.h; sourceTree = "<group>"; };
+		DC8EB2FC23951AAB009148F9 /* OCAuthenticationBrowserSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSession.h; sourceTree = "<group>"; };
+		DC8EB2FD23951AAB009148F9 /* OCAuthenticationBrowserSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSession.m; sourceTree = "<group>"; };
+		DC8EB30223952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionUIWebView.h; sourceTree = "<group>"; };
+		DC8EB30323952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionUIWebView.m; sourceTree = "<group>"; };
 		DC8FE6FD221CAF280016BDEE /* OCProgressManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCProgressManager.h; sourceTree = "<group>"; };
 		DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProgressManager.m; sourceTree = "<group>"; };
 		DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteQueryCondition.h; sourceTree = "<group>"; };
@@ -2017,6 +2025,7 @@
 				DCC8F9FD20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h */,
 				DC241E6D229549E200AEE068 /* OCAuthenticationMethodOpenIDConnect.m */,
 				DC241E6C229549E200AEE068 /* OCAuthenticationMethodOpenIDConnect.h */,
+				DC8EB30023951AB4009148F9 /* Browser Session */,
 			);
 			path = Authentication;
 			sourceTree = "<group>";
@@ -2209,6 +2218,25 @@
 				DC8556FD204F597800189B9A /* OCXMLParserNode.h */,
 			);
 			path = Parsing;
+			sourceTree = "<group>";
+		};
+		DC8EB30023951AB4009148F9 /* Browser Session */ = {
+			isa = PBXGroup;
+			children = (
+				DC8EB2FD23951AAB009148F9 /* OCAuthenticationBrowserSession.m */,
+				DC8EB2FC23951AAB009148F9 /* OCAuthenticationBrowserSession.h */,
+				DC8EB30123952049009148F9 /* UIWebView */,
+			);
+			path = "Browser Session";
+			sourceTree = "<group>";
+		};
+		DC8EB30123952049009148F9 /* UIWebView */ = {
+			isa = PBXGroup;
+			children = (
+				DC8EB30323952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.m */,
+				DC8EB30223952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h */,
+			);
+			path = UIWebView;
 			sourceTree = "<group>";
 		};
 		DC98BDF021E73E36003B5658 /* Reachability */ = {
@@ -2631,6 +2659,7 @@
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
+				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
 				DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */,
 				DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */,
@@ -2654,6 +2683,7 @@
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DC3521782251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h in Headers */,
+				DC8EB30423952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h in Headers */,
 				DC708CE0214135D100FE43CA /* OCSyncActionDelete.h in Headers */,
 				DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */,
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
@@ -3153,6 +3183,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC381FCC22C8146F00284699 /* NSString+NameConflicts.m in Sources */,
+				DC8EB30523952085009148F9 /* OCAuthenticationBrowserSessionUIWebView.m in Sources */,
 				DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */,
 				DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */,
 				DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */,
@@ -3270,6 +3301,7 @@
 				DC24F8F121E4F5BF00C9119C /* OCSQLiteDB+Internal.m in Sources */,
 				DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
+				DC8EB2FF23951AAB009148F9 /* OCAuthenticationBrowserSession.m in Sources */,
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
 				DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
@@ -3721,6 +3753,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -3781,6 +3814,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -3805,7 +3839,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
 		};
@@ -3826,7 +3861,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
 		};
