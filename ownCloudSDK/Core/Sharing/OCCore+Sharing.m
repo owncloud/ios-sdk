@@ -76,7 +76,7 @@
 			{
 				if (shareQuery.refreshInterval > 0)
 				{
-					if (((-shareQuery.lastRefreshed.timeIntervalSinceNow) > shareQuery.refreshInterval) &&
+					if ((((shareQuery.lastRefreshed!=nil) && ((-shareQuery.lastRefreshed.timeIntervalSinceNow) > shareQuery.refreshInterval)) || (shareQuery.lastRefreshed == nil)) &&
 					    ((-shareQuery.lastRefreshStarted.timeIntervalSinceNow) > shareQuery.refreshInterval))
 					{
 						shareQuery.lastRefreshStarted = [NSDate new];
@@ -124,8 +124,14 @@
 			if (earliestRefresh != nil)
 			{
 				__weak OCCore *weakSelf = self;
+				NSTimeInterval nextRefreshFromNow = earliestRefresh.timeIntervalSinceNow;
 
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(earliestRefresh.timeIntervalSinceNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
+				if (nextRefreshFromNow < 0)
+				{
+					nextRefreshFromNow = 1.0;
+				}
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(nextRefreshFromNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
 					OCCore *strongSelf;
 
 					if (((strongSelf = weakSelf) != nil) &&  (strongSelf.state == OCCoreStateRunning))
