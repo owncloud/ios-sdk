@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,readonly,strong) OCProcessSession *processSession; //!< Session of this process
 @property(nonatomic,readonly,strong) NSArray <OCProcessSession *> *sessions;
 
-+ (instancetype)sharedProcessManager;
+@property(class,nonatomic,readonly,strong) OCProcessManager *sharedProcessManager;
 
 + (BOOL)isProcessExtension; //!< Returns YES if this process is an extension.
 

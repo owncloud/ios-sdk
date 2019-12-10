@@ -29,6 +29,8 @@
 #import "OCProxyProgress.h"
 #import "NSURLSessionTaskMetrics+OCCompactSummary.h"
 #import "OCBackgroundTask.h"
+#import "OCAppIdentity.h"
+#import "UIDevice+ModelID.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -53,6 +55,44 @@
 @end
 
 @implementation OCHTTPPipeline
+
+#pragma mark - User agent
++ (nullable NSString *)userAgent
+{
+	static NSString *userAgent = nil;
+	static NSString *userAgentTemplate = nil;
+
+	NSString *template = [self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingUserAgent];
+
+	if (((userAgent == nil) && (template != nil)) || (template != userAgentTemplate))
+	{
+		NSString *bundleName = @"App";
+
+		if (OCProcessManager.isProcessExtension)
+		{
+			if ((bundleName = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleNameKey]) == nil)
+			{
+				bundleName = NSBundle.mainBundle.bundlePath.lastPathComponent.stringByDeletingPathExtension;
+			}
+		}
+
+		if (bundleName == nil)
+		{
+			bundleName = @"App";
+		}
+
+		userAgent = [[[[[[[userAgentTemplate stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
+						     stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
+						     stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
+						     stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
+						     stringByReplacingOccurrencesOfString:@"{{device.model-id}}" withString:UIDevice.currentDevice.ocModelIdentifier]
+						     stringByReplacingOccurrencesOfString:@"{{os.name}}"  	withString:UIDevice.currentDevice.systemName]
+						     stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+		userAgentTemplate = template;
+	}
+
+	return (userAgent);
+}
 
 #pragma mark - Lifecycle
 - (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration
@@ -855,6 +895,14 @@
 			NSURLRequest *urlRequest;
 			NSURLSessionTask *urlSessionTask = nil;
 			BOOL createTask = YES;
+
+			// Apply User-Agent (if any)
+			NSString *userAgent;
+
+			if ((userAgent = [OCHTTPPipeline userAgent]) != nil)
+			{
+				[request setValue:userAgent forHeaderField:@"User-Agent"];
+			}
 
 			// Invoke host simulation (if any)
 			if ((partitionHandler!=nil) && [partitionHandler respondsToSelector:@selector(pipeline:partitionID:simulateRequestHandling:completionHandler:)])
@@ -2288,12 +2336,13 @@
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	return (@"http");
+	return (OCClassSettingsIdentifierHTTP);
 }
 
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
+		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})"
 	});
 }
 
@@ -2365,3 +2414,6 @@
 }
 
 @end
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP = @"http";
+OCClassSettingsKey OCHTTPPipelineSettingUserAgent = @"user-agent";

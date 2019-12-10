@@ -49,7 +49,7 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 #pragma mark - Sync Record Scheduling
 - (void)setNeedsToProcessSyncRecords;
 
-- (void)submitSyncRecord:(OCSyncRecord *)record;
+- (void)submitSyncRecord:(OCSyncRecord *)record  withPreflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler;
 - (void)rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError *(^)(OCSyncRecord *record))applyUpdates;
 - (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter;
 
@@ -63,6 +63,7 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 
 #pragma mark - Sync enqueue utilities
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable preflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler resultHandler:(OCCoreActionResultHandler)resultHandler;
 
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo;

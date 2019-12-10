@@ -71,7 +71,12 @@ typedef void(^OCKeyValueStoreObserver)(OCKeyValueStore *store, id _Nullable owne
 @property(strong,readonly) NSURL *url;
 
 #pragma mark - Fallback
-+ (NSSet<Class> *)fallbackClasses; //!< Classes to use for decoding if no class has been registered for a key. Safe "Property List" classes by default.
++ (NSSet<Class> *)fallbackClasses; //!< Classes to use for decoding if no class has been registered for a key. Safe "Property List" classes + NSSet by default.
+
+#pragma mark - Global class registrations
++ (NSSet<Class> *)registeredClassesForKey:(OCKeyValueStoreKey)key;
++ (void)registerClass:(Class)objectClass forKey:(OCKeyValueStoreKey)key;
++ (void)registerClasses:(NSSet<Class> *)classes forKey:(OCKeyValueStoreKey)key;
 
 #pragma mark - Init
 - (instancetype)initWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier;

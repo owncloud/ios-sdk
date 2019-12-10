@@ -217,6 +217,11 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 #pragma mark - Sync Record Scheduling
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler
 {
+	return ([self _enqueueSyncRecordWithAction:action cancellable:cancellable preflightResultHandler:nil resultHandler:resultHandler]);
+}
+
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable preflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler resultHandler:(OCCoreActionResultHandler)resultHandler
+{
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
 
@@ -238,13 +243,13 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 		syncRecord.progress.cancellable = cancellable;
 		progress.cancellable = cancellable;
 
-		[self submitSyncRecord:syncRecord];
+		[self submitSyncRecord:syncRecord withPreflightResultHandler:preflightResultHandler];
 	}
 
 	return(progress);
 }
 
-- (void)submitSyncRecord:(OCSyncRecord *)record
+- (void)submitSyncRecord:(OCSyncRecord *)record withPreflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler
 {
 	OCLogDebug(@"record %@ submitted", record);
 
@@ -343,6 +348,14 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 		{
 			// Call result handler
 			[record completeWithError:error core:self item:record.action.localItem parameter:record];
+		}
+
+		if (preflightResultHandler != nil)
+		{
+			// Call preflight handler on a different thread to avoid dead-locks
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+				preflightResultHandler(error);
+			});
 		}
 
 		[self setNeedsToProcessSyncRecords];

@@ -351,7 +351,7 @@
 				expectUploadStart = nil;
 
 				[core importFileNamed:uploadName at:query.rootItem fromURL:uploadFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, id  _Nullable parameter) {
-					XCTAssert(error == nil);
+					XCTAssert(error == nil, @"Import failed with error: %@", error);
 					XCTAssert(item != nil);
 
 					[expectUploadComplete fulfill];

@@ -17,8 +17,11 @@
  */
 
 #import <UIKit/UIKit.h>
+#import "OCFeatureAvailability.h"
+#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
 #import <SafariServices/SafariServices.h>
 #import <AuthenticationServices/AuthenticationServices.h>
+#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethod+OCTools.h"
@@ -45,6 +48,9 @@ static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 #define __IPHONE_13_0    130000
 #endif /* __IPHONE_13_0 */
 
+static Class sBrowserSessionClass;
+
+#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
 @interface OCAuthenticationMethodOAuth2ContextProvider : NSObject <ASWebAuthenticationPresentationContextProviding>
 
@@ -76,6 +82,7 @@ static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 @end
 
 #endif /* __IPHONE_13_0 */
+#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 @interface OCAuthenticationMethodOAuth2 ()
 {
@@ -103,7 +110,8 @@ OCAuthenticationMethodAutoRegister
 		OCAuthenticationMethodOAuth2TokenEndpoint 	  : @"index.php/apps/oauth2/api/v1/token",
 		OCAuthenticationMethodOAuth2RedirectURI 	  : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOAuth2ClientID 		  : @"mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1",
-		OCAuthenticationMethodOAuth2ClientSecret 	  : @"KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx"
+		OCAuthenticationMethodOAuth2ClientSecret 	  : @"KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx",
+		OCAuthenticationMethodOAuth2BrowserSessionClass	  : @"operating-system"
 	});
 }
 
@@ -273,6 +281,7 @@ OCAuthenticationMethodAutoRegister
 				{
 					if (error!=nil)
 					{
+						#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
 						if (@available(iOS 12.0, *))
 						{
 							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
@@ -289,6 +298,7 @@ OCAuthenticationMethodAutoRegister
 								error = OCError(OCErrorAuthorizationCancelled);
 							}
 						}
+						#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 					}
 
 					// Return errors
@@ -320,11 +330,53 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
++ (Class)browserSessionClass
+{
+	if (sBrowserSessionClass == nil)
+	{
+		NSString *className;
+
+		if ((className = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2BrowserSessionClass]) != nil)
+		{
+			if (![className isEqual:@"operating-system"])
+			{
+				Class browserSessionClass;
+
+				if ((browserSessionClass = NSClassFromString([@"OCAuthenticationBrowserSession" stringByAppendingString:className])) != Nil)
+				{
+					return (browserSessionClass);
+				}
+			}
+		}
+	}
+
+	return (sBrowserSessionClass);
+}
+
++ (void)setBrowserSessionClass:(Class)browserSessionClass
+{
+	sBrowserSessionClass = browserSessionClass;
+}
+
 + (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
 {
-	BOOL authSessionDidStart;
+	BOOL authSessionDidStart = NO;
 
-	if (@available(iOS 12, *))
+	if (self.browserSessionClass != Nil)
+	{
+		OCAuthenticationBrowserSession *browserSession;
+
+		// Create custom browser session class
+		if ((browserSession = [[self.browserSessionClass alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme options:options completionHandler:oauth2CompletionHandler]) != nil)
+		{
+			*authenticationSession = browserSession;
+
+			// Start authentication session
+			authSessionDidStart = [browserSession start];
+		}
+	}
+	#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
+	else if (@available(iOS 12, *))
 	{
 		ASWebAuthenticationSession *webAuthenticationSession;
 
@@ -363,6 +415,7 @@ OCAuthenticationMethodAutoRegister
 		// Start authentication session
 		authSessionDidStart = [sfAuthenticationSession start];
 	}
+	#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 	return (authSessionDidStart);
 }
@@ -679,3 +732,4 @@ OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint = @"oa2-token-endpo
 OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI = @"oa2-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID = @"oa2-client-id";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret = @"oa2-client-secret";
+OCClassSettingsKey OCAuthenticationMethodOAuth2BrowserSessionClass = @"oa2-browser-session-class";

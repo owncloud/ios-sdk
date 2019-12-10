@@ -40,6 +40,7 @@
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, NSDictionary<OCSyncActionParameter,id> *> *_ephermalParametersBySyncRecordID;
+	NSMutableDictionary <OCSyncRecordID, OCSyncRecord *> *_syncRecordsByID;
 
 	OCAsyncSequentialQueue *_openQueue;
 	NSInteger _openCount;
@@ -72,6 +73,12 @@
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 		_eventsByDatabaseID = [NSMutableDictionary new];
+
+		if (![OCProcessManager isProcessExtension])
+		{
+			// Set up sync record caching if not running in an extension
+			_syncRecordsByID = [NSMutableDictionary new];
+		}
 
 		_openQueue = [OCAsyncSequentialQueue new];
 		_openQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
@@ -1167,8 +1174,14 @@
 
 		if (path != nil)
 		{
+			if (syncRecord.revision == nil)
+			{
+				syncRecord.revision = @(0);
+			}
+
 			[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameSyncJournal rowValues:@{
 				@"laneID"		: OCSQLiteNullProtect(syncRecord.laneID),
+				@"revision"		: syncRecord.revision,
 				@"timestampDate" 	: syncRecord.timestamp,
 				@"inProgressSinceDate"	: OCSQLiteNullProtect(syncRecord.inProgressSince),
 				@"action"		: syncRecord.actionIdentifier,
@@ -1182,6 +1195,12 @@
 				{
 					if (syncRecord.recordID != nil)
 					{
+						if (self->_syncRecordsByID != nil)
+						{
+ 							// Add to cache
+ 							self->_syncRecordsByID[syncRecord.recordID] = syncRecord;
+						}
+
 						if (syncRecord.progress != nil)
 						{
 							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress.progress;
@@ -1218,11 +1237,15 @@
 	{
 		if (syncRecord.recordID != nil)
 		{
+			// Increment revision of record
+			syncRecord.revision = @(syncRecord.revision.longLongValue + 1);
+
 			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:syncRecord.recordID inTable:OCDatabaseTableNameSyncJournal withRowValues:@{
 				@"laneID"		: OCSQLiteNullProtect(syncRecord.laneID),
 				@"inProgressSinceDate"	: OCSQLiteNullProtect(syncRecord.inProgressSince),
 				@"recordData"		: [syncRecord serializedData],
-				@"localID"		: syncRecord.localID
+				@"localID"		: syncRecord.localID,
+				@"revision"		: syncRecord.revision
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				@synchronized(db)
 				{
@@ -1289,6 +1312,11 @@
 						[self->_progressBySyncRecordID removeObjectForKey:syncRecordID];
 						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecordID];
 						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecordID];
+
+						if (self->_syncRecordsByID != nil)
+						{
+							[self->_syncRecordsByID removeObjectForKey:syncRecordID];
+						}
 					}
 				}
 			}]];
@@ -1324,15 +1352,46 @@
 - (OCSyncRecord *)_syncRecordFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary
 {
 	OCSyncRecord *syncRecord = nil;
+	OCSyncRecordID recordID;
+	OCSyncRecordRevision revision;
 
-	if ((syncRecord = [OCSyncRecord syncRecordFromSerializedData:(NSData *)rowDictionary[@"recordData"]]) != nil)
+	if ((recordID = (OCSyncRecordID)rowDictionary[@"recordID"]) != nil)
 	{
-		OCSyncRecordID recordID;
-
-		if ((recordID = (OCSyncRecordID)rowDictionary[@"recordID"]) != nil)
+		if ((revision = (OCSyncRecordRevision)rowDictionary[@"revision"]) != nil)
 		{
-			syncRecord.recordID = recordID;
+			if (_syncRecordsByID != nil)
+			{
+				@synchronized(self.sqlDB)
+				{
+					if ([_syncRecordsByID[recordID].revision isEqual:revision])
+					{
+						// Use cached sync record if its revision hasn't changed
+						syncRecord = _syncRecordsByID[recordID];
+					}
+				}
+			}
+		}
 
+		if (syncRecord == nil)
+		{
+			if ((syncRecord = [OCSyncRecord syncRecordFromSerializedData:(NSData *)rowDictionary[@"recordData"]]) != nil)
+			{
+				syncRecord.recordID = recordID;
+				syncRecord.revision = revision;
+
+				// Add to cache
+				if (_syncRecordsByID != nil)
+				{
+					@synchronized(self.sqlDB)
+					{
+						_syncRecordsByID[recordID] = syncRecord;
+					}
+				}
+			}
+		}
+
+		if (syncRecord != nil)
+		{
 			@synchronized(self.sqlDB)
 			{
 				syncRecord.progress.progress = _progressBySyncRecordID[syncRecord.recordID];

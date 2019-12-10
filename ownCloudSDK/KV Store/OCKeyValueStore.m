@@ -56,6 +56,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		fallbackClasses = [[NSSet alloc] initWithObjects:
 			[NSArray class],
 			[NSDictionary class],
+			[NSSet class],
 
 			[NSString class],
 			[NSNumber class],
@@ -65,6 +66,48 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	});
 
 	return (fallbackClasses);
+}
+
++ (NSMutableDictionary<OCKeyValueStoreKey, NSSet<Class> *> *)_sharedRegisteredClassesForKey
+{
+	static NSMutableDictionary<OCKeyValueStoreKey, NSSet<Class> *> *sharedRegisteredClassesForKey;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		sharedRegisteredClassesForKey= [NSMutableDictionary new];
+	});
+
+	return (sharedRegisteredClassesForKey);
+}
+
++ (NSSet<Class> *)registeredClassesForKey:(OCKeyValueStoreKey)key
+{
+	NSMutableDictionary<OCKeyValueStoreKey, NSSet<Class> *> *sharedRegisteredClassesForKey = [self _sharedRegisteredClassesForKey];
+
+	@synchronized(sharedRegisteredClassesForKey)
+	{
+		return (sharedRegisteredClassesForKey[key]);
+	}
+}
+
++ (void)registerClass:(Class)objectClass forKey:(OCKeyValueStoreKey)key
+{
+	NSMutableDictionary<OCKeyValueStoreKey, NSSet<Class> *> *sharedRegisteredClassesForKey = [self _sharedRegisteredClassesForKey];
+
+	@synchronized(sharedRegisteredClassesForKey)
+	{
+		sharedRegisteredClassesForKey[key] = [NSSet setWithObject:objectClass];
+	}
+}
+
++ (void)registerClasses:(NSSet<Class> *)classes forKey:(OCKeyValueStoreKey)key
+{
+	NSMutableDictionary<OCKeyValueStoreKey, NSSet<Class> *> *sharedRegisteredClassesForKey = [self _sharedRegisteredClassesForKey];
+
+	@synchronized(sharedRegisteredClassesForKey)
+	{
+		sharedRegisteredClassesForKey[key] = classes;
+	}
 }
 
 #pragma mark - Init
@@ -285,6 +328,11 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		if (keyClasses == nil)
 		{
+			keyClasses = [OCKeyValueStore registeredClassesForKey:key];
+		}
+
+		if (keyClasses == nil)
+		{
 			keyClasses = [OCKeyValueStore fallbackClasses];
 		}
 
@@ -393,7 +441,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	}
 }
 
-- (void)notifyObserversForKey:(OCKeyValueStoreKey)key ofNewValue:(id)newValue
+- (void)notifyObserversOfNewValueForKey:(OCKeyValueStoreKey)key
 {
 	NSMapTable<id, OCKeyValueStoreObserver> *observersByOwner;
 
@@ -401,6 +449,8 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	{
 		if ((observersByOwner = _observersByOwnerByKey[key]) != nil)
 		{
+			id newValue = [self readObjectForKey:key];
+
 			observersByOwner = [observersByOwner copy];
 
 			for (id owner in observersByOwner)
@@ -584,7 +634,7 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		// Notify observers
 		for (OCKeyValueStoreKey key in changedKeys)
 		{
-			[self notifyObserversForKey:key ofNewValue:[self readObjectForKey:key]];
+			[self notifyObserversOfNewValueForKey:key];
 		}
 	}
 }

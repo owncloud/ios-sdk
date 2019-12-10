@@ -43,8 +43,11 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_appGroupIdentifier;
 	NSURL *_appGroupContainerURL;
 	NSURL *_appGroupLogsContainerURL;
+
 	NSString *_appName;
-	
+	NSString *_appVersion;
+	NSString *_appBuildNumber;
+
 	OCKeychain *_keychain;
 	NSUserDefaults *_userDefaults;
 }
@@ -57,6 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nonatomic,nullable) NSString *appGroupIdentifier;
 
 @property(strong,nonatomic,nullable) NSString *appName;
+@property(strong,nonatomic,nullable) NSString *appVersion;
+@property(strong,nonatomic,nullable) NSString *appBuildNumber;
 
 @property(strong,nonatomic,readonly,nullable) NSString *sdkCommit;
 @property(strong,nonatomic,readonly,nullable) NSString *sdkVersionString;

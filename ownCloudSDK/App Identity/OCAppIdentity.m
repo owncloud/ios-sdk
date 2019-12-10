@@ -90,9 +90,9 @@
 		if (![[NSFileManager defaultManager] fileExistsAtPath:[_appGroupLogsContainerURL path]])
 		{
 			[[NSFileManager defaultManager] createDirectoryAtURL:_appGroupLogsContainerURL
-									 withIntermediateDirectories:NO
-													  attributes:nil
-														   error:nil];
+						 withIntermediateDirectories:NO
+								  attributes:nil
+								       error:nil];
 		}
 	}
 
@@ -107,6 +107,27 @@
 	}
 	
 	return (_appName);
+}
+
+- (NSString *)appVersion
+{
+	if (_appVersion == nil)
+	{
+		_appVersion = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+	}
+
+	return (_appVersion);
+}
+
+
+- (NSString *)appBuildNumber
+{
+	if (_appBuildNumber == nil)
+	{
+		_appBuildNumber = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleVersionKey];
+	}
+
+	return (_appBuildNumber);
 }
 
 - (NSString *)sdkCommit

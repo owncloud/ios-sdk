@@ -47,6 +47,7 @@ typedef NSString* OCSyncActionIdentifier NS_TYPED_ENUM;
 typedef NSString* OCSyncActionParameter NS_TYPED_ENUM;
 typedef NSString* OCSyncActionCategory NS_TYPED_ENUM;
 typedef NSNumber* OCSyncRecordID;
+typedef NSNumber* OCSyncRecordRevision;
 
 typedef NSNumber* OCSyncLaneID;
 typedef NSString* OCSyncLaneTag;

@@ -20,11 +20,13 @@
 #import "OCHTTPPipelineTask.h"
 #import "NSURLSessionTaskMetrics+OCCompactSummary.h"
 #import "OCVault+Internal.h"
+#import "OCFeatureAvailability.h"
 
 @implementation OCSyncAction (FileProviderProgressReporting)
 
 - (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext * _Nonnull)syncContext
 {
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 	if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 	{
 		/*
@@ -85,6 +87,7 @@
 			}
 		}
 	}
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 }
 
 @end

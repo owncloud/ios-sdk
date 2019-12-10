@@ -17,9 +17,13 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <FileProvider/FileProvider.h>
+#import "OCFeatureAvailability.h"
 #import "OCBookmark.h"
 #import "OCKeyValueStore.h"
+
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+#import <FileProvider/FileProvider.h>
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @class OCDatabase;
 @class OCItem;
@@ -38,10 +42,12 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	NSURL *_httpPipelineRootURL;
 	NSURL *_temporaryDownloadURL;
 
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 	NSFileProviderDomain *_fileProviderDomain;
 	NSFileProviderManager *_fileProviderManager;
 	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	NSString *_fileProviderSignalCountByContainerItemIdentifiersLock;
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 	OCDatabase *_database;
 }
@@ -61,8 +67,10 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
 
+#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 @property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
 @property(nullable,readonly,nonatomic) NSFileProviderManager *fileProviderManager; //!< File provider manager for .fileProviderDomain
+#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 + (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark;
 
