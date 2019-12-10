@@ -1,3 +1,11 @@
+## 1.1.2 version
+
+- Fix for long delays before starting a request on iOS 13.1
+
+## 1.1.1 version
+
+- OAuth2/OIDC improvements
+
 ## 1.1.0 version
 
 - Background Upload Support
