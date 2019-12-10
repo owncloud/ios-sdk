@@ -57,7 +57,7 @@
 		uploadItem.lastUsed = [NSDate new];
 		[uploadItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
-		if (uploadItem.isPlaceholder)
+		if (uploadItem.isPlaceholder && (uploadItem.databaseID == nil))
 		{
 			syncContext.addedItems = @[ uploadItem ];
 		}
@@ -203,7 +203,7 @@
 		OCItem *uploadItem;
 		OCItem *uploadedItem = (OCItem *)event.result;
 
-		if ((uploadItem = self.localItem) != nil)
+		if ((uploadItem = self.latestVersionOfLocalItem) != nil)
 		{
 			// Transfer localID
 			uploadedItem.localID = uploadItem.localID;
