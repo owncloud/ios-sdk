@@ -1078,12 +1078,13 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
-- (void)testRequestPrivateLink
+- (void)testRequestAndResolvePrivateLink
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
 	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
 	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
 	XCTestExpectation *expectPrivateLink = [self expectationWithDescription:@"Private link retrieved"];
+	XCTestExpectation *expectPrivateLinkResolution = [self expectationWithDescription:@"Private link resolved"];
 	OCConnection *connection = nil;
 
 	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
@@ -1109,8 +1110,16 @@
 
 						[expectPrivateLink fulfill];
 
-						[connection disconnectWithCompletionHandler:^{
-							[expectDisconnect fulfill];
+						[connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, NSString * _Nullable path) {
+							XCTAssert(error == nil);
+							XCTAssert(path != nil);
+							XCTAssert([item.path isEqual:path]);
+
+							[expectPrivateLinkResolution fulfill];
+
+							[connection disconnectWithCompletionHandler:^{
+								[expectDisconnect fulfill];
+							}];
 						}];
 					}];
 					break;

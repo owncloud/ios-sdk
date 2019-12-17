@@ -286,6 +286,7 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 
 #pragma mark - Private Link
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler;
+- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, NSString * _Nullable path))completionHandler;
 
 @end
 
@@ -353,6 +354,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDWellKnown;
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
+extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;

@@ -276,6 +276,14 @@
 				case OCErrorUnnormalizedPath:
 					unlocalizedString = @"The provided path is not normalized.";
 				break;
+
+				case OCErrorPrivateLinkInvalidFormat:
+					unlocalizedString = @"Private link format invalid.";
+				break;
+
+				case OCErrorPrivateLinkResolutionFailed:
+					unlocalizedString = @"Resolution of private link failed.";
+				break;
 			}
 		}
 	}

@@ -23,6 +23,9 @@ This document provides an overview over the available sections and their setting
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/dav/files`
+	- `endpoint-webdav-meta`: Endpoint to use for WebDAV metadata
+		- type: string
+		- default: `remote.php/dav/meta`
 	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
 		- type: string
 		- default: `status.php`

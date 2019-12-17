@@ -35,6 +35,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCHTTPResponse+DAVError.h"
 #import "OCHTTPDAVRequest.h"
+#import "NSString+OCPath.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -915,6 +916,87 @@
 
 		return (progress);
 	}
+}
+
+- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, NSString * _Nullable path))completionHandler
+{
+	NSProgress *progress = nil;
+	NSArray<NSString *> *pathComponents = nil;
+	NSString *privateFileID = nil;
+
+	if ((pathComponents = privateLink.path.pathComponents) != nil)
+	{
+		if (pathComponents.count > 1)
+		{
+			if ([[pathComponents objectAtIndex:pathComponents.count-2] isEqual:@"f"])
+			{
+				privateFileID = pathComponents.lastObject;
+			}
+		}
+	}
+
+	if (privateFileID != nil)
+	{
+		OCHTTPDAVRequest *davRequest;
+		NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVMeta options:nil];
+
+		davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[endpointURL URLByAppendingPathComponent:privateFileID] depth:0];
+		davRequest.requiredSignals = self.propFindSignals;
+
+		[davRequest.xmlRequestPropAttribute addChildren:@[
+			[OCXMLNode elementWithName:@"oc:meta-path-for-user"],
+			// [OCXMLNode elementWithName:@"D:resourcetype"]
+		]];
+
+		progress = [self sendRequest:davRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			if ((error == nil) && (response.status.isSuccess))
+			{
+				NSArray <NSError *> *errors = nil;
+				NSArray <OCItem *> *items = nil;
+
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				{
+					NSString *path;
+
+					if ((path = items.firstObject.path) != nil)
+					{
+						// OC Server will return "/Documents" for the documents folder => make sure to normalize the path to follow OCPath conventions in that case
+						// Update: the value of D:resourcetype is not correct. OC server will return d:collection for files, too.
+						// if (items.firstObject.type == OCItemTypeCollection)
+						// {
+						// 	path = [path normalizedDirectoryPath];
+						// }
+
+						completionHandler(nil, path);
+						return;
+					}
+				}
+
+				error = OCError(OCErrorPrivateLinkResolutionFailed);
+			}
+			else
+			{
+				if (error == nil)
+				{
+					error = response.bodyParsedAsDAVError;
+				}
+
+				if (error == nil)
+				{
+					error = response.status.error;
+				}
+			}
+
+			completionHandler(error, nil);
+		}];
+	}
+	else
+	{
+		// Private File ID couldn't be determined
+		completionHandler(OCError(OCErrorPrivateLinkInvalidFormat), nil);
+	}
+
+	return (progress);
 }
 
 @end
