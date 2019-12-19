@@ -40,4 +40,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCActivityIdentifier OCActivityIdentifierPendingServerScanJobsSummary; //!< The activity reporting the progress of background checks for updates
+
 NS_ASSUME_NONNULL_END
