@@ -833,6 +833,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							}
 						}
 
+						// Save server status to bookmark
+						if ((serverStatus != nil) && (self->_bookmark != nil))
+						{
+							[self->_bookmark.userInfo setObject:serverStatus forKey:OCBookmarkUserInfoKeyStatusInfo];
+							[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
+						}
+
 						// Authenticate connection
 						connectProgress.localizedDescription = OCLocalizedString(@"Authenticating…", @"");
 

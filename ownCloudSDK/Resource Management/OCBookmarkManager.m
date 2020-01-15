@@ -213,7 +213,7 @@
 	}
 }
 
-- (OCBookmark *)bookmarkForUUID:(NSUUID *)uuid
+- (OCBookmark *)bookmarkForUUID:(OCBookmarkUUID)uuid
 {
 	@synchronized(self)
 	{
