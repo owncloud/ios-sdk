@@ -27,6 +27,16 @@
 // Automatically register
 OCAuthenticationMethodAutoRegister
 
+#pragma mark - Class settings
++ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	NSMutableDictionary<NSString *,id> *defaultSettings = [[super defaultSettingsForIdentifier:identifier] mutableCopy];
+
+	[defaultSettings setObject:@"oc.ios://ios.owncloud.com" forKey:OCAuthenticationMethodOpenIDConnectRedirectURI];
+
+	return (defaultSettings);
+}
+
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type
 {
@@ -70,7 +80,7 @@ OCAuthenticationMethodAutoRegister
 
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
 {
-	return (@"oc.ios://ios.owncloud.com");
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectRedirectURI]);
 }
 
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
@@ -205,3 +215,5 @@ OCAuthenticationMethodAutoRegister
 @end
 
 OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect = @"com.owncloud.openid-connect";
+
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";

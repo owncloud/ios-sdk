@@ -130,7 +130,7 @@ This document provides an overview over the available sections and their setting
 		- type: boolean
 		- default: `false`
 
-## OAuth2
+## OAuth2 / OpenID Connect
 
 - **Section ID**: `authentication-oauth2`
 
@@ -141,15 +141,18 @@ This document provides an overview over the available sections and their setting
 	- `oa2-token-endpoint`: OAuth2 token endpoint
 		- type: string
 		- default: `index.php/apps/oauth2/api/v1/token`
-	- `oa2-redirect-uri`: OAuth2 Redirect URI
-		- type: string
-		- default: `oc://ios.owncloud.com`
 	- `oa2-client-id`: OAuth2 Client ID
 		- type: string
 		- default: `mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1`
 	- `oa2-client-secret`: OAuth2 Client Secret
 		- type: string
-		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`
+		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`		
+	- `oa2-redirect-uri`: OAuth2 Redirect URI
+		- type: string
+		- default: `oc://ios.owncloud.com`
+	- `oidc-redirect-uri`: OpenID Connect Redirect URI
+		- type: string
+		- default: `oc.ios://ios.owncloud.com`
 
 # Managed configuration
 
