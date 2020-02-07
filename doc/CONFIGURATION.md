@@ -153,6 +153,10 @@ This document provides an overview over the available sections and their setting
 	- `oidc-redirect-uri`: OpenID Connect Redirect URI
 		- type: string
 		- default: `oc.ios://ios.owncloud.com`
+	- `oidc-scope`: OpenID Connect Scope
+		- type: string
+		- default: `openid offline_access email`
+		
 
 # Managed configuration
 
