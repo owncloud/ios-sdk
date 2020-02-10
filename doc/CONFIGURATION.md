@@ -23,6 +23,9 @@ This document provides an overview over the available sections and their setting
 	- `endpoint-webdav`: Endpoint to use for WebDAV
 		- type: string
 		- default: `remote.php/dav/files`
+	- `endpoint-webdav-meta`: Endpoint to use for WebDAV metadata
+		- type: string
+		- default: `remote.php/dav/meta`
 	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
 		- type: string
 		- default: `status.php`
@@ -127,7 +130,7 @@ This document provides an overview over the available sections and their setting
 		- type: boolean
 		- default: `false`
 
-## OAuth2
+## OAuth2 / OpenID Connect
 
 - **Section ID**: `authentication-oauth2`
 
@@ -138,15 +141,22 @@ This document provides an overview over the available sections and their setting
 	- `oa2-token-endpoint`: OAuth2 token endpoint
 		- type: string
 		- default: `index.php/apps/oauth2/api/v1/token`
-	- `oa2-redirect-uri`: OAuth2 Redirect URI
-		- type: string
-		- default: `oc://ios.owncloud.com`
 	- `oa2-client-id`: OAuth2 Client ID
 		- type: string
 		- default: `mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1`
 	- `oa2-client-secret`: OAuth2 Client Secret
 		- type: string
-		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`
+		- default: `KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx`		
+	- `oa2-redirect-uri`: OAuth2 Redirect URI
+		- type: string
+		- default: `oc://ios.owncloud.com`
+	- `oidc-redirect-uri`: OpenID Connect Redirect URI
+		- type: string
+		- default: `oc.ios://ios.owncloud.com`
+	- `oidc-scope`: OpenID Connect Scope
+		- type: string
+		- default: `openid offline_access email`
+		
 
 # Managed configuration
 

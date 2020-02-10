@@ -205,6 +205,13 @@
 				}
 			} copy],
 
+			@"oc:meta-path-for-user" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.path = value;
+				}
+			} copy],
+
 			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{
@@ -515,4 +522,17 @@ x-frame-options: SAMEORIGIN
  </data>
 </ocs>
 
+// Meta resolution of private link to path
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:oc="http://owncloud.org/ns">
+	<d:response>
+		<d:href>/remote.php/dav/meta/27/</d:href>
+		<d:propstat>
+			<d:prop>
+				<oc:meta-path-for-user>/ownCloud Manual.pdf</oc:meta-path-for-user>
+			</d:prop>
+			<d:status>HTTP/1.1 200 OK</d:status>
+		</d:propstat>
+	</d:response>
+</d:multistatus>
 */

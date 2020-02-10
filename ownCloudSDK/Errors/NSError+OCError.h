@@ -95,7 +95,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemPolicyRedundant, //!< Another item policy of the same kind already includes the item, making the addition of this item policy redundant. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
 	OCErrorItemPolicyMakesRedundant, //!< Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
 
-	OCErrorUnnormalizedPath //!< The provided path is not normalized.
+	OCErrorUnnormalizedPath, //!< The provided path is not normalized.
+
+	OCErrorPrivateLinkInvalidFormat, //!< Private link format invalid.
+	OCErrorPrivateLinkResolutionFailed //!< Resolution of private link failed
 };
 
 @class OCIssue;

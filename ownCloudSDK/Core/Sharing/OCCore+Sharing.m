@@ -76,7 +76,7 @@
 			{
 				if (shareQuery.refreshInterval > 0)
 				{
-					if (((-shareQuery.lastRefreshed.timeIntervalSinceNow) > shareQuery.refreshInterval) &&
+					if ((((shareQuery.lastRefreshed!=nil) && ((-shareQuery.lastRefreshed.timeIntervalSinceNow) > shareQuery.refreshInterval)) || (shareQuery.lastRefreshed == nil)) &&
 					    ((-shareQuery.lastRefreshStarted.timeIntervalSinceNow) > shareQuery.refreshInterval))
 					{
 						shareQuery.lastRefreshStarted = [NSDate new];
@@ -124,8 +124,14 @@
 			if (earliestRefresh != nil)
 			{
 				__weak OCCore *weakSelf = self;
+				NSTimeInterval nextRefreshFromNow = earliestRefresh.timeIntervalSinceNow;
 
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(earliestRefresh.timeIntervalSinceNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
+				if (nextRefreshFromNow < 0)
+				{
+					nextRefreshFromNow = 1.0;
+				}
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(nextRefreshFromNow * ((NSTimeInterval)NSEC_PER_SEC))), self->_queue, ^{
 					OCCore *strongSelf;
 
 					if (((strongSelf = weakSelf) != nil) &&  (strongSelf.state == OCCoreStateRunning))
@@ -324,6 +330,65 @@
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler
 {
 	return ([_connection retrievePrivateLinkForItem:item completionHandler:completionHandler]);
+}
+
+- (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
+{
+	NSProgress *progress = [_connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, NSString * _Nullable path) {
+		if (error != nil)
+		{
+			// Forward error
+			completionHandler(error, nil);
+		}
+		else
+		{
+			// Resolve to item
+			__block NSMutableArray<OCCoreItemTracking> *trackings = [NSMutableArray new];
+			__block BOOL trackingCompleted = NO;
+			OCCoreItemTracking tracking;
+
+			if ((tracking = [self trackItemAtPath:path trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+				BOOL endTracking = NO;
+
+				if (trackingCompleted)
+				{
+					return;
+				}
+
+				if (error != nil)
+				{
+					// An error occured
+					trackingCompleted = YES;
+					completionHandler(error, nil);
+					endTracking = YES;
+				}
+				else if (item != nil)
+				{
+					trackingCompleted = YES;
+					completionHandler(nil, item);
+					endTracking = YES;
+				}
+
+				if (endTracking)
+				{
+					// Remove "tracking" so it is released and the tracking ends
+					@synchronized(trackings)
+					{
+						[trackings removeAllObjects];
+					}
+				}
+			}]) != nil)
+			{
+				// Make sure "tracking" isn't released until the item was resolved
+				@synchronized(trackings)
+				{
+					[trackings addObject:tracking];
+				}
+			}
+		}
+	}];
+
+	return (progress);
 }
 
 @end

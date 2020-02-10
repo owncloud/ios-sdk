@@ -275,7 +275,8 @@
 
 @end
 
-NSString *OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
+OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo = @"statusInfo";
+OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

@@ -1046,5 +1046,127 @@
 	[self waitForExpectationsWithTimeout:120.0 handler:nil];
 }
 
+#pragma mark - Private Links
+- (void)_testPrivateLinkCreationAndResolutionWithTestItemSelector:(void(^)(OCConnection *connection, NSArray<OCItem *> *rootItems, void(^completionHandler)(OCItem *item)))testItemSelector
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectDisconnect = [self expectationWithDescription:@"Disconnected"];
+	XCTestExpectation *expectLists = [self expectationWithDescription:@"Lists"];
+	XCTestExpectation *expectPrivateLink = [self expectationWithDescription:@"Private link retrieved"];
+	XCTestExpectation *expectPrivateLinkResolution = [self expectationWithDescription:@"Private link resolved"];
+	XCTestExpectation *expectCoreStopped = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *expectEraseComplete = [self expectationWithDescription:@"Erase complete"];
+	OCConnection *connection = nil;
+
+	connection = [[OCConnection alloc] initWithBookmark:OCTestTarget.adminBookmark];
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[expectLists fulfill];
+
+			testItemSelector(connection, items, ^(OCItem *item) {
+				[connection retrievePrivateLinkForItem:item completionHandler:^(NSError * _Nullable error, NSURL * _Nullable privateLink) {
+					XCTAssert(error == nil);
+					XCTAssert(privateLink != nil);
+					XCTAssert(item.privateLink == privateLink);
+
+					OCLogDebug(@"error=%@, privateLink: %@", error, privateLink);
+
+					[expectPrivateLink fulfill];
+
+					[connection disconnectWithCompletionHandler:^{
+						[expectDisconnect fulfill];
+					}];
+
+					// Resolve with core
+					OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.adminBookmark];
+
+					[core startWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert(error == nil);
+
+						[core retrieveItemForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, OCItem * _Nullable resolvedItem) {
+							XCTAssert(error == nil);
+							XCTAssert(resolvedItem != nil);
+							XCTAssert(resolvedItem.path != nil);
+							XCTAssert([item.path isEqual:resolvedItem.path]);
+
+							[expectPrivateLinkResolution fulfill];
+
+							OCLogDebug(@"Original Item: %@\nPrivate Link: %@\nResolved Item: %@", item, privateLink, resolvedItem);
+
+							[core stopWithCompletionHandler:^(id sender, NSError *error) {
+								[expectCoreStopped fulfill];
+
+								[core.vault eraseWithCompletionHandler:^(id sender, NSError *error) {
+									[expectEraseComplete fulfill];
+								}];
+							}];
+						}];
+					}];
+				}];
+			});
+		}];
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testPrivateLinkCreationAndResolutionWithFileInRoot
+{
+	[self _testPrivateLinkCreationAndResolutionWithTestItemSelector:^(OCConnection *connection, NSArray<OCItem *> *items, void (^completionHandler)(OCItem *item)) {
+		for (OCItem *item in items)
+		{
+			if ((item.type == OCItemTypeFile) && (item.privateLink == nil))
+			{
+				completionHandler(item);
+				break;
+			}
+		}
+	}];
+}
+
+- (void)testPrivateLinkCreationAndResolutionWithFolderInRoot
+{
+	[self _testPrivateLinkCreationAndResolutionWithTestItemSelector:^(OCConnection *connection, NSArray<OCItem *> *items, void (^completionHandler)(OCItem *item)) {
+		for (OCItem *item in items)
+		{
+			if ((item.type == OCItemTypeCollection) && (item.privateLink == nil) && !item.isRoot)
+			{
+				completionHandler(item);
+				break;
+			}
+		}
+	}];
+}
+
+- (void)testPrivateLinkCreationAndResolutionWithFileInSubfolder
+{
+	[self _testPrivateLinkCreationAndResolutionWithTestItemSelector:^(OCConnection *connection, NSArray<OCItem *> *items, void (^completionHandler)(OCItem *item)) {
+		for (OCItem *item in items)
+		{
+			if ((item.type == OCItemTypeCollection) && (item.privateLink == nil) && !item.isRoot)
+			{
+				[connection retrieveItemListAtPath:item.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *subItems) {
+					for (OCItem *item in subItems)
+					{
+						if ((item.type == OCItemTypeFile) && (item.privateLink == nil))
+						{
+							completionHandler(item);
+							break;
+						}
+					}
+				}];
+
+				break;
+			}
+		}
+	}];
+}
 
 @end

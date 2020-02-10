@@ -1185,14 +1185,25 @@
 			query = [OCQuery queryForPath:path];
 			query.includeRootItem = YES;
 
+			NSString *pathAsDirectory = path.normalizedDirectoryPath;
+
 			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 				if (weakTrackingObject != nil)
 				{
-					OCItem *item = query.queryResults.firstObject;
+					OCItem *item = nil;
+
+					for (OCItem *queryItem in query.queryResults)
+					{
+						if ([queryItem.path isEqual:path] || [queryItem.path isEqual:pathAsDirectory])
+						{
+							item = queryItem;
+							break;
+						}
+					}
 
 					if (item != nil)
 					{
-						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						trackingHandler(nil, item, isFirstInvocation);
 						isFirstInvocation = NO;
 					}
 					else

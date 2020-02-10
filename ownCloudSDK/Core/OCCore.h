@@ -349,6 +349,7 @@ typedef id<NSObject> OCCoreItemTracking;
 - (OCRecipientSearchController *)recipientSearchControllerForItem:(OCItem *)item; //!< Returns a recipient search controller for the provided item
 
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
+- (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
 
 @end
 

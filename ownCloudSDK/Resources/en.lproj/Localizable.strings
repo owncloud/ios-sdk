@@ -277,3 +277,9 @@
 
 // OCErrorUnnormalizedPath
 "The provided path is not normalized." = "The provided path is not normalized.";
+
+// OCErrorPrivateLinkInvalidFormat
+"Private link format invalid." = "Private link format invalid.";
+
+// OCErrorPrivateLinkResolutionFailed
+"Resolution of private link failed." = "Resolution of private link failed.";

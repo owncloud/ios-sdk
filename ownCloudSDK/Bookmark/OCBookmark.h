@@ -28,6 +28,8 @@ typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 	OCBookmarkAuthenticationDataStorageMemory	//!< Store authenticationData in memory. Should only be used temporarily, for f.ex. editing contexts, where temporarily decoupling the data from the keychain can be desirable.
 };
 
+typedef NSString* OCBookmarkUserInfoKey NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCBookmark : NSObject <NSSecureCoding, NSCopying>
@@ -62,7 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-extern NSString *OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
+extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo; //!<  .userInfo key with a NSDictionary holding the info from "status.php".
+extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
 
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 

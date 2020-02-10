@@ -30,4 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect;
 
+extern OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI;
+extern OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope;
+
 NS_ASSUME_NONNULL_END

@@ -27,6 +27,17 @@
 // Automatically register
 OCAuthenticationMethodAutoRegister
 
+#pragma mark - Class settings
++ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	NSMutableDictionary<NSString *,id> *defaultSettings = [[super defaultSettingsForIdentifier:identifier] mutableCopy];
+
+	defaultSettings[OCAuthenticationMethodOpenIDConnectRedirectURI] = @"oc.ios://ios.owncloud.com";
+	defaultSettings[OCAuthenticationMethodOpenIDConnectScope] = @"openid offline_access email";
+
+	return (defaultSettings);
+}
+
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type
 {
@@ -70,7 +81,7 @@ OCAuthenticationMethodAutoRegister
 
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
 {
-	return (@"oc.ios://ios.owncloud.com");
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectRedirectURI]);
 }
 
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
@@ -102,7 +113,7 @@ OCAuthenticationMethodAutoRegister
 
 - (NSString *)scope
 {
-	return (@"openid offline_access");
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectScope]);
 }
 
 - (NSString *)prompt
@@ -205,3 +216,6 @@ OCAuthenticationMethodAutoRegister
 @end
 
 OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect = @"com.owncloud.openid-connect";
+
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";

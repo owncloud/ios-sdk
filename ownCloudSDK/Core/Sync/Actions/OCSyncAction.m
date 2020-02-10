@@ -20,6 +20,12 @@
 #import "OCWaitCondition.h"
 #import <objc/runtime.h>
 
+@interface OCSyncAction ()
+{
+	OCItem *_localItemCached;
+}
+@end
+
 @implementation OCSyncAction
 
 #pragma mark - Init
@@ -36,6 +42,23 @@
 	}
 
 	return (self);
+}
+
+#pragma mark - Local ID
+- (OCItem *)latestVersionOfLocalItem
+{
+	if (_localItemCached == nil)
+	{
+		OCSyncExec(cacheItemRetrieval, {
+			[self.core.vault.database retrieveCacheItemForLocalID:self.localItem.localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+				self->_localItemCached = item;
+
+				OCSyncExecDone(cacheItemRetrieval);
+			}];
+		});
+	}
+
+	return ((_localItemCached != nil) ? _localItemCached : _localItem);
 }
 
 #pragma mark - Implementation
@@ -287,8 +310,8 @@
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 
 		_localItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"localItem"];
-		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
+		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 		_parameters = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"parameters"];
 
 		_laneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"laneTags"];
