@@ -116,6 +116,17 @@
 
 	if ((item = self.localItem) != nil)
 	{
+		OCItem *latestVersionOfItem;
+
+		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:nil]) != nil)
+		{
+			[latestVersionOfItem prepareToReplace:item];
+
+			OCLogDebug(@"Descheduling - and updating %@ with replacement %@", item, latestVersionOfItem);
+
+			item = latestVersionOfItem;
+		}
+
 		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
 		syncContext.updatedItems = @[ item ];
@@ -423,9 +434,31 @@
 		}
 		else
 		{
-			// Create cancellation issue for any errors (TODO: extend options to include "Retry")
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[downloadError localizedDescription] impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
-			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
+			BOOL handledError = NO;
+
+			if ([downloadError.domain isEqual:OCHTTPStatusErrorDomain] && (downloadError.code == OCHTTPStatusCodePRECONDITION_FAILED))
+			{
+				// Precondition failed: ETag of the file to download has changed on the server
+				// For Available Offline, this can be handled automatically
+				OCLogError(@"Download %@ error %@ => ETag on the server likely changed from the last known ETag", item, downloadError);
+
+				if ([self.options[OCCoreOptionDownloadTriggerID] isEqual:OCItemDownloadTriggerIDAvailableOffline])
+				{
+					OCLogError(@"Download %@ is an available offline download => descheduling automatically without raising an issue", item);
+
+					[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:downloadError parameter:nil];
+					handledError = YES;
+				}
+			}
+
+			if (!handledError)
+			{
+				// Create cancellation issue for any errors (TODO: extend options to include "Retry")
+				OCLogError(@"Wrapping download %@ error %@ into cancellation issue", item, downloadError);
+
+				[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[downloadError localizedDescription] impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+				[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
+			}
 		}
 	}
 
