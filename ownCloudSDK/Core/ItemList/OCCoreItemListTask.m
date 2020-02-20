@@ -145,6 +145,14 @@
 			[self->_core queueConnectivityBlock:^{
 				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
 					NSProgress *retrievalProgress;
+					
+					if (self->_core.connection.state == OCConnectionStateDisconnected)
+					{
+						self->_retrievedSet.state = OCCoreItemListStateFailed;
+						self.changeHandler(self->_core, self);
+						completionHandler();
+						return;
+					}
 
 					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:((self.groupID != nil) ? @{ OCConnectionOptionGroupIDKey : self.groupID } : nil) completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 						if (self.core.state != OCCoreStateRunning)
@@ -342,6 +350,13 @@
 	activity.progress = NSProgress.indeterminateProgress;
 
 	return (activity);
+}
+
+#pragma mark - Debug description
+
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, path: %@, groupID: %@, cachedSet: %@, retrievedSet: %@, mergeStatus: %lu, syncAnchorAtStart: %@", NSStringFromClass(self.class), self, self.path, self.groupID, self.cachedSet, self.retrievedSet, self.mergeStatus, self.syncAnchorAtStart]);
 }
 
 @end

@@ -224,4 +224,9 @@
 	return (_itemParentPaths);
 }
 
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, state: %lu, itemCount: %lu>", NSStringFromClass(self.class), self, self.state, self.items.count]);
+}
+			 
 @end

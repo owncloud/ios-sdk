@@ -415,6 +415,11 @@
 	}
 }
 
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, Path: %@, State: %lu, Has changes: %@, Full result count: %lu, Processed result count: %lu, _needsRecomputation: %@>", NSStringFromClass(self.class), self, self.queryPath, self.state, self.hasChangesAvailable ? @"YES" : @"NO", _fullQueryResults.count, _processedQueryResults.count, _needsRecomputation ? @"YES" : @"NO"]);
+}
+
 @end
 
 NSNotificationName OCQueryDidChangeStateNotification = @"OCQueryDidChangeState";
