@@ -34,6 +34,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPStatus.h>
 #import <ownCloudSDK/NSError+OCHTTPStatus.h>
 #import <ownCloudSDK/NSError+OCDAVError.h>
+#import <ownCloudSDK/NSError+OCNetworkFailure.h>
 
 #import <ownCloudSDK/OCAppIdentity.h>
 

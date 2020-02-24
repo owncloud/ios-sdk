@@ -227,7 +227,9 @@
 		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
-//		_connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
+		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
+		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDNetworkAvailable, OCConnectionSignalIDAuthenticationAvailable, nil]; // will make sharing queries "hang", resulting in core not being able to stop
+		_connection.authSignals = [NSSet setWithObjects: OCConnectionSignalIDNetworkAvailable, nil]; // avoid an endless loop where requests are rescheduled due to an expired token, the auth method can't fetch a new token due to an unreachable network, and then the original request is rescheduled, resulting in an endless loop of reschedules and failures due to an unreachable network
 		_connection.delegate = self;
 
 		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
@@ -373,6 +375,10 @@
 				// Setup item policies
 				[self setupItemPolicies];
 
+				// Core is ready
+				[self _updateState:OCCoreStateReady];
+
+				// Attempt connecting
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
 			}
@@ -412,7 +418,7 @@
 
 			OCTLogDebug(stopTags, @"performing stop request");
 
-			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
+			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateReady) || (self->_state == OCCoreStateStarting))
 			{
 				__weak OCCore *weakSelf = self;
 
@@ -534,7 +540,7 @@
 - (void)_attemptConnect
 {
 	[self queueConnectivityBlock:^{
-		if ((self->_state == OCCoreStateStarting) && self->_attemptConnect)
+		if ((self->_state == OCCoreStateReady) && self->_attemptConnect)
 		{
 			// Open connection
 			dispatch_suspend(self->_connectivityQueue);
@@ -748,8 +754,8 @@
 	if (query != nil)
 	{
 		[self queueBlock:^{
-			[self->_queries removeObject:query];
 			query.state = OCQueryStateStopped;
+			[self->_queries removeObject:query];
 		}];
 	}
 
@@ -1775,6 +1781,7 @@ OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 
 OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
+OCConnectionSignalID OCConnectionSignalIDNetworkAvailable = @"networkAvailable";
 
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";

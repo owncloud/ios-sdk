@@ -67,6 +67,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 @synthesize actionSignals = _actionSignals;
 @synthesize propFindSignals = _propFindSignals;
+@synthesize authSignals = _authSignals;
 
 @synthesize state = _state;
 
@@ -204,6 +205,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 		_propFindSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		_authSignals = [NSSet set];
 
 		_usersByUserID = [NSMutableDictionary new];
 
@@ -1161,6 +1163,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		if (options[OCConnectionOptionGroupIDKey] != nil)
 		{
 			davRequest.groupID = options[OCConnectionOptionGroupIDKey];
+		}
+
+		if (options[OCConnectionOptionRequiredSignalsKey] != nil)
+		{
+			davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
 		}
 
 		// Attach to pipelines
@@ -2613,6 +2620,7 @@ OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey = @"is-non-critical";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
+OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 

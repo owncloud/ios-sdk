@@ -608,6 +608,7 @@ OCAuthenticationMethodAutoRegister
 	if ((tokenRequest = [OCHTTPRequest requestWithURL:tokenEndpointURL]) != nil)
 	{
 		tokenRequest.method = OCHTTPMethodPOST; // Use POST
+		tokenRequest.requiredSignals = connection.authSignals;
 		
 		[tokenRequest addParameters:parameters];
 

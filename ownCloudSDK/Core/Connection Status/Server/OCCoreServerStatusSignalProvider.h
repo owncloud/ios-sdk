@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)reportResponseIndicatingMaintenanceMode;
 
-- (void)reportConnectionRefusedError;
+- (void)reportConnectionRefusedError:(nullable NSError *)error;
 
 @end
 

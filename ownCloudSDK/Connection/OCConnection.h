@@ -112,6 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 	NSSet<OCConnectionSignalID> *_propFindSignals;
+	NSSet<OCConnectionSignalID> *_authSignals;
 
 	BOOL _attachedToPipelines;
 
@@ -142,6 +143,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSSet<OCConnectionSignalID> *actionSignals; //!< The set of signals to use for the requests of all actions
 @property(nullable,strong) NSSet<OCConnectionSignalID> *propFindSignals; //!< The set of signals to use for PROPFIND requests
+@property(nullable,strong) NSSet<OCConnectionSignalID> *authSignals; //!< The set of signals to use for authentication requests
 
 @property(assign,nonatomic) OCConnectionState state;
 @property(assign) BOOL connectionInitializationPhaseCompleted; //!< Indiciates whether the connection initialization phase has been completed.
@@ -380,6 +382,7 @@ extern OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey; // Request is n
 extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum instance to use for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
+extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OCConnectionSignalID> with the signal ids to require for the requests
 
 extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 
