@@ -84,10 +84,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					    (existingQueryTask.cachedSet.state == OCCoreItemListStateFailed))
 					{
 						// Make sure a new query is not waiting for a queued update job
-						// by notifying the core of changed to the existing query task
+						// by notifying the core of changes to the existing query task
 						// for the same target, which triggers an OCQuery update with
 						// the existing content
-						[self handleUpdatedTask:existingQueryTask];
+						// [self handleUpdatedTask:existingQueryTask];
+
+						// Instead, force an update of the cache set, due to the possibility of
+						// changes having occured since the cachedSet was first requested. Once
+						// finished, that'll also trigger -handleUpdatedTask:
+						[existingQueryTask forceUpdateCacheSet];
 					}
 				}
 			}
