@@ -21,6 +21,7 @@
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemUpdates.h"
 #import "OCCore+Claims.h"
+#import "OCWaitConditionMetaDataRefresh.h"
 
 @implementation OCSyncActionDownload
 
@@ -95,7 +96,6 @@
 		else if (returnImmediately && (self.core.connectionStatus != OCCoreConnectionStatusOnline))
 		{
 			// Item not available and asked to return immediately
-
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
 			[syncContext completeWithError:OCError(OCErrorItemNotAvailableOffline) core:self.core item:item parameter:nil];
@@ -173,6 +173,35 @@
 				[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil]; // schedule issue
 				return (OCCoreSyncInstructionStop);
 			}
+			else
+			{
+				// No locally modified version
+				OCItem *latestItemVersion = (latestVersionOfItem.remoteItem != nil) ? latestVersionOfItem.remoteItem : latestVersionOfItem;
+
+				OCLogDebug(@"record %@ download: item=%@, latestItemVersion=%@", syncContext.syncRecord, item, latestItemVersion);
+
+				if (![item.itemVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier])
+				{
+					// Database has a newer item version -> update archived server item
+					OCLogDebug(@"record %@ updating item=%@ with latestItemVersion=%@", syncContext.syncRecord, item, latestItemVersion);
+
+					_archivedServerItem = latestItemVersion;
+					_archivedServerItemData = nil; // necessary to ensure _archivedServerItem is encoded and written out
+					item = latestItemVersion;
+
+					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so new archivedServerItem is persisted
+				}
+				else
+				{
+					if ([item.localCopyVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier] && // Local copy and latest known version are identical
+					    ([self.core localCopyOfItem:item] != nil)) // Local copy actually exists
+					{
+						// Exact same file already downloaded -> prevent scheduling of download
+						[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
+						return (OCCoreSyncInstructionStop);
+					}
+				}
+			}
 		}
 	}
 
@@ -193,7 +222,7 @@
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
-		OCLogDebug(@"record %@ download: initiating download", syncContext.syncRecord);
+		OCLogDebug(@"record %@ download: initiating download of %@", syncContext.syncRecord, item);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
@@ -333,12 +362,12 @@
 					// Switch to "remoteItem" or latestVersionOfItem if eTag of downloaded file doesn't match
 					if (![item.eTag isEqual:event.file.eTag])
 					{
-						if (![item.remoteItem.eTag isEqual:event.file.eTag])
+						if ((![item.remoteItem.eTag isEqual:event.file.eTag]) && (item.remoteItem != nil))
 						{
 							[item.remoteItem prepareToReplace:item];
 							item = item.remoteItem;
 						}
-						else if (![latestVersionOfItem.eTag isEqual:event.file.eTag])
+						else if (![latestVersionOfItem.eTag isEqual:event.file.eTag] && (latestVersionOfItem != nil))
 						{
 							[latestVersionOfItem prepareToReplace:item];
 							item = latestVersionOfItem;
@@ -435,19 +464,32 @@
 		else
 		{
 			BOOL handledError = NO;
+			NSString *errorDescription = nil;
 
 			if ([downloadError.domain isEqual:OCHTTPStatusErrorDomain] && (downloadError.code == OCHTTPStatusCodePRECONDITION_FAILED))
 			{
 				// Precondition failed: ETag of the file to download has changed on the server
-				// For Available Offline, this can be handled automatically
 				OCLogError(@"Download %@ error %@ => ETag on the server likely changed from the last known ETag", item, downloadError);
 
-				if ([self.options[OCCoreOptionDownloadTriggerID] isEqual:OCItemDownloadTriggerIDAvailableOffline])
-				{
-					OCLogError(@"Download %@ is an available offline download => descheduling automatically without raising an issue", item);
+				// Request refresh of parent path
+				syncContext.refreshPaths = @[ item.path.parentPath ];
 
-					[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:downloadError parameter:nil];
+				// For anything else: wait for metadata update to happen
+				if (_resolutionRetries < 3) // limit retries until bringing up a user-facing error
+				{
+					_resolutionRetries++;
+
+					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
+
+					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
+						[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]]
+					]];
+
 					handledError = YES;
+				}
+				else
+				{
+					errorDescription = OCLocalizedString(@"The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server.", nil);
 				}
 			}
 
@@ -456,7 +498,7 @@
 				// Create cancellation issue for any errors (TODO: extend options to include "Retry")
 				OCLogError(@"Wrapping download %@ error %@ into cancellation issue", item, downloadError);
 
-				[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:[downloadError localizedDescription] impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+				[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 				[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 			}
 		}
@@ -543,11 +585,13 @@
 - (void)decodeActionData:(NSCoder *)decoder
 {
 	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
+	_resolutionRetries = (NSUInteger)[decoder decodeIntForKey:@"resolutionRetries"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
 {
 	[coder encodeObject:_options forKey:@"options"];
+	[coder encodeInteger:_resolutionRetries forKey:@"resolutionRetries"];
 }
 
 @end

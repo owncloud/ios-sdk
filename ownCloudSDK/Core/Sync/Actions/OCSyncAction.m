@@ -137,7 +137,7 @@
 					[waitCondition handleEvent:event withOptions:options sender:self];
 				}
 			}
-			else
+			else if (event.eventType != OCEventTypeWakeupSyncRecord)
 			{
 				// Pass to result handler
 				OCCoreSyncInstruction instruction;
