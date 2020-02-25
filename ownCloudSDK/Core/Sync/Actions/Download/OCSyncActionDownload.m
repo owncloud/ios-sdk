@@ -472,10 +472,13 @@
 				OCLogError(@"Download %@ error %@ => ETag on the server likely changed from the last known ETag", item, downloadError);
 
 				// Request refresh of parent path
-				syncContext.refreshPaths = @[ item.path.parentPath ];
+				if (item.path.parentPath != nil)
+				{
+					syncContext.refreshPaths = @[ item.path.parentPath ];
+				}
 
 				// For anything else: wait for metadata update to happen
-				if (_resolutionRetries < 3) // limit retries until bringing up a user-facing error
+				if ((_resolutionRetries < 3) && (item.path != nil)) // limit retries until bringing up a user-facing error
 				{
 					_resolutionRetries++;
 

@@ -42,7 +42,7 @@ typedef NS_ENUM(NSUInteger, OCKeyValueRecordType)
 - (void)updateWithObject:(id<NSSecureCoding>)object; //!< Updates .object and .data with the provided object
 - (BOOL)updateFromRecord:(OCKeyValueRecord *)otherRecord; //!< Checks otherRecord for updates and applies them. Returns YES if the record was updated from otherRecord's data, NO otherwise.
 
-- (id<NSSecureCoding>)decodeObjectWithClasses:(NSSet<Class> *)decodeClasses; //!< Decodes .data using .decodeClasses and caches the decoded object.
+- (nullable id<NSSecureCoding>)decodeObjectWithClasses:(NSSet<Class> *)decodeClasses; //!< Decodes .data using .decodeClasses and caches the decoded object.
 
 @end
 

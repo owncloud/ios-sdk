@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSString (OCRandom)
 
-+ (instancetype)stringWithRandomCharactersOfLength:(NSUInteger)length allowedCharacters:(NSString *)allowedCharacters;
++ (nullable instancetype)stringWithRandomCharactersOfLength:(NSUInteger)length allowedCharacters:(NSString *)allowedCharacters;
 
 @end
 
