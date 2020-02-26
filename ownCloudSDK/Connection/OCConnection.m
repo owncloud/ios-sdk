@@ -1576,6 +1576,18 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						}
 						break;
 
+						case OCHTTPStatusCodeFORBIDDEN: {
+							NSString *errorDescription = request.httpResponse.bodyParsedAsDAVError.davExceptionMessage;
+
+							if (errorDescription == nil)
+							{
+								errorDescription = OCLocalized(@"Uploads to this folder are not allowed.");
+							}
+
+							event.error = OCErrorWithDescription(OCErrorItemOperationForbidden, errorDescription);
+						}
+						break;
+
 						default: {
 							NSError *davError = [request.httpResponse bodyParsedAsDAVError];
 							NSString *davMessage = davError.davExceptionMessage;

@@ -82,6 +82,7 @@
 /* Upload */
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
 "Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
+"Uploads to this folder are not allowed." = "Uploads to this folder are not allowed.";
 
 /* Download */
 "Downloading %@…" = "Downloading %@…";
