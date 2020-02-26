@@ -253,16 +253,18 @@
 	}
 
 	// - Update connection signals on "unavailable" status changes
-	if ((newStatus == OCCoreConnectionStatusUnavailable) != (oldStatus == OCCoreConnectionStatusUnavailable))
+	if (((newStatus != OCCoreConnectionStatusUnavailable) != (oldStatus != OCCoreConnectionStatusUnavailable)) || !_connectionStatusInitialUpdate)
 	{
 		updateUnavailableConnectionSignal = YES;
 	}
 
 	// - Update connection signals on "online" status changes
-	if ((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline))
+	if (((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline)) || !_connectionStatusInitialUpdate)
 	{
 		updateOnlineConnectionSignal = YES;
 	}
+
+	_connectionStatusInitialUpdate = YES;
 
 	// Internal updates
 	if (reattemptConnect || reloadQueries || updateOnlineConnectionSignal)

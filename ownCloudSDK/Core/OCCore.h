@@ -147,6 +147,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCCoreState _state;
 	OCCoreStateChangedHandler _stateChangedHandler;
 
+	BOOL _connectionStatusInitialUpdate;
 	OCCoreConnectionStatus _connectionStatus;
 	OCCoreConnectionStatusSignal _connectionStatusSignals;
 	NSString *_connectionStatusShortDescription;
