@@ -39,14 +39,10 @@
 
 - (void)reloadShareQuery:(OCShareQuery *)shareQuery
 {
-	[self beginActivity:@"Reloading share query"];
-
 	[self queueBlock:^{
 		shareQuery.lastRefreshStarted = [NSDate new];
 
-		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:^{
-			[self endActivity:@"Reloading share query"];
-		}];
+		[self _pollForSharesWithScope:shareQuery.scope item:shareQuery.item completionHandler:nil];
 	}];
 }
 
@@ -149,22 +145,43 @@
 #pragma mark - Updating share queries
 - (void)_pollForSharesWithScope:(OCShareScope)scope item:(OCItem *)item completionHandler:(dispatch_block_t)completionHandler
 {
-	[self beginActivity:@"Polling for shares with scope"];
+	__weak OCCore *weakCore = self;
 
 	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
-		if (error == nil)
-		{
-			[self queueBlock:^{
-				for (OCShareQuery *query in self->_shareQueries)
-				{
-					[query _updateWithRetrievedShares:shares forItem:item scope:scope];
-				}
+		OCCore *core = weakCore;
 
+		if (core != nil)
+		{
+			if (error == nil)
+			{
+				[core beginActivity:@"Updating retrieved shares"];
+
+				[core queueBlock:^{
+					OCCore *core = weakCore;
+
+					if (core != nil)
+					{
+						for (OCShareQuery *query in core->_shareQueries)
+						{
+							[query _updateWithRetrievedShares:shares forItem:item scope:scope];
+						}
+					}
+
+					if (completionHandler != nil)
+					{
+						completionHandler();
+					}
+
+					[core endActivity:@"Updating retrieved shares"];
+				}];
+			}
+			else
+			{
 				if (completionHandler != nil)
 				{
 					completionHandler();
 				}
-			}];
+			}
 		}
 		else
 		{
@@ -173,8 +190,6 @@
 				completionHandler();
 			}
 		}
-
-		[self endActivity:@"Polling for shares with scope"];
 	}];
 }
 
