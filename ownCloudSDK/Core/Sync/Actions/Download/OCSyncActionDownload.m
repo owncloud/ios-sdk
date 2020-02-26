@@ -114,20 +114,18 @@
 {
 	OCItem *item;
 
-	if ((item = self.localItem) != nil)
+	if ((item = self.latestVersionOfLocalItem) != nil)
 	{
-		OCItem *latestVersionOfItem;
-
-		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:nil]) != nil)
-		{
-			[latestVersionOfItem prepareToReplace:item];
-
-			OCLogDebug(@"Descheduling - and updating %@ with replacement %@", item, latestVersionOfItem);
-
-			item = latestVersionOfItem;
-		}
-
 		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
+
+		if (item.remoteItem != nil)
+		{
+			[item.remoteItem prepareToReplace:item];
+
+			OCLogDebug(@"record %@ download: descheduling and replacing item %@ with newer remoteItem %@", syncContext.syncRecord, item, item.remoteItem);
+
+			item = item.remoteItem;
+		}
 
 		syncContext.updatedItems = @[ item ];
 	}
@@ -147,7 +145,18 @@
 
 		OCLogDebug(@"record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
-		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
+		latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error];
+
+		OCLogDebug(@"record %@ download: latest version from cache: %@", syncContext.syncRecord, latestVersionOfItem);
+
+		if ((latestVersionOfItem.remoteItem != nil) && ![latestVersionOfItem.remoteItem.path isEqual:latestVersionOfItem.path])
+		{
+			// File to download has been renamed, so cancel the download
+			OCLogDebug(@"record %@ download: newer server item version with different path: %@", syncContext.syncRecord, latestVersionOfItem.remoteItem);
+			latestVersionOfItem = nil;
+		}
+
+		if (latestVersionOfItem != nil)
 		{
 			// Check for locally modified version
 			if (latestVersionOfItem.locallyModified)
@@ -197,11 +206,21 @@
 					    ([self.core localCopyOfItem:item] != nil)) // Local copy actually exists
 					{
 						// Exact same file already downloaded -> prevent scheduling of download
-						[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
+						[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+
 						return (OCCoreSyncInstructionStop);
 					}
 				}
 			}
+		}
+		else
+		{
+			// Item couldn't be found in the cache and likely no longer exists
+			OCLogWarning(@"record %@ download: no item at %@ => cancelling/descheduling", syncContext.syncRecord, item);
+
+			[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+
+			return (OCCoreSyncInstructionStop);
 		}
 	}
 

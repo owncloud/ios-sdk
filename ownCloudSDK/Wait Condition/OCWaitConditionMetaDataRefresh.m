@@ -61,6 +61,15 @@
 			// Get latest remote version
 			cachedItem = (cachedItem.remoteItem != nil) ? cachedItem.remoteItem : cachedItem;
 
+			// Check path
+			if ((cachedItem.path != nil) && ![self.itemPath isEqual:cachedItem.path])
+			{
+				OCLogDebug(@"Metadata refresh wait condition found change of %@, now %@ - proceeding with sync record %@", self.itemPath, cachedItem.path, syncRecordID);
+
+				state = OCWaitConditionStateProceed;
+			}
+
+			// Check itemVersionIdentifier
 			if (self.itemVersionIdentifier != nil)
 			{
 				if (![cachedItem.itemVersionIdentifier isEqual:self.itemVersionIdentifier])
@@ -75,6 +84,8 @@
 		else
 		{
 			// Item is gone
+			OCLogDebug(@"Metadata refresh wait condition found %@ missing - proceeding with sync record %@", self.itemPath, syncRecordID);
+
 			state = OCWaitConditionStateProceed;
 		}
 	}
@@ -92,11 +103,39 @@
 		if (_itemTracker == nil)
 		{
 			__weak OCWaitConditionMetaDataRefresh *weakSelf = self;
+			__weak OCCore *weakCore = core;
 			__block BOOL didNotify = NO;
+			OCPath itemPath = self.itemPath;
 
-			_itemTracker = [core trackItemAtPath:self.itemPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+			_itemTracker = [core trackItemAtPath:itemPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+				OCWaitConditionMetaDataRefresh *strongSelf = weakSelf;
+				BOOL doNotify = NO;
 
 				item = (item.remoteItem != nil) ? item.remoteItem : item;
+
+				if ((item == nil) && (error == nil))
+				{
+					if (!didNotify)
+					{
+						didNotify = YES;
+
+						OCWTLogDebug(nil, @"Metadata refresh wait condition notified of removal of %@ - waking up sync record %@", weakSelf.itemPath, syncRecordID);
+
+						doNotify = YES;
+					}
+				}
+
+				if ((item.path != nil) && ![itemPath isEqual:item.path])
+				{
+					if (!didNotify)
+					{
+						didNotify = YES;
+
+						OCWTLogDebug(nil, @"Metadata refresh wait condition notified of move of %@ to %@ - waking up sync record %@", weakSelf.itemPath, item.path, syncRecordID);
+
+						doNotify = YES;
+					}
+				}
 
 				if (![item.itemVersionIdentifier isEqual:self.itemVersionIdentifier])
 				{
@@ -105,8 +144,15 @@
 						didNotify = YES;
 
 						OCWTLogDebug(nil, @"Metadata refresh wait condition notified of change of %@: %@ vs %@ - waking up sync record %@", weakSelf.itemPath, weakSelf.itemVersionIdentifier, item.itemVersionIdentifier, syncRecordID);
-						[core wakeupSyncRecord:syncRecordID waitCondition:self userInfo:nil result:nil];
+
+						doNotify = YES;
 					}
+				}
+
+				if (doNotify)
+				{
+					[weakCore wakeupSyncRecord:syncRecordID waitCondition:self userInfo:nil result:nil];
+					strongSelf->_itemTracker = nil;
 				}
 			}];
 		}

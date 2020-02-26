@@ -1127,6 +1127,7 @@
 {
 	NSObject *trackingObject = [NSObject new];
 	__weak NSObject *weakTrackingObject = trackingObject;
+	__weak OCCore *weakSelf = self;
 
 	// Detect unnormalized path
 	if ([inPath isUnnormalizedPath])
@@ -1142,19 +1143,26 @@
 		OCQuery *query = nil;
 		NSObject *trackingObject = weakTrackingObject;
 		__block BOOL isFirstInvocation = YES;
+		OCCore *core = weakSelf;
 
 		if (trackingObject == nil)
 		{
 			return;
 		}
 
-		if ((item = [self cachedItemAtPath:path error:&error]) == nil)
+		if (core == nil)
+		{
+			trackingHandler(OCError(OCErrorInternal), nil, YES);
+			return;
+		}
+
+		if ((item = [core cachedItemAtPath:path error:&error]) == nil)
 		{
 			// No item for this path found in cache
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
 				// This path indicates a file - but maybe that's what what's wanted: retry by looking for a folder at that location instead.
-				if ((item = [self cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
+				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
 				}
@@ -1226,10 +1234,10 @@
 
 		if (query != nil)
 		{
-			__weak OCCore *weakCore = self;
+			__weak OCCore *weakCore = core;
 			__weak OCQuery *weakQuery = query;
 
-			[self startQuery:query];
+			[core startQuery:query];
 
 			// Stop query as soon as trackingObject is deallocated
 			[OCDeallocAction addAction:^{

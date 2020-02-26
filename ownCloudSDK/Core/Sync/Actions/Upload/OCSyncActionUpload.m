@@ -152,24 +152,18 @@
 			});
 
 			// Schedule the upload
-			OCItem *latestVersionOfLocalItem;
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
-			if ((latestVersionOfLocalItem = [self.core retrieveLatestVersionOfItem:self.localItem withError:NULL]) == nil)
-			{
-				latestVersionOfLocalItem = self.localItem;
-			}
-
-			[self setupProgressSupportForItem:latestVersionOfLocalItem options:&options syncContext:syncContext];
+			[self setupProgressSupportForItem:self.latestVersionOfLocalItem options:&options syncContext:syncContext];
 
 			if ((progress = [self.core.connection uploadFileFromURL:uploadURL
 								       withName:remoteFileName
 									     to:parentItem
-								  replacingItem:(self.replaceItem != nil) ? self.replaceItem : (self.localItem.isPlaceholder ? nil : latestVersionOfLocalItem)
+								  replacingItem:(self.replaceItem != nil) ? self.replaceItem : (self.localItem.isPlaceholder ? nil : self.latestVersionOfLocalItem)
 									options:options
 								   resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 			{
