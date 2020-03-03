@@ -815,7 +815,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	[self dumpSyncJournalWithTags:@[@"AfterProc"]];
 }
 
-- (BOOL)processWaitRecordsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
+- (BOOL)processWaitConditionsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
 {
 	__block BOOL canContinue = YES;
 	__block NSError *error = nil;
@@ -866,6 +866,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 							// + continue evaluating the wait conditions (because any may have failed)
 
 							canContinue = NO;
+							updateSyncRecordInDB = YES;
 						break;
 
 						case OCWaitConditionStateProceed:
@@ -1055,7 +1056,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	}
 
 	// Process sync record's wait conditions
-	if (![self processWaitRecordsOfSyncRecord:syncRecord error:outError])
+	if (![self processWaitConditionsOfSyncRecord:syncRecord error:outError])
 	{
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
 
@@ -1315,6 +1316,37 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	}
 
 	[self handleEvent:[OCEvent eventWithType:OCEventTypeIssueResponse userInfo:userInfo ephermalUserInfo:nil result:choice] sender:self];
+}
+
+#pragma mark - Sync Record wakeup
+- (void)wakeupSyncRecord:(OCSyncRecordID)syncRecordID waitCondition:(nullable OCWaitCondition *)waitCondition userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo result:(id)result
+{
+	if (userInfo == nil)
+	{
+		if (waitCondition.uuid != nil)
+		{
+			userInfo = @{
+				OCEventUserInfoKeySyncRecordID      : syncRecordID,
+				OCEventUserInfoKeyWaitConditionUUID : waitCondition.uuid
+			};
+		}
+		else
+		{
+			userInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecordID };
+		}
+	}
+	else
+	{
+		userInfo = [[NSMutableDictionary alloc] initWithDictionary:userInfo];
+		((NSMutableDictionary *)userInfo)[OCEventUserInfoKeySyncRecordID] = syncRecordID;
+
+		if (waitCondition.uuid != nil)
+		{
+			((NSMutableDictionary *)userInfo)[OCEventUserInfoKeyWaitConditionUUID] = waitCondition.uuid;
+		}
+	}
+
+	[self handleEvent:[OCEvent eventWithType:OCEventTypeWakeupSyncRecord userInfo:userInfo ephermalUserInfo:nil result:result] sender:self];
 }
 
 #pragma mark - Sync issues utilities

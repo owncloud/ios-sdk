@@ -82,12 +82,12 @@
 	}
 }
 
-- (void)reportConnectionRefusedError
+- (void)reportConnectionRefusedError:(NSError *)error
 {
 	@synchronized(self)
 	{
 		self.state = OCCoreConnectionStatusSignalStateFalse;
-		self.shortDescription = OCLocalized(@"Connection refused");
+		self.shortDescription = ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused");
 
 		[self setStatusPollTimerActive:YES];
 	}

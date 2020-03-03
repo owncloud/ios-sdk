@@ -67,6 +67,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 @synthesize actionSignals = _actionSignals;
 @synthesize propFindSignals = _propFindSignals;
+@synthesize authSignals = _authSignals;
 
 @synthesize state = _state;
 
@@ -204,6 +205,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		_actionSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 		_propFindSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		_authSignals = [NSSet set];
 
 		_usersByUserID = [NSMutableDictionary new];
 
@@ -1163,6 +1165,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			davRequest.groupID = options[OCConnectionOptionGroupIDKey];
 		}
 
+		if (options[OCConnectionOptionRequiredSignalsKey] != nil)
+		{
+			davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
+		}
+
 		// Attach to pipelines
 		[self attachToPipelines];
 
@@ -1566,6 +1573,18 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
 							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+						}
+						break;
+
+						case OCHTTPStatusCodeFORBIDDEN: {
+							NSString *errorDescription = request.httpResponse.bodyParsedAsDAVError.davExceptionMessage;
+
+							if (errorDescription == nil)
+							{
+								errorDescription = OCLocalized(@"Uploads to this folder are not allowed.");
+							}
+
+							event.error = OCErrorWithDescription(OCErrorItemOperationForbidden, errorDescription);
 						}
 						break;
 
@@ -2613,6 +2632,7 @@ OCConnectionOptionKey OCConnectionOptionIsNonCriticalKey = @"is-non-critical";
 OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
+OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 

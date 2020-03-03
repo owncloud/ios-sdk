@@ -49,11 +49,13 @@
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCCoreState)
 {
-	OCCoreStateStopped,
-	OCCoreStateStopping,
+	OCCoreStateStopped,	//!< The core is stopped and can't be used. (if you do, expect things to break)
+ 	OCCoreStateStopping,	//!< The core is in the process of being stopped.
 
-	OCCoreStateStarting,
-	OCCoreStateRunning
+	OCCoreStateStarting,	//!< The core is being started
+	OCCoreStateReady,	//!< The core is started and ready, awaiting connecting to complete
+
+	OCCoreStateRunning	//!< The core is fully operational - and now running
 };
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
@@ -145,6 +147,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCCoreState _state;
 	OCCoreStateChangedHandler _stateChangedHandler;
 
+	BOOL _connectionStatusInitialUpdate;
 	OCCoreConnectionStatus _connectionStatus;
 	OCCoreConnectionStatusSignal _connectionStatusSignals;
 	NSString *_connectionStatusShortDescription;
@@ -401,7 +404,8 @@ extern OCClassSettingsKey OCCoreCookieSupportEnabled;
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
 
-extern OCConnectionSignalID OCConnectionSignalIDCoreOnline;
+extern OCConnectionSignalID OCConnectionSignalIDCoreOnline; //!< This signal is set if the core is fully online and operational. Don't use this as a general network availability indicator - as the network may be reachable, but this signal still not set because of a server-side issue.
+extern OCConnectionSignalID OCConnectionSignalIDNetworkAvailable; //!< This signal is set if the network is generally available.
 
 extern OCCoreOption OCCoreOptionImportByCopying; //!< [BOOL] Determines whether -[OCCore importFileNamed:..] should make a copy of the provided file, or move it (default).
 extern OCCoreOption OCCoreOptionImportTransformation; //!< [OCCoreImportTransformation] Transformation to be applied on local item before upload

@@ -146,11 +146,18 @@
 				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
 					NSProgress *retrievalProgress;
 
-					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:((self.groupID != nil) ? @{ OCConnectionOptionGroupIDKey : self.groupID } : nil) completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:[NSDictionary dictionaryWithObjectsAndKeys:
+						// For background scan jobs, wait with scheduling until there is connectivity
+						((self.updateJob.isForQuery) ? self.core.connection.propFindSignals : self.core.connection.actionSignals), 	OCConnectionOptionRequiredSignalsKey,
+
+						// Schedule in a particular group
+						((self.groupID != nil) ? self.groupID : nil), 									OCConnectionOptionGroupIDKey,
+					nil] completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 						if (self.core.state != OCCoreStateRunning)
 						{
-							// Skip processing thre response if the core is not running
+							// Skip processing the response if the core is not starting or running
 							self.retrievedSet.state = OCCoreItemListStateNew;
+							completionHandler(); // we're done for now, make sure the queue doesn't get stuck
 							return;
 						}
 
@@ -322,6 +329,23 @@
 	}
 
 	[_core endActivity:@"update unstarted sets"];
+}
+
+- (void)updateIfNew
+{
+	if (_cachedSet.state == OCCoreItemListStateNew)
+	{
+		// Retrieve items from cache
+		_cachedSet.state = OCCoreItemListStateStarted;
+		[self _updateCacheSet];
+	}
+
+	if (_retrievedSet.state == OCCoreItemListStateNew)
+	{
+		// Request item list from server
+		_retrievedSet.state = OCCoreItemListStateStarted;
+		[self _updateRetrievedSet];
+	}
 }
 
 #pragma mark - Activity source

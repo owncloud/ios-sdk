@@ -31,6 +31,8 @@
 
 		sysctlbyname("hw.machine", NULL, &size, NULL, 0);
 
+		modelIdentifier = @"Unknown";
+
 		if (size > 0)
 		{
 			void *hwModel;

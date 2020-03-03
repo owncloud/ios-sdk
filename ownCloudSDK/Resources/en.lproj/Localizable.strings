@@ -82,6 +82,7 @@
 /* Upload */
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
 "Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
+"Uploads to this folder are not allowed." = "Uploads to this folder are not allowed.";
 
 /* Download */
 "Downloading %@…" = "Downloading %@…";
@@ -91,6 +92,8 @@
 "The downloaded file's checksum does not match the checksum provided by the server." = "The downloaded file's checksum does not match the checksum provided by the server.";
 "File modified locally" = "File modified locally";
 "\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
+"Couldn't download %@" = "Couldn't download %@";
+"The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";

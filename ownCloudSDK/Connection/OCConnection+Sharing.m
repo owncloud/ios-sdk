@@ -418,21 +418,21 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
-					case 200:
+					case OCHTTPStatusCodeOK: // 200
 						// Successful
 					break;
 
-					case 400:
+					case OCHTTPStatusCodeBAD_REQUEST: // 400
 						// Not a directory (fetching shares for directory)
 						error = OCErrorWithDescription(OCErrorShareUnknownType, status.message);
 					break;
 
-					case 403:
+					case OCHTTPStatusCodeFORBIDDEN: // 403
 						// Public upload was disabled by the admin
 						error = OCErrorWithDescription(OCErrorSharePublicUploadDisabled, status.message);
 					break;
 
-					case 404:
+					case OCHTTPStatusCodeNOT_FOUND: // 404
 						// File or folder couldn’t be shared
 						error = OCErrorWithDescription(OCErrorShareItemNotFound, status.message);
 					break;
@@ -616,21 +616,21 @@
 				switch (status.statusCode.integerValue)
 				{
 					case 100:
-					case 200:
+					case OCHTTPStatusCodeOK: // 200
 						// Successful
 					break;
 
-					case 400:
+					case OCHTTPStatusCodeBAD_REQUEST: // 400
 						// Wrong or no update parameter given
 						error = OCErrorWithDescription(OCErrorInsufficientParameters, status.message);
 					break;
 
-					case 403:
+					case OCHTTPStatusCodeFORBIDDEN: // 403
 						// Public upload disabled by the admin
 						error = OCErrorWithDescription(OCErrorSharePublicUploadDisabled, status.message);
 					break;
 
-					case 404:
+					case OCHTTPStatusCodeNOT_FOUND: // 404
 						// Share couldn't be updated
 						error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
 					break;

@@ -22,7 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCWaitConditionIssue : OCWaitCondition
+@interface OCWaitConditionIssue : OCWaitCondition <NSSecureCoding>
 {
 	OCSyncIssue *_issue;
 }

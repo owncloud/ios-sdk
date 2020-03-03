@@ -55,7 +55,10 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	OCEventTypeIssueResponse,
 
 	// Report
-	OCEventTypeFilterFiles
+	OCEventTypeFilterFiles,
+
+	// Wakeup
+	OCEventTypeWakeupSyncRecord
 };
 
 @class OCEvent;

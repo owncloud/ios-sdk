@@ -64,4 +64,6 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 - (void)_updateCacheSet;
 
+- (void)updateIfNew;
+
 @end

@@ -291,6 +291,10 @@
 		DC75D30C214BF1BA00B6FB62 /* NSString+OCFormatting.m in Sources */ = {isa = PBXBuildFile; fileRef = DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */; };
 		DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */ = {isa = PBXBuildFile; fileRef = DC75D30D214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.h */; };
 		DC75D310214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC75D30E214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.m */; };
+		DC7650082403DF5000201812 /* NSError+OCNetworkFailure.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7650062403DF5000201812 /* NSError+OCNetworkFailure.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC7650092403DF5000201812 /* NSError+OCNetworkFailure.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7650072403DF5000201812 /* NSError+OCNetworkFailure.m */; };
+		DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */ = {isa = PBXBuildFile; fileRef = DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */; };
+		DC76500D2404703A00201812 /* OCWaitConditionMetaDataRefresh.m in Sources */ = {isa = PBXBuildFile; fileRef = DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */; };
 		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
 		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
 		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
@@ -937,6 +941,10 @@
 		DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCFormatting.m"; sourceTree = "<group>"; };
 		DC75D30D214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCItemCreationDebugging.h"; sourceTree = "<group>"; };
 		DC75D30E214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCItemCreationDebugging.m"; sourceTree = "<group>"; };
+		DC7650062403DF5000201812 /* NSError+OCNetworkFailure.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCNetworkFailure.h"; sourceTree = "<group>"; };
+		DC7650072403DF5000201812 /* NSError+OCNetworkFailure.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCNetworkFailure.m"; sourceTree = "<group>"; };
+		DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCWaitConditionMetaDataRefresh.h; sourceTree = "<group>"; };
+		DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionMetaDataRefresh.m; sourceTree = "<group>"; };
 		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
@@ -1314,6 +1322,8 @@
 				DC114A9622A7AA2E00CBD597 /* NSString+OCRandom.h */,
 				DC3521772251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m */,
 				DC3521762251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h */,
+				DC7650072403DF5000201812 /* NSError+OCNetworkFailure.m */,
+				DC7650062403DF5000201812 /* NSError+OCNetworkFailure.h */,
 			);
 			path = Foundation;
 			sourceTree = "<group>";
@@ -1404,6 +1414,8 @@
 				DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */,
 				DC24F8E721E2B3EF00C9119C /* OCWaitConditionIssue.m */,
 				DC24F8E621E2B3EF00C9119C /* OCWaitConditionIssue.h */,
+				DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */,
+				DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */,
 			);
 			path = "Wait Condition";
 			sourceTree = "<group>";
@@ -2647,6 +2659,7 @@
 				DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */,
 				DC8FE6FF221CAF280016BDEE /* OCProgressManager.h in Headers */,
 				DC8EB2FB23950B54009148F9 /* OCFeatureAvailability.h in Headers */,
+				DC7650082403DF5000201812 /* NSError+OCNetworkFailure.h in Headers */,
 				DC2C3F32230E8C5100D2282A /* OCKeyValueStore.h in Headers */,
 				DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */,
 				DC07C296212450DC00B815A4 /* OCExtensionLocation.h in Headers */,
@@ -2814,6 +2827,7 @@
 				4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
+				DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
@@ -3190,6 +3204,7 @@
 				DCDD9B1D22298D050052A001 /* OCGroup.m in Sources */,
 				DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */,
 				DC4AFAB9206AE92F00189B9A /* OCSQLiteTransaction.m in Sources */,
+				DC76500D2404703A00201812 /* OCWaitConditionMetaDataRefresh.m in Sources */,
 				DC359693223FA7CC00C4D6E6 /* OCQueryCondition.m in Sources */,
 				DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */,
 				DCA36D4E22A6B14200265534 /* OCPKCE.m in Sources */,
@@ -3335,6 +3350,7 @@
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
 				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
+				DC7650092403DF5000201812 /* NSError+OCNetworkFailure.m in Sources */,
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DCC8F9E32028554E00EB6701 /* OCBookmark.m in Sources */,
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,

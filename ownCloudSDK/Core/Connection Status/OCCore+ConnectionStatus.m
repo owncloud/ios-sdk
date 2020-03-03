@@ -23,6 +23,8 @@
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCMacros.h"
 #import "NSError+OCError.h"
+#import "NSError+OCNetworkFailure.h"
+#import "OCCore+ItemList.h"
 
 @implementation OCCore (ConnectionStatus)
 
@@ -199,7 +201,7 @@
 {
 	OCCoreConnectionStatus oldStatus = _connectionStatus;
 	OCCoreConnectionStatusSignal oldSignal = _connectionStatusSignals;
-	BOOL reattemptConnect = NO, reloadQueries = NO, updateOnlineConnectionSignal = NO;
+	BOOL reattemptConnect = NO, reloadQueries = NO, updateOnlineConnectionSignal = NO, updateUnavailableConnectionSignal = NO;
 
 	// Property changes
 	if (newStatus != _connectionStatus)
@@ -239,7 +241,7 @@
 	// Determine internal updates
 	// - In case server has become reachable and is not (or no longer) in maintenance mode => reattempt connect
 	if ((newSignal != oldSignal) && (newStatus == OCCoreConnectionStatusOffline) && ((newSignal & OCCoreConnectionStatusSignalReachable) != 0) &&
-	    (self.state == OCCoreStateStarting) && (self.connection.state != OCConnectionStateConnecting))
+	    (self.state == OCCoreStateReady) && (self.connection.state != OCConnectionStateConnecting))
 	{
 		reattemptConnect = YES;
 	}
@@ -250,16 +252,29 @@
 		reloadQueries = YES;
 	}
 
+	// - Update connection signals on "unavailable" status changes
+	if (((newStatus != OCCoreConnectionStatusUnavailable) != (oldStatus != OCCoreConnectionStatusUnavailable)) || !_connectionStatusInitialUpdate)
+	{
+		updateUnavailableConnectionSignal = YES;
+	}
+
 	// - Update connection signals on "online" status changes
-	if ((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline))
+	if (((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline)) || !_connectionStatusInitialUpdate)
 	{
 		updateOnlineConnectionSignal = YES;
 	}
+
+	_connectionStatusInitialUpdate = YES;
 
 	// Internal updates
 	if (reattemptConnect || reloadQueries || updateOnlineConnectionSignal)
 	{
 		[self queueBlock:^{
+			if (updateUnavailableConnectionSignal)
+			{
+				[self->_connection setSignal:OCConnectionSignalIDNetworkAvailable on:(self->_connectionStatus != OCCoreConnectionStatusUnavailable)];
+			}
+
 			if (updateOnlineConnectionSignal)
 			{
 				[self->_connection setSignal:OCConnectionSignalIDCoreOnline on:(self->_connectionStatus == OCCoreConnectionStatusOnline)];
@@ -267,7 +282,7 @@
 
 			if (reattemptConnect)
 			{
-				if ((self->_state == OCCoreStateStarting) && (self->_connection.state != OCConnectionStateConnecting))
+				if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
 				{
 					[self _attemptConnect];
 				}
@@ -290,6 +305,10 @@
 							[self setNeedsToProcessSyncRecords];
 
 							[self _pollNextShareQuery];
+
+							[self startCheckingForUpdates];
+
+							[self scheduleNextItemListTask];
 						}
 					}];
 				}];
@@ -309,7 +328,7 @@
 {
 	// User approved a certificate that was blocking connecting
 	[self queueBlock:^{
-		if ((self->_state == OCCoreStateStarting) && (self->_connection.state != OCConnectionStateConnecting))
+		if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
 		{
 			[self _attemptConnect];
 		}
@@ -321,18 +340,9 @@
 	if (error != nil)
 	{
 		// Connection dropped errors
-		if ([error.domain isEqual:NSURLErrorDomain] && (
-			(error.code == NSURLErrorDNSLookupFailed) ||
-			(error.code == NSURLErrorCannotFindHost) ||
-			(error.code == NSURLErrorCannotConnectToHost) ||
-			(error.code == NSURLErrorNotConnectedToInternet) ||
-			(error.code == NSURLErrorNetworkConnectionLost) ||
-			(error.code == NSURLErrorDataNotAllowed) ||
-			(error.code == NSURLErrorInternationalRoamingOff) ||
-			(error.code == NSURLErrorCallIsActive)
-		    ))
+		if (error.isNetworkFailureError)
 		{
-			[_serverStatusSignalProvider reportConnectionRefusedError];
+			[_serverStatusSignalProvider reportConnectionRefusedError:error];
 
 			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{

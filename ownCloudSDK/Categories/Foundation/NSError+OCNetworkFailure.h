@@ -1,13 +1,13 @@
 //
-//  NSString+OCRandom.h
+//  NSError+OCNetworkFailure.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.06.19.
-//  Copyright © 2019 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 24.02.20.
+//  Copyright © 2020 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2019, ownCloud GmbH.
+ * Copyright (C) 2020, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -20,9 +20,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSString (OCRandom)
+@interface NSError (OCNetworkFailure)
 
-+ (nullable instancetype)stringWithRandomCharactersOfLength:(NSUInteger)length allowedCharacters:(NSString *)allowedCharacters;
+@property(readonly,nonatomic) BOOL isNetworkFailureError;
 
 @end
 
