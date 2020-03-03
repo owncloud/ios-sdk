@@ -866,6 +866,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 							// + continue evaluating the wait conditions (because any may have failed)
 
 							canContinue = NO;
+							updateSyncRecordInDB = YES;
 						break;
 
 						case OCWaitConditionStateProceed:
