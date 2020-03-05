@@ -193,11 +193,6 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	}];
 }
 
-- (NSProgress *)synchronizeWithServer
-{
-	return(nil); // Stub implementation
-}
-
 #pragma mark - Sync Lanes
 - (OCSyncLane *)laneForTags:(NSSet <OCSyncLaneTag> *)tags readOnly:(BOOL)readOnly
 {
@@ -220,7 +215,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	return ([self _enqueueSyncRecordWithAction:action cancellable:cancellable preflightResultHandler:nil resultHandler:resultHandler]);
 }
 
-- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable preflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler resultHandler:(OCCoreActionResultHandler)resultHandler
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable preflightResultHandler:(nullable OCCoreCompletionHandler)preflightResultHandler resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
@@ -401,7 +396,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	}];
 }
 
-- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(nullable id)parameter
 {
 	__block NSError *error = nil;
 	OCSyncAction *syncAction;
@@ -457,7 +452,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	return (error);
 }
 
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(nullable NSError *)completionError parameter:(nullable id)parameter
 {
 	if (syncRecord==nil) { return; }
 
@@ -1303,7 +1298,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 }
 
 #pragma mark - Sync issue handling
-- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(nullable OCCoreSyncIssueResolutionResultHandler)completionHandler
 {
 	if (userInfo == nil)
 	{
@@ -1319,7 +1314,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 }
 
 #pragma mark - Sync Record wakeup
-- (void)wakeupSyncRecord:(OCSyncRecordID)syncRecordID waitCondition:(nullable OCWaitCondition *)waitCondition userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo result:(id)result
+- (void)wakeupSyncRecord:(OCSyncRecordID)syncRecordID waitCondition:(nullable OCWaitCondition *)waitCondition userInfo:(nullable NSDictionary<OCEventUserInfoKey, id> *)userInfo result:(nullable id)result
 {
 	if (userInfo == nil)
 	{
@@ -1395,7 +1390,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 }
 
 #pragma mark - Sync action utilities
-- (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo
+- (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(nullable NSDictionary *)userInfo ephermal:(nullable NSDictionary *)ephermalUserInfo
 {
 	NSDictionary *syncRecordUserInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecord.recordID };
 
@@ -1417,7 +1412,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 }
 
 #pragma mark - Sync record persistence
-- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler
 {
 	[self.database addSyncRecords:syncRecords completionHandler:completionHandler];
 
@@ -1429,7 +1424,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
-- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
@@ -1446,7 +1441,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
-- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
