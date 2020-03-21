@@ -54,7 +54,9 @@
 		item.lastUsed = [NSDate new];
 
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
-		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
+		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier] &&  // Local item version is identical to latest known version on the server
+		    ( (item.localCopyVersionIdentifier == nil) || // Either the local copy has no item version (typical for uploading files) …
+		     ((item.localCopyVersionIdentifier != nil) && [item.localCopyVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier])))  // … or the item version exists and is identical to the latest item version (typical for downloaded files - or after upload completion)
 		{
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
@@ -145,7 +147,7 @@
 
 		OCLogDebug(@"record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
-		latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error];
+		latestVersionOfItem = [self.core retrieveLatestVersionAtPathOfItem:item withError:&error];
 
 		OCLogDebug(@"record %@ download: latest version from cache: %@", syncContext.syncRecord, latestVersionOfItem);
 
@@ -329,7 +331,7 @@
 		// Check for locally modified version
 		if (useDownloadedFile)
 		{
-			if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:NULL]) != nil)
+			if ((latestVersionOfItem = [self.core retrieveLatestVersionAtPathOfItem:item withError:NULL]) != nil)
 			{
 				// This catches the edge case where a file was locally modified WHILE a download of the same file was already scheduled
 				// The case where a download is initiated when a locally modified version exists is caught in download scheduling
@@ -397,7 +399,7 @@
 					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
 
 					item.downloadTriggerIdentifier = self.options[OCCoreOptionDownloadTriggerID];
-					item.fileClaim = self.options[OCCoreOptionAddFileClaim];
+					item.fileClaim = [OCClaim combining:self.localItem.fileClaim with:self.options[OCCoreOptionAddFileClaim] usingOperator:OCClaimGroupOperatorOR];
 
 					downloadedFile.url = vaultItemURL;
 
@@ -547,7 +549,7 @@
 				OCItem *latestItem;
 				NSError *error = nil;
 
-				if ((latestItem = [self.core retrieveLatestVersionOfItem:self.archivedServerItem withError:&error]) != nil)
+				if ((latestItem = [self.core retrieveLatestVersionAtPathOfItem:self.archivedServerItem withError:&error]) != nil)
 				{
 					if (latestItem.locallyModified)
 					{

@@ -22,24 +22,24 @@
 
 @implementation OCClaim
 
-+ (instancetype)processClaim
++ (instancetype)processClaimWithLockType:(OCClaimLockType)lockType
 {
-	return ([[self alloc] initWithProcess]);
+	return ([[self alloc] initWithProcessForLockType:lockType]);
 }
 
-+ (instancetype)explicitClaimWithIdentifier:(NSString *)identifier
++ (instancetype)explicitClaimWithIdentifier:(NSString *)identifier lockType:(OCClaimLockType)lockType
 {
-	return ([[self alloc] initWithExplicitIdentifier:identifier]);
+	return ([[self alloc] initWithExplicitIdentifier:identifier lockType:lockType]);
 }
 
-+ (instancetype)claimExpiringAtDate:(NSDate *)expiryDate
++ (instancetype)claimExpiringAtDate:(NSDate *)expiryDate withLockType:(OCClaimLockType)lockType
 {
-	return ([[self alloc] initWithExpiryDate:expiryDate]);
+	return ([[self alloc] initWithExpiryDate:expiryDate lockType:lockType]);
 }
 
-+ (instancetype)claimForLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier
++ (instancetype)claimForLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier withLockType:(OCClaimLockType)lockType
 {
-	return ([[self alloc] initWithLifetimeOfCore:core explicitIdentifier:explicitIdentifier]);
+	return ([[self alloc] initWithLifetimeOfCore:core explicitIdentifier:explicitIdentifier lockType:lockType]);
 }
 
 + (instancetype)groupOfClaims:(NSArray<OCClaim *> *)groupClaims withOperator:(OCClaimGroupOperator)groupOperator
@@ -61,9 +61,9 @@
 	return ([claim combinedWithClaim:otherClaim usingOperator:groupRule]);
 }
 
-+ (instancetype)claimForProcessExpiringAtDate:(NSDate *)expiryDate
++ (instancetype)claimForProcessExpiringAtDate:(NSDate *)expiryDate withLockType:(OCClaimLockType)lockType
 {
-	return ([OCClaim combining:[OCClaim processClaim] with:[OCClaim claimExpiringAtDate:expiryDate] usingOperator:OCClaimGroupOperatorAND]);
+	return ([OCClaim combining:[OCClaim processClaimWithLockType:lockType] with:[OCClaim claimExpiringAtDate:expiryDate withLockType:lockType] usingOperator:OCClaimGroupOperatorAND]);
 }
 
 #pragma mark - Init & Dealloc
@@ -78,51 +78,55 @@
 	return(self);
 }
 
-- (instancetype)initWithProcess
+- (instancetype)initWithProcessForLockType:(OCClaimLockType)typeOfLock
 {
 	if ((self = [self init]) != nil)
 	{
 		_type = OCClaimTypeProcess;
+		_typeOfLock = typeOfLock;
 		_processSession = OCProcessManager.sharedProcessManager.processSession;
 	}
 
 	return(self);
 }
 
-- (instancetype)initWithExplicitIdentifier:(NSString *)identifier
+- (instancetype)initWithExplicitIdentifier:(NSString *)identifier lockType:(OCClaimLockType)lockType
 {
 	if ((self = [self init]) != nil)
 	{
 		_type = OCClaimTypeExplicit;
+		_typeOfLock = lockType;
 		_explicitIdentifier = identifier;
 	}
 
 	return(self);
 }
 
-- (instancetype)initWithExpiryDate:(NSDate *)expiryDate
+- (instancetype)initWithExpiryDate:(NSDate *)expiryDate lockType:(OCClaimLockType)lockType
 {
 	if ((self = [self init]) != nil)
 	{
 		_type = OCClaimTypeExpires;
+		_typeOfLock = lockType;
 		_expiryDate = expiryDate;
 	}
 
 	return(self);
 }
 
-- (instancetype)initWithLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier
+- (instancetype)initWithLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier lockType:(OCClaimLockType)lockType
 {
 	if (!core.isManaged)
 	{
 		// Only OCCoreManager'd cores' coreRunIdentifiers can currently be checked by OCClaim, so if a core isn't managed, return a processClaim instead
-		self = [self initWithProcess];
+		self = [self initWithProcessForLockType:lockType];
 	}
 	else
 	{
 		if ((self = [self init]) != nil)
 		{
 			_type = OCClaimTypeCoreLifetime;
+			_typeOfLock = lockType;
 			_coreRunIdentifier = core.runIdentifier;
 			_processSession = OCProcessManager.sharedProcessManager.processSession;
 		}
@@ -215,6 +219,31 @@
 	}
 
 	return (isValid);
+}
+
+- (OCClaimLockType)lockType
+{
+	OCClaimLockType lockType = _typeOfLock;
+
+	if (_type == OCClaimTypeGroup)
+	{
+		lockType = OCClaimLockTypeNone;
+
+		for (OCClaim *claim in _groupClaims)
+		{
+			if (claim.isValid)
+			{
+				OCClaimLockType claimLockType = claim.lockType;
+
+				if (claimLockType > lockType)
+				{
+					lockType = claimLockType;
+				}
+			}
+		}
+	}
+
+	return (lockType);
 }
 
 #pragma mark - Operations
@@ -328,6 +357,8 @@
 	{
 		_type = (OCClaimType)[decoder decodeIntegerForKey:@"type"];
 
+		_typeOfLock = (OCClaimLockType)[decoder decodeIntegerForKey:@"lockType"];
+
 		_identifier = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"identifier"];
 
 		_creationTimestamp = [decoder decodeDoubleForKey:@"creationTimestamp"];
@@ -350,6 +381,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeInteger:_type forKey:@"type"];
+
+	[coder encodeInteger:_typeOfLock forKey:@"lockType"];
 
 	[coder encodeObject:_identifier forKey:@"identifier"];
 
@@ -411,7 +444,7 @@
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, valid: %d%@>", NSStringFromClass(self.class), self, _identifier, typeString, self.isValid, typeDescription]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, valid: %d, lockType:%lu%@>", NSStringFromClass(self.class), self, _identifier, typeString, self.isValid, (unsigned long)self.lockType, typeDescription]);
 }
 
 @end

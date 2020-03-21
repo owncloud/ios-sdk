@@ -47,7 +47,7 @@
 		[self.localItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 		// Special handling for local attributes
-		if ((latestItemVersion = [self.core retrieveLatestVersionOfItem:self.localItem withError:&error]) != nil)
+		if ((latestItemVersion = [self.core retrieveLatestVersionForLocalIDOfItem:self.localItem withError:&error]) != nil)
 		{
 			// Archive latest version
 			self.archivedItemVersion = latestItemVersion;

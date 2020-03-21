@@ -36,7 +36,8 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 - (void)retrieveLatestSyncAnchorWithCompletionHandler:(void(^)(NSError * _Nullable error, OCSyncAnchor latestSyncAnchor))completionHandler;
 - (OCSyncAnchor)retrieveLatestSyncAnchorWithError:(NSError * _Nullable __autoreleasing *)outError;
 
-- (OCItem *)retrieveLatestVersionOfItem:(OCItem *)item withError:(NSError * _Nullable __autoreleasing *)outError;
+- (OCItem *)retrieveLatestVersionAtPathOfItem:(OCItem *)item withError:(NSError * _Nullable __autoreleasing *)outError;
+- (OCItem *)retrieveLatestVersionForLocalIDOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError;
 
 - (void)incrementSyncAnchorWithProtectedBlock:(NSError * _Nullable (^)(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor))protectedBlock completionHandler:(void(^)(NSError * _Nullable error, OCSyncAnchor _Nullable previousSyncAnchor, OCSyncAnchor _Nullable newSyncAnchor))completionHandler;
 

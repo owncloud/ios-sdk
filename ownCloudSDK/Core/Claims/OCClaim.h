@@ -29,6 +29,15 @@ typedef NS_ENUM(NSUInteger, OCClaimType)
 	OCClaimTypeGroup	//!< Claim determined by a group of other claims, combined with an operator
 };
 
+typedef NS_ENUM(NSUInteger, OCClaimLockType)
+{
+	OCClaimLockTypeNone,	//!< Not a lock
+
+	OCClaimLockTypeDelete,	//!< Lock against deletion (for files: guarantee that *any* version of the file is available locally, updates allowed)
+	OCClaimLockTypeRead,	//!< Lock against deletion and outdating (for files: guarantee that a version of the file is available locally, updates to latest version allowed and encouraged)
+	OCClaimLockTypeWrite	//!< Lock against deletion, updates and writes (for files: guarantee that the existing, local version of the file is not updated or touched in any other way)
+};
+
 typedef NS_ENUM(NSUInteger, OCClaimGroupOperator)
 {
 	OCClaimGroupOperatorAND,//!< All claims in the group must be valid, otherwise the whole claim is invalid
@@ -46,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Metadata
 @property(readonly,assign) OCClaimType type;	//!< The claim type
+@property(readonly,assign) OCClaimLockType typeOfLock; //!< The level of locking the claim was put in place for (called typeOfLock because lockType seems to conflict with some Obj-C internals)
 @property(readonly,strong) OCClaimIdentifier identifier; //!< The UUID of the claim (auto-generated on init)
 @property(readonly,assign) NSTimeInterval creationTimestamp; //!< Timestamp of the creation of the claim
 
@@ -70,16 +80,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isValid;
 
 #pragma mark - Creation
-+ (instancetype)processClaim; //!< Temporary claim; automatically expires if the process adding the claim has been terminated.
-+ (instancetype)explicitClaimWithIdentifier:(NSString *)identifier; //!< Indefinite claim; valid until it's removed using the same explicitIdentifier.
-+ (instancetype)claimExpiringAtDate:(NSDate *)expiryDate; //!< Time-limited claim; valid until a certain date.
++ (instancetype)processClaimWithLockType:(OCClaimLockType)lockType; //!< Temporary claim; automatically expires if the process adding the claim has been terminated.
++ (instancetype)explicitClaimWithIdentifier:(NSString *)identifier lockType:(OCClaimLockType)lockType; //!< Indefinite claim; valid until it's removed using the same explicitIdentifier.
++ (instancetype)claimExpiringAtDate:(NSDate *)expiryDate withLockType:(OCClaimLockType)lockType; //!< Time-limited claim; valid until a certain date.
 
-+ (instancetype)claimForLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier; //!< Temporary claim; automatically expires if the process adding the claim has been terminated - or if the OCCore instance inside that process has been terminated (checkable only within the process adding it). Allows adding an explicitIdentifier for simplified manual removal.
++ (instancetype)claimForLifetimeOfCore:(OCCore *)core explicitIdentifier:(nullable OCClaimExplicitIdentifier)explicitIdentifier withLockType:(OCClaimLockType)lockType; //!< Temporary claim; automatically expires if the process adding the claim has been terminated - or if the OCCore instance inside that process has been terminated (checkable only within the process adding it). Allows adding an explicitIdentifier for simplified manual removal.
 
 + (instancetype)groupOfClaims:(NSArray<OCClaim *> *)groupClaims withOperator:(OCClaimGroupOperator)groupRule; //!< Creates a group claim whose validity is the result of checking the validity of the contained claims and combining them with the provided operator
 + (instancetype)combining:(nullable OCClaim *)claim with:(nullable OCClaim *)otherClaim usingOperator:(OCClaimGroupOperator)groupRule; //!< Creates a new claim representing the combination of up to two claims using an operator. Convenience method for handling nil claims.
 
-+ (instancetype)claimForProcessExpiringAtDate:(NSDate *)expiryDate; //!< Time-limited claim; valid until the process adding the claim has been terminated or a certain date has passed, whatever comes first.
++ (instancetype)claimForProcessExpiringAtDate:(NSDate *)expiryDate withLockType:(OCClaimLockType)lockType; //!< Time-limited claim; valid until the process adding the claim has been terminated or a certain date has passed, whatever comes first.
 
 #pragma mark - Operations
 - (OCClaim *)combinedWithClaim:(OCClaim *)claim usingOperator:(OCClaimGroupOperator)groupOperator; //!< Combines the receiving claim with another claim and returns a new claim

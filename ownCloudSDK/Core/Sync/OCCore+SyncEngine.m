@@ -118,7 +118,7 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 	return (syncAnchor);
 }
 
-- (OCItem *)retrieveLatestVersionOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
+- (OCItem *)retrieveLatestVersionAtPathOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
 {
 	__block OCItem *latestItem = nil;
 
@@ -136,6 +136,30 @@ OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
 			OCSyncExecDone(databaseRetrieval);
 
 			[self endActivity:@"Retrieve latest version of item"];
+		}];
+	});
+
+	return (latestItem);
+}
+
+- (OCItem *)retrieveLatestVersionForLocalIDOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
+{
+	__block OCItem *latestItem = nil;
+
+	OCSyncExec(databaseRetrieval, {
+		[self beginActivity:@"Retrieve latest version of item by localID"];
+
+		[self.database retrieveCacheItemForLocalID:item.localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			if (outError != NULL)
+			{
+				*outError = error;
+			}
+
+			latestItem = item;
+
+			OCSyncExecDone(databaseRetrieval);
+
+			[self endActivity:@"Retrieve latest version of item by localID"];
 		}];
 	});
 

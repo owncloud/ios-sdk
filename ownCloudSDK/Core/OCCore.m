@@ -1559,12 +1559,43 @@
 #pragma mark - Item usage
 - (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler
 {
+	// Do not register item usage updates if the last usage was less than 5 seconds ago
+	if (item.lastUsed.timeIntervalSinceNow > -5)
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+		return;
+	}
+
 	[self beginActivity:@"Registering item usage"];
 
 	[self queueBlock:^{
-		item.lastUsed = [NSDate date];
+		OCItem *updatedItem = item;
 
-		[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ item ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+		if (updatedItem.databaseID != nil)
+		{
+			OCItem *latestItem;
+
+			if ((latestItem = [self retrieveLatestVersionForLocalIDOfItem:updatedItem withError:NULL]) != nil)
+			{
+				updatedItem = latestItem;
+			}
+		}
+
+		if (updatedItem.timeIntervalSinceNow > -5)
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler(self, nil);
+			}
+			return;
+		}
+
+		updatedItem.lastUsed = [NSDate date];
+
+		[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 
 		[self endActivity:@"Registering item usage"];
 
