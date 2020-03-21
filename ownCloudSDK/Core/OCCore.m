@@ -1584,7 +1584,7 @@
 			}
 		}
 
-		if (updatedItem.timeIntervalSinceNow > -5)
+		if (updatedItem.lastUsed.timeIntervalSinceNow > -5)
 		{
 			if (completionHandler != nil)
 			{
