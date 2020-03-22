@@ -53,11 +53,15 @@
 	{
 		item.lastUsed = [NSDate new];
 
+		OCLogDebug(@"Preflight on item=%@\narchivedServerItem=%@\n- item.itemVersionIdentifier=%@\n- item.localCopyVersionIdentifier=%@\n- archivedServerItem.itemVersionIdentifier=%@", item, self.archivedServerItem, item.itemVersionIdentifier, item.localCopyVersionIdentifier, self.archivedServerItem.itemVersionIdentifier);
+
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier] &&  // Local item version is identical to latest known version on the server
 		    ( (item.localCopyVersionIdentifier == nil) || // Either the local copy has no item version (typical for uploading files) …
 		     ((item.localCopyVersionIdentifier != nil) && [item.localCopyVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier])))  // … or the item version exists and is identical to the latest item version (typical for downloaded files - or after upload completion)
 		{
+			OCLogDebug(@"Latest item version already downloaded");
+
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
@@ -101,6 +105,8 @@
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
 			[syncContext completeWithError:OCError(OCErrorItemNotAvailableOffline) core:self.core item:item parameter:nil];
+
+			OCLogDebug(@"Connection offline and returnImmediately flag set => canceled download");
 		}
 		else
 		{
@@ -108,6 +114,8 @@
 			[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
 			syncContext.updatedItems = @[ item ];
+
+			OCLogDebug(@"Preflight completed for downloading %@", item);
 		}
 	}
 }
@@ -147,7 +155,7 @@
 
 		OCLogDebug(@"record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
-		latestVersionOfItem = [self.core retrieveLatestVersionAtPathOfItem:item withError:&error];
+		latestVersionOfItem = [self.core retrieveLatestVersionForLocalIDOfItem:item withError:&error];
 
 		OCLogDebug(@"record %@ download: latest version from cache: %@", syncContext.syncRecord, latestVersionOfItem);
 

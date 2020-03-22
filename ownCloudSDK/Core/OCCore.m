@@ -1584,18 +1584,12 @@
 			}
 		}
 
-		if (updatedItem.lastUsed.timeIntervalSinceNow > -5)
+		if (updatedItem.lastUsed.timeIntervalSinceNow < -5)
 		{
-			if (completionHandler != nil)
-			{
-				completionHandler(self, nil);
-			}
-			return;
+			updatedItem.lastUsed = [NSDate new];
+
+			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 		}
-
-		updatedItem.lastUsed = [NSDate date];
-
-		[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 
 		[self endActivity:@"Registering item usage"];
 

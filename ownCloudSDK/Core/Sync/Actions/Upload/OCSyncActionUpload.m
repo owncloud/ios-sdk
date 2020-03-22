@@ -199,10 +199,6 @@
 
 		if ((uploadItem = self.latestVersionOfLocalItem) != nil)
 		{
-			// Transfer localID
-			uploadedItem.localID = uploadItem.localID;
-			uploadedItem.parentLocalID = uploadItem.parentLocalID;
-
 			// Propagate previousPlaceholderFileID
 			if (![uploadedItem.fileID isEqual:uploadItem.fileID])
 			{
