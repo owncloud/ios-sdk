@@ -372,10 +372,10 @@
 		OCKeyValueStore *keyValueStore1 = [[OCKeyValueStore alloc] initWithURL:keyValueStoreURL identifier:@"test.kvs4"];
 		OCClaim *claim10 = nil;
 
-		[keyValueStore1 pushObject:@(0) onStackForKey:@"test" withClaim:(claim10 = [OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:10.0]])];
-		[keyValueStore1 pushObject:@(1) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:6.0]]];
-		[keyValueStore1 pushObject:@(2) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:4.0]]];
-		[keyValueStore1 pushObject:@(3) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2.0]]];
+		[keyValueStore1 pushObject:@(0) onStackForKey:@"test" withClaim:(claim10 = [OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:10.0] withLockType:OCClaimLockTypeRead])];
+		[keyValueStore1 pushObject:@(1) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:6.0] withLockType:OCClaimLockTypeRead]];
+		[keyValueStore1 pushObject:@(2) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:4.0] withLockType:OCClaimLockTypeRead]];
+		[keyValueStore1 pushObject:@(3) onStackForKey:@"test" withClaim:[OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2.0] withLockType:OCClaimLockTypeRead]];
 
 		XCTAssert([[keyValueStore1 readObjectForKey:@"test"] isEqual:@(3)]);
 		OCLogDebug(@"(0) testValue=%@", [keyValueStore1 readObjectForKey:@"test"]);

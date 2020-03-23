@@ -24,6 +24,7 @@
 #import "OCItemPolicyProcessorAvailableOffline.h"
 #import "OCItemPolicyProcessorDownloadExpiration.h"
 #import "OCItemPolicyProcessorVacuum.h"
+#import "OCItemPolicyProcessorVersionUpdates.h"
 #import "OCCore+SyncEngine.h"
 #import "OCItemPolicy.h"
 
@@ -370,6 +371,7 @@
 	[self addItemPolicyProcessor:[[OCItemPolicyProcessorAvailableOffline alloc] initWithCore:self]];
 	[self addItemPolicyProcessor:[[OCItemPolicyProcessorDownloadExpiration alloc] initWithCore:self]];
 	[self addItemPolicyProcessor:[[OCItemPolicyProcessorVacuum alloc] initWithCore:self]];
+	[self addItemPolicyProcessor:[[OCItemPolicyProcessorVersionUpdates alloc] initWithCore:self]];
 
 	// Load item policies to update processors
 	[self loadItemPoliciesWithCompletionHandler:nil];

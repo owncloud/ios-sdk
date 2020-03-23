@@ -55,6 +55,8 @@
 		DC139CD320DBCDCB0090175A /* ChecksumTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC139CD220DBCDCB0090175A /* ChecksumTests.m */; };
 		DC14CC4A21067320006DDA69 /* OCCore+ItemList.h in Headers */ = {isa = PBXBuildFile; fileRef = DC14CC4821067320006DDA69 /* OCCore+ItemList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */ = {isa = PBXBuildFile; fileRef = DC14CC4921067320006DDA69 /* OCCore+ItemList.m */; };
+		DC166E9E2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.h in Headers */ = {isa = PBXBuildFile; fileRef = DC166E9C2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.h */; };
+		DC166E9F2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m in Sources */ = {isa = PBXBuildFile; fileRef = DC166E9D2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m */; };
 		DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CCF209475C20018DF7F /* UIImage+OCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC179CD0209475C20018DF7F /* UIImage+OCTools.m */; };
 		DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -707,6 +709,8 @@
 		DC139CD220DBCDCB0090175A /* ChecksumTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChecksumTests.m; sourceTree = "<group>"; };
 		DC14CC4821067320006DDA69 /* OCCore+ItemList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+ItemList.h"; sourceTree = "<group>"; };
 		DC14CC4921067320006DDA69 /* OCCore+ItemList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+ItemList.m"; sourceTree = "<group>"; };
+		DC166E9C2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemPolicyProcessorVersionUpdates.h; sourceTree = "<group>"; };
+		DC166E9D2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemPolicyProcessorVersionUpdates.m; sourceTree = "<group>"; };
 		DC179CCF209475C20018DF7F /* UIImage+OCTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIImage+OCTools.h"; sourceTree = "<group>"; };
 		DC179CD0209475C20018DF7F /* UIImage+OCTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImage+OCTools.m"; sourceTree = "<group>"; };
 		DC179CD320948DF30018DF7F /* NSProgress+OCExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProgress+OCExtensions.h"; sourceTree = "<group>"; };
@@ -1288,6 +1292,15 @@
 			path = Checksums;
 			sourceTree = "<group>";
 		};
+		DC166E9B2428FD7600347714 /* Version Updates */ = {
+			isa = PBXGroup;
+			children = (
+				DC166E9D2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m */,
+				DC166E9C2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.h */,
+			);
+			path = "Version Updates";
+			sourceTree = "<group>";
+		};
 		DC179CCD209475950018DF7F /* UIKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -1485,6 +1498,7 @@
 				DC2AA56D22DD1318001D5C39 /* Available Offline */,
 				DC2CD12822E8E7D40099C665 /* Download Expiration */,
 				DC2CD12322E84A7F0099C665 /* Vacuum */,
+				DC166E9B2428FD7600347714 /* Version Updates */,
 			);
 			path = Processors;
 			sourceTree = "<group>";
@@ -2785,6 +2799,7 @@
 				DCD63276223BB1710090169E /* OCCapabilities.h in Headers */,
 				DCEEB2ED2046E2B900189B9A /* OCCertificate.h in Headers */,
 				DC4AFAB0206A8C1D00189B9A /* OCSQLiteStatement.h in Headers */,
+				DC166E9E2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.h in Headers */,
 				DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */,
 				DC0364FB20AAD75700F62732 /* OCCore+SyncEngine.h in Headers */,
 				DC19BFDE21CB99D1007C20D1 /* OCIssue+SyncIssue.h in Headers */,
@@ -3392,6 +3407,7 @@
 				DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */,
 				DC2AA57122DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m in Sources */,
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,
+				DC166E9F2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
 				DC6BFFF723206215005FA5CB /* OCEventQueue.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
