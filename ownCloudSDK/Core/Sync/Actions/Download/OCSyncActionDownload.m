@@ -116,6 +116,13 @@
 
 	if ((item = self.localItem) != nil)
 	{
+		OCItem *latestVersionOfItem;
+
+		if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error]) != nil)
+		{
+			[latestVersionOfItem prepareToReplace:item];
+		}
+
 		[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
 		syncContext.updatedItems = @[ item ];

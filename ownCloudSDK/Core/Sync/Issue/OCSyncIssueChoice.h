@@ -37,6 +37,8 @@ typedef NS_ENUM(NSInteger,OCSyncIssueChoiceImpact)
 @property(strong) OCSyncIssueChoiceIdentifier identifier;
 @property(strong) NSString *label;
 
+@property(nullable,strong) NSError *autoChoiceForError; //!< If a handler can resolve this error, it can pick this option automatically
+
 @property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
 
 + (instancetype)choiceOfType:(OCIssueChoiceType)type impact:(OCSyncIssueChoiceImpact)impact identifier:(OCSyncIssueChoiceIdentifier)identifier label:(NSString *)label metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
@@ -44,6 +46,8 @@ typedef NS_ENUM(NSInteger,OCSyncIssueChoiceImpact)
 + (instancetype)okChoice;
 + (instancetype)retryChoice; //!< The OCSyncAction default implementation reschedules the record.
 + (instancetype)cancelChoiceWithImpact:(OCSyncIssueChoiceImpact)impact; //!< The OCSyncAction default implementation deschedules the record.
+
+- (instancetype)withAutoChoiceForError:(NSError *)error; //!< See .autoChoiceForError
 
 @end
 

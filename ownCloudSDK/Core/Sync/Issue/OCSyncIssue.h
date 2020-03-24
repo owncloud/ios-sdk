@@ -27,12 +27,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NSUUID* OCSyncIssueUUID;
+
 @interface OCSyncIssue : NSObject <NSSecureCoding>
 
 @property(strong,nullable) OCSyncRecordID syncRecordID;
 
 @property(readonly,strong) NSDate *creationDate;
-@property(readonly,strong) NSUUID *uuid;
+@property(readonly,strong) OCSyncIssueUUID uuid;
 
 @property(assign) OCIssueLevel level;
 

@@ -474,6 +474,10 @@
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */; };
+		DCE6420B23FAAA930063BCBD /* OCCore+IssueQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE6420923FAAA930063BCBD /* OCCore+IssueQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCE6420C23FAAA930063BCBD /* OCCore+IssueQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE6420A23FAAA930063BCBD /* OCCore+IssueQueue.m */; };
+		DCE6420F23FAAC920063BCBD /* OCIssueQueueRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE6420D23FAAC910063BCBD /* OCIssueQueueRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCE6421023FAAC920063BCBD /* OCIssueQueueRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE6420E23FAAC920063BCBD /* OCIssueQueueRecord.m */; };
 		DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */; };
 		DCE784FC2232748100733F01 /* OCHTTPResponse+DAVError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */; };
 		DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */; };
@@ -1132,6 +1136,10 @@
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
 		DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTaskCache.h; sourceTree = "<group>"; };
 		DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineTaskCache.m; sourceTree = "<group>"; };
+		DCE6420923FAAA930063BCBD /* OCCore+IssueQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+IssueQueue.h"; sourceTree = "<group>"; };
+		DCE6420A23FAAA930063BCBD /* OCCore+IssueQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+IssueQueue.m"; sourceTree = "<group>"; };
+		DCE6420D23FAAC910063BCBD /* OCIssueQueueRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIssueQueueRecord.h; sourceTree = "<group>"; };
+		DCE6420E23FAAC920063BCBD /* OCIssueQueueRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIssueQueueRecord.m; sourceTree = "<group>"; };
 		DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Recipients.m"; sourceTree = "<group>"; };
 		DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPResponse+DAVError.h"; sourceTree = "<group>"; };
 		DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPResponse+DAVError.m"; sourceTree = "<group>"; };
@@ -1382,6 +1390,7 @@
 				DC855705204FE9F100189B9A /* Record */,
 				DC54396620D51138002BF291 /* Actions */,
 				DC19BFC721CA6B4E007C20D1 /* Issue */,
+				DCE6420823FAAA6E0063BCBD /* IssueQueue */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -2566,6 +2575,17 @@
 			path = AvailableOffline;
 			sourceTree = "<group>";
 		};
+		DCE6420823FAAA6E0063BCBD /* IssueQueue */ = {
+			isa = PBXGroup;
+			children = (
+				DCE6420A23FAAA930063BCBD /* OCCore+IssueQueue.m */,
+				DCE6420923FAAA930063BCBD /* OCCore+IssueQueue.h */,
+				DCE6420E23FAAC920063BCBD /* OCIssueQueueRecord.m */,
+				DCE6420D23FAAC910063BCBD /* OCIssueQueueRecord.h */,
+			);
+			path = IssueQueue;
+			sourceTree = "<group>";
+		};
 		DCEA7D942093553300F25223 /* Toolkit */ = {
 			isa = PBXGroup;
 			children = (
@@ -2657,6 +2677,7 @@
 				DC8556ED204DEA2900189B9A /* OCHTTPDAVRequest.h in Headers */,
 				DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */,
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
+				DCE6420F23FAAC920063BCBD /* OCIssueQueueRecord.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
@@ -2782,6 +2803,7 @@
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */,
 				DC35969622403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h in Headers */,
+				DCE6420B23FAAA930063BCBD /* OCCore+IssueQueue.h in Headers */,
 				DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */,
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
 				DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */,
@@ -3320,6 +3342,7 @@
 				DC19BFD321CA6C15007C20D1 /* OCSyncIssueChoice.m in Sources */,
 				DCE227D922D612EC000BE0A5 /* OCCore+ItemPolicies.m in Sources */,
 				DC2CD12C22E8E7FD0099C665 /* OCItemPolicyProcessorDownloadExpiration.m in Sources */,
+				DCE6420C23FAAA930063BCBD /* OCCore+IssueQueue.m in Sources */,
 				DC1D4D3820DBD58E005A3DFC /* OCFile.m in Sources */,
 				DC27A1A120CBE8BD008ACB6C /* OCCore+FileProvider.m in Sources */,
 				DC1889852189F50500CFB3F9 /* OCLogFileWriter.m in Sources */,
@@ -3363,6 +3386,7 @@
 				DC4A2C5F20D4608100A47260 /* OCIssueChoice.m in Sources */,
 				DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */,
 				DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */,
+				DCE6421023FAAC920063BCBD /* OCIssueQueueRecord.m in Sources */,
 				DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCDD9B19222989E50052A001 /* OCRecipient.m in Sources */,

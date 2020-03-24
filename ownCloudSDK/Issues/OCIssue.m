@@ -23,32 +23,12 @@
 
 @interface OCIssue ()
 {
+	BOOL _decisionMade;
 	BOOL _ignoreChildEvents;
 }
 @end
 
 @implementation OCIssue
-
-@synthesize type = _type;
-@synthesize level = _level;
-
-@synthesize localizedTitle = _localizedTitle;
-@synthesize localizedDescription = _localizedDescription;
-
-@synthesize certificate = _certificate;
-@synthesize certificateValidationResult = _certificateValidationResult;
-@synthesize certificateURL = _certificateURL;
-
-@synthesize originalURL = _originalURL;
-@synthesize suggestedURL = _suggestedURL;
-
-@synthesize decision = _decision;
-@synthesize issueHandler = _issueHandler;
-
-@synthesize selectedChoice = _selectedChoice;
-@synthesize choices = _choices;
-
-@synthesize issues = _issues;
 
 #pragma mark - Init
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler
@@ -451,6 +431,22 @@
 	[descriptionString appendString:@">"];
 
 	return (descriptionString);
+}
+
+#pragma mark - Queuing
+- (void)enqueue
+{
+	if (!_allowsQueuing)
+	{
+		[[NSException exceptionWithName:@"OCIssueNotEnqueuableName" reason:@"Issue is not enqueuable" userInfo:@{ @"issue" : self }] raise];
+	}
+	else
+	{
+		if (_enqueueHandler != nil)
+		{
+			_enqueueHandler(self);
+		}
+	}
 }
 
 #pragma mark - Filtering
