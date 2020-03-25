@@ -21,36 +21,7 @@
 #import "OCKeyValueStore.h"
 #import "OCBookmark.h"
 
-/*
-	Message Queue Concept
-	- Queues
-		- global queue: for issues occuring outside of a specific core - or that need immediate attention from the user
-		- per-core queue: for issues occuring in context of a specific core
-
-	- Handling
-		- Sync Engine
-			-> sends issue to queue
-				- queue
-					- checks if issue is already in the queue -> if yes -> return / do nothing
-					- packages issue in record
-					- sets process' OCProcessSession as record.lockingProcess
-					- save record to the queue
-
-				- queue._handleRecord:
-					- determines best presenter
-						- if any:
-							- picks the highest priority one
-							- tells the presenter to present the issue
-								- waits for completionHandler
-									- if didPresent == YES
-										-> set record.presentedToUser to YES
-										-> if choice provided, handle accordingly and remove issue
-									- remove record.lockingProcess
-									- save
-
-						- if none:
-							- remove record.lockingProcess and save again, allowing other components to take a turn
-*/
+// # CONCEPT DOC in doc/concepts/MessageQueue.md
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -86,11 +86,11 @@
 #pragma mark - Queue
 - (void)enqueue:(OCMessage *)newMessage
 {
-	__block OCMessagePresenter *messagePresenter = nil;
-
 	if (newMessage == nil) { return; }
 
-	dispatch_async(self->_workQueue, ^{
+	dispatch_sync(self->_workQueue, ^{
+		__block OCMessagePresenter *messagePresenter = nil;
+
 		[self.storage updateObjectForKey:OCKeyValueStoreKeySyncIssueQueue usingModifier:^id _Nullable(NSMutableArray<OCMessage *> *existingMessages, BOOL *outDidModify) {
 			NSMutableArray<OCMessage *> *messages = existingMessages;
 			BOOL isExistingMessage = NO;
@@ -119,6 +119,8 @@
 					newMessage.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
 				}
 			}
+
+			self.messages = messages;
 
 			return (messages);
 		}];
@@ -162,6 +164,11 @@
 			[self _handleMessages];
 		});
 	}];
+}
+
+- (void)setMessages:(NSArray<OCMessage *> * _Nonnull)messages
+{
+	_messages = messages;
 }
 
 - (void)_handleMessages
@@ -212,6 +219,8 @@
 				}
 			}
 		}
+
+		self.messages = newMessages;
 
 		return (newMessages);
 	}];
@@ -378,6 +387,8 @@
 
 		didUpdate = updatePerformer(messages, storedMessage);
 		*outDidModify = didUpdate;
+
+		self.messages = messages;
 
 		return (messages);
 	}];
