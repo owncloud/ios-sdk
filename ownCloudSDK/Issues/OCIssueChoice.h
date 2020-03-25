@@ -40,6 +40,8 @@ typedef NS_ENUM(NSInteger,OCIssueChoiceType)
 @property(strong,nullable) NSString *label;
 @property(copy,nullable) OCIssueChoiceHandler choiceHandler;
 
+@property(strong,nullable) NSError *autoChoiceForError;
+
 @property(strong,nullable) id<NSObject> userInfo;
 
 + (instancetype)choiceWithType:(OCIssueChoiceType)type identifier:(nullable NSString *)identifier label:(nullable NSString *)label userInfo:(nullable id<NSObject>)userInfo handler:(nullable OCIssueChoiceHandler)handler;

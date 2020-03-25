@@ -53,31 +53,6 @@ typedef NS_ENUM(NSUInteger, OCIssueDecision)
 typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 @interface OCIssue : NSObject
-{
-	OCIssueType _type;
-	OCIssueLevel _level;
-
-	NSString *_localizedTitle;
-	NSString *_localizedDescription;
-
-	OCCertificate *_certificate;
-	OCCertificateValidationResult _certificateValidationResult;
-	NSURL *_certificateURL;
-	
-	NSURL *_originalURL;
-	NSURL *_suggestedURL;
-	
-	NSError *_error;
-	
-	BOOL _decisionMade;
-	OCIssueDecision _decision;
-	OCIssueHandler _issueHandler;
-	
-	NSArray <OCIssue *> *_issues;
-
-	OCIssueChoice *_selectedChoice;
-	NSArray <OCIssueChoice *> *_choices;
-}
 
 @property(weak) OCIssue *parentIssue;
 
@@ -85,6 +60,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 @property(assign) OCIssueLevel level;
 
 @property(readonly,nonatomic) BOOL resolvable;
+
+@property(nullable,strong) NSUUID *uuid; //!< Equal to OCSyncIssueUUID if generated from an OCSyncIssue
 
 @property(nullable,strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
@@ -128,6 +105,12 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 #pragma mark - Multiple choice
 - (void)selectChoice:(OCIssueChoice *)choice; //!< Selects the choice, calling the choice's handler and then the issueHandler with decision=OCIssueDecisionNone.
 - (void)cancel; //!< Searches for a choice of type Cancel and selects it.
+
+#pragma mark - Queuing
+@property(assign) BOOL allowsQueuing; //!< Indicates if this issue can be enqueued
+@property(nullable,copy) void(^enqueueHandler)(OCIssue *issue); //!< Block to be called if -enqueue is called
+
+- (void)enqueue; //!< Enqueue the issue. Raises an exception if allowsQueuing is NO
 
 #pragma mark - Filtering
 - (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;

@@ -50,6 +50,13 @@
 	return ([self choiceOfType:OCIssueChoiceTypeCancel impact:impact identifier:OCSyncIssueChoiceIdentifierCancel label:OCLocalized(@"Cancel") metaData:nil]);
 }
 
+- (instancetype)withAutoChoiceForError:(NSError *)error
+{
+	_autoChoiceForError = error;
+
+	return (self);
+}
+
 #pragma mark - En-/Decoding
 + (BOOL)supportsSecureCoding
 {
@@ -65,6 +72,7 @@
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 		_label = [decoder decodeObjectOfClass:[NSString class] forKey:@"label"];
 		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
+		_autoChoiceForError = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoChoiceForError"];
 	}
 
 	return (self);
@@ -77,6 +85,7 @@
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_label forKey:@"label"];
 	[coder encodeObject:_metaData forKey:@"metaData"];
+	[coder encodeObject:_autoChoiceForError forKey:@"autoChoiceForError"];
 }
 
 

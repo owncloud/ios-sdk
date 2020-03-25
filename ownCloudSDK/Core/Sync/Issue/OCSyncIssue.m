@@ -37,6 +37,21 @@
 	return (issue);
 }
 
++ (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
+{
+	OCSyncIssue *issue = [self new];
+
+	issue->_eventTarget = eventTarget;
+
+	issue.level = level;
+	issue.localizedTitle = title;
+	issue.localizedDescription = description;
+	issue.metaData = metaData;
+	issue.choices = choices;
+
+	return (issue);
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -64,6 +79,7 @@
 	if ((self = [self init]) != nil)
 	{
 		_syncRecordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"syncRecordID"];
+		_eventTarget = [decoder decodeObjectOfClass:OCEventTarget.class forKey:@"eventTarget"];
 
 		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
@@ -81,6 +97,7 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_syncRecordID forKey:@"syncRecordID"];
+	[coder encodeObject:_eventTarget forKey:@"eventTarget"];
 
 	[coder encodeObject:_uuid forKey:@"uuid"];
 	[coder encodeObject:_creationDate forKey:@"creationDate"];

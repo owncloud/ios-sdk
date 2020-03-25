@@ -95,6 +95,11 @@
 					[weakCore endActivity:@"Handle issue"];
 				}];
 
+				issue.allowsQueuing = YES;
+				issue.enqueueHandler = ^(OCIssue * _Nonnull issue) {
+					[weakCore endActivity:@"Handle issue"];
+				};
+
 				[core.delegate core:core handleError:nil issue:issue];
 			}
 			else

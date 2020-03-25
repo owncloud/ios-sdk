@@ -27,12 +27,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NSUUID* OCSyncIssueUUID;
+
 @interface OCSyncIssue : NSObject <NSSecureCoding>
 
 @property(strong,nullable) OCSyncRecordID syncRecordID;
+@property(strong,nullable) OCEventTarget *eventTarget;
 
 @property(readonly,strong) NSDate *creationDate;
-@property(readonly,strong) NSUUID *uuid;
+@property(readonly,strong) OCSyncIssueUUID uuid;
 
 @property(assign) OCIssueLevel level;
 
@@ -43,7 +46,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) NSArray <OCSyncIssueChoice *> *choices;
 
+#pragma mark - Sync Engine issues
 + (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+
+#pragma mark - Other issues
++ (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
 - (OCWaitConditionIssue *)makeWaitCondition; //!< Makes a wait condition wrapping the issue
 

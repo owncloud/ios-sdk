@@ -293,7 +293,7 @@
 			}
 			else
 			{
-				[choices addObject:[OCSyncIssueChoice retryChoice]];
+				[choices addObject:[[OCSyncIssueChoice retryChoice] withAutoChoiceForError:event.error]];
 			}
 
 			issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord

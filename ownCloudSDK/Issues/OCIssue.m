@@ -23,32 +23,12 @@
 
 @interface OCIssue ()
 {
+	BOOL _decisionMade;
 	BOOL _ignoreChildEvents;
 }
 @end
 
 @implementation OCIssue
-
-@synthesize type = _type;
-@synthesize level = _level;
-
-@synthesize localizedTitle = _localizedTitle;
-@synthesize localizedDescription = _localizedDescription;
-
-@synthesize certificate = _certificate;
-@synthesize certificateValidationResult = _certificateValidationResult;
-@synthesize certificateURL = _certificateURL;
-
-@synthesize originalURL = _originalURL;
-@synthesize suggestedURL = _suggestedURL;
-
-@synthesize decision = _decision;
-@synthesize issueHandler = _issueHandler;
-
-@synthesize selectedChoice = _selectedChoice;
-@synthesize choices = _choices;
-
-@synthesize issues = _issues;
 
 #pragma mark - Init
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler
@@ -87,11 +67,11 @@
 	{
 		_type = OCIssueTypeCertificate;
 		_level = level;
-	
+
 		_certificate = certificate;
 		_certificateValidationResult = validationResult;
 		_certificateURL = url;
-		
+
 		_issueHandler = [issueHandler copy];
 
 		_localizedTitle = OCLocalizedString(@"Certificate", @"");
@@ -119,7 +99,7 @@
 			break;
 		}
 	}
-	
+
 	return(self);
 }
 
@@ -138,7 +118,7 @@
 		_localizedTitle = OCLocalizedString(@"Redirection", @"");
 		_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The connection is redirected from %@ to %@.", @""), originalURL.hostAndPort, suggestedURL.hostAndPort];
 	}
-	
+
 	return(self);
 }
 
@@ -148,7 +128,7 @@
 	{
 		_type = OCIssueTypeError;
 		_level = level;
-		
+
 		_error = error;
 
 		_issueHandler = [issueHandler copy];
@@ -160,7 +140,7 @@
 			_localizedDescription = _error.description;
 		}
 	}
-	
+
 	return(self);
 }
 
@@ -202,25 +182,25 @@
 	if ((self = [super init]) != nil)
 	{
 		OCIssueLevel highestLevel = OCIssueLevelInformal;
-	
+
 		_type = OCIssueTypeGroup;
 
 		_issues = issues;
 		_issueHandler = [completionHandler copy];
-		
+
 		for (OCIssue *issue in issues)
 		{
 			issue.parentIssue = self;
-			
+
 			if (issue.level > highestLevel)
 			{
 				highestLevel = issue.level;
 			}
 		}
-		
+
 		_level = highestLevel;
 	}
-	
+
 	return(self);
 }
 
@@ -250,10 +230,10 @@
 			{
 				_issues = [NSMutableArray arrayWithArray:_issues];
 			}
-			
+
 			addIssue.parentIssue = self;
 			[(NSMutableArray *)_issues addObject:addIssue];
-			
+
 			if (addIssue.level > _level)
 			{
 				_level = addIssue.level;
@@ -329,11 +309,11 @@
 				decisionCounts[issue.decision]++;
 			}
 		}
-		
+
 		if (decisionCounts[OCIssueDecisionNone] == 0)
 		{
 			OCIssueDecision summaryDecision = OCIssueDecisionNone;
-		
+
 			if (decisionCounts[OCIssueDecisionApprove] == _issues.count)
 			{
 				summaryDecision = OCIssueDecisionApprove;
@@ -365,7 +345,7 @@
 			[self didChangeValueForKey:@"decision"];
 		}
 	}
-	
+
 	if (madeDecision)
 	{
 		if (_type == OCIssueTypeGroup)
@@ -432,17 +412,17 @@
 			[descriptionString appendFormat:@"Error [%@]", _error];
 		break;
 	}
-	
+
 	switch (_level)
 	{
 		case OCIssueLevelInformal:
 			[descriptionString appendString:@" (Informal)"];
 		break;
-		
+
 		case OCIssueLevelWarning:
 			[descriptionString appendString:@" (Warning)"];
 		break;
-		
+
 		case OCIssueLevelError:
 			[descriptionString appendString:@" (Error)"];
 		break;
@@ -451,6 +431,22 @@
 	[descriptionString appendString:@">"];
 
 	return (descriptionString);
+}
+
+#pragma mark - Queuing
+- (void)enqueue
+{
+	if (!_allowsQueuing)
+	{
+		[[NSException exceptionWithName:@"OCIssueNotEnqueuableName" reason:@"Issue is not enqueuable" userInfo:@{ @"issue" : self }] raise];
+	}
+	else
+	{
+		if (_enqueueHandler != nil)
+		{
+			_enqueueHandler(self);
+		}
+	}
 }
 
 #pragma mark - Filtering

@@ -30,6 +30,8 @@
 
 @synthesize appName = _appName;
 
+@synthesize componentIdentifier = _componentIdentifier;
+
 @synthesize keychain = _keychain;
 @synthesize userDefaults = _userDefaults;
 
@@ -57,6 +59,8 @@
 			self.appIdentifierPrefix 	   = bundleInfoDictionary[@"OCAppIdentifierPrefix"];
 			self.keychainAccessGroupIdentifier = bundleInfoDictionary[@"OCKeychainAccessGroupIdentifier"];
 			self.appGroupIdentifier 	   = bundleInfoDictionary[@"OCAppGroupIdentifier"];
+
+			_componentIdentifier	   	   = bundleInfoDictionary[@"OCAppComponentIdentifier"];
 			
 			self.appGroupContainerURL	   = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:[self appGroupIdentifier]];
 		}
@@ -159,6 +163,16 @@
 	return (nil);
 }
 
+- (OCAppComponentIdentifier)componentIdentifier
+{
+	if (_componentIdentifier == nil)
+	{
+		_componentIdentifier = NSBundle.mainBundle.bundleIdentifier;
+	}
+
+	return (_componentIdentifier);
+}
+
 - (OCKeychain *)keychain
 {
 	if (_keychain == nil)
@@ -193,3 +207,7 @@
 }
 
 @end
+
+OCAppComponentIdentifier OCAppComponentIdentifierApp = @"app";
+OCAppComponentIdentifier OCAppComponentIdentifierFileProviderExtension = @"fileProviderExtension";
+OCAppComponentIdentifier OCAppComponentIdentifierShareExtension = @"shareExtension";

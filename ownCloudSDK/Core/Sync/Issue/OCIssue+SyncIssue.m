@@ -32,6 +32,7 @@
 		if ((choice = [OCIssueChoice choiceWithType:syncChoice.type label:syncChoice.label handler:nil]) != nil)
 		{
 			choice.userInfo = syncChoice;
+			choice.autoChoiceForError = syncChoice.autoChoiceForError;
 
 			[choices addObject:choice];
 		}
@@ -42,6 +43,8 @@
 
 		resolutionResultHandler(syncChoice);
 	}];
+
+	issue.uuid = syncIssue.uuid;
 
 	return (issue);
 }
