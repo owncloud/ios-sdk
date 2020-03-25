@@ -36,7 +36,7 @@ typedef NSUUID* OCMessageUUID;
 
 @property(strong,nonatomic,nullable) OCBookmarkUUID bookmarkUUID; //!< UUID of the bookmark that this message belongs to (nil for global issues)
 
-@property(strong) OCSyncIssue *syncIssue; //!< The sync issue represented by this message
+@property(strong,nullable) OCSyncIssue *syncIssue; //!< The sync issue represented by this message
 @property(strong,nullable) OCSyncIssueChoice *syncIssueChoice; //!< The choice picked for the sync issue
 
 @property(strong,nullable) NSSet<OCMessagePresenterComponentSpecificIdentifier> *processedBy; //!< component-specific identifiers of presenters that have already processed this issue (used to avoids duplicate handling and infinite loops)

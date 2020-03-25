@@ -88,6 +88,7 @@
 		_localizedTitle = [decoder decodeObjectOfClass:[NSString class] forKey:@"title"];
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"desc"];
 		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
+		_routingInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"routingInfo"];
 		_choices = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCSyncIssueChoice.class, nil] forKey:@"choices"];
 	}
 
@@ -106,6 +107,7 @@
 	[coder encodeObject:_localizedTitle forKey:@"title"];
 	[coder encodeObject:_localizedDescription forKey:@"desc"];
 	[coder encodeObject:_metaData forKey:@"metaData"];
+	[coder encodeObject:_routingInfo forKey:@"routingInfo"];
 	[coder encodeObject:_choices forKey:@"choices"];
 }
 

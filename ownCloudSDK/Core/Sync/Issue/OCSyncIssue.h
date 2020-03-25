@@ -44,6 +44,8 @@ typedef NSUUID* OCSyncIssueUUID;
 
 @property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
 
+@property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *routingInfo; //!< Internal, do not use
+
 @property(strong) NSArray <OCSyncIssueChoice *> *choices;
 
 #pragma mark - Sync Engine issues

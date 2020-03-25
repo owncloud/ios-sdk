@@ -24,8 +24,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
-
 @interface OCCore (SyncEngine)
 
 #pragma mark - Setup & shutdown

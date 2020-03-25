@@ -33,6 +33,8 @@
 #import "OCActivityManager.h"
 #import "OCActivityUpdate.h"
 #import "OCRecipientSearchController.h"
+#import "OCSyncIssue.h"
+#import "OCMessageQueue.h"
 
 @class OCCore;
 @class OCItem;
@@ -110,6 +112,8 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
+
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
 
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
@@ -121,6 +125,9 @@ typedef id<NSObject> OCCoreItemTracking;
 @protocol OCCoreDelegate <NSObject>
 
 - (void)core:(OCCore *)core handleError:(nullable NSError *)error issue:(nullable OCIssue *)issue;
+
+@optional
+- (BOOL)core:(OCCore *)core handleSyncIssue:(nullable OCSyncIssue *)syncIssue; //!< Implement this method if you want to get a chance of handling sync issues before they are submitted to the core's OCMessageQueue. Return YES if you handled it, NO if it should still be submitted to the OCMessageQueue. Use [OCIssue issueFromSyncIssue:syncIssue forCore:core] to convert sync issues received this way to OCIssue instances.
 
 @end
 
@@ -245,6 +252,8 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesRemaining; //!< The remaining number of bytes available to the user.
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesUsed; //!< The number of bytes used by the user's content.
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesTotal; //!< The total amount of space assigned/available to the user.
+
+@property(readonly,strong,nonatomic) OCMessageQueue *messageQueue;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.

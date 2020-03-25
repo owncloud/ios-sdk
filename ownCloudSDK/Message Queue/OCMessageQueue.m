@@ -29,6 +29,7 @@
 	NSMutableArray<OCMessagePresenter *> *_presenters;
 	NSHashTable<id<OCMessageResponseHandler>> *_responseHandlers;
 	OCRateLimiter *_observerRateLimiter;
+	dispatch_queue_t _workQueue;
 }
 @end
 
@@ -57,6 +58,8 @@
 	if ((self = [super init]) != nil)
 	{
 		_storage = storage;
+
+		_workQueue = dispatch_queue_create("OCMessageQueue work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
 		[_storage registerClasses:[OCEvent.safeClasses setByAddingObjectsFromArray:@[
 			OCMessage.class
@@ -87,42 +90,44 @@
 
 	if (newMessage == nil) { return; }
 
-	[_storage updateObjectForKey:OCKeyValueStoreKeySyncIssueQueue usingModifier:^id _Nullable(NSMutableArray<OCMessage *> *existingMessages, BOOL *outDidModify) {
-		NSMutableArray<OCMessage *> *messages = existingMessages;
-		BOOL isExistingMessage = NO;
+	dispatch_async(self->_workQueue, ^{
+		[self.storage updateObjectForKey:OCKeyValueStoreKeySyncIssueQueue usingModifier:^id _Nullable(NSMutableArray<OCMessage *> *existingMessages, BOOL *outDidModify) {
+			NSMutableArray<OCMessage *> *messages = existingMessages;
+			BOOL isExistingMessage = NO;
 
-		for (OCMessage *message in existingMessages)
+			for (OCMessage *message in existingMessages)
+			{
+				if ([message.uuid isEqual:newMessage.uuid])
+				{
+					isExistingMessage = YES;
+					break;
+				}
+			}
+
+			if (!isExistingMessage)
+			{
+				if (messages == nil)
+				{
+					messages = [NSMutableArray new];
+				}
+
+				[messages addObject:newMessage];
+				*outDidModify = YES;
+
+				if ((messagePresenter = [self presenterForMessage:newMessage addToProcessedBy:YES]) != nil)
+				{
+					newMessage.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
+				}
+			}
+
+			return (messages);
+		}];
+
+		if (messagePresenter != nil)
 		{
-			if ([message.uuid isEqual:newMessage.uuid])
-			{
-				isExistingMessage = YES;
-				break;
-			}
+			[self presentMessage:newMessage withPresenter:messagePresenter];
 		}
-
-		if (!isExistingMessage)
-		{
-			if (messages == nil)
-			{
-				messages = [NSMutableArray new];
-			}
-
-			[messages addObject:newMessage];
-			*outDidModify = YES;
-
-			if ((messagePresenter = [self presenterForMessage:newMessage addToProcessedBy:YES]) != nil)
-			{
-				newMessage.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
-			}
-		}
-
-		return (messages);
-	}];
-
-	if (messagePresenter != nil)
-	{
-		[self presentMessage:newMessage withPresenter:messagePresenter];
-	}
+	});
 }
 
 - (void)dequeue:(OCMessage *)message
@@ -153,7 +158,9 @@
 - (void)setNeedsMessageHandling
 {
 	[_observerRateLimiter runRateLimitedBlock:^{
-		[self _handleMessages];
+		dispatch_async(self->_workQueue, ^{
+			[self _handleMessages];
+		});
 	}];
 }
 
@@ -188,19 +195,19 @@
 			// Handle result
 			if (message.handled)
 			{
+				NSArray<id<OCMessageResponseHandler>> *responseHandlers = nil;
+
 				@synchronized(self->_responseHandlers)
 				{
-					NSArray<id<OCMessageResponseHandler>> *responseHandlers = nil;
-
 					responseHandlers = [self->_responseHandlers allObjects]; // Make sure response handlers aren't deallocated while looping through them
+				}
 
-					for (id<OCMessageResponseHandler> responseHandler in responseHandlers)
+				for (id<OCMessageResponseHandler> responseHandler in responseHandlers)
+				{
+					if ([responseHandler handleResponseToMessage:message])
 					{
-						if ([responseHandler handleResponseToMessage:message])
-						{
-							[newMessages removeObject:message];
-							*outDidModify = YES;
-						}
+						[newMessages removeObject:message];
+						*outDidModify = YES;
 					}
 				}
 			}
@@ -237,7 +244,7 @@
 
 - (void)resolveMessage:(OCMessage *)message withChoice:(OCSyncIssueChoice *)choice
 {
-	[self _performOnMessage:nil updates:^BOOL(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message) {
+	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message) {
 		BOOL updated = NO;
 
 		if (!message.handled && (message.syncIssue != nil))
@@ -346,18 +353,25 @@
 	}];
 }
 
-- (BOOL)_performOnMessage:(nullable OCMessage *)message updates:(BOOL(^)(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message))updatePerformer
+- (void)_performOnMessage:(nullable OCMessage *)message updates:(BOOL(^)(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message))updatePerformer
+{
+	dispatch_async(self->_workQueue, ^{
+		[self __performOnMessage:message updates:updatePerformer];
+	});
+}
+
+- (void)__performOnMessage:(nullable OCMessage *)message updates:(BOOL(^)(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message))updatePerformer
 {
 	__block BOOL didUpdate = NO;
 
 	[_storage updateObjectForKey:OCKeyValueStoreKeySyncIssueQueue usingModifier:^id _Nullable(NSMutableArray<OCMessage *> *messages, BOOL *outDidModify) {
 		OCMessage *storedMessage;
 
-		for (OCMessage *message in messages)
+		for (OCMessage *inspectMessage in messages)
 		{
-			if ([message.uuid isEqual:message])
+			if ([inspectMessage.uuid isEqual:message.uuid])
 			{
-				storedMessage = message;
+				storedMessage = inspectMessage;
 				break;
 			}
 		}
@@ -367,8 +381,6 @@
 
 		return (messages);
 	}];
-
-	return (didUpdate);
 }
 
 #pragma mark - Response handling

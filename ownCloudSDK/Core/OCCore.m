@@ -51,6 +51,7 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCDeallocAction.h"
 #import "OCCore+ItemPolicies.h"
+#import "OCCore+MessageResponseHandler.h"
 
 @interface OCCore ()
 {
@@ -381,9 +382,13 @@
 				// Attempt connecting
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
+
+				// Register as message response handler
+				[self.messageQueue addResponseHandler:self];
 			}
 			else
 			{
+				OCLogError(@"STOPPED CORE due to startError=%@", startError);
 				self->_attemptConnect = NO;
 				[self _updateState:OCCoreStateStopped];
 			}
@@ -776,6 +781,12 @@
 	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
+}
+
+#pragma mark - Message queue
+- (OCMessageQueue *)messageQueue
+{
+	return (OCMessageQueue.globalQueue);
 }
 
 #pragma mark - Memory configuration
