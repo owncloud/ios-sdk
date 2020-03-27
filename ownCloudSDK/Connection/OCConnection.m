@@ -561,6 +561,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			{
 				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
 
+				OCErrorAddDateFromResponse(errorIssue, request.httpResponse);
+
 				// Embed issue
 				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 					if (decision == OCIssueDecisionApprove)
@@ -754,6 +756,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							}
 						}
 
+						OCErrorAddDateFromResponse(error, response);
+
 						connectProgress.localizedDescription = @"";
 						completionHandler(error, issue);
 						resultHandler(request, response, error);
@@ -776,6 +780,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				{
 					// An error occured
 					OCIssue *issue = error.embeddedIssue;
+
+					OCErrorAddDateFromResponse(error, response);
 
 					if (issue == nil)
 					{
@@ -828,6 +834,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							if (((NSNumber *)serverStatus[@"maintenance"]).boolValue)
 							{
 								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
+
+								OCErrorAddDateFromResponse(maintenanceModeError, response);
 
 								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
@@ -1278,6 +1286,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			}
 		}
 
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -1606,6 +1616,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				}
 			}
 
+			// Add date to error
+			if (event.error != nil)
+			{
+				OCErrorAddDateFromResponse(event.error, request.httpResponse);
+			}
+
 			[request.eventTarget handleEvent:event sender:self];
 		}
 	}
@@ -1712,6 +1728,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				}
 			}
 		}
+
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
@@ -1874,6 +1892,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -1964,6 +1984,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 
 					// Post event
+					OCErrorAddDateFromResponse(event.error, request.httpResponse);
 					[request.eventTarget handleEvent:event sender:self];
 				}];
 			}
@@ -2005,6 +2026,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (postEvent && (event!=nil))
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2137,6 +2160,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 
 					// Post event
+					OCErrorAddDateFromResponse(event.error, request.httpResponse);
 					[request.eventTarget handleEvent:event sender:self];
 				}];
 			}
@@ -2174,6 +2198,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (postEvent && (event!=nil))
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2313,6 +2339,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2463,6 +2490,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2551,6 +2579,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }

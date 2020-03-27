@@ -22,6 +22,10 @@
 - handle messages that have received a response
 - indicate if a message was handled
 	-> if it was handled, is removed from the queue
+	
+### AutoResolver
+- attempt automatic handling of messages
+- can be used to f.ex. automatically resolve auth-related error messages from before the authentication error was fixed
 
 ## Flow
 - queue receives message
@@ -40,7 +44,9 @@
 
 - every time a presenter or responseHandler is added; every time KVS indicates a change of values
 	-> loops through all stored messages
+		-> if `.handled` == `NO`: asks autoResolver to see if it can automatically handle the message
+			-> if autoResolver returns `YES`: updates the message in the KVS
+		-> if `.presentedToUser` == `NO` and `.handled` == `NO`
+			-> checks for suitable presenter and presents the message if one is found
 		-> if `.handled` == `YES`: asks responseHandlers to handle the response
 			-> if responseHandler returns `YES`: removes the message
-		-> if `.presentedToUser` == `NO`:
-			-> checks for suitable presenter and presents the message if one is found

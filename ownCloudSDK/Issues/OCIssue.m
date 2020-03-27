@@ -433,22 +433,6 @@
 	return (descriptionString);
 }
 
-#pragma mark - Queuing
-- (void)enqueue
-{
-	if (!_allowsQueuing)
-	{
-		[[NSException exceptionWithName:@"OCIssueNotEnqueuableName" reason:@"Issue is not enqueuable" userInfo:@{ @"issue" : self }] raise];
-	}
-	else
-	{
-		if (_enqueueHandler != nil)
-		{
-			_enqueueHandler(self);
-		}
-	}
-}
-
 #pragma mark - Filtering
 - (NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level
 {

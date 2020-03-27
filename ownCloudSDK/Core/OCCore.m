@@ -52,6 +52,7 @@
 #import "OCDeallocAction.h"
 #import "OCCore+ItemPolicies.h"
 #import "OCCore+MessageResponseHandler.h"
+#import "OCCore+MessageAutoresolver.h"
 
 @interface OCCore ()
 {
@@ -382,6 +383,9 @@
 				// Attempt connecting
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
+
+				// Register as message autoResolver
+				[self.messageQueue addAutoResolver:self];
 
 				// Register as message response handler
 				[self.messageQueue addResponseHandler:self];

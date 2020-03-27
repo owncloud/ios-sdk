@@ -106,12 +106,6 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 - (void)selectChoice:(OCIssueChoice *)choice; //!< Selects the choice, calling the choice's handler and then the issueHandler with decision=OCIssueDecisionNone.
 - (void)cancel; //!< Searches for a choice of type Cancel and selects it.
 
-#pragma mark - Queuing
-@property(assign) BOOL allowsQueuing; //!< Indicates if this issue can be enqueued
-@property(nullable,copy) void(^enqueueHandler)(OCIssue *issue); //!< Block to be called if -enqueue is called
-
-- (void)enqueue; //!< Enqueue the issue. Raises an exception if allowsQueuing is NO
-
 #pragma mark - Filtering
 - (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
 

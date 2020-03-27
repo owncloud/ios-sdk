@@ -40,6 +40,7 @@
 @synthesize authenticationMethodIdentifier = _authenticationMethodIdentifier;
 @synthesize authenticationData = _authenticationData;
 @synthesize authenticationDataStorage = _authenticationDataStorage;
+@synthesize authenticationValidationDate = _authenticationValidationDate;
 
 + (instancetype)bookmarkForURL:(NSURL *)url //!< Creates a bookmark for the ownCloud server with the specified URL.
 {
@@ -97,6 +98,7 @@
 - (void)setAuthenticationData:(NSData *)authenticationData saveToKeychain:(BOOL)saveToKeychain
 {
 	_authenticationData = authenticationData;
+	_authenticationValidationDate = (_authenticationData != nil) ? [NSDate new] : nil;
 
 	if (saveToKeychain)
 	{
@@ -169,6 +171,7 @@
 	_authenticationMethodIdentifier = sourceBookmark.authenticationMethodIdentifier;
 	_authenticationData = sourceBookmark.authenticationData;
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
+	_authenticationValidationDate = sourceBookmark.authenticationValidationDate;
 
 	_userInfo = sourceBookmark.userInfo;
 }
@@ -183,17 +186,18 @@
 {
 	if ((self = [self init]) != nil)
 	{
-		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
+		_uuid = [decoder decodeObjectOfClass:NSUUID.class forKey:@"uuid"];
 
-		_name = [decoder decodeObjectOfClass:[NSString class] forKey:@"name"];
-		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
+		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];
 
-		_originURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"originURL"];
+		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
-		_certificate = [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"certificate"];
-		_certificateModificationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"certificateModificationDate"];
+		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
+		_certificateModificationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"certificateModificationDate"];
 
-		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"authenticationMethodIdentifier"];
+		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
+		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
@@ -216,6 +220,7 @@
 	[coder encodeObject:_certificateModificationDate forKey:@"certificateModificationDate"];
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
+	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
 
 	if (_userInfo.count > 0)
 	{
@@ -230,7 +235,7 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
 			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
@@ -239,6 +244,7 @@
 			((_certificateModificationDate!=nil) ? [@", certificateModificationDate: " stringByAppendingString:_certificateModificationDate.description] : @""),
 			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
 			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
+			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
 			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
 		]);
 }

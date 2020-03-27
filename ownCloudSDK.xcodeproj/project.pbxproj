@@ -411,6 +411,8 @@
 		DCC6567920CA696A00110A97 /* OCBookmarkManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6567720CA696A00110A97 /* OCBookmarkManager.m */; };
 		DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC832CC242BB05A00153F8C /* OCCore+MessageResponseHandler.h */; };
 		DCC832CF242BB05A00153F8C /* OCCore+MessageResponseHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC832CD242BB05A00153F8C /* OCCore+MessageResponseHandler.m */; };
+		DCC83307242E1B4600153F8C /* OCCore+MessageAutoresolver.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC83305242E1B4600153F8C /* OCCore+MessageAutoresolver.h */; };
+		DCC83308242E1B4600153F8C /* OCCore+MessageAutoresolver.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC83306242E1B4600153F8C /* OCCore+MessageAutoresolver.m */; };
 		DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8F9CA202853B300EB6701 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DCC8F9C72028535B00EB6701 /* LICENSE */; };
@@ -1081,6 +1083,8 @@
 		DCC6567720CA696A00110A97 /* OCBookmarkManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCBookmarkManager.m; sourceTree = "<group>"; };
 		DCC832CC242BB05A00153F8C /* OCCore+MessageResponseHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+MessageResponseHandler.h"; sourceTree = "<group>"; };
 		DCC832CD242BB05A00153F8C /* OCCore+MessageResponseHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+MessageResponseHandler.m"; sourceTree = "<group>"; };
+		DCC83305242E1B4600153F8C /* OCCore+MessageAutoresolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+MessageAutoresolver.h"; sourceTree = "<group>"; };
+		DCC83306242E1B4600153F8C /* OCCore+MessageAutoresolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+MessageAutoresolver.m"; sourceTree = "<group>"; };
 		DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCC8F9AE202852A200EB6701 /* ownCloudSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudSDK.h; sourceTree = "<group>"; };
 		DCC8F9AF202852A200EB6701 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1423,7 +1427,7 @@
 				DC855705204FE9F100189B9A /* Record */,
 				DC54396620D51138002BF291 /* Actions */,
 				DC19BFC721CA6B4E007C20D1 /* Issue */,
-				DCC832D0242BB1B800153F8C /* MessageResponseHandler */,
+				DCC832D0242BB1B800153F8C /* Message Handling */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -2464,13 +2468,15 @@
 			path = "Resource Management";
 			sourceTree = "<group>";
 		};
-		DCC832D0242BB1B800153F8C /* MessageResponseHandler */ = {
+		DCC832D0242BB1B800153F8C /* Message Handling */ = {
 			isa = PBXGroup;
 			children = (
 				DCC832CD242BB05A00153F8C /* OCCore+MessageResponseHandler.m */,
 				DCC832CC242BB05A00153F8C /* OCCore+MessageResponseHandler.h */,
+				DCC83306242E1B4600153F8C /* OCCore+MessageAutoresolver.m */,
+				DCC83305242E1B4600153F8C /* OCCore+MessageAutoresolver.h */,
 			);
-			path = MessageResponseHandler;
+			path = "Message Handling";
 			sourceTree = "<group>";
 		};
 		DCC8F9A1202852A200EB6701 = {
@@ -2834,6 +2840,7 @@
 				DC75D30B214BF1BA00B6FB62 /* NSString+OCFormatting.h in Headers */,
 				DC381FD522C9E77500284699 /* OCCore+DirectURL.h in Headers */,
 				DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */,
+				DCC83307242E1B4600153F8C /* OCCore+MessageAutoresolver.h in Headers */,
 				DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */,
 				DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
@@ -3408,6 +3415,7 @@
 				DC07C29D2124526000B815A4 /* OCExtensionContext.m in Sources */,
 				DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */,
 				DCDA307221412A0100DB61A9 /* OCSyncAction.m in Sources */,
+				DCC83308242E1B4600153F8C /* OCCore+MessageAutoresolver.m in Sources */,
 				DC2F63682239509E0063C2DA /* OCCore+Sharing.m in Sources */,
 				DC00DB1E219B120300C82737 /* OCHTTPDAVMultistatusResponse.m in Sources */,
 				DC02835C209098D7005B6334 /* OCImage.m in Sources */,

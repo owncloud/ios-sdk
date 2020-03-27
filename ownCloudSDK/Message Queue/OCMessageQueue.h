@@ -34,6 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)handleResponseToMessage:(OCMessage *)message; //!< Return YES if the response to the message has been handled and the message can be removed from the queue.
 @end
 
+@protocol OCMessageAutoResolver <NSObject>
+- (BOOL)autoresolveMessage:(OCMessage *)message; //!< Return YES if the unhandled message was modified (f.ex. with a choice)
+@end
+
 @interface OCMessageQueue : NSObject
 
 @property(strong,readonly,nonatomic,class) OCMessageQueue *globalQueue;
@@ -60,6 +64,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Presentation
 - (void)addPresenter:(OCMessagePresenter *)presenter;
 - (void)removePresenter:(OCMessagePresenter *)presenter;
+
+#pragma mark - Auto resolver
+- (void)addAutoResolver:(id<OCMessageAutoResolver>)autoResolver; //!< Adds a response handler, but only keeps a weak reference.
+- (void)removeAutoResolver:(id<OCMessageAutoResolver>)autoResolver; //!< Removes a response handler.
 
 #pragma mark - Response handling
 - (void)addResponseHandler:(id<OCMessageResponseHandler>)responseHandler; //!< Adds a response handler, but only keeps a weak reference.

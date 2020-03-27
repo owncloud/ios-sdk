@@ -98,6 +98,12 @@
 		}
 	}
 
+	// Fill response date from metrics.responseStartDate
+	if ((response != nil) && (_metrics != nil) && (_metrics.responseStartDate != nil))
+	{
+		response.date = _metrics.responseStartDate;
+	}
+
 	return ((OCHTTPResponse * _Nonnull)response); // Working around a Static Analyzer bug that assumes [[OCHTTPResponse alloc] init] could return nil and triggers a false positive
 }
 

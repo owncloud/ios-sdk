@@ -70,7 +70,7 @@
 		_syncIssueChoice = [decoder decodeObjectOfClass:OCSyncIssueChoice.class forKey:@"syncIssueChoice"];
 
 		_processedBy = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"processedBy"];
-		_lockingProcess = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"lockingProcess"];
+		_lockingProcess = [decoder decodeObjectOfClass:OCProcessSession.class forKey:@"lockingProcess"];
 
 		_presentedToUser = [decoder decodeBoolForKey:@"presentedToUser"];
 	}

@@ -499,8 +499,8 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		// IPC notifications
 		_rateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.05];
 
-		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:updateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-
+		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:updateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCKeyValueStore *keyValueStore, OCIPCNotificationName  _Nonnull notificationName) {
+			[keyValueStore updateFromStoreContentsAtURL:keyValueStore.url];
 		}];
 	}
 }

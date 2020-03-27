@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) OCHTTPRequestID requestID;			//!< The OCHTTPRequestID this is the response to
 
+@property(strong,nullable) NSDate *date; 			//!< The date this response was initially created (typically identical to the date the response was received)
+
 @property(strong,nullable) OCCertificate *certificate;		//!< The certificate served by the server
 @property(assign) OCCertificateValidationResult certificateValidationResult; //!< The result of the validation of the certificate (if any). OCCertificateValidationResultNone if no validation has been performed yet.
 @property(strong,nullable) NSError *certificateValidationError; //!< Any error that occured during validation of the certificate (if any).

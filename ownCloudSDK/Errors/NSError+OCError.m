@@ -21,6 +21,8 @@
 #import "NSError+OCError.h"
 #import "OCMacros.h"
 
+static NSString *OCErrorIssueKey = @"OCErrorIssue";
+
 @implementation NSError (OCError)
 
 + (void)load
@@ -335,6 +337,50 @@
 	return (objc_getAssociatedObject(self, (__bridge const void *)OCErrorIssueKey));
 }
 
+#pragma mark - Error dating
+- (NSError *)withErrorDate:(nullable NSDate *)errorDate
+{
+	// Take a shortcut if there's no date in the error and none to be set
+	if ((errorDate == nil) && (self.errorDate == nil))
+	{
+		return (self);
+	}
+
+	// Create new error with added errorDate
+	NSDictionary<NSErrorUserInfoKey,id> *errorUserInfo;
+	NSError *newError = nil;
+
+	if ((errorUserInfo = [self.userInfo mutableCopy]) != nil)
+	{
+		NSMutableDictionary<NSErrorUserInfoKey,id> *mutableErrorUserInfo = [errorUserInfo mutableCopy];
+
+		mutableErrorUserInfo[OCErrorDateKey] = errorDate;
+
+		errorUserInfo = mutableErrorUserInfo;
+	}
+	else
+	{
+		errorUserInfo = @{ OCErrorDateKey : errorDate };
+	}
+
+	newError = [NSError errorWithDomain:self.domain code:self.code userInfo:errorUserInfo];
+
+	// Preserve embeddedIssue metadata that's maintained as an associated object
+	OCIssue *embeddedIssue;
+
+	if ((embeddedIssue = self.embeddedIssue) != nil)
+	{
+		newError = [newError errorByEmbeddingIssue:embeddedIssue];
+	}
+
+	return (newError);
+}
+
+- (nullable NSDate *)errorDate
+{
+	return (self.userInfo[OCErrorDateKey]);
+}
+
 - (NSDictionary *)ocErrorInfoDictionary
 {
 	NSDictionary *errorInfoDictionary;
@@ -354,5 +400,5 @@
 
 NSErrorDomain OCErrorDomain = @"OCError";
 
-NSString *OCErrorInfoKey = @"OCErrorInfo";
-NSString *OCErrorIssueKey = @"OCErrorIssue";
+NSErrorUserInfoKey OCErrorInfoKey = @"OCErrorInfo";
+NSErrorUserInfoKey OCErrorDateKey = @"OCErrorDate";

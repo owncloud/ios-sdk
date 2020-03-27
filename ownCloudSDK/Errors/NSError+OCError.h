@@ -121,22 +121,31 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSError *)errorByEmbeddingIssue:(OCIssue *)issue;
 - (nullable OCIssue *)embeddedIssue;
 
+#pragma mark - Error dating
+- (NSError *)withErrorDate:(nullable NSDate *)errorDate;
+- (nullable NSDate *)errorDate;
+
 @end
 
-#define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
+#define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorDateKey : [NSDate new] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
 
-#define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
+#define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, [NSDate new], OCErrorDateKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
 
 #define OCErrorWithDescriptionAndUserInfo(errorCode,description,userInfoKey,userInfoValue) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, userInfoValue, userInfoKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
 
-#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
+#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo, OCErrorDateKey : [NSDate new] }] //!< Like the OCError macro, but allows for an error specific info value
 
-#define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+#define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError, OCErrorDateKey : ((underlyingError.errorDate != nil) ? underlyingError.errorDate : [NSDate new]) }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+
+#define OCErrorAddDateFromResponse(error,response) if (response.date != nil) \
+	{ \
+		error = [error withErrorDate:response.date]; \
+	}
 
 extern NSErrorDomain OCErrorDomain;
 
-extern NSString *OCErrorInfoKey;
-extern NSString *OCErrorIssueKey;
+extern NSErrorUserInfoKey OCErrorInfoKey;
+extern NSErrorUserInfoKey OCErrorDateKey;
 
 NS_ASSUME_NONNULL_END
 

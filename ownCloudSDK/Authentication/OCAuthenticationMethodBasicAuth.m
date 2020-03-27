@@ -178,6 +178,7 @@ OCAuthenticationMethodAutoRegister
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
+					OCErrorAddDateFromResponse(error, response);
 					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 				}
 				else
@@ -223,6 +224,8 @@ OCAuthenticationMethodAutoRegister
 						{
 							error = OCError(OCErrorAuthorizationFailed);
 						}
+
+						OCErrorAddDateFromResponse(error, response);
 
 						completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 					}

@@ -1196,7 +1196,7 @@
 	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
+		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nDate(rcvd): %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, task.response.date, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
 	}
 
 	// Attempt delivery
@@ -1889,7 +1889,7 @@
 	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] taskIsWaitingForConnectivity", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL));
 }
 
--(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
 {
 	OCHTTPPipelineTask *task = nil;
 	NSError *backendError = nil;

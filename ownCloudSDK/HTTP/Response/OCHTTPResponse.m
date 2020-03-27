@@ -29,9 +29,19 @@
 	return ([[self alloc] initWithRequest:request HTTPError:error]);
 }
 
-- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+- (instancetype)init
 {
 	if ((self = [super init]) != nil)
+	{
+		_date = [NSDate new];
+	}
+
+	return (self);
+}
+
+- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+{
+	if ((self = [self init]) != nil)
 	{
 		_requestID = request.identifier;
 		_httpError = error;
@@ -211,6 +221,8 @@
 	{
 		_requestID			= [decoder decodeObjectOfClass:[NSString class] forKey:@"requestID"];
 
+		_date				= [decoder decodeObjectOfClass:[NSString class] forKey:@"date"];
+
 		_certificate 			= [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"certificate"];
 		_certificateValidationResult 	= [decoder decodeIntegerForKey:@"certificateValidationResult"];
 		_certificateValidationError	= [decoder decodeObjectOfClass:[NSError class] forKey:@"certificateValidationError"];
@@ -235,6 +247,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_requestID 				forKey:@"requestID"];
+
+	[coder encodeObject:_date 				forKey:@"date"];
 
 	[coder encodeObject:_certificate 			forKey:@"certificate"];
 	[coder encodeInteger:_certificateValidationResult 	forKey:@"certificateValidationResult"];

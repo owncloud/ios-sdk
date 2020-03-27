@@ -295,6 +295,8 @@
 			{
 				error = OCError(OCErrorAuthorizationFailed);
 			}
+
+			OCErrorAddDateFromResponse(error, response);
 		}
 	}
 

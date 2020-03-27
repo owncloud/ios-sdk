@@ -28,6 +28,7 @@
 {
 	NSMutableArray<OCMessagePresenter *> *_presenters;
 	NSHashTable<id<OCMessageResponseHandler>> *_responseHandlers;
+	NSHashTable<id<OCMessageAutoResolver>> *_autoResolvers;
 	OCRateLimiter *_observerRateLimiter;
 	dispatch_queue_t _workQueue;
 }
@@ -67,6 +68,7 @@
 
 		_presenters = [NSMutableArray new];
 		_responseHandlers = [NSHashTable weakObjectsHashTable];
+		_autoResolvers = [NSHashTable weakObjectsHashTable];
 
 		_observerRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
 
@@ -178,13 +180,32 @@
 
 		for (OCMessage *message in messages)
 		{
+			// Autoresolve
+			if (!message.handled)
+			{
+				NSArray<id<OCMessageAutoResolver>> *autoResolvers = nil;
+
+				@synchronized(self->_autoResolvers)
+				{
+					autoResolvers = [self->_autoResolvers allObjects]; // Make sure response handlers aren't deallocated while looping through them
+				}
+
+				for (id<OCMessageAutoResolver> autoResolver in autoResolvers)
+				{
+					if ([autoResolver autoresolveMessage:message])
+					{
+						*outDidModify = YES;
+					}
+				}
+			}
+
 			// Check presentation options
-			if (!message.presentedToUser)
+			if (!message.presentedToUser && !message.handled)
 			{
 				if ((message.lockingProcess == nil) ||
 				    ((message.lockingProcess != nil) &&
-				     ![message.lockingProcess isEqual:OCProcessManager.sharedProcessManager.processSession] &&
-				     ![OCProcessManager.sharedProcessManager isSessionValid:message.lockingProcess usingThoroughChecks:YES])
+				     ![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:message.lockingProcess] && // Not this app
+				     ![OCProcessManager.sharedProcessManager isSessionValid:message.lockingProcess usingThoroughChecks:YES]) // Not valid
 				   )
 				{
 					OCMessagePresenter *presenter;
@@ -392,6 +413,25 @@
 
 		return (messages);
 	}];
+}
+
+#pragma mark - Auto resolver
+- (void)addAutoResolver:(id<OCMessageAutoResolver>)autoResolver
+{
+	@synchronized(_autoResolvers)
+	{
+		[_autoResolvers addObject:autoResolver];
+	}
+
+	[self setNeedsMessageHandling];
+}
+
+- (void)removeAutoResolver:(id<OCMessageAutoResolver>)autoResolver
+{
+	@synchronized(_autoResolvers)
+	{
+		[_autoResolvers removeObject:autoResolver];
+	}
 }
 
 #pragma mark - Response handling

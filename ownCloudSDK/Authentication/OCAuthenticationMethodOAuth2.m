@@ -279,27 +279,24 @@ OCAuthenticationMethodAutoRegister
 
 				if (error != nil)
 				{
-					if (error!=nil)
+					#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
+					if (@available(iOS 12.0, *))
 					{
-						#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-						if (@available(iOS 12.0, *))
+						if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
 						{
-							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
+							// User cancelled authorization
+							error = OCError(OCErrorAuthorizationCancelled);
 						}
-						else
-						{
-							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
-						}
-						#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 					}
+					else
+					{
+						if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
+						{
+							// User cancelled authorization
+							error = OCError(OCErrorAuthorizationCancelled);
+						}
+					}
+					#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 					// Return errors
 					completionHandler(error, self.class.identifier, nil);
@@ -482,6 +479,8 @@ OCAuthenticationMethodAutoRegister
 				error = OCError(OCErrorAuthorizationRetry);
 			}
 		}
+
+		OCErrorAddDateFromResponse(error, response);
 	}
 
 	return (error);
