@@ -491,10 +491,7 @@
 		OCLogDebug(@"Received pong from %@", _session.bundleIdentifier);
 		[self stopListeningForPong];
 
-		if (!_responded)
-		{
-			_responded = YES;
-		}
+		_responded = YES;
 
 		if (_completionHandler != nil)
 		{

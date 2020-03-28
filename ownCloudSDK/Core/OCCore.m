@@ -763,7 +763,7 @@
 	if (query != nil)
 	{
 		[self queueBlock:^{
-			query.state = OCQueryStateStopped;
+			[query setState:OCQueryStateStopped];
 			[self->_queries removeObject:query];
 		}];
 	}
@@ -1717,6 +1717,8 @@
 			return;
 		}
 	}
+
+	block = [block copy];
 
 	dispatch_async(_queue, ^{
 		pthread_setspecific(self->_queueKey, (__bridge void *)self);
