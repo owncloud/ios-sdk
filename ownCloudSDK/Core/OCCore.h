@@ -191,6 +191,9 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
+	NSMutableDictionary <OCIPCNotificationName, id> *_remoteSyncEngineTriggerAcknowledgements;
+	NSMutableSet<OCSyncRecordID> *_remoteSyncEngineTimedOutSyncRecordIDs;
+
 	OCChecksumAlgorithmIdentifier _preferredChecksumAlgorithm;
 
 	BOOL _automaticItemListUpdatesEnabled;
