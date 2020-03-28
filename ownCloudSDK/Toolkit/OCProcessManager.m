@@ -26,7 +26,7 @@
 #import "OCIPNotificationCenter.h"
 #import "OCMacros.h"
 
-@interface OCProcessPing : NSObject
+@interface OCProcessPing : NSObject <OCLogTagging>
 {
 	BOOL _responded;
 	OCProcessSession *_session;
@@ -78,6 +78,8 @@
 		_processSession = [[OCProcessSession alloc] initForProcess];
 
 		_processStateDirectoryURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@".processManager" isDirectory:YES];
+
+		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		// Set up ping-pong
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:[OCProcessManager pingNotificationNameForSession:_processSession] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessManager *processManager, OCIPCNotificationName  _Nonnull notificationName) {
@@ -429,6 +431,7 @@
 		_timeout = timeout;
 
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
+			OCLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
 			[observer receivedPong];
 		}];
 	}
@@ -443,11 +446,16 @@
 
 - (void)sendPing
 {
+	OCLogDebug(@"Sending ping to %@", _session.bundleIdentifier);
+	[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:[OCProcessManager pingNotificationNameForSession:_session] ignoreSelf:YES];
+
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_timeout * (NSTimeInterval)NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		@synchronized(self)
 		{
 			if (!self->_responded)
 			{
+				OCLogDebug(@"Timeout waiting for pong from %@", self->_session.bundleIdentifier);
+
 				if (self->_completionHandler != nil)
 				{
 					self->_completionHandler(NO, nil);
@@ -475,6 +483,17 @@
 			_completionHandler = nil;
 		}
 	}
+}
+
+#pragma mark - Log tagging
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
+}
+
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
 }
 
 @end
