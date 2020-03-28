@@ -72,19 +72,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	_remoteSyncEngineTriggerAcknowledgements = [NSMutableDictionary new];
 	_remoteSyncEngineTimedOutSyncRecordIDs = [NSMutableSet new];
 
-	[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyActiveProcessCores usingModifier:^NSMutableSet<OCIPCNotificationName> * _Nullable(NSMutableSet<OCIPCNotificationName> *  _Nullable activeProcessCoreIDs, BOOL * _Nonnull outDidModify) {
-		if (activeProcessCoreIDs == nil)
-		{
-			activeProcessCoreIDs = [NSMutableSet new];
-		}
-
-		// Check in this bookmark/process combination as active core
-		[activeProcessCoreIDs addObject:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession]];
-
-		*outDidModify = YES;
-
-		return (activeProcessCoreIDs);
-	}];
+	[self renewActiveProcessCoreRegistration];
 
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[notificationCenter postNotificationForName:[core notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:OCProcessManager.sharedProcessManager.processSession] ignoreSelf:YES];
@@ -592,6 +580,9 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 {
 	[self beginActivity:@"process sync records"];
 
+	// Renew active process core registration
+	[self renewActiveProcessCoreRegistration];
+
 	// Transfer incoming OCEvents from KVS to the OCCore database
 	OCWaitInitAndStartTask(transferIncomingEvents);
 
@@ -996,6 +987,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	syncRecord.action.core = self;
 
 	// Check originating process session
+	// (ensures that completionHandlers and progress objects provided in/by that process can be called - and that sync issues are delivered first on the originating process)
 	if (syncRecord.originProcessSession != nil)
 	{
 		// Check that the record has not been exempt from origin process session checks
@@ -1263,6 +1255,27 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 }
 
 #pragma mark - Sync engine: remote status check
+- (void)renewActiveProcessCoreRegistration
+{
+	[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyActiveProcessCores usingModifier:^NSMutableSet<OCIPCNotificationName> * _Nullable(NSMutableSet<OCIPCNotificationName> *  _Nullable activeProcessCoreIDs, BOOL * _Nonnull outDidModify) {
+		OCIPCNotificationName triggerNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+		if (activeProcessCoreIDs == nil)
+		{
+			activeProcessCoreIDs = [NSMutableSet new];
+		}
+
+		// Check in this bookmark/process combination as active core
+		if (![activeProcessCoreIDs containsObject:triggerNotificationName])
+		{
+			[activeProcessCoreIDs addObject:triggerNotificationName];
+			*outDidModify = YES;
+		}
+
+		return (activeProcessCoreIDs);
+	}];
+}
+
 - (void)triggerRemoteSyncEngineForSyncRecord:(OCSyncRecord *)syncRecord processSession:(OCProcessSession *)processSession
 {
 	// Listen for acknowledgement response from remote sync engine

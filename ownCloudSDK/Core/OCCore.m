@@ -754,7 +754,7 @@
 	if (query != nil)
 	{
 		[self queueBlock:^{
-			[query setState:OCQueryStateStopped];
+			query.state = OCQueryStateStopped;
 			[self->_queries removeObject:query];
 		}];
 	}
