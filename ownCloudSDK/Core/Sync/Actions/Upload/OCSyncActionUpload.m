@@ -23,15 +23,39 @@
 #import "OCChecksumAlgorithmSHA1.h"
 #import "NSDate+OCDateParser.h"
 
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadKeepBoth;
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadRetry;
+
 @implementation OCSyncActionUpload
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierUpload);
+}
+
++ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Keep both
+		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierUploadKeepBoth categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]
+		] options:nil],
+
+		// Retry
+		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierUploadRetry categoryName:nil choices:@[
+			[OCSyncIssueChoice retryChoice]
+		] options:nil]
+	]);
+}
 
 #pragma mark - Initializer
 - (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierUpload;
-
 		self.parentItem = parentItem;
 
 		self.importFileURL = importFileURL;
@@ -282,26 +306,16 @@
 		{
 			// Create issue for cancellation for all other errors
 			OCSyncIssue *issue;
-			NSMutableArray <OCSyncIssueChoice *> *choices = [NSMutableArray new];
+			BOOL alreadyExists = [event.error isOCErrorWithCode:OCErrorItemAlreadyExists];
 
-			[choices addObject:[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]];
+			issue = [OCSyncIssue issueFromTemplate:(alreadyExists ? OCSyncIssueTemplateIdentifierUploadKeepBoth : OCSyncIssueTemplateIdentifierUploadRetry)
+						 forSyncRecord:syncContext.syncRecord
+							 level:OCIssueLevelError
+							 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
+						   description:event.error.localizedDescription
+						      metaData:nil];
 
-			if ([event.error isOCErrorWithCode:OCErrorItemAlreadyExists])
-			{
-				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]];
-//				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactDataLoss identifier:@"replaceExisting" label:OCLocalized(@"Replace existing") metaData:nil]];
-			}
-			else
-			{
-				[choices addObject:[[OCSyncIssueChoice retryChoice] withAutoChoiceForError:event.error]];
-			}
-
-			issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord
-							  level:OCIssueLevelError
-							  title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
-						    description:event.error.localizedDescription
-						       metaData:nil
-							choices:choices];
+			[issue setAutoChoiceError:event.error forChoiceWithIdentifier:OCSyncIssueChoiceIdentifierRetry];
 
 			[syncContext addSyncIssue:issue];
 			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition

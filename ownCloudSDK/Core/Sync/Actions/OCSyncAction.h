@@ -29,6 +29,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define OCSyncActionWrapNullableItem(item) ((item != nil) ? item : ((OCItem*)NSNull.null))
 
+#define OCSYNCACTION_REGISTER_ISSUETEMPLATES + (void)load { \
+	[OCSyncIssueTemplate registerTemplates:self.issueTemplates]; \
+}\
+
 @class OCSyncContext;
 
 typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
@@ -47,9 +51,12 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 	NSData *_archivedServerItemData;
 }
 
+#pragma mark - Class properties
+@property(strong,readonly,nonatomic,class) OCSyncActionIdentifier identifier; //!< Identifier of the action
+
 #pragma mark - Core properties
 @property(weak,nullable) OCCore *core; //!< The core using this sync action.
-@property(strong) OCSyncActionIdentifier identifier; //!< Identifier of the action (persisted)
+@property(strong,nonatomic) OCSyncActionIdentifier identifier; //!< Identifier of the action (persisted)
 @property(strong) NSArray<OCSyncActionCategory> *categories; //!< Categories this action belongs to.
 
 #pragma mark - Persisted properties
@@ -100,6 +107,12 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 
 #pragma mark - Issue handling
 - (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
+
+#pragma mark - Issue generation
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCSyncIssueTemplate *> *issueTemplates; //!< Issue templates (including auto-generated ones)
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCSyncIssueTemplate *> *actionIssueTemplates; //!< Issue templates (specific to an sync action class)
+
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact;
 
 #pragma mark - Restore progress
 - (nullable OCItem *)itemToRestoreProgressRegistrationFor;

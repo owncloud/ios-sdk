@@ -17,7 +17,6 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCSyncIssue.h"
 #import "OCProcessSession.h"
 #import "OCAppIdentity.h"
 #import "OCMessagePresenter.h"
@@ -28,11 +27,18 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSUUID* OCMessageUUID;
 
 @class OCCore;
+@class OCSyncIssue;
+
+typedef NSString* OCMessageCategoryIdentifier NS_TYPED_ENUM;
+typedef NSString* OCMessageThreadIdentifier;
 
 @interface OCMessage : NSObject <NSSecureCoding>
 
 @property(strong,readonly) NSDate *date; //!< Date the record was created
 @property(strong,nonatomic,readonly) OCMessageUUID uuid; //!< UUID of this record (identical to syncIssue.uuid for sync issues)
+
+@property(strong,nonatomic,nullable) OCMessageCategoryIdentifier categoryIdentifier; //!< Identifier used to categorize the message
+@property(strong,nonatomic,nullable) OCMessageThreadIdentifier threadIdentifier; //!< Identifier used to assign a message to a thread
 
 @property(strong,nonatomic,nullable) OCBookmarkUUID bookmarkUUID; //!< UUID of the bookmark that this message belongs to (nil for global issues)
 
@@ -51,3 +57,5 @@ typedef NSUUID* OCMessageUUID;
 @end
 
 NS_ASSUME_NONNULL_END
+
+#import "OCSyncIssue.h"

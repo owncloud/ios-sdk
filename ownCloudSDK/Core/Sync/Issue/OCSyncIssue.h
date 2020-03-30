@@ -21,6 +21,8 @@
 #import "OCSyncIssueChoice.h"
 #import "OCTypes.h"
 #import "OCEvent.h"
+#import "OCMessage.h"
+#import "OCSyncIssueTemplate.h"
 
 @class OCSyncRecord;
 @class OCWaitConditionIssue;
@@ -42,6 +44,8 @@ typedef NSUUID* OCSyncIssueUUID;
 @property(strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
 
+@property(strong,nullable) OCSyncIssueTemplateIdentifier templateIdentifier; //!< Identifier used to categorize the issue
+
 @property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
 
 @property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *routingInfo; //!< Internal, do not use
@@ -51,8 +55,15 @@ typedef NSUUID* OCSyncIssueUUID;
 #pragma mark - Sync Engine issues
 + (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
++ (nullable instancetype)issueFromTemplate:(OCSyncIssueTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
+
 #pragma mark - Other issues
 + (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
+
+//- (instancetype)withCategory:(OCMessageCategoryIdentifier)categoryIdentifier;
+
+- (OCSyncIssue *)mapAutoChoiceErrors:(NSDictionary<OCSyncIssueChoiceIdentifier, NSError *> *)choiceToAutoChoiceErrorMap;
+- (void)setAutoChoiceError:(NSError *)error forChoiceWithIdentifier:(OCSyncIssueChoiceIdentifier)choiceIdentifier;
 
 - (OCWaitConditionIssue *)makeWaitCondition; //!< Makes a wait condition wrapping the issue
 

@@ -54,6 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)dequeue:(OCMessage *)message; //!< Removes a message from the queue, cancelling presentation if its already presented
 - (void)dequeueAllMessagesForBookmarkUUID:(OCBookmarkUUID)bookmarkUUID; //!< Removes all messages from the queue targeted at bookmarkUUID.
 
+- (nullable OCMessage *)messageWithUUID:(OCMessageUUID)messageUUID; //!< Retrieves the message with the given UUID
+
 #pragma mark - Queue Handling
 - (void)setNeedsMessageHandling; //!< Triggers presentation and response handling
 

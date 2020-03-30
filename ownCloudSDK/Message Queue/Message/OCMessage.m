@@ -39,6 +39,8 @@
 		_date = syncIssue.creationDate;
 		_uuid = syncIssue.uuid;
 
+		_categoryIdentifier = syncIssue.templateIdentifier;
+
 		_syncIssue = syncIssue;
 		_bookmarkUUID = core.bookmark.uuid;
 	}
@@ -64,6 +66,9 @@
 		_date = [decoder decodeObjectOfClass:NSDate.class forKey:@"date"];
 		_uuid = [decoder decodeObjectOfClass:NSUUID.class forKey:@"uuid"];
 
+		_categoryIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"categoryIdentifier"];
+		_threadIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"threadIdentifier"];
+
 		_bookmarkUUID = [decoder decodeObjectOfClass:NSUUID.class forKey:@"bookmarkUUID"];
 
 		_syncIssue = [decoder decodeObjectOfClass:OCSyncIssue.class forKey:@"syncIssue"];
@@ -82,6 +87,9 @@
 {
 	[coder encodeObject:_date forKey:@"date"];
 	[coder encodeObject:_uuid forKey:@"uuid"];
+
+	[coder encodeObject:_categoryIdentifier forKey:@"categoryIdentifier"];
+	[coder encodeObject:_threadIdentifier forKey:@"threadIdentifier"];
 
 	[coder encodeObject:_bookmarkUUID forKey:@"bookmarkUUID"];
 

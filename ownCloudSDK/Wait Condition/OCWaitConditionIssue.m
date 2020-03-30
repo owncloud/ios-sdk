@@ -241,13 +241,12 @@
 {
 	if ((self = [super initWithCoder:decoder]) != nil)
 	{
-		_issue = [decoder decodeObjectOfClass:[OCSyncIssue class] forKey:@"issue"];
-		_processSession = [decoder decodeObjectOfClass:[OCProcessSession class] forKey:@"processSession"];
+		_issue = [decoder decodeObjectOfClass:OCSyncIssue.class forKey:@"issue"];
+		_processSession = [decoder decodeObjectOfClass:OCProcessSession.class forKey:@"processSession"];
 		_resolved = [decoder decodeBoolForKey:@"resolved"];
 	}
 
 	return (self);
 }
-
 
 @end

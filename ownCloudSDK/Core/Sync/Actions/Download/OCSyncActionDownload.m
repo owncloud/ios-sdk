@@ -23,15 +23,53 @@
 #import "OCCore+Claims.h"
 #import "OCWaitConditionMetaDataRefresh.h"
 
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadOverwrite = @"download.overwrite";
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadRetry = @"download.retry";
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadCancel = @"download.cancel";
+
 @implementation OCSyncActionDownload
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierDownload);
+}
+
++ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Overwrite
+		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadOverwrite categoryName:nil choices:@[
+			// Delete local representation and reschedule download
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
+
+			// Keep local modifications and drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil],
+
+		// Retry
+		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadRetry categoryName:nil choices:@[
+			// Reschedule sync record
+			[OCSyncIssueChoice retryChoice],
+
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+		] options:nil],
+
+		// Cancel
+		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadCancel categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+		] options:nil],
+	]);
+}
 
 #pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierDownload;
-
 		self.options = options;
 
 		self.actionEventType = OCEventTypeDownload;
@@ -176,13 +214,7 @@
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil choices:@[
-						// Delete local representation and reschedule download
-						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
-
-						// Keep local modifications and drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
-				]];
+				issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil];
 
 				OCLogDebug(@"record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
 
@@ -324,13 +356,7 @@
 
 				useDownloadedFile = NO;
 
-				issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil choices:@[
-					// Reschedule sync record
-					[OCSyncIssueChoice retryChoice],
-
-					// Drop sync record
-					[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-				]];
+				issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil];
 
 				[syncContext addSyncIssue:issue];
 			}
@@ -349,10 +375,7 @@
 
 					useDownloadedFile = NO;
 
-					issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil choices:@[
-						// Drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-					]];
+					issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil];
 
 					[syncContext addSyncIssue:issue];
 				}
@@ -530,7 +553,7 @@
 				// Create cancellation issue for any errors (TODO: extend options to include "Retry")
 				OCLogError(@"Wrapping download %@ error %@ into cancellation issue", item, downloadError);
 
-				[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+				[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 				[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 			}
 		}

@@ -37,6 +37,20 @@
 	return (issue);
 }
 
++ (instancetype)issueFromTemplate:(OCSyncIssueTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData
+{
+	OCSyncIssueTemplate *template;
+	OCSyncIssue *issue = nil;
+
+	if ((template = [OCSyncIssueTemplate templateForIdentifier:templateIdentifier]) != nil)
+	{
+		issue = [self issueForSyncRecord:syncRecord level:level title:title description:description metaData:metaData choices:template.choices];
+		issue.templateIdentifier = templateIdentifier;
+	}
+
+	return (issue);
+}
+
 + (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices
 {
 	OCSyncIssue *issue = [self new];
@@ -63,6 +77,44 @@
 	return (self);
 }
 
+//- (instancetype)withCategory:(OCMessageCategoryIdentifier)categoryIdentifier
+//{
+//	self.categoryIdentifier = categoryIdentifier;
+//	return (self);
+//}
+
+- (OCSyncIssue *)mapAutoChoiceErrors:(NSDictionary<OCSyncIssueChoiceIdentifier, NSError *> *)choiceToAutoChoiceErrorMap
+{
+	for (OCSyncIssueChoice *choice in _choices)
+	{
+		if (choice.identifier != nil)
+		{
+			NSError *error;
+
+			if ((error = choiceToAutoChoiceErrorMap[choice.identifier]) != nil)
+			{
+				choice.autoChoiceForError = error;
+			}
+		}
+	}
+
+	return (self);
+}
+
+- (void)setAutoChoiceError:(NSError *)error forChoiceWithIdentifier:(OCSyncIssueChoiceIdentifier)choiceIdentifier
+{
+	if ((error != nil) && (choiceIdentifier != nil))
+	{
+		for (OCSyncIssueChoice *choice in _choices)
+		{
+			if ([choice.identifier isEqual:choiceIdentifier])
+			{
+				choice.autoChoiceForError = error;
+			}
+		}
+	}
+}
+
 - (OCWaitConditionIssue *)makeWaitCondition
 {
 	return ([OCWaitConditionIssue waitForIssueResolution:self]);
@@ -84,6 +136,11 @@
 		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
 		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
 
+		_templateIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"templateIdentifier"];
+
+//		_categoryIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"categoryIdentifier"];
+//		_threadIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"threadIdentifier"];
+
 		_level = [decoder decodeIntegerForKey:@"level"];
 		_localizedTitle = [decoder decodeObjectOfClass:[NSString class] forKey:@"title"];
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"desc"];
@@ -102,6 +159,11 @@
 
 	[coder encodeObject:_uuid forKey:@"uuid"];
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
+
+	[coder encodeObject:_templateIdentifier forKey:@"templateIdentifier"];
+
+//	[coder encodeObject:_categoryIdentifier forKey:@"categoryIdentifier"];
+//	[coder encodeObject:_threadIdentifier forKey:@"threadIdentifier"];
 
 	[coder encodeInteger:_level forKey:@"level"];
 	[coder encodeObject:_localizedTitle forKey:@"title"];

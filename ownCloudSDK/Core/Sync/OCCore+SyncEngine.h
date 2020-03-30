@@ -60,7 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (SyncPrivate)
 
 #pragma mark - Sync issues utilities
-- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact;
 - (BOOL)_isConnectivityError:(NSError *)error;
 
 #pragma mark - Sync enqueue utilities

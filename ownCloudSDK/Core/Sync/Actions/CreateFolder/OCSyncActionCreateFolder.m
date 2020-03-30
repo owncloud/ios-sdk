@@ -20,14 +20,19 @@
 
 @implementation OCSyncActionCreateFolder
 
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierCreateFolder);
+}
+
 #pragma mark - Initializer
 - (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler
 {
 	if ((self = [super initWithItem:parentItem]) != nil)
 	{
 		OCItem *placeholderItem;
-
-		self.identifier = OCSyncActionIdentifierCreateFolder;
 
 		self.folderName = folderName;
 
@@ -144,7 +149,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 

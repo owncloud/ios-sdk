@@ -158,6 +158,47 @@
 	}];
 }
 
+- (OCMessage *)messageWithUUID:(OCMessageUUID)messageUUID
+{
+	__block OCMessage *foundMessage = nil;
+
+	// Check if the message is already known
+	@synchronized(self)
+	{
+		for (OCMessage *message in _messages)
+		{
+			if ([message.uuid isEqual:messageUUID])
+			{
+				foundMessage = message;
+				break;
+			}
+		}
+	}
+
+	// Load from storage and repeat search
+	if (foundMessage == nil)
+	{
+		__block NSMutableArray<OCMessage *> *messages = nil;
+
+		dispatch_sync(self->_workQueue, ^{
+			messages = [self->_storage readObjectForKey:OCKeyValueStoreKeySyncIssueQueue];
+
+			for (OCMessage *message in messages)
+			{
+				if ([message.uuid isEqual:messageUUID])
+				{
+					foundMessage = message;
+					break;
+				}
+			}
+		});
+
+		self.messages = messages;
+	}
+
+	return (foundMessage);
+}
+
 #pragma mark - Queue Handling
 - (void)setNeedsMessageHandling
 {
@@ -170,7 +211,10 @@
 
 - (void)setMessages:(NSArray<OCMessage *> * _Nonnull)messages
 {
-	_messages = messages;
+	@synchronized(self)
+	{
+		_messages = messages;
+	}
 }
 
 - (void)_handleMessages

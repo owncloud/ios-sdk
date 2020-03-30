@@ -18,15 +18,19 @@
 
 #import "OCSyncActionCopyMove.h"
 
+@interface OCSyncActionCopyMove ()
+{
+	OCSyncActionIdentifier _identifier;
+}
+@end
+
 @implementation OCSyncActionCopyMove
 
 #pragma mark - Initializer
-- (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename
+- (instancetype)initWithItem:(OCItem *)item targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = actionIdentifier;
-
 		self.targetName = targetName;
 		self.targetParentItem = targetParentItem;
 
@@ -472,7 +476,7 @@
 		if ((issueTitle!=nil) && (issueDescription!=nil))
 		{
 			// Create issue for cancellation for any errors
-			[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+			[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:issueTitle description:issueDescription impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 		}
 	}
@@ -528,6 +532,28 @@
 	[coder encodeBool:_isRename forKey:@"isRename"];
 	[coder encodeObject:_associatedItemLocalIDs forKey:@"associatedItemLocalIDs"];
 	[coder encodeObject:_associatedItemLaneTags forKey:@"associatedItemLaneTags"];
+}
+
+@end
+
+@implementation OCSyncActionCopy : OCSyncActionCopyMove
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return (OCSyncActionIdentifierCopy);
+}
+
+@end
+
+@implementation OCSyncActionMove : OCSyncActionCopyMove
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return (OCSyncActionIdentifierMove);
 }
 
 @end
