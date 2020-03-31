@@ -29,6 +29,15 @@ typedef NS_ENUM(NSUInteger, OCMessagePresentationPriority)
 	OCMessagePresentationPriorityHigh = 300	//!< The presenter wants priority in the presentation of the issue
 };
 
+typedef NS_OPTIONS(NSUInteger, OCMessagePresentationResult)
+{
+	OCMessagePresentationResultDidNotPresent = 0, //!< Use [] in Swift (which seems to drop .didNotPresent because of its 0 value)
+
+	OCMessagePresentationResultDidPresent = (1<<0),
+	OCMessagePresentationResultRequiresEndNotification = (1<<1),
+	OCMessagePresentationResultRequiresEndNotificationSameComponent = (1<<2)
+};
+
 @class OCMessageQueue;
 @class OCMessage;
 @class OCSyncIssueChoice;
@@ -44,9 +53,9 @@ typedef NSString* OCMessagePresenterComponentSpecificIdentifier;
 @property(readonly,nonatomic) OCMessagePresenterComponentSpecificIdentifier componentSpecificIdentifier; //!< App-Component-specific identifier, built from OCAppIdentity.componentIdentifier and .identifier
 
 - (OCMessagePresentationPriority)presentationPriorityFor:(OCMessage *)message; //!< Return the priority with which the presenter wants to present the record's issue. Return OCSyncIssuePresentationPriorityWontPresent to signal the record's issue shouldn't be presented through this presenter
-- (void)present:(OCMessage *)message completionHandler:(void(^)(BOOL didPresent, OCSyncIssueChoice * _Nullable choice))completionHandler; //!< Present the record's issue
+- (void)present:(OCMessage *)message completionHandler:(void(^)(OCMessagePresentationResult result, OCSyncIssueChoice * _Nullable choice))completionHandler; //!< Present the record's issue
 
-//- (void)cancelPresentationOfMessage:(OCMessage *)message; //!< Cancel the presentation of a message
+- (void)endPresentationOfMessage:(OCMessage *)message; //!< End the presentation of a message
 
 @end
 

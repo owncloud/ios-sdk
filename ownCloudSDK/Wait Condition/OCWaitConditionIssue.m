@@ -94,22 +94,6 @@
 
 			if ([core.delegate respondsToSelector:@selector(core:handleSyncIssue:)])
 			{
-//				OCIssue *issue;
-//				OCSyncIssue *syncIssue = _issue;
-//				__weak OCCore *weakCore = core;
-//
-//				[core beginActivity:@"Handle issue"];
-//
-//				issue = [OCIssue issueFromSyncIssue:syncIssue forCore:core resolutionResultHandler:^(OCSyncIssueChoice *choice) {
-//					[weakCore resolveSyncIssue:syncIssue withChoice:choice userInfo:userInfo completionHandler:nil];
-//					[weakCore endActivity:@"Handle issue"];
-//				}];
-//
-//				issue.allowsQueuing = YES;
-//				issue.enqueueHandler = ^(OCIssue * _Nonnull issue) {
-//					[weakCore endActivity:@"Handle issue"];
-//				};
-//
 				submitToQueue = [core.delegate core:core handleSyncIssue:_issue];
 			}
 
@@ -118,47 +102,6 @@
 			{
 				[core.messageQueue enqueue:[[OCMessage alloc] initWithSyncIssue:_issue fromCore:core]];
 			}
-
-//			else
-//			{
-//				// User can't be asked, so the SDK needs to choose
-//				OCSyncIssueChoice *selectChoice = nil, *nonDestructiveChoice = nil, *destructiveChoice = nil, *defaultChoice = nil;
-//
-//				// Search for default, non-destructive and data loss choices
-//				for (OCSyncIssueChoice *choice in _issue.choices)
-//				{
-//					if (choice.type == OCIssueChoiceTypeDefault)
-//					{
-//						defaultChoice = choice;
-//					}
-//
-//					if (choice.impact == OCSyncIssueChoiceImpactNonDestructive)
-//					{
-//						nonDestructiveChoice = choice;
-//					}
-//	//
-//	//				if ((choice.impact == OCSyncIssueChoiceImpactDataLoss) && (destructiveChoice == nil))
-//	//				{
-//	//					destructiveChoice = choice;
-//	//				}
-//				}
-//
-//				// Use the default choice, non-destructive choice, data lass choice (in that order)
-//				selectChoice = (defaultChoice != nil) ? defaultChoice : ((nonDestructiveChoice != nil) ? nonDestructiveChoice : destructiveChoice);
-//
-//				// Select the choice
-//				if (selectChoice != nil)
-//				{
-//					_processSession = [OCProcessManager sharedProcessManager].processSession; // Update processSession to current
-//
-//					[core resolveSyncIssue:_issue withChoice:selectChoice userInfo:userInfo completionHandler:nil];
-//				}
-//				else
-//				{
-//					// Could not pick a choice automatically
-//					OCLogWarning(@"Failed to pick a choice from issue=%@, waiting for app to pick it up", _issue);
-//				}
-//			}
 		}
 		else
 		{

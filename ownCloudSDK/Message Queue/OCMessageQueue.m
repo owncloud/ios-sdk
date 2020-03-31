@@ -29,7 +29,13 @@
 	NSMutableArray<OCMessagePresenter *> *_presenters;
 	NSHashTable<id<OCMessageResponseHandler>> *_responseHandlers;
 	NSHashTable<id<OCMessageAutoResolver>> *_autoResolvers;
+
+	NSMapTable<OCMessageUUID, OCMessagePresenter *> *_activePresenterByMessageUUID;
+
+	NSMutableSet<OCMessageUUID> *_messageUUIDs;
+
 	OCRateLimiter *_observerRateLimiter;
+
 	dispatch_queue_t _workQueue;
 }
 @end
@@ -69,6 +75,7 @@
 		_presenters = [NSMutableArray new];
 		_responseHandlers = [NSHashTable weakObjectsHashTable];
 		_autoResolvers = [NSHashTable weakObjectsHashTable];
+		_activePresenterByMessageUUID = [NSMapTable strongToWeakObjectsMapTable];
 
 		_observerRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
 
@@ -129,7 +136,7 @@
 
 		if (messagePresenter != nil)
 		{
-			[self presentMessage:newMessage withPresenter:messagePresenter];
+			[self _presentMessage:newMessage withPresenter:messagePresenter activePresenter:YES];
 		}
 	});
 }
@@ -139,8 +146,9 @@
 	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> *messages, OCMessage *message) {
 		if (message != nil)
 		{
-			[messages removeObject:message];
+			message.removed = YES;
 		}
+
 		return (message != nil);
 	}];
 }
@@ -148,13 +156,18 @@
 - (void)dequeueAllMessagesForBookmarkUUID:(OCBookmarkUUID)bookmarkUUID
 {
 	[self _performOnMessage:nil updates:^BOOL(NSMutableArray<OCMessage *> *messages, OCMessage *message) {
-		NSUInteger messagesCount = messages.count;
+		BOOL messageRemoved = NO;
 
-		[messages filterUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(OCMessage *message, NSDictionary<NSString *,id> * _Nullable bindings) {
-			return ((message.bookmarkUUID == nil) || ((message.bookmarkUUID != nil) && ![message.bookmarkUUID isEqual:bookmarkUUID]));
-		}]];
+		for (OCMessage *message in messages)
+		{
+			if ((message.bookmarkUUID != nil) && ![message.bookmarkUUID isEqual:bookmarkUUID])
+			{
+				message.removed = YES;
+				messageRemoved = YES;
+			}
+		}
 
-		return (messagesCount != messages.count);
+		return (messageRemoved);
 	}];
 }
 
@@ -219,13 +232,18 @@
 
 - (void)_handleMessages
 {
+	NSMutableSet<OCMessageUUID> *messageUUIDs = [NSMutableSet new];
+	NSMutableSet<OCMessageUUID> *removedMessageUUIDs = nil;
+
 	[_storage updateObjectForKey:OCKeyValueStoreKeySyncIssueQueue usingModifier:^id _Nullable(NSMutableArray<OCMessage *> *messages, BOOL *outDidModify) {
 		NSMutableArray<OCMessage *> *newMessages = [messages mutableCopy];
 
 		for (OCMessage *message in messages)
 		{
+			[messageUUIDs addObject:message.uuid];
+
 			// Autoresolve
-			if (!message.handled)
+			if (!message.handled && !message.removed)
 			{
 				NSArray<id<OCMessageAutoResolver>> *autoResolvers = nil;
 
@@ -244,7 +262,7 @@
 			}
 
 			// Check presentation options
-			if (!message.presentedToUser && !message.handled)
+			if (!message.presentedToUser && !message.handled && !message.removed)
 			{
 				if ((message.lockingProcess == nil) ||
 				    ((message.lockingProcess != nil) &&
@@ -259,13 +277,13 @@
 						message.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
 						*outDidModify = YES;
 
-						[self presentMessage:message withPresenter:presenter];
+						[self _presentMessage:message withPresenter:presenter activePresenter:YES];
 					}
 				}
 			}
 
 			// Handle result
-			if (message.handled)
+			if (message.handled && !message.removed)
 			{
 				NSArray<id<OCMessageResponseHandler>> *responseHandlers = nil;
 
@@ -278,9 +296,58 @@
 				{
 					if ([responseHandler handleResponseToMessage:message])
 					{
-						[newMessages removeObject:message];
+						message.removed = YES;
 						*outDidModify = YES;
 					}
+				}
+			}
+
+			// Handle removal
+			if (message.removed)
+			{
+				// Notify presenters of end of notification where it's required
+				if (message.presentationRequiresEndNotification)
+				{
+					if ((message.presentationAppComponentIdentifier == nil) || // No binding to component
+					   ((message.presentationAppComponentIdentifier != nil) && [message.presentationAppComponentIdentifier isEqual:OCAppIdentity.sharedAppIdentity.componentIdentifier])) // Binding to the current component
+					{
+						OCMessagePresenter *notifyPresenter = nil;
+
+						@synchronized(self->_presenters)
+						{
+							for (OCMessagePresenter *presenter in self->_presenters)
+							{
+								if ([presenter.identifier isEqual:message.presentationPresenterIdentifier])
+								{
+									notifyPresenter = presenter;
+									break;
+								}
+							}
+						}
+
+						if (notifyPresenter != nil)
+						{
+							// Notify presenter
+							dispatch_async(dispatch_get_main_queue(), ^{
+								[notifyPresenter endPresentationOfMessage:message];
+							});
+
+							// Remove presenter information
+							message.presentationAppComponentIdentifier = nil;
+							message.presentationPresenterIdentifier = nil;
+
+							// Remove end notification requirement
+							message.presentationRequiresEndNotification = NO;
+							*outDidModify = YES;
+						}
+					}
+				}
+
+				// No end notification needed (or already performed) - message can be removed
+				if (!message.presentationRequiresEndNotification)
+				{
+					[newMessages removeObject:message];
+					*outDidModify = YES;
 				}
 			}
 		}
@@ -289,6 +356,24 @@
 
 		return (newMessages);
 	}];
+
+	// Determine removed message UUIDs
+	@synchronized(self)
+	{
+		[_messageUUIDs minusSet:messageUUIDs];
+		removedMessageUUIDs = _messageUUIDs;
+
+		_messageUUIDs = messageUUIDs;
+	}
+
+	// Post notifications for removed messages
+	if (removedMessageUUIDs.count > 0)
+	{
+		for (OCMessageUUID messageUUID in removedMessageUUIDs)
+		{
+			[NSNotificationCenter.defaultCenter postNotificationName:OCMessageRemovedNotification object:messageUUID];
+		}
+	}
 }
 
 #pragma mark - Issue resolution
@@ -299,13 +384,16 @@
 
 		for (OCMessage *message in messages)
 		{
-			if (!message.handled && (message.syncIssue != nil) && [message.bookmarkUUID isEqual:bookmarkUUID])
+			if (!message.handled && !message.removed && (message.syncIssue != nil) && [message.bookmarkUUID isEqual:bookmarkUUID])
 			{
 				for (OCSyncIssueChoice *choice in message.syncIssue.choices)
 				{
 					if ([choice.autoChoiceForError isEqual:error])
 					{
 						message.syncIssueChoice = choice;
+
+						[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
+
 						updated = YES;
 					}
 				}
@@ -321,9 +409,12 @@
 	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message) {
 		BOOL updated = NO;
 
-		if (!message.handled && (message.syncIssue != nil))
+		if (!message.handled && !message.removed && (message.syncIssue != nil))
 		{
 			message.syncIssueChoice = choice;
+
+			[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
+
 			updated = YES;
 		}
 
@@ -391,29 +482,85 @@
 	return (presenter);
 }
 
-- (void)presentMessage:(OCMessage *)message withPresenter:(OCMessagePresenter *)presenter
+- (void)_presentMessage:(OCMessage *)message withPresenter:(OCMessagePresenter *)presenter activePresenter:(BOOL)activePresenter
 {
 	dispatch_async(dispatch_get_main_queue(), ^{
-		[presenter present:message completionHandler:^(BOOL didPresent, OCSyncIssueChoice * _Nullable choice) {
-			[self _handlePresentationResultForMessage:message didPresent:didPresent choice:choice];
+		if (activePresenter)
+		{
+			@synchronized(self->_activePresenterByMessageUUID)
+			{
+				[self->_activePresenterByMessageUUID setObject:presenter forKey:message.uuid];
+			}
+		}
+
+		[presenter present:message completionHandler:^(OCMessagePresentationResult result, OCSyncIssueChoice * _Nullable choice) {
+			if (activePresenter)
+			{
+				@synchronized(self->_activePresenterByMessageUUID)
+				{
+					[self->_activePresenterByMessageUUID removeObjectForKey:message.uuid];
+				}
+			}
+
+			[self _handlePresenter:presenter resultForMessage:message result:result choice:choice activePresenter:activePresenter];
 		}];
 	});
 }
 
-- (void)_handlePresentationResultForMessage:(OCMessage *)message didPresent:(BOOL)didPresent choice:(OCSyncIssueChoice *)choice
+- (void)present:(OCMessage *)message withPresenter:(OCMessagePresenter *)presenter
+{
+	[self _presentMessage:message withPresenter:presenter activePresenter:NO];
+}
+
+- (void)_notifyActivePresenterForEndOfPresentationOfMessage:(OCMessage *)message
+{
+	OCMessagePresenter *presenter = nil;
+
+	@synchronized(self->_activePresenterByMessageUUID)
+	{
+		presenter = [self->_activePresenterByMessageUUID objectForKey:message.uuid];
+		[self->_activePresenterByMessageUUID removeObjectForKey:message.uuid];
+	}
+
+	if (presenter != nil)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[presenter endPresentationOfMessage:message];
+		});
+	}
+}
+
+- (void)_handlePresenter:(OCMessagePresenter *)presenter resultForMessage:(OCMessage *)message result:(OCMessagePresentationResult)result choice:(OCSyncIssueChoice *)choice activePresenter:(BOOL)activePresenter
 {
 	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> *messages, OCMessage *message) {
 		BOOL update = NO;
+		BOOL didPresent = (result != 0);
 
 		if (didPresent && !message.presentedToUser)
 		{
 			message.presentedToUser = YES;
+
+			if ((result & OCMessagePresentationResultRequiresEndNotification) != 0)
+			{
+				message.presentationPresenterIdentifier = presenter.identifier;
+
+				if ((result & OCMessagePresentationResultRequiresEndNotificationSameComponent) != 0)
+				{
+					message.presentationAppComponentIdentifier = OCAppIdentity.sharedAppIdentity.componentIdentifier;
+				}
+
+				message.presentationRequiresEndNotification = YES;
+			}
+
 			update = YES;
 		}
 
 		if (choice != nil)
 		{
 			message.syncIssueChoice = choice;
+
+			[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
+
 			update = YES;
 		}
 
@@ -500,3 +647,4 @@
 @end
 
 OCKeyValueStoreKey OCKeyValueStoreKeySyncIssueQueue = @"syncIssueQueue";
+NSNotificationName OCMessageRemovedNotification = @"OCMessageRemovedNotification"; //!< Posted on all active processes with the message.uuid as notification.object - for messages that have been removed

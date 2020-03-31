@@ -127,7 +127,7 @@ typedef id<NSObject> OCCoreItemTracking;
 - (void)core:(OCCore *)core handleError:(nullable NSError *)error issue:(nullable OCIssue *)issue;
 
 @optional
-- (BOOL)core:(OCCore *)core handleSyncIssue:(nullable OCSyncIssue *)syncIssue; //!< Implement this method if you want to get a chance of handling sync issues before they are submitted to the core's OCMessageQueue. Return YES if you handled it, NO if it should still be submitted to the OCMessageQueue. Use [OCIssue issueFromSyncIssue:syncIssue forCore:core] to convert sync issues received this way to OCIssue instances.
+- (BOOL)core:(OCCore *)core handleSyncIssue:(nullable OCSyncIssue *)syncIssue; //!< Implement this method if you want to get a chance to handle sync issues before they are submitted to the core's OCMessageQueue. Return YES if you handled it, NO if it should still be submitted to the OCMessageQueue. Use [OCIssue issueFromSyncIssue:syncIssue forCore:core] to convert sync issues received this way to OCIssue instances.
 
 @end
 

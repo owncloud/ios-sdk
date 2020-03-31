@@ -23,8 +23,8 @@
 #import "OCChecksumAlgorithmSHA1.h"
 #import "NSDate+OCDateParser.h"
 
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadKeepBoth;
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadRetry;
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadKeepBoth = @"upload.keep-both";
+static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadRetry = @"upload.retry";
 
 @implementation OCSyncActionUpload
 

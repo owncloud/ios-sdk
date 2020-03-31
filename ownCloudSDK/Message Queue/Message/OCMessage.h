@@ -50,6 +50,12 @@ typedef NSString* OCMessageThreadIdentifier;
 
 @property(assign) BOOL presentedToUser; //!< Indicator if the message has previously been presented to the user
 
+@property(strong,nullable) OCMessagePresenterIdentifier presentationPresenterIdentifier; //!< The identifier of the presenter that presented the message to the user
+@property(strong,nullable) OCAppComponentIdentifier presentationAppComponentIdentifier; //!< The identifier of the app component from which the presentation originated. Only set this if the presentation end notification needs to be delivered in this exact app component.
+@property(assign) BOOL presentationRequiresEndNotification; //!< YES if the presenter requires a call to -[OCMessagePresenter endPresentationOfMessage:] before the message is removed from the queue.
+
+@property(assign) BOOL removed; //!< YES if the message should be considered removed, and be removed as soon as .presentationRequiresEndNotification has been honored.
+
 @property(nonatomic,readonly) BOOL handled; //!< Indicator if the message has already been handled (automatically, or through user interaction)
 
 - (instancetype)initWithSyncIssue:(OCSyncIssue *)syncIssue fromCore:(OCCore *)core;

@@ -67,6 +67,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addPresenter:(OCMessagePresenter *)presenter;
 - (void)removePresenter:(OCMessagePresenter *)presenter;
 
+- (void)present:(OCMessage *)message withPresenter:(OCMessagePresenter *)presenter;
+
 #pragma mark - Auto resolver
 - (void)addAutoResolver:(id<OCMessageAutoResolver>)autoResolver; //!< Adds a response handler, but only keeps a weak reference.
 - (void)removeAutoResolver:(id<OCMessageAutoResolver>)autoResolver; //!< Removes a response handler.
@@ -78,5 +80,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern OCKeyValueStoreKey OCKeyValueStoreKeySyncIssueQueue;
+
+extern NSNotificationName OCMessageRemovedNotification;
 
 NS_ASSUME_NONNULL_END

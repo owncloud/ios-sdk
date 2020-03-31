@@ -78,6 +78,13 @@
 		_lockingProcess = [decoder decodeObjectOfClass:OCProcessSession.class forKey:@"lockingProcess"];
 
 		_presentedToUser = [decoder decodeBoolForKey:@"presentedToUser"];
+
+		_presentationPresenterIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"presentationPresenterIdentifier"];
+		_presentationAppComponentIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"presentationAppComponentIdentifier"];
+
+		_presentationRequiresEndNotification = [decoder decodeBoolForKey:@"presentationRequiresEndNotification"];
+
+		_removed = [decoder decodeBoolForKey:@"removed"];
 	}
 
 	return (self);
@@ -100,6 +107,13 @@
 	[coder encodeObject:_lockingProcess forKey:@"lockingProcess"];
 
 	[coder encodeBool:_presentedToUser forKey:@"presentedToUser"];
+
+	[coder encodeObject:_presentationPresenterIdentifier forKey:@"presentationPresenterIdentifier"];
+	[coder encodeObject:_presentationAppComponentIdentifier forKey:@"presentationAppComponentIdentifier"];
+
+	[coder encodeBool:_presentationRequiresEndNotification forKey:@"presentationRequiresEndNotification"];
+
+	[coder encodeBool:_removed forKey:@"removed"];
 }
 
 @end

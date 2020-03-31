@@ -1,4 +1,4 @@
-# Message Queue Concept
+# Message Queue Overview
 
 ## Components
 ### Queue
@@ -16,12 +16,13 @@
 	- the presenter with the highest priority wins
 - present messages and indicate outcome via provided completionHandler
 	-> can indicate if the presentation was successful
+		-> can indicate if the presenter wants to be notified before the message is removed from the queue (to f.ex.allow for deletion of notifications)
 	-> can indicate a user's choice for `OCSyncIssue`s
 
 ### ResponseHandler
 - handle messages that have received a response
 - indicate if a message was handled
-	-> if it was handled, is removed from the queue
+	-> if it was handled, is marked as removed from the queue
 	
 ### AutoResolver
 - attempt automatic handling of messages
@@ -49,4 +50,7 @@
 		-> if `.presentedToUser` == `NO` and `.handled` == `NO`
 			-> checks for suitable presenter and presents the message if one is found
 		-> if `.handled` == `YES`: asks responseHandlers to handle the response
-			-> if responseHandler returns `YES`: removes the message
+			-> if responseHandler returns `YES`: sets `.removed` to `YES`
+		-> if `.removed` == `YES`: checks if the presenter wanted to be notified (via `presentationRequiresEndNotification`)
+			-> notifies the presenter if so, and subsequently removes the presenter info, setting `presentationRequiresEndNotification` to `NO`
+			-> if `presentationRequiresEndNotification` is `NO`, removes the message
