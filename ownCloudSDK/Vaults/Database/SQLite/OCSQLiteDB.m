@@ -177,7 +177,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 - (BOOL)isOnSQLiteThread
 {
-	return ([OCRunLoopThread currentRunLoopThread] == self.runLoopThread);
+	return (self.runLoopThread.isCurrentThread);
 }
 
 #pragma mark - Accessors

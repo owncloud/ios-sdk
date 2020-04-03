@@ -15,6 +15,7 @@
 #import <pthread/pthread.h>
 
 static NSString *kISRunLoopThreadNameMain = @"__main__";
+static NSString *kISRunLoopThreadUUIDKey = @"_runLoopThreadUUID";
 
 @implementation OCRunLoopThread
 
@@ -22,6 +23,8 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 
 @synthesize thread;
 @synthesize runLoop;
+
+@synthesize uuid = _uuid;
 
 + (NSMutableDictionary *)_runLoopThreadsByNameDict
 {
@@ -31,7 +34,7 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 	dispatch_once(&onceToken, ^{
 		sISRunLoopThreadsByName = [[NSMutableDictionary alloc] init];
 	});
-	
+
 	return (sISRunLoopThreadsByName);
 }
 
@@ -54,23 +57,24 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 		{
 			NSMutableDictionary *threadsByNameDict = [self _runLoopThreadsByNameDict];
 			NSThread *currentThread = [NSThread currentThread];
-		
+			NSUUID *currentThreadUUID = currentThread.threadDictionary[kISRunLoopThreadUUIDKey];
+
 			for (NSString *name in threadsByNameDict)
 			{
 				OCRunLoopThread *runLoopThread;
-				
+
 				runLoopThread = [threadsByNameDict objectForKey:name];
-				
-				if (runLoopThread.thread == currentThread)
+
+				if ((runLoopThread.thread == currentThread) || [currentThreadUUID isEqual:runLoopThread.uuid] || [runLoopThread.thread isEqual:currentThread])
 				{
 					return (runLoopThread);
 				}
 			}
-			
+
 			if ((currentRunLoopThread = [[OCRunLoopThread alloc] initWithName:[NSString stringWithFormat:@"%p",currentThread] thread:currentThread runLoop:[NSRunLoop currentRunLoop]]) != nil)
 			{
 				[threadsByNameDict setObject:currentRunLoopThread forKey:currentRunLoopThread.name];
-				
+
 				[currentRunLoopThread release];
 			}
 		}
@@ -82,13 +86,13 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 + (instancetype)runLoopThreadNamed:(NSString *)runLoopThreadName
 {
 	OCRunLoopThread *runLoopThread = nil;
-	
+
 	if (runLoopThreadName==nil) { return(nil); }
 
 	@synchronized(self)
 	{
 		runLoopThread = [[self _runLoopThreadsByNameDict] objectForKey:runLoopThreadName];
-		
+
 		if (runLoopThread == nil)
 		{
 			if ([runLoopThreadName isEqual:kISRunLoopThreadNameMain])
@@ -99,7 +103,7 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 			{
 				runLoopThread = [[self alloc] initWithName:runLoopThreadName];
 			}
-			
+
 			if (runLoopThread != nil)
 			{
 				[[self _runLoopThreadsByNameDict] setObject:runLoopThread forKey:runLoopThreadName];
@@ -107,7 +111,7 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 			}
 		}
 	}
-	
+
 	return (runLoopThread);
 }
 
@@ -116,8 +120,9 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 	if ((self = [super init]) != nil)
 	{
 		_syncSemaphore = dispatch_semaphore_create(0);
+		_uuid = [NSUUID new];
 	}
-	
+
 	return (self);
 }
 
@@ -130,7 +135,7 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 		runLoop = [NSRunLoop mainRunLoop];
 		thread = [[NSThread mainThread] retain];
 	}
-	
+
 	return (self);
 }
 
@@ -142,13 +147,13 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 
 		runLoop = nil;
 		thread = [[NSThread alloc] initWithTarget:self selector:@selector(_threadMain:) object:nil];
-		
+
 		[thread start];
-		
+
 		// Wait for thread's runloop to become available
 		dispatch_semaphore_wait(_syncSemaphore,DISPATCH_TIME_FOREVER);
 	}
-	
+
 	return (self);
 }
 
@@ -160,7 +165,7 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 		thread = [aThread retain];
 		runLoop = aRunLoop;
 	}
-	
+
 	return (self);
 }
 
@@ -168,12 +173,15 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 {
 	[name release];
 	name = nil;
-	
+
 	[thread release];
 	thread = nil;
-	
+
 	[_syncSemaphore release];
 	_syncSemaphore = nil;
+
+	[_uuid release];
+	_uuid = nil;
 
 	[super dealloc];
 }
@@ -181,16 +189,18 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 - (void)_threadMain:(id)sender
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        
+
         // Set thread name
 	NSString *runLoopThreadName = [NSString stringWithFormat:@"ISRunLoopThread:%@",name];
-	
+
 	pthread_setname_np([runLoopThreadName UTF8String]);
 	[[NSThread currentThread] setName:runLoopThreadName];
-	
+
+	thread.threadDictionary[kISRunLoopThreadUUIDKey] = _uuid;
+
 	// Get runloop
 	runLoop = [NSRunLoop currentRunLoop];
-	
+
 	// Signal init
 	dispatch_semaphore_signal(_syncSemaphore);
 
@@ -198,16 +208,16 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 	do
 	{
 		NSDate *runUntil;
-		
+
 		if ((runUntil = [[NSDate alloc] initWithTimeIntervalSinceNow:5.0]) != nil)
 		{
 			[[NSRunLoop currentRunLoop] runUntilDate:runUntil];
-			
+
 			[runUntil release];
 		}
 
 	}while(![thread isCancelled]);
-	
+
 	// Clean up thread
 	runLoop = nil;
 
@@ -219,11 +229,11 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 	if (block != nil)
 	{
 		dispatch_block_t jobBlock;
-		
+
 		if ((jobBlock = [block copy]) != nil)
 		{
 			[self performSelector:@selector(_executeBlock:) onThread:thread withObject:jobBlock waitUntilDone:NO];
-			
+
 			[jobBlock release];
 		}
 	}
@@ -248,6 +258,17 @@ static NSString *kISRunLoopThreadNameMain = @"__main__";
 	{
 		block();
 	}
+}
+
+- (BOOL)isCurrentThread
+{
+	NSThread *currentThread = NSThread.currentThread;
+
+	return (
+		(currentThread == thread) || // Thread pointers identical
+		[currentThread.threadDictionary[kISRunLoopThreadUUIDKey] isEqual:_uuid] || // UUID identical
+		[currentThread isEqual:thread] // Thread objects equal
+	);
 }
 
 @end
