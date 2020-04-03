@@ -1502,14 +1502,21 @@
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			event.databaseID = rowID;
 
-			self->_eventsByDatabaseID[rowID] = event;
+			if (rowID != nil)
+			{
+				self->_eventsByDatabaseID[rowID] = event;
+			}
+			else
+			{
+				OCLogError(@"Unexpected return fromSQL insert into events table, rowID == nil, error: %@, event: %@", error, event);
+			}
 
 			completionHandler(self, error);
 		}]];
 	}
 	else
 	{
-		OCLogError(@"Could not serialize event=%@ to eventData=%@ or missing recordID=%@", event, eventData, syncRecordID);
+		OCLogError(@"Could not serialize event=%@ due to eventData=%@ or missing recordID=%@", event, eventData, syncRecordID);
 		completionHandler(self, OCError(OCErrorInsufficientParameters));
 	}
 }
@@ -1518,7 +1525,7 @@
 {
 	if (!self.sqlDB.isOnSQLiteThread)
 	{
-		OCLogError(@"%@ may only be called on the SQLite thread. Returning nil.", @(__PRETTY_FUNCTION__));
+		OCLogError(@"%@ may only be called on the SQLite thread. Returning NO.", @(__PRETTY_FUNCTION__));
 		return (NO);
 	}
 

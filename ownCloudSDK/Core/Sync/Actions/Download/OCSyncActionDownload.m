@@ -53,9 +53,15 @@
 	{
 		item.lastUsed = [NSDate new];
 
+		OCLogDebug(@"Preflight on item=%@\narchivedServerItem=%@\n- item.itemVersionIdentifier=%@\n- item.localCopyVersionIdentifier=%@\n- archivedServerItem.itemVersionIdentifier=%@", item, self.archivedServerItem, item.itemVersionIdentifier, item.localCopyVersionIdentifier, self.archivedServerItem.itemVersionIdentifier);
+
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
-		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier]) // Local item version is identical to latest known version on the server
+		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier] &&  // Local item version is identical to latest known version on the server
+		    ( (item.localCopyVersionIdentifier == nil) || // Either the local copy has no item version (typical for uploading files) …
+		     ((item.localCopyVersionIdentifier != nil) && [item.localCopyVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier])))  // … or the item version exists and is identical to the latest item version (typical for downloaded files - or after upload completion)
 		{
+			OCLogDebug(@"Latest item version already downloaded");
+
 			// Item already downloaded - take some shortcuts
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
@@ -99,6 +105,8 @@
 			syncContext.removeRecords = @[ syncContext.syncRecord ];
 
 			[syncContext completeWithError:OCError(OCErrorItemNotAvailableOffline) core:self.core item:item parameter:nil];
+
+			OCLogDebug(@"Connection offline and returnImmediately flag set => canceled download");
 		}
 		else
 		{
@@ -106,6 +114,8 @@
 			[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDownloading];
 
 			syncContext.updatedItems = @[ item ];
+
+			OCLogDebug(@"Preflight completed for downloading %@", item);
 		}
 	}
 }
@@ -145,7 +155,7 @@
 
 		OCLogDebug(@"record %@ download: retrieve latest version from cache", syncContext.syncRecord);
 
-		latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:&error];
+		latestVersionOfItem = [self.core retrieveLatestVersionForLocalIDOfItem:item withError:&error];
 
 		OCLogDebug(@"record %@ download: latest version from cache: %@", syncContext.syncRecord, latestVersionOfItem);
 
@@ -329,7 +339,7 @@
 		// Check for locally modified version
 		if (useDownloadedFile)
 		{
-			if ((latestVersionOfItem = [self.core retrieveLatestVersionOfItem:item withError:NULL]) != nil)
+			if ((latestVersionOfItem = [self.core retrieveLatestVersionAtPathOfItem:item withError:NULL]) != nil)
 			{
 				// This catches the edge case where a file was locally modified WHILE a download of the same file was already scheduled
 				// The case where a download is initiated when a locally modified version exists is caught in download scheduling
@@ -397,7 +407,7 @@
 					item.localCopyVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:event.file.fileID eTag:event.file.eTag];
 
 					item.downloadTriggerIdentifier = self.options[OCCoreOptionDownloadTriggerID];
-					item.fileClaim = self.options[OCCoreOptionAddFileClaim];
+					item.fileClaim = [OCClaim combining:self.localItem.fileClaim with:self.options[OCCoreOptionAddFileClaim] usingOperator:OCClaimGroupOperatorOR];
 
 					downloadedFile.url = vaultItemURL;
 
@@ -547,7 +557,7 @@
 				OCItem *latestItem;
 				NSError *error = nil;
 
-				if ((latestItem = [self.core retrieveLatestVersionOfItem:self.archivedServerItem withError:&error]) != nil)
+				if ((latestItem = [self.core retrieveLatestVersionAtPathOfItem:self.archivedServerItem withError:&error]) != nil)
 				{
 					if (latestItem.locallyModified)
 					{

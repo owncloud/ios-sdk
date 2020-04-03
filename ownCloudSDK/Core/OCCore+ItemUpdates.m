@@ -65,40 +65,62 @@
 		return;
 	}
 
-	// Remove outdated versions of updated items
-	if (updatedItems.count > 0)
-	{
-		for (OCItem *updateItem in updatedItems)
-		{
-			if ((!updateItem.locallyModified) && // don't delete local modified versions
-			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
-			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
-			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier]) &&  // different versions?
-			    (!updateItem.fileClaim.isValid)) // don't delete claimed files
-			{
-				// delete local copy
-				NSURL *deleteFileURL;
-
-				// TODO: evaluate move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
-				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
-				{
-					NSError *deleteError = nil;
-
-					OCLogDebug(@"Deleting outdated local copy of %@ (%@ vs %@)", updateItem, updateItem.itemVersionIdentifier, updateItem.localCopyVersionIdentifier);
-
-					updateItem.localRelativePath = nil;
-					updateItem.localCopyVersionIdentifier = nil;
-					updateItem.downloadTriggerIdentifier = nil;
-					updateItem.fileClaim = nil;
-
-					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
-					{
-						OCLogError(@"Error removing %@: %@", deleteFileURL, deleteError);
-					}
-				}
-			}
-		}
-	}
+	// Remove outdated versions of updated items => moved to OCItemPolicyProcessorVersionUpdates; below is preserved to allow short-term reversal, should be removed in later versions if there are no drawbacks to moving this from here to OCItemPolicyProcessorVersionUpdates
+//	if (updatedItems.count > 0)
+//	{
+//		for (OCItem *updateItem in updatedItems)
+//		{
+//			if ((!updateItem.locallyModified) && // don't delete local modified versions
+//			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
+//			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
+//			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier]))  // different versions?
+//			{
+//				if (updateItem.fileClaim.isValid)  // don't delete claimed files
+//				{
+//					// Determine lock type of claim
+//					if (updateItem.fileClaim.typeOfLock == OCClaimLockTypeRead)
+//					{
+//						// Read lock that allows and encourages updating
+//						if (!updateItem.removed && // Item is not representing a removed item
+//						    (updateItem.activeSyncRecordIDs.count == 0)) // Item has no sync activity (=> not already being downloaded)
+//						{
+//							[self downloadItem:updateItem options:nil resultHandler:nil];
+//						}
+//					}
+//				}
+//				else
+//				{
+//					// delete local copy
+//					NSURL *deleteFileURL;
+//
+//					// TODO: evaluate move to new API to delete local copy - and possibly remove this here entirely and turn it into an item policy processor
+//					if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
+//					{
+//						NSError *deleteError = nil;
+//
+//						OCLogDebug(@"Deleting outdated, unclaimed local copy of %@ (%@ vs %@)", updateItem, updateItem.itemVersionIdentifier, updateItem.localCopyVersionIdentifier);
+//
+//						updateItem.localRelativePath = nil;
+//						updateItem.localCopyVersionIdentifier = nil;
+//						updateItem.downloadTriggerIdentifier = nil;
+//						updateItem.fileClaim = nil;
+//
+//						if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
+//						{
+//							if (deleteError != nil)
+//							{
+//								OCLogDebug(@"Deletion of %@ resulted in error=%@", deleteFileURL, deleteError);
+//							}
+//							else
+//							{
+//								OCLogDebug(@"Deletion of %@ succeeded", deleteFileURL);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 
 	// Update metaData table and queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (beforeQueryUpdatesAction!=nil))

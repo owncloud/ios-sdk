@@ -419,7 +419,7 @@
 	[self _runTestWithBookmark:OCTestTarget.demoBookmark implementation:^(OCCore *core, OCQuery *query, void (^endTest)(BOOL doEraseVault)) {
 		if (query.state == OCQueryStateIdle)
 		{
-			coreBoundClaim = [OCClaim claimForLifetimeOfCore:core explicitIdentifier:nil];
+			coreBoundClaim = [OCClaim claimForLifetimeOfCore:core explicitIdentifier:nil withLockType:OCClaimLockTypeRead];
 
 			XCTAssert(coreBoundClaim != nil);
 			XCTAssert(coreBoundClaim.isValid);
@@ -436,8 +436,8 @@
 
 - (void)testClaimExpires
 {
-	OCClaim *claim = [OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2]];
-	OCClaim *claimForProcess = [OCClaim claimForProcessExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2]];
+	OCClaim *claim = [OCClaim claimExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2] withLockType:OCClaimLockTypeRead];
+	OCClaim *claimForProcess = [OCClaim claimForProcessExpiringAtDate:[NSDate dateWithTimeIntervalSinceNow:2] withLockType:OCClaimLockTypeRead];
 
 	XCTAssert(claim != nil);
 	XCTAssert(claim.isValid);
@@ -460,7 +460,7 @@
 
 - (void)testClaimProcess
 {
-	OCClaim *claim = [OCClaim processClaim];
+	OCClaim *claim = [OCClaim processClaimWithLockType:OCClaimLockTypeRead];
 
 	XCTAssert(claim != nil);
 	XCTAssert(claim.isValid);
@@ -474,7 +474,7 @@
 
 - (void)testClaimExplicit
 {
-	OCClaim *claim = [OCClaim explicitClaimWithIdentifier:@"exID"];
+	OCClaim *claim = [OCClaim explicitClaimWithIdentifier:@"exID" lockType:OCClaimLockTypeRead];
 
 	XCTAssert(claim != nil);
 	XCTAssert(claim.isValid);
@@ -488,8 +488,8 @@
 
 - (void)testClaimGroup
 {
-	OCClaim *claim1 = [OCClaim explicitClaimWithIdentifier:@"exID1"];
-	OCClaim *claim2 = [OCClaim explicitClaimWithIdentifier:@"exID2"];
+	OCClaim *claim1 = [OCClaim explicitClaimWithIdentifier:@"exID1" lockType:OCClaimLockTypeRead];
+	OCClaim *claim2 = [OCClaim explicitClaimWithIdentifier:@"exID2" lockType:OCClaimLockTypeRead];
 
 	XCTAssert(claim1 != nil);
 	XCTAssert(claim1.isValid);
@@ -527,7 +527,7 @@
 	[self _runTestWithBookmark:OCTestTarget.demoBookmark implementation:^(OCCore *core, OCQuery *query, void (^endTest)(BOOL doEraseVault)) {
 		if (query.state == OCQueryStateIdle)
 		{
-			coreBoundClaim = [OCClaim claimForLifetimeOfCore:core explicitIdentifier:@"explicit"];
+			coreBoundClaim = [OCClaim claimForLifetimeOfCore:core explicitIdentifier:@"explicit" withLockType:OCClaimLockTypeRead];
 
 			XCTAssert(coreBoundClaim != nil);
 			XCTAssert(coreBoundClaim.isValid);

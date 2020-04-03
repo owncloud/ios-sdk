@@ -26,9 +26,10 @@
 #import "OCIPNotificationCenter.h"
 #import "OCMacros.h"
 
-@interface OCProcessPing : NSObject
+@interface OCProcessPing : NSObject <OCLogTagging>
 {
 	BOOL _responded;
+	BOOL _listening;
 	OCProcessSession *_session;
 	OCIPCNotificationName _pongNotificationName;
 	NSTimeInterval _timeout;
@@ -79,12 +80,17 @@
 
 		_processStateDirectoryURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@".processManager" isDirectory:YES];
 
+		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+
 		// Set up ping-pong
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:[OCProcessManager pingNotificationNameForSession:_processSession] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessManager *processManager, OCIPCNotificationName  _Nonnull notificationName) {
+			OCLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
+
 			// Refresh state file
 			[processManager writeStateFileForSession:processManager.processSession];
 
 			// Respond with a pong to pings directed at this process
+			OCLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
 			[notificationCenter postNotificationForName:[OCProcessManager pongNotificationNameForSession:processManager.processSession] ignoreSelf:YES];
 		}];
 
@@ -428,6 +434,8 @@
 		_completionHandler = [completionHandler copy];
 		_timeout = timeout;
 
+		_listening = YES;
+
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
 			[observer receivedPong];
 		}];
@@ -436,18 +444,35 @@
 	return (self);
 }
 
+- (void)stopListeningForPong
+{
+	@synchronized(self)
+	{
+		if (_listening)
+		{
+			[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:_pongNotificationName];
+			_listening = NO;
+		}
+	}
+}
+
 - (void)dealloc
 {
-	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:_pongNotificationName];
+	[self stopListeningForPong];
 }
 
 - (void)sendPing
 {
+	OCLogDebug(@"Sending ping to %@", _session.bundleIdentifier);
+	[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:[OCProcessManager pingNotificationNameForSession:_session] ignoreSelf:YES];
+
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_timeout * (NSTimeInterval)NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		@synchronized(self)
 		{
 			if (!self->_responded)
 			{
+				OCLogDebug(@"Timeout waiting for pong from %@", self->_session.bundleIdentifier);
+
 				if (self->_completionHandler != nil)
 				{
 					self->_completionHandler(NO, nil);
@@ -462,10 +487,14 @@
 {
 	@synchronized(self)
 	{
+		OCLogDebug(@"Received pong from %@", _session.bundleIdentifier);
+		[self stopListeningForPong];
+
 		_responded = YES;
 
 		if (_completionHandler != nil)
 		{
+
 			if (_session != nil)
 			{
 				_session = [[OCProcessManager sharedProcessManager] readSessionFromStateFileURL:[[OCProcessManager sharedProcessManager] stateFileURLForSession:_session]];
@@ -475,6 +504,17 @@
 			_completionHandler = nil;
 		}
 	}
+}
+
+#pragma mark - Log tagging
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
+}
+
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
 }
 
 @end

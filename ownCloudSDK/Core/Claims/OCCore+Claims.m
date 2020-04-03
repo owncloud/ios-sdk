@@ -135,7 +135,7 @@
 		break;
 
 		case OCCoreClaimPurposeView:
-			claim = [OCClaim claimForLifetimeOfCore:self explicitIdentifier:nil];
+			claim = [OCClaim claimForLifetimeOfCore:self explicitIdentifier:nil withLockType:OCClaimLockTypeRead];
 		break;
 	}
 
