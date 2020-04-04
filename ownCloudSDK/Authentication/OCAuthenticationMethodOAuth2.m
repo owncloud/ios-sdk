@@ -204,7 +204,7 @@ OCAuthenticationMethodAutoRegister
 
 		if ((authDataDict = [NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]) != nil)
 		{
-			return (authDataDict[@"tokenResponse"][@"user_id"]);
+			return (authDataDict[OA2TokenResponse][@"user_id"]);
 		}
 	}
 
@@ -488,6 +488,14 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Token management
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+{
+	return (@{
+		@"grant_type"    : @"refresh_token",
+		@"refresh_token" : refreshToken,
+	});
+}
+
 - (void)_refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	NSDictionary<NSString *, id> *authSecret;
@@ -504,10 +512,7 @@ OCAuthenticationMethodAutoRegister
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 
 			[self 	_sendTokenRequestToConnection:connection
-				withParameters:@{
-					@"grant_type"    : @"refresh_token",
-					@"refresh_token" : refreshToken,
-				}
+				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken]
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 					OCLogDebug(@"Token refresh finished with error=%@, jsonResponseDict=%@", error, OCLogPrivate(jsonResponseDict));
 
@@ -642,6 +647,13 @@ OCAuthenticationMethodAutoRegister
 
 						error = OCErrorWithInfo(OCErrorAuthorizationFailed, errorInfo);
 					}
+					else if (jsonResponseDict[@"refresh_token"] == nil)
+					{
+						// Token response did not contain a new refresh_token! Authentication refresh would fail with next token renewal.
+						OCLogError(@"Token response did not contain a new refresh_token! Next token refresh would fail. Returning authorization failed error.");
+
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"The token refresh response did not contain a new refresh_token.");
+					}
 					else
 					{
 						// Success
@@ -657,6 +669,9 @@ OCAuthenticationMethodAutoRegister
 							validUntil = [NSDate dateWithTimeIntervalSinceNow:3600];
 						}
 
+						// #warning !! REMOVE LINE BELOW - FOR TESTING TOKEN RENEWAL ONLY !!
+						// validUntil = [NSDate dateWithTimeIntervalSinceNow:130];
+
 						bearerString = [NSString stringWithFormat:@"Bearer %@", jsonResponseDict[@"access_token"]];
 
 						void (^CompleteWithJSONResponseDict)(NSDictionary *jsonResponseDict) = ^(NSDictionary *jsonResponseDict) {
@@ -665,9 +680,9 @@ OCAuthenticationMethodAutoRegister
 							NSData *authenticationData;
 
 							authenticationDataDict = @{
-								@"expirationDate" : validUntil,
-								@"bearerString"  : bearerString,
-								@"tokenResponse" : jsonResponseDict
+								OA2ExpirationDate : validUntil,
+								OA2BearerString   : bearerString,
+								OA2TokenResponse  : jsonResponseDict
 							};
 
 							OCLogDebug(@"Token authorization succeeded with: %@", OCLogPrivate(authenticationDataDict));

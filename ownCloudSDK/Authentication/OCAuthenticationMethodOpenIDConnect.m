@@ -84,6 +84,17 @@ OCAuthenticationMethodAutoRegister
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectRedirectURI]);
 }
 
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+{
+	NSMutableDictionary<NSString *, NSString *> *refreshParameters = [[super tokenRefreshParametersForRefreshToken:refreshToken] mutableCopy];
+
+	refreshParameters[@"client_id"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID];
+	refreshParameters[@"client_secret"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret];
+	refreshParameters[@"scope"] = @"openid profile"; // self.scope;
+
+	return (refreshParameters);
+}
+
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
 {
 	NSURL *openidConfigURL;

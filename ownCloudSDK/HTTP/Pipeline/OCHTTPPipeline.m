@@ -959,7 +959,7 @@
 					@catch (NSException *exception)
 					{
 						OCLogDebug(@"Exception creating a task: %@", exception);
-						error = OCErrorWithInfo(OCErrorException, exception);
+						error = OCErrorWithInfo(OCErrorException, @{ @"exception" : exception });
 					}
 				}
 
