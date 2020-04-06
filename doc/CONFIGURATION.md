@@ -150,9 +150,12 @@ This document provides an overview over the available sections and their setting
 	- `oa2-redirect-uri`: OAuth2 Redirect URI
 		- type: string
 		- default: `oc://ios.owncloud.com`
+	- `oa2-expiration-override-seconds`: OAuth2 Expiration Override (**!! for testing only !!**) - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)
+		- type: integer
+		- default: none
 	- `oidc-redirect-uri`: OpenID Connect Redirect URI
 		- type: string
-		- default: `oc.ios://ios.owncloud.com`
+		- default: `oc://ios.owncloud.com`
 	- `oidc-scope`: OpenID Connect Scope
 		- type: string
 		- default: `openid offline_access email`

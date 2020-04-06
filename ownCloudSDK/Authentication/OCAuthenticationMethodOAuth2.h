@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
 - (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken;
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;
 - (nullable NSString *)scope;
 - (nullable NSString *)prompt;
@@ -50,5 +51,6 @@ extern OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret;
 extern OCClassSettingsKey OCAuthenticationMethodOAuth2BrowserSessionClass;
+extern OCClassSettingsKey OCAuthenticationMethodOAuth2ExpirationOverrideSeconds;
 
 NS_ASSUME_NONNULL_END
