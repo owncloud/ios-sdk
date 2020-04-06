@@ -90,7 +90,7 @@ OCAuthenticationMethodAutoRegister
 
 	refreshParameters[@"client_id"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID];
 	refreshParameters[@"client_secret"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret];
-	refreshParameters[@"scope"] = @"openid profile"; // self.scope;
+	refreshParameters[@"scope"] = self.scope;
 
 	return (refreshParameters);
 }
