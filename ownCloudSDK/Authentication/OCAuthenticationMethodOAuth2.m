@@ -44,6 +44,14 @@ static OA2DictKeyPath OA2TokenType      = @"tokenResponse.token_type";
 static OA2DictKeyPath OA2MessageURL     = @"tokenResponse.message_url";
 static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 
+#define OA2RefreshSafetyMarginInSeconds 120
+
+typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
+{
+	OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode,
+	OCAuthenticationOAuth2TokenRequestTypeRefreshToken
+};
+
 #ifndef __IPHONE_13_0
 #define __IPHONE_13_0    130000
 #endif /* __IPHONE_13_0 */
@@ -264,6 +272,7 @@ OCAuthenticationMethodAutoRegister
 								// OAuth2 PKCE
 								@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
 							}
+							requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
 								completionHandler(error, self.class.identifier, authenticationData);
@@ -442,8 +451,8 @@ OCAuthenticationMethodAutoRegister
 	{
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
 
-		// Get a new token up to 2 minutes before the old one expires
-		if ((timeLeftUntilExpiration < 120) || _receivedUnauthorizedResponse)
+		// Get a new token up to OA2RefreshSafetyMarginInSeconds seconds before the old one expires
+		if ((timeLeftUntilExpiration < OA2RefreshSafetyMarginInSeconds) || _receivedUnauthorizedResponse)
 		{
 			OCLogDebug(@"OAuth2 token expired %@ - refreshing token for connection..", authSecret[OA2ExpirationDate])
 			[self _refreshTokenForConnection:connection availabilityHandler:availabilityHandler];
@@ -513,6 +522,7 @@ OCAuthenticationMethodAutoRegister
 
 			[self 	_sendTokenRequestToConnection:connection
 				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken]
+				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 					OCLogDebug(@"Token refresh finished with error=%@, jsonResponseDict=%@", error, OCLogPrivate(jsonResponseDict));
 
@@ -566,9 +576,11 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
-- (void)_sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
+- (void)_sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
 	OCHTTPRequest *tokenRequest;
+	NSDictionary<NSString *, id> *previousAuthSecret = (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken) ? [self cachedAuthenticationSecretForConnection:connection] : nil;
+	NSString *previousRefreshToken = (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken) ? parameters[@"refresh_token"] : nil;
 
 	OCLogDebug(@"Sending token request with parameters: %@", OCLogPrivate(parameters));
 
@@ -594,7 +606,7 @@ OCAuthenticationMethodAutoRegister
 		[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
 			if (error == nil)
 			{
-				[self _sendTokenRequestToConnection:connection withParameters:parameters completionHandler:completionHandler];
+				[self _sendTokenRequestToConnection:connection withParameters:parameters requestType:requestType completionHandler:completionHandler];
 			}
 			else
 			{
@@ -627,7 +639,7 @@ OCAuthenticationMethodAutoRegister
 			// Handle Token Request Result
 			if (error == nil)
 			{
-				NSDictionary *jsonResponseDict;
+				NSDictionary<NSString *, id> *jsonResponseDict;
 				
 				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
 				{
@@ -647,7 +659,7 @@ OCAuthenticationMethodAutoRegister
 
 						error = OCErrorWithInfo(OCErrorAuthorizationFailed, errorInfo);
 					}
-					else if (jsonResponseDict[@"refresh_token"] == nil)
+					else if ((jsonResponseDict[@"refresh_token"] == nil) && (previousRefreshToken == nil) && (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken))
 					{
 						// Token response did not contain a new refresh_token! Authentication refresh would fail with next token renewal.
 						OCLogError(@"Token response did not contain a new refresh_token! Next token refresh would fail. Returning authorization failed error.");
@@ -660,6 +672,7 @@ OCAuthenticationMethodAutoRegister
 						NSDate *validUntil = nil;
 						NSString *bearerString;
 
+						// Compute expiration date
 						if (jsonResponseDict[@"expires_in"] != nil)
 						{
 							validUntil = [NSDate dateWithTimeIntervalSinceNow:[jsonResponseDict[@"expires_in"] integerValue]];
@@ -671,9 +684,25 @@ OCAuthenticationMethodAutoRegister
 
 						// #warning !! REMOVE LINE BELOW - FOR TESTING TOKEN RENEWAL ONLY !!
 						// validUntil = [NSDate dateWithTimeIntervalSinceNow:130];
+						NSNumber *expirationOverrideSeconds;
 
+						if ((expirationOverrideSeconds = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ExpirationOverrideSeconds]) != nil)
+						{
+							OCLogWarning(@"Overriding expiration time of %@ with %@ as per class settings", jsonResponseDict[@"expires_in"], expirationOverrideSeconds);
+							validUntil = [NSDate dateWithTimeIntervalSinceNow:OA2RefreshSafetyMarginInSeconds + expirationOverrideSeconds.doubleValue];
+						}
+
+						// Reuse refresh_token if no new one was provided
+						if ((jsonResponseDict[@"refresh_token"] == nil) && (previousRefreshToken != nil) && (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken))
+						{
+							jsonResponseDict = [jsonResponseDict mutableCopy];
+							[((NSMutableDictionary *)jsonResponseDict) setObject:parameters[@"refresh_token"] forKey:@"refresh_token"];
+						}
+
+						// Compute bearer string
 						bearerString = [NSString stringWithFormat:@"Bearer %@", jsonResponseDict[@"access_token"]];
 
+						// Finalize
 						void (^CompleteWithJSONResponseDict)(NSDictionary *jsonResponseDict) = ^(NSDictionary *jsonResponseDict) {
 							NSError *error = nil;
 							NSDictionary *authenticationDataDict;
@@ -697,8 +726,16 @@ OCAuthenticationMethodAutoRegister
 							}
 						};
 
-						if (jsonResponseDict[@"user_name"] == nil)
+						if ((jsonResponseDict[@"user_id"] == nil) && (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken) && (previousAuthSecret != nil) && ([previousAuthSecret valueForKeyPath:OA2UserID] != nil))
 						{
+							// Reuse user name if it was already known
+							jsonResponseDict = [jsonResponseDict mutableCopy];
+							[((NSMutableDictionary *)jsonResponseDict) setObject:[previousAuthSecret valueForKeyPath:OA2UserID] forKey:@"user_id"];
+						}
+
+						if (jsonResponseDict[@"user_id"] == nil)
+						{
+							// Retrieve user_id if it wasn't provided with the token request response
 							[connection retrieveLoggedInUserWithRequestCustomization:^(OCHTTPRequest * _Nonnull request) {
 								request.requiredSignals = nil;
 								[request setValue:bearerString forHeaderField:@"Authorization"];
@@ -707,7 +744,7 @@ OCAuthenticationMethodAutoRegister
 								{
 									NSMutableDictionary *jsonResponseUpdated = [jsonResponseDict mutableCopy];
 
-									jsonResponseUpdated[@"user_name"] = loggedInUser.userName;
+									jsonResponseUpdated[@"user_id"] = loggedInUser.userName;
 
 									CompleteWithJSONResponseDict(jsonResponseUpdated);
 								}
@@ -719,6 +756,7 @@ OCAuthenticationMethodAutoRegister
 						}
 						else
 						{
+							// user_id was already provided - we're all set!
 							CompleteWithJSONResponseDict(jsonResponseDict);
 						}
 					}
@@ -749,3 +787,4 @@ OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI = @"oa2-redirect-uri"
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID = @"oa2-client-id";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret = @"oa2-client-secret";
 OCClassSettingsKey OCAuthenticationMethodOAuth2BrowserSessionClass = @"oa2-browser-session-class";
+OCClassSettingsKey OCAuthenticationMethodOAuth2ExpirationOverrideSeconds = @"oa2-expiration-override-seconds";
