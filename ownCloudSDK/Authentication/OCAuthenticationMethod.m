@@ -233,17 +233,16 @@
 		{
 			cachedAuthenticationSecret = [self loadCachedAuthenticationSecretForConnection:connection];
 
+			_cachedAuthenticationSecret = cachedAuthenticationSecret;
+
 			if ([self respondsToSelector:@selector(cacheSecrets)])
 			{
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if (((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
+					if (!((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
 					{
 						@synchronized(self)
 						{
-							if (self->_cachedAuthenticationSecret == nil)
-							{
-								self->_cachedAuthenticationSecret = cachedAuthenticationSecret;
-							}
+							self->_cachedAuthenticationSecret = nil;
 						}
 					}
 				});
