@@ -529,8 +529,10 @@ OCAuthenticationMethodAutoRegister
 					// Update authentication data of the bookmark
 					if ((error==nil) && (authenticationData!=nil))
 					{
+						OCLogDebug(@"Updating authentication data for bookmarkUUID=%@", connection.bookmark.uuid);
 						connection.bookmark.authenticationData = authenticationData;
 
+						OCLogDebug(@"Authentication data updated: flush auth secret for bookmarkUUID=%@", connection.bookmark.uuid);
 						[self flushCachedAuthenticationSecret];
 					}
 
