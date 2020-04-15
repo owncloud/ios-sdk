@@ -61,6 +61,17 @@
 	if ((self = [super init]) != nil)
 	{
 		_uuid = [NSUUID UUID];
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
+			if (observerBookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
+			{
+				if (observerBookmark->_authenticationData != nil)
+				{
+					observerBookmark->_authenticationData = nil;
+					OCLogDebug(@"authenticationData for bookmarkUUID=%@ changed - flushed locally cached copy", observerBookmark.uuid);
+				}
+			}
+		}];
 	}
 	
 	return(self);
@@ -68,6 +79,7 @@
 
 - (void)dealloc
 {
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
 }
 
 - (NSData *)bookmarkData
