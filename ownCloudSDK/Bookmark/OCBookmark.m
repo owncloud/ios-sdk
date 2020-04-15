@@ -21,6 +21,10 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
 
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IOS */
+
 @interface OCBookmark ()
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
@@ -63,15 +67,13 @@
 		_uuid = [NSUUID UUID];
 
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
-			if (observerBookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
-			{
-				if (observerBookmark->_authenticationData != nil)
-				{
-					observerBookmark->_authenticationData = nil;
-					OCLogDebug(@"authenticationData for bookmarkUUID=%@ changed - flushed locally cached copy", observerBookmark.uuid);
-				}
-			}
+			[observerBookmark considerAuthenticationDataFlush];
 		}];
+
+		#if TARGET_OS_IOS
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:UIApplicationWillResignActiveNotification object:nil];
+		#endif /* TARGET_OS_IOS */
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:NSExtensionHostWillResignActiveNotification object:nil];
 	}
 	
 	return(self);
@@ -80,6 +82,11 @@
 - (void)dealloc
 {
 	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
+
+	#if TARGET_OS_IOS
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+	#endif /* TARGET_OS_IOS */
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
 }
 
 - (NSData *)bookmarkData
@@ -132,6 +139,18 @@
 	{
 		[self setAuthenticationData:self.authenticationData saveToKeychain:(authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
 		_authenticationDataStorage = authenticationDataStorage;
+	}
+}
+
+- (void)considerAuthenticationDataFlush
+{
+	if (_authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
+	{
+		if (_authenticationData != nil)
+		{
+			_authenticationData = nil;
+			OCLogDebug(@"flushed local copy of authenticationData for bookmarkUUID=%@", _uuid);
+		}
 	}
 }
 
