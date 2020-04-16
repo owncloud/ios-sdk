@@ -170,13 +170,6 @@
 	[self saveBookmarks];
 }
 
-- (void)updatedBookmark:(OCBookmark *)bookmark
-{
-	if (bookmark==nil) { return; }
-
-	[self saveBookmarks];
-}
-
 - (void)removeBookmark:(OCBookmark *)bookmark
 {
 	if (bookmark==nil) { return; }

@@ -43,7 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - List mutations
 - (void)addBookmark:(OCBookmark *)bookmark;
-- (void)updatedBookmark:(OCBookmark *)bookmark;
 - (void)removeBookmark:(OCBookmark *)bookmark;
 
 - (void)moveBookmarkFrom:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
