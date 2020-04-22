@@ -460,6 +460,8 @@
 		DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */; };
 		DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE3B2049F3D100189B9A /* MiscTests.m */; };
+		DCDCA61C245093E800AFA158 /* NSURL+OCPrivateLink.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDCA61A245093E800AFA158 /* NSURL+OCPrivateLink.h */; };
+		DCDCA61D245093E800AFA158 /* NSURL+OCPrivateLink.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDCA61B245093E800AFA158 /* NSURL+OCPrivateLink.m */; };
 		DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDD9B12222986D50052A001 /* OCShare+OCXMLObjectCreation.h */; };
 		DCDD9B15222986D50052A001 /* OCShare+OCXMLObjectCreation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDD9B13222986D50052A001 /* OCShare+OCXMLObjectCreation.m */; };
 		DCDD9B18222989E50052A001 /* OCRecipient.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDD9B16222989E50052A001 /* OCRecipient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1124,6 +1126,8 @@
 		DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCURLNormalization.h"; sourceTree = "<group>"; };
 		DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCURLNormalization.m"; sourceTree = "<group>"; };
 		DCDBEE3B2049F3D100189B9A /* MiscTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MiscTests.m; sourceTree = "<group>"; };
+		DCDCA61A245093E800AFA158 /* NSURL+OCPrivateLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCPrivateLink.h"; sourceTree = "<group>"; };
+		DCDCA61B245093E800AFA158 /* NSURL+OCPrivateLink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCPrivateLink.m"; sourceTree = "<group>"; };
 		DCDD9B12222986D50052A001 /* OCShare+OCXMLObjectCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCShare+OCXMLObjectCreation.h"; sourceTree = "<group>"; };
 		DCDD9B13222986D50052A001 /* OCShare+OCXMLObjectCreation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCShare+OCXMLObjectCreation.m"; sourceTree = "<group>"; };
 		DCDD9B16222989E50052A001 /* OCRecipient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRecipient.h; sourceTree = "<group>"; };
@@ -1317,6 +1321,8 @@
 				DCEEB2DA20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.h */,
 				DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */,
 				DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */,
+				DCDCA61B245093E800AFA158 /* NSURL+OCPrivateLink.m */,
+				DCDCA61A245093E800AFA158 /* NSURL+OCPrivateLink.h */,
 				DCEEB2F02047094500189B9A /* NSData+OCHash.m */,
 				DCEEB2EF2047094500189B9A /* NSData+OCHash.h */,
 				DC114A9322A7A87C00CBD597 /* NSData+OCRandom.m */,
@@ -2747,6 +2753,7 @@
 				DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */,
 				DC3C7FE121A6EDE00064D193 /* NSError+OCHTTPStatus.h in Headers */,
 				DC19BFE921CBACB0007C20D1 /* OCProcessSession.h in Headers */,
+				DCDCA61C245093E800AFA158 /* NSURL+OCPrivateLink.h in Headers */,
 				DC7E0A6F2036F28B006111FA /* OCKeychain.h in Headers */,
 				DCC8FA122029D5EC00EB6701 /* OCTypes.h in Headers */,
 				DC114A9422A7A87C00CBD597 /* NSData+OCRandom.h in Headers */,
@@ -3332,6 +3339,7 @@
 				DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
 				DC8EB2FF23951AAB009148F9 /* OCAuthenticationBrowserSession.m in Sources */,
+				DCDCA61D245093E800AFA158 /* NSURL+OCPrivateLink.m in Sources */,
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
 				DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,

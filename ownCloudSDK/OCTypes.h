@@ -26,6 +26,8 @@ typedef NSString* OCLocalID; //!< Unique local identifier of the item (persists 
 typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files and folders)
 typedef NSString* OCFileETag; //!< Identifier unique to a specific combination of contents and metadata. Can be used to detect changes. (files and folders)
 
+typedef NSString* OCFileIDUniquePrefix; //!< Unique fileID prefix of an item on the server. Background is that OC 10 FileIDs are composed of an 8-digit (%08ld) number and the server's ID (apparently identical across files). That number is unique for every file and also used as the number component in OC10 private links. By using a prefix here, it's possible to support both OC10-style fileID prefixes as well as future full-length fileIDs for searching for items.
+
 typedef NSString* OCLocalAttribute NS_TYPED_ENUM; //!< Identifier uniquely identifying a local attribute
 
 typedef NSNumber* OCItemFavorite; //!< Favorite status of an item (boolean)
