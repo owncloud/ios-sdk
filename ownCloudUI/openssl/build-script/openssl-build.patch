@@ -9,36 +9,66 @@
 38c38
 < OPENSSL_VERSION="openssl-1.0.2d"
 ---
-> OPENSSL_VERSION="openssl-1.0.2t"
-164a165,166
+> OPENSSL_VERSION="openssl-1.1.1g"
+57c57
+< 	./Configure no-asm ${TARGET} --openssldir="/tmp/${OPENSSL_VERSION}-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-${ARCH}.log"
+---
+> 	./Configure no-asm ${TARGET} --prefix="/tmp/${OPENSSL_VERSION}-${ARCH}" --openssldir="/tmp/${OPENSSL_VERSION}-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-${ARCH}.log"
+82,83c82,87
+< 	export CC="${BUILD_TOOLS}/usr/bin/gcc -fembed-bitcode -arch ${ARCH}"
+<    
+---
+> 	if [[ "${ARCH}" == "x86_64" ]]; then
+> 		export CC="${BUILD_TOOLS}/usr/bin/gcc -arch ${ARCH}"
+> 	else
+> 		export CC="${BUILD_TOOLS}/usr/bin/gcc -fembed-bitcode -arch ${ARCH}"
+> 	fi
+> 
+87c91
+< 		./Configure no-asm darwin64-x86_64-cc --openssldir="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-iOS-${ARCH}.log"
+---
+> 		./Configure no-asm darwin64-x86_64-cc --prefix="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" --openssldir="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-iOS-${ARCH}.log"
+89c93
+< 		./Configure iphoneos-cross --openssldir="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-iOS-${ARCH}.log"
+---
+> 		./Configure iphoneos-cross --prefix="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" --openssldir="/tmp/${OPENSSL_VERSION}-iOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-iOS-${ARCH}.log"
+130c134
+< 		./Configure no-asm darwin64-x86_64-cc --openssldir="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}.log"
+---
+> 		./Configure no-asm darwin64-x86_64-cc --prefix="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" --openssldir="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}.log"
+132c136
+< 		./Configure iphoneos-cross --openssldir="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}.log"
+---
+> 		./Configure iphoneos-cross --prefix="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" --openssldir="/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}" &> "/tmp/${OPENSSL_VERSION}-tvOS-${ARCH}.log"
+164a169,170
 > if false; then
 > 
-179c181,182
+179c185,186
 < buildIOS "armv7"
 ---
 > fi
 > 
-182c185,187
+182c189,191
 < buildIOS "i386"
 ---
 > 
 > echo "Copying headers"
 > cp /tmp/${OPENSSL_VERSION}-iOS-x86_64/include/openssl/* include/openssl/
-184a190,192
+184a194,196
 > 
 > if false; then
 > 
-195a204,206
+195a208,210
 > 
 > fi
 > 
-197d207
+197d211
 < 		"lib/libcrypto_iOS.a" \
-203d212
+203d216
 < 		"lib/libssl_iOS.a" \
-207a217,218
+207a221,222
 > if false; then
 > 
-221a233,234
+221a237,238
 > fi
 > 

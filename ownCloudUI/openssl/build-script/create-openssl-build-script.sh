@@ -6,5 +6,5 @@ echo "Applying patches.."
 /usr/bin/patch -p0 openssl-build.sh openssl-build.patch
 
 echo "Verifiying integrity.."
-echo "28d5748105ab30beebf8f8741ec4cce5d3f4334c  openssl-build.sh" | shasum -c -
+echo "6fa3ec7b96ff68bb236b5532375b39bbd816fcf6  openssl-build.sh" | shasum -c -
 chmod u+x openssl-build.sh
