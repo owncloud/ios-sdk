@@ -642,8 +642,9 @@ OCAuthenticationMethodAutoRegister
 			if (error == nil)
 			{
 				NSDictionary<NSString *, id> *jsonResponseDict;
+				NSError *jsonDecodeError = nil;
 				
-				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
+				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonDecodeError]) != nil)
 				{
 					NSString *jsonError;
 
@@ -761,6 +762,21 @@ OCAuthenticationMethodAutoRegister
 							// user_id was already provided - we're all set!
 							CompleteWithJSONResponseDict(jsonResponseDict);
 						}
+					}
+				}
+				else
+				{
+					OCLogError(@"Decoding token response JSON failed with error %@", jsonDecodeError);
+
+					if (jsonDecodeError == nil)
+					{
+						// Empty response
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"The token refresh response was empty.");
+					}
+					else
+					{
+						// Malformed response
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"Malformed token refresh response.");
 					}
 				}
 			}
