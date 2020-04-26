@@ -28,6 +28,7 @@
 @interface OCBookmark ()
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
+	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
 }
 @end
 
@@ -130,6 +131,7 @@
 
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
+		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:self.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 	}
 }
 
@@ -297,6 +299,16 @@
 	}
 
 	return (_coreUpdateNotificationName);
+}
+
+- (OCIPCNotificationName)bookmarkAuthUpdateNotificationName
+{
+	if (_bookmarkAuthUpdateNotificationName == nil)
+	{
+		_bookmarkAuthUpdateNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.bookmark.auth-update.%@", self.uuid.UUIDString];
+	}
+
+	return (_bookmarkAuthUpdateNotificationName);
 }
 
 + (OCIPCNotificationName)bookmarkAuthUpdateNotificationName
