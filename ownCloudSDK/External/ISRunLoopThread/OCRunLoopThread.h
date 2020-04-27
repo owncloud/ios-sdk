@@ -42,6 +42,7 @@
 	NSThread *thread;
 	NSRunLoop *runLoop;
 	NSString *name;
+	NSUUID *_uuid;
 	
 	dispatch_semaphore_t _syncSemaphore;
 }
@@ -50,6 +51,10 @@
 
 @property(readonly) NSThread *thread;
 @property(readonly) NSRunLoop *runLoop;
+
+@property(readonly) NSUUID *uuid;
+
+@property(nonatomic,readonly) BOOL isCurrentThread;
 
 + (instancetype)mainRunLoopThread;
 + (instancetype)currentRunLoopThread;
