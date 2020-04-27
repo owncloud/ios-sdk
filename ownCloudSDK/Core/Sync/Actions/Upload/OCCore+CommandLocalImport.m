@@ -167,6 +167,14 @@
 		return (nil);
 	}
 
+	// Override last modified date (if provided as option)
+	NSDate *lastModifiedOverrideDate;
+
+	if ((lastModifiedOverrideDate = OCTypedCast(options[OCCoreOptionLastModifiedDate], NSDate)) != nil)
+	{
+		placeholderItem.lastModified = lastModifiedOverrideDate;
+	}
+
 	// Enqueue sync record
 	NSProgress *progress;
 

@@ -1854,6 +1854,7 @@ OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
 OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
+OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 
