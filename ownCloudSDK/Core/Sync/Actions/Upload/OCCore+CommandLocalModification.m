@@ -129,6 +129,13 @@
 		}
 	}
 
+	// Override last modified date (if provided as option)
+	NSDate *lastModifiedOverrideDate;
+	if ((lastModifiedOverrideDate = OCTypedCast(options[OCCoreOptionLastModifiedDate], NSDate)) != nil)
+	{
+		item.lastModified = lastModifiedOverrideDate;
+	}
+
 	// Enqueue sync record
 	NSProgress *progress;
 

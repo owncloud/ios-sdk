@@ -17,10 +17,11 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCKeychain : NSObject
+@interface OCKeychain : NSObject <OCLogTagging>
 {
 	NSString *_accessGroupIdentifier;
 }

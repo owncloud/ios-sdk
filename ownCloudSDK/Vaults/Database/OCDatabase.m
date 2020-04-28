@@ -250,12 +250,12 @@
 	{
 		if (item.localID == nil)
 		{
-			OCLogDebug(@"Item added without localID: %@", item);
+			OCLogWarning(@"Item added without localID: %@", item);
 		}
 
 		if ((item.parentLocalID == nil) && (![item.path isEqualToString:@"/"]))
 		{
-			OCLogDebug(@"Item added without parentLocalID: %@", item);
+			OCLogWarning(@"Item added without parentLocalID: %@", item);
 		}
 
 		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
@@ -538,6 +538,22 @@
 				 parameters:@[fileID]
 			  completionHandler:completionHandler];
 }
+
+- (void)retrieveCacheItemForFileIDUniquePrefix:(OCFileIDUniquePrefix)fileIDUniquePrefix includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
+{
+	if (fileIDUniquePrefix == nil)
+	{
+		OCLogError(@"Retrieval of fileIDUniquePrefix==nil failed");
+
+		completionHandler(self, OCError(OCErrorItemNotFound), nil, nil);
+		return;
+	}
+
+	[self _retrieveCacheItemForSQLQuery:(includingRemoved ? [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE fileID LIKE ?"] : [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE fileID LIKE ? AND removed=0"])
+				 parameters:@[ [[fileIDUniquePrefix stringBySQLLikeEscaping] stringByAppendingString:@"%"] ]
+			  completionHandler:completionHandler];
+}
+
 
 - (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {

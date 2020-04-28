@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
+#import "OCIPNotificationCenter.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -37,7 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)saveBookmarks;
 
 #pragma mark - Change notification
-- (void)postChangeNotification;
+- (void)postLocalChangeNotification; //!< Posts a notification to observers in the current process that the bookmark list has changed. You usually don't have to call this. OCBookmarkManager will call this method when needed, so you usually shouldn't call this method.
+- (void)postRemoteChangeNotification;//!< Posts a notification to observers in other processes that the bookmark list has changed. You usually don't have to call this. OCBookmarkManager will call this method when needed, so you usually shouldn't call this method.
 
 #pragma mark - List mutations
 - (void)addBookmark:(OCBookmark *)bookmark;
@@ -54,5 +56,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern NSNotificationName OCBookmarkManagerListChanged;
+extern OCIPCNotificationName OCIPCNotificationNameBookmarkManagerListChanged;
 
 NS_ASSUME_NONNULL_END

@@ -24,7 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCBookmark (IPNotificationNames)
 
 @property(readonly,nonatomic) OCIPCNotificationName coreUpdateNotificationName;
-@property(readonly,nonatomic,class) OCIPCNotificationName bookmarkAuthUpdateNotificationName;
+
+@property(readonly,nonatomic) OCIPCNotificationName bookmarkAuthUpdateNotificationName; //!< Bookmark-specific notification name
+@property(readonly,nonatomic,class) OCIPCNotificationName bookmarkAuthUpdateNotificationName; //!< Global, catch-all notification name
 
 @end
 

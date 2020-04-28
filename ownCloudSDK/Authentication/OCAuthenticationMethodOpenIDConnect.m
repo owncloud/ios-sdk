@@ -32,7 +32,7 @@ OCAuthenticationMethodAutoRegister
 {
 	NSMutableDictionary<NSString *,id> *defaultSettings = [[super defaultSettingsForIdentifier:identifier] mutableCopy];
 
-	defaultSettings[OCAuthenticationMethodOpenIDConnectRedirectURI] = @"oc.ios://ios.owncloud.com";
+	defaultSettings[OCAuthenticationMethodOpenIDConnectRedirectURI] = @"oc://ios.owncloud.com";
 	defaultSettings[OCAuthenticationMethodOpenIDConnectScope] = @"openid offline_access email profile";
 
 	return (defaultSettings);
@@ -82,6 +82,17 @@ OCAuthenticationMethodAutoRegister
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
 {
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectRedirectURI]);
+}
+
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+{
+	NSMutableDictionary<NSString *, NSString *> *refreshParameters = [[super tokenRefreshParametersForRefreshToken:refreshToken] mutableCopy];
+
+	refreshParameters[@"client_id"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID];
+	refreshParameters[@"client_secret"] = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret];
+	refreshParameters[@"scope"] = self.scope;
+
+	return (refreshParameters);
 }
 
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler

@@ -21,9 +21,14 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
 
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IOS */
+
 @interface OCBookmark ()
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
+	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
 }
 @end
 
@@ -62,6 +67,15 @@
 	if ((self = [super init]) != nil)
 	{
 		_uuid = [NSUUID UUID];
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
+			[observerBookmark considerAuthenticationDataFlush];
+		}];
+
+		#if TARGET_OS_IOS
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:UIApplicationWillResignActiveNotification object:nil];
+		#endif /* TARGET_OS_IOS */
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:NSExtensionHostWillResignActiveNotification object:nil];
 	}
 	
 	return(self);
@@ -69,6 +83,12 @@
 
 - (void)dealloc
 {
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
+
+	#if TARGET_OS_IOS
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+	#endif /* TARGET_OS_IOS */
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
 }
 
 - (NSData *)bookmarkData
@@ -113,6 +133,7 @@
 
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
+		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:self.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 	}
 }
 
@@ -122,6 +143,18 @@
 	{
 		[self setAuthenticationData:self.authenticationData saveToKeychain:(authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
 		_authenticationDataStorage = authenticationDataStorage;
+	}
+}
+
+- (void)considerAuthenticationDataFlush
+{
+	if (_authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
+	{
+		if (_authenticationData != nil)
+		{
+			_authenticationData = nil;
+			OCLogDebug(@"flushed local copy of authenticationData for bookmarkUUID=%@", _uuid);
+		}
 	}
 }
 
@@ -272,6 +305,16 @@
 	}
 
 	return (_coreUpdateNotificationName);
+}
+
+- (OCIPCNotificationName)bookmarkAuthUpdateNotificationName
+{
+	if (_bookmarkAuthUpdateNotificationName == nil)
+	{
+		_bookmarkAuthUpdateNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.bookmark.auth-update.%@", self.uuid.UUIDString];
+	}
+
+	return (_bookmarkAuthUpdateNotificationName);
 }
 
 + (OCIPCNotificationName)bookmarkAuthUpdateNotificationName

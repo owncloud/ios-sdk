@@ -763,7 +763,7 @@
 	if (query != nil)
 	{
 		[self queueBlock:^{
-			[query setState:OCQueryStateStopped];
+			query.state = OCQueryStateStopped;
 			[self->_queries removeObject:query];
 		}];
 	}
@@ -816,10 +816,19 @@
 	[_ipNotificationCenter addObserver:self forName:self.bookmark.coreUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core handleIPCChangeNotification];
 	}];
+
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core handleAuthDataChangedNotification];
+	}];
+
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification) name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
 }
 
 - (void)stopIPCObserveration
 {
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
+
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName];
 	[_ipNotificationCenter removeObserver:self forName:self.bookmark.coreUpdateNotificationName];
 }
 
@@ -864,6 +873,23 @@
 
 	[self queueBlock:^{
 		[self _checkForChangesByOtherProcessesAndUpdateQueries];
+	}];
+}
+
+- (void)handleAuthDataChangedNotification
+{
+	[self queueBlock:^{
+		if (self->_state == OCCoreStateRunning)
+		{
+			// Trigger a small request to check auth availabiltiy
+			[self startCheckingForUpdates];
+		}
+
+		if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
+		{
+			// Re-attempt connection
+			[self _attemptConnect];
+		}
 	}];
 }
 
@@ -1843,6 +1869,7 @@ OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
 OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
+OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 
