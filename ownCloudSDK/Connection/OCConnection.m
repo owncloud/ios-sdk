@@ -42,6 +42,7 @@
 #import "NSString+OCPath.h"
 #import "OCMacros.h"
 #import "OCCore.h"
+#import "OCTUSJob.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -1371,8 +1372,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - File transfer: upload
 - (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	OCProgress *requestProgress = nil;
-	NSURL *uploadURL;
+	// OCProgress *requestProgress = nil;
 
 	if ((sourceURL == nil) || (newParentDirectory == nil))
 	{
@@ -1398,6 +1398,463 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		return(nil);
 	}
 
+	// Determine file size
+	NSNumber *fileSize = nil;
+	{
+		NSError *error = nil;
+		if (![sourceURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:&error])
+		{
+			OCLogError(@"Error determining size of %@: %@", sourceURL, error);
+		}
+	}
+
+	// Determine modification date
+	NSDate *modDate = nil;
+	if ((modDate = options[OCConnectionOptionLastModificationDateKey]) == nil)
+	{
+		NSError *error = nil;
+
+		if (![sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
+		{
+			OCLogError(@"Error determining modification date of %@: %@", sourceURL, error);
+			modDate = nil;
+		}
+	}
+
+	// Compute checksum
+	__block OCChecksum *checksum = nil;
+
+	if ((checksum = options[OCConnectionOptionChecksumKey]) == nil)
+	{
+		OCChecksumAlgorithmIdentifier checksumAlgorithmIdentifier = options[OCConnectionOptionChecksumAlgorithmKey];
+
+		if (checksumAlgorithmIdentifier==nil)
+		{
+			checksumAlgorithmIdentifier = _preferredChecksumAlgorithm;
+		}
+
+		OCSyncExec(checksumComputation, {
+			[OCChecksum computeForFile:sourceURL checksumAlgorithm:checksumAlgorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
+				checksum = computedChecksum;
+				OCSyncExecDone(checksumComputation);
+			}];
+		});
+	}
+
+	if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
+		return(nil);
+	}
+
+	// Determine TUS info
+	OCTUSHeader *parentTusHeader = nil;
+
+	if (OCTUSIsAvailable(newParentDirectory.tusSupport))
+	{
+		// Instantiate from OCItem
+		parentTusHeader = [[OCTUSHeader alloc] initWithTUSInfo:newParentDirectory.tusInfo];
+	}
+
+	if ((_delegate != nil) && ([_delegate respondsToSelector:@selector(connection:tusHeader:forChildrenOf:)]))
+	{
+		// Modify / Retrieve from delegate
+		parentTusHeader = [_delegate connection:self tusHeader:parentTusHeader forChildrenOf:newParentDirectory];
+	}
+
+	// Start upload
+	if ((parentTusHeader != nil) && OCTUSIsAvailable(parentTusHeader.supportFlags) && // TUS support available
+	    OCTUSIsSupported(parentTusHeader.supportFlags, OCTUSSupportExtensionCreation)) // TUS creation extension available
+	{
+		// Use TUS
+		return ([self _tusUploadFileFromURL:sourceURL withName:fileName modificationDate:modDate fileSize:fileSize checksum:checksum tusHeader:parentTusHeader to:newParentDirectory replacingItem:replacedItem options:options resultTarget:eventTarget]);
+	}
+	else
+	{
+		// Use a single "traditional" PUT for uploads
+		return ([self _directUploadFileFromURL:sourceURL withName:fileName modificationDate:modDate fileSize:fileSize checksum:checksum to:newParentDirectory replacingItem:replacedItem options:options resultTarget:eventTarget]);
+	}
+}
+
+#pragma mark - File transfer: resumable upload (TUS)
+- (OCProgress *)_tusUploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName modificationDate:(NSDate *)modificationDate fileSize:(NSNumber *)fileSize checksum:(OCChecksum *)checksum tusHeader:(OCTUSHeader *)parentTusHeader to:(OCItem *)parentItem replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	OCProgress *tusProgress = nil;
+	NSURL *segmentFolderURL = options[OCConnectionOptionTemporarySegmentFolderURLKey];
+	NSError *error = nil;
+
+	// Determine segment folder
+	if (segmentFolderURL == nil)
+	{
+		segmentFolderURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:[NSString stringWithFormat:@"OCTUS-%@",NSUUID.UUID.UUIDString]];
+	}
+
+	if (segmentFolderURL == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientStorage) type:OCEventTypeUpload uuid:nil sender:self];
+		return(nil);
+	}
+	else
+	{
+		if (![[NSFileManager defaultManager] createDirectoryAtURL:segmentFolderURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
+		{
+			segmentFolderURL = nil;
+			OCLogError(@"Error creating TUS segment folder at %@: %@", segmentFolderURL, error);
+		}
+	}
+
+	// Clone source file to segment folder
+	NSURL *clonedSourceURL = [segmentFolderURL URLByAppendingPathComponent:sourceURL.lastPathComponent isDirectory:NO];
+
+	if (![NSFileManager.defaultManager copyItemAtURL:sourceURL toURL:clonedSourceURL error:&error])
+	{
+		OCLogError(@"Error cloning sourceURL %@ to segment folder at %@: %@", sourceURL, segmentFolderURL, error);
+		[eventTarget handleError:OCError(OCErrorInsufficientStorage) type:OCEventTypeUpload uuid:nil sender:self];
+		return(nil);
+	}
+
+	// Create TUS job
+	OCTUSJob *tusJob;
+	NSURL *creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path];
+
+	if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
+	{
+		tusJob.fileName = fileName;
+		tusJob.fileSize = fileSize;
+		tusJob.fileModDate = modificationDate;
+		tusJob.fileChecksum = checksum;
+
+		tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
+
+		tusJob.eventTarget = eventTarget;
+
+		tusJob.maxSegmentSize = 111000; // TODO: here for testing only, remove
+
+		tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+	}
+
+	return (tusProgress);
+}
+
+- (OCProgress *)_continueTusJob:(OCTUSJob *)tusJob lastTask:(NSString *)lastTask
+{
+	OCProgress *tusProgress = nil;
+	BOOL useCreationWithUpload = NO; // OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionCreationWithUpload);
+	OCHTTPRequest *request = nil;
+
+	/*
+		OCTUSJob handling flow:
+
+		Q: Is there an .uploadURL?
+
+		1) No -> upload has not yet started
+			- initiate upload via create or create-with-upload
+				- response provides Tus-Resumable header
+					- response status indicates success and provides Location:
+						- save the URL returned via the Location header as .uploadURL
+						- save 0 or $numberOfBytesAlreadyUploaded for .uploadOffset
+						-> _continueTusJob…
+
+					- response indicates failure
+						- partial response with Location header
+							- save Location header to .uploadURL
+							- set nil for .uploadOffset
+							-> _continueTusJob…
+						- no response / response without Location heaer
+							- restart upload via create or create-with-upload if necessary / makes sense (-> _continueTusJob…)
+							- stop upload with error otherwise (-> message .eventTarget)
+
+				- response provides NO Tus-Resumable header
+					-> Tus not supported, reschedule as "traditional" direct upload
+
+		2) Yes -> continue upload
+			- is .uploadOffset set?
+				- no
+					- send HEAD request to .uploadURL to determine current Upload-Offset. On return:
+						- response contains "Upload-Offset"
+							- use as value for .uploadOffset
+							-> _continueTusJob…
+						- response doesn't contain "Upload-Offset"
+							- if status is 404 -> upload was removed
+								- set .uploadURL to nil to trigger an upload restart
+								-> _continueTusJob…
+							- other errors
+								- stop upload with error
+								-> message .eventTarget
+
+				- yes
+					- POST the next segment to .uploadURL
+						- on success
+							- increment .uploadOffset by the size of the segment
+							- are any segments left?
+								- yes
+									-> _continueTusJob…
+								- no
+									-> initiate targeted PROPFIND and message .eventTarget
+						- on failure
+							- set .uploadOffset to nil
+							-> _continueTusJob…
+
+	*/
+
+	OCTUSHeader *reqTusHeader = [OCTUSHeader new];
+	reqTusHeader.version = @"1.0.0";
+
+	if (tusJob.uploadURL == nil)
+	{
+		// Create file for upload and determine upload URL
+		request = [OCHTTPRequest requestWithURL:tusJob.creationURL];
+		request.method = OCHTTPMethodPOST;
+
+		// Compose header
+		reqTusHeader.uploadLength = tusJob.fileSize;
+		reqTusHeader.uploadMetadata = @{
+			OCTUSMetadataKeyFileName : tusJob.fileName,
+			OCTUSMetadataKeyChecksum : [NSString stringWithFormat:@"%@ %@", tusJob.fileChecksum.algorithmIdentifier, tusJob.fileChecksum.checksum]
+		};
+
+		if (useCreationWithUpload)
+		{
+			reqTusHeader.uploadOffset = @(0);
+			[request setValue:@"application/offset+octet-stream" forHeaderField:@"Content-Type"];
+
+			// request.bodyURL = sourceURL;
+		}
+
+		[request addHeaderFields:reqTusHeader.httpHeaderFields];
+
+		// TODO: clarify if conditions (If-Match / If-None-Match) are still relevant/supported with ocis
+
+		// Add userInfo
+		request.userInfo = @{
+			@"task" : @"create",
+			@"job"  : tusJob
+		};
+	}
+	else
+	{
+		if (tusJob.uploadOffset == nil)
+		{
+			// Determine .uploadOffset
+			request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
+			request.method = OCHTTPMethodHEAD;
+
+			// Compose header
+			[request addHeaderFields:reqTusHeader.httpHeaderFields];
+
+			// Add userInfo
+			request.userInfo = @{
+				@"task" : @"head",
+				@"job"  : tusJob
+			};
+		}
+		else
+		{
+			if (tusJob.uploadOffset.unsignedIntegerValue == tusJob.fileSize.unsignedIntegerValue)
+			{
+				// Upload complete
+
+				// Destroy TusJob
+				[tusJob destroy];
+
+				// Retrieve item information
+				[self retrieveItemListAtPath:tusJob.futureItemPath depth:0 options:@{
+					@"alternativeEventType"  : @(OCEventTypeUpload),
+				} resultTarget:tusJob.eventTarget];
+			}
+			else
+			{
+				// Continue upload from .uploadOffset
+				request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
+				request.method = OCHTTPMethodPATCH;
+
+				// Compose body
+				NSError *error;
+				OCTUSJobSegment *segment = [tusJob requestSegmentFromOffset:tusJob.uploadOffset.unsignedIntegerValue
+								   withSize:((tusJob.maxSegmentSize == 0) ?
+										(tusJob.fileSize.unsignedIntegerValue - tusJob.uploadOffset.unsignedIntegerValue) :
+										tusJob.maxSegmentSize
+									)
+								   error:&error];
+
+				if (segment != nil)
+				{
+					request.bodyURL = segment.url;
+				}
+
+				// Compose header
+				reqTusHeader.uploadOffset = tusJob.uploadOffset;
+				// reqTusHeader.uploadLength = @(segment.size);
+				[request addHeaderFields:reqTusHeader.httpHeaderFields];
+				[request setValue:@"application/offset+octet-stream" forHeaderField:@"Content-Type"];
+
+				// Add userInfo
+				request.userInfo = @{
+					@"task" : @"upload",
+					@"job"  : tusJob,
+					@"segmentSize" : @(segment.size)
+				};
+			}
+		}
+	}
+
+	if (request != nil)
+	{
+		// Set meta data for handling
+		request.requiredSignals = self.actionSignals;
+		request.resultHandlerAction = @selector(_handleUploadTusJobResult:error:);
+		request.eventTarget = tusJob.eventTarget;
+		request.forceCertificateDecisionDelegation = YES;
+
+		// Attach to pipelines
+		[self attachToPipelines];
+
+		// Enqueue request
+//		if (options[OCConnectionOptionRequestObserverKey] != nil)
+//		{
+//			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
+//		}
+
+		[[self transferPipelineForRequest:request withExpectedResponseLength:1000] enqueueRequest:request forPartitionID:self.partitionID];
+	}
+
+	return (tusProgress);
+}
+
+- (void)_handleUploadTusJobResult:(OCHTTPRequest *)request error:(NSError *)error
+{
+	NSString *task = request.userInfo[@"task"];
+	OCTUSJob *tusJob = request.userInfo[@"job"];
+	BOOL isTusResponse = (request.httpResponse.headerFields[OCTUSHeaderNameTusResumable] != nil); // Tus-Resumable header indicates server supports TUS
+
+	if ([task isEqual:@"create"])
+	{
+		NSString *location = request.httpResponse.headerFields[@"Location"]; // URL to continue the upload at
+
+		#warning remove this hack
+		location = [location stringByReplacingOccurrencesOfString:@"localhost" withString:tusJob.creationURL.host];
+
+		if (isTusResponse && (location != nil))
+		{
+			if (request.httpResponse.status.isSuccess) // Expected: 201 Created
+			{
+				tusJob.uploadURL = [NSURL URLWithString:location]; // save Location to .uploadURL
+
+				if (error == nil)
+				{
+					tusJob.uploadOffset = @(0); // TODO: revise when adding support for create-with-upload
+				}
+				else
+				{
+					tusJob.uploadOffset = nil; // ensure a HEAD request is sent to determine current upload status before continuing
+				}
+
+				// Continue
+				[self _continueTusJob:tusJob lastTask:task];
+			}
+			else
+			{
+				// Stop upload with an error
+				OCTLogError(@[@"TUS"], @"creation response doesn't indicate success");
+				[self _errorEventFromRequest:request error:error send:YES];
+			}
+		}
+		else
+		{
+			// Stop upload with an error
+			OCTLogError(@[@"TUS"], @"creation response is not a TUS response");
+			[self _errorEventFromRequest:request error:error send:YES];
+		}
+	}
+	else if ([task isEqual:@"head"])
+	{
+		if (isTusResponse &&
+		    request.httpResponse.status.isSuccess && // Expected: 200 OK
+		    (request.httpResponse.headerFields != nil))
+		{
+			OCTUSHeader *tusHeader = [[OCTUSHeader alloc] initWithHTTPHeaderFields:request.httpResponse.headerFields];
+
+			if (tusHeader.uploadOffset != nil)
+			{
+				OCTLogDebug(@[@"TUS"], @"TUS HEAD response indicates uploadOffset of %@", tusHeader.uploadOffset);
+
+				tusJob.uploadOffset = tusHeader.uploadOffset;
+				[self _continueTusJob:tusJob lastTask:task];
+			}
+			else
+			{
+				OCTLogError(@[@"TUS"], @"TUS HEAD response lacks expected Upload-Offset");
+				[request.eventTarget handleError:OCError(OCErrorResponseUnknownFormat) type:OCEventTypeUpload uuid:nil sender:self];
+			}
+		}
+		else
+		{
+			// Stop upload with an error
+			[self _errorEventFromRequest:request error:error send:YES];
+		}
+	}
+	else if ([task isEqual:@"upload"])
+	{
+		if (isTusResponse &&
+		    request.httpResponse.status.isSuccess && // Expected: 204 No Content
+		    (request.httpResponse.headerFields != nil))
+		{
+			OCTUSHeader *tusHeader = [[OCTUSHeader alloc] initWithHTTPHeaderFields:request.httpResponse.headerFields];
+
+			if (tusHeader.uploadOffset != nil)
+			{
+				OCTLogDebug(@[@"TUS"], @"TUS upload response indicates uploadOffset of %@", tusHeader.uploadOffset);
+
+				tusJob.uploadOffset = tusHeader.uploadOffset;
+				[self _continueTusJob:tusJob lastTask:task];
+			}
+		}
+	}
+}
+
+- (OCEvent *)_errorEventFromRequest:(OCHTTPRequest *)request error:(NSError *)error send:(BOOL)send
+{
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload uuid:request.identifier attributes:nil]) != nil)
+	{
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else
+		{
+			if (request.error != nil)
+			{
+				event.error = request.error;
+			}
+			else
+			{
+				event.error = request.httpResponse.status.error;
+			}
+		}
+
+		// Add date to error
+		if (event.error != nil)
+		{
+			OCErrorAddDateFromResponse(event.error, request.httpResponse);
+		}
+
+		if (send)
+		{
+			[request.eventTarget handleEvent:event sender:self];
+		}
+	}
+
+	return (event);
+}
+
+#pragma mark - File transfer: direct upload (PUT)
+- (OCProgress *)_directUploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName modificationDate:(NSDate *)modDate fileSize:(NSNumber *)fileSize checksum:(OCChecksum *)checksum to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+{
+	OCProgress *requestProgress = nil;
+	NSURL *uploadURL;
+
 	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:uploadURL];
@@ -1420,62 +1877,23 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		}
 
 		// Set Content-Length
-		NSNumber *fileSize = nil;
-		if ([sourceURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
-		{
-			OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
-			[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
-		}
+		OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
+		[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
 
 		// Set modification date
-		NSDate *modDate = nil;
-		if ((modDate = options[OCConnectionOptionLastModificationDateKey]) == nil)
-		{
-			if (![sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
-			{
-				modDate = nil;
-			}
-		}
-		if (modDate != nil)
-		{
-			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
-		}
+		[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
 
-		// Compute and set checksum header
+		// Set checksum header
 		OCChecksumHeaderString checksumHeaderValue = nil;
-		__block OCChecksum *checksum = nil;
-
-		if ((checksum = options[OCConnectionOptionChecksumKey]) == nil)
-		{
-			OCChecksumAlgorithmIdentifier checksumAlgorithmIdentifier = options[OCConnectionOptionChecksumAlgorithmKey];
-
-			if (checksumAlgorithmIdentifier==nil)
-			{
-				checksumAlgorithmIdentifier = _preferredChecksumAlgorithm;
-			}
-
-			OCSyncExec(checksumComputation, {
-				[OCChecksum computeForFile:sourceURL checksumAlgorithm:checksumAlgorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
-					checksum = computedChecksum;
-					OCSyncExecDone(checksumComputation);
-				}];
-			});
-		}
 
 		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
 		{
 			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
 		}
 
-		if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
-		{
-			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
-			return(nil);
-		}
-
 		// Set meta data for handling
 		request.requiredSignals = self.actionSignals;
-		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
+		request.resultHandlerAction = @selector(_handleDirectUploadFileResult:error:);
 		request.userInfo = @{
 			@"sourceURL" : sourceURL,
 			@"fileName" : fileName,
@@ -1513,6 +1931,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
 {
+	// Compatibility with previous selector (from before the addition of TUS support)
+	[self _handleDirectUploadFileResult:request error:error];
+}
+
+- (void)_handleDirectUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
+{
 	NSString *fileName = request.userInfo[@"fileName"];
 	OCItem *parentItem = request.userInfo[@"parentItem"];
 
@@ -1545,10 +1969,10 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			}
 		*/
 
-		// Retrieve item information and continue in _handleUploadFileItemResult:error:
+		// Retrieve item information
 		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
 			@"alternativeEventType"  : @(OCEventTypeUpload),
-			@"_originalUserInfo"	: request.userInfo
+			// @"_originalUserInfo"	: request.userInfo
 		} resultTarget:request.eventTarget];
 	}
 	else
@@ -2682,6 +3106,7 @@ OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
+OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 

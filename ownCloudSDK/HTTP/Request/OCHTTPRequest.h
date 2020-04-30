@@ -122,6 +122,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 extern OCHTTPMethod OCHTTPMethodGET;
 extern OCHTTPMethod OCHTTPMethodPOST;
+extern OCHTTPMethod OCHTTPMethodPATCH;
 extern OCHTTPMethod OCHTTPMethodHEAD;
 extern OCHTTPMethod OCHTTPMethodPUT;
 extern OCHTTPMethod OCHTTPMethodDELETE;

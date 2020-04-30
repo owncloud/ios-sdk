@@ -44,6 +44,8 @@
 #import "OCSyncIssueChoice.h"
 #import "OCUser.h"
 #import "OCWaitCondition.h"
+#import "OCTUSJob.h"
+#import "OCTUSHeader.h"
 
 @implementation OCEvent
 
@@ -99,6 +101,9 @@
 				OCSyncIssueChoice.class,
 				OCUser.class,
 				OCWaitCondition.class,
+				OCTUSHeader.class,
+				OCTUSJob.class,
+				OCTUSJobSegment.class,
 
 				// Foundation classes
 				NSArray.class,
@@ -257,19 +262,19 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_uuid = [decoder decodeObjectOfClass:[NSString class] forKey:@"uuid"];
+		_uuid = [decoder decodeObjectOfClass:NSString.class forKey:@"uuid"];
 
 		_eventType = [decoder decodeIntegerForKey:@"eventType"];
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
-		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
 		_depth = [decoder decodeIntegerForKey:@"depth"];
 
-		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
 		_file = [decoder decodeObjectOfClass:OCFile.class forKey:@"file"];
 
-		_error = [decoder decodeObjectOfClass:[NSError class] forKey:@"error"];
-		_result = [decoder decodeObjectOfClasses:[OCEvent safeClasses] forKey:@"result"];
+		_error = [decoder decodeObjectOfClass:NSError.class forKey:@"error"];
+		_result = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"result"];
 	}
 
 	return (self);
