@@ -276,10 +276,12 @@
 			}
 		}
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
-		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
 		[self addSignalProvider:_serverStatusSignalProvider];
+		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
@@ -538,6 +540,22 @@
 }
 
 - (void)_attemptConnect
+{
+	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)
+	{
+		__weak OCCore *weakCore = self;
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), self->_queue, ^{
+			[weakCore __attemptConnect];
+		});
+	}
+	else
+	{
+		[self __attemptConnect];
+	}
+}
+
+- (void)__attemptConnect
 {
 	[self queueConnectivityBlock:^{
 		if ((self->_state == OCCoreStateReady) && self->_attemptConnect)

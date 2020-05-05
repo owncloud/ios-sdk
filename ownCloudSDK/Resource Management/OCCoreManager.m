@@ -215,7 +215,6 @@
 	}
 }
 
-
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
 {
 	OCLogDebug(@"queuing core return for bookmark %@", bookmark);

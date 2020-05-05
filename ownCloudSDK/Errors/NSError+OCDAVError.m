@@ -95,7 +95,18 @@ static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionM
 			break;
 
 			case OCDAVErrorUnknown:
-				value = [NSString stringWithFormat:@"%@ (%@)", [error davExceptionMessage], error.davExceptionName];
+				if ((error.davExceptionMessage != nil) && (error.davExceptionName != nil))
+				{
+					value = [NSString stringWithFormat:@"%@ (%@)", error.davExceptionMessage, error.davExceptionName];
+				}
+				else if (error.davExceptionMessage != nil)
+				{
+					value = error.davExceptionMessage;
+				}
+				else if (error.davExceptionName != nil)
+				{
+					value = [NSString stringWithFormat:@"(%@)", error.davExceptionName];
+				}
 			break;
 		}
 	}

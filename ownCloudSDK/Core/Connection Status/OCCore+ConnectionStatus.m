@@ -157,6 +157,12 @@
 				break;
 			}
 
+			// Connecting state
+			if ((computedSignal & OCCoreConnectionStatusSignalConnecting) != 0)
+			{
+				computedConnectionStatus = OCCoreConnectionStatusConnecting;
+			}
+
 			// Connection state
 			if ((computedSignal & OCCoreConnectionStatusSignalConnected) == 0)
 			{
@@ -180,6 +186,10 @@
 				shortStatusDescription = OCLocalized(@"Server down for maintenance");
 			break;
 
+			case OCCoreConnectionStatusConnecting:
+				shortStatusDescription = OCLocalized(@"Connecting");
+			break;
+
 			case OCCoreConnectionStatusOnline:
 				shortStatusDescription = OCLocalized(@"Online");
 			break;
@@ -197,6 +207,30 @@
 }
 
 #pragma mark - Connnection status updates
+- (NSString *)_descriptionForConnectionStatus:(OCCoreConnectionStatus)status
+{
+	switch (status)
+	{
+		case OCCoreConnectionStatusOffline:
+			return (@"offline");
+		break;
+
+		case OCCoreConnectionStatusUnavailable:
+			return (@"unavailable");
+		break;
+
+		case OCCoreConnectionStatusConnecting:
+			return (@"connecting");
+		break;
+
+		case OCCoreConnectionStatusOnline:
+			return (@"online");
+		break;
+	}
+
+	return (@"unknown");
+}
+
 - (void)updateConnectionStatus:(OCCoreConnectionStatus)newStatus withSignal:(OCCoreConnectionStatusSignal)newSignal
 {
 	OCCoreConnectionStatus oldStatus = _connectionStatus;
@@ -206,7 +240,7 @@
 	// Property changes
 	if (newStatus != _connectionStatus)
 	{
-		OCLogDebug(@"************ Connection Status will change from %lu to %lu ************", (unsigned long)oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status will change from %@ to %@ ************", [self _descriptionForConnectionStatus:oldStatus], [self _descriptionForConnectionStatus:newStatus]);
 
 		// Announce change
 		[self willChangeValueForKey:@"connectionStatus"];
@@ -235,7 +269,7 @@
 		_connectionStatus = newStatus;
 		[self didChangeValueForKey:@"connectionStatus"];
 
-		OCLogDebug(@"************ Connection Status changed from %lu to %lu ************", oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status changed from %@ to %@ ************", [self _descriptionForConnectionStatus:oldStatus], [self _descriptionForConnectionStatus:newStatus]);
 	}
 
 	// Determine internal updates
@@ -321,7 +355,11 @@
 - (void)connectionChangedState:(OCConnection *)connection
 {
 	// Update connectionStatusSignalProvider representing connection state
-	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
+	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected)  ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
+	_connectingStatusSignalProvider.state = ((connection.state == OCConnectionStateConnecting) && // bind this signal provider to the connection's OCConnectionStateConnecting state
+	 					 (connection.authenticationMethod.authenticationDataKnownInvalidDate == nil)) ? // avoid retries if authentication data is known to be invalid (triggered by state changes) as well as user-visible state changes due to retries
+	 					 	OCCoreConnectionStatusSignalStateTrue :
+	 					 	OCCoreConnectionStatusSignalStateFalse;
 }
 
 - (void)connectionCertificateUserApproved:(OCConnection *)connection
