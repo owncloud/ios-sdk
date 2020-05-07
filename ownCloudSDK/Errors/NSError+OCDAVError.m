@@ -49,6 +49,11 @@ static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionM
 			errorCode = OCDAVErrorServiceUnavailable;
 		}
 
+		if ([sabreException isEqual:@"Sabre\\DAV\\Exception\\NotFound"])
+		{
+			errorCode = OCDAVErrorNotFound;
+		}
+
 		davError = [NSError 	errorWithDomain:OCDAVErrorDomain
 				 	code:errorCode
 				 	userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -92,6 +97,10 @@ static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionM
 
 			case OCDAVErrorServiceUnavailable:
 				unlocalizedString = @"Server down for maintenance.";
+			break;
+
+			case OCDAVErrorNotFound:
+				unlocalizedString = @"Resource not found.";
 			break;
 
 			case OCDAVErrorUnknown:

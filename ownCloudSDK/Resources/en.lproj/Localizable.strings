@@ -126,6 +126,8 @@
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";
+// OCDAVErrorNotFound
+"Resource not found." = "Resource not found.";
 
 /* OC Errors */
 "%@ (error %ld, %@)" = "%@ (error %ld, %@)";
