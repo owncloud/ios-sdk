@@ -39,3 +39,5 @@
 @end
 
 extern OCSyncActionCategory OCSyncActionCategoryUpload; //!< Action category for uploads
+extern OCSyncActionCategory OCSyncActionCategoryUploadWifiOnly; //!< Action category for uploads via WiFi
+extern OCSyncActionCategory OCSyncActionCategoryUploadWifiAndCellular; //!< Action category for uploads via WiFi and Cellular

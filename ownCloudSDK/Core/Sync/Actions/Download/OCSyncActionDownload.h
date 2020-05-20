@@ -28,3 +28,5 @@
 @end
 
 extern OCSyncActionCategory OCSyncActionCategoryDownload; //!< Action category for downloads
+extern OCSyncActionCategory OCSyncActionCategoryDownloadWifiOnly; //!< Action category for downloads via WiFi
+extern OCSyncActionCategory OCSyncActionCategoryDownloadWifiAndCellular; //!< Action category for downloads via WiFi and Cellular

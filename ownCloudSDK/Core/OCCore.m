@@ -123,8 +123,14 @@
 				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
 
 				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+
 					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
-					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryUploadWifiOnly   	  : @(2), // Limit number of concurrent uploads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryUploadWifiAndCellular : @(3), // Limit number of concurrent uploads by WiFi and Cellular transfers to 3
+
+					OCSyncActionCategoryDownload : @(3),	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
 		OCCoreCookieSupportEnabled : @(NO)
 	});

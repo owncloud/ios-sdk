@@ -38,7 +38,15 @@
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryDownload ];
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryDownload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:item.size] ?
+				OCSyncActionCategoryDownloadWifiAndCellular :
+				OCSyncActionCategoryDownloadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -659,3 +667,5 @@
 @end
 
 OCSyncActionCategory OCSyncActionCategoryDownload = @"download";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiOnly = @"download-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiAndCellular = @"download-wifi-and-cellular";

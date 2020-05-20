@@ -85,8 +85,13 @@
 
 - (BOOL)cellularAccessAllowedFor:(OCCellularSwitchIdentifier)identifier transferSize:(NSUInteger)transferSize
 {
-	return ([[self switchWithIdentifier:OCCellularSwitchIdentifierMaster] allowsTransferOfSize:transferSize] &&
-	    	[[self switchWithIdentifier:identifier] allowsTransferOfSize:transferSize]);
+	if (identifier != nil)
+	{
+		return ([[self switchWithIdentifier:OCCellularSwitchIdentifierMaster] allowsTransferOfSize:transferSize] &&
+			[[self switchWithIdentifier:identifier] allowsTransferOfSize:transferSize]);
+	}
+
+	return ([[self switchWithIdentifier:OCCellularSwitchIdentifierMaster] allowsTransferOfSize:transferSize]);
 }
 
 @end

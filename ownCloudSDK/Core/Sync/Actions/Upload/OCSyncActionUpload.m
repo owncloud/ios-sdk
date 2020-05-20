@@ -44,7 +44,15 @@
 
 		self.options = options;
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryUpload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:uploadItem.size] ?
+				OCSyncActionCategoryUploadWifiAndCellular :
+				OCSyncActionCategoryUploadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -558,3 +566,5 @@
 @end
 
 OCSyncActionCategory OCSyncActionCategoryUpload = @"upload";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiOnly = @"upload-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiAndCellular = @"upload-cellular-and-wifi";
