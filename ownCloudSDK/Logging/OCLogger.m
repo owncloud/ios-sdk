@@ -353,14 +353,31 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
-	if ([OCLogger logsForLevel:logLevel])
+	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
+	{
+		va_list args;
+
+		va_start(args, formatString);
+		[self appendLogLevel:logLevel force:force functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		va_end(args);
+	}
+}
+
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+{
+	[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+}
+
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+{
+	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
 		NSString *logMessage;
 		NSDate *timestamp;
