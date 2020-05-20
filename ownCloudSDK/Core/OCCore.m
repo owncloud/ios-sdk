@@ -1874,6 +1874,7 @@ OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
 OCCoreOption OCCoreOptionAllowCellular = @"allowCellularAccess";
+OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 

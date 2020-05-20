@@ -22,6 +22,7 @@
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "NSDate+OCDateParser.h"
+#import "OCCellularManager.h"
 
 @implementation OCSyncActionUpload
 
@@ -153,9 +154,28 @@
 				}];
 			});
 
+			// Determine cellular access permission
+			NSNumber *allowCellularAccess = @(1);
+
+			OCCellularSwitchIdentifier cellularSwitchID;
+			if ((cellularSwitchID = self.options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+			{
+				// Cellular switch ID provided -> first choice
+				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:uploadItem.size]);
+			}
+			else if (self.options[OCCoreOptionAllowCellular] != nil)
+			{
+				// Allow cellular provided -> second choice
+				allowCellularAccess = self.options[OCCoreOptionAllowCellular];
+			}
+			else
+			{
+				// None provided -> use master switch value
+				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:uploadItem.size]);
+			}
+
 			// Schedule the upload
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
-			NSNumber *allowCellularAccess = (self.options[OCCoreOptionAllowCellular] != nil) ? self.options[OCCoreOptionAllowCellular] : @(1);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
 							allowCellularAccess,			OCConnectionOptionAllowCellularKey,

@@ -22,6 +22,7 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCCore+Claims.h"
 #import "OCWaitConditionMetaDataRefresh.h"
+#import "OCCellularManager.h"
 
 @implementation OCSyncActionDownload
 
@@ -251,17 +252,36 @@
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
-		OCLogDebug(@"record %@ download: initiating download of %@", syncContext.syncRecord, item);
-
 		if (options != nil)
 		{
 			NSMutableDictionary *mutableOptions = [options mutableCopy];
 
-			// Translate options
-			mutableOptions[OCConnectionOptionAllowCellularKey] = options[OCCoreOptionAllowCellular];
+			// Determine and add allow cellular option
+			NSNumber *allowCellular = @(1);
+
+			OCCellularSwitchIdentifier cellularSwitchID;
+			if ((cellularSwitchID = options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+			{
+				// Cellular Switch provided -> first choice
+				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:item.size]);
+			}
+			else if (options[OCCoreOptionAllowCellular] != nil)
+			{
+				// Allow cellular provided -> second choice
+				allowCellular = options[OCCoreOptionAllowCellular];
+			}
+			else
+			{
+				// Default to cellular master switch -> fallback choice
+				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:item.size]);
+			}
+
+			mutableOptions[OCConnectionOptionAllowCellularKey] = allowCellular;
 
 			options = mutableOptions;
 		}
+
+		OCLogDebug(@"record %@ download: initiating download (allowCellular=%@) of %@", syncContext.syncRecord, options[OCConnectionOptionAllowCellularKey], item);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{

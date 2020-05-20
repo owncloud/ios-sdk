@@ -159,7 +159,7 @@
 		{
 			[self.core downloadItem:matchingItem options:@{
 				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline,
-				OCCoreOptionAllowCellular : @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierAvailableOffline transferSize:matchingItem.size])
+				OCCoreOptionDependsOnCellularSwitch : OCCellularSwitchIdentifierAvailableOffline
 			} resultHandler:nil];
 		}
 		else if (matchingItem.cloudStatus == OCItemCloudStatusLocalCopy)

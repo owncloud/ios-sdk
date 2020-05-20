@@ -351,6 +351,10 @@
 	{
 		[requestDescription appendFormat:@"[Auto-Resume: %lu | Info: %@]\n", (unsigned long)_autoResume, _autoResumeInfo.allKeys];
 	}
+	if (_avoidCellular)
+	{
+		[requestDescription appendFormat:@"[Avoid Cellular Transfer]\n"];
+	}
 	if (_bodyData != nil)
 	{
 		[requestDescription appendFormat:@"Content-Length: %lu\n", (unsigned long)_bodyData.length];
