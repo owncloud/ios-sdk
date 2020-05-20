@@ -250,6 +250,9 @@
 		{
 			urlRequest.HTTPBody = self.bodyData;
 		}
+
+		// Apply settings
+		urlRequest.allowsCellularAccess = !self.avoidCellular;
 	}
 
 	return (urlRequest);
@@ -413,6 +416,8 @@
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 		self.downloadedFileIsTemporary = [decoder decodeBoolForKey:@"downloadedFileIsTemporary"];
 
+		self.avoidCellular	= [decoder decodeBoolForKey:@"avoidCellular"];
+
 		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
 		self.cancelled		= [decoder decodeBoolForKey:@"cancelled"];
 
@@ -456,6 +461,8 @@
 	[coder encodeBool:_downloadRequest 	forKey:@"downloadRequest"];
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
 	[coder encodeBool:_downloadedFileIsTemporary forKey:@"downloadedFileIsTemporary"];
+
+	[coder encodeBool:_avoidCellular 	forKey:@"avoidCellular"];
 
 	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 	[coder encodeBool:_cancelled 		forKey:@"cancelled"];

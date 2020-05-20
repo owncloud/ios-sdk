@@ -1873,6 +1873,7 @@ OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPur
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
+OCCoreOption OCCoreOptionAllowCellular = @"allowCellularAccess";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 

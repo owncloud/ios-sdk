@@ -26,7 +26,7 @@
 @implementation OCSyncActionUpload
 
 #pragma mark - Initializer
-- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
+- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
 	{
@@ -40,6 +40,8 @@
 
 		self.actionEventType = OCEventTypeUpload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
+
+		self.options = options;
 
 		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
 	}
@@ -153,8 +155,10 @@
 
 			// Schedule the upload
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
+			NSNumber *allowCellularAccess = (self.options[OCCoreOptionAllowCellular] != nil) ? self.options[OCCoreOptionAllowCellular] : @(1);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
+							allowCellularAccess,			OCConnectionOptionAllowCellularKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
@@ -511,6 +515,8 @@
 	_replaceItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"replaceItem"];
 
 	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
+
+	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -525,6 +531,8 @@
 	[coder encodeObject:_replaceItem forKey:@"replaceItem"];
 
 	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
+
+	[coder encodeObject:_options forKey:@"options"];
 }
 
 @end

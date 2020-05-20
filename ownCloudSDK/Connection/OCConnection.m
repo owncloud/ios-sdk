@@ -1458,6 +1458,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.bodyURL = sourceURL;
 		request.forceCertificateDecisionDelegation = YES;
 
+		if (options[OCConnectionOptionAllowCellularKey] != nil)
+		{
+			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+		}
+
 		// Attach to pipelines
 		[self attachToPipelines];
 
@@ -1640,6 +1645,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.autoResume = YES;
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
+
+		if (options[OCConnectionOptionAllowCellularKey] != nil)
+		{
+			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+		}
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -2633,6 +2643,7 @@ OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
+OCConnectionOptionKey OCConnectionOptionAllowCellularKey = @"allow-cellular";
 
 OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 

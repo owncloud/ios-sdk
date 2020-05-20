@@ -253,6 +253,16 @@
 
 		OCLogDebug(@"record %@ download: initiating download of %@", syncContext.syncRecord, item);
 
+		if (options != nil)
+		{
+			NSMutableDictionary *mutableOptions = [options mutableCopy];
+
+			// Translate options
+			mutableOptions[OCConnectionOptionAllowCellularKey] = options[OCCoreOptionAllowCellular];
+
+			options = mutableOptions;
+		}
+
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
 			OCLogDebug(@"record %@ download: download initiated with progress %@", syncContext.syncRecord, progress);
