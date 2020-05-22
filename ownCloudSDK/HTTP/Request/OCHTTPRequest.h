@@ -115,10 +115,10 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong) OCHTTPResponse *httpResponse;
 
 #pragma mark - Description
-+ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers;
-+ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers;
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed;
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix;
 
-- (NSString *)requestDescription;
+- (NSString *)requestDescriptionPrefixed:(BOOL)prefixed;
 
 @end
 

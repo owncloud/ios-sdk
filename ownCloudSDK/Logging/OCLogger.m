@@ -35,6 +35,8 @@ static BOOL sOCLogLevelInitialized;
 static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
+static BOOL sOCLogSingleLined;
+
 @interface OCLogger ()
 {
 	uint64_t _mainThreadThreadID;
@@ -185,7 +187,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
-			OCClassSettingsKeyLogColored		   : @(NO)
+			OCClassSettingsKeyLogColored		   : @(NO),
+			OCClassSettingsKeyLogSingleLined	   : @(YES)
 		});
 	}
 
@@ -212,6 +215,8 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		{
 			sOCLogLevel = OCLogLevelOff;
 		}
+
+		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
 
 		sOCLogLevelInitialized = YES;
 	}
@@ -427,6 +432,19 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		}
 	}
 
+	NSArray<NSString *> *lines = nil;
+
+	if (sOCLogSingleLined)
+	{
+		static NSString *splitNewLine;
+		static dispatch_once_t onceToken;
+		dispatch_once(&onceToken, ^{
+			splitNewLine = [[NSString alloc] initWithFormat:@"\n"];
+		});
+
+		lines = [logMessage componentsSeparatedByString:splitNewLine];
+	}
+
 	for (OCLogWriter *writer in self->_writers)
 	{
 		if ((sOCLogLevel != OCLogLevelOff) && writer.enabled)
@@ -443,7 +461,17 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 			if (writer.isOpen)
 			{
-				[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:logMessage];
+				if (lines != nil)
+				{
+					for (NSString *singleLine in lines)
+					{
+						[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:singleLine];
+					}
+				}
+				else
+				{
+					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:logMessage];
+				}
 			}
 		}
 		else
@@ -696,7 +724,32 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	return (logIntro);
 }
 
-; //!< Introductory lines to start logging (and new log files) with. Allows for app-side injection of additions via OCLogger<OCLogAdditionalIntro> conformance.
+@end
+
+@implementation NSArray (OCLogTagMerge)
+
+- (NSArray<NSString *> *)arrayByMergingTagsFromArray:(NSArray<NSString *> *)mergeTags
+{
+	if (self.count < 2)
+	{
+		return ([self arrayByAddingObjectsFromArray:mergeTags]);
+	}
+
+	NSMutableArray<NSString *> *mergedTags = [[NSMutableArray alloc] initWithCapacity:(self.count+mergeTags.count)];
+
+	[mergedTags addObjectsFromArray:self];
+
+	NSUInteger mergedTagsCount = mergedTags.count;
+
+	for (NSUInteger idx=0; idx < mergeTags.count; idx++)
+	{
+		[mergedTags insertObject:mergedTags[idx] atIndex:((idx == 0) ? 1 : mergedTagsCount)];
+
+		mergedTagsCount++;
+	}
+
+	return (mergeTags);
+}
 
 @end
 
@@ -712,5 +765,6 @@ OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
 OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
 OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
 OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
+OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

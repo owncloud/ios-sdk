@@ -129,8 +129,13 @@ extern OCClassSettingsKey OCClassSettingsKeyLogOmitTags;
 extern OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogOmitMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages;
+extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
+
+@interface NSArray (OCLogTagMerge)
+- (NSArray<NSString *> *)arrayByMergingTagsFromArray:(NSArray<NSString *> *)mergeTags;
+@end
 
 NS_ASSUME_NONNULL_END
 
@@ -140,6 +145,12 @@ NS_ASSUME_NONNULL_END
 	((extraTags==nil) ? \
 		[(id<OCLogTagging>)obj logTags] : \
 		[[(id<OCLogTagging>)obj logTags] arrayByAddingObjectsFromArray:(id _Nonnull)(extraTags)] ) : \
+	(extraTags))
+
+#define OCLogMergeTags(obj,extraTags)	([obj conformsToProtocol:@protocol(OCLogTagging)] ? \
+	((extraTags==nil) ? \
+		[(id<OCLogTagging>)obj logTags] : \
+		[[(id<OCLogTagging>)obj logTags] arrayByMergingTagsFromArray:(id _Nonnull)(extraTags)] ) : \
 	(extraTags))
 
 #define OCLogToggleEnabled(toggleID)	((toggleID!=nil) ? [OCLogger.sharedLogger isToggleEnabled:toggleID] : YES)
@@ -181,6 +192,14 @@ NS_ASSUME_NONNULL_END
 #define OCPFLog(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFLogWarning(toggleID, extraTags, format,...) _OC_PLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFLogError(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelError,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
+
+// Parametrized forced logging (with toggles, auto-tags, merged extra-tags)
+#define _OC_PMLOG(obj, level, forceLog, toggleID, extraTags, format,...)  if ([OCLogger logsForLevel:(forceLog ? OCLogLevelError : level)] && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:level force:forceLog functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogMergeTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
+
+#define OCPFMLogDebug(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelDebug,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLog(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLogWarning(toggleID, extraTags, format,...) _OC_PMLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLogError(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelError,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
 
 // Raw logging (with manual tags)
 #define _OC_RLOG(level,tags,format,...)   	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }

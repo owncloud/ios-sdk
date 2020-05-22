@@ -1083,8 +1083,12 @@
 	// Log request
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
+		BOOL prefixedLogging = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingPrefixedHTTPLogging] boolValue];
+		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
+
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:   %@\n%@Error: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
 	}
 
 	// Update task
@@ -1185,7 +1189,7 @@
 	if ((task.response != nil) && (task.response != response))
 	{
 		// has existing response
-		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", task.requestID, response.responseDescription, task.response.responseDescription);
+		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", task.requestID, [response responseDescriptionPrefixed:NO], [task.response responseDescriptionPrefixed:NO]);
 	}
 
 	task.response = response;
@@ -1195,8 +1199,12 @@
 	// Log response
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
+		BOOL prefixedLogging = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingPrefixedHTTPLogging] boolValue];
+		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
+
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:     %@\n%@URL:        %@\n%@Request-ID: %@\n%@Error:      %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, infoPrefix, errorDescription, infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
 	}
 
 	// Attempt delivery
@@ -2342,7 +2350,8 @@
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})"
+		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})",
+		OCHTTPPipelineSettingPrefixedHTTPLogging : @(YES)
 	});
 }
 
@@ -2417,3 +2426,4 @@
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP = @"http";
 OCClassSettingsKey OCHTTPPipelineSettingUserAgent = @"user-agent";
+OCClassSettingsKey OCHTTPPipelineSettingPrefixedHTTPLogging = @"prefixed-http-logging";

@@ -179,21 +179,22 @@
 	return (nil);
 }
 
-- (NSString *)responseDescription
+- (NSString *)responseDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *responseDescription = [NSMutableString new];
+	NSString *headPrefix = (prefixed ? @"[head] " : @"");
 
-	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 
-	[responseDescription appendFormat:@"%ld %@\n", (long)_status.code, [NSHTTPURLResponse localizedStringForStatusCode:_status.code].uppercaseString];
+	[responseDescription appendFormat:@"%@%ld %@\n", headPrefix, (long)_status.code, [NSHTTPURLResponse localizedStringForStatusCode:_status.code].uppercaseString];
 	if (_headerFields.count > 0)
 	{
-		[responseDescription appendString:[OCHTTPRequest formattedHeaders:_headerFields]];
+		[responseDescription appendString:[OCHTTPRequest formattedHeaders:_headerFields withLinePrefix:(prefixed ? headPrefix : nil)]];
 	}
 
 	if (bodyDescription != nil)
 	{
-		[responseDescription appendFormat:@"\n%@\n", bodyDescription];
+		[responseDescription appendFormat:@"%@\n%@\n", headPrefix, bodyDescription];
 	}
 
 	return (responseDescription);
