@@ -182,7 +182,7 @@
 - (NSString *)responseDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *responseDescription = [NSMutableString new];
-	NSString *headPrefix = (prefixed ? @"[head] " : @"");
+	NSString *headPrefix = (prefixed ? @"[header] " : @"");
 
 	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 

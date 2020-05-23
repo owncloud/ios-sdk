@@ -36,6 +36,7 @@ static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
 static BOOL sOCLogSingleLined;
+static NSUInteger sOCLogMessageMaximumSize;
 
 @interface OCLogger ()
 {
@@ -188,7 +189,8 @@ static BOOL sOCLogSingleLined;
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
 			OCClassSettingsKeyLogColored		   : @(NO),
-			OCClassSettingsKeyLogSingleLined	   : @(YES)
+			OCClassSettingsKeyLogSingleLined	   : @(YES),
+			OCClassSettingsKeyLogMaximumLogMessageSize : @(0)
 		});
 	}
 
@@ -217,6 +219,8 @@ static BOOL sOCLogSingleLined;
 		}
 
 		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+
+		sOCLogMessageMaximumSize = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogMaximumLogMessageSize] unsignedIntegerValue];
 
 		sOCLogLevelInitialized = YES;
 	}
@@ -432,6 +436,14 @@ static BOOL sOCLogSingleLined;
 		}
 	}
 
+	if (sOCLogMessageMaximumSize != 0)
+	{
+		if (logMessage.length > sOCLogMessageMaximumSize)
+		{
+			logMessage = [[logMessage substringToIndex:sOCLogMessageMaximumSize] stringByAppendingFormat:@" [truncated: %lu -> %lu bytes]", logMessage.length, sOCLogMessageMaximumSize];
+		}
+	}
+
 	NSArray<NSString *> *lines = nil;
 
 	if (sOCLogSingleLined)
@@ -463,14 +475,33 @@ static BOOL sOCLogSingleLined;
 			{
 				if (lines != nil)
 				{
+					NSUInteger lineIdx = 0, linesLastIdx = lines.count - 1;
+					OCLogLineFlag lineFlags = OCLogLineFlagSingleLinesModeEnabled | ((linesLastIdx > 1) ? OCLogLineFlagTotalLineCountGreaterTwo : 0);
+
 					for (NSString *singleLine in lines)
 					{
-						[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:singleLine];
+						[writer appendMessageWithLogLevel:logLevel
+									     date:timestamp
+									 threadID:threadID
+								     isMainThread:(threadID==self->_mainThreadThreadID)
+								    privacyMasked:sOCLogMaskPrivateData
+								     functionName:functionName
+									     file:file
+									     line:line
+									     tags:tags
+									    flags:(	lineFlags |
+									    		((lineIdx == 0) ? OCLogLineFlagLineFirst : 0) |
+									    		((lineIdx == linesLastIdx) ? OCLogLineFlagLineLast : 0) |
+									    		((lineIdx > 0) && (lineIdx < linesLastIdx) ? OCLogLineFlagLineInbetween : 0)
+										  )
+									  message:singleLine];
+
+						lineIdx++;
 					}
 				}
 				else
 				{
-					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:logMessage];
+					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags flags:(OCLogLineFlagLineFirst|OCLogLineFlagLineLast) message:logMessage];
 				}
 			}
 		}
@@ -766,5 +797,6 @@ OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
 OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
 OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
 OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
+OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

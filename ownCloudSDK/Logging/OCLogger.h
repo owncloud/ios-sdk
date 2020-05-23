@@ -130,6 +130,7 @@ extern OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogOmitMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages;
 extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
+extern OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
 

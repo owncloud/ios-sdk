@@ -362,7 +362,7 @@
 {
 	NSMutableString *requestDescription = [NSMutableString new];
 	NSString *infoPrefix = (prefixed ? @"[info] " : @"");
-	NSString *headPrefix = (prefixed ? @"[head] " : @"");
+	NSString *headPrefix = (prefixed ? @"[header] " : @"");
 
 	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 

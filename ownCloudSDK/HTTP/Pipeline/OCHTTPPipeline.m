@@ -1083,7 +1083,7 @@
 	// Log request
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		BOOL prefixedLogging = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingPrefixedHTTPLogging] boolValue];
+		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
 		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
 		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
 
@@ -1199,7 +1199,7 @@
 	// Log response
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		BOOL prefixedLogging = [[self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingPrefixedHTTPLogging] boolValue];
+		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
 		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
 		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
 
@@ -2350,8 +2350,7 @@
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})",
-		OCHTTPPipelineSettingPrefixedHTTPLogging : @(YES)
+		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})"
 	});
 }
 
@@ -2426,4 +2425,3 @@
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP = @"http";
 OCClassSettingsKey OCHTTPPipelineSettingUserAgent = @"user-agent";
-OCClassSettingsKey OCHTTPPipelineSettingPrefixedHTTPLogging = @"prefixed-http-logging";

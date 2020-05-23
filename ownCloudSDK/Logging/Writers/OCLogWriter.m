@@ -71,9 +71,9 @@ static NSDateFormatter *dateFormatter;
 	return [dateFormatter stringFromDate:date];
 }
 
-- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)message
+- (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags flags:(OCLogLineFlag)flags message:(NSString *)message
 {
-	NSString *logLevelName = nil, *timestampString = nil, *leadingTags = nil, *trailingTags = nil;
+	NSString *logLevelName = nil, *timestampString = nil, *leadingTags = nil, *trailingTags = nil, *separator = @"|";
 
 	switch (logLevel)
 	{
@@ -117,9 +117,30 @@ static NSDateFormatter *dateFormatter;
 		trailingTags = @"";
 	}
 
+	if (flags & OCLogLineFlagSingleLinesModeEnabled)
+	{
+		if ((flags & (OCLogLineFlagLineFirst|OCLogLineFlagLineLast)) != (OCLogLineFlagLineFirst|OCLogLineFlagLineLast))
+		{
+			separator = @"┃";
+
+			// if (flags & OCLogLineFlagTotalLineCountGreaterTwo)
+			{
+				if (flags & OCLogLineFlagLineFirst)
+				{
+					separator = @"┓";
+				}
+
+				if (flags & OCLogLineFlagLineLast)
+				{
+					separator = @"┛";
+				}
+			}
+		}
+	}
+
 	timestampString = [dateFormatter stringFromDate:date];
 
-	[self appendMessage:[[NSString alloc] initWithFormat:@"%@ %@[%d%@%06llu] %@ | %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
+	[self appendMessage:[[NSString alloc] initWithFormat:@"%@ %@[%d%@%06llu] %@ %@ %@%@%@ [%@:%lu|%@]\n", timestampString, processName, getpid(), (isMainThread ? @"." : @":"), threadID, logLevelName, separator, leadingTags, message, trailingTags, [file lastPathComponent], (unsigned long)line, (privacyMasked ? @"MASKED" : @"FULL")]];
 }
 
 - (void)appendMessage:(NSString *)message

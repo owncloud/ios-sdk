@@ -172,6 +172,5 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP;
 extern OCClassSettingsKey OCHTTPPipelineSettingUserAgent;
-extern OCClassSettingsKey OCHTTPPipelineSettingPrefixedHTTPLogging;
 
 NS_ASSUME_NONNULL_END
