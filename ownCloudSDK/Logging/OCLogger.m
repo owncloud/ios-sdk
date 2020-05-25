@@ -35,6 +35,9 @@ static BOOL sOCLogLevelInitialized;
 static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
+static BOOL sOCLogSingleLined;
+static NSUInteger sOCLogMessageMaximumSize;
+
 @interface OCLogger ()
 {
 	uint64_t _mainThreadThreadID;
@@ -185,7 +188,9 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
-			OCClassSettingsKeyLogColored		   : @(NO)
+			OCClassSettingsKeyLogColored		   : @(NO),
+			OCClassSettingsKeyLogSingleLined	   : @(YES),
+			OCClassSettingsKeyLogMaximumLogMessageSize : @(0)
 		});
 	}
 
@@ -212,6 +217,10 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		{
 			sOCLogLevel = OCLogLevelOff;
 		}
+
+		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+
+		sOCLogMessageMaximumSize = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogMaximumLogMessageSize] unsignedIntegerValue];
 
 		sOCLogLevelInitialized = YES;
 	}
@@ -353,14 +362,31 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
-	if ([OCLogger logsForLevel:logLevel])
+	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
+	{
+		va_list args;
+
+		va_start(args, formatString);
+		[self appendLogLevel:logLevel force:force functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		va_end(args);
+	}
+}
+
+- (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+{
+	[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+}
+
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+{
+	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
 		NSString *logMessage;
 		NSDate *timestamp;
@@ -410,6 +436,27 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 		}
 	}
 
+	if (sOCLogMessageMaximumSize != 0)
+	{
+		if (logMessage.length > sOCLogMessageMaximumSize)
+		{
+			logMessage = [[logMessage substringToIndex:sOCLogMessageMaximumSize] stringByAppendingFormat:@" [truncated: %lu -> %lu bytes]", logMessage.length, sOCLogMessageMaximumSize];
+		}
+	}
+
+	NSArray<NSString *> *lines = nil;
+
+	if (sOCLogSingleLined)
+	{
+		static NSString *splitNewLine;
+		static dispatch_once_t onceToken;
+		dispatch_once(&onceToken, ^{
+			splitNewLine = [[NSString alloc] initWithFormat:@"\n"];
+		});
+
+		lines = [logMessage componentsSeparatedByString:splitNewLine];
+	}
+
 	for (OCLogWriter *writer in self->_writers)
 	{
 		if ((sOCLogLevel != OCLogLevelOff) && writer.enabled)
@@ -426,7 +473,36 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 			if (writer.isOpen)
 			{
-				[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags message:logMessage];
+				if (lines != nil)
+				{
+					NSUInteger lineIdx = 0, linesLastIdx = lines.count - 1;
+					OCLogLineFlag lineFlags = OCLogLineFlagSingleLinesModeEnabled | ((linesLastIdx > 1) ? OCLogLineFlagTotalLineCountGreaterTwo : 0);
+
+					for (NSString *singleLine in lines)
+					{
+						[writer appendMessageWithLogLevel:logLevel
+									     date:timestamp
+									 threadID:threadID
+								     isMainThread:(threadID==self->_mainThreadThreadID)
+								    privacyMasked:sOCLogMaskPrivateData
+								     functionName:functionName
+									     file:file
+									     line:line
+									     tags:tags
+									    flags:(	lineFlags |
+									    		((lineIdx == 0) ? OCLogLineFlagLineFirst : 0) |
+									    		((lineIdx == linesLastIdx) ? OCLogLineFlagLineLast : 0) |
+									    		((lineIdx > 0) && (lineIdx < linesLastIdx) ? OCLogLineFlagLineInbetween : 0)
+										  )
+									  message:singleLine];
+
+						lineIdx++;
+					}
+				}
+				else
+				{
+					[writer appendMessageWithLogLevel:logLevel date:timestamp threadID:threadID isMainThread:(threadID==self->_mainThreadThreadID) privacyMasked:sOCLogMaskPrivateData functionName:functionName file:file line:line tags:tags flags:(OCLogLineFlagLineFirst|OCLogLineFlagLineLast) message:logMessage];
+				}
 			}
 		}
 		else
@@ -679,7 +755,32 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 	return (logIntro);
 }
 
-; //!< Introductory lines to start logging (and new log files) with. Allows for app-side injection of additions via OCLogger<OCLogAdditionalIntro> conformance.
+@end
+
+@implementation NSArray (OCLogTagMerge)
+
+- (NSArray<NSString *> *)arrayByMergingTagsFromArray:(NSArray<NSString *> *)mergeTags
+{
+	if (self.count < 2)
+	{
+		return ([self arrayByAddingObjectsFromArray:mergeTags]);
+	}
+
+	NSMutableArray<NSString *> *mergedTags = [[NSMutableArray alloc] initWithCapacity:(self.count+mergeTags.count)];
+
+	[mergedTags addObjectsFromArray:self];
+
+	NSUInteger mergedTagsCount = mergedTags.count;
+
+	for (NSUInteger idx=0; idx < mergeTags.count; idx++)
+	{
+		[mergedTags insertObject:mergedTags[idx] atIndex:((idx == 0) ? 1 : mergedTagsCount)];
+
+		mergedTagsCount++;
+	}
+
+	return (mergeTags);
+}
 
 @end
 
@@ -695,5 +796,7 @@ OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
 OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
 OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
 OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
+OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
+OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

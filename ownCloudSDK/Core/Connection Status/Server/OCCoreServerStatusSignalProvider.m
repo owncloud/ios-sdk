@@ -41,7 +41,7 @@
 			if (statusPollTimerActive)
 			{
 				self->_statusPollTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10] interval:10 target:self selector:@selector(_sendStatusPollRequest:) userInfo:nil repeats:YES];
-				[[NSRunLoop currentRunLoop] addTimer:self->_statusPollTimer forMode:NSRunLoopCommonModes];
+				[[NSRunLoop currentRunLoop] addTimer:self->_statusPollTimer forMode:NSDefaultRunLoopMode];
 			}
 			else
 			{

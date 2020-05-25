@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSDictionary *)bodyConvertedDictionaryFromJSONWithError:(NSError * _Nullable *)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
 - (nullable NSArray *)bodyConvertedArrayFromJSONWithError:(NSError * _Nullable *)error; //!< Returns the response body as array as converted by the JSON deserializer
 
-- (NSString *)responseDescription;
+- (NSString *)responseDescriptionPrefixed:(BOOL)prefixed;
 
 @end
 

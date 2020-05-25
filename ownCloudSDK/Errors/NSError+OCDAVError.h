@@ -28,6 +28,7 @@ typedef NS_ENUM(NSInteger, OCDAVError)
 	OCDAVErrorNone = -1,
 
 	OCDAVErrorUnknown,
+	OCDAVErrorNotFound,
 	OCDAVErrorServiceUnavailable	//!< ownCloud server is in maintenance mode
 };
 

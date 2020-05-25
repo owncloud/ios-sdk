@@ -22,6 +22,7 @@
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "NSDate+OCDateParser.h"
+#import "OCCellularManager.h"
 
 static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadKeepBoth = @"upload.keep-both";
 static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadRetry = @"upload.retry";
@@ -52,7 +53,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 }
 
 #pragma mark - Initializer
-- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
+- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
 	{
@@ -65,7 +66,17 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.actionEventType = OCEventTypeUpload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
+		self.options = options;
+
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryUpload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:uploadItem.size] ?
+				OCSyncActionCategoryUploadWifiAndCellular :
+				OCSyncActionCategoryUploadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -175,10 +186,31 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				}];
 			});
 
+			// Determine cellular access permission
+			NSNumber *allowCellularAccess = @(1);
+
+			OCCellularSwitchIdentifier cellularSwitchID;
+			if ((cellularSwitchID = self.options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+			{
+				// Cellular switch ID provided -> first choice
+				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:uploadItem.size]);
+			}
+			else if (self.options[OCCoreOptionAllowCellular] != nil)
+			{
+				// Allow cellular provided -> second choice
+				allowCellularAccess = self.options[OCCoreOptionAllowCellular];
+			}
+			else
+			{
+				// None provided -> use master switch value
+				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:uploadItem.size]);
+			}
+
 			// Schedule the upload
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
+							allowCellularAccess,			OCConnectionOptionAllowCellularKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
@@ -525,6 +557,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	_replaceItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"replaceItem"];
 
 	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
+
+	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -539,8 +573,12 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	[coder encodeObject:_replaceItem forKey:@"replaceItem"];
 
 	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
+
+	[coder encodeObject:_options forKey:@"options"];
 }
 
 @end
 
 OCSyncActionCategory OCSyncActionCategoryUpload = @"upload";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiOnly = @"upload-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiAndCellular = @"upload-cellular-and-wifi";

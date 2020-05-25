@@ -42,6 +42,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 
 @interface OCAuthenticationMethod : NSObject <OCLogTagging>
 {
+	NSDate *_authenticationDataKnownInvalidDate;
+
 	@private
 	id _cachedAuthenticationSecret;
 }
@@ -62,6 +64,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 @property(readonly,class,nonatomic) BOOL usesUserName; //!< This authentication method uses a user name (passphrase-based only)
 + (nullable NSString *)userNameFromAuthenticationData:(NSData *)authenticationData; //!< Returns the user name stored inside authenticationData
 + (nullable NSString *)passPhraseFromAuthenticationData:(NSData *)authenticationData; //!< Returns the passphrase stored inside authenticationData (passphrase-based only)
+
+@property(readonly,nonatomic,nullable) NSDate *authenticationDataKnownInvalidDate; //!< The date the .authenticationData was last known to be invalid. Reset to nil when -flushCachedAuthenticationSecret is called.
 
 #pragma mark - Authentication Method Detection
 + (nullable NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported

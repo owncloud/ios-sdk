@@ -383,6 +383,7 @@ extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum inst
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
 extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OCConnectionSignalID> with the signal ids to require for the requests
+extern OCConnectionOptionKey OCConnectionOptionAllowCellularKey; //!< NSNumber (Bool) indicating if usage of cellular should be allowed. If not provided, defaults to YES.
 
 extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 

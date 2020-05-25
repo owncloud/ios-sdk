@@ -228,7 +228,7 @@
 											rootItem.parentFileID = parentDirectoryItem.fileID;
 										}
 
-										if (parentDirectoryItem.parentLocalID == nil)
+										if (rootItem.parentLocalID == nil)
 										{
 											rootItem.parentLocalID = parentDirectoryItem.localID;
 										}

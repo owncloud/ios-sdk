@@ -32,8 +32,12 @@
 
 @property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading
 
-- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy;
+@property(strong) NSDictionary<OCCoreOption,id> *options;
+
+- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy options:(NSDictionary<OCCoreOption,id> *)options;
 
 @end
 
 extern OCSyncActionCategory OCSyncActionCategoryUpload; //!< Action category for uploads
+extern OCSyncActionCategory OCSyncActionCategoryUploadWifiOnly; //!< Action category for uploads via WiFi
+extern OCSyncActionCategory OCSyncActionCategoryUploadWifiAndCellular; //!< Action category for uploads via WiFi and Cellular

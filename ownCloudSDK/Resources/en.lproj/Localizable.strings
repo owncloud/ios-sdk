@@ -14,6 +14,9 @@
 /* Item policy */
 "Available Offline" = "Available Offline";
 
+/* Cellular Switches */
+"Allow cellular access" = "Allow cellular access";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -126,6 +129,8 @@
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";
+// OCDAVErrorNotFound
+"Resource not found." = "Resource not found.";
 
 /* OC Errors */
 "%@ (error %ld, %@)" = "%@ (error %ld, %@)";

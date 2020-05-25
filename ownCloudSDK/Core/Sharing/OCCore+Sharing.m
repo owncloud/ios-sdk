@@ -366,7 +366,8 @@
 			{
 				OCLogDebug(@"Resolved private link %@ locally - using fileID %@ - to item %@", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix), OCLogPrivate(item));
 				completionHandler(nil, item);
-			}			else
+			}
+			else
 			{
 				OCLogDebug(@"Resolving private link %@ locally - using fileID %@ - failed: resolving via server…", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix));
 				NSProgress *progress = [self _retrieveItemForPrivateLink:privateLink completionHandler:completionHandler];

@@ -178,7 +178,7 @@
 	// Enqueue sync record
 	NSProgress *progress;
 
-	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] cancellable:YES preflightResultHandler:^(NSError * _Nullable error) {
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO options:options] cancellable:YES preflightResultHandler:^(NSError * _Nullable error) {
 		// Invoke placeholder completion handler - AFTER it was added to the database as part of preflight
 		if (placeholderCompletionHandler != nil)
 		{

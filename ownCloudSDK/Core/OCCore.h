@@ -64,16 +64,18 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 {
 	OCCoreConnectionStatusOffline,		//!< The server or client device is currently offline
 	OCCoreConnectionStatusUnavailable,	//!< The server is in maintenance mode and returns with 503 Service Unavailable or /status.php returns "maintenance"=true
-	OCCoreConnectionStatusOnline,		//!< The server and client device are online
+	OCCoreConnectionStatusConnecting,	//!< The connection is available and the client is actively trying to connect to the server
+	OCCoreConnectionStatusOnline		//!< The server and client device are online
 };
 
 typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 {
-	OCCoreConnectionStatusSignalReachable = (1 << 0), //!< The server is reachable
-	OCCoreConnectionStatusSignalAvailable = (1 << 1), //!< The server is available (not in maintenance mode, not responding with unexpected responses)
-	OCCoreConnectionStatusSignalConnected = (1 << 2), //!< The OCConnection has connected successfully
+	OCCoreConnectionStatusSignalReachable	= (1 << 0),	//!< The server is reachable
+	OCCoreConnectionStatusSignalAvailable	= (1 << 1), 	//!< The server is available (not in maintenance mode, not responding with unexpected responses)
+	OCCoreConnectionStatusSignalConnecting	= (1 << 2),	//!< The OCCore is in the process of connecting
+	OCCoreConnectionStatusSignalConnected	= (1 << 3), 	//!< The OCConnection has connected successfully
 
-	OCCoreConnectionStatusSignalBitCount  = 3	  //!< Number of bits used for status signal
+	OCCoreConnectionStatusSignalBitCount	= 4		//!< Number of bits used for status signal
 };
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
@@ -162,7 +164,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
 	OCCoreServerStatusSignalProvider *_serverStatusSignalProvider; // Processes reports of connection refused and maintenance mode responses and performs status.php polls to detect the resolution of the issue
-	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_connectingStatusSignalProvider; // Glue to include the OCCore state (connecting) into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state (connected) into connection status (signal)
 
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
@@ -430,6 +433,8 @@ extern OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose; //!< [OCCoreClaimPu
 extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whether AvailableOffline should skip redundancy checks.
 extern OCCoreOption OCCoreOptionConvertExistingLocalDownloads; //!< [BOOL] Determines whether AvailableOffline should convert existing local copies to Available Offline managed items if they fall under a new Available Offline rule
 extern OCCoreOption OCCoreOptionLastModifiedDate; //!< [NSDate] For uploads, the date that should be used as last modified date for the uploaded file.
+extern OCCoreOption OCCoreOptionAllowCellular; //!< [BOOL] Determines whether cellular access should be allowed for an action (currently only supported for up- and downloads)
+extern OCCoreOption OCCoreOptionDependsOnCellularSwitch; //!< [OCCellularSwitchIdentifier] Tells the core to set the permission for cellular access according to the status of the provided OCCellularSwitchIdentifier (currently only supported for up- and downloads). If provided together with OCCoreOptionAllowCellular, overrides the value passed for OCCoreOptionAllowCellular.
 
 extern OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey; //!< Vault.KVS-key with a NSNumber Boolean value. If the value is YES, available offline item policies are skipped.
 

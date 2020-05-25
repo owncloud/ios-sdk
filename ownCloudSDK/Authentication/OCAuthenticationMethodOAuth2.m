@@ -443,7 +443,14 @@ OCAuthenticationMethodAutoRegister
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	NSDictionary<NSString *, id> *authSecret;
-	
+
+	if (self.authenticationDataKnownInvalidDate != nil)
+	{
+		// Authentication data known to be invalid
+		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, @"Previous token refresh attempts indicated an invalid refresh_token."), NO);
+		return (NO);
+	}
+
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
@@ -480,7 +487,7 @@ OCAuthenticationMethodAutoRegister
 				// Unexpected 401 response - request a retry that'll also invoke canSendAuthenticatedRequestsForConnection:withAvailabilityHandler:
 				// which will attempt a token refresh
 				_receivedUnauthorizedResponse = YES;
-				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d", _tokenRefreshFollowingUnauthorizedResponseFailed);
+				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d (known invalid %@)", _tokenRefreshFollowingUnauthorizedResponseFailed, self.authenticationDataKnownInvalidDate);
 			}
 
 			if (!_tokenRefreshFollowingUnauthorizedResponseFailed)
@@ -533,6 +540,13 @@ OCAuthenticationMethodAutoRegister
 
 						OCLogDebug(@"Authentication data updated: flush auth secret for bookmarkUUID=%@", connection.bookmark.uuid);
 						[self flushCachedAuthenticationSecret];
+					}
+					else
+					{
+						// Did not receive update
+						[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+						self->_authenticationDataKnownInvalidDate = [NSDate new];
+						[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 					}
 
 					if (self->_receivedUnauthorizedResponse)

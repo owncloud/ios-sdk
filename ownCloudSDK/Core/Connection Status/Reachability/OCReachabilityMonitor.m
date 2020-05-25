@@ -101,7 +101,7 @@ static void OCReachabilityMonitorCallback(SCNetworkReachabilityRef target, SCNet
 	if (reachabilityRef != NULL)
 	{
 		SCNetworkReachabilitySetCallback(reachabilityRef, NULL, NULL);
-		SCNetworkReachabilityUnscheduleFromRunLoop(reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+		SCNetworkReachabilityUnscheduleFromRunLoop(reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
 		CFRelease(reachabilityRef);
 	}
@@ -128,7 +128,7 @@ static void OCReachabilityMonitorCallback(SCNetworkReachabilityRef target, SCNet
 
 				if (SCNetworkReachabilitySetCallback(_reachabilityRef, OCReachabilityMonitorCallback, &context))
 				{
-					SCNetworkReachabilityScheduleWithRunLoop(_reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+					SCNetworkReachabilityScheduleWithRunLoop(_reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 				}
 
 				if (SCNetworkReachabilityGetFlags(_reachabilityRef, &flags))

@@ -1081,10 +1081,14 @@
 	}
 
 	// Log request
-	if ([OCLogger logsForLevel:OCLogLevelDebug])
+	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
+		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
+
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n# REQUEST ---------------------------------------------------------\nURL:   %@\nError: %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", request.effectiveURL, ((error != nil) ? error : @"-"), request.requestDescription);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:   %@\n%@Error: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
 	}
 
 	// Update task
@@ -1185,7 +1189,7 @@
 	if ((task.response != nil) && (task.response != response))
 	{
 		// has existing response
-		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", task.requestID, response.responseDescription, task.response.responseDescription);
+		OCLogWarning(@"Existing response for %@ overwritten: %@ replaces %@", task.requestID, [response responseDescriptionPrefixed:NO], [task.response responseDescriptionPrefixed:NO]);
 	}
 
 	task.response = response;
@@ -1193,10 +1197,14 @@
 	[self.backend updatePipelineTask:task];
 
 	// Log response
-	if ([OCLogger logsForLevel:OCLogLevelDebug])
+	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
+		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
+
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n# RESPONSE --------------------------------------------------------\nMethod:     %@\nURL:        %@\nRequest-ID: %@\nDate(rcvd): %@\nError:      %@\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", task.request.method, task.request.effectiveURL, task.request.identifier, task.response.date, ((task.response.httpError != nil) ? task.response.httpError : @"-"), task.response.responseDescription);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:     %@\n%@URL:        %@\n%@Request-ID: %@\n%@Error:      %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, infoPrefix, errorDescription, infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
 	}
 
 	// Attempt delivery
@@ -1894,12 +1902,12 @@
 	OCHTTPPipelineTask *task = nil;
 	NSError *backendError = nil;
 
-	if ([OCLogger logsForLevel:OCLogLevelDebug])
+	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
 		NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
 
-		OCPLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics: %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), [metrics compactSummaryWithTask:urlSessionTask]);
+		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics: %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), [metrics compactSummaryWithTask:urlSessionTask]);
 	}
 
 	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)

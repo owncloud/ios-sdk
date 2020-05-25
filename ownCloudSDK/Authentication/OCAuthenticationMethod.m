@@ -276,6 +276,7 @@
 	@synchronized(self)
 	{
 		_cachedAuthenticationSecret = nil;
+		_authenticationDataKnownInvalidDate = nil;
 	}
 }
 

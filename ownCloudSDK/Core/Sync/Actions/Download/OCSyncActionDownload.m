@@ -22,6 +22,7 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCCore+Claims.h"
 #import "OCWaitConditionMetaDataRefresh.h"
+#import "OCCellularManager.h"
 
 static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadOverwrite = @"download.overwrite";
 static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadRetry = @"download.retry";
@@ -75,7 +76,15 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryDownload ];
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryDownload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:item.size] ?
+				OCSyncActionCategoryDownloadWifiAndCellular :
+				OCSyncActionCategoryDownloadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -283,7 +292,36 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
-		OCLogDebug(@"record %@ download: initiating download of %@", syncContext.syncRecord, item);
+		if (options != nil)
+		{
+			NSMutableDictionary *mutableOptions = [options mutableCopy];
+
+			// Determine and add allow cellular option
+			NSNumber *allowCellular = @(1);
+
+			OCCellularSwitchIdentifier cellularSwitchID;
+			if ((cellularSwitchID = options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+			{
+				// Cellular Switch provided -> first choice
+				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:item.size]);
+			}
+			else if (options[OCCoreOptionAllowCellular] != nil)
+			{
+				// Allow cellular provided -> second choice
+				allowCellular = options[OCCoreOptionAllowCellular];
+			}
+			else
+			{
+				// Default to cellular master switch -> fallback choice
+				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:item.size]);
+			}
+
+			mutableOptions[OCConnectionOptionAllowCellularKey] = allowCellular;
+
+			options = mutableOptions;
+		}
+
+		OCLogDebug(@"record %@ download: initiating download (allowCellular=%@) of %@", syncContext.syncRecord, options[OCConnectionOptionAllowCellularKey], item);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
@@ -652,3 +690,5 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 @end
 
 OCSyncActionCategory OCSyncActionCategoryDownload = @"download";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiOnly = @"download-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiAndCellular = @"download-wifi-and-cellular";

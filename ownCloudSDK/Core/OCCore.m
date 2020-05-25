@@ -125,8 +125,14 @@
 				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
 
 				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+
 					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
-					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryUploadWifiOnly   	  : @(2), // Limit number of concurrent uploads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryUploadWifiAndCellular : @(3), // Limit number of concurrent uploads by WiFi and Cellular transfers to 3
+
+					OCSyncActionCategoryDownload : @(3),	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
 		OCCoreCookieSupportEnabled : @(NO)
 	});
@@ -278,10 +284,12 @@
 			}
 		}
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
-		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
 		[self addSignalProvider:_serverStatusSignalProvider];
+		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
@@ -547,6 +555,22 @@
 }
 
 - (void)_attemptConnect
+{
+	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)
+	{
+		__weak OCCore *weakCore = self;
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), self->_queue, ^{
+			[weakCore __attemptConnect];
+		});
+	}
+	else
+	{
+		[self __attemptConnect];
+	}
+}
+
+- (void)__attemptConnect
 {
 	[self queueConnectivityBlock:^{
 		if ((self->_state == OCCoreStateReady) && self->_attemptConnect)
@@ -1870,6 +1894,8 @@ OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPur
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
+OCCoreOption OCCoreOptionAllowCellular = @"allowCellularAccess";
+OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 
