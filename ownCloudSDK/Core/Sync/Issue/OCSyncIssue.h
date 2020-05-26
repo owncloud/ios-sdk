@@ -60,10 +60,10 @@ typedef NSUUID* OCSyncIssueUUID;
 #pragma mark - Other issues
 + (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
-//- (instancetype)withCategory:(OCMessageCategoryIdentifier)categoryIdentifier;
-
 - (OCSyncIssue *)mapAutoChoiceErrors:(NSDictionary<OCSyncIssueChoiceIdentifier, NSError *> *)choiceToAutoChoiceErrorMap;
 - (void)setAutoChoiceError:(NSError *)error forChoiceWithIdentifier:(OCSyncIssueChoiceIdentifier)choiceIdentifier;
+
+- (nullable OCSyncIssueChoice *)choiceWithIdentifier:(OCSyncIssueChoiceIdentifier)choiceIdentifier;
 
 - (OCWaitConditionIssue *)makeWaitCondition; //!< Makes a wait condition wrapping the issue
 

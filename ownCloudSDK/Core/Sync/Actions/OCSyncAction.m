@@ -216,7 +216,7 @@
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]
 		] options:nil]];
 
-		[templates addObject:[OCSyncIssueTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDesctructive"] categoryName:nil choices:@[
+		[templates addObject:[OCSyncIssueTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDestructive"] categoryName:nil choices:@[
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
 		] options:nil]];
 	}
@@ -242,13 +242,12 @@
 	OCSyncIssue *issue;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
 
-	issue = [OCSyncIssue issueFromTemplate:[self.identifier stringByAppendingString:((impact == OCSyncIssueChoiceImpactDataLoss) ? @"._cancel.dataLoss" : @"._cancel.nonDesctructive")] forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
+	issue = [OCSyncIssue issueFromTemplate:[self.identifier stringByAppendingString:((impact == OCSyncIssueChoiceImpactDataLoss) ? @"._cancel.dataLoss" : @"._cancel.nonDestructive")] forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 
 	[syncContext addSyncIssue:issue];
 
 	return (issue);
 }
-
 
 #pragma mark - Issue handling
 - (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext

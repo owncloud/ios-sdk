@@ -77,12 +77,6 @@
 	return (self);
 }
 
-//- (instancetype)withCategory:(OCMessageCategoryIdentifier)categoryIdentifier
-//{
-//	self.categoryIdentifier = categoryIdentifier;
-//	return (self);
-//}
-
 - (OCSyncIssue *)mapAutoChoiceErrors:(NSDictionary<OCSyncIssueChoiceIdentifier, NSError *> *)choiceToAutoChoiceErrorMap
 {
 	for (OCSyncIssueChoice *choice in _choices)
@@ -115,6 +109,19 @@
 	}
 }
 
+- (nullable OCSyncIssueChoice *)choiceWithIdentifier:(OCSyncIssueChoiceIdentifier)choiceIdentifier;
+{
+	for (OCSyncIssueChoice *choice in _choices)
+	{
+		if ([choice.identifier isEqual:choiceIdentifier])
+		{
+			return (choice);
+		}
+	}
+
+	return (nil);
+}
+
 - (OCWaitConditionIssue *)makeWaitCondition
 {
 	return ([OCWaitConditionIssue waitForIssueResolution:self]);
@@ -138,9 +145,6 @@
 
 		_templateIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"templateIdentifier"];
 
-//		_categoryIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"categoryIdentifier"];
-//		_threadIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"threadIdentifier"];
-
 		_level = [decoder decodeIntegerForKey:@"level"];
 		_localizedTitle = [decoder decodeObjectOfClass:[NSString class] forKey:@"title"];
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"desc"];
@@ -161,9 +165,6 @@
 	[coder encodeObject:_creationDate forKey:@"creationDate"];
 
 	[coder encodeObject:_templateIdentifier forKey:@"templateIdentifier"];
-
-//	[coder encodeObject:_categoryIdentifier forKey:@"categoryIdentifier"];
-//	[coder encodeObject:_threadIdentifier forKey:@"threadIdentifier"];
 
 	[coder encodeInteger:_level forKey:@"level"];
 	[coder encodeObject:_localizedTitle forKey:@"title"];

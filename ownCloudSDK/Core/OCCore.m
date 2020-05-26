@@ -1226,7 +1226,7 @@
 			// No item for this path found in cache
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
-				// This path indicates a file - but maybe that's what what's wanted: retry by looking for a folder at that location instead.
+				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
 				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
