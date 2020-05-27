@@ -1264,11 +1264,31 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 				break;
 
-				default:
+				default: {
 					event.path = request.userInfo[@"path"];
 					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
 
+					OCTUSHeader *tusHeader;
+
+					if ((tusHeader = [[OCTUSHeader alloc] initWithHTTPHeaderFields:request.httpResponse.headerFields]) != nil)
+					{
+						OCTUSSupport tusSupportLevel = tusHeader.supportFlags;
+
+						if (tusSupportLevel != OCTUSSupportNone)
+						{
+							for (OCItem *item in items)
+							{
+								if ([item.path isEqual:event.path])
+								{
+									item.tusInfo = tusHeader.info;
+									break;
+								}
+							}
+						}
+					}
+
 					event.result = items;
+				}
 				break;
 			}
 

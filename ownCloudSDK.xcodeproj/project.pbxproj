@@ -509,6 +509,8 @@
 		DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F02047094500189B9A /* NSData+OCHash.m */; };
 		DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2F3204802CF00189B9A /* OCIssue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCIssue.m */; };
+		DCF39B552458268E00DEA137 /* OCTUSHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF39B532458268E00DEA137 /* OCTUSHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCF39B562458268E00DEA137 /* OCTUSHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF39B542458268E00DEA137 /* OCTUSHeader.m */; };
 		DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */ = {isa = PBXBuildFile; fileRef = DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */; };
 		DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF621BAB35A00943F76 /* PerformanceTests.m */; };
 		DCFBACF921BAB5F500943F76 /* OCDetailedPerformanceTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */; };
@@ -1177,6 +1179,8 @@
 		DCEEB2F02047094500189B9A /* NSData+OCHash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSData+OCHash.m"; sourceTree = "<group>"; };
 		DCEEB2F3204802CF00189B9A /* OCIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIssue.h; sourceTree = "<group>"; };
 		DCEEB2F4204802CF00189B9A /* OCIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIssue.m; sourceTree = "<group>"; };
+		DCF39B532458268E00DEA137 /* OCTUSHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCTUSHeader.h; sourceTree = "<group>"; };
+		DCF39B542458268E00DEA137 /* OCTUSHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCTUSHeader.m; sourceTree = "<group>"; };
 		DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = largePropFindResponse1000.xml; sourceTree = "<group>"; };
 		DCFBACF621BAB35A00943F76 /* PerformanceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerformanceTests.m; sourceTree = "<group>"; };
 		DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDetailedPerformanceTestCase.m; sourceTree = "<group>"; };
@@ -1742,6 +1746,7 @@
 				DC27BBBC230498A4002CC2F8 /* Cookies */,
 				DC7014182209C57B009D4FD9 /* Request */,
 				DC701481220B0865009D4FD9 /* Response */,
+				DCF39B572458290200DEA137 /* TUS */,
 			);
 			path = HTTP;
 			sourceTree = "<group>";
@@ -2639,6 +2644,15 @@
 			path = Toolkit;
 			sourceTree = "<group>";
 		};
+		DCF39B572458290200DEA137 /* TUS */ = {
+			isa = PBXGroup;
+			children = (
+				DCF39B542458268E00DEA137 /* OCTUSHeader.m */,
+				DCF39B532458268E00DEA137 /* OCTUSHeader.h */,
+			);
+			path = TUS;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -2712,6 +2726,7 @@
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
+				DCF39B552458268E00DEA137 /* OCTUSHeader.h in Headers */,
 				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
 				DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */,
@@ -3252,6 +3267,7 @@
 				DC359693223FA7CC00C4D6E6 /* OCQueryCondition.m in Sources */,
 				DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */,
 				DCA36D4E22A6B14200265534 /* OCPKCE.m in Sources */,
+				DCF39B562458268E00DEA137 /* OCTUSHeader.m in Sources */,
 				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
 				DC2FED61228D5589004FDEC6 /* OCCore+Favorites.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
