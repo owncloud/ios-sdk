@@ -165,10 +165,6 @@
 	{
 		headerFields[OCTUSHeaderNameTusVersion] = [_versions componentsJoinedByString:@","];
 	}
-//	else if (_version != nil)
-//	{
-//		headerFields[OCTUSHeaderNameTusVersion] = _version;
-//	}
 
 	if (_extensions != nil)
 	{

@@ -1362,8 +1362,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - File transfer: upload
 - (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	// OCProgress *requestProgress = nil;
-
 	if ((sourceURL == nil) || (newParentDirectory == nil))
 	{
 		return(nil);
@@ -1411,6 +1409,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		}
 	}
 
+	// Determine sufficiency of parameters
+	if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
+		return(nil);
+	}
+
 	// Compute checksum
 	__block OCChecksum *checksum = nil;
 
@@ -1429,12 +1434,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				OCSyncExecDone(checksumComputation);
 			}];
 		});
-	}
-
-	if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
-	{
-		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
-		return(nil);
 	}
 
 	// Determine TUS info
@@ -1707,6 +1706,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		// Attach to pipelines
 		[self attachToPipelines];
 
+		// TODO: Apply cellular options
+//		if (options[OCConnectionOptionAllowCellularKey] != nil)
+//		{
+//			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+//		}
+
 		// Enqueue request
 //		if (options[OCConnectionOptionRequestObserverKey] != nil)
 //		{
@@ -1833,10 +1838,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		}
 
 		// Add date to error
+		#ifdef OCErrorAddDateFromResponse
 		if (event.error != nil)
 		{
 			OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		}
+		#endif /* OCErrorAddDateFromResponse */
 
 		if (send)
 		{
@@ -1934,7 +1941,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
 {
-	// Compatibility with previous selector (from before the addition of TUS support)
+	// Compatibility with previous selector (from before the addition of TUS support) - some Sync Journal entries may still reference this selector
 	[self _handleDirectUploadFileResult:request error:error];
 }
 
@@ -1974,8 +1981,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		// Retrieve item information
 		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-			@"alternativeEventType"  : @(OCEventTypeUpload),
-			// @"_originalUserInfo"	: request.userInfo
+			@"alternativeEventType"  : @(OCEventTypeUpload)
 		} resultTarget:request.eventTarget];
 	}
 	else
@@ -2098,6 +2104,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
+		// Apply cellular options
 		if (options[OCConnectionOptionAllowCellularKey] != nil)
 		{
 			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];

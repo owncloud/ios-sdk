@@ -74,15 +74,6 @@ typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
 };
 
-typedef NS_OPTIONS(NSInteger, OCUploadMethod)
-{
-	OCUploadMethodUnknown	= 0,
-
-	OCUploadMethodStandard	= (1 << 0),	//!< Standard HTTP PUT uploads supported
-	OCUploadMethodChunked	= (1 << 1),	//!< OC10 chunked uploads supported
-	OCUploadMethodTUS	= (1 << 2)	//!< TUS uploads supported
-};
-
 #import "OCShare.h"
 
 NS_ASSUME_NONNULL_BEGIN
