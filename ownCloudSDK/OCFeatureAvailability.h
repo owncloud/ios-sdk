@@ -26,7 +26,10 @@
 	#define OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION 1
 
 	#if TARGET_OS_IOS
-	#define OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION 1
+	// Commented out due to "ITMS-90809: Deprecated API Usage - New apps that use UIWebView are no longer accepted. Instead, use WKWebView for improved security and reliability"
+	// To include UIWebView browser session support, define OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION via the build settings (preprocessor macros: "OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1")
+
+	// #define OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION 1
 	#endif /* TARGET_OS_IOS */
 #else
 	#define OC_FEATURE_AVAILABLE_FILEPROVIDER 0
