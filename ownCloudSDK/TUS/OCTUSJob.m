@@ -35,7 +35,7 @@
 		_header = header;
 		_creationURL = creationURL;
 
-		_maxSegmentSize = _header.maximumSize.unsignedIntegerValue;
+		_maxSegmentSize = _header.maximumChunkSize.unsignedIntegerValue;
 
 		_segmentFolderURL = segmentFolder;
 		_fileURL = fileURL;

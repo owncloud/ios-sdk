@@ -1518,7 +1518,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		tusJob.eventTarget = eventTarget;
 
-		tusJob.maxSegmentSize = 111000; // TODO: here for testing only, remove
+		if (tusJob.maxSegmentSize == 0)
+		{
+			NSNumber *capabilitiesTusMaxChunkSize;
+
+			if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+			{
+				tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
+			}
+		}
 
 		tusProgress = [self _continueTusJob:tusJob lastTask:nil];
 	}
