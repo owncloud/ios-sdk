@@ -26,6 +26,9 @@ typedef NSString* OCTUSVersion;
 typedef NSString* OCTUSExtension NS_TYPED_ENUM;
 typedef NSString* OCTUSHeaderName NS_TYPED_ENUM;
 
+typedef NSString* OCTUSCapabilityKey NS_TYPED_ENUM;
+typedef NSDictionary<OCTUSCapabilityKey,id>* OCTUSCapabilities;
+
 typedef NS_OPTIONS(UInt8, OCTUSSupport)
 {
 	OCTUSSupportNone,
@@ -58,7 +61,8 @@ typedef UInt64 OCTUSInfo; // encodes OCTUSSupport, maxSize and more (format is O
 @property(strong,nullable) NSArray<OCTUSVersion> *versions; 	//!< Corresponds to "Tus-Version" header (where available), with fallback to "Tus-Resumable"
 @property(strong,nullable) NSArray<OCTUSExtension> *extensions; //!< Corresponds to "Tus-Extension" header
 
-@property(strong,nullable) NSNumber *maximumSize;		//!< Corresponds to "Tus-Max-Size" header
+@property(strong,nullable) NSNumber *maximumSize;		//!< Corresponds to "Tus-Max-Size" header (maximum size of entire upload)
+@property(strong,nullable) NSNumber *maximumChunkSize;		//!< Maximum chunk size to apply
 
 @property(strong,nullable) NSNumber *uploadOffset;		//!< Corresponds to "Upload-Offset" header
 @property(strong,nullable) NSNumber *uploadLength;		//!< Corresponds to "Upload-Length" header

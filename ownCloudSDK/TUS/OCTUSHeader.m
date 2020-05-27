@@ -242,6 +242,7 @@
 		_extensions = [coder decodeObjectOfClasses:allowedClasses forKey:@"extensions"];
 
 		_maximumSize = [coder decodeObjectOfClass:NSNumber.class forKey:@"maximumSize"];
+		_maximumChunkSize = [coder decodeObjectOfClass:NSNumber.class forKey:@"maximumChunkSize"];
 		_uploadOffset = [coder decodeObjectOfClass:NSNumber.class forKey:@"uploadOffset"];
 		_uploadLength = [coder decodeObjectOfClass:NSNumber.class forKey:@"uploadLength"];
 
@@ -259,6 +260,7 @@
 	[coder encodeObject:_extensions forKey:@"extensions"];
 
 	[coder encodeObject:_maximumSize forKey:@"maximumSize"];
+	[coder encodeObject:_maximumChunkSize forKey:@"maximumChunkSize"];
 	[coder encodeObject:_uploadOffset forKey:@"uploadOffset"];
 	[coder encodeObject:_uploadLength forKey:@"uploadLength"];
 
