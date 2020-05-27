@@ -23,6 +23,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCHTTPMethod NS_TYPED_ENUM;
+typedef NSDictionary<NSString*,NSString*>* OCHTTPStaticHeaderFields;
 typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPHeaderFields;
 typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPRequestParameters;
 

@@ -73,6 +73,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
+- (nullable OCTUSHeader *)connection:(OCConnection *)connection tusHeader:(nullable OCTUSHeader *)tusHeader forChildrenOf:(OCItem *)parentItem;
+
 @end
 
 NS_ASSUME_NONNULL_END
@@ -384,6 +386,7 @@ extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChec
 extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
 extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OCConnectionSignalID> with the signal ids to require for the requests
 extern OCConnectionOptionKey OCConnectionOptionAllowCellularKey; //!< NSNumber (Bool) indicating if usage of cellular should be allowed. If not provided, defaults to YES.
+extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!< NSURL of the temporary folder to store file segments in when performing uploads via TUS
 
 extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 

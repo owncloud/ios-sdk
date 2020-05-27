@@ -182,9 +182,13 @@
 				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:uploadItem.size]);
 			}
 
+			// Create segment folder
+			NSURL *segmentFolderURL = [[self.core.vault.rootURL URLByAppendingPathComponent:@"TUS"] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+
 			// Schedule the upload
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							segmentFolderURL,			OCConnectionOptionTemporarySegmentFolderURLKey,
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
 							allowCellularAccess,			OCConnectionOptionAllowCellularKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
