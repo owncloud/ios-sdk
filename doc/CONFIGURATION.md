@@ -153,6 +153,10 @@ This document provides an overview over the available sections and their setting
 	- `oa2-expiration-override-seconds`: OAuth2 Expiration Override (**!! for testing only !!**) - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)
 		- type: integer
 		- default: none
+	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession` (`SFAuthenticationSession` on older iOS releases). Please also see Compule Time Configuration if you want to use this.
+		- type: string
+		- default: none
+		- possible values: none, `UIWebView`
 	- `oidc-redirect-uri`: OpenID Connect Redirect URI
 		- type: string
 		- default: `oc://ios.owncloud.com`
@@ -166,3 +170,21 @@ This document provides an overview over the available sections and their setting
 ## Keys
 
 The key names in the managed configuration dictionary are built from the section ID and the setting name, i.e. a Section ID of `connection` and a setting name of `endpoint-user` results in the key name  `connection.endpoint-user` for use in managed configuration dictionaries.
+
+# Compile time configuration
+
+## Preprocessor Macros
+
+The inclusion and exclusion of some features can be controlled at compile time by adding or removing preprocessor macros:
+
+### Support for `UIWebView`-based authentication sessions
+
+By default, support for `UIWebView`-based authentication sessions is not included. If it is needed (f.ex. for MobileIron setups, where `ASWebAuthenticationSession` and `SFAuthenticationSession` are not supported), it needs to be configured by adding
+
+```
+OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1
+```
+
+to the preprocessor flags of the Xcode project of the ownCloud SDK.
+
+⚠️ Please note that - as of the time of writing - new apps with `UIWebView` are no longer allowed in the App Store, and updates to existing apps will no longer be allowed to use `UIWebView` come December 2020.
