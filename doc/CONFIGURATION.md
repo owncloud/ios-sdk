@@ -129,6 +129,9 @@ This document provides an overview over the available sections and their setting
 	- `log-blank-filtered-messages`: Controls whether filtered out messages should still be logged, but with the message replaced with `-`. 
 		- type: boolean
 		- default: `false`
+	- `log-format`: Determines the format that log messages are saved in: `text` for standard logging as text, `json` for detailed JSON (one line per message), `json-composed` for a simpler JSON version where details are already merged into the message.
+		- type: string
+		- default: `text`
 
 ## OAuth2 / OpenID Connect
 
