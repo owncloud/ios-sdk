@@ -299,8 +299,11 @@
 #pragma mark - Description
 + (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
 {
-	NSString *contentType = headers[@"Content-Type"];
-	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"] || [contentType isEqualToString:@"application/x-www-form-urlencoded"];
+	NSString *contentType = [[headers[@"Content-Type"] componentsSeparatedByString:@"; "] firstObject];
+	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
+			       [contentType isEqualToString:@"application/xml"] ||
+			       [contentType isEqualToString:@"application/json"] ||
+			       [contentType isEqualToString:@"application/x-www-form-urlencoded"];
 
 	NSString*(^FormatReadableData)(NSData *data) = ^(NSData *data) {
 		NSString *readable = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
