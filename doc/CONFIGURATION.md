@@ -31,7 +31,7 @@ This document provides an overview over the available sections and their setting
 		- default: `status.php`
 	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most prefered first).
 		- type: array
-		- default: `["com.owncloud.oauth2", "com.owncloud.basicauth"]`
+		- default: `["com.owncloud.openid-connect", "com.owncloud.oauth2", "com.owncloud.basicauth"]`
 	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
 		- type: array
 		- default: `nil`
