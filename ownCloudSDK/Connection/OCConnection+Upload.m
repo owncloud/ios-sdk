@@ -146,6 +146,20 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 }
 
 #pragma mark - File transfer: resumable upload (TUS)
+
+/*
+	TUS implementation score card:
+	- [x] support for creation
+	- [x] support for creation-with-upload
+	- [x] store availability of tus extensions + max upload size
+	- [x] use creation + PATCH if creation-with-upload is not available
+	- [x] support for max chunk size via capabilities
+	- [ ] use If-Match / If-None-Match with uploads
+	- [ ] apply cellular option to tus upload requests
+	- [ ] look for and use returned OC-Fileid and OC-ETag
+	- [ ] handle little gap between upload finish and response not received via checksums
+*/
+
 + (NSUInteger)tusSmallFileThreshold
 {
 	// return (100000); // 100 KB
