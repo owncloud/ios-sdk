@@ -392,6 +392,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @interface OCCore (CommandCreateFolder)
 - (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandDelete)

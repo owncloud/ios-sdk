@@ -150,7 +150,10 @@ static NSURL *sDefaultLogFileURL;
 
 	if (_isOpen)
 	{
-		[self appendMessage:[NSString stringWithFormat:@"-- %@: closing log file --", [NSDate date]]];
+		if (OCLogger.logFormat == OCLogFormatText)
+		{
+			[self appendMessageData:[[NSString stringWithFormat:@"-- %@: closing log file --", [NSDate date]] dataUsingEncoding:NSUTF8StringEncoding]];
+		}
 
 		if (close(_logFileFD) != 0)
 		{
@@ -166,16 +169,11 @@ static NSURL *sDefaultLogFileURL;
 	return (error);
 }
 
-- (void)appendMessage:(NSString *)message
+- (void)appendMessageData:(NSData *)data
 {
-	if (_isOpen)
+	if (_isOpen && (data != nil))
 	{
-		NSData *messageData;
-
-		if ((messageData = [message dataUsingEncoding:NSUTF8StringEncoding]) != nil)
-		{
-			write(_logFileFD, messageData.bytes, (size_t)messageData.length);
-		}
+		write(_logFileFD, data.bytes, (size_t)data.length);
 	}
 }
 
@@ -262,7 +260,7 @@ static NSURL *sDefaultLogFileURL;
 	[self cleanUpLogs:NO];
 }
 
-// Private methods
+#pragma mark - Private methods
 
 - (void)_notifyAboutChangesInLogStorage
 {

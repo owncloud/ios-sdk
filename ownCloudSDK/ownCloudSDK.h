@@ -143,6 +143,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCMessage.h>
 #import <ownCloudSDK/OCMessagePresenter.h>
 
+#import <ownCloudSDK/OCTUSHeader.h>
+#import <ownCloudSDK/NSString+TUSMetadata.h>
+
 #import <ownCloudSDK/NSURL+OCURLNormalization.h>
 #import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>
 #import <ownCloudSDK/NSString+OCVersionCompare.h>

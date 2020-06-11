@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSError *certificateValidationError; //!< Any error that occured during validation of the certificate (if any).
 
 @property(strong,nullable) OCHTTPStatus *status;		//!< The HTTP status returned by the server
-@property(strong,nullable) NSDictionary<NSString *, NSString *> *headerFields; //!< All HTTP header fields
+@property(strong,nullable) OCHTTPStaticHeaderFields headerFields;//!< All HTTP header fields
 
 @property(strong,nullable,nonatomic) NSHTTPURLResponse *httpURLResponse; //!< The NSHTTPURLResponse returned by the server. If set, is used to populate httpStatus and allHTTPHeaderFields.
 

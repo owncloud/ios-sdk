@@ -35,6 +35,7 @@ static BOOL sOCLogLevelInitialized;
 static BOOL sOCLogMaskPrivateData;
 static BOOL sOCLogMaskPrivateDataInitialized;
 
+static OCLogFormat sOCLogFormat;
 static BOOL sOCLogSingleLined;
 static NSUInteger sOCLogMessageMaximumSize;
 
@@ -62,14 +63,14 @@ static NSUInteger sOCLogMessageMaximumSize;
 
 			[sharedLogger addSource:stdErrLogger];
 
-			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSString * _Nonnull message) {
-				[weakStdErrLogger writeDataToOriginalFile:[message dataUsingEncoding:NSUTF8StringEncoding]];
+			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
+				[weakStdErrLogger writeDataToOriginalFile:messageData];
 			}]];
 		}
 		else
 		{
-			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSString * _Nonnull message) {
-				fwrite([message UTF8String], [message lengthOfBytesUsingEncoding:NSUTF8StringEncoding], 1, stderr);
+			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
+				fwrite(messageData.bytes, messageData.length, 1, stderr);
 				fflush(stderr);
 			}]];
 		}
@@ -190,7 +191,8 @@ static NSUInteger sOCLogMessageMaximumSize;
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
 			OCClassSettingsKeyLogColored		   : @(NO),
 			OCClassSettingsKeyLogSingleLined	   : @(YES),
-			OCClassSettingsKeyLogMaximumLogMessageSize : @(0)
+			OCClassSettingsKeyLogMaximumLogMessageSize : @(0),
+			OCClassSettingsKeyLogFormat		   : @"text"
 		});
 	}
 
@@ -222,6 +224,12 @@ static NSUInteger sOCLogMessageMaximumSize;
 
 		sOCLogMessageMaximumSize = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogMaximumLogMessageSize] unsignedIntegerValue];
 
+		sOCLogFormat = [self logFormat]; // must be called before setting sOCLogLevelInitialized to YES
+		if ((sOCLogFormat == OCLogFormatJSON) || (sOCLogFormat == OCLogFormatJSONComposed))
+		{
+			sOCLogSingleLined = NO; // override single lined if log format is JSON to permanently off
+		}
+
 		sOCLogLevelInitialized = YES;
 	}
 
@@ -235,6 +243,36 @@ static NSUInteger sOCLogMessageMaximumSize;
 	[OCAppIdentity.sharedAppIdentity.userDefaults setInteger:newLogLevel forKey:OCClassSettingsKeyLogLevel];
 
 	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+}
+
++ (OCLogFormat)logFormat
+{
+	if (!sOCLogLevelInitialized)
+	{
+		NSString *logFormatString;
+
+		if ((logFormatString = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogFormat]) != nil)
+		{
+			if ([logFormatString isEqual:@"text"])
+			{
+				return (OCLogFormatText);
+			}
+
+			if ([logFormatString isEqual:@"json"])
+			{
+				return (OCLogFormatJSON);
+			}
+
+			if ([logFormatString isEqual:@"json-composed"])
+			{
+				return (OCLogFormatJSONComposed);
+			}
+		}
+
+		return (OCLogFormatText);
+	}
+
+	return (sOCLogFormat);
 }
 
 + (BOOL)maskPrivateData
@@ -798,5 +836,6 @@ OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
 OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
 OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
 OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
+OCClassSettingsKey OCClassSettingsKeyLogFormat = @"log-format";
 
 OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

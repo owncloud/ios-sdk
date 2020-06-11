@@ -34,6 +34,13 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 	OCLogLevelOff		//!< No logging
 };
 
+typedef NS_ENUM(NSInteger, OCLogFormat)
+{
+	OCLogFormatText, //!< Plain-text log format
+	OCLogFormatJSON, //!< Log every message as one line of detailed JSON
+	OCLogFormatJSONComposed //!< Log every message as one line of composed/simplified JSON
+};
+
 @class OCLogger;
 
 typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> * _Nullable * _Nullable pTags, NSString *_Nonnull * _Nonnull pLogMessage, uint64_t threadID, NSDate *timestamp); //!< Filter block. Returns YES if the message should be logged, NO otherwise. Can alter the log message via pLogMessage.
@@ -69,6 +76,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 }
 
 @property(assign,class) OCLogLevel logLevel;
+@property(readonly,class) OCLogFormat logFormat;
 @property(assign,class) BOOL maskPrivateData;
 @property(readonly,class) BOOL synchronousLoggingEnabled;
 @property(readonly,class) BOOL coloredLogging;
@@ -131,6 +139,7 @@ extern OCClassSettingsKey OCClassSettingsKeyLogOmitMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages;
 extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
 extern OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize;
+extern OCClassSettingsKey OCClassSettingsKeyLogFormat;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
 

@@ -32,7 +32,7 @@ typedef NS_OPTIONS(NSUInteger, OCLogLineFlag)
 	OCLogLineFlagSingleLinesModeEnabled = (1 << 4)
 };
 
-typedef void(^OCLogWriteHandler)(NSString *message);
+typedef void(^OCLogWriteHandler)(NSData *messageData);
 
 @interface OCLogWriter : OCLogComponent
 {
@@ -57,7 +57,7 @@ typedef void(^OCLogWriteHandler)(NSString *message);
 - (nullable NSError *)close;	//!< Closes the log
 
 - (void)appendMessageWithLogLevel:(OCLogLevel)logLevel date:(NSDate *)date threadID:(uint64_t)threadID isMainThread:(BOOL)isMainThread privacyMasked:(BOOL)privacyMasked functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags flags:(OCLogLineFlag)flags message:(NSString *)message; //!< By default composes the parameters and calls -appendMessage:
-- (void)appendMessage:(NSString *)message; //!< Called by the default implementation of -appendMessageWithLogLevel:functionName:file:line:message:
+- (void)appendMessageData:(NSData *)data; //!< Called by the default implementation of -appendMessageWithLogLevel:functionName:file:line:message:
 
 + (NSString*)timestampStringFrom:(NSDate*)date;
 

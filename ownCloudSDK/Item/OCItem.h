@@ -20,6 +20,7 @@
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCClaim.h"
+#import "OCTUSHeader.h"
 
 @class OCFile;
 @class OCCore;
@@ -148,6 +149,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)
 
 @property(strong,nullable) NSURL *privateLink; //!< Private link for the item. This property is used as a cache. Please use -[OCCore retrievePrivateLinkForItem:..] to request the private link for an item.
+
+@property(assign,nonatomic) OCTUSInfo tusInfo; //!< For folders only: compressed Tus info; undefined for files
+@property(readonly,nonatomic) OCTUSSupport tusSupport; //!< For folders only: Tus support level; undefined for files
+@property(readonly,nonatomic) UInt64 tusMaximumSize; //!< For folders only: Tus maximum chunk size; undefined for files
+// @property(strong,nullable) OCTUSHeader *tusHeader; //!< For folders only: detailed Tus support info (optional); nil for files
 
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
