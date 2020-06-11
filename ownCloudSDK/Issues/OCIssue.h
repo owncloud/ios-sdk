@@ -52,6 +52,8 @@ typedef NS_ENUM(NSUInteger, OCIssueDecision)
 
 typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
+typedef NSString* OCIssueSignature; //!< Signature that - for identical issues - will be identical
+
 @interface OCIssue : NSObject
 {
 	OCIssueType _type;
@@ -106,6 +108,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 @property(nullable,strong,readonly) NSArray <OCIssue *> *issues;
 
+@property(nullable,strong,readonly) OCIssueSignature signature;
+
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(nullable OCIssueHandler)issueHandler;
@@ -131,6 +135,9 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 #pragma mark - Filtering
 - (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
+
+#pragma mark - Handling
+- (void)appendIssueHandler:(OCIssueHandler)issueHandler;
 
 @end
 

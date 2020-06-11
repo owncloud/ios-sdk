@@ -95,7 +95,7 @@
 					[weakCore endActivity:@"Handle issue"];
 				}];
 
-				[core.delegate core:core handleError:nil issue:issue];
+				[core sendError:nil issue:issue];
 			}
 			else
 			{

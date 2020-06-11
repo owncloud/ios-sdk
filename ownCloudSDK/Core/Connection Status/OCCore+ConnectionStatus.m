@@ -354,10 +354,18 @@
 #pragma mark - OCConnection tracking
 - (void)connectionChangedState:(OCConnection *)connection
 {
+	BOOL hasUnsolvedIssues = NO;
+
+	@synchronized(_unsolvedIssueSignatures)
+	{
+		hasUnsolvedIssues = (_unsolvedIssueSignatures.count > 0);
+	}
+
 	// Update connectionStatusSignalProvider representing connection state
 	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected)  ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
-	_connectingStatusSignalProvider.state = ((connection.state == OCConnectionStateConnecting) && // bind this signal provider to the connection's OCConnectionStateConnecting state
-	 					 (connection.authenticationMethod.authenticationDataKnownInvalidDate == nil)) ? // avoid retries if authentication data is known to be invalid (triggered by state changes) as well as user-visible state changes due to retries
+	_connectingStatusSignalProvider.state = (((connection.state == OCConnectionStateConnecting) && // bind this signal provider to the connection's OCConnectionStateConnecting state
+	 					  (connection.authenticationMethod.authenticationDataKnownInvalidDate == nil)) || // avoid retries if authentication data is known to be invalid (triggered by state changes) as well as user-visible state changes due to retries
+	 					  hasUnsolvedIssues) ? // avoid retries if there are unsolved issues that need fixing first
 	 					 	OCCoreConnectionStatusSignalStateTrue :
 	 					 	OCCoreConnectionStatusSignalStateFalse;
 }
@@ -400,10 +408,7 @@
 		// Authorization failed
 		if ([error isOCErrorWithCode:OCErrorAuthorizationFailed])
 		{
-			if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
-			{
-				[_delegate core:self handleError:error issue:nil];
-			}
+			[self sendError:error issue:nil];
 		}
 	}
 

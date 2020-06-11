@@ -159,6 +159,10 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCCoreServerStatusSignalProvider *_serverStatusSignalProvider; // Processes reports of connection refused and maintenance mode responses and performs status.php polls to detect the resolution of the issue
 	OCCoreConnectionStatusSignalProvider *_connectingStatusSignalProvider; // Glue to include the OCCore state (connecting) into connection status (signal)
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state (connected) into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_rejectedIssueSignalProvider; // Glue to include rejectedIssueSignatures into reachability
+
+	NSMutableSet<OCIssueSignature> *_unsolvedIssueSignatures;
+	NSMutableSet<OCIssueSignature> *_rejectedIssueSignatures;
 
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
@@ -272,6 +276,9 @@ typedef id<NSObject> OCCoreItemTracking;
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item; //!< Unregisters a progress object for an item
 
 - (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
+
+#pragma mark - Error handling
+- (BOOL)sendError:(nullable NSError *)error issue:(nullable OCIssue *)issue; //!< If YES is returned, the error was sent to the OCCoreDelegate. If NO is returned, the error was not sent to the OCCoreDelegate.
 
 #pragma mark - Item lookup and information
 - (nullable OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.

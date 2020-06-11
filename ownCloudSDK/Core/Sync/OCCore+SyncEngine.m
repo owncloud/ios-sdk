@@ -1546,10 +1546,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 {
 	if (error != nil)
 	{
-		if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
-		{
-			[self.delegate core:self handleError:error issue:nil];
-		}
+		[self sendError:error issue:nil];
 	}
 
 	return (error);

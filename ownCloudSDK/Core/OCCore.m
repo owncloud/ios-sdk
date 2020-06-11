@@ -172,6 +172,9 @@
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
 		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
 
+		_unsolvedIssueSignatures = [NSMutableSet new];
+		_rejectedIssueSignatures = [NSMutableSet new];
+
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
@@ -281,11 +284,16 @@
 				_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
 			}
 		}
+
+		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
+		[self addSignalProvider:_rejectedIssueSignalProvider];
+
 		[self addSignalProvider:_serverStatusSignalProvider];
 		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
@@ -605,10 +613,7 @@
 					// Relay error and issues to delegate
 					if ((error != nil) || (issue != nil))
 					{
-						if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
-						{
-							[self->_delegate core:self handleError:error issue:issue];
-						}
+						[self sendError:error issue:issue];
 					}
 
 					dispatch_resume(self->_connectivityQueue);
@@ -1004,6 +1009,117 @@
 
 		[self endActivity:@"Replaying changes since sync anchor"];
 	}];
+}
+
+#pragma mark - Error handling
+- (BOOL)sendError:(NSError *)error issue:(OCIssue *)issue
+{
+	if ((error != nil) || (issue != nil))
+	{
+		id<OCCoreDelegate> delegate;
+
+		if (((delegate = self.delegate) != nil) && [self.delegate respondsToSelector:@selector(core:handleError:issue:)])
+		{
+			if (issue != nil)
+			{
+				OCIssueSignature issueSignature = nil;
+
+				switch (issue.type)
+				{
+					case OCIssueTypeCertificate:
+					case OCIssueTypeURLRedirection:
+						if ((issueSignature = issue.signature) != nil)
+						{
+							@synchronized(_unsolvedIssueSignatures)
+							{
+								// Do not re-send unsolved issues
+								if ([_unsolvedIssueSignatures containsObject:issueSignature])
+								{
+									OCLogDebug(@"Blocked duplicate issue %@ (signature: %@)", issue, issueSignature);
+									return (NO);
+								}
+
+								// New unsolved issue -> add and add handler to issue
+								[_unsolvedIssueSignatures addObject:issueSignature];
+
+								__weak OCCore *weakCore = self;
+
+								[issue appendIssueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+									OCCore *strongCore;
+									NSMutableSet<OCIssueSignature> *unsolvedIssueSignatures;
+									NSMutableSet<OCIssueSignature> *rejectedIssueSignatures;
+
+									if (((strongCore = weakCore) != nil) &&
+									    ((unsolvedIssueSignatures = strongCore->_unsolvedIssueSignatures) != nil) &&
+									    ((rejectedIssueSignatures = strongCore->_rejectedIssueSignatures) != nil))
+									{
+										BOOL unsolvedListIsEmpty = NO;
+
+										if (decision == OCIssueDecisionApprove)
+										{
+											OCLogDebug(@"Issue %@ approved, removing from list of unsolved issue (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures removeObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if (decision == OCIssueDecisionReject)
+										{
+											OCLogDebug(@"Issue %@ rejected, removing from list of unsolved issue, adding to list of rejected issues (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures addObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if ((strongCore.state != OCCoreStateStopping) && (strongCore.state != OCCoreStateStopped))
+										{
+											[strongCore _updateRejectedIssueSignalProvider];
+
+											if (unsolvedListIsEmpty)
+											{
+												[strongCore connectionChangedState:strongCore.connection];
+											}
+										}
+									}
+								}];
+							}
+						}
+					break;
+
+					default:
+					break;
+				}
+			}
+
+			[delegate core:self handleError:error issue:issue];
+
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+- (void)_updateRejectedIssueSignalProvider
+{
+	BOOL rejectedListIsEmpty;
+
+	@synchronized(_unsolvedIssueSignatures)
+	{
+		rejectedListIsEmpty = (_rejectedIssueSignatures.count == 0);
+	}
+
+	_rejectedIssueSignalProvider.state = (rejectedListIsEmpty ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
 }
 
 #pragma mark - ## Commands
