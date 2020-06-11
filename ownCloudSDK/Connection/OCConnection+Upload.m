@@ -588,12 +588,10 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		}
 
 		// Add date to error
-		#ifdef OCErrorAddDateFromResponse
 		if (event.error != nil)
 		{
 			OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		}
-		#endif /* OCErrorAddDateFromResponse */
 
 		if (send)
 		{
@@ -817,6 +815,12 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 						break;
 					}
 				}
+			}
+
+			// Add date to error
+			if (event.error != nil)
+			{
+				OCErrorAddDateFromResponse(event.error, request.httpResponse);
 			}
 
 			[request.eventTarget handleEvent:event sender:self];
