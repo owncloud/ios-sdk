@@ -1324,10 +1324,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				if (sendIssueToDelegate)
 				{
-					if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(core:handleError:issue:)])
-					{
-						[self.delegate core:self handleError:event.error issue:certificateIssue];
-					}
+					[self sendError:event.error issue:certificateIssue];
 				}
 			}
 		}

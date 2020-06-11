@@ -393,7 +393,7 @@
 		break;
 
 		case OCIssueTypeMultipleChoice:
-			[descriptionString appendFormat:@"Multiple Choice [%@]", _choices];
+			[descriptionString appendFormat:@"Multiple Choice [%@: %@] : [%@]", _localizedTitle, _localizedDescription, _choices];
 		break;
 
 		case OCIssueTypeURLRedirection:
@@ -401,7 +401,7 @@
 		break;
 
 		case OCIssueTypeCertificate:
-			[descriptionString appendFormat:@"Certificate [%@]", _certificate.hostName];
+			[descriptionString appendFormat:@"Certificate [%@ | %@]", _certificate.hostName, _certificate.sha256Fingerprint.asFingerPrintString];
 		break;
 
 		case OCIssueTypeGeneric:
@@ -431,6 +431,65 @@
 	[descriptionString appendString:@">"];
 
 	return (descriptionString);
+}
+
+#pragma mark - Handling
+- (void)appendIssueHandler:(OCIssueHandler)issueHandler
+{
+	if (_issueHandler == nil)
+	{
+		_issueHandler = [issueHandler copy];
+	}
+	else
+	{
+		OCIssueHandler existingHandler = [_issueHandler copy];
+		OCIssueHandler additionalHandler = [issueHandler copy];
+
+		_issueHandler = [^(OCIssue *issue, OCIssueDecision decision) {
+			existingHandler(issue, decision);
+			additionalHandler(issue, decision);
+		} copy];
+	}
+}
+
+#pragma mark - Signature
+- (OCIssueSignature)signature
+{
+	NSMutableString *signatureString = [NSMutableString stringWithFormat:@"%lu:%lu:%@:%@:", (unsigned long)_level, (unsigned long)_type, _localizedTitle, _localizedDescription];
+
+	switch (_type)
+	{
+		case OCIssueTypeGroup:
+			for (OCIssue *issue in _issues)
+			{
+				[signatureString appendFormat:@"%@:", issue.signature];
+			}
+		break;
+
+		case OCIssueTypeMultipleChoice:
+			for (OCIssueChoice *choice in _choices)
+			{
+				[signatureString appendFormat:@"%@[%@]:", choice.label, choice.identifier];
+			}
+		break;
+
+		case OCIssueTypeURLRedirection:
+			[signatureString appendFormat:@"%@ -> %@", _originalURL, _suggestedURL];
+		break;
+
+		case OCIssueTypeCertificate:
+			[signatureString appendFormat:@"%@:%@", _certificate.hostName, [_certificate.sha256Fingerprint asHexStringWithSeparator:@""]];
+		break;
+
+		case OCIssueTypeGeneric:
+		break;
+
+		case OCIssueTypeError:
+			[signatureString appendFormat:@"%@:%ld", _error.domain, (long)_error.code];
+		break;
+	}
+
+	return (signatureString);
 }
 
 #pragma mark - Filtering
