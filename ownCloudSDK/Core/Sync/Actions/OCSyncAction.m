@@ -203,26 +203,26 @@
 }
 
 #pragma mark - Issue generation
-+ (NSArray<OCSyncIssueTemplate *> *)issueTemplates
++ (NSArray<OCMessageTemplate *> *)issueTemplates
 {
-	NSMutableArray<OCSyncIssueTemplate *> *templates = [NSMutableArray new];
+	NSMutableArray<OCMessageTemplate *> *templates = [NSMutableArray new];
 	OCSyncActionIdentifier actionIdentifier;
 
 	// Standard templates
 	if ((actionIdentifier = self.identifier) != nil)
 	{
 		// Standard cancellation template used by _addIssueForCancellationAndDeschedulingToContext:
-		[templates addObject:[OCSyncIssueTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.dataLoss"] categoryName:nil choices:@[
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.dataLoss"] categoryName:nil choices:@[
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]
 		] options:nil]];
 
-		[templates addObject:[OCSyncIssueTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDestructive"] categoryName:nil choices:@[
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDestructive"] categoryName:nil choices:@[
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
 		] options:nil]];
 	}
 
 	// Action-specific templates
-	NSArray<OCSyncIssueTemplate *> *actionIssueTemplates;
+	NSArray<OCMessageTemplate *> *actionIssueTemplates;
 
 	if ((actionIssueTemplates = self.actionIssueTemplates) != nil)
 	{
@@ -232,7 +232,7 @@
 	return (templates);
 }
 
-+ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
 {
 	return (nil);
 }

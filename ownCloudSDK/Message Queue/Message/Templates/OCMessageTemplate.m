@@ -1,5 +1,5 @@
 //
-//  OCSyncIssueTemplate.m
+//  OCMessageTemplate.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 30.03.20.
@@ -16,13 +16,13 @@
  *
  */
 
-#import "OCSyncIssueTemplate.h"
+#import "OCMessageTemplate.h"
 
-static NSMutableDictionary<OCSyncIssueTemplateIdentifier, OCSyncIssueTemplate *> *sTemplatesByIdentifier;
+static NSMutableDictionary<OCMessageTemplateIdentifier, OCMessageTemplate *> *sTemplatesByIdentifier;
 
-@implementation OCSyncIssueTemplate
+@implementation OCMessageTemplate
 
-+ (void)registerTemplates:(NSArray<OCSyncIssueTemplate *> *)syncIssueTemplates
++ (void)registerTemplates:(NSArray<OCMessageTemplate *> *)syncIssueTemplates
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
@@ -31,14 +31,14 @@ static NSMutableDictionary<OCSyncIssueTemplateIdentifier, OCSyncIssueTemplate *>
 
 	@synchronized(self)
 	{
-		for (OCSyncIssueTemplate *syncIssueTemplate in syncIssueTemplates)
+		for (OCMessageTemplate *syncIssueTemplate in syncIssueTemplates)
 		{
 			[sTemplatesByIdentifier setObject:syncIssueTemplate forKey:syncIssueTemplate.identifier];
 		}
 	}
 }
 
-+ (nullable OCSyncIssueTemplate *)templateForIdentifier:(OCSyncIssueTemplateIdentifier)templateIdentifier
++ (nullable OCMessageTemplate *)templateForIdentifier:(OCMessageTemplateIdentifier)templateIdentifier
 {
 	@synchronized(self)
 	{
@@ -46,7 +46,7 @@ static NSMutableDictionary<OCSyncIssueTemplateIdentifier, OCSyncIssueTemplate *>
 	}
 }
 
-+ (nullable NSArray<OCSyncIssueTemplate *> *)templates
++ (nullable NSArray<OCMessageTemplate *> *)templates
 {
 	@synchronized(self)
 	{
@@ -54,9 +54,9 @@ static NSMutableDictionary<OCSyncIssueTemplateIdentifier, OCSyncIssueTemplate *>
 	}
 }
 
-+ (instancetype)templateWithIdentifier:(OCSyncIssueTemplateIdentifier)identifier categoryName:(nullable NSString *)categoryName choices:(NSArray<OCSyncIssueChoice *> *)choices options:(nullable OCSyncIssueTemplateOptions)options
++ (instancetype)templateWithIdentifier:(OCMessageTemplateIdentifier)identifier categoryName:(nullable NSString *)categoryName choices:(NSArray<OCMessageChoice *> *)choices options:(nullable OCMessageTemplateOptions)options
 {
-	OCSyncIssueTemplate *template = [OCSyncIssueTemplate new];
+	OCMessageTemplate *template = [OCMessageTemplate new];
 
 	template.identifier = identifier;
 	template.categoryName = categoryName;

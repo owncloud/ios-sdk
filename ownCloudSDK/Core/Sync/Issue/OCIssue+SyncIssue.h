@@ -30,8 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core;
 
-+ (nullable instancetype)issueFromMessage:(OCMessage *)message fromMessageQueue:(OCMessageQueue *)messageQueue;
-
 @end
 
 NS_ASSUME_NONNULL_END

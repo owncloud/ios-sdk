@@ -24,9 +24,9 @@
 #import "OCWaitConditionMetaDataRefresh.h"
 #import "OCCellularManager.h"
 
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadOverwrite = @"download.overwrite";
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadRetry = @"download.retry";
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDownloadCancel = @"download.cancel";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadOverwrite = @"download.overwrite";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadRetry = @"download.retry";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadCancel = @"download.cancel";
 
 @implementation OCSyncActionDownload
 
@@ -37,11 +37,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	return(OCSyncActionIdentifierDownload);
 }
 
-+ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
 {
 	return (@[
 		// Overwrite
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadOverwrite categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadOverwrite categoryName:nil choices:@[
 			// Delete local representation and reschedule download
 			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
 
@@ -50,7 +50,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		] options:nil],
 
 		// Retry
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadRetry categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadRetry categoryName:nil choices:@[
 			// Reschedule sync record
 			[OCSyncIssueChoice retryChoice],
 
@@ -59,7 +59,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		] options:nil],
 
 		// Cancel
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDownloadCancel categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadCancel categoryName:nil choices:@[
 			// Drop sync record
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
 		] options:nil],
@@ -223,7 +223,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil];
 
 				OCLogDebug(@"record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
 
@@ -394,7 +394,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 				useDownloadedFile = NO;
 
-				issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil];
 
 				[syncContext addSyncIssue:issue];
 			}
@@ -413,7 +413,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 					useDownloadedFile = NO;
 
-					issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil];
+					issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil];
 
 					[syncContext addSyncIssue:issue];
 				}

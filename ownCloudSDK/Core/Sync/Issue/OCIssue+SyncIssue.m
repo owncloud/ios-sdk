@@ -52,21 +52,6 @@
 	return (issue);
 }
 
-+ (instancetype)issueFromMessage:(OCMessage *)message fromMessageQueue:(OCMessageQueue *)messageQueue
-{
-	OCIssue *issue = nil;
-	__weak OCMessageQueue *weakMessageQueue = messageQueue;
-
-	if (message.syncIssue != nil)
-	{
-		issue = [OCIssue issueFromSyncIssue:message.syncIssue resolutionResultHandler:^(OCSyncIssueChoice *choice) {
-			[weakMessageQueue resolveMessage:message withChoice:choice];
-		}];
-	}
-
-	return (issue);
-}
-
 + (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core
 {
 	OCIssue *issue;

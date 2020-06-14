@@ -31,7 +31,7 @@
 	return (OCMessagePresentationPriorityWontPresent);
 }
 
-- (void)present:(OCMessage *)message completionHandler:(void(^)(OCMessagePresentationResult result, OCSyncIssueChoice * _Nullable choice))completionHandler
+- (void)present:(OCMessage *)message completionHandler:(void(^)(OCMessagePresentationResult result, OCMessageChoice * _Nullable choice))completionHandler
 {
 	completionHandler(OCMessagePresentationResultDidNotPresent, nil);
 }

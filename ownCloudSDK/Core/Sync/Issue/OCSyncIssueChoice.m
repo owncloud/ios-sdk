@@ -22,15 +22,13 @@
 
 @implementation OCSyncIssueChoice
 
+@dynamic identifier;
+
 + (instancetype)choiceOfType:(OCIssueChoiceType)type impact:(OCSyncIssueChoiceImpact)impact identifier:(OCSyncIssueChoiceIdentifier)identifier label:(NSString *)label metaData:(NSDictionary<NSString*, id> *)metaData
 {
-	OCSyncIssueChoice *choice = [self new];
+	OCSyncIssueChoice *choice = [self choiceOfType:type identifier:identifier label:label metaData:metaData];
 
-	choice.type = type;
 	choice.impact = impact;
-	choice.identifier = identifier;
-	choice.label = label;
-	choice.metaData = metaData;
 
 	return (choice);
 }
@@ -65,13 +63,9 @@
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
-	if ((self = [self init]) != nil)
+	if ((self = [super initWithCoder:decoder]) != nil)
 	{
-		_type = [decoder decodeIntegerForKey:@"type"];
 		_impact = [decoder decodeIntegerForKey:@"impact"];
-		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
-		_label = [decoder decodeObjectOfClass:[NSString class] forKey:@"label"];
-		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
 		_autoChoiceForError = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoChoiceForError"];
 	}
 
@@ -80,14 +74,11 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeInteger:_type forKey:@"type"];
+	[super encodeWithCoder:coder];
+
 	[coder encodeInteger:_impact forKey:@"impact"];
-	[coder encodeObject:_identifier forKey:@"identifier"];
-	[coder encodeObject:_label forKey:@"label"];
-	[coder encodeObject:_metaData forKey:@"metaData"];
 	[coder encodeObject:_autoChoiceForError forKey:@"autoChoiceForError"];
 }
-
 
 @end
 

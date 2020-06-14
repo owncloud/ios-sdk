@@ -136,11 +136,12 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCSyncIssue.h>
 #import <ownCloudSDK/OCSyncIssueChoice.h>
-#import <ownCloudSDK/OCSyncIssueTemplate.h>
+#import <ownCloudSDK/OCMessageTemplate.h>
 #import <ownCloudSDK/OCIssue+SyncIssue.h>
 
 #import <ownCloudSDK/OCMessageQueue.h>
 #import <ownCloudSDK/OCMessage.h>
+#import <ownCloudSDK/OCMessageChoice.h>
 #import <ownCloudSDK/OCMessagePresenter.h>
 
 #import <ownCloudSDK/OCTUSHeader.h>

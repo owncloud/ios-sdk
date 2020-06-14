@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define OCSyncActionWrapNullableItem(item) ((item != nil) ? item : ((OCItem*)NSNull.null))
 
 #define OCSYNCACTION_REGISTER_ISSUETEMPLATES + (void)load { \
-	[OCSyncIssueTemplate registerTemplates:self.issueTemplates]; \
+	[OCMessageTemplate registerTemplates:self.issueTemplates]; \
 }\
 
 @class OCSyncContext;
@@ -109,8 +109,8 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 - (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
 
 #pragma mark - Issue generation
-@property(strong,nullable,nonatomic,readonly,class) NSArray<OCSyncIssueTemplate *> *issueTemplates; //!< Issue templates (including auto-generated ones)
-@property(strong,nullable,nonatomic,readonly,class) NSArray<OCSyncIssueTemplate *> *actionIssueTemplates; //!< Issue templates (specific to an sync action class)
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCMessageTemplate *> *issueTemplates; //!< Issue templates (including auto-generated ones)
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCMessageTemplate *> *actionIssueTemplates; //!< Issue templates (specific to an sync action class)
 
 - (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact;
 

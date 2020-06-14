@@ -26,9 +26,9 @@
 {
 	if ([message.bookmarkUUID isEqual:self.bookmark.uuid]) // Handle only message related to this core
 	{
-		if ((message.syncIssue != nil) && (message.syncIssueChoice != nil)) // Handle only sync issues where a choice was made
+		if ((message.syncIssue != nil) && (message.pickedChoice != nil)) // Handle only sync issues where a choice was made
 		{
-			[self resolveSyncIssue:message.syncIssue withChoice:message.syncIssueChoice userInfo:message.syncIssue.routingInfo completionHandler:nil]; // Resolve issue with choice
+			[self resolveSyncIssue:message.syncIssue withChoice:(OCSyncIssueChoice *)message.pickedChoice userInfo:message.syncIssue.routingInfo completionHandler:nil]; // Resolve issue with choice
 
 			return (YES); // Message was handled, can now be removed
 		}

@@ -22,7 +22,7 @@
 #import "OCTypes.h"
 #import "OCEvent.h"
 #import "OCMessage.h"
-#import "OCSyncIssueTemplate.h"
+#import "OCMessageTemplate.h"
 
 @class OCSyncRecord;
 @class OCWaitConditionIssue;
@@ -30,6 +30,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSUUID* OCSyncIssueUUID;
+typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCSyncIssueMetadata;
+typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCSyncIssueRoutingInfo;
 
 @interface OCSyncIssue : NSObject <NSSecureCoding>
 
@@ -44,18 +46,18 @@ typedef NSUUID* OCSyncIssueUUID;
 @property(strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
 
-@property(strong,nullable) OCSyncIssueTemplateIdentifier templateIdentifier; //!< Identifier used to categorize the issue
+@property(strong,nullable) OCMessageTemplateIdentifier templateIdentifier; //!< Identifier used to categorize the issue
 
-@property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
+@property(nullable,strong) OCSyncIssueMetadata metaData;
 
-@property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *routingInfo; //!< Internal, do not use
+@property(nullable,strong) OCSyncIssueRoutingInfo routingInfo; //!< Internal, do not use
 
 @property(strong) NSArray <OCSyncIssueChoice *> *choices;
 
 #pragma mark - Sync Engine issues
 + (instancetype)issueForSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;
 
-+ (nullable instancetype)issueFromTemplate:(OCSyncIssueTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
++ (nullable instancetype)issueFromTemplate:(OCMessageTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
 
 #pragma mark - Other issues
 + (instancetype)issueFromTarget:(nullable OCEventTarget *)eventTarget withLevel:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData choices:(NSArray <OCSyncIssueChoice *> *)choices;

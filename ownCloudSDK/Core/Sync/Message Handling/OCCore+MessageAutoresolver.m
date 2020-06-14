@@ -50,7 +50,7 @@
 								{
 									OCLog(@"Autoresolving syncIssue predating (%@) last authentication validation (%@): picking %@ for %@", autochoiceError.errorDate, authenticationValidationDate, choice.identifier, syncIssue);
 
-									message.syncIssueChoice = choice;
+									message.pickedChoice = choice;
 									return (YES);
 								}
 							break;

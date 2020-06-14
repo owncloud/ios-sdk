@@ -243,7 +243,7 @@
 			[messageUUIDs addObject:message.uuid];
 
 			// Autoresolve
-			if (!message.handled && !message.removed)
+			if (!message.resolved && !message.removed)
 			{
 				NSArray<id<OCMessageAutoResolver>> *autoResolvers = nil;
 
@@ -262,7 +262,7 @@
 			}
 
 			// Check presentation options
-			if (!message.presentedToUser && !message.handled && !message.removed)
+			if (!message.presentedToUser && !message.resolved && !message.removed)
 			{
 				if ((message.lockingProcess == nil) ||
 				    ((message.lockingProcess != nil) &&
@@ -283,7 +283,7 @@
 			}
 
 			// Handle result
-			if (message.handled && !message.removed)
+			if (message.resolved && !message.removed)
 			{
 				NSArray<id<OCMessageResponseHandler>> *responseHandlers = nil;
 
@@ -299,6 +299,13 @@
 						message.removed = YES;
 						*outDidModify = YES;
 					}
+				}
+
+				// Auto-remove messages that indicate they want auto-removal
+				if (!message.removed && message.autoRemove)
+				{
+					message.removed = YES;
+					*outDidModify = YES;
 				}
 			}
 
@@ -384,13 +391,13 @@
 
 		for (OCMessage *message in messages)
 		{
-			if (!message.handled && !message.removed && (message.syncIssue != nil) && [message.bookmarkUUID isEqual:bookmarkUUID])
+			if (!message.resolved && !message.removed && (message.syncIssue != nil) && [message.bookmarkUUID isEqual:bookmarkUUID])
 			{
 				for (OCSyncIssueChoice *choice in message.syncIssue.choices)
 				{
 					if ([choice.autoChoiceForError isEqual:error])
 					{
-						message.syncIssueChoice = choice;
+						message.pickedChoice = choice;
 
 						[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
 
@@ -404,14 +411,14 @@
 	}];
 }
 
-- (void)resolveMessage:(OCMessage *)message withChoice:(OCSyncIssueChoice *)choice
+- (void)resolveMessage:(OCMessage *)message withChoice:(OCMessageChoice *)choice
 {
 	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> * _Nullable messages, OCMessage * _Nullable message) {
 		BOOL updated = NO;
 
-		if (!message.handled && !message.removed && (message.syncIssue != nil))
+		if (!message.resolved && !message.removed && (message.choices != nil))
 		{
-			message.syncIssueChoice = choice;
+			message.pickedChoice = choice;
 
 			[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
 
@@ -493,7 +500,7 @@
 			}
 		}
 
-		[presenter present:message completionHandler:^(OCMessagePresentationResult result, OCSyncIssueChoice * _Nullable choice) {
+		[presenter present:message completionHandler:^(OCMessagePresentationResult result, OCMessageChoice * _Nullable choice) {
 			if (activePresenter)
 			{
 				@synchronized(self->_activePresenterByMessageUUID)
@@ -530,7 +537,7 @@
 	}
 }
 
-- (void)_handlePresenter:(OCMessagePresenter *)presenter resultForMessage:(OCMessage *)message result:(OCMessagePresentationResult)result choice:(OCSyncIssueChoice *)choice activePresenter:(BOOL)activePresenter
+- (void)_handlePresenter:(OCMessagePresenter *)presenter resultForMessage:(OCMessage *)message result:(OCMessagePresentationResult)result choice:(OCMessageChoice *)choice activePresenter:(BOOL)activePresenter
 {
 	[self _performOnMessage:message updates:^BOOL(NSMutableArray<OCMessage *> *messages, OCMessage *message) {
 		BOOL update = NO;
@@ -557,7 +564,7 @@
 
 		if (choice != nil)
 		{
-			message.syncIssueChoice = choice;
+			message.pickedChoice = choice;
 
 			[self _notifyActivePresenterForEndOfPresentationOfMessage:message];
 

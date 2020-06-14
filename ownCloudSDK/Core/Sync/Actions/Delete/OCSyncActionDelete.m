@@ -18,8 +18,8 @@
 
 #import "OCSyncActionDelete.h"
 
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDeleteWithForce = @"delete.withForce";
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierDeleteCancel = @"delete.cancel";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteWithForce = @"delete.withForce";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteCancel = @"delete.cancel";
 
 @implementation OCSyncActionDelete
 
@@ -30,17 +30,17 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	return(OCSyncActionIdentifierDeleteLocal);
 }
 
-+ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
 {
 	return (@[
 		// Cancel
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDeleteCancel categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteCancel categoryName:nil choices:@[
 			// Drop sync record
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
 		] options:nil],
 
 		// Cancel or Force Delete
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierDeleteWithForce categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteWithForce categoryName:nil choices:@[
 			// Drop sync record
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
 
@@ -281,7 +281,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
-				issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDeleteWithForce forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteWithForce forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 			}
 			break;
 
@@ -327,7 +327,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		if ((issue==nil) && (title!=nil))
 		{
-			issue = [OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierDeleteCancel forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
+			issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteCancel forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 		}
 
 		if (issue != nil)

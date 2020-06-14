@@ -24,8 +24,8 @@
 #import "NSDate+OCDateParser.h"
 #import "OCCellularManager.h"
 
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadKeepBoth = @"upload.keep-both";
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUploadRetry = @"upload.retry";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUploadKeepBoth = @"upload.keep-both";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUploadRetry = @"upload.retry";
 
 @implementation OCSyncActionUpload
 
@@ -36,17 +36,17 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	return(OCSyncActionIdentifierUpload);
 }
 
-+ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
 {
 	return (@[
 		// Keep both
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierUploadKeepBoth categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadKeepBoth categoryName:nil choices:@[
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
 			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]
 		] options:nil],
 
 		// Retry
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierUploadRetry categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadRetry categoryName:nil choices:@[
 			[OCSyncIssueChoice retryChoice]
 		] options:nil]
 	]);
@@ -344,7 +344,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			OCSyncIssue *issue;
 			BOOL alreadyExists = [event.error isOCErrorWithCode:OCErrorItemAlreadyExists];
 
-			issue = [OCSyncIssue issueFromTemplate:(alreadyExists ? OCSyncIssueTemplateIdentifierUploadKeepBoth : OCSyncIssueTemplateIdentifierUploadRetry)
+			issue = [OCSyncIssue issueFromTemplate:(alreadyExists ? OCMessageTemplateIdentifierUploadKeepBoth : OCMessageTemplateIdentifierUploadRetry)
 						 forSyncRecord:syncContext.syncRecord
 							 level:OCIssueLevelError
 							 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]

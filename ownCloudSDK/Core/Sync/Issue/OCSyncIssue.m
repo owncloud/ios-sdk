@@ -37,14 +37,14 @@
 	return (issue);
 }
 
-+ (instancetype)issueFromTemplate:(OCSyncIssueTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData
++ (instancetype)issueFromTemplate:(OCMessageTemplateIdentifier)templateIdentifier forSyncRecord:(OCSyncRecord *)syncRecord level:(OCIssueLevel)level title:(NSString *)title description:(nullable NSString *)description metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData
 {
-	OCSyncIssueTemplate *template;
+	OCMessageTemplate *template;
 	OCSyncIssue *issue = nil;
 
-	if ((template = [OCSyncIssueTemplate templateForIdentifier:templateIdentifier]) != nil)
+	if ((template = [OCMessageTemplate templateForIdentifier:templateIdentifier]) != nil)
 	{
-		issue = [self issueForSyncRecord:syncRecord level:level title:title description:description metaData:metaData choices:template.choices];
+		issue = [self issueForSyncRecord:syncRecord level:level title:title description:description metaData:metaData choices:(NSArray<OCSyncIssueChoice *> *)template.choices];
 		issue.templateIdentifier = templateIdentifier;
 	}
 

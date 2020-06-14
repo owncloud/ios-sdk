@@ -46,6 +46,8 @@
 #import "OCWaitCondition.h"
 #import "OCTUSJob.h"
 #import "OCTUSHeader.h"
+#import "OCMessageChoice.h"
+#import "OCMessage.h"
 
 @implementation OCEvent
 
@@ -104,6 +106,8 @@
 				OCTUSHeader.class,
 				OCTUSJob.class,
 				OCTUSJobSegment.class,
+				OCMessage.class,
+				OCMessageChoice.class,
 
 				// Foundation classes
 				NSArray.class,

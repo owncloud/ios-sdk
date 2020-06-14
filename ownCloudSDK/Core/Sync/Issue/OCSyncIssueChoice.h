@@ -18,10 +18,11 @@
 
 #import <Foundation/Foundation.h>
 #import "OCIssueChoice.h"
+#import "OCMessageChoice.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCSyncIssueChoiceIdentifier;
+typedef OCMessageChoiceIdentifier OCSyncIssueChoiceIdentifier;
 
 typedef NS_ENUM(NSInteger,OCSyncIssueChoiceImpact)
 {
@@ -29,17 +30,13 @@ typedef NS_ENUM(NSInteger,OCSyncIssueChoiceImpact)
 	OCSyncIssueChoiceImpactDataLoss
 };
 
-@interface OCSyncIssueChoice : NSObject <NSSecureCoding>
+@interface OCSyncIssueChoice : OCMessageChoice <NSSecureCoding>
 
-@property(assign) OCIssueChoiceType type;
 @property(assign) OCSyncIssueChoiceImpact impact;
 
 @property(strong) OCSyncIssueChoiceIdentifier identifier;
-@property(strong) NSString *label;
 
 @property(nullable,strong) NSError *autoChoiceForError; //!< If a handler can resolve this error, it can pick this option automatically
-
-@property(nullable,strong) NSDictionary<NSString*, id<NSSecureCoding>> *metaData;
 
 + (instancetype)choiceOfType:(OCIssueChoiceType)type impact:(OCSyncIssueChoiceImpact)impact identifier:(OCSyncIssueChoiceIdentifier)identifier label:(NSString *)label metaData:(nullable NSDictionary<NSString*, id<NSSecureCoding>> *)metaData;
 

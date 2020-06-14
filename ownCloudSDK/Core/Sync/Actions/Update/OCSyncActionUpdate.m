@@ -19,7 +19,7 @@
 #import "OCSyncActionUpdate.h"
 #import "OCMacros.h"
 
-static OCSyncIssueTemplateIdentifier OCSyncIssueTemplateIdentifierUpdateCancel = @"update.cancel";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUpdateCancel = @"update.cancel";
 
 @implementation OCSyncActionUpdate
 
@@ -30,10 +30,10 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	return(OCSyncActionIdentifierUpdate);
 }
 
-+ (NSArray<OCSyncIssueTemplate *> *)actionIssueTemplates
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
 {
 	return (@[
-		[OCSyncIssueTemplate templateWithIdentifier:OCSyncIssueTemplateIdentifierUpdateCancel categoryName:nil choices:@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUpdateCancel categoryName:nil choices:@[
 			// Drop sync record (also restores previous metadata)
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
 		] options:nil]
@@ -153,7 +153,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			if (!updateStatus.isSuccess)
 			{
 				// Property couldn't be updated successfully
-				[syncContext addSyncIssue:[OCSyncIssue issueFromTemplate:OCSyncIssueTemplateIdentifierUpdateCancel
+				[syncContext addSyncIssue:[OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierUpdateCancel
 									   forSyncRecord:syncContext.syncRecord
 										   level:OCIssueLevelError
 										   title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
