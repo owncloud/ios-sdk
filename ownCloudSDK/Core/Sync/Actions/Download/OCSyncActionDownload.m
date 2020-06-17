@@ -280,8 +280,8 @@
 			}
 			else
 			{
-				// Default to cellular master switch -> fallback choice
-				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:item.size]);
+				// Default to cellular main switch -> fallback choice
+				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMain transferSize:item.size]);
 			}
 
 			mutableOptions[OCConnectionOptionAllowCellularKey] = allowCellular;

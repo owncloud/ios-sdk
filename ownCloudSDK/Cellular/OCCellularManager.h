@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable OCCellularSwitch *)switchWithIdentifier:(OCCellularSwitchIdentifier)identifier;
 
-- (BOOL)cellularAccessAllowedFor:(nullable OCCellularSwitchIdentifier)identifier transferSize:(NSUInteger)transferSize; //!< Convenience method merging results for the referenced and global master switches. If you pass nil as identifier, the master switch is used.
+- (BOOL)cellularAccessAllowedFor:(nullable OCCellularSwitchIdentifier)identifier transferSize:(NSUInteger)transferSize; //!< Convenience method merging results for the referenced and global main switches. If you pass nil as identifier, the main switch is used.
 
 @end
 

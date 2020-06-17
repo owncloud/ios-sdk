@@ -101,14 +101,30 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
+		OCConnectionForceBackgroundURLSessions		: @(NO),
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO)
 	});
 }
 
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
+{
+	if ([key isEqualToString:OCConnectionForceBackgroundURLSessions])
+	{
+		return (YES);
+	}
+
+	return (NO);
+}
+
 + (BOOL)backgroundURLSessionsAllowed
 {
+	if ([[self classSettingForOCClassSettingsKey:OCConnectionForceBackgroundURLSessions] boolValue])
+	{
+		return (YES);
+	}
+
 	if (@available(iOS 13.1, *))
 	{
 		if (OCVault.hostHasFileProvider && !OCProcessManager.isProcessExtension)
@@ -2378,6 +2394,7 @@ OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"connection-
 OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"connection-renewed-certificate-acceptance-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
+OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
