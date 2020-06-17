@@ -292,7 +292,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 	
 	if ((value==nil) && (unlocalizedString != nil))
 	{
-		if (((error.userInfo.count) > 0 && (!((error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo.count==1)))) && !forceShortForm)
+		if ((error.userInfo.count > 0) &&
+		    (!((error.userInfo.count==1) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil))) &&
+		    (!((error.userInfo.count==2) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo[OCErrorDateKey]!=nil))) &&
+		    !forceShortForm)
 		{
 			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
 		}
