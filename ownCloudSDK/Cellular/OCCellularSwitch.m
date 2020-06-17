@@ -106,5 +106,5 @@
 
 @end
 
-OCCellularSwitchIdentifier OCCellularSwitchIdentifierMaster = @"master";
+OCCellularSwitchIdentifier OCCellularSwitchIdentifierMain = @"main";
 OCCellularSwitchIdentifier OCCellularSwitchIdentifierAvailableOffline = @"available-offline";

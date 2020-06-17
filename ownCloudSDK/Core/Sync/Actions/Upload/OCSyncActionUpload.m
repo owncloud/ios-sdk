@@ -202,8 +202,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			}
 			else
 			{
-				// None provided -> use master switch value
-				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMaster transferSize:uploadItem.size]);
+				// None provided -> use main switch value
+				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMain transferSize:uploadItem.size]);
 			}
 
 			// Create segment folder

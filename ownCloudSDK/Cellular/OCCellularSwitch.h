@@ -44,7 +44,7 @@ typedef NSString* OCCellularSwitchIdentifier NS_TYPED_ENUM;
 
 @end
 
-extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierMaster; //!< Master switch controlling ALL cellular access + limits
-extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierAvailableOffline; //!< Master switch controlling ALL available offline transfers
+extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierMain; //!< Main switch controlling ALL cellular access + limits
+extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierAvailableOffline; //!< Switch controlling ALL available offline transfers
 
 NS_ASSUME_NONNULL_END

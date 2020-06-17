@@ -32,26 +32,26 @@
 	return (sharedClassSettingsUserPreferences);
 }
 
-- (NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *)masterDictionary
+- (NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *)mainDictionary
 {
-	NSDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *masterDictionaryReadOnly;
+	NSDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *mainDictionaryReadOnly;
 
-	if ((masterDictionaryReadOnly = [OCAppIdentity.sharedAppIdentity.userDefaults dictionaryForKey:@"org.owncloud.user-settings"]) != nil)
+	if ((mainDictionaryReadOnly = [OCAppIdentity.sharedAppIdentity.userDefaults dictionaryForKey:@"org.owncloud.user-settings"]) != nil)
 	{
-		return ([masterDictionaryReadOnly mutableCopy]);
+		return ([mainDictionaryReadOnly mutableCopy]);
 	}
 
 	return ([NSMutableDictionary new]);
 }
 
-- (void)setMasterDictionary:(NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *)masterDictionary
+- (void)setMainDictionary:(NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *)mainDictionary
 {
-	[OCAppIdentity.sharedAppIdentity.userDefaults setObject:masterDictionary forKey:@"org.owncloud.user-settings"];
+	[OCAppIdentity.sharedAppIdentity.userDefaults setObject:mainDictionary forKey:@"org.owncloud.user-settings"];
 }
 
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	return (self.masterDictionary[classSettingsIdentifier]);
+	return (self.mainDictionary[classSettingsIdentifier]);
 }
 
 - (BOOL)setValue:(id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass
@@ -86,15 +86,15 @@
 
 - (void)setValue:(id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key classSettingsIdentifier:(OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *masterDictionary = [self masterDictionary];
+	NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *mainDictionary = [self mainDictionary];
 	NSMutableDictionary<OCClassSettingsKey, id> *classSettingsDictionary = nil;
 
-	if ((classSettingsDictionary = [masterDictionary[classSettingsIdentifier] mutableCopy]) == nil)
+	if ((classSettingsDictionary = [mainDictionary[classSettingsIdentifier] mutableCopy]) == nil)
 	{
 		classSettingsDictionary = [NSMutableDictionary new];
 	}
 
-	masterDictionary[classSettingsIdentifier] = classSettingsDictionary;
+	mainDictionary[classSettingsIdentifier] = classSettingsDictionary;
 
 	if (value != nil)
 	{
@@ -107,10 +107,10 @@
 
 	if (classSettingsDictionary.count == 0)
 	{
-		[masterDictionary removeObjectForKey:classSettingsIdentifier];
+		[mainDictionary removeObjectForKey:classSettingsIdentifier];
 	}
 
-	self.masterDictionary = masterDictionary;
+	self.mainDictionary = mainDictionary;
 }
 
 @end

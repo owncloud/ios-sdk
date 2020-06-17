@@ -52,9 +52,12 @@ This document provides an overview over the available sections and their setting
 	- `connection-minimum-server-version`:  The minimum server version required.
 		- type: string
 		- default: `9.0`
-	- `allow-background-url-sessions`: Allow the use of background URL sessions.
+	- `allow-background-url-sessions`: Allow the use of background URL sessions. Note: depending on iOS version, the app may still choose not to use them. This settings is overriden by `force-background-url-sessions`.
 		- type: boolean
 		- default: `true`
+	- `force-background-url-sessions`: Forces the use of background URL sessions. Overrides `allow-background-url-sessions`.
+		- type: boolean
+		- default: `false`
 	- `allow-cellular`: Allow the use of cellular connections.
 		- type: boolean
 		- default: `true`

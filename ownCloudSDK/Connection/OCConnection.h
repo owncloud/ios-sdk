@@ -23,6 +23,7 @@
 #import "OCEventTarget.h"
 #import "OCShare.h"
 #import "OCClassSettings.h"
+#import "OCClassSettingsUserPreferences.h"
 #import "OCCertificate.h"
 #import "OCIssue.h"
 #import "OCChecksum.h"
@@ -89,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface OCConnection : NSObject <OCClassSettingsSupport, OCLogTagging, OCHTTPPipelinePartitionHandler>
+@interface OCConnection : NSObject <OCClassSettingsSupport, OCClassSettingsUserPreferencesSupport, OCLogTagging, OCHTTPPipelinePartitionHandler>
 {
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
@@ -381,6 +382,7 @@ extern OCClassSettingsKey OCConnectionCertificateExtendedValidationRule; //!< Ru
 extern OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule; //!< Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate automatically. Used when OCConnectionCertificateExtendedValidationRule fails. Set this to "never" if the user should always be prompted when a server's certificate changed.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
+extern OCClassSettingsKey OCConnectionForceBackgroundURLSessions; //!< Forces (TRUE) or allows (FALSE) the use of background URL sessions everywhere. Defaults to FALSE.
 extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
