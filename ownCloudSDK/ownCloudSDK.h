@@ -133,6 +133,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCActivityUpdate.h>
 
 #import <ownCloudSDK/OCSyncRecord.h>
+#import <ownCloudSDK/OCSyncRecordActivity.h>
 
 #import <ownCloudSDK/OCSyncIssue.h>
 #import <ownCloudSDK/OCSyncIssueChoice.h>

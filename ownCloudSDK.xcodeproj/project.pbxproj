@@ -394,7 +394,7 @@
 		DCADC0532072DE6600DB8E83 /* OCSQLiteMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCADC0512072DE6600DB8E83 /* OCSQLiteMigration.m */; };
 		DCAEB06921FA617D0067E147 /* OCActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06721FA617D0067E147 /* OCActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB06821FA617D0067E147 /* OCActivity.m */; };
-		DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06B21FA63D80067E147 /* OCSyncRecordActivity.h */; };
+		DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06B21FA63D80067E147 /* OCSyncRecordActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB06C21FA63D80067E147 /* OCSyncRecordActivity.m */; };
 		DCAEB07121FA67060067E147 /* OCActivityUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAEB06F21FA67060067E147 /* OCActivityUpdate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAEB07021FA67060067E147 /* OCActivityUpdate.m */; };
