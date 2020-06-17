@@ -868,8 +868,6 @@
 		DC39DC58204215A800189B9A /* NSProgress+OCEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSProgress+OCEvent.m"; sourceTree = "<group>"; };
 		DC3C7FDF21A6EDE00064D193 /* NSError+OCHTTPStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCHTTPStatus.h"; sourceTree = "<group>"; };
 		DC3C7FE021A6EDE00064D193 /* NSError+OCHTTPStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCHTTPStatus.m"; sourceTree = "<group>"; };
-		DC3CE0392429FAA100AB8B88 /* OCCore+IssueQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+IssueQueue.h"; sourceTree = "<group>"; };
-		DC3CE03A2429FAA200AB8B88 /* OCCore+IssueQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+IssueQueue.m"; sourceTree = "<group>"; };
 		DC3CE03B2429FAA200AB8B88 /* OCMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OCMessage.m; sourceTree = "<group>"; };
 		DC3CE03C2429FAA200AB8B88 /* OCMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMessage.h; sourceTree = "<group>"; };
 		DC3CE0462429FCDF00AB8B88 /* OCMessageQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMessageQueue.h; sourceTree = "<group>"; };
@@ -1738,8 +1736,6 @@
 				DC3CE068242A4F4A00AB8B88 /* Message */,
 				DC5D9E6524963DDA00BFFE8E /* Choices */,
 				DC3CE067242A4D5400AB8B88 /* Presenter */,
-				DC3CE03A2429FAA200AB8B88 /* OCCore+IssueQueue.m */,
-				DC3CE0392429FAA100AB8B88 /* OCCore+IssueQueue.h */,
 			);
 			path = "Message Queue";
 			sourceTree = "<group>";
