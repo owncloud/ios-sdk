@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nonatomic,nullable) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.
 @property(assign,nonatomic) OCBookmarkAuthenticationDataStorage authenticationDataStorage; //! Determines where to store authenticationData. Keychain by default. Changing the storage copies the data from the old to the new storage.
 
-@property(strong,nonatomic) NSMutableDictionary<NSString *, id<NSObject,NSSecureCoding>> *userInfo; //!< Dictionary for storing app-specific / custom properties alongside the bookmark
+@property(strong,nonatomic) NSMutableDictionary<OCBookmarkUserInfoKey, id<NSObject,NSSecureCoding>> *userInfo; //!< Dictionary for storing app-specific / custom properties alongside the bookmark
 
 #pragma mark - Creation
 + (instancetype)bookmarkForURL:(NSURL *)url; //!< Creates a bookmark for the ownCloud server with the specified URL.
