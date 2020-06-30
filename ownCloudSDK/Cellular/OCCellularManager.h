@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCCellularSwitch.h"
+#import "OCIPNotificationCenter.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,6 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)cellularAccessAllowedFor:(nullable OCCellularSwitchIdentifier)identifier transferSize:(NSUInteger)transferSize; //!< Convenience method merging results for the referenced and global main switches. If you pass nil as identifier, the main switch is used.
 
+- (BOOL)networkAccessAvailableFor:(nullable OCCellularSwitchIdentifier)switchID transferSize:(NSUInteger)transferSize onWifiOnly:(BOOL * _Nullable)outOnWifiOnly; //!< Returns if network access is _currently_ allowed for the respective cellular switch - and (optionally) - if only WiFi should be used. Only pass signals prefixed with OCConnectionSignalCellularSwitchPrefix here!
+
 @end
+
+extern OCIPCNotificationName OCIPCNotificationNameOCCellularSwitchChangedNotification;
 
 NS_ASSUME_NONNULL_END

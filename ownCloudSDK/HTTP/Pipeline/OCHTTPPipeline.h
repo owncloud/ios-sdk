@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,readonly) OCHTTPPipelinePartitionID partitionID; //!< The ID of the partition
 
 #pragma mark - Requirements
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError;
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError **)outError;
 
 #pragma mark - Scheduling
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;

@@ -605,7 +605,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 
 		if ((certificateRef = self.certificateRef) != NULL)
 		{
-			_publicKey = SecCertificateCopyPublicKey(self.certificateRef);
+			_publicKey = SecCertificateCopyKey(self.certificateRef);
 		}
 	}
 

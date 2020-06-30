@@ -18,6 +18,8 @@
 
 #import "OCCellularSwitch.h"
 #import "OCAppIdentity.h"
+#import "OCCellularManager.h"
+#import "OCConnection.h"
 
 @implementation OCCellularSwitch
 
@@ -65,6 +67,8 @@
 	{
 		[OCAppIdentity.sharedAppIdentity.userDefaults setObject:@(allowed) forKey:_prefsKey];
 	}
+
+	[NSNotificationCenter.defaultCenter postNotificationName:OCCellularSwitchUpdatedNotification object:self];
 }
 
 - (NSUInteger)maximumTransferSize
@@ -90,11 +94,13 @@
 	{
 		[OCAppIdentity.sharedAppIdentity.userDefaults setObject:@(maximumTransferSize) forKey:[_prefsKey stringByAppendingString:@":max-size"]];
 	}
+
+	[NSNotificationCenter.defaultCenter postNotificationName:OCCellularSwitchUpdatedNotification object:self];
 }
 
 - (BOOL)allowsTransferOfSize:(NSUInteger)transferSize
 {
-	if (self.allowed)
+	if (self.allowed && OCConnection.allowCellular)
 	{
 		NSUInteger maxTransferSize = self.maximumTransferSize;
 
@@ -108,3 +114,5 @@
 
 OCCellularSwitchIdentifier OCCellularSwitchIdentifierMain = @"main";
 OCCellularSwitchIdentifier OCCellularSwitchIdentifierAvailableOffline = @"available-offline";
+
+NSNotificationName OCCellularSwitchUpdatedNotification = @"OCCellularSwitchUpdated";

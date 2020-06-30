@@ -40,11 +40,13 @@ typedef NSString* OCCellularSwitchIdentifier NS_TYPED_ENUM;
 
 - (instancetype)initWithIdentifier:(OCCellularSwitchIdentifier)identifier localizedName:(nullable NSString *)localizedName defaultValue:(BOOL)defaultAllowed maximumTransferSize:(NSUInteger)maximumTransferSize; //!< Convenience initializer constructing the prefsKey from the identifier
 
-- (BOOL)allowsTransferOfSize:(NSUInteger)transferSize; //!< Convenience method to quickly determine if a transfer of a given size is allowed via this cellular switch.
+- (BOOL)allowsTransferOfSize:(NSUInteger)transferSize; //!< Method to determine if a transfer of a given size is allowed via this cellular switch. In most cases, however, you'll want to use -[OCCellularManager cellularAccessAllowedFor:…] instead.
 
 @end
 
 extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierMain; //!< Main switch controlling ALL cellular access + limits
 extern OCCellularSwitchIdentifier OCCellularSwitchIdentifierAvailableOffline; //!< Switch controlling ALL available offline transfers
+
+extern NSNotificationName OCCellularSwitchUpdatedNotification; //!< Notification that's posted whenever the parameters of a cellular switch have changed
 
 NS_ASSUME_NONNULL_END

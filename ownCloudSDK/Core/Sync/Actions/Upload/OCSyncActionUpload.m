@@ -162,24 +162,12 @@
 				}];
 			});
 
-			// Determine cellular access permission
-			NSNumber *allowCellularAccess = @(1);
-
+			// Determine cellular switch ID dependency
 			OCCellularSwitchIdentifier cellularSwitchID;
-			if ((cellularSwitchID = self.options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+
+			if ((cellularSwitchID = self.options[OCCoreOptionDependsOnCellularSwitch]) == nil)
 			{
-				// Cellular switch ID provided -> first choice
-				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:uploadItem.size]);
-			}
-			else if (self.options[OCCoreOptionAllowCellular] != nil)
-			{
-				// Allow cellular provided -> second choice
-				allowCellularAccess = self.options[OCCoreOptionAllowCellular];
-			}
-			else
-			{
-				// None provided -> use main switch value
-				allowCellularAccess = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMain transferSize:uploadItem.size]);
+				cellularSwitchID = OCCellularSwitchIdentifierMain;
 			}
 
 			// Create segment folder
@@ -190,7 +178,7 @@
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 							segmentFolderURL,			OCConnectionOptionTemporarySegmentFolderURLKey,
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
-							allowCellularAccess,			OCConnectionOptionAllowCellularKey,
+							cellularSwitchID,			OCConnectionOptionRequiredCellularSwitchKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 

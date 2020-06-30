@@ -19,7 +19,6 @@
 #import <UIKit/UIKit.h>
 #import "OCFeatureAvailability.h"
 #if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-#import <SafariServices/SafariServices.h>
 #import <AuthenticationServices/AuthenticationServices.h>
 #endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
@@ -291,21 +290,10 @@ OCAuthenticationMethodAutoRegister
 					if (error!=nil)
 					{
 						#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-						if (@available(iOS 12.0, *))
+						if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
 						{
-							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
-						}
-						else
-						{
-							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
+							// User cancelled authorization
+							error = OCError(OCErrorAuthorizationCancelled);
 						}
 						#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 					}
@@ -385,7 +373,7 @@ OCAuthenticationMethodAutoRegister
 		}
 	}
 	#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-	else if (@available(iOS 12, *))
+	else
 	{
 		ASWebAuthenticationSession *webAuthenticationSession;
 
@@ -412,17 +400,6 @@ OCAuthenticationMethodAutoRegister
 
 		// Start authentication session
 		authSessionDidStart = [webAuthenticationSession start];
-	}
-	else
-	{
-		SFAuthenticationSession *sfAuthenticationSession;
-
-		sfAuthenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme completionHandler:oauth2CompletionHandler];
-
-		*authenticationSession = sfAuthenticationSession;
-
-		// Start authentication session
-		authSessionDidStart = [sfAuthenticationSession start];
 	}
 	#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
