@@ -428,7 +428,9 @@
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
+
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
+		self.requiredCellularSwitch = [decoder decodeObjectOfClass:[NSString class] forKey:@"requiredCellularSwitch"];
 
 		self.autoResume 	= [decoder decodeBoolForKey:@"autoResume"];
 		self.autoResumeInfo	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoResumeInfo"];
@@ -474,7 +476,8 @@
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
-	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredSignals 		forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredCellularSwitch 	forKey:@"requiredCellularSwitch"];
 
 	[coder encodeBool:_autoResume 		forKey:@"autoResume"];
 	[coder encodeObject:_autoResumeInfo	forKey:@"autoResumeInfo"];

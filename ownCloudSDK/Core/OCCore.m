@@ -36,8 +36,7 @@
 #import "OCCoreManager.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "OCIPNotificationCenter.h"
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
-#import "OCCoreNetworkPathMonitorSignalProvider.h"
+#import "OCCoreNetworkMonitorSignalProvider.h"
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
@@ -277,14 +276,7 @@
 
 		if (_reachabilityStatusSignalProvider == nil)
 		{
-			if (@available(iOS 12, *))
-			{
-				_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
-			}
-			else
-			{
-				_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
-			}
+			_reachabilityStatusSignalProvider = [OCCoreNetworkMonitorSignalProvider new];
 		}
 
 		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
@@ -2010,7 +2002,6 @@ OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPur
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
 OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
-OCCoreOption OCCoreOptionAllowCellular = @"allowCellularAccess";
 OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";

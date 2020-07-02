@@ -154,8 +154,9 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	- [x] store availability of tus extensions + max upload size
 	- [x] use creation + PATCH if creation-with-upload is not available
 	- [x] support for max chunk size via capabilities
-	- [ ] use If-Match / If-None-Match with uploads
 	- [ ] apply cellular option to tus upload requests
+	- [ ] provide progress updates for File Provider and app
+	- [ ] use If-Match / If-None-Match with uploads
 	- [ ] look for and use returned OC-Fileid and OC-ETag
 	- [ ] handle little gap between upload finish and response not received via checksums
 */
@@ -442,15 +443,16 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		// Attach to pipelines
 		[self attachToPipelines];
 
-		// TODO: Apply cellular options
-//		if (options[OCConnectionOptionAllowCellularKey] != nil)
+//		// TODO: Apply cellular options
+//		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
 //		{
-//			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+//			request.requiredCellularSwitch = options[OCConnectionOptionRequiredCellularSwitchKey];
 //		}
-
-		// Enqueue request
+//
+//		// Enqueue request
 //		if (options[OCConnectionOptionRequestObserverKey] != nil)
 //		{
+//			// TODO: proper progress reporting for file provider and UI
 //			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
 //		}
 
@@ -659,9 +661,9 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		request.bodyURL = sourceURL;
 		request.forceCertificateDecisionDelegation = YES;
 
-		if (options[OCConnectionOptionAllowCellularKey] != nil)
+		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
 		{
-			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+			request.requiredCellularSwitch = options[OCConnectionOptionRequiredCellularSwitchKey];
 		}
 
 		// Attach to pipelines

@@ -77,7 +77,7 @@
 	{
 		if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
 		{
-			NSMutableArray *loadedBookmarks = nil;
+			NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
 
 			@try
 			{

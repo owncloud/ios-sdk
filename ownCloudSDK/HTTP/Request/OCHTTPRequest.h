@@ -22,6 +22,7 @@
 #import "OCCertificate.h"
 #import "OCHTTPTypes.h"
 #import "OCProgress.h"
+#import "OCCellularSwitch.h"
 
 @class OCHTTPPipelineTask;
 
@@ -59,6 +60,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
 @property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
+
+@property(strong) OCCellularSwitchIdentifier requiredCellularSwitch; //!< Switch that needs to be allowed before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
 
 @property(assign) BOOL autoResume;				//!< For GET requests, try to automatically resume transfer if connection is cut off
 @property(strong) OCHTTPRequestResumeInfo autoResumeInfo;	//!< Resume information for auto resume

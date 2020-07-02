@@ -17,6 +17,7 @@
  */
 
 #import "OCCellularManager.h"
+#import "OCNetworkMonitor.h"
 #import "OCMacros.h"
 
 @interface OCCellularManager ()
@@ -52,9 +53,22 @@
 	{
 		_switches = [NSMutableArray new];
 		_switchesByIdentifier = [NSMutableDictionary new];
+
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_handleCellularSwitchChangedNotification:) name:OCCellularSwitchUpdatedNotification object:nil];
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameOCCellularSwitchChangedNotification withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+			[NSNotificationCenter.defaultCenter postNotificationName:OCCellularSwitchUpdatedNotification object:nil]; // object must be nil here to indicate a bridged notification (will be replayed over IPC otherwise!)
+		}];
 	}
 
 	return (self);
+}
+
+- (void)dealloc
+{
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameOCCellularSwitchChangedNotification];
+
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCCellularSwitchUpdatedNotification object:nil];
 }
 
 - (void)registerSwitch:(OCCellularSwitch *)cellularSwitch
@@ -94,4 +108,52 @@
 	return ([[self switchWithIdentifier:OCCellularSwitchIdentifierMain] allowsTransferOfSize:transferSize]);
 }
 
+- (BOOL)networkAccessAvailableFor:(nullable OCCellularSwitchIdentifier)switchID transferSize:(NSUInteger)transferSize onWifiOnly:(BOOL * _Nullable)outOnWifiOnly
+{
+	OCCellularSwitch *cellularSwitch = nil;
+	BOOL allowedOverCellular;
+	BOOL available = NO;
+
+	if ((cellularSwitch = [self switchWithIdentifier:switchID]) == nil)
+	{
+		cellularSwitch = [self switchWithIdentifier:OCCellularSwitchIdentifierMain];
+	}
+
+	allowedOverCellular = [cellularSwitch allowsTransferOfSize:transferSize];
+
+	// Check if cellular usage is allowed
+	if (allowedOverCellular)
+	{
+		// No further checks… this is allowed to use any network and can be scheduled now - IF a network is actually available
+		available = OCNetworkMonitor.sharedNetworkMonitor.networkAvailable;
+	}
+	else
+	{
+		// Not allowed over cellular - further checks needed
+		available = OCNetworkMonitor.sharedNetworkMonitor.networkAvailable && // Check general network availability
+			    !OCNetworkMonitor.sharedNetworkMonitor.isExpensive; // No cellular usage allowed - so make this available only if the connection is not expensive (cellular) to avoid requests being returned from NSURLSession
+	}
+
+	if (outOnWifiOnly != NULL)
+	{
+		*outOnWifiOnly = !allowedOverCellular;
+	}
+
+	return (available);
+}
+
+- (void)_handleCellularSwitchChangedNotification:(NSNotification *)notification
+{
+	if (notification.object == nil)
+	{
+		// Remotely originating, reposted notification -> ignore
+		return;
+	}
+
+	// Locally originating notification -> broadcast remotely
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameOCCellularSwitchChangedNotification ignoreSelf:YES];
+}
+
 @end
+
+OCIPCNotificationName OCIPCNotificationNameOCCellularSwitchChangedNotification = @"org.owncloud.cellular-switch-changed";

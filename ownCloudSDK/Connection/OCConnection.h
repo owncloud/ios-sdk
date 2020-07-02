@@ -123,7 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
-@property(class,assign,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used.
+@property(class,readonly,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used (reflecting class settings / MDM configuration)
 @property(class,assign,nonatomic) OCConnectionSetupHTTPPolicy setupHTTPPolicy; //!< Policy to use for setting up with plain-text HTTP URLs.
 
 @property(nullable,strong) OCBookmark *bookmark;
@@ -383,7 +383,7 @@ extern OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule; //!< Rul
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 extern OCClassSettingsKey OCConnectionForceBackgroundURLSessions; //!< Forces (TRUE) or allows (FALSE) the use of background URL sessions everywhere. Defaults to FALSE.
-extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
+extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 
@@ -394,10 +394,8 @@ extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum inst
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
 extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OCConnectionSignalID> with the signal ids to require for the requests
-extern OCConnectionOptionKey OCConnectionOptionAllowCellularKey; //!< NSNumber (Bool) indicating if usage of cellular should be allowed. If not provided, defaults to YES.
+extern OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey; //!< OCCellularSwitchIdentifier to require for the requests.
 extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!< NSURL of the temporary folder to store file segments in when performing uploads via TUS
-
-extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
 
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 

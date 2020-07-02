@@ -18,6 +18,33 @@
 
 #import "OCSyncRecordActivity.h"
 #import "OCSyncAction.h"
+#import "OCWaitConditionIssue.h"
+
+@interface OCSyncRecord (WaitingForUser)
+
+@property(readonly) BOOL waitingForUser;
+
+@end
+
+@implementation OCSyncRecord (WaitingForUser)
+
+- (BOOL)waitingForUser
+{
+	if (_state == OCSyncRecordStateProcessing)
+	{
+		for (OCWaitCondition *waitCondition in self.waitConditions)
+		{
+			if ([waitCondition isKindOfClass:OCWaitConditionIssue.class])
+			{
+				return (YES);
+			}
+		}
+	}
+
+	return (NO);
+}
+
+@end
 
 @implementation OCSyncRecordActivity
 
@@ -28,6 +55,7 @@
 		_recordID = syncRecord.recordID;
 		_type = syncRecord.action.actionEventType;
 		self.recordState = syncRecord.state;
+		self.waitingForUser = syncRecord.waitingForUser;
 
 		_ranking = syncRecord.recordID.integerValue;
 		_progress = [syncRecord.progress resolveWith:nil];
@@ -44,25 +72,48 @@
 	{
 		_recordState = recordState;
 
-		switch (_recordState)
-		{
-			case OCSyncRecordStatePending:
-			case OCSyncRecordStateReady:
-				self.state = OCActivityStatePending;
-				self.localizedStatusMessage = OCLocalized(@"Pending");
-			break;
+		[self _computeStateAndMessage];
+	}
+}
 
-			case OCSyncRecordStateProcessing:
-			case OCSyncRecordStateCompleted:
+- (void)setWaitingForUser:(BOOL)waitingForUser
+{
+	if ((_waitingForUser != waitingForUser) || (_localizedStatusMessage == nil))
+	{
+		_waitingForUser = waitingForUser;
+
+		[self _computeStateAndMessage];
+	}
+}
+
+- (void)_computeStateAndMessage
+{
+	switch (_recordState)
+	{
+		case OCSyncRecordStatePending:
+		case OCSyncRecordStateReady:
+			self.state = OCActivityStatePending;
+			self.localizedStatusMessage = OCLocalized(@"Pending");
+		break;
+
+		case OCSyncRecordStateProcessing:
+		case OCSyncRecordStateCompleted:
+			if (self.waitingForUser)
+			{
+				self.state = OCActivityStatePaused;
+				self.localizedStatusMessage = OCLocalized(@"Waiting for user");
+			}
+			else
+			{
 				self.state = OCActivityStateRunning;
 				self.localizedStatusMessage = OCLocalized(@"Running");
-			break;
+			}
+		break;
 
-			case OCSyncRecordStateFailed:
-				self.state = OCActivityStateFailed;
-				self.localizedStatusMessage = OCLocalized(@"Failed");
-			break;
-		}
+		case OCSyncRecordStateFailed:
+			self.state = OCActivityStateFailed;
+			self.localizedStatusMessage = OCLocalized(@"Failed");
+		break;
 	}
 }
 
@@ -70,9 +121,10 @@
 
 @implementation OCActivityUpdate (OCSyncRecord)
 
-- (instancetype)withRecordState:(OCSyncRecordState)recordState
+- (instancetype)withSyncRecord:(OCSyncRecord *)syncRecord
 {
-	_updatesByKeyPath[@"recordState"] = @(recordState);
+	_updatesByKeyPath[@"recordState"] = @(syncRecord.state);
+	_updatesByKeyPath[@"waitingForUser"] = @(syncRecord.waitingForUser);
 
 	return (self);
 }

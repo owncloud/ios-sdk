@@ -1596,9 +1596,9 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	{
 		NSProgress *progress;
 
-		if ((progress = syncRecord.progress.progress) != nil)
+		if (((progress = syncRecord.progress.progress) != nil) || (syncRecord.waitConditions.count > 0))
 		{
-	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 		}
 	}
 
@@ -1645,7 +1645,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 						progress.cancellable = NO;
 					}
 
-			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 				}
 				else
 				{

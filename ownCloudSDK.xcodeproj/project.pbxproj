@@ -205,8 +205,6 @@
 		DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3F2B50204AED8300189B9A /* OCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3FE4BB229BD424002E009C /* OCCoreDirectoryUpdateJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */; };
-		DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */; };
-		DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */; };
 		DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */; };
 		DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */ = {isa = PBXBuildFile; fileRef = DC434D0C20D68C3000740056 /* NSString+OCPath.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0D20D68C3000740056 /* NSString+OCPath.m */; };
@@ -276,6 +274,8 @@
 		DC6CF8212195D56C0013B9F9 /* OCCore+CommandUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CF8202195D56B0013B9F9 /* OCCore+CommandUpdate.m */; };
 		DC6CF8242195D7C90013B9F9 /* OCSyncActionUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CF8222195D7C90013B9F9 /* OCSyncActionUpdate.h */; };
 		DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */; };
+		DC6D51D924A8BC4D006B75E6 /* OCNetworkMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */; };
 		DC6DB88221C26F4D00189B21 /* XCTestCase+Tagging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */; };
 		DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */; };
@@ -357,9 +357,9 @@
 		DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */; };
 		DC971BEE20D15D4400428EF1 /* OCSQLiteQueryCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC971BEF20D15D4400428EF1 /* OCSQLiteQueryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC971BED20D15D4400428EF1 /* OCSQLiteQueryCondition.m */; };
-		DC98BDF521E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */; };
-		DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */; };
-		DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC98BDF721E73EFF003B5658 /* Network.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		DC98BDF521E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DC98BDF321E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h */; };
+		DC98BDF621E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC98BDF421E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m */; };
+		DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC98BDF721E73EFF003B5658 /* Network.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		DC9B4D3922E987EF0089BF78 /* OCClaim.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3E20DC2281005A3DFC /* OCClaim.m */; };
 		DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCClaim.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA36D4B22A6B14200265534 /* OCPKCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -405,8 +405,6 @@
 		DCB0A46021B828F400FAC4E9 /* OCCore+ConnectionStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A45E21B828F400FAC4E9 /* OCCore+ConnectionStatus.m */; };
 		DCB0A46421B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */; };
-		DCB0A46821B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */; };
-		DCB0A46921B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */; };
 		DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */; };
 		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -878,8 +876,6 @@
 		DC3F2B50204AED8300189B9A /* OCMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMacros.h; sourceTree = "<group>"; };
 		DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreDirectoryUpdateJob.h; sourceTree = "<group>"; };
 		DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreDirectoryUpdateJob.m; sourceTree = "<group>"; };
-		DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCReachabilityMonitor.h; sourceTree = "<group>"; };
-		DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCReachabilityMonitor.m; sourceTree = "<group>"; };
 		DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandCreateFolder.m"; sourceTree = "<group>"; };
 		DC434D0C20D68C3000740056 /* NSString+OCPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCPath.h"; sourceTree = "<group>"; };
 		DC434D0D20D68C3000740056 /* NSString+OCPath.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCPath.m"; sourceTree = "<group>"; };
@@ -950,6 +946,8 @@
 		DC6CF8202195D56B0013B9F9 /* OCCore+CommandUpdate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandUpdate.m"; sourceTree = "<group>"; };
 		DC6CF8222195D7C90013B9F9 /* OCSyncActionUpdate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionUpdate.h; sourceTree = "<group>"; };
 		DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionUpdate.m; sourceTree = "<group>"; };
+		DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCNetworkMonitor.h; sourceTree = "<group>"; };
+		DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCNetworkMonitor.m; sourceTree = "<group>"; };
 		DC6DB88021C26F4D00189B21 /* XCTestCase+Tagging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XCTestCase+Tagging.h"; sourceTree = "<group>"; };
 		DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "XCTestCase+Tagging.m"; sourceTree = "<group>"; };
 		DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineManager.h; sourceTree = "<group>"; };
@@ -1042,8 +1040,8 @@
 		DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProgressManager.m; sourceTree = "<group>"; };
 		DC971BEC20D15D4400428EF1 /* OCSQLiteQueryCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteQueryCondition.h; sourceTree = "<group>"; };
 		DC971BED20D15D4400428EF1 /* OCSQLiteQueryCondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteQueryCondition.m; sourceTree = "<group>"; };
-		DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreNetworkPathMonitorSignalProvider.h; sourceTree = "<group>"; };
-		DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreNetworkPathMonitorSignalProvider.m; sourceTree = "<group>"; };
+		DC98BDF321E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreNetworkMonitorSignalProvider.h; sourceTree = "<group>"; };
+		DC98BDF421E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreNetworkMonitorSignalProvider.m; sourceTree = "<group>"; };
 		DC98BDF721E73EFF003B5658 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		DCA36D4B22A6B14200265534 /* OCPKCE.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCPKCE.h; sourceTree = "<group>"; };
 		DCA36D4C22A6B14200265534 /* OCPKCE.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCPKCE.m; sourceTree = "<group>"; };
@@ -1091,8 +1089,6 @@
 		DCB0A45E21B828F400FAC4E9 /* OCCore+ConnectionStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+ConnectionStatus.m"; sourceTree = "<group>"; };
 		DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreConnectionStatusSignalProvider.h; sourceTree = "<group>"; };
 		DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
-		DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreReachabilityConnectionStatusSignalProvider.h; sourceTree = "<group>"; };
-		DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreReachabilityConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreServerStatusSignalProvider.h; sourceTree = "<group>"; };
 		DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreServerStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Schemas.h"; sourceTree = "<group>"; };
@@ -1832,6 +1828,8 @@
 		DC51FD86247562A50069AB79 /* Cellular */ = {
 			isa = PBXGroup;
 			children = (
+				DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */,
+				DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */,
 				DC51FD88247562C20069AB79 /* OCCellularManager.m */,
 				DC51FD87247562C20069AB79 /* OCCellularManager.h */,
 				DC51FD8C247565080069AB79 /* OCCellularSwitch.m */,
@@ -2383,17 +2381,6 @@
 			path = UIWebView;
 			sourceTree = "<group>";
 		};
-		DC98BDF021E73E36003B5658 /* Reachability */ = {
-			isa = PBXGroup;
-			children = (
-				DCB0A46721B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m */,
-				DCB0A46621B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h */,
-				DC42254620766D63002E01E4 /* OCReachabilityMonitor.m */,
-				DC42254520766D63002E01E4 /* OCReachabilityMonitor.h */,
-			);
-			path = Reachability;
-			sourceTree = "<group>";
-		};
 		DC98BDF121E73E4B003B5658 /* Server */ = {
 			isa = PBXGroup;
 			children = (
@@ -2403,13 +2390,13 @@
 			path = Server;
 			sourceTree = "<group>";
 		};
-		DC98BDF221E73EB0003B5658 /* Network Path Monitor */ = {
+		DC98BDF221E73EB0003B5658 /* Network Monitor */ = {
 			isa = PBXGroup;
 			children = (
-				DC98BDF421E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m */,
-				DC98BDF321E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h */,
+				DC98BDF421E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m */,
+				DC98BDF321E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h */,
 			);
-			path = "Network Path Monitor";
+			path = "Network Monitor";
 			sourceTree = "<group>";
 		};
 		DCA8921B20F5ECF900AEFF98 /* Mocking Targets */ = {
@@ -2488,8 +2475,7 @@
 				DCB0A45D21B828F400FAC4E9 /* OCCore+ConnectionStatus.h */,
 				DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */,
 				DCB0A46221B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h */,
-				DC98BDF221E73EB0003B5658 /* Network Path Monitor */,
-				DC98BDF021E73E36003B5658 /* Reachability */,
+				DC98BDF221E73EB0003B5658 /* Network Monitor */,
 				DC98BDF121E73E4B003B5658 /* Server */,
 			);
 			path = "Connection Status";
@@ -2864,6 +2850,7 @@
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
 				DC24F8E821E2B3EF00C9119C /* OCWaitConditionIssue.h in Headers */,
 				DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */,
+				DC6D51D924A8BC4D006B75E6 /* OCNetworkMonitor.h in Headers */,
 				DC8B7B3922D88FFD00E63657 /* OCItemPolicyProcessor.h in Headers */,
 				DCD9B8822379783200691929 /* UIDevice+ModelID.h in Headers */,
 				DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */,
@@ -2938,7 +2925,6 @@
 				DC07C2992124510200B815A4 /* OCExtensionTypes.h in Headers */,
 				DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */,
 				DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */,
-				DCB0A46821B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.h in Headers */,
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
 				DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */,
@@ -2960,7 +2946,7 @@
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
-				DC98BDF521E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.h in Headers */,
+				DC98BDF521E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
 				DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */,
 				DC51FD8D247565080069AB79 /* OCCellularSwitch.h in Headers */,
@@ -2970,7 +2956,6 @@
 				DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */,
 				DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */,
 				DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */,
-				DC42254720766D63002E01E4 /* OCReachabilityMonitor.h in Headers */,
 				DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */,
 				DC3CE0482429FCDF00AB8B88 /* OCMessageQueue.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
@@ -3395,6 +3380,7 @@
 				DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */,
 				DC2AA57A22DDD005001D5C39 /* OCSyncActionLocalCopyDelete.m in Sources */,
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
+				DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */,
 				DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */,
 				DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */,
 				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
@@ -3415,7 +3401,7 @@
 				DC4B116E2208306C0062BCDD /* OCHTTPPipeline.m in Sources */,
 				DC8B7B3A22D88FFD00E63657 /* OCItemPolicyProcessor.m in Sources */,
 				DC2F63642239455E0063C2DA /* OCRecipientSearchController.m in Sources */,
-				DC98BDF621E73ECE003B5658 /* OCCoreNetworkPathMonitorSignalProvider.m in Sources */,
+				DC98BDF621E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m in Sources */,
 				DC8245B421FB31E500775AB9 /* OCActivityManager.m in Sources */,
 				DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */,
 				DC8556FC204F4F3000189B9A /* OCXMLParser.m in Sources */,
@@ -3496,7 +3482,6 @@
 				DC4AFAB1206A8C1D00189B9A /* OCSQLiteStatement.m in Sources */,
 				DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */,
 				DC24F8F121E4F5BF00C9119C /* OCSQLiteDB+Internal.m in Sources */,
-				DC42254820766D63002E01E4 /* OCReachabilityMonitor.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
 				DC8EB2FF23951AAB009148F9 /* OCAuthenticationBrowserSession.m in Sources */,
 				DCDCA61D245093E800AFA158 /* NSURL+OCPrivateLink.m in Sources */,
@@ -3553,7 +3538,6 @@
 				DC8556F7204F361100189B9A /* OCLogger.m in Sources */,
 				DC24F8E921E2B3EF00C9119C /* OCWaitConditionIssue.m in Sources */,
 				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
-				DCB0A46921B9306300FAC4E9 /* OCCoreReachabilityConnectionStatusSignalProvider.m in Sources */,
 				DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */,
 				DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */,
 				DCC6567920CA696A00110A97 /* OCBookmarkManager.m in Sources */,
@@ -3758,6 +3742,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ownCloudUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3779,6 +3764,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ownCloudUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3795,6 +3781,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3810,6 +3797,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3831,7 +3819,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ownCloudMocking/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMocking;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3854,7 +3842,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ownCloudMocking/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMocking;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -4039,14 +4027,16 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				INFOPLIST_FILE = ownCloudSDK/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
-				TARGETED_DEVICE_FAMILY = "1,2,3";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -4062,14 +4052,16 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				INFOPLIST_FILE = ownCloudSDK/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
-				TARGETED_DEVICE_FAMILY = "1,2,3";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

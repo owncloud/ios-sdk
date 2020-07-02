@@ -16,7 +16,7 @@
  *
  */
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 #import "OCConnection.h"
 #import "OCHTTPRequest.h"
@@ -42,6 +42,8 @@
 #import "NSString+OCPath.h"
 #import "OCMacros.h"
 #import "OCCore.h"
+#import "OCCellularManager.h"
+#import "OCCellularSwitch.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -86,7 +88,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDWellKnown			: @"/.well-known",
+		OCConnectionEndpointIDWellKnown			: @".well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
@@ -144,21 +146,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 + (BOOL)allowCellular
 {
-	NSNumber *allowCellularNumber;
-
-	if ((allowCellularNumber =[OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCConnectionAllowCellular]) == nil)
-	{
-		allowCellularNumber = [self classSettingForOCClassSettingsKey:OCConnectionAllowCellular];
-	}
-
-	return ([allowCellularNumber boolValue]);
-}
-
-+ (void)setAllowCellular:(BOOL)allowCellular
-{
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:allowCellular forKey:OCConnectionAllowCellular];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameConnectionSettingsChanged ignoreSelf:NO];
+	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowCellular] boolValue]);
 }
 
 + (void)setSetupHTTPPolicy:(OCConnectionSetupHTTPPolicy)setupHTTPPolicy
@@ -622,8 +610,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	return (error);
 }
 
-- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
+- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
+	// Authentication
 	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
 
 	if (authenticationAvailable)
@@ -1418,9 +1407,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
 
 		// Apply cellular options
-		if (options[OCConnectionOptionAllowCellularKey] != nil)
+		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
 		{
-			request.avoidCellular = ![options[OCConnectionOptionAllowCellularKey] boolValue];
+			request.requiredCellularSwitch = options[OCConnectionOptionRequiredCellularSwitchKey];
 		}
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
@@ -2429,9 +2418,7 @@ OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
-OCConnectionOptionKey OCConnectionOptionAllowCellularKey = @"allow-cellular";
+OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
-
-OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";

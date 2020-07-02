@@ -21,7 +21,7 @@
 #import "OCItem+OCFileURLMetadata.h"
 #import "OCCore+NameConflicts.h"
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 @implementation OCCore (CommandLocalImport)
 

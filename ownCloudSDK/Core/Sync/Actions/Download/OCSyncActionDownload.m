@@ -296,32 +296,20 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		{
 			NSMutableDictionary *mutableOptions = [options mutableCopy];
 
-			// Determine and add allow cellular option
-			NSNumber *allowCellular = @(1);
-
+			// Determine cellular switch ID dependency
 			OCCellularSwitchIdentifier cellularSwitchID;
-			if ((cellularSwitchID = options[OCCoreOptionDependsOnCellularSwitch]) != nil)
+
+			if ((cellularSwitchID = options[OCCoreOptionDependsOnCellularSwitch]) == nil)
 			{
-				// Cellular Switch provided -> first choice
-				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:cellularSwitchID transferSize:item.size]);
-			}
-			else if (options[OCCoreOptionAllowCellular] != nil)
-			{
-				// Allow cellular provided -> second choice
-				allowCellular = options[OCCoreOptionAllowCellular];
-			}
-			else
-			{
-				// Default to cellular main switch -> fallback choice
-				allowCellular = @([OCCellularManager.sharedManager cellularAccessAllowedFor:OCCellularSwitchIdentifierMain transferSize:item.size]);
+				cellularSwitchID = OCCellularSwitchIdentifierMain;
 			}
 
-			mutableOptions[OCConnectionOptionAllowCellularKey] = allowCellular;
+			mutableOptions[OCConnectionOptionRequiredCellularSwitchKey] = cellularSwitchID;
 
 			options = mutableOptions;
 		}
 
-		OCLogDebug(@"record %@ download: initiating download (allowCellular=%@) of %@", syncContext.syncRecord, options[OCConnectionOptionAllowCellularKey], item);
+		OCLogDebug(@"record %@ download: initiating download (requiredCellularSwitch=%@) of %@", syncContext.syncRecord, options[OCConnectionOptionRequiredCellularSwitchKey], item);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{

@@ -31,6 +31,8 @@
 #import "OCBackgroundTask.h"
 #import "OCAppIdentity.h"
 #import "UIDevice+ModelID.h"
+#import "OCCellularManager.h"
+#import "OCNetworkMonitor.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -49,6 +51,8 @@
 	NSTimeInterval _metricsMinimumTotalTransferDurationRelevancyThreshold;
 
 	dispatch_group_t _busyGroup;
+
+	BOOL _observingCellularSwitchChanges;
 }
 
 - (void)queueBlock:(dispatch_block_t)block;
@@ -169,6 +173,17 @@
 						// Start URLSession
 						self->_urlSession = [NSURLSession sessionWithConfiguration:self->_sessionConfiguration delegate:self delegateQueue:nil];
 
+						// Start observation cellular switches and network status
+						if (!self->_observingCellularSwitchChanges)
+						{
+							self->_observingCellularSwitchChanges = YES;
+
+							[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_cellularSwitchChanged:) name:OCCellularSwitchUpdatedNotification object:nil];
+
+							[OCNetworkMonitor.sharedNetworkMonitor addNetworkObserver:self selector:@selector(_networkStatusChanged:)];
+						}
+
+						// Recover from/with URLSession
 						[self _recoverQueueForURLSession:self->_urlSession completionHandler:^{
 							completionHandler(self, error);
 						}];
@@ -221,6 +236,15 @@
 						});
 					} withBusy:NO];
 				};
+
+				// Stop observing cellular switches and network status
+				if (_observingCellularSwitchChanges)
+				{
+					_observingCellularSwitchChanges = NO;
+					[NSNotificationCenter.defaultCenter removeObserver:self name:OCCellularSwitchUpdatedNotification object:nil];
+
+					[OCNetworkMonitor.sharedNetworkMonitor removeNetworkObserver:self];
+				}
 
 				_state = OCHTTPPipelineStateStopping;
 
@@ -665,13 +689,51 @@
 						{
 							NSError *failWithError = nil;
 
-							schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals failWithError:&failWithError];
+							schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals forTask:task failWithError:&failWithError];
 
 							if (!schedule && (failWithError!=nil))
 							{
 								// Required signal check returned a failWithError => make request fail with that error
 								[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:failWithError]];
 								return;
+							}
+						}
+
+						// Check cellular switch availability
+						if (schedule && (task.request.requiredCellularSwitch != nil))
+						{
+							NSUInteger transferSize = 0;
+							BOOL wifiOnly = NO;
+
+							if (task.request.bodyData != nil)
+							{
+								transferSize = task.request.bodyData.length;
+							}
+							else if (task.request.bodyURL != nil)
+							{
+								NSNumber *fileSize = nil;
+								{
+									NSError *error = nil;
+									if (![task.request.bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:&error])
+									{
+										OCLogError(@"Error determining size of %@: %@", task.request.bodyURL, error);
+									}
+									else
+									{
+										transferSize = fileSize.unsignedIntegerValue;
+									}
+								}
+							}
+
+							if ([OCCellularManager.sharedManager networkAccessAvailableFor:task.request.requiredCellularSwitch transferSize:transferSize onWifiOnly:&wifiOnly])
+							{
+								// Network access currently allowed for this request
+								task.request.avoidCellular = wifiOnly; // Pass on enforcement of cellular setting on to the HTTP/NSURLSession layer
+							}
+							else
+							{
+								// Network access not currently allowed for this request based on the cellular switch settings
+								schedule = NO;
 							}
 						}
 
@@ -2159,6 +2221,17 @@
 
 	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: downloadTask:didFinishDownloadingToURL: %@, dbError=%@", urlSessionDownloadTask.currentRequest.URL, urlSessionDownloadTask.taskIdentifier, location, dbError);
 	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
+}
+
+#pragma mark - Cellular Switch / Network observation
+- (void)_cellularSwitchChanged:(NSNotification *)notification
+{
+	[self setPipelineNeedsScheduling];
+}
+
+- (void)_networkStatusChanged:(NSNotification *)notification
+{
+	[self setPipelineNeedsScheduling];
 }
 
 #pragma mark - Metrics
