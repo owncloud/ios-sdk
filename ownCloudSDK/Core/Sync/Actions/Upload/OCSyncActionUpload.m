@@ -47,6 +47,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		// Retry
 		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadRetry categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
 			[OCSyncIssueChoice retryChoice]
 		] options:nil]
 	]);
