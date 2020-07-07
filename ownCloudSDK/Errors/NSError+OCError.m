@@ -20,6 +20,7 @@
 
 #import "NSError+OCError.h"
 #import "OCMacros.h"
+#import "OCAuthenticationMethod.h"
 
 static NSString *OCErrorIssueKey = @"OCErrorIssue";
 
@@ -44,6 +45,7 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 {
 	id value = nil;
 	NSString *unlocalizedString = nil;
+	NSString *customErrorDescription = nil;
 	BOOL forceShortForm = NO;
 
 	if ([userInfoKey isEqualToString:@"NSDescription"] || [userInfoKey isEqualToString:NSLocalizedDescriptionKey])
@@ -73,6 +75,26 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 
 				case OCErrorAuthorizationFailed:
 					unlocalizedString = @"Authorization failed.";
+
+					if (error.userInfo[OCErrorInfoKey] != nil)
+					{
+						OCAuthenticationMethodIdentifier authMethodID = error.userInfo[OCErrorInfoKey][@"authMethod"];
+						NSString *jsonError = error.userInfo[OCErrorInfoKey][@"jsonError"];
+
+						if (authMethodID != nil)
+						{
+							authMethodID = [[authMethodID componentsSeparatedByString:@"."] lastObject];
+
+							if (jsonError != nil)
+							{
+								customErrorDescription = [NSString stringWithFormat:@"%@: %@", authMethodID, jsonError];
+							}
+							else
+							{
+								customErrorDescription = authMethodID;
+							}
+						}
+					}
 				break;
 
 				case OCErrorAuthorizationRedirect:
@@ -292,16 +314,23 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 	
 	if ((value==nil) && (unlocalizedString != nil))
 	{
-		if ((error.userInfo.count > 0) &&
-		    (!((error.userInfo.count==1) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil))) &&
-		    (!((error.userInfo.count==2) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo[OCErrorDateKey]!=nil))) &&
-		    !forceShortForm)
+		if (customErrorDescription != nil)
 		{
-			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, customErrorDescription];
 		}
 		else
 		{
-			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+			if ((error.userInfo.count > 0) &&
+			    (!((error.userInfo.count==1) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil))) &&
+			    (!((error.userInfo.count==2) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo[OCErrorDateKey]!=nil))) &&
+			    !forceShortForm)
+			{
+				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+			}
+			else
+			{
+				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+			}
 		}
 	}
 
