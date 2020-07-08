@@ -762,6 +762,16 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 							return;
 						break;
 
+						case OCCoreSyncInstructionStopAndSideline:
+							// Stop processing
+							stopProcessing = YES;
+
+							// Update budget usage to allow execution of actions on other lanes in the meantime
+							UpdateRunningActionCategories(actionCategories, -1);
+
+							return;
+						break;
+
 						case OCCoreSyncInstructionRepeatLast:
 							// Repeat processing of record
 							return;
@@ -1137,7 +1147,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
 
 		// Stop processing
-		return (OCCoreSyncInstructionStop);
+		return (OCCoreSyncInstructionStopAndSideline);
 	}
 
 	// Process sync record

@@ -285,6 +285,7 @@
 						[changedDirectoriesLocalIDs addObject:item.parentLocalID];
 					}
 
+//					if ((item.localID != nil) && !item.removed)
 					if (item.localID != nil)
 					{
 						[changedDirectoriesLocalIDs addObject:item.localID];
@@ -294,7 +295,7 @@
 			break;
 		}
 
-		if ((rootDirectoryLocalID==nil) && [item.path.parentPath isEqual:@"/"] && (item.parentLocalID!=nil))
+		if ((rootDirectoryLocalID==nil) && item.path.parentPath.isRootPath && (item.parentLocalID!=nil))
 		{
 			rootDirectoryLocalID = item.parentLocalID;
 		}

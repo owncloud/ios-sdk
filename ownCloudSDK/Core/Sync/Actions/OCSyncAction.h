@@ -40,6 +40,7 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 	OCCoreSyncInstructionNone,		//!< No instruction (can be used to continue execution - or stop and perform an instruction)
 
 	OCCoreSyncInstructionStop,		//!< Stop processing
+	OCCoreSyncInstructionStopAndSideline,	//!< Stop processing & free up budget to allow processing of other actions
 	OCCoreSyncInstructionRepeatLast,	//!< Repeat last processing
 	OCCoreSyncInstructionDeleteLast,	//!< Delete last processed and process next
 	OCCoreSyncInstructionProcessNext	//!< Process next
