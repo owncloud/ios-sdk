@@ -785,7 +785,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 							NSString *errorDescription = nil;
 
 							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
-							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+							event.error = OCErrorWithDescription(OCErrorInsufficientStorage, errorDescription);
 						}
 						break;
 
