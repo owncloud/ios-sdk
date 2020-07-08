@@ -3933,6 +3933,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
@@ -3958,6 +3959,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release;
 		};
