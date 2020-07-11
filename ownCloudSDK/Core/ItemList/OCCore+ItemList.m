@@ -39,6 +39,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 @implementation OCCore (ItemList)
 
+- (NSUInteger)parallelItemListTaskCount
+{
+	return (2);
+}
+
 #pragma mark - Item List Tasks
 - (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob
 {
@@ -120,7 +125,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	@synchronized(_queuedItemListTaskUpdateJobs)
 	{
-		if (_scheduledItemListTasks.count == 0)
+		if (_scheduledItemListTasks.count < self.parallelItemListTaskCount)
 		{
 			if ((self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
 			{
@@ -280,7 +285,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			[_scheduledItemListTasks removeObject:finishedTask];
 
-			if (_scheduledItemListTasks.count == 0)
+			if (_scheduledItemListTasks.count < self.parallelItemListTaskCount)
 			{
 				[self scheduleNextItemListTask];
 			}
