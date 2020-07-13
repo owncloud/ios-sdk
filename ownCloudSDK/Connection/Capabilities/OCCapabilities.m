@@ -216,7 +216,7 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 
 	if ((statusDict = OCTypedCast(_capabilities[@"core"][@"status"], NSDictionary)) != nil)
 	{
-		return ([OCConnection serverLongProductVersionStringFromServerStatus:_capabilities[@"core"][@"status"]]);
+		return ([OCConnection serverLongProductVersionStringFromServerStatus:statusDict]);
 	}
 
 	return (nil);

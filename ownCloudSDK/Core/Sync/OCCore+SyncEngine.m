@@ -1103,11 +1103,9 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)
 	{
-		OCSyncAction *syncAction;
-
 		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
 
-		if ((syncAction = syncRecord.action) != nil)
+		if (syncRecord.action != nil)
 		{
 			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
 

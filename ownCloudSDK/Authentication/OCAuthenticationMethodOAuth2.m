@@ -221,11 +221,9 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
-	UIViewController *viewController;
-	
 	if (completionHandler==nil) { return; }
 	
-	if (((viewController = options[OCAuthenticationMethodPresentingViewControllerKey]) != nil) && (connection!=nil))
+	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
 	{
 		NSURL *authorizationRequestURL;
 

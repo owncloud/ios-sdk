@@ -155,7 +155,6 @@
 {
 	if (event.eventType == OCEventTypeIssueResponse)
 	{
-		OCCore *core = nil;
 		OCSyncRecord *syncRecord = nil;
 		OCSyncContext *syncContext = nil;
 		OCSyncIssue *syncIssue = event.userInfo[OCEventUserInfoKeySyncIssue];
@@ -167,7 +166,7 @@
 			return (NO);
 		}
 
-		if (((core = options[OCWaitConditionOptionCore]) != nil) &&
+		if ( (options[OCWaitConditionOptionCore] != nil) &&
 		    ((syncRecord = options[OCWaitConditionOptionSyncRecord]) != nil) &&
 		    ((syncContext = options[OCWaitConditionOptionSyncContext]) != nil)
 		   )

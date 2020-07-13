@@ -31,9 +31,9 @@
 	OCSQLiteStatement *statement = nil;
 	sqlite3_stmt *sqlStatement = NULL;
 	NSError *error = nil;
-	int sqErr;
+	/* int sqErr; */
 
-	if ((sqErr = sqlite3_prepare_v2(database.sqlite3DB, (const char *)query.UTF8String, -1, &sqlStatement, NULL)) != SQLITE_OK)
+	if (sqlite3_prepare_v2(database.sqlite3DB, (const char *)query.UTF8String, -1, &sqlStatement, NULL) != SQLITE_OK)
 	{
 		// Error
 		error = OCSQLiteLastDBError(database.sqlite3DB);
