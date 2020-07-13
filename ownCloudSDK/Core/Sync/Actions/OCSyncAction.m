@@ -31,7 +31,7 @@
 #pragma mark - Class properties
 + (OCSyncActionIdentifier)identifier
 {
-	return (nil);
+	return (@"invalid-sync-action-identifier");
 }
 
 - (OCSyncActionIdentifier)identifier

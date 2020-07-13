@@ -373,9 +373,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 - (NSError *)withErrorDate:(nullable NSDate *)errorDate
 {
 	// Take a shortcut if there's no date in the error and none to be set
-	if ((errorDate == nil) && (self.errorDate == nil))
+	if (errorDate == nil)
 	{
-		return (self);
+		if (self.errorDate == nil)
+		{
+			return (self);
+		}
+
+		errorDate = self.errorDate;
 	}
 
 	// Create new error with added errorDate
