@@ -88,10 +88,9 @@
 		}
 
 		// Check for existing item
-		OCItem *item = nil;
 		NSError *error = nil;
 
-		if ((item = [self cachedItemInParentPath:path withName:suggestedName isDirectory:isDirectory error:&error]) != nil)
+		if ([self cachedItemInParentPath:path withName:suggestedName isDirectory:isDirectory error:&error] != nil)
 		{
 			[duplicateNames addObject:suggestedName];
 			duplicateCount++;

@@ -472,8 +472,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	{
 		NSString *location = request.httpResponse.headerFields[@"Location"]; // URL to continue the upload at
 
-		#warning remove this hack
-		location = [location stringByReplacingOccurrencesOfString:@"localhost" withString:tusJob.creationURL.host];
+		// #warning remove this hack
+		// location = [location stringByReplacingOccurrencesOfString:@"localhost" withString:tusJob.creationURL.host];
 
 		if (isTusResponse && (location != nil))
 		{

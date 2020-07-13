@@ -33,8 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) OCPKCE *pkce; //!< pre-configured PKCE object to use for Proof Key for Code Exchange
 
 #pragma mark - Subclassing points
-- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
+- (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
+- (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
 - (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken;
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;

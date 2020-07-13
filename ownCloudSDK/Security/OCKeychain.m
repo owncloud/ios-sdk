@@ -73,10 +73,9 @@
 	
 	if ((queryDict = [self _queryType:kSecReturnAttributes dictForAccount:account path:path]) != nil)
 	{
-		OSStatus status;
 		CFDictionaryRef outDict = nil;
 		
-		if ((status = SecItemCopyMatching((CFDictionaryRef)queryDict, (CFTypeRef *)&outDict)) == errSecSuccess)
+		if (SecItemCopyMatching((CFDictionaryRef)queryDict, (CFTypeRef *)&outDict) == errSecSuccess)
 		{
 			attrDict = (NSDictionary *)CFBridgingRelease(outDict);
 		}
@@ -107,13 +106,12 @@
 
 - (NSError *)writeData:(NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path
 {
-	NSDictionary<NSString *, id> *itemAttributesForExistingItem;
 	OSStatus status = errSecSuccess;
 	NSError *error = nil;
 
 	OCTLogDebug(@[@"Write"], @"Writing %lu bytes for %@:%@", (unsigned long)data.length, account, path);
 
-	if ((itemAttributesForExistingItem = [self _attributesOfItemForAccount:account path:path]) != nil)
+	if ([self _attributesOfItemForAccount:account path:path] != nil)
 	{
 		// Item already exists. Update it.
 		NSMutableDictionary <NSString *, id> *queryDict;

@@ -972,8 +972,6 @@
 
 								if ((item = items.firstObject) != nil)
 								{
-									normalizedPath = path;
-
 									switch (item.type)
 									{
 										case OCItemTypeFile:
@@ -982,6 +980,10 @@
 
 										case OCItemTypeCollection:
 											normalizedPath = path.normalizedDirectoryPath;
+										break;
+
+										default:
+											normalizedPath = path;
 										break;
 									}
 								}

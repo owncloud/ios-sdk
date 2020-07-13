@@ -1014,7 +1014,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		else
 		{
 			OCPath queryItemPath = nil;
-			OCSyncAnchor syncAnchor = nil;
 
 			// Queries targeting an item in a subdirectory of taskPath: check if that subdirectory exists
 			if (taskPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:taskPath] &&
@@ -1078,7 +1077,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 
 			// Queries targeting a sync anchor
-			if (((syncAnchor = query.querySinceSyncAnchor) != nil) &&
+			if ((query.querySinceSyncAnchor != nil) &&
 			    (querySyncAnchor!=nil) &&
 			    (taskRootItem!=nil) &&
 			    (queryResultsChangedItems!=nil) &&
