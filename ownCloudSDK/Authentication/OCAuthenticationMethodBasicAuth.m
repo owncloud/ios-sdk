@@ -47,6 +47,11 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Data Tools
 + (NSDictionary *)_decodedAuthenticationData:(NSData *)authenticationData
 {
+	if (authenticationData == nil)
+	{
+		return (nil);
+	}
+
 	return ([NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]);
 }
 
