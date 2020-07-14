@@ -33,7 +33,7 @@
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
 		       removedItems:(nullable NSArray<OCItem *> *)removedItems
 		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-		       refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		       refreshPaths:(nullable NSArray<OCPath> *)refreshPaths
 		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction

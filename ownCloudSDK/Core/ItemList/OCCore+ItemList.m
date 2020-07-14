@@ -954,8 +954,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
 	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
 	OCItem *taskRootItem = nil;
-	OCQueryState setQueryState = queryState;
-	// NSString *parentTaskPath = [taskPath parentPath];
 
 	// Determine root item
 	if ((taskPath != nil) && !targetRemoved)
@@ -981,6 +979,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	{
 		NSMutableArray <OCItem *> *useQueryResults = nil;
 		OCItem *queryRootItem = nil;
+		OCQueryState setQueryState = (([query.queryPath isEqual:taskPath] || [query.queryItem.path isEqual:taskPath]) && !query.isCustom) ?
+						queryState :
+						query.state;
 
 		// Queries targeting the path
 		if ([query.queryPath isEqual:taskPath])
@@ -1062,7 +1063,23 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					if ((itemAtPath = queryResultItemsByPath[queryItemPath]) != nil)
 					{
 						// Item contained in queried directory, new info may be available
-						useQueryResults = [[NSMutableArray alloc] initWithObjects:itemAtPath, nil];
+						if (itemAtPath.removed)
+						{
+							// Item was removed
+							useQueryResults = [NSMutableArray new];
+							setQueryState = OCQueryStateTargetRemoved;
+						}
+						else
+						{
+							// Use item for query
+							useQueryResults = [[NSMutableArray alloc] initWithObjects:itemAtPath, nil];
+
+							if (query.state == OCQueryStateStarted)
+							{
+								// Initial query results
+								setQueryState = OCQueryStateIdle;
+							}
+						}
 					}
 					else
 					{

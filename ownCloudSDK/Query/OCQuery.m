@@ -415,6 +415,47 @@
 	}
 }
 
+- (NSString *)_stateAsString
+{
+	switch (self.state)
+	{
+		case OCQueryStateStopped:
+			return (@"stopped");
+		break;
+
+		case OCQueryStateStarted:
+			return (@"started");
+		break;
+
+		case OCQueryStateContentsFromCache:
+			return (@"contents from cache");
+		break;
+
+		case OCQueryStateWaitingForServerReply:
+			return (@"waiting for server reply");
+		break;
+
+		case OCQueryStateTargetRemoved:
+			return (@"target removed");
+		break;
+
+		case OCQueryStateIdle:
+			return (@"idle");
+		break;
+	}
+
+	return (@"?");
+}
+
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, %@=%@, state=%@>", NSStringFromClass(self.class), self,
+			((self.queryPath != nil) ? @"path" : ((self.queryItem != nil) ? @"item" : @"?")),
+			((self.queryPath != nil) ? self.queryPath : ((self.queryItem != nil) ? [NSString stringWithFormat:@"%@ (localID: %@)", self.queryItem.path, self.queryItem.localID] : @"?")),
+			[self _stateAsString]
+		]);
+}
+
 @end
 
 NSNotificationName OCQueryDidChangeStateNotification = @"OCQueryDidChangeState";
