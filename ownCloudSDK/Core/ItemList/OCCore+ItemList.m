@@ -979,12 +979,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	{
 		NSMutableArray <OCItem *> *useQueryResults = nil;
 		OCItem *queryRootItem = nil;
-		OCQueryState setQueryState = (([query.queryPath isEqual:taskPath] || [query.queryItem.path isEqual:taskPath]) && !query.isCustom) ?
+		OCPath queryPath = query.queryPath;
+		OCPath queryItemPath = query.queryItem.path;
+		BOOL taskPathIsAncestorOfQueryPath = [queryPath hasPrefix:taskPath] && taskPath.isNormalizedDirectoryPath && ![queryPath isEqual:taskPath];
+		OCQueryState setQueryState = (([queryPath isEqual:taskPath] || [queryItemPath isEqual:taskPath] || taskPathIsAncestorOfQueryPath) && !query.isCustom) ?
 						queryState :
 						query.state;
 
 		// Queries targeting the path
-		if ([query.queryPath isEqual:taskPath])
+		if ([queryPath isEqual:taskPath])
 		{
 			if (query.state != OCQueryStateIdle)	// Keep updating queries that have not gone through its complete, initial content update
 			{
@@ -1014,18 +1017,14 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		}
 		else
 		{
-			OCPath queryItemPath = nil;
-
 			// Queries targeting an item in a subdirectory of taskPath: check if that subdirectory exists
-			if (taskPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:taskPath] &&
-			    (task.cachedSet.state == OCCoreItemListStateSuccess) && (task.retrievedSet.state == OCCoreItemListStateSuccess)
-			   )
+			if (taskPathIsAncestorOfQueryPath)
 			{
-				if (query.state != OCQueryStateIdle)
+				if ((task.cachedSet.state == OCCoreItemListStateSuccess) && (task.retrievedSet.state == OCCoreItemListStateSuccess) && (query.state != OCQueryStateIdle))
 				{
 					NSString *queryPathSubfolder;
 
-					if ((queryPathSubfolder = [[query.queryPath substringFromIndex:taskPath.length] componentsSeparatedByString:@"/"].firstObject) != nil)
+					if ((queryPathSubfolder = [[queryPath substringFromIndex:taskPath.length] componentsSeparatedByString:@"/"].firstObject) != nil)
 					{
 						NSString *queryPathSubpath;
 
@@ -1040,16 +1039,27 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							    (queryResultItemsByPath[queryPathSubpath.normalizedDirectoryPath] == nil))
 							{
 								// Relevant parent folder is missing
+								queryResultItemsByPath = nil;
+
 								useQueryResults = [NSMutableArray new];
 								setQueryState = OCQueryStateTargetRemoved;
 							}
 						}
 					}
 				}
+
+				if (targetRemoved && (queryState == OCQueryStateTargetRemoved))
+				{
+					// Relevant ancestor folder has been removed
+					queryResultItemsByPath = nil;
+
+					useQueryResults = [NSMutableArray new];
+					setQueryState = OCQueryStateTargetRemoved;
+				}
 			}
 
 			// Queries targeting a particular item
-			if ((queryItemPath = query.queryItem.path) != nil)
+			if (queryItemPath != nil)
 			{
 				if (query.state != OCQueryStateIdle)	// Keep updating queries that have not gone through its complete, initial content update
 				{

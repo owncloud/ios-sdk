@@ -229,7 +229,9 @@
 				@synchronized(query)
 				{
 					// Queries targeting directories
-					if (query.queryPath != nil)
+					OCPath queryPath;
+
+					if ((queryPath = query.queryPath) != nil)
 					{
 						// Only update queries that ..
 						if ((query.state == OCQueryStateIdle) || // .. have already gone through their complete, initial content update.
@@ -259,14 +261,14 @@
 								}
 							};
 
-							if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[query.queryPath].count > 0))
+							if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[queryPath].count > 0))
 							{
 								// Items were added in the target path of this query
 								GetUpdatedFullResultsReady();
 
-								for (OCItem *item in addedItemList.itemsByParentPaths[query.queryPath])
+								for (OCItem *item in addedItemList.itemsByParentPaths[queryPath])
 								{
-									if (!query.includeRootItem && [item.path isEqual:query.queryPath])
+									if (!query.includeRootItem && [item.path isEqual:queryPath])
 									{
 										// Respect query.includeRootItem for special case "/" and don't include root items if not wanted
 										continue;
@@ -278,12 +280,12 @@
 
 							if (removedItemList != nil)
 							{
-								if (removedItemList.itemsByParentPaths[query.queryPath].count > 0)
+								if (removedItemList.itemsByParentPaths[queryPath].count > 0)
 								{
 									// Items were removed in the target path of this query
 									GetUpdatedFullResultsReady();
 
-									for (OCItem *item in removedItemList.itemsByParentPaths[query.queryPath])
+									for (OCItem *item in removedItemList.itemsByParentPaths[queryPath])
 									{
 										if (item.path != nil)
 										{
@@ -301,18 +303,36 @@
 									}
 								}
 
-								if (removedItemList.itemsByPath[query.queryPath] != nil)
+								if (removedItemList.itemsByPath[queryPath] != nil)
 								{
-									if (addedItemList.itemsByPath[query.queryPath] != nil)
+									if (addedItemList.itemsByPath[queryPath] != nil)
 									{
 										// Handle replacement scenario
-										query.rootItem = addedItemList.itemsByPath[query.queryPath];
+										query.rootItem = addedItemList.itemsByPath[queryPath];
 									}
 									else
 									{
 										// The target of this query was removed
 										updatedFullQueryResults = [NSMutableArray new];
 										query.state = OCQueryStateTargetRemoved;
+									}
+								}
+
+								// Check if a parent folder of the queryPath has been removed
+								if (query.state != OCQueryStateTargetRemoved)
+								{
+									for (OCItem *removedItem in removedItemList.items)
+									{
+										OCPath removedItemPath = removedItem.path;
+
+										if (removedItemPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:removedItemPath])
+										{
+											// A parent folder of this query has been removed
+											updatedFullQueryResults = [NSMutableArray new];
+											query.state = OCQueryStateTargetRemoved;
+
+											break;
+										}
 									}
 								}
 							}
