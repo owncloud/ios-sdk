@@ -50,6 +50,7 @@ typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 	NSURL *_appGroupLogsContainerURL;
 
 	NSString *_appName;
+	NSString *_appDisplayName;
 	NSString *_appVersion;
 	NSString *_appBuildNumber;
 
@@ -65,6 +66,7 @@ typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 @property(strong,nonatomic,nullable) NSString *appGroupIdentifier;
 
 @property(strong,nonatomic,nullable) NSString *appName;
+@property(strong,nonatomic,nullable) NSString *appDisplayName;
 @property(strong,nonatomic,nullable) NSString *appVersion;
 @property(strong,nonatomic,nullable) NSString *appBuildNumber;
 
