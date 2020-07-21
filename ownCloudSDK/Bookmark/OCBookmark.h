@@ -63,6 +63,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Data replacement
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark; //!< Replaces all values in the receiving bookmark with those in the source bookmark.
 
+#pragma mark - Certificate approval
+- (NSNotificationName)certificateUserApprovalUpdateNotificationName; //!< Notification that gets sent if the bookmark's certificate user-approved status changed
+- (void)postCertificateUserApprovalUpdateNotification; //!< Posts a .certificateUserApprovalUpdateNotificationName notification
+
 @end
 
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo; //!<  .userInfo key with a NSDictionary holding the info from "status.php".

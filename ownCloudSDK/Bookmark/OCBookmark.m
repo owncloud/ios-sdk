@@ -188,6 +188,17 @@
 	return (nil);
 }
 
+#pragma mark - Certificate approval
+- (NSNotificationName)certificateUserApprovalUpdateNotificationName
+{
+	return ([@"OCBookmarkCertificateUserApprovalUpdateNotification." stringByAppendingString:_uuid.UUIDString]);
+}
+
+- (void)postCertificateUserApprovalUpdateNotification
+{
+	[NSNotificationCenter.defaultCenter postNotificationName:self.certificateUserApprovalUpdateNotificationName object:self];
+}
+
 #pragma mark - Data replacement
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark
 {

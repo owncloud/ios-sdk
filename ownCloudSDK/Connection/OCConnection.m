@@ -44,6 +44,8 @@
 #import "OCCore.h"
 #import "OCCellularManager.h"
 #import "OCCellularSwitch.h"
+#import "OCHTTPPolicyManager.h"
+#import "OCHTTPPolicyBookmark.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -213,6 +215,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		_usersByUserID = [NSMutableDictionary new];
 
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_connectionCertificateUserApproved) name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
+
 		// Get pipelines
 		[self spinUpPipelines];
 	}
@@ -222,6 +226,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (void)dealloc
 {
+	[NSNotificationCenter.defaultCenter removeObserver:self name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
+
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
@@ -457,142 +463,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Handle certificate challenges
-- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
-{
-	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
-	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
-
-	// Enforce bookmark certificate
-	if (_bookmark.certificate != nil)
-	{
-		BOOL extendedValidationPassed = NO;
-		NSString *extendedValidationRule = nil;
-
-		if ((extendedValidationRule = [self classSettingForOCClassSettingsKey:OCConnectionCertificateExtendedValidationRule]) != nil)
-		{
-			// Check extended validation rule
-			OCCertificateRuleChecker *ruleChecker = nil;
-
-			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:extendedValidationRule]) != nil)
-			{
-				extendedValidationPassed = [ruleChecker evaluateRule];
-			}
-		}
-		else
-		{
-			// Check if certificate SHA-256 fingerprints are identical
-			extendedValidationPassed = [_bookmark.certificate isEqual:certificate];
-		}
-
-		if (extendedValidationPassed)
-		{
-			fulfillsBookmarkRequirements = YES;
-		}
-		else
-		{
-			// Evaluate the renewal acceptance rule to determine if this certificate should be used instead
-			NSString *renewalAcceptanceRule = nil;
-
-			fulfillsBookmarkRequirements = NO;
-
-			OCLogWarning(@"Certificate %@ does not match bookmark certificate %@. Checking with rule: %@", OCLogPrivate(certificate), OCLogPrivate(_bookmark.certificate), OCLogPrivate(renewalAcceptanceRule));
-
-			if ((renewalAcceptanceRule = [self classSettingForOCClassSettingsKey:OCConnectionRenewedCertificateAcceptanceRule]) != nil)
-			{
-				OCCertificateRuleChecker *ruleChecker;
-
-				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:renewalAcceptanceRule]) != nil)
-				{
-					fulfillsBookmarkRequirements = [ruleChecker evaluateRule];
-
-					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
-					{
-						// Auto-accept successor to user-accepted certificate that also would prompt for confirmation
-						if ((_bookmark.certificate.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
-						{
-							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
-
-							validationResult = OCCertificateValidationResultUserAccepted;
-						}
-
-						// Update bookmark certificate
-						_bookmark.certificate = certificate;
-						_bookmark.certificateModificationDate = [NSDate date];
-
-						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
-
-						if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
-						{
-							[_delegate connectionCertificateUserApproved:self];
-						}
-
-						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(_bookmark), certificate);
-					}
-
-					defaultWouldProceed = fulfillsBookmarkRequirements;
-				}
-			}
-
-			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
-		}
-	}
-
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:request:certificate:validationResult:validationError:defaultProceedValue:proceedHandler:)])
-	{
-		// Consult delegate
-		[_delegate connection:self request:request certificate:certificate validationResult:validationResult validationError:validationError defaultProceedValue:fulfillsBookmarkRequirements proceedHandler:proceedHandler];
-	}
-	else
-	{
-		if (proceedHandler != nil)
-		{
-			NSError *errorIssue = nil;
-			BOOL doProceed = NO, changeUserAccepted = NO;
-
-			if (defaultWouldProceed && request.forceCertificateDecisionDelegation)
-			{
-				// enforce bookmark certificate where available
-				doProceed = fulfillsBookmarkRequirements;
-			}
-			else
-			{
-				// Default to safe option: reject
-				changeUserAccepted = (validationResult == OCCertificateValidationResultPromptUser);
-				doProceed = NO;
-			}
-
-			if (!doProceed)
-			{
-				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
-
-				OCErrorAddDateFromResponse(errorIssue, request.httpResponse);
-
-				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
-					if (decision == OCIssueDecisionApprove)
-					{
-						if (changeUserAccepted)
-						{
-							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
-						}
-
-						self->_bookmark.certificate = certificate;
-						self->_bookmark.certificateModificationDate = [NSDate date];
-
-						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
-
-						if ((self.delegate!=nil) && [self.delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
-						{
-							[self.delegate connectionCertificateUserApproved:self];
-						}
-					}
-				}]];
-			}
-
-			proceedHandler(doProceed, errorIssue);
-		}
-	}
-}
+// -> moved to OCHTTPPolicyBookmark that's created on-the-fly by OCHTTPPolicyManager for now 
 
 #pragma mark - Post process request after it finished
 - (NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
@@ -654,7 +525,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Rescheduling support
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)incomingInstruction error:(NSError *)error
 {
 	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
 
@@ -670,6 +541,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	return (instruction);
+}
+
+#pragma mark - User certificate approval changes
+- (void)_connectionCertificateUserApproved
+{
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+	{
+		[_delegate connectionCertificateUserApproved:self];
+	}
 }
 
 #pragma mark - Connect & Disconnect

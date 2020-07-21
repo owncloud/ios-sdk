@@ -287,7 +287,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryDirectoryURL.path])
 		{
-			[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+			[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:NULL];
 		}
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
@@ -417,7 +417,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			if (![[NSFileManager defaultManager] fileExistsAtPath:vaultItemParentURL.path])
 			{
 				// Create target directory
-				[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemParentURL withIntermediateDirectories:YES attributes:nil error:&error];
+				[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemParentURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error];
 			}
 			else
 			{

@@ -95,6 +95,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 + (nullable NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
 
+@property(nullable,readonly,nonatomic,class) NSURL *httpPipelineRootURL;
+
 @end
 
 extern NSString *OCVaultPathVaults;

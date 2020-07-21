@@ -96,6 +96,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPPipelineBackend.h>
 #import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
 
+#import <ownCloudSDK/OCHTTPPolicyManager.h>
+#import <ownCloudSDK/OCHTTPPolicy.h>
+
 #import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
 #import <ownCloudSDK/OCWaitCondition.h>
