@@ -184,7 +184,7 @@ static NSUInteger sOCLogMessageMaximumSize;
 	if ([identifier isEqual:OCClassSettingsIdentifierLog])
 	{
 		return (@{
-			OCClassSettingsKeyLogLevel		   : @(OCLogLevelOff),
+			OCClassSettingsKeyLogLevel		   : @(OCLogLevelDebug),
 			OCClassSettingsKeyLogPrivacyMask	   : @(NO),
 			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
