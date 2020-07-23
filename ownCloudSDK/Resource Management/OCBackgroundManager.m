@@ -177,29 +177,37 @@
 {
 	if (block == nil) { return; }
 
-	if (self.isBackgrounded == inBackground)
+	if (self.delegate != nil)
 	{
-		OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
-		block();
+		if (self.isBackgrounded == inBackground)
+		{
+			OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
+			block();
+		}
+		else
+		{
+			block = [block copy];
+
+			if (inBackground)
+			{
+				// Wrap background blocks into a background task to ensure background execution (app may otherwise be suspended beforehand)
+				[[[OCBackgroundTask backgroundTaskWithName:@"scheduled block" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+					[task end];
+				}] start] endWhenDeallocating:block];
+			}
+
+			OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
+
+			@synchronized(_queuedBlocksByBackground)
+			{
+				[_queuedBlocksByBackground[@(inBackground)] addObject:block];
+			}
+		}
 	}
 	else
 	{
-		block = [block copy];
-
-		if (inBackground)
-		{
-			// Wrap background blocks into a background task to ensure background execution (app may otherwise be suspended beforehand)
-			[[[OCBackgroundTask backgroundTaskWithName:@"scheduled block" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
-				[task end];
-			}] start] endWhenDeallocating:block];
-		}
-
-		OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
-
-		@synchronized(_queuedBlocksByBackground)
-		{
-			[_queuedBlocksByBackground[@(inBackground)] addObject:block];
-		}
+		OCLogDebug(@"Running %@ block (%@) immediately: process has no concept of background/foreground", (inBackground ? @"background" : @"foreground"), block);
+		block();
 	}
 }
 
@@ -221,7 +229,7 @@
 
 	@synchronized(self)
 	{
-		if ([_tasks indexOfObjectIdenticalTo:task] == NSNotFound)
+		if (([_tasks indexOfObjectIdenticalTo:task] == NSNotFound) && (_delegate != nil))
 		{
 			task.started = YES;
 			[_tasks addObject:task];

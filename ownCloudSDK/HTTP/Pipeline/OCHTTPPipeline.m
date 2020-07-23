@@ -642,7 +642,8 @@
 		// Check if this task originates from our process
 		if (isRelevant)
 		{
-			if (![task.bundleID isEqual:self->_bundleIdentifier])
+			if (![task.bundleID isEqual:self->_bundleIdentifier] &&    // not originating from this process ..
+			    ![task.bundleID isEqual:OCHTTPPipelineTaskAnyBundleID]) // .. and tied to a specific process
 			{
 				// Task originates from a different process. Only process it, if that other process is no longer around
 				OCProcessSession *processSession;
@@ -1486,7 +1487,16 @@
 	}
 	else
 	{
-		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d", task.taskID, removeTask);
+		// No partition handler attached, so delivery on same process assumed not to be critical
+		BOOL allowHandlingByAnyProcess = [task.bundleID isEqual:self->_bundleIdentifier];
+
+		if (allowHandlingByAnyProcess)
+		{
+			task.bundleID = OCHTTPPipelineTaskAnyBundleID;
+			[_backend updatePipelineTask:task];
+		}
+
+		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d, bundleID=%@, allowHandlingByAnyProcess=%d", task.taskID, removeTask, task.bundleID, allowHandlingByAnyProcess);
 	}
 
 	return (removeTask);
