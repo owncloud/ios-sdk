@@ -253,7 +253,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file]);
+	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@%@%@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file, ((_ephermalUserInfo[@"_processSession"]!=nil)?[NSString stringWithFormat:@", processSession=%@",_ephermalUserInfo[@"_processSession"]]:@""), ((_ephermalUserInfo[@"_doProcess"]!=nil)?[NSString stringWithFormat:@", doProcess=%@",_ephermalUserInfo[@"_doProcess"]]:@"")]);
 }
 
 #pragma mark - Secure coding

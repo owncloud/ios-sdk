@@ -35,6 +35,8 @@
 #import "NSString+OCSQLTools.h"
 #import "OCItemPolicy.h"
 
+#import <objc/runtime.h>
+
 @interface OCDatabase ()
 {
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
@@ -1566,10 +1568,59 @@
 	return (eventExistsInDatabase);
 }
 
+- (OCEvent *)_eventFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary processSession:(OCProcessSession **)outProcessSession doProcess:(BOOL *)outDoProcess
+{
+	OCEvent *event = nil;
+	NSNumber *databaseID = nil;
+	OCProcessSession *processSession = nil;
+
+	if (outProcessSession != nil)
+	{
+		NSData *processSessionData = OCTypedCast(rowDictionary[@"processSession"], NSData);
+
+		if ((processSessionData != nil) && (processSessionData.length > 0))
+		{
+			processSession = [OCProcessSession processSessionFromSerializedData:processSessionData];
+		}
+
+		*outProcessSession = processSession;
+	}
+
+	if ((databaseID = OCTypedCast(rowDictionary[@"eventID"], NSNumber) ) != nil)
+	{
+		if ((event = [self->_eventsByDatabaseID objectForKey:databaseID]) == nil)
+		{
+			event = [OCEvent eventFromSerializedData:(NSData *)rowDictionary[@"eventData"]];
+		}
+
+		event.databaseID = rowDictionary[@"eventID"];
+	}
+
+	BOOL doProcess = YES;
+
+	if ((processSession != nil) && (event != nil))
+	{
+		// Only perform processSession validity check if bundleIDs differ
+		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
+		{
+			// Don't process events originating from other processes that are running
+			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
+		}
+	}
+
+	if (outDoProcess != NULL)
+	{
+		*outDoProcess = doProcess;
+	}
+
+	return (event);
+}
+
 - (OCEvent *)nextEventForSyncRecordID:(OCSyncRecordID)recordID afterEventID:(OCDatabaseID)afterEventID
 {
 	__block OCEvent *event = nil;
 	__block OCProcessSession *processSession = nil;
+	__block BOOL doProcess = YES;
 
 	if (!self.sqlDB.isOnSQLiteThread)
 	{
@@ -1578,57 +1629,68 @@
 	}
 
 	// Requests the oldest available event for the OCSyncRecordID.
-	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"processSession", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
 		@"recordID" 	: recordID,
 		@"eventID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:afterEventID apply:(afterEventID!=nil)]
 	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *iterationError = error;
 
 		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-			NSNumber *databaseID;
-			NSData *processSessionData = OCTypedCast(rowDictionary[@"processSession"], NSData);
-
-			if ((processSessionData != nil) && (processSessionData.length > 0))
-			{
-				processSession = [OCProcessSession processSessionFromSerializedData:processSessionData];
-			}
-
-			if ((databaseID = OCTypedCast(rowDictionary[@"eventID"], NSNumber) ) != nil)
-			{
-				if ((event = [self->_eventsByDatabaseID objectForKey:databaseID]) == nil)
-				{
-					event = [OCEvent eventFromSerializedData:(NSData *)rowDictionary[@"eventData"]];
-				}
-
-				event.databaseID = rowDictionary[@"eventID"];
-			}
+			event = [self _eventFromRowDictionary:rowDictionary processSession:&processSession doProcess:&doProcess];
 
 			*stop = YES;
 		} error:&iterationError];
 	}]];
 
-	if ((processSession != nil) && (event != nil))
+	if (!doProcess)
 	{
-		BOOL doProcess = YES;
-
-		// Only perform processSession validity check if bundleIDs differ
-		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
-		{
-			// Don't process events originating from other processes that are running
-			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
-		}
-
-		if (!doProcess)
-		{
-			// Skip this event
-			// return ([self nextEventForSyncRecordID:recordID afterEventID:event.databaseID]);
-
-			// Do not skip and look for the next event… because this is about the events for a single sync record - and out of order execution should not happen (?)
-			return (nil);
-		}
+		// Do not skip and look for the next event… because this is about the events for a single sync record - and out of order execution should not happen
+		return (nil);
 	}
 
 	return (event);
+}
+
+- (NSArray<OCEvent *> *)eventsForSyncRecordID:(OCSyncRecordID)recordID
+{
+	__block NSMutableArray<OCEvent *> *events = nil;
+
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"processSession", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
+		@"recordID" 	: recordID,
+	} orderBy:@"eventID ASC" limit:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+			OCEvent *event = nil;
+			OCProcessSession *processSession = nil;
+			BOOL doProcess = YES;
+
+			if ((event = [self _eventFromRowDictionary:rowDictionary processSession:&processSession doProcess:&doProcess]) != nil)
+			{
+				NSMutableDictionary *ephermalUserInfo = [NSMutableDictionary new];
+
+				if (event.ephermalUserInfo != nil)
+				{
+					[ephermalUserInfo addEntriesFromDictionary:event.ephermalUserInfo];
+				}
+
+				ephermalUserInfo[@"_processSession"] = processSession;
+				ephermalUserInfo[@"_doProcess"] = @(doProcess);
+
+				[event setValue:ephermalUserInfo forKey:@"ephermalUserInfo"]; // Change private variable
+
+				if (events == nil)
+				{
+					events = [NSMutableArray new];
+				}
+
+				[events addObject:event];
+			}
+
+		} error:&iterationError];
+	}]];
+
+	return (events);
 }
 
 - (NSError *)removeEvent:(OCEvent *)event
