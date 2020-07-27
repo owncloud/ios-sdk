@@ -31,6 +31,7 @@
 #import "OCHTTPRequest.h"
 #import "OCHTTPResponse.h"
 #import "OCHTTPStatus.h"
+#import "OCHTTPPolicy.h"
 #import "OCImage.h"
 #import "OCItem.h"
 #import "OCItemPolicy.h"
@@ -89,6 +90,7 @@
 				OCHTTPRequest.class,
 				OCHTTPResponse.class,
 				OCHTTPStatus.class,
+				OCHTTPPolicy.class,
 				OCImage.class,
 				OCItem.class,
 				OCItemPolicy.class,

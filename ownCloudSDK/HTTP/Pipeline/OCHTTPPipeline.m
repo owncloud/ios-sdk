@@ -33,6 +33,7 @@
 #import "UIDevice+ModelID.h"
 #import "OCCellularManager.h"
 #import "OCNetworkMonitor.h"
+#import "OCHTTPPolicyManager.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -641,7 +642,8 @@
 		// Check if this task originates from our process
 		if (isRelevant)
 		{
-			if (![task.bundleID isEqual:self->_bundleIdentifier])
+			if (![task.bundleID isEqual:self->_bundleIdentifier] &&    // not originating from this process ..
+			    ![task.bundleID isEqual:OCHTTPPipelineTaskAnyBundleID]) // .. and tied to a specific process
 			{
 				// Task originates from a different process. Only process it, if that other process is no longer around
 				OCProcessSession *processSession;
@@ -1395,9 +1397,9 @@
 		// Determine request instruction
 		if (!skipPartitionInstructionDecision)
 		{
-			if ([partitionHandler respondsToSelector:@selector(pipeline:instructionForFinishedTask:error:)])
+			if ([partitionHandler respondsToSelector:@selector(pipeline:instructionForFinishedTask:instruction:error:)])
 			{
-				requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task error:error];
+				requestInstruction = [partitionHandler pipeline:self instructionForFinishedTask:task instruction:requestInstruction error:error];
 			}
 		}
 
@@ -1485,7 +1487,16 @@
 	}
 	else
 	{
-		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d", task.taskID, removeTask);
+		// No partition handler attached, so delivery on same process assumed not to be critical
+		BOOL allowHandlingByAnyProcess = [task.bundleID isEqual:self->_bundleIdentifier];
+
+		if (allowHandlingByAnyProcess)
+		{
+			task.bundleID = OCHTTPPipelineTaskAnyBundleID;
+			[_backend updatePipelineTask:task];
+		}
+
+		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d, bundleID=%@, allowHandlingByAnyProcess=%d", task.taskID, removeTask, task.bundleID, allowHandlingByAnyProcess);
 	}
 
 	return (removeTask);
@@ -2027,20 +2038,55 @@
 				}
 				else
 				{
+					NSArray<id<OCHTTPPipelinePolicyHandler>> *policyHandlers;
 					id<OCHTTPPipelinePartitionHandler> partitionHandler;
+
+					policyHandlers = (NSArray<id<OCHTTPPipelinePolicyHandler>> *)[OCHTTPPolicyManager.sharedManager applicablePoliciesForPipelinePartitionID:task.partitionID handler:partitionHandler];
 
 					if ((partitionHandler = [self partitionHandlerForPartitionID:task.partitionID]) != nil)
 					{
-						[partitionHandler pipeline:self handleValidationOfRequest:task.request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:proceedHandler];
+						if ([partitionHandler conformsToProtocol:@protocol(OCHTTPPipelinePolicyHandler)])
+						{
+							if (policyHandlers != nil)
+							{
+								policyHandlers = [policyHandlers arrayByAddingObject:(id<OCHTTPPipelinePolicyHandler>)partitionHandler];
+							}
+							else
+							{
+								policyHandlers = @[ (id<OCHTTPPipelinePolicyHandler>)partitionHandler ];
+							}
+						}
+					}
+
+					if (policyHandlers.count == 0)
+					{
+						// If no policy handlers are available, reject the certificate
+						proceedHandler(NO, nil);
 					}
 					else
 					{
-						// If no partitionHandler is available, reject the certificate
-						proceedHandler(NO, nil);
+						// Iterate through policy handlers
+						[OCHTTPPipeline _iteratePolicyHandlers:policyHandlers index:0 pipeline:self certificate:certificate validationResult:validationResult validationError:validationError task:task proceedHandler:proceedHandler];
 					}
 				}
 			}
 		}];
+	}];
+}
+
++ (void)_iteratePolicyHandlers:(NSArray<id<OCHTTPPipelinePolicyHandler>> *)policyHandlers index:(NSUInteger)index pipeline:(OCHTTPPipeline *)pipeline certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError task:(OCHTTPPipelineTask *)task  proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
+{
+	id<OCHTTPPipelinePolicyHandler> policyHandler = policyHandlers[index];
+
+	[policyHandler pipeline:pipeline handleValidationOfRequest:task.request certificate:certificate validationResult:validationResult validationError:validationError proceedHandler:^(BOOL proceed, NSError * _Nullable error) {
+		if (!proceed || ((index+1) >= policyHandlers.count))
+		{
+			proceedHandler(proceed, error);
+		}
+		else
+		{
+			[self _iteratePolicyHandlers:policyHandlers index:(index+1) pipeline:pipeline certificate:certificate validationResult:validationResult validationError:validationError task:task proceedHandler:proceedHandler];
+		}
 	}];
 }
 
@@ -2189,7 +2235,7 @@
 			{
 				if (![[NSFileManager defaultManager] fileExistsAtPath:partitionURL.path])
 				{
-					[[NSFileManager defaultManager] createDirectoryAtURL:partitionURL withIntermediateDirectories:YES attributes:nil error:NULL];
+					[[NSFileManager defaultManager] createDirectoryAtURL:partitionURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:NULL];
 				}
 			}
 
@@ -2209,7 +2255,7 @@
 
 			if (![[NSFileManager defaultManager] fileExistsAtPath:parentURL.path])
 			{
-				[[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:nil error:&error];
+				[[NSFileManager defaultManager] createDirectoryAtURL:parentURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error];
 			}
 
 			[[NSFileManager defaultManager] moveItemAtURL:location toURL:response.bodyURL error:&error];

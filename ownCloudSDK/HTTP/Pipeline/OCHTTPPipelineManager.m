@@ -93,7 +93,7 @@
 #pragma mark - Backend
 - (NSURL *)backendRootURL
 {
-	return [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathHTTPPipeline];
+	return (OCVault.httpPipelineRootURL);
 }
 
 - (OCHTTPPipelineBackend *)backend

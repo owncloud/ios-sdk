@@ -981,7 +981,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		OCItem *queryRootItem = nil;
 		OCPath queryPath = query.queryPath;
 		OCPath queryItemPath = query.queryItem.path;
-		BOOL taskPathIsAncestorOfQueryPath = [queryPath hasPrefix:taskPath] && taskPath.isNormalizedDirectoryPath && ![queryPath isEqual:taskPath];
+		BOOL taskPathIsAncestorOfQueryPath = (taskPath!=nil) && [queryPath hasPrefix:taskPath] && taskPath.isNormalizedDirectoryPath && ![queryPath isEqual:taskPath];
 		OCQueryState setQueryState = (([queryPath isEqual:taskPath] || [queryItemPath isEqual:taskPath] || taskPathIsAncestorOfQueryPath) && !query.isCustom) ?
 						queryState :
 						query.state;

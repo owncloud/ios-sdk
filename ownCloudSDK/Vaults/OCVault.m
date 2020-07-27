@@ -28,6 +28,7 @@
 #import "OCEventQueue.h"
 #import "OCCore+SyncEngine.h"
 #import "OCFeatureAvailability.h"
+#import "OCHTTPPolicyManager.h"
 
 @implementation OCVault
 
@@ -341,6 +342,11 @@
 + (NSString *)keyValueStoreFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
 {
 	return ([uuid.UUIDString stringByAppendingString:@".ockvs"]);
+}
+
++ (NSURL *)httpPipelineRootURL
+{
+	return [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathHTTPPipeline];
 }
 
 @end

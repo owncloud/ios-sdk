@@ -69,4 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern NSString *OCHTTPPipelineTaskAnyBundleID; //!< Value for OCHTTPPipelineTask.bundleID indicating this task isn't tied to a specific app or extension bundle and can be delivered to attached partition handlers on other processes, too.
+
 NS_ASSUME_NONNULL_END

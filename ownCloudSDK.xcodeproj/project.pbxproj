@@ -277,6 +277,14 @@
 		DC6D51D924A8BC4D006B75E6 /* OCNetworkMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */; };
 		DC6DB88221C26F4D00189B21 /* XCTestCase+Tagging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */; };
+		DC6DEEAD24C5978E00E3772E /* OCHTTPPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6DEEAB24C5978E00E3772E /* OCHTTPPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6DEEAE24C5978E00E3772E /* OCHTTPPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DEEAC24C5978E00E3772E /* OCHTTPPolicy.m */; };
+		DC6DEEB124C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6DEEAF24C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h */; };
+		DC6DEEB224C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DEEB024C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.m */; };
+		DC6DEEB524C59BE300E3772E /* OCHTTPPolicyManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6DEEB324C59BE300E3772E /* OCHTTPPolicyManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6DEEB624C59BE300E3772E /* OCHTTPPolicyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DEEB424C59BE300E3772E /* OCHTTPPolicyManager.m */; };
+		DC6DEEB924C5C82400E3772E /* OCHTTPPolicyBookmark.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6DEEB724C5C82400E3772E /* OCHTTPPolicyBookmark.h */; };
+		DC6DEEBA24C5C82400E3772E /* OCHTTPPolicyBookmark.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DEEB824C5C82400E3772E /* OCHTTPPolicyBookmark.m */; };
 		DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */; };
 		DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -961,6 +969,14 @@
 		DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCNetworkMonitor.m; sourceTree = "<group>"; };
 		DC6DB88021C26F4D00189B21 /* XCTestCase+Tagging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XCTestCase+Tagging.h"; sourceTree = "<group>"; };
 		DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "XCTestCase+Tagging.m"; sourceTree = "<group>"; };
+		DC6DEEAB24C5978E00E3772E /* OCHTTPPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPolicy.h; sourceTree = "<group>"; };
+		DC6DEEAC24C5978E00E3772E /* OCHTTPPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPolicy.m; sourceTree = "<group>"; };
+		DC6DEEAF24C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPPolicy+PipelinePolicyHandler.h"; sourceTree = "<group>"; };
+		DC6DEEB024C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPPolicy+PipelinePolicyHandler.m"; sourceTree = "<group>"; };
+		DC6DEEB324C59BE300E3772E /* OCHTTPPolicyManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPolicyManager.h; sourceTree = "<group>"; };
+		DC6DEEB424C59BE300E3772E /* OCHTTPPolicyManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPolicyManager.m; sourceTree = "<group>"; };
+		DC6DEEB724C5C82400E3772E /* OCHTTPPolicyBookmark.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPolicyBookmark.h; sourceTree = "<group>"; };
+		DC6DEEB824C5C82400E3772E /* OCHTTPPolicyBookmark.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPolicyBookmark.m; sourceTree = "<group>"; };
 		DC7014232209CE7A009D4FD9 /* OCHTTPPipelineManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineManager.h; sourceTree = "<group>"; };
 		DC7014242209CE7A009D4FD9 /* OCHTTPPipelineManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineManager.m; sourceTree = "<group>"; };
 		DC701475220AE696009D4FD9 /* OCHTTPPipelineTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTask.h; sourceTree = "<group>"; };
@@ -1841,6 +1857,7 @@
 			children = (
 				DC701482220B090B009D4FD9 /* OCHTTPTypes.h */,
 				DC7014172209C570009D4FD9 /* Pipeline */,
+				DC6DEEAA24C5977500E3772E /* Policy */,
 				DC7014192209C59D009D4FD9 /* Status */,
 				DC27BBBC230498A4002CC2F8 /* Cookies */,
 				DC7014182209C57B009D4FD9 /* Request */,
@@ -1929,6 +1946,21 @@
 				DC6CF8202195D56B0013B9F9 /* OCCore+CommandUpdate.m */,
 			);
 			path = Update;
+			sourceTree = "<group>";
+		};
+		DC6DEEAA24C5977500E3772E /* Policy */ = {
+			isa = PBXGroup;
+			children = (
+				DC6DEEB424C59BE300E3772E /* OCHTTPPolicyManager.m */,
+				DC6DEEB324C59BE300E3772E /* OCHTTPPolicyManager.h */,
+				DC6DEEAC24C5978E00E3772E /* OCHTTPPolicy.m */,
+				DC6DEEAB24C5978E00E3772E /* OCHTTPPolicy.h */,
+				DC6DEEB824C5C82400E3772E /* OCHTTPPolicyBookmark.m */,
+				DC6DEEB724C5C82400E3772E /* OCHTTPPolicyBookmark.h */,
+				DC6DEEB024C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.m */,
+				DC6DEEAF24C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h */,
+			);
+			path = Policy;
 			sourceTree = "<group>";
 		};
 		DC7014172209C570009D4FD9 /* Pipeline */ = {
@@ -2834,6 +2866,7 @@
 				DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */,
 				DC22669A22817DC600FB29EE /* OCVault+Internal.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
+				DC6DEEB524C59BE300E3772E /* OCHTTPPolicyManager.h in Headers */,
 				DC8556FB204F4F3000189B9A /* OCXMLParser.h in Headers */,
 				DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */,
 				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
@@ -2854,6 +2887,7 @@
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DC8556ED204DEA2900189B9A /* OCHTTPDAVRequest.h in Headers */,
+				DC6DEEB124C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h in Headers */,
 				DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */,
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
@@ -2897,7 +2931,9 @@
 				DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */,
 				DCAEB06D21FA63D80067E147 /* OCSyncRecordActivity.h in Headers */,
 				DCEA7D972093556600F25223 /* OCCache.h in Headers */,
+				DC6DEEAD24C5978E00E3772E /* OCHTTPPolicy.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
+				DC6DEEB924C5C82400E3772E /* OCHTTPPolicyBookmark.h in Headers */,
 				DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */,
 				DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */,
 				DC1D3DF22459B86200328EBC /* NSString+TUSMetadata.h in Headers */,
@@ -3439,6 +3475,7 @@
 				DC20DE9021C104DE0096000B /* OCLogTag.m in Sources */,
 				DC114A9522A7A87C00CBD597 /* NSData+OCRandom.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCHTTPDAVRequest.m in Sources */,
+				DC6DEEAE24C5978E00E3772E /* OCHTTPPolicy.m in Sources */,
 				DC4AFAA7206A6E7100189B9A /* OCSQLiteResultSet.m in Sources */,
 				DCE451A62459AD3F0074363F /* OCTUSJob.m in Sources */,
 				DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */,
@@ -3507,6 +3544,7 @@
 				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
 				DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
+				DC6DEEBA24C5C82400E3772E /* OCHTTPPolicyBookmark.m in Sources */,
 				DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */,
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
@@ -3579,6 +3617,7 @@
 				DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */,
 				DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
+				DC6DEEB624C59BE300E3772E /* OCHTTPPolicyManager.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
 				DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */,
@@ -3611,6 +3650,7 @@
 				DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */,
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
 				DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */,
+				DC6DEEB224C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.m in Sources */,
 				DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */,
 				DC2AA57122DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m in Sources */,
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,

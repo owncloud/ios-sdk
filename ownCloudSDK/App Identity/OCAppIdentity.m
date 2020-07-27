@@ -29,6 +29,7 @@
 @synthesize appGroupLogsContainerURL = _appGroupLogsContainerURL;
 
 @synthesize appName = _appName;
+@synthesize appDisplayName = _appDisplayName;
 
 @synthesize componentIdentifier = _componentIdentifier;
 
@@ -111,6 +112,16 @@
 	}
 	
 	return (_appName);
+}
+
+- (NSString *)appDisplayName
+{
+	if (_appDisplayName == nil)
+	{
+		_appDisplayName = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+	}
+
+	return (_appDisplayName);
 }
 
 - (NSString *)appVersion
