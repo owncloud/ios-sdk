@@ -208,6 +208,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCDiagnosticSource.h>
 #import <ownCloudSDK/OCDiagnosticNode.h>
 #import <ownCloudSDK/OCSyncRecord+Diagnostic.h>
+#import <ownCloudSDK/OCHTTPPipeline+Diagnostic.h>
 
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
 #import <ownCloudSDK/OCRateLimiter.h>

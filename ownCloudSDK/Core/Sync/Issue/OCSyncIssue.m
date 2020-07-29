@@ -174,6 +174,17 @@
 	[coder encodeObject:_choices forKey:@"choices"];
 }
 
-OCEventUserInfoKey OCEventUserInfoKeySyncIssue = @"syncIssue";
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, uuid: %@, syncRecordID: %@, templateIdentifier: %@, level: %d, title: %@, description: %@, choices: %@>", NSStringFromClass(self.class), self, _uuid, _syncRecordID, _templateIdentifier, _level, _localizedTitle, _localizedDescription, _choices]);
+}
+
+- (NSString *)privacyMaskedDescription
+{
+	return ([NSString stringWithFormat:@"<%@: %p, uuid: %@, syncRecordID: %@, templateIdentifier: %@, level: %d, choices: %@>", NSStringFromClass(self.class), self, _uuid, _syncRecordID, _templateIdentifier, _level, _choices]);
+}
 
 @end
+
+OCEventUserInfoKey OCEventUserInfoKeySyncIssue = @"syncIssue";

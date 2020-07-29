@@ -381,6 +381,12 @@
 		DCA35D6224CF704100DBE2B0 /* OCSyncAction+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D6024CF704100DBE2B0 /* OCSyncAction+Diagnostic.m */; };
 		DCA35D6524CF72B500DBE2B0 /* OCDiagnosticContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D6324CF72B500DBE2B0 /* OCDiagnosticContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA35D6624CF72B500DBE2B0 /* OCDiagnosticContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D6424CF72B500DBE2B0 /* OCDiagnosticContext.m */; };
+		DCA35D7224D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D7024D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D7124D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.m */; };
+		DCA35D7624D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D7424D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h */; };
+		DCA35D7724D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D7524D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m */; };
+		DCA35D7E24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D7C24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.h */; };
+		DCA35D7F24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D7D24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m */; };
 		DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA36D4B22A6B14200265534 /* OCPKCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA36D4E22A6B14200265534 /* OCPKCE.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA36D4C22A6B14200265534 /* OCPKCE.m */; };
 		DCA8923020F5F13F00AEFF98 /* ownCloudMocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; };
@@ -1081,6 +1087,12 @@
 		DCA35D6024CF704100DBE2B0 /* OCSyncAction+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCSyncAction+Diagnostic.m"; sourceTree = "<group>"; };
 		DCA35D6324CF72B500DBE2B0 /* OCDiagnosticContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDiagnosticContext.h; sourceTree = "<group>"; };
 		DCA35D6424CF72B500DBE2B0 /* OCDiagnosticContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDiagnosticContext.m; sourceTree = "<group>"; };
+		DCA35D7024D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPPipeline+Diagnostic.h"; sourceTree = "<group>"; };
+		DCA35D7124D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPPipeline+Diagnostic.m"; sourceTree = "<group>"; };
+		DCA35D7424D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPPipelineTask+Diagnostic.h"; sourceTree = "<group>"; };
+		DCA35D7524D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPPipelineTask+Diagnostic.m"; sourceTree = "<group>"; };
+		DCA35D7C24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCWaitCondition+Diagnostic.h"; sourceTree = "<group>"; };
+		DCA35D7D24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCWaitCondition+Diagnostic.m"; sourceTree = "<group>"; };
 		DCA36D4B22A6B14200265534 /* OCPKCE.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCPKCE.h; sourceTree = "<group>"; };
 		DCA36D4C22A6B14200265534 /* OCPKCE.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCPKCE.m; sourceTree = "<group>"; };
 		DCA8921320F5E9D100AEFF98 /* OCMockManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMockManager.h; sourceTree = "<group>"; };
@@ -1522,6 +1534,8 @@
 				DC24F8E621E2B3EF00C9119C /* OCWaitConditionIssue.h */,
 				DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */,
 				DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */,
+				DCA35D7D24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m */,
+				DCA35D7C24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.h */,
 			);
 			path = "Wait Condition";
 			sourceTree = "<group>";
@@ -1978,6 +1992,10 @@
 				DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */,
 				DC5AD95322665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m */,
 				DC5AD95222665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h */,
+				DCA35D7124D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.m */,
+				DCA35D7024D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.h */,
+				DCA35D7524D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m */,
+				DCA35D7424D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h */,
 			);
 			path = Pipeline;
 			sourceTree = "<group>";
@@ -2907,6 +2925,7 @@
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */,
 				DC2AA57922DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h in Headers */,
+				DCA35D7624D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h in Headers */,
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
@@ -2934,6 +2953,7 @@
 				DC6DEEAD24C5978E00E3772E /* OCHTTPPolicy.h in Headers */,
 				DC179CD520948DF30018DF7F /* NSProgress+OCExtensions.h in Headers */,
 				DC6DEEB924C5C82400E3772E /* OCHTTPPolicyBookmark.h in Headers */,
+				DCA35D7224D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.h in Headers */,
 				DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */,
 				DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */,
 				DC1D3DF22459B86200328EBC /* NSString+TUSMetadata.h in Headers */,
@@ -3029,6 +3049,7 @@
 				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
 				DC98BDF521E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
+				DCA35D7E24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.h in Headers */,
 				DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */,
 				DC51FD8D247565080069AB79 /* OCCellularSwitch.h in Headers */,
 				DC35969622403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h in Headers */,
@@ -3515,6 +3536,7 @@
 				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
+				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
 				DC1D3DF32459B86200328EBC /* NSString+TUSMetadata.m in Sources */,
 				DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */,
@@ -3605,6 +3627,7 @@
 				DC5AD95522665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m in Sources */,
 				DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
+				DCA35D7724D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
 				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
@@ -3616,6 +3639,7 @@
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,
 				DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */,
 				DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */,
+				DCA35D7F24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
 				DC6DEEB624C59BE300E3772E /* OCHTTPPolicyManager.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,

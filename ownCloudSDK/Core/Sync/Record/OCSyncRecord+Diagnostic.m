@@ -19,6 +19,7 @@
 #import "OCSyncRecord+Diagnostic.h"
 #import "OCProcessManager.h"
 #import "OCSyncAction+Diagnostic.h"
+#import "OCWaitCondition+Diagnostic.h"
 
 @implementation OCSyncRecord (Diagnostic)
 
@@ -34,7 +35,7 @@
 			waitConditionNodes = [NSMutableArray new];
 		}
 
-		[waitConditionNodes addObject:[OCDiagnosticNode withLabel:@"Wait Condition" content:waitCondition.description]];
+		[waitConditionNodes addObject:[OCDiagnosticNode withLabel:@"Wait Condition" children:[waitCondition diagnosticNodesWithContext:context]]];
 	}
 
 	if (context.database != nil)
@@ -62,6 +63,17 @@
 		[OCDiagnosticNode withLabel:@"Lane ID" 			content:self.laneID.stringValue],
 		[OCDiagnosticNode withLabel:@"Local ID" 		content:self.localID],
 		[OCDiagnosticNode withLabel:@"Action ID" 		content:self.actionIdentifier],
+
+		[OCDiagnosticNode withLabel:@"Process Sync Records" action:^(OCDiagnosticContext * _Nullable context) {
+			[context.core setNeedsToProcessSyncRecords];
+		}],
+		[OCDiagnosticNode withLabel:@"Reschedule" action:^(OCDiagnosticContext * _Nullable context) {
+			[context.core rescheduleSyncRecord:self withUpdates:nil];
+		}],
+		[OCDiagnosticNode withLabel:@"Deschedule (remove)" action:^(OCDiagnosticContext * _Nullable context) {
+			[context.core descheduleSyncRecord:self completeWithError:nil parameter:nil];
+		}],
+
 		[OCDiagnosticNode withLabel:@"Action" 			children:[self.action diagnosticNodesWithContext:context]],
 		[OCDiagnosticNode withLabel:@"Wait Conditions" 		children:waitConditionNodes],
 		[OCDiagnosticNode withLabel:@"Events" 			children:eventNodes],

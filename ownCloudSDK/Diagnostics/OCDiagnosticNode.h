@@ -20,6 +20,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class OCDiagnosticContext;
+
 typedef NS_ENUM(NSUInteger, OCDiagnosticNodeType)
 {
 	OCDiagnosticNodeTypeInfo,
@@ -27,7 +29,7 @@ typedef NS_ENUM(NSUInteger, OCDiagnosticNodeType)
 	OCDiagnosticNodeTypeGroup
 };
 
-typedef void(^OCDiagnosticNodeAction)(void);
+typedef void(^OCDiagnosticNodeAction)(OCDiagnosticContext * _Nullable context);
 
 @interface OCDiagnosticNode : NSObject
 
