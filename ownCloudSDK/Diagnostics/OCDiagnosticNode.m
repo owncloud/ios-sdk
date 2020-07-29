@@ -90,7 +90,10 @@
 		return ([[text stringByReplacingOccurrencesOfString:@">" withString:@"&gt;"] stringByReplacingOccurrencesOfString:@"<" withString:@"&lt;"]);
 	};
 
-	[markdown appendFormat:@"%@ %@\n", [@"" stringByPaddingToLength:level withString:@"#" startingAtIndex:0], htmlify(self.label)];
+	if (level == 1)
+	{
+		[markdown appendFormat:@"%@ %@\n", [@"" stringByPaddingToLength:level withString:@"#" startingAtIndex:0], htmlify(self.label)];
+	}
 	[markdown appendFormat:@"<table>\n"];
 
 	for (OCDiagnosticNode *node in _children)
@@ -100,24 +103,20 @@
 			switch (node.type)
 			{
 				case OCDiagnosticNodeTypeInfo:
-					[markdown appendFormat:@"<tr><td nowrap>%@</td><td><code>%@</code></td></tr>\n", htmlify(node.label), htmlify(node.content)];
+					[markdown appendFormat:@"<tr><td nowrap valign=\"top\">%@</td><td><code>%@</code></td></tr>\n", htmlify(node.label), htmlify(node.content)];
 				break;
 
 				case OCDiagnosticNodeTypeAction:
 				break;
 
 				case OCDiagnosticNodeTypeGroup:
-					[markdown appendFormat:@"</table>\n"];
-					[markdown appendFormat:@"\n%@", [node _composeMarkdownWithLevel:level+1]];
-					[markdown appendFormat:@"<table>"];
+					[markdown appendFormat:@"<tr><td nowrap valign=\"top\">%@</td><td>\n%@\n</td></tr>\n", htmlify(node.label), [node _composeMarkdownWithLevel:level+1]];
 				break;
 			}
 		}
 	}
 
 	[markdown appendFormat:@"</table>\n"];
-
-	[markdown replaceOccurrencesOfString:@"<table></table>\n" withString:@"" options:0 range:NSMakeRange(0, markdown.length)];
 
 	return (markdown);
 }

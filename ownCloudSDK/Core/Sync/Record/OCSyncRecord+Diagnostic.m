@@ -27,6 +27,7 @@
 {
 	NSMutableArray<OCDiagnosticNode *> *waitConditionNodes = nil;
 	NSMutableArray<OCDiagnosticNode *> *eventNodes = nil;
+	NSUInteger idx = 1;
 
 	for (OCWaitCondition *waitCondition in self.waitConditions)
 	{
@@ -35,12 +36,15 @@
 			waitConditionNodes = [NSMutableArray new];
 		}
 
-		[waitConditionNodes addObject:[OCDiagnosticNode withLabel:@"Wait Condition" children:[waitCondition diagnosticNodesWithContext:context]]];
+		[waitConditionNodes addObject:[OCDiagnosticNode withLabel:[NSString stringWithFormat:@"# %lu", (unsigned long)idx] children:[waitCondition diagnosticNodesWithContext:context]]];
+		idx++;
 	}
 
 	if (context.database != nil)
 	{
 		NSArray<OCEvent *> *events = [context.database eventsForSyncRecordID:self.recordID];
+
+		idx = 1;
 
 		for (OCEvent *event in events)
 		{
@@ -49,7 +53,8 @@
 				eventNodes = [NSMutableArray new];
 			}
 
-			[eventNodes addObject:[OCDiagnosticNode withLabel:@"Event" content:event.description]];
+			[eventNodes addObject:[OCDiagnosticNode withLabel:[NSString stringWithFormat:@"# %lu", (unsigned long)idx] content:event.description]];
+			idx++;
 		}
 	}
 
