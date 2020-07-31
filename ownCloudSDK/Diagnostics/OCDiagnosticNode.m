@@ -80,6 +80,13 @@
 	return (NO);
 }
 
+- (instancetype)withIdentifier:(OCDiagnosticNodeIdentifier)identifier
+{
+	self.identifier = identifier;
+
+	return (self);
+}
+
 - (nullable NSString *)_composeMarkdownWithLevel:(NSUInteger)level
 {
 	if (_type != OCDiagnosticNodeTypeGroup) { return(nil); }

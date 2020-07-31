@@ -31,7 +31,11 @@ typedef NS_ENUM(NSUInteger, OCDiagnosticNodeType)
 
 typedef void(^OCDiagnosticNodeAction)(OCDiagnosticContext * _Nullable context);
 
+typedef NSString* OCDiagnosticNodeIdentifier NS_TYPED_ENUM;
+
 @interface OCDiagnosticNode : NSObject
+
+@property(strong,nullable) OCDiagnosticNodeIdentifier identifier;
 
 @property(readonly,nonatomic) OCDiagnosticNodeType type;
 
@@ -47,6 +51,8 @@ typedef void(^OCDiagnosticNodeAction)(OCDiagnosticContext * _Nullable context);
 + (instancetype)withLabel:(NSString *)label content:(nullable NSString *)content;
 + (instancetype)withLabel:(NSString *)label action:(nullable OCDiagnosticNodeAction)action;
 + (instancetype)withLabel:(NSString *)label children:(nullable NSArray<OCDiagnosticNode *> *)children;
+
+- (instancetype)withIdentifier:(nullable OCDiagnosticNodeIdentifier)identifier;
 
 - (nullable NSString *)composeMarkdown;
 
