@@ -35,6 +35,7 @@
 #import "OCRecipientSearchController.h"
 #import "OCSyncIssue.h"
 #import "OCMessageQueue.h"
+#import "OCScanJobActivity.h"
 
 @class OCCore;
 @class OCItem;
@@ -185,7 +186,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
 	NSMutableSet <OCCoreDirectoryUpdateJobID> *_scheduledDirectoryUpdateJobIDs;
-	OCActivity *_scheduledDirectoryUpdateJobActivity;
+	OCScanJobActivity *_scheduledDirectoryUpdateJobActivity;
 	NSUInteger _totalScheduledDirectoryUpdateJobs;
 	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;

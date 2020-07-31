@@ -438,6 +438,8 @@
 		DCB6D05922A13E7500CA47C5 /* NSString+OCSQLTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB6D05722A13E7500CA47C5 /* NSString+OCSQLTools.m */; };
 		DCC3700F24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC3700D24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC3701024D4B3B7008B0DEB /* OCDatabase+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC3700E24D4B3B7008B0DEB /* OCDatabase+Diagnostic.m */; };
+		DCC3701324D4D134008B0DEB /* OCScanJobActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCC3701424D4D134008B0DEB /* OCScanJobActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC3701224D4D134008B0DEB /* OCScanJobActivity.m */; };
 		DCC599F422EEE65700499B29 /* OCCore+Claims.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC599F222EEE65700499B29 /* OCCore+Claims.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC599F522EEE65700499B29 /* OCCore+Claims.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC599F322EEE65700499B29 /* OCCore+Claims.m */; };
 		DCC6563D20C979FB00110A97 /* TestTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6563C20C979FB00110A97 /* TestTools.m */; };
@@ -1149,6 +1151,8 @@
 		DCB6D05722A13E7500CA47C5 /* NSString+OCSQLTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCSQLTools.m"; sourceTree = "<group>"; };
 		DCC3700D24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Diagnostic.h"; sourceTree = "<group>"; };
 		DCC3700E24D4B3B7008B0DEB /* OCDatabase+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Diagnostic.m"; sourceTree = "<group>"; };
+		DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCScanJobActivity.h; sourceTree = "<group>"; };
+		DCC3701224D4D134008B0DEB /* OCScanJobActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCScanJobActivity.m; sourceTree = "<group>"; };
 		DCC599F222EEE65700499B29 /* OCCore+Claims.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+Claims.h"; sourceTree = "<group>"; };
 		DCC599F322EEE65700499B29 /* OCCore+Claims.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+Claims.m"; sourceTree = "<group>"; };
 		DCC6563B20C979FB00110A97 /* TestTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTools.h; sourceTree = "<group>"; };
@@ -2560,6 +2564,8 @@
 				DCADC0462072CDEA00DB8E83 /* OCCoreItemList.h */,
 				DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */,
 				DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */,
+				DCC3701224D4D134008B0DEB /* OCScanJobActivity.m */,
+				DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */,
 			);
 			path = ItemList;
 			sourceTree = "<group>";
@@ -2924,6 +2930,7 @@
 				DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */,
 				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
+				DCC3701324D4D134008B0DEB /* OCScanJobActivity.h in Headers */,
 				DC6BFFF623206215005FA5CB /* OCEventQueue.h in Headers */,
 				DCDD9B1C22298D050052A001 /* OCGroup.h in Headers */,
 				DC1889842189F50500CFB3F9 /* OCLogFileWriter.h in Headers */,
@@ -3480,6 +3487,7 @@
 				DCF39B562458268E00DEA137 /* OCTUSHeader.m in Sources */,
 				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
 				DC2FED61228D5589004FDEC6 /* OCCore+Favorites.m in Sources */,
+				DCC3701424D4D134008B0DEB /* OCScanJobActivity.m in Sources */,
 				DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */,
 				DC3CE066242A49E100AB8B88 /* OCMessagePresenter.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
