@@ -131,8 +131,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 		_coordinationQueue = [[NSOperationQueue alloc] init];
 		_coordinationQueue.maxConcurrentOperationCount = 1;
 
+		__weak OCKeyValueStore *weakSelf = self;
+
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore initial read" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
-			OCLogWarning(@"%@ background task expired", task.name);
+			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
 
@@ -649,8 +651,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		if (strongSelf == nil) { return; }
 
+		__weak OCKeyValueStore *weakSelf = self;
+
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateFromStoreContentsAtURL" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
-			OCLogWarning(@"%@ background task expired", task.name);
+			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
 
@@ -689,8 +693,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 	[_coordinationQueue addOperationWithBlock:^{
 		NSError *error = nil;
 
+		__weak OCKeyValueStore *weakSelf = self;
+
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateStoreContentsWithModifications" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
-			OCLogWarning(@"%@ background task expired", task.name);
+			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
 

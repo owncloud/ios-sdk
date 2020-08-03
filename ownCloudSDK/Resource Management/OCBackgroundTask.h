@@ -43,6 +43,8 @@ typedef void(^OCBackgroundTaskExpirationHandler)(OCBackgroundTask *task);
 - (void)end;
 - (void)endWhenDeallocating:(id)object;
 
+- (void)clearExpirationHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

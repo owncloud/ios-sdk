@@ -1068,9 +1068,11 @@
 //							 __weak OCHTTPPipeline *weakPipeline = self;
 //							 OCHTTPRequestID resumeRequestID = request.identifier;
 
+							__weak OCHTTPPipeline *weakSelf = self;
+
 							[[[OCBackgroundTask backgroundTaskWithName:[NSString stringWithFormat:@"OCHTTPPipeline <%ld>: %@", urlSessionTaskID, absoluteURLString] expirationHandler:^(OCBackgroundTask *backgroundTask){
 								// Task needs to end in the expiration handler - or the app will be terminated by iOS
-								OCLogWarning(@"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
+								OCWTLogWarning(nil, @"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
 
 								// Cancel resumeable download and store resume data
 								// (commented out for now as it raises additional issues/questions, like f.ex. preventing a restart right away while the app transitions to the background - letting iOS cancel the connection on our behalf works better as we won't get notified until after the app has been woken up again, at which point rescheduling is just fine)
