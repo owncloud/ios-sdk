@@ -42,7 +42,17 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (NSUInteger)parallelItemListTaskCount
 {
-	return (2);
+	switch (self.memoryConfiguration)
+	{
+		case OCCoreMemoryConfigurationMinimum:
+			return (1);
+		break;
+
+		case OCCoreMemoryConfigurationDefault:
+		default:
+			return (2);
+		break;
+	}
 }
 
 #pragma mark - Item List Tasks

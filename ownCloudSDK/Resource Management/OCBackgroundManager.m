@@ -236,33 +236,35 @@
 
 			OCLogDebug(@"Starting background task '%@' (delegate=%@)", task.name, _delegate);
 
-			if (_delegate != nil)
-			{
-				UIBackgroundTaskIdentifier taskID;
+			UIBackgroundTaskIdentifier taskID;
 
-				taskID = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
-					if (task.expirationHandler != nil)
-					{
-						task.expirationHandler(task);
-					}
-					else
-					{
-						[self endTask:task];
-					}
-				}];
-
-
-				if (taskID != UIBackgroundTaskInvalid)
+			taskID = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
+				if (task.expirationHandler != nil)
 				{
-					task.identifier = taskID;
-					taskStarted = YES;
+					task.expirationHandler(task);
 				}
 				else
 				{
-					task.started = NO;
-					[_tasks removeObjectIdenticalTo:task];
+					[self endTask:task];
 				}
+			}];
+
+
+			if (taskID != UIBackgroundTaskInvalid)
+			{
+				task.identifier = taskID;
+				taskStarted = YES;
 			}
+			else
+			{
+				task.started = NO;
+				[_tasks removeObjectIdenticalTo:task];
+			}
+		}
+		else if (_delegate == nil)
+		{
+			// Task not managed, so can't expire and we can drop the expiration handler
+			[task clearExpirationHandler];
 		}
 	}
 

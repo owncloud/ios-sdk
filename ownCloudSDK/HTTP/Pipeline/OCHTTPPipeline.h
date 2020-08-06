@@ -55,6 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
 
 - (nullable NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error;
+
+@optional
 - (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)inInstruction error:(nullable NSError *)error;
 
 #pragma mark - Mocking

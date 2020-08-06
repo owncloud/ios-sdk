@@ -508,6 +508,8 @@
 		DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */; };
 		DCDBEE3C2049F3D100189B9A /* MiscTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE3B2049F3D100189B9A /* MiscTests.m */; };
+		DCDC62E124D8A04900585261 /* NSArray+OCSegmentedProcessing.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDC62DF24D8A04900585261 /* NSArray+OCSegmentedProcessing.h */; };
+		DCDC62E224D8A04900585261 /* NSArray+OCSegmentedProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDC62E024D8A04900585261 /* NSArray+OCSegmentedProcessing.m */; };
 		DCDCA61C245093E800AFA158 /* NSURL+OCPrivateLink.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDCA61A245093E800AFA158 /* NSURL+OCPrivateLink.h */; };
 		DCDCA61D245093E800AFA158 /* NSURL+OCPrivateLink.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDCA61B245093E800AFA158 /* NSURL+OCPrivateLink.m */; };
 		DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDD9B12222986D50052A001 /* OCShare+OCXMLObjectCreation.h */; };
@@ -1226,6 +1228,8 @@
 		DCDBEE362049EF3B00189B9A /* NSURL+OCURLNormalization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCURLNormalization.h"; sourceTree = "<group>"; };
 		DCDBEE372049EF3C00189B9A /* NSURL+OCURLNormalization.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCURLNormalization.m"; sourceTree = "<group>"; };
 		DCDBEE3B2049F3D100189B9A /* MiscTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MiscTests.m; sourceTree = "<group>"; };
+		DCDC62DF24D8A04900585261 /* NSArray+OCSegmentedProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSArray+OCSegmentedProcessing.h"; sourceTree = "<group>"; };
+		DCDC62E024D8A04900585261 /* NSArray+OCSegmentedProcessing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSArray+OCSegmentedProcessing.m"; sourceTree = "<group>"; };
 		DCDCA61A245093E800AFA158 /* NSURL+OCPrivateLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURL+OCPrivateLink.h"; sourceTree = "<group>"; };
 		DCDCA61B245093E800AFA158 /* NSURL+OCPrivateLink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURL+OCPrivateLink.m"; sourceTree = "<group>"; };
 		DCDD9B12222986D50052A001 /* OCShare+OCXMLObjectCreation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCShare+OCXMLObjectCreation.h"; sourceTree = "<group>"; };
@@ -1449,6 +1453,8 @@
 				DC7650062403DF5000201812 /* NSError+OCNetworkFailure.h */,
 				DCA35D5C24CF6BEC00DBE2B0 /* NSArray+OCNullable.m */,
 				DCA35D5B24CF6BEC00DBE2B0 /* NSArray+OCNullable.h */,
+				DCDC62E024D8A04900585261 /* NSArray+OCSegmentedProcessing.m */,
+				DCDC62DF24D8A04900585261 /* NSArray+OCSegmentedProcessing.h */,
 			);
 			path = Foundation;
 			sourceTree = "<group>";
@@ -3075,6 +3081,7 @@
 				DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */,
 				DC3CE0482429FCDF00AB8B88 /* OCMessageQueue.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
+				DCDC62E124D8A04900585261 /* NSArray+OCSegmentedProcessing.h in Headers */,
 				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
 				DC2F636B2239523A0063C2DA /* OCShareQuery.h in Headers */,
 				DCB0A46421B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h in Headers */,
@@ -3614,6 +3621,7 @@
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
 				DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
+				DCDC62E224D8A04900585261 /* NSArray+OCSegmentedProcessing.m in Sources */,
 				DC701478220AE696009D4FD9 /* OCHTTPPipelineTask.m in Sources */,
 				DCEA7D982093556600F25223 /* OCCache.m in Sources */,
 				DCE227D422D60D49000BE0A5 /* OCItemPolicy.m in Sources */,
@@ -4022,7 +4030,6 @@
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -4053,7 +4060,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -4090,7 +4096,6 @@
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -4121,7 +4126,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

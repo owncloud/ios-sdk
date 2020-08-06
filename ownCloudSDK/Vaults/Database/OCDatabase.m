@@ -34,6 +34,9 @@
 #import "OCAsyncSequentialQueue.h"
 #import "NSString+OCSQLTools.h"
 #import "OCItemPolicy.h"
+#import "OCCoreManager.h"
+#import "NSArray+OCSegmentedProcessing.h"
+#import "OCSQLiteDB+Internal.h"
 
 #import <objc/runtime.h>
 
@@ -46,6 +49,7 @@
 
 	OCAsyncSequentialQueue *_openQueue;
 	NSInteger _openCount;
+	OCCoreMemoryConfiguration _memoryConfiguration;
 }
 
 @end
@@ -70,6 +74,8 @@
 		self.removedItemRetentionLength = 100;
 
 		_selectItemRowsSQLQueryPrefix = @"SELECT mdID, mdTimestamp, syncAnchor, itemData";
+
+		_memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
@@ -240,7 +246,6 @@
 
 - (void)addCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
-	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 	OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
 
 	if (_itemFilter != nil)
@@ -248,8 +253,9 @@
 		items = _itemFilter(items);
 	}
 
-	for (OCItem *item in items)
-	{
+	[items enumerateObjectsWithTransformer:^id _Nullable(OCItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull stop) {
+		OCSQLiteQuery *query = nil;
+
 		if (item.localID == nil)
 		{
 			OCLogWarning(@"Item added without localID: %@", item);
@@ -260,7 +266,7 @@
 			OCLogWarning(@"Item added without parentLocalID: %@", item);
 		}
 
-		[queries addObject:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
+		query = [OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameMetaData rowValues:@{
 			@"type" 		: @(item.type),
 			@"syncAnchor"		: syncAnchor,
 			@"removed"		: @(0),
@@ -283,17 +289,29 @@
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
 			item.databaseTimestamp = mdTimestamp;
-		}]];
-	}
+		}];
 
-	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
-	}]];
+		return (query);
+	} process:^(NSArray<OCSQLiteQuery *> * _Nonnull queries, NSUInteger processed, NSUInteger total, BOOL * _Nonnull stop) {
+		[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+			if (error != nil)
+			{
+				*stop = YES;
+			}
+
+			[db logMemoryStatistics];
+			[db flushCache];
+
+			if ((processed == total) || (error != nil))
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 20 : 200)];
 }
 
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
-	NSMutableArray <OCSQLiteQuery *> *queries = [[NSMutableArray alloc] initWithCapacity:items.count];
 	OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
 
 	if (_itemFilter != nil)
@@ -301,8 +319,9 @@
 		items = _itemFilter(items);
 	}
 
-	for (OCItem *item in items)
-	{
+	[items enumerateObjectsWithTransformer:^id _Nullable(OCItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull stop) {
+		OCSQLiteQuery *query = nil;
+
 		if ((item.localID == nil) && (!item.removed))
 		{
 			OCLogDebug(@"Item updated without localID: %@", item);
@@ -315,7 +334,7 @@
 
 		if (item.databaseID != nil)
 		{
-			[queries addObject:[OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
+			query = [OCSQLiteQuery queryUpdatingRowWithID:item.databaseID inTable:OCDatabaseTableNameMetaData withRowValues:@{
 				@"type" 		: @(item.type),
 				@"syncAnchor"		: syncAnchor,
 				@"removed"		: @(item.removed),
@@ -335,7 +354,7 @@
 				@"fileID"		: OCSQLiteNullProtect(item.fileID),
 				@"localID"		: OCSQLiteNullProtect(item.localID),
 				@"itemData"		: [item serializedData]
-			} completionHandler:nil]];
+			} completionHandler:nil];
 
 			item.databaseTimestamp = mdTimestamp;
 		}
@@ -343,11 +362,24 @@
 		{
 			OCLogError(@"Item without databaseID can't be used for updating: %@", item);
 		}
-	}
 
-	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-		completionHandler(self, error);
-	}]];
+		return (query);
+	} process:^(NSArray<OCSQLiteQuery *> *queries, NSUInteger processed, NSUInteger total, BOOL * _Nonnull stop) {
+		[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+			if (error != nil)
+			{
+				*stop = YES;
+			}
+
+			[db logMemoryStatistics];
+			[db flushCache];
+
+			if ((processed == total) || (error != nil))
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 20 : 200)];
 }
 
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
@@ -436,6 +468,7 @@
 - (void)_completeRetrievalWithResultSet:(OCSQLiteResultSet *)resultSet completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSMutableArray <OCItem *> *items = [NSMutableArray new];
+	NSMutableArray <OCUser *> *cachedUsers = [NSMutableArray new];
 	NSError *returnError = nil;
 	__block OCSyncAnchor syncAnchor = nil;
 
@@ -446,6 +479,20 @@
 		if ((item = [self _itemFromResultDict:resultDict]) != nil)
 		{
 			[items addObject:item];
+
+			if (item.owner != nil)
+			{
+				NSUInteger cachedUserIndex;
+
+				if ((cachedUserIndex = [cachedUsers indexOfObject:item.owner]) != NSNotFound)
+				{
+					item.owner = [cachedUsers objectAtIndex:cachedUserIndex];
+				}
+				else
+				{
+					[cachedUsers addObject:item.owner];
+				}
+			}
 		}
 
 		if ((itemSyncAnchor = (NSNumber *)resultDict[@"syncAnchor"]) != nil)

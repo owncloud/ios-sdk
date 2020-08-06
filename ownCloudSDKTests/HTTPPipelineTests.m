@@ -60,7 +60,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 }
 
 #pragma mark - Requirements
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals forTask:(OCHTTPPipelineTask *)task failWithError:(NSError *__autoreleasing  _Nullable *)outError
 {
 	if (self.meetsSignalRequirements != nil)
 	{
