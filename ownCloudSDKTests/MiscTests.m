@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 
 @interface MiscTests : XCTestCase
 

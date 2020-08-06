@@ -113,7 +113,7 @@
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
-	return ((_userName.hash << 1) ^ (_displayName.hash >> 1) ^ _emailAddress.hash ^ _forceIsRemote);
+	return ((_userName.hash << 1) ^ (_displayName.hash >> 1) ^ _emailAddress.hash ^ ((_forceIsRemote != nil) ? _forceIsRemote.boolValue : 0xEF));
 }
 
 - (BOOL)isEqual:(id)object

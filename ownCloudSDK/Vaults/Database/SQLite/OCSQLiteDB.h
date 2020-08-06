@@ -44,10 +44,13 @@ typedef NS_ENUM(int, OCSQLiteOpenFlags)
 typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 {
 	OCSQLiteDBErrorAlreadyOpenedInInstance, //!< Instance has already opened file
-	OCSQLiteDBErrorDatabaseNotOpened	//!< SQLite database not opened
+	OCSQLiteDBErrorDatabaseNotOpened,	//!< SQLite database not opened
+	OCSQLiteDBErrorInsufficientParameters	//!< Insufficient parameters
 };
 
 typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
+
+typedef NSString* OCSQLiteQueryString;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,6 +69,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 	NSTimeInterval _maxBusyRetryTimeInterval;
 	NSTimeInterval _firstBusyRetryTime;
 
+	BOOL _cacheStatements;
+	NSMutableArray<OCSQLiteStatement *> *_cachedStatements;
+
 	NSInteger _transactionNestingLevel;
 	NSUInteger _savepointCounter;
 
@@ -82,6 +88,8 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 @property(nullable,strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
 
 @property(assign,nonatomic) NSTimeInterval maxBusyRetryTimeInterval; //!< Amount of time SQLite retries accessing a database before it returns a SQLITE_BUSY error
+
+@property(assign,nonatomic) BOOL cacheStatements; //!< If YES, caches and reuses statements
 
 @property(nullable,readonly,nonatomic) sqlite3 *sqlite3DB;
 
@@ -130,6 +138,7 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - Miscellaneous
 - (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.
+- (void)flushCache; //!< Tells SQLite to flush its in-memory cache to disk.
 + (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a soft heap memory limit for SQLite
 
 @end

@@ -152,9 +152,8 @@
 }
 
 #pragma mark - Cache Cleaning
-- (void)_receivedMemoryWarning:(NSNotification *)notification
+- (void)clearCache
 {
-	// Received memory warning - release the maximum amount of memory possible
 	@synchronized(self)
 	{
 		[_valuesByKey removeAllObjects];
@@ -163,6 +162,12 @@
 
 		_currentCost = 0;
 	}
+}
+
+- (void)_receivedMemoryWarning:(NSNotification *)notification
+{
+	// Received memory warning - release the maximum amount of memory possible
+	[self clearCache];
 }
 
 - (void)_cleanCache

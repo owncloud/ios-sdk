@@ -67,6 +67,8 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 		_journalMode = OCSQLiteJournalModeDelete; // (SQLite default)
 
+		self.cacheStatements = YES;
+
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
 		#endif /* TARGET_OS_IOS */
@@ -502,7 +504,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	[self enterProcessing];
 
-	if ((statement = [self _statementForSQLQuery:sqlQuery error:&error]) != nil)
+	if ((statement = [self _statementForSQLQuery:sqlQuery allowCaching:NO error:&error]) != nil)
 	{
 		if (error == nil)
 		{
@@ -558,7 +560,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	[self enterProcessing];
 
-	if ((statement = [self _statementForSQLQuery:query.sqlQuery error:&error]) != nil)
+	if ((statement = [self _statementForSQLQuery:query.sqlQuery allowCaching:YES error:&error]) != nil)
 	{
 		if (query.namedParameters != nil)
 		{
@@ -642,7 +644,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	return (error);
 }
 
-- (OCSQLiteStatement *)_statementForSQLQuery:(NSString *)sqlQuery error:(NSError **)outError
+- (OCSQLiteStatement *)_statementForSQLQuery:(OCSQLiteQueryString)sqlQuery allowCaching:(BOOL)allowCaching error:(NSError **)outError
 {
 	// This is a hook for caching statements in the future
 
@@ -663,6 +665,23 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		return (nil);
 	}
 
+	if (sqlQuery == nil)
+	{
+		if (outError != NULL)
+		{
+			*outError = OCSQLiteDBError(OCSQLiteDBErrorInsufficientParameters);
+		}
+
+		return (nil);
+	}
+
+	if (_cacheStatements && allowCaching && ![sqlQuery hasPrefix:@"PRAGMA"] && ![sqlQuery hasPrefix:@"CREATE"])
+	{
+		// Retrieve prepared statement from cache - or create a new one and track it in the cache
+		return ([self _cachedStatementForSQLQuery:sqlQuery error:outError]);
+	}
+
+	// Create a new statement for single use
 	return ([OCSQLiteStatement statementFromQuery:sqlQuery database:self error:outError]);
 }
 
@@ -812,6 +831,104 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	[self leaveProcessing];
 }
 
+
+#pragma mark - Statement caching
+- (void)setCacheStatements:(BOOL)cacheStatements
+{
+	_cacheStatements = cacheStatements;
+
+	@synchronized(OCSQLiteStatement.class)
+	{
+		if (_cacheStatements)
+		{
+			if (_cachedStatements == nil)
+			{
+				_cachedStatements = [NSMutableArray new];
+			}
+		}
+		else
+		{
+			_cachedStatements = nil;
+		}
+	}
+}
+
+- (OCSQLiteStatement *)_cachedStatementForSQLQuery:(OCSQLiteQueryString)sqlQuery error:(NSError **)error
+{
+	OCSQLiteStatement *statement = nil;
+	NSUInteger maxCachedStatements = 20;
+//	NSTimeInterval maxAgeInSeconds = 3;
+
+	@synchronized(OCSQLiteStatement.class)
+	{
+		NSInteger idx = 0;
+//		NSUInteger cutOffIdx = NSNotFound;
+
+		for (OCSQLiteStatement *cachedStatement in _cachedStatements)
+		{
+			if (!cachedStatement.isClaimed)
+			{
+				if ([cachedStatement.query isEqualToString:sqlQuery])
+				{
+					if (cachedStatement.sqlStatement != NULL)
+					{
+						statement = cachedStatement;
+						[statement reset]; // Reset here, so we can be sure it's on the SQLite thread
+						break;
+					}
+					else
+					{
+						OCLogWarning(@"SQL statement cache entry with NULL sqlStatement: %@", cachedStatement);
+					}
+				}
+//				else if (cutOffIdx == NSNotFound)
+//				{
+//					NSTimeInterval timeSinceLastUse = NSDate.timeIntervalSinceReferenceDate - cachedStatement.lastUsed;
+//
+//					if (timeSinceLastUse > maxAgeInSeconds)
+//					{
+//						cutOffIdx = idx;
+//					}
+//				}
+			}
+
+			idx++;
+		}
+
+		if (statement != nil)
+		{
+			// Moved statement back to top of array
+			if (idx != 0)
+			{
+				[_cachedStatements insertObject:statement atIndex:0];
+				[_cachedStatements removeObjectAtIndex:idx+1];
+			}
+		}
+
+		if (statement == nil)
+		{
+			statement = [OCSQLiteStatement statementFromQuery:sqlQuery database:self error:error];
+
+			// Insert statement at the top of the array
+			[_cachedStatements insertObject:statement atIndex:0];
+
+//			if (cutOffIdx != NSNotFound)
+//			{
+//				[_cachedStatements removeObjectsInRange:NSMakeRange(cutOffIdx+1, _cachedStatements.count - cutOffIdx - 1)];
+//			}
+
+			if (_cachedStatements.count > maxCachedStatements)
+			{
+				[_cachedStatements removeObjectsInRange:NSMakeRange(maxCachedStatements, _cachedStatements.count - maxCachedStatements)];
+			}
+		}
+	}
+
+	// OCLogDebug(@"using: %@\ncached: %@", statement, _cachedStatements);
+
+	return (statement);
+}
+
 #pragma mark - Debug tools
 - (void)executeQueryString:(NSString *)queryString //!< Runs a query and logs the result. Meant to simplify debugging.
 {
@@ -940,6 +1057,22 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	{
 		[self queueBlock:^{
 			sqlite3_db_release_memory(self->_db);
+		}];
+	}
+}
+
+- (void)flushCache
+{
+	if (_db == NULL) { return; }
+
+	if ([self isOnSQLiteThread])
+	{
+		sqlite3_db_cacheflush(_db);
+	}
+	else
+	{
+		[self queueBlock:^{
+			sqlite3_db_cacheflush(self->_db);
 		}];
 	}
 }

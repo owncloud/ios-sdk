@@ -31,12 +31,18 @@
 	if ((self = [super init]) != nil)
 	{
 		_statement = statement;
+		[_statement claim]; // Indicate this statement is in use
+
 		_sqlStatement = _statement.sqlStatement;
 	}
 
 	return(self);
 }
 
+- (void)dealloc
+{
+	[_statement dropClaim]; // Indicate this statement is no longer in use
+}
 
 #pragma mark - Iterating
 - (BOOL)nextRow:(NSError **)outError

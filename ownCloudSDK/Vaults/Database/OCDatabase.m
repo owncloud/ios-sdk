@@ -36,6 +36,7 @@
 #import "OCItemPolicy.h"
 #import "OCCoreManager.h"
 #import "NSArray+OCSegmentedProcessing.h"
+#import "OCSQLiteDB+Internal.h"
 
 @interface OCDatabase ()
 {
@@ -296,6 +297,9 @@
 				*stop = YES;
 			}
 
+			[db logMemoryStatistics];
+			[db flushCache];
+
 			if ((processed == total) || (error != nil))
 			{
 				completionHandler(self, error);
@@ -364,6 +368,9 @@
 			{
 				*stop = YES;
 			}
+
+			[db logMemoryStatistics];
+			[db flushCache];
 
 			if ((processed == total) || (error != nil))
 			{
