@@ -65,7 +65,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,readonly) OCProcessSession *originProcessSession; //!< The process session that this sync record originated in
 
 #pragma mark - Revision
-@property(strong,nullable) OCSyncRecordRevision revision; //!< Revision of the sync record (ephermal)
+@property(strong,nullable) OCSyncRecordRevision revision; //!< Revision of the sync record
 
 #pragma mark - Lane integration
 @property(strong,nullable) OCSyncLaneID laneID; //!< The ID of the sync lane this record is scheduled on.

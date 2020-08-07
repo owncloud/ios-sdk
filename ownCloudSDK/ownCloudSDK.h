@@ -55,6 +55,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCore+ItemUpdates.h>
 #import <ownCloudSDK/OCCore+DirectURL.h>
 #import <ownCloudSDK/OCCore+NameConflicts.h>
+#import <ownCloudSDK/OCScanJobActivity.h>
 #import <ownCloudSDK/NSString+NameConflicts.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
@@ -204,6 +205,12 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCellularSwitch.h>
 
 #import <ownCloudSDK/OCNetworkMonitor.h>
+
+#import <ownCloudSDK/OCDiagnosticSource.h>
+#import <ownCloudSDK/OCDiagnosticNode.h>
+#import <ownCloudSDK/OCDatabase+Diagnostic.h>
+#import <ownCloudSDK/OCSyncRecord+Diagnostic.h>
+#import <ownCloudSDK/OCHTTPPipeline+Diagnostic.h>
 
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
 #import <ownCloudSDK/OCRateLimiter.h>

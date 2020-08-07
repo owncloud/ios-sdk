@@ -32,6 +32,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCCore+ItemPolicies.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCScanJobActivity.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -1529,7 +1530,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			// Publish background scan activity
 			if (_scheduledDirectoryUpdateJobActivity == nil)
 			{
-				_scheduledDirectoryUpdateJobActivity = [OCActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:NSLocalizedString(@"Scanning server for changes…", @"") statusMessage:nil ranking:0];
+				_scheduledDirectoryUpdateJobActivity = [OCScanJobActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:NSLocalizedString(@"Fetching updates…", @"") statusMessage:nil ranking:0];
 				_scheduledDirectoryUpdateJobActivity.state = OCActivityStateRunning;
 				_scheduledDirectoryUpdateJobActivity.progress = [NSProgress new];
 				_scheduledDirectoryUpdateJobActivity.isCancellable = NO;
@@ -1549,7 +1550,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			if (currentPathChange != nil)
 			{
-				[self.activityManager update:[[OCActivityUpdate updatingActivityForIdentifier:_scheduledDirectoryUpdateJobActivity.identifier] withStatusMessage:[NSString stringWithFormat:@"%lu/%lu – %@", (_totalScheduledDirectoryUpdateJobs - activeScheduledJobsCount), (unsigned long)_totalScheduledDirectoryUpdateJobs, currentPathChange.lastPathComponent]]];
+				_scheduledDirectoryUpdateJobActivity.completedUpdateJobs = _totalScheduledDirectoryUpdateJobs - activeScheduledJobsCount;
+				_scheduledDirectoryUpdateJobActivity.totalUpdateJobs = _totalScheduledDirectoryUpdateJobs;
 			}
 
 			_scheduledDirectoryUpdateJobActivity.progress.completedUnitCount = (((_totalScheduledDirectoryUpdateJobs + _pendingScheduledDirectoryUpdateJobs) - activeScheduledJobsCount) * progressTotalUnitCount) / (_totalScheduledDirectoryUpdateJobs + _pendingScheduledDirectoryUpdateJobs);

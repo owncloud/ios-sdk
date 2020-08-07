@@ -80,6 +80,12 @@
 	[coder encodeObject:_autoChoiceForError forKey:@"autoChoiceForError"];
 }
 
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, autoChoiceForError: %@, label: %@>", NSStringFromClass(self.class), self, self.identifier, _autoChoiceForError, self.label]);
+}
+
 @end
 
 OCSyncIssueChoiceIdentifier OCSyncIssueChoiceIdentifierOK = @"_ok";
