@@ -186,12 +186,15 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 static int OCSQLiteDBBusyHandler(void *refCon, int count)
 {
 	OCSQLiteDB *dbObj = (__bridge OCSQLiteDB *)refCon;
+	__weak OCSQLiteDB *weakSelf = dbObj;
 	NSTimeInterval elapsedTime = ([NSDate timeIntervalSinceReferenceDate] - dbObj->_firstBusyRetryTime);
 
 	if (count == 0)
 	{
 		// Record start time
 		dbObj->_firstBusyRetryTime = [NSDate timeIntervalSinceReferenceDate];
+
+		OCWTLogDebug(@[@"Busy"], @"Busy time started");
 
 		return (1); // Retry
 	}
@@ -202,9 +205,13 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			// We're still below the timeout threshold, so sleep a random time between 50 and 100 microseconds
 			sqlite3_sleep(50 + arc4random_uniform(50));
 
+			OCWTLogDebug(@[@"Busy"], @"Retrying, with %f of %f elapsed", elapsedTime, dbObj->_maxBusyRetryTimeInterval);
+
 			return (1); // Retry
 		}
 	}
+
+	OCWTLogError(@[@"Busy"], @"Busy handler timeout hit - with %f of %f elapsed", elapsedTime, dbObj->_maxBusyRetryTimeInterval);
 
 	return (0); // Give up and return busy error
 }
@@ -504,7 +511,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	[self enterProcessing];
 
-	if ((statement = [self _statementForSQLQuery:sqlQuery allowCaching:NO error:&error]) != nil)
+	if ((statement = [self _statementForSQLQuery:sqlQuery allowCaching:NO error:&error]) != nil) // If caching is ever turned on here, the statement needs to be reset (to release the file lock asap) below, afte sqlite3_step
 	{
 		if (error == nil)
 		{
@@ -601,6 +608,12 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		if (query.resultHandler != nil)
 		{
 			query.resultHandler(self, error, transaction, ((error==nil) ? (hasRows ? [[OCSQLiteResultSet alloc] initWithStatement:statement] : nil) : nil));
+		}
+
+		if (!statement.isClaimed && ([_cachedStatements indexOfObjectIdenticalTo:statement] != NSNotFound))
+		{
+			// Release resources / file lock
+			[statement reset];
 		}
 	}
 
