@@ -48,18 +48,21 @@
 
 	if ((nameStyleNumber = options[OCCoreOptionAutomaticConflictResolutionNameStyle]) != nil)
 	{
-		__block NSString *outSuggestedName = nil;
-
-		OCSyncExec(checkForExistingItems, {
-			[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
-				outSuggestedName = suggestedName;
-				OCSyncExecDone(checkForExistingItems);
-			}];
-		});
-
-		if (outSuggestedName != nil)
+		if (nameStyleNumber.integerValue != OCCoreDuplicateNameStyleNone)
 		{
-			newFileName = outSuggestedName;
+			__block NSString *outSuggestedName = nil;
+
+			OCSyncExec(checkForExistingItems, {
+				[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+					outSuggestedName = suggestedName;
+					OCSyncExecDone(checkForExistingItems);
+				}];
+			});
+
+			if (outSuggestedName != nil)
+			{
+				newFileName = outSuggestedName;
+			}
 		}
 	}
 

@@ -257,6 +257,12 @@
 {
 	@synchronized(OCSQLiteStatement.class)
 	{
+		if (_isClaimed)
+		{
+			// Release resources / file lock asap
+			[self reset];
+		}
+
 		_isClaimed = NO;
 	}
 }

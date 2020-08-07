@@ -58,11 +58,17 @@
 {
 	static OCProcessManager *sharedProcessManager;
 	static dispatch_once_t onceToken;
+	__block BOOL notifyFinishedLaunching = NO;
 
 	dispatch_once(&onceToken, ^{
 		sharedProcessManager = [OCProcessManager new];
-		[sharedProcessManager processDidFinishLaunching];
+		notifyFinishedLaunching = YES;
 	});
+
+	if (notifyFinishedLaunching)
+	{
+		[sharedProcessManager processDidFinishLaunching];
+	}
 
 	return (sharedProcessManager);
 }
