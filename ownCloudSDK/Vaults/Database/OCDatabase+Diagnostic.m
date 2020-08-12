@@ -46,11 +46,12 @@
 					switch (type)
 					{
 						case OCItemTypeFile:
-							[nodes addObject:[OCDiagnosticNode withLabel:@"Files" content:@(cnt).stringValue]];
+							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Files") content:@(cnt).stringValue]];
 						break;
 
 						case OCItemTypeCollection:
-							[nodes addObject:[OCDiagnosticNode withLabel:@"Folders" content:@(cnt).stringValue]];
+							cnt -= 1; // do not count the root folder
+							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Folders") content:@(cnt).stringValue]];
 						break;
 					}
 				}
@@ -64,12 +65,12 @@
 
 			if (totalItems > 0)
 			{
-				[nodes addObject:[OCDiagnosticNode withLabel:@"Total Items" content:@(totalItems).stringValue]];
+				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Total Items") content:@(totalItems).stringValue]];
 			}
 
 			if (removedItems > 0)
 			{
-				[nodes addObject:[OCDiagnosticNode withLabel:@"Removed Items" content:@(removedItems).stringValue]];
+				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Removed Items") content:@(removedItems).stringValue]];
 			}
 		}],
 
@@ -81,7 +82,7 @@
 				updateJobs += OCTypedCast(rowDictionary[@"cnt"], NSNumber).unsignedIntegerValue;
 			} error:NULL];
 
-			[nodes addObject:[OCDiagnosticNode withLabel:@"Scheduled folder scans" content:@(updateJobs).stringValue]];
+			[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Scheduled folder scans") content:@(updateJobs).stringValue]];
 		}]
 
 	] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction, NSError * _Nullable error) {

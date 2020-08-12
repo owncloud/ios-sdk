@@ -293,3 +293,11 @@
 
 // OCErrorPrivateLinkResolutionFailed
 "Resolution of private link failed." = "Resolution of private link failed.";
+
+/* Diagnostic */
+"Files" = "Files";
+"Folders" = "Folders";
+"Total Items" = "Total Items";
+"Removed Items" = "Removed Items";
+"Scheduled folder scans" = "Scheduled folder scans";
+
