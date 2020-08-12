@@ -23,9 +23,9 @@
 - (NSArray<OCDiagnosticNode *> *)diagnosticNodesWithContext:(OCDiagnosticContext *)context
 {
 	return (@[
-		[OCDiagnosticNode withLabel:@"Class" content:NSStringFromClass(self.class)],
-		[OCDiagnosticNode withLabel:@"Identifier" content:self.identifier],
-		[OCDiagnosticNode withLabel:@"Localized Description" content:self.localizedDescription]
+		[OCDiagnosticNode withLabel:OCLocalized(@"Class") content:NSStringFromClass(self.class)],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Identifier") content:self.identifier],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Localized Description") content:self.localizedDescription]
 	]);
 }
 

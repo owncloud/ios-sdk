@@ -59,29 +59,29 @@
 	}
 
 	return (@[
-		[OCDiagnosticNode withLabel:@"Sync Record ID" 		content:_recordID.stringValue],
-		[OCDiagnosticNode withLabel:@"State" 			content:@(self.state).stringValue],
-		[OCDiagnosticNode withLabel:@"In progress since" 	content:self.inProgressSince.description],
-		[OCDiagnosticNode withLabel:@"Origin Process" 		content:_originProcessSession.description],
-		[OCDiagnosticNode withLabel:@"Origin Process Valid" 	content:@([OCProcessManager.sharedProcessManager isSessionValid:_originProcessSession usingThoroughChecks:YES]).description],
-		[OCDiagnosticNode withLabel:@"Timestamp" 		content:self.timestamp.description],
-		[OCDiagnosticNode withLabel:@"Lane ID" 			content:self.laneID.stringValue],
-		[OCDiagnosticNode withLabel:@"Local ID" 		content:self.localID],
-		[OCDiagnosticNode withLabel:@"Action ID" 		content:self.actionIdentifier],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Sync Record ID") 		content:_recordID.stringValue],
+		[OCDiagnosticNode withLabel:OCLocalized(@"State") 				content:@(self.state).stringValue],
+		[OCDiagnosticNode withLabel:OCLocalized(@"In progress since") 	content:self.inProgressSince.description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Origin Process")		content:_originProcessSession.description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Origin Process Valid") 	content:@([OCProcessManager.sharedProcessManager isSessionValid:_originProcessSession usingThoroughChecks:YES]).description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Timestamp") 		content:self.timestamp.description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Lane ID") 		content:self.laneID.stringValue],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Local ID") 		content:self.localID],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Action ID") 		content:self.actionIdentifier],
 
-		[OCDiagnosticNode withLabel:@"Process Sync Records" action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalized(@"Process Sync Records") action:^(OCDiagnosticContext * _Nullable context) {
 			[context.core setNeedsToProcessSyncRecords];
 		}],
-		[OCDiagnosticNode withLabel:@"Reschedule" action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalized(@"Reschedule") action:^(OCDiagnosticContext * _Nullable context) {
 			[context.core rescheduleSyncRecord:self withUpdates:nil];
 		}],
-		[OCDiagnosticNode withLabel:@"Deschedule (remove)" action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalized(@"Deschedule (remove)") action:^(OCDiagnosticContext * _Nullable context) {
 			[context.core descheduleSyncRecord:self completeWithError:nil parameter:nil];
 		}],
 
-		[OCDiagnosticNode withLabel:@"Action" 			children:[self.action diagnosticNodesWithContext:context]],
-		[OCDiagnosticNode withLabel:@"Wait Conditions" 		children:waitConditionNodes],
-		[OCDiagnosticNode withLabel:@"Events" 			children:eventNodes],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Action") 			children:[self.action diagnosticNodesWithContext:context]],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Wait Conditions") children:waitConditionNodes],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Events") 			children:eventNodes],
 	]);
 }
 

@@ -300,4 +300,21 @@
 "Total Items" = "Total Items";
 "Removed Items" = "Removed Items";
 "Scheduled folder scans" = "Scheduled folder scans";
-
+"Sync Record ID"  = "Sync Record ID";
+"State" = "State";
+"In progress since" = "In progress since";
+"Origin Process" = "Origin Process";
+"Origin Process Valid" = "Origin Process Valid";
+"Timestamp" = "Timestamp";
+"Lane ID" = "Lane ID";
+"Local ID" = "Local ID";
+"Action ID" = "Action ID";
+"Process Sync Records" = "Process Sync Records";
+"Reschedule" = "Reschedule";
+"Deschedule (remove)" = "Deschedule (remove)";
+"Action" = "Action";
+"Wait Conditions" = "Wait Conditions";
+"Events" = "Events";
+"Class" = "Class";
+"Identifier" = "Identifier";
+"Localized Description" = "Localized Description";
