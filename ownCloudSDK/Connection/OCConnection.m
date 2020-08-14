@@ -108,7 +108,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionForceBackgroundURLSessions		: @(NO),
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
-		OCConnectionAlwaysRequestPrivateLink		: @(NO)
+		OCConnectionAlwaysRequestPrivateLink		: @(NO),
+		OCConnectionSyncRootETagInterval : @(10.0)
 	});
 }
 
@@ -179,6 +180,10 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	return (sSetupHTTPPolicy);
+}
+
++ (NSTimeInterval)syncRootEtagInterval {
+	return ([[self classSettingForOCClassSettingsKey:OCConnectionSyncRootETagInterval] doubleValue]);
 }
 
 #pragma mark - Init
@@ -2290,6 +2295,7 @@ OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-u
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
+OCClassSettingsKey OCConnectionSyncRootETagInterval = @"sync-root-etag-interval";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

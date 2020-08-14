@@ -125,6 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
 @property(class,readonly,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used (reflecting class settings / MDM configuration)
 @property(class,assign,nonatomic) OCConnectionSetupHTTPPolicy setupHTTPPolicy; //!< Policy to use for setting up with plain-text HTTP URLs.
+@property(class,readonly,nonatomic) NSTimeInterval syncRootEtagInterval;
 
 @property(nullable,strong) OCBookmark *bookmark;
 @property(nullable,strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
@@ -386,6 +387,8 @@ extern OCClassSettingsKey OCConnectionForceBackgroundURLSessions; //!< Forces (T
 extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
+
+extern OCClassSettingsKey OCConnectionSyncRootETagInterval; //!<Time interval in seconds for polling ETag changes
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads
