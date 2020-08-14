@@ -136,9 +136,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	@synchronized(_queuedItemListTaskUpdateJobs)
 	{
-		if (_scheduledItemListTasks.count < self.parallelItemListTaskCount)
+		if ((self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
 		{
-			if ((self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
+			// Check for tasks waiting to be (re)started
+			if (_scheduledItemListTasks.count != 0)
+			{
+				for (OCCoreItemListTask *itemListTask in _scheduledItemListTasks)
+				{
+					[itemListTask updateIfNew];
+				}
+			}
+
+			// Check for free capacities and try to fill them
+			if (_scheduledItemListTasks.count < self.parallelItemListTaskCount)
 			{
 				// Check for high-priority query item list update jobs
 				for (OCCoreDirectoryUpdateJob *updateJob in _queuedItemListTaskUpdateJobs)
@@ -188,17 +198,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					{
 						[_scheduledItemListTasks addObject:task];
 					}
-				}
-			}
-		}
-		else
-		{
-			// Check
-			if ((self.state != OCCoreStateStopping) && (self.state != OCCoreStateStopped))
-			{
-				for (OCCoreItemListTask *itemListTask in _scheduledItemListTasks)
-				{
-					[itemListTask updateIfNew];
 				}
 			}
 		}

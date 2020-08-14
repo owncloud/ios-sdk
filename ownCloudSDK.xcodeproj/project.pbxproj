@@ -495,6 +495,8 @@
 		DCD2D42322F180EF0071FB8F /* ItemPolicyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD2D42222F180EF0071FB8F /* ItemPolicyTests.m */; };
 		DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD3439A2059319C00189B9A /* OCSQLiteDB.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD3439B2059319C00189B9A /* OCSQLiteDB.m */; };
+		DCD49A0D24E68D72008D9544 /* OCBookmark+Diagnostics.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD49A0924E68BD5008D9544 /* OCBookmark+Diagnostics.m */; };
+		DCD49A0E24E68F7B008D9544 /* OCBookmark+Diagnostics.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD49A0824E68BD5008D9544 /* OCBookmark+Diagnostics.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD63276223BB1710090169E /* OCCapabilities.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD63274223BB1710090169E /* OCCapabilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD63277223BB1710090169E /* OCCapabilities.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD63275223BB1710090169E /* OCCapabilities.m */; };
 		DCD6327B223BE0980090169E /* capabilities.json in Resources */ = {isa = PBXBuildFile; fileRef = DCD6327A223BE0980090169E /* capabilities.json */; };
@@ -1215,6 +1217,8 @@
 		DCD2D42222F180EF0071FB8F /* ItemPolicyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ItemPolicyTests.m; sourceTree = "<group>"; };
 		DCD3439A2059319C00189B9A /* OCSQLiteDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteDB.h; sourceTree = "<group>"; };
 		DCD3439B2059319C00189B9A /* OCSQLiteDB.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteDB.m; sourceTree = "<group>"; };
+		DCD49A0824E68BD5008D9544 /* OCBookmark+Diagnostics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+Diagnostics.h"; sourceTree = "<group>"; };
+		DCD49A0924E68BD5008D9544 /* OCBookmark+Diagnostics.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+Diagnostics.m"; sourceTree = "<group>"; };
 		DCD63274223BB1710090169E /* OCCapabilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCapabilities.h; sourceTree = "<group>"; };
 		DCD63275223BB1710090169E /* OCCapabilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCapabilities.m; sourceTree = "<group>"; };
 		DCD6327A223BE0980090169E /* capabilities.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capabilities.json; sourceTree = "<group>"; };
@@ -2238,6 +2242,8 @@
 			children = (
 				DCC8F9E12028554E00EB6701 /* OCBookmark.m */,
 				DCC8F9E02028554E00EB6701 /* OCBookmark.h */,
+				DCD49A0924E68BD5008D9544 /* OCBookmark+Diagnostics.m */,
+				DCD49A0824E68BD5008D9544 /* OCBookmark+Diagnostics.h */,
 				DC2266A62282BC8100FB29EE /* OCBookmark+IPNotificationNames.h */,
 			);
 			path = Bookmark;
@@ -2977,6 +2983,7 @@
 				DCADC0442072CCC900DB8E83 /* OCCoreItemListTask.h in Headers */,
 				DCD3439C2059319C00189B9A /* OCSQLiteDB.h in Headers */,
 				DC1D3DF22459B86200328EBC /* NSString+TUSMetadata.h in Headers */,
+				DCD49A0E24E68F7B008D9544 /* OCBookmark+Diagnostics.h in Headers */,
 				DCDD9B18222989E50052A001 /* OCRecipient.h in Headers */,
 				DCADC03F2072774200DB8E83 /* OCQuery+Internal.h in Headers */,
 				DC4A2C5E20D4608100A47260 /* OCIssueChoice.h in Headers */,
@@ -3529,6 +3536,7 @@
 				DC8B7B3A22D88FFD00E63657 /* OCItemPolicyProcessor.m in Sources */,
 				DCA35D5E24CF6BEC00DBE2B0 /* NSArray+OCNullable.m in Sources */,
 				DC2F63642239455E0063C2DA /* OCRecipientSearchController.m in Sources */,
+				DCD49A0D24E68D72008D9544 /* OCBookmark+Diagnostics.m in Sources */,
 				DC98BDF621E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m in Sources */,
 				DC8245B421FB31E500775AB9 /* OCActivityManager.m in Sources */,
 				DC3422832180765900705508 /* OCCore+ItemUpdates.m in Sources */,

@@ -74,6 +74,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>
 
 #import <ownCloudSDK/OCBookmark.h>
+#import <ownCloudSDK/OCBookmark+Diagnostics.h>
 
 #import <ownCloudSDK/OCAuthenticationMethod.h>
 #import <ownCloudSDK/OCAuthenticationMethodBasicAuth.h>
