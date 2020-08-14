@@ -20,6 +20,8 @@
 #import "OCHTTPResponse.h"
 #import "OCHTTPRequest.h"
 #import "NSHTTPCookie+OCCookies.h"
+#import "OCKeyValueStore.h"
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,9 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef BOOL(^OCHTTPCookieStorageCookieFilter)(NSHTTPCookie *cookie); //!< Cookie storage filter block: cookies for which YES is returned are used, a NO return value discards it.
 
-@interface OCHTTPCookieStorage : NSObject
+@interface OCHTTPCookieStorage : NSObject <OCLogTagging>
 
 @property(nullable,copy) OCHTTPCookieStorageCookieFilter cookieFilter;
+
+//@property(nullable,readonly,strong) OCKeyValueStore *keyValueStore;
+//@property(nullable,readonly,strong) OCKeyValueStoreKey storageKey;
+//
+//#pragma mark - Init
+//- (instancetype)initWithKeyValueStore:(nullable OCKeyValueStore *)keyValueStore key:(nullable OCKeyValueStoreKey)storageKey;
 
 #pragma mark - HTTP
 - (void)addCookiesForPipeline:(nullable OCHTTPPipeline *)pipeline partitionID:(nullable OCHTTPPipelinePartitionID)partitionID toRequest:(OCHTTPRequest *)request;

@@ -226,14 +226,14 @@
 		{
 			// Adding cookie storage enabled cookie support
 			_connection.cookieStorage = [OCHTTPCookieStorage new];
-			_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
+			/*_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
 				if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
 				{
 					return (NO);
 				}
 
 				return (YES);
-			};
+			};*/
 		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
