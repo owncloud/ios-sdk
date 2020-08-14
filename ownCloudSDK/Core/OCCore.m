@@ -133,7 +133,7 @@
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(NO)
+		OCCoreCookieSupportEnabled : @(YES)
 	});
 }
 
