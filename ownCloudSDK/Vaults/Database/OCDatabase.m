@@ -1676,7 +1676,7 @@
 	}
 
 	// Requests the oldest available event for the OCSyncRecordID.
-	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", @"processSession", @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"eventID", /* @"processSession", */ @"eventData" ] fromTable:OCDatabaseTableNameEvents where:@{
 		@"recordID" 	: recordID,
 		@"eventID"	: [OCSQLiteQueryCondition queryConditionWithOperator:@">" value:afterEventID apply:(afterEventID!=nil)]
 	} orderBy:@"eventID ASC" limit:@"0,1" resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
