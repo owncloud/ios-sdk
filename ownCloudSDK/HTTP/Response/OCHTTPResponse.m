@@ -101,7 +101,7 @@
 
 	if ((locationURLString = self.headerFields[@"Location"]) != nil)
 	{
-		return ([NSURL URLWithString:locationURLString]);
+		return ([[NSURL URLWithString:locationURLString relativeToURL:self.httpURLResponse.URL] absoluteURL]);
 	}
 
 	return (nil);
