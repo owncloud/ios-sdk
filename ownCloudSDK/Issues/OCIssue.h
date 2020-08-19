@@ -52,32 +52,9 @@ typedef NS_ENUM(NSUInteger, OCIssueDecision)
 
 typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
+typedef NSString* OCIssueSignature; //!< Signature that - for identical issues - will be identical
+
 @interface OCIssue : NSObject
-{
-	OCIssueType _type;
-	OCIssueLevel _level;
-
-	NSString *_localizedTitle;
-	NSString *_localizedDescription;
-
-	OCCertificate *_certificate;
-	OCCertificateValidationResult _certificateValidationResult;
-	NSURL *_certificateURL;
-	
-	NSURL *_originalURL;
-	NSURL *_suggestedURL;
-	
-	NSError *_error;
-	
-	BOOL _decisionMade;
-	OCIssueDecision _decision;
-	OCIssueHandler _issueHandler;
-	
-	NSArray <OCIssue *> *_issues;
-
-	OCIssueChoice *_selectedChoice;
-	NSArray <OCIssueChoice *> *_choices;
-}
 
 @property(weak) OCIssue *parentIssue;
 
@@ -85,6 +62,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 @property(assign) OCIssueLevel level;
 
 @property(readonly,nonatomic) BOOL resolvable;
+
+@property(nullable,strong) NSUUID *uuid; //!< Equal to OCSyncIssueUUID if generated from an OCSyncIssue
 
 @property(nullable,strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
@@ -105,6 +84,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 @property(nullable,strong,readonly) NSArray <OCIssueChoice *> *choices;
 
 @property(nullable,strong,readonly) NSArray <OCIssue *> *issues;
+
+@property(nullable,strong,readonly) OCIssueSignature signature;
 
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
@@ -131,6 +112,9 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 #pragma mark - Filtering
 - (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
+
+#pragma mark - Handling
+- (void)appendIssueHandler:(OCIssueHandler)issueHandler;
 
 @end
 

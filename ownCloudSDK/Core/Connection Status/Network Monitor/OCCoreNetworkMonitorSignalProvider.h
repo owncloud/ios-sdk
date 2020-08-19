@@ -1,13 +1,13 @@
 //
-//  OCCoreReachabilityConnectionStatusSignalProvider.h
+//  OCCoreNetworkMonitorSignalProvider.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 06.12.18.
-//  Copyright © 2018 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 10.01.19.
+//  Copyright © 2019 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2018, ownCloud GmbH.
+ * Copyright (C) 2019, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -17,17 +17,10 @@
  */
 
 #import "OCCoreConnectionStatusSignalProvider.h"
-#import "OCReachabilityMonitor.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCoreReachabilityConnectionStatusSignalProvider : OCCoreConnectionStatusSignalProvider
-{
-	OCReachabilityMonitor *_reachabilityMonitor;
-	NSString *_hostname;
-}
-
-- (instancetype)initWithHostname:(NSString *)hostname;
+@interface OCCoreNetworkMonitorSignalProvider : OCCoreConnectionStatusSignalProvider
 
 @end
 

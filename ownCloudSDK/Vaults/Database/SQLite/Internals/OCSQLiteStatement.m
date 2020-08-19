@@ -31,9 +31,9 @@
 	OCSQLiteStatement *statement = nil;
 	sqlite3_stmt *sqlStatement = NULL;
 	NSError *error = nil;
-	int sqErr;
+	/* int sqErr; */
 
-	if ((sqErr = sqlite3_prepare_v2(database.sqlite3DB, (const char *)query.UTF8String, -1, &sqlStatement, NULL)) != SQLITE_OK)
+	if (sqlite3_prepare_v2(database.sqlite3DB, (const char *)query.UTF8String, -1, &sqlStatement, NULL) != SQLITE_OK)
 	{
 		// Error
 		error = OCSQLiteLastDBError(database.sqlite3DB);
@@ -54,13 +54,13 @@
 	return (statement);
 }
 
-
 - (instancetype)initWithSQLStatement:(sqlite3_stmt *)sqlStatement database:(OCSQLiteDB *)database;
 {
 	if ((self = [super init]) != nil)
 	{
 		_sqlStatement = sqlStatement;
 		_database = database;
+		_lastUsed = NSDate.timeIntervalSinceReferenceDate;
 
 		[_database startTrackingStatement:self];
 	}
@@ -243,13 +243,54 @@
 }
 
 #pragma mark - Resetting
+- (void)claim
+{
+	@synchronized(OCSQLiteStatement.class)
+	{
+		_isClaimed = YES;
+		_lastUsed = NSDate.timeIntervalSinceReferenceDate;
+		_claimedCounter++;
+	}
+}
+
+- (void)dropClaim
+{
+	@synchronized(OCSQLiteStatement.class)
+	{
+		if (_isClaimed)
+		{
+			// Release resources / file lock asap
+			[self reset];
+		}
+
+		_isClaimed = NO;
+	}
+}
+
 - (void)reset
 {
+	OCLogDebug(@"Resetting %@", self);
+
 	if (_sqlStatement != NULL)
 	{
-	 	sqlite3_reset(_sqlStatement);
-		sqlite3_clear_bindings(_sqlStatement);
+	 	int sqErr;
+
+	 	if ((sqErr = sqlite3_reset(_sqlStatement)) != SQLITE_OK)
+	 	{
+			OCLogWarning(@"Reset of statement %p with query `%@` failed with error=%d", self, _query, sqErr);
+		}
+
+		if ((sqErr = sqlite3_clear_bindings(_sqlStatement)) != SQLITE_OK)
+		{
+			OCLogWarning(@"Clearing bindings of statement %p with query `%@` failed with error=%d", self, _query, sqErr);
+		}
 	}
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, query: %@, native: %p, claimed: %d (total: %lu)>", NSStringFromClass(self.class), self, _query, _sqlStatement, _isClaimed, (unsigned long)_claimedCounter]);
 }
 
 @end

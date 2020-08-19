@@ -179,12 +179,11 @@
 - (NSString *)_iso8601DateStringForASN1Time:(ASN1_TIME *)asn1Time
 {
 	BIO *bio;
-	int retVal;
 	NSString *iso8601DateString = nil;
 
 	if ((bio = BIO_new(BIO_s_mem())) != NULL)
 	{
-		if ((retVal = ASN1_TIME_print(bio, asn1Time)) > 0)
+		if (ASN1_TIME_print(bio, asn1Time) > 0)
 		{
 			long availableBytes;
 			char *p_bytes = NULL;
@@ -320,9 +319,7 @@
 								case EVP_PKEY_EC:
 								default: {
 
-									int retVal;
-
-									if ((retVal = EVP_PKEY_print_public(bio, evpPKey, 0, NULL)) > 0)
+									if (EVP_PKEY_print_public(bio, evpPKey, 0, NULL) > 0)
 									{
 										long availableBytes;
 										char *p_bytes = NULL;
@@ -415,11 +412,10 @@
 
 									default: {
 										BIO *bio;
-										int retVal;
 
 										if ((bio = BIO_new(BIO_s_mem())) != NULL)
 										{
-											if ((retVal = X509V3_EXT_print(bio, x509Extension, 0, 0)) != 0)
+											if (X509V3_EXT_print(bio, x509Extension, 0, 0) != 0)
 											{
 												long availableBytes;
 												char *p_bytes = NULL;

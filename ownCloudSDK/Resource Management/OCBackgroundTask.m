@@ -57,9 +57,16 @@
 
 - (void)endWhenDeallocating:(id)object
 {
+	__weak OCBackgroundTask *weakSelf = self;
+
 	[OCDeallocAction addAction:^{
-		[self end];
+		[weakSelf end];
 	} forDeallocationOfObject:object];
+}
+
+- (void)clearExpirationHandler
+{
+	_expirationHandler = nil;
 }
 
 @end

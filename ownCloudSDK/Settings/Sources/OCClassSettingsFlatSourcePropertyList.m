@@ -16,6 +16,7 @@
  *
  */
 
+#import "OCLogger.h"
 #import "OCClassSettingsFlatSourcePropertyList.h"
 
 @interface OCClassSettingsFlatSourcePropertyList ()

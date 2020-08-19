@@ -23,6 +23,7 @@
 #import "OCEventTarget.h"
 #import "OCShare.h"
 #import "OCClassSettings.h"
+#import "OCClassSettingsUserPreferences.h"
 #import "OCCertificate.h"
 #import "OCIssue.h"
 #import "OCChecksum.h"
@@ -73,6 +74,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
+- (nullable OCTUSHeader *)connection:(OCConnection *)connection tusHeader:(nullable OCTUSHeader *)tusHeader forChildrenOf:(OCItem *)parentItem;
+
 @end
 
 NS_ASSUME_NONNULL_END
@@ -87,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface OCConnection : NSObject <OCClassSettingsSupport, OCLogTagging, OCHTTPPipelinePartitionHandler>
+@interface OCConnection : NSObject <OCClassSettingsSupport, OCClassSettingsUserPreferencesSupport, OCLogTagging, OCHTTPPipelinePartitionHandler>
 {
 	OCBookmark *_bookmark;
 	OCAuthenticationMethod *_authenticationMethod;
@@ -120,7 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
-@property(class,assign,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used.
+@property(class,readonly,nonatomic) BOOL allowCellular; //!< Indicates whether cellular may be used (reflecting class settings / MDM configuration)
 @property(class,assign,nonatomic) OCConnectionSetupHTTPPolicy setupHTTPPolicy; //!< Policy to use for setting up with plain-text HTTP URLs.
 
 @property(nullable,strong) OCBookmark *bookmark;
@@ -183,7 +186,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable OCProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (nullable OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(nullable NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(nullable OCItem *)replacedItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 - (nullable OCProgress *)downloadItem:(OCItem *)item to:(nullable NSURL *)targetURL options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable OCProgress *)updateItem:(OCItem *)item properties:(nullable NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
@@ -196,9 +198,17 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Report API
 - (nullable OCProgress *)filterFilesWithRules:(nullable NSDictionary<OCItemPropertyName, id> *)filterRules properties:(nullable NSArray<OCXMLNode *> *)properties resultTarget:(OCEventTarget *)eventTarget;
 
+#pragma mark - Transfer pipeline
+- (OCHTTPPipeline *)transferPipelineForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength;
+
 #pragma mark - Sending requests synchronously
 - (nullable NSError *)sendSynchronousRequest:(OCHTTPRequest *)request; //!< Send a request synchronously using the ephermal pipeline and returns the error.
 
+@end
+
+#pragma mark - Action: Upload
+@interface OCConnection (Upload)
+- (nullable OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(nullable NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(nullable OCItem *)replacedItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
 @end
 
 #pragma mark - SIGNALS
@@ -372,7 +382,8 @@ extern OCClassSettingsKey OCConnectionCertificateExtendedValidationRule; //!< Ru
 extern OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule; //!< Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate automatically. Used when OCConnectionCertificateExtendedValidationRule fails. Set this to "never" if the user should always be prompted when a server's certificate changed.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
-extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections (only available on iOS 12 and later)
+extern OCClassSettingsKey OCConnectionForceBackgroundURLSessions; //!< Forces (TRUE) or allows (FALSE) the use of background URL sessions everywhere. Defaults to FALSE.
+extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disallows(FALSE) the use of cellular connections
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 
@@ -383,8 +394,8 @@ extern OCConnectionOptionKey OCConnectionOptionChecksumKey; //!< OCChecksum inst
 extern OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey; //!< OCChecksumAlgorithmIdentifier identifying the checksum algorithm to use to compute checksums for the "OC-Checksum" header in uploads
 extern OCConnectionOptionKey OCConnectionOptionGroupIDKey; //!< OCHTTPRequestGroupID to use for requests
 extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OCConnectionSignalID> with the signal ids to require for the requests
-
-extern OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged; //!< Posted when connection settings changed
+extern OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey; //!< OCCellularSwitchIdentifier to require for the requests.
+extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!< NSURL of the temporary folder to store file segments in when performing uploads via TUS
 
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 

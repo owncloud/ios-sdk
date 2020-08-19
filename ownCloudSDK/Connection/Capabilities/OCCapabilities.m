@@ -25,6 +25,10 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @interface OCCapabilities()
 {
 	NSDictionary<NSString *, id> *_capabilities;
+
+	OCTUSHeader *_tusCapabilitiesHeader;
+	NSArray<OCTUSVersion> *_tusVersions;
+	NSArray<OCTUSExtension> *_tusExtensions;
 }
 
 @end
@@ -56,6 +60,17 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 #pragma mark - DAV
 @dynamic davChunkingVersion;
 @dynamic davReports;
+
+#pragma mark - TUS
+@dynamic tusSupported;
+@dynamic tusCapabilities;
+@dynamic tusVersions;
+@dynamic tusResumable;
+@dynamic tusExtensions;
+@dynamic tusMaxChunkSize;
+@dynamic tusHTTPMethodOverride;
+
+@dynamic tusCapabilitiesHeader;
 
 #pragma mark - Files
 @dynamic supportsPrivateLinks;
@@ -201,7 +216,7 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 
 	if ((statusDict = OCTypedCast(_capabilities[@"core"][@"status"], NSDictionary)) != nil)
 	{
-		return ([OCConnection serverLongProductVersionStringFromServerStatus:_capabilities[@"core"][@"status"]]);
+		return ([OCConnection serverLongProductVersionStringFromServerStatus:statusDict]);
 	}
 
 	return (nil);
@@ -227,6 +242,79 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (NSArray<NSString *> *)davReports
 {
 	return (OCTypedCast(_capabilities[@"dav"][@"reports"], NSArray));
+}
+
+#pragma mark - TUS
+- (BOOL)tusSupported
+{
+	return (self.tusResumable.length > 0);
+}
+
+- (OCTUSCapabilities)tusCapabilities
+{
+	return (OCTypedCast(_capabilities[@"files"][@"tus_support"], NSDictionary));
+}
+
+- (NSArray<OCTUSVersion> *)tusVersions
+{
+	if (_tusVersions)
+	{
+		_tusVersions = [OCTypedCast(self.tusCapabilities[@"version"], NSString) componentsSeparatedByString:@","];
+	}
+
+	return (_tusVersions);
+}
+
+- (OCTUSVersion)tusResumable
+{
+	return(OCTypedCast(self.tusCapabilities[@"resumable"], NSString));
+}
+
+- (NSArray<OCTUSExtension> *)tusExtensions
+{
+	if (_tusExtensions == nil)
+	{
+		NSString *tusExtensionsString = OCTypedCast(self.tusCapabilities[@"extension"], NSString);
+
+		_tusExtensions = [tusExtensionsString componentsSeparatedByString:@","];
+	}
+
+	return (_tusExtensions);
+}
+
+- (NSNumber *)tusMaxChunkSize
+{
+	return(OCTypedCast(self.tusCapabilities[@"max_chunk_size"], NSNumber));
+}
+
+- (OCHTTPMethod)tusHTTPMethodOverride
+{
+	NSString *httpMethodOverride = OCTypedCast(self.tusCapabilities[@"http_method_override"], NSString);
+
+	if (httpMethodOverride.length == 0)
+	{
+		return (nil);
+	}
+
+	return(httpMethodOverride);
+}
+
+- (OCTUSHeader *)tusCapabilitiesHeader
+{
+	if ((_tusCapabilitiesHeader == nil) && self.tusSupported)
+	{
+		OCTUSHeader *header = [[OCTUSHeader alloc] init];
+
+		header.extensions = self.tusExtensions;
+		header.version = self.tusResumable;
+		header.versions = self.tusVersions;
+
+		header.maximumChunkSize = self.tusMaxChunkSize;
+
+		_tusCapabilitiesHeader = header;
+	}
+
+	return (_tusCapabilitiesHeader);
 }
 
 #pragma mark - Files

@@ -14,6 +14,9 @@
 /* Item policy */
 "Available Offline" = "Available Offline";
 
+/* Cellular Switches */
+"Allow cellular access" = "Allow cellular access";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -38,7 +41,9 @@
 "Offline" = "Offline";
 "Offline (no WiFi connection)" = "Offline (no WiFi connection)";
 "Server down for maintenance" = "Server down for maintenance";
+"Network unavailable" = "Network unavailable";
 "Online" = "Online";
+"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
 
 /* Copies */
 "copy" = "copy";
@@ -108,6 +113,7 @@
 "Pending" = "Pending";
 "Running" = "Running";
 "Failed" = "Failed";
+"Waiting for user" = "Waiting for user";
 
 /* Update */
 "\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
@@ -126,6 +132,8 @@
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";
+// OCDAVErrorNotFound
+"Resource not found." = "Resource not found.";
 
 /* OC Errors */
 "%@ (error %ld, %@)" = "%@ (error %ld, %@)";
@@ -286,3 +294,28 @@
 
 // OCErrorPrivateLinkResolutionFailed
 "Resolution of private link failed." = "Resolution of private link failed.";
+
+/* Diagnostic */
+"Files" = "Files";
+"Folders" = "Folders";
+"Total Items" = "Total Items";
+"Removed Items" = "Removed Items";
+"Scheduled folder scans" = "Scheduled folder scans";
+"Sync Record ID"  = "Sync Record ID";
+"State" = "State";
+"In progress since" = "In progress since";
+"Origin Process" = "Origin Process";
+"Origin Process Valid" = "Origin Process Valid";
+"Timestamp" = "Timestamp";
+"Lane ID" = "Lane ID";
+"Local ID" = "Local ID";
+"Action ID" = "Action ID";
+"Process Sync Records" = "Process Sync Records";
+"Reschedule" = "Reschedule";
+"Deschedule (remove)" = "Deschedule (remove)";
+"Action" = "Action";
+"Wait Conditions" = "Wait Conditions";
+"Events" = "Events";
+"Class" = "Class";
+"Identifier" = "Identifier";
+"Localized Description" = "Localized Description";

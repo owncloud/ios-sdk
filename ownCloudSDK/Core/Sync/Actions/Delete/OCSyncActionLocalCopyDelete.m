@@ -20,13 +20,16 @@
 
 @implementation OCSyncActionLocalCopyDelete
 
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierDeleteLocalCopy);
+}
+
 #pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierDeleteLocalCopy;
-
 		self.actionEventType = OCEventTypeDelete;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Removing local copy of %@…"), item.name];
 	}

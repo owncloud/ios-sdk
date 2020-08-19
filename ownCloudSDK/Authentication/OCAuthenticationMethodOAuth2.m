@@ -19,7 +19,6 @@
 #import <UIKit/UIKit.h>
 #import "OCFeatureAvailability.h"
 #if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-#import <SafariServices/SafariServices.h>
 #import <AuthenticationServices/AuthenticationServices.h>
 #endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
@@ -222,11 +221,9 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
-	UIViewController *viewController;
-	
 	if (completionHandler==nil) { return; }
 	
-	if (((viewController = options[OCAuthenticationMethodPresentingViewControllerKey]) != nil) && (connection!=nil))
+	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
 	{
 		NSURL *authorizationRequestURL;
 
@@ -288,27 +285,13 @@ OCAuthenticationMethodAutoRegister
 
 				if (error != nil)
 				{
-					if (error!=nil)
+					#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
+					if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
 					{
-						#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-						if (@available(iOS 12.0, *))
-						{
-							if ([error.domain isEqual:ASWebAuthenticationSessionErrorDomain] && (error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
-						}
-						else
-						{
-							if ([error.domain isEqual:SFAuthenticationErrorDomain] && (error.code == SFAuthenticationErrorCanceledLogin))
-							{
-								// User cancelled authorization
-								error = OCError(OCErrorAuthorizationCancelled);
-							}
-						}
-						#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
+						// User cancelled authorization
+						error = OCError(OCErrorAuthorizationCancelled);
 					}
+					#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 					// Return errors
 					completionHandler(error, self.class.identifier, nil);
@@ -385,7 +368,7 @@ OCAuthenticationMethodAutoRegister
 		}
 	}
 	#if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
-	else if (@available(iOS 12, *))
+	else
 	{
 		ASWebAuthenticationSession *webAuthenticationSession;
 
@@ -413,17 +396,6 @@ OCAuthenticationMethodAutoRegister
 		// Start authentication session
 		authSessionDidStart = [webAuthenticationSession start];
 	}
-	else
-	{
-		SFAuthenticationSession *sfAuthenticationSession;
-
-		sfAuthenticationSession = [[SFAuthenticationSession alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme completionHandler:oauth2CompletionHandler];
-
-		*authenticationSession = sfAuthenticationSession;
-
-		// Start authentication session
-		authSessionDidStart = [sfAuthenticationSession start];
-	}
 	#endif /* OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION */
 
 	return (authSessionDidStart);
@@ -446,7 +418,14 @@ OCAuthenticationMethodAutoRegister
 - (BOOL)canSendAuthenticatedRequestsForConnection:(OCConnection *)connection withAvailabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	NSDictionary<NSString *, id> *authSecret;
-	
+
+	if (self.authenticationDataKnownInvalidDate != nil)
+	{
+		// Authentication data known to be invalid
+		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, OCLocalized(@"Previous token refresh attempts indicated an invalid refresh token.")), NO);
+		return (NO);
+	}
+
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
@@ -483,7 +462,7 @@ OCAuthenticationMethodAutoRegister
 				// Unexpected 401 response - request a retry that'll also invoke canSendAuthenticatedRequestsForConnection:withAvailabilityHandler:
 				// which will attempt a token refresh
 				_receivedUnauthorizedResponse = YES;
-				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d", _tokenRefreshFollowingUnauthorizedResponseFailed);
+				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d (known invalid %@)", _tokenRefreshFollowingUnauthorizedResponseFailed, self.authenticationDataKnownInvalidDate);
 			}
 
 			if (!_tokenRefreshFollowingUnauthorizedResponseFailed)
@@ -491,6 +470,8 @@ OCAuthenticationMethodAutoRegister
 				error = OCError(OCErrorAuthorizationRetry);
 			}
 		}
+
+		OCErrorAddDateFromResponse(error, response);
 	}
 
 	return (error);
@@ -529,9 +510,18 @@ OCAuthenticationMethodAutoRegister
 					// Update authentication data of the bookmark
 					if ((error==nil) && (authenticationData!=nil))
 					{
+						OCLogDebug(@"Updating authentication data for bookmarkUUID=%@", connection.bookmark.uuid);
 						connection.bookmark.authenticationData = authenticationData;
 
+						OCLogDebug(@"Authentication data updated: flush auth secret for bookmarkUUID=%@", connection.bookmark.uuid);
 						[self flushCachedAuthenticationSecret];
+					}
+					else
+					{
+						// Did not receive update
+						[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+						self->_authenticationDataKnownInvalidDate = [NSDate new];
+						[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 					}
 
 					if (self->_receivedUnauthorizedResponse)
@@ -640,8 +630,9 @@ OCAuthenticationMethodAutoRegister
 			if (error == nil)
 			{
 				NSDictionary<NSString *, id> *jsonResponseDict;
+				NSError *jsonDecodeError = nil;
 				
-				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:NULL]) != nil)
+				if ((jsonResponseDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonDecodeError]) != nil)
 				{
 					NSString *jsonError;
 
@@ -759,6 +750,21 @@ OCAuthenticationMethodAutoRegister
 							// user_id was already provided - we're all set!
 							CompleteWithJSONResponseDict(jsonResponseDict);
 						}
+					}
+				}
+				else
+				{
+					OCLogError(@"Decoding token response JSON failed with error %@", jsonDecodeError);
+
+					if (jsonDecodeError == nil)
+					{
+						// Empty response
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"The token refresh response was empty.");
+					}
+					else
+					{
+						// Malformed response
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"Malformed token refresh response.");
 					}
 				}
 			}

@@ -25,6 +25,7 @@
 #import "NSError+OCError.h"
 #import "OCIPNotificationCenter.h"
 #import "OCBookmark+IPNotificationNames.h"
+#import "OCLogger.h"
 
 @implementation OCAuthenticationMethod
 
@@ -123,10 +124,10 @@
 	{
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_bookmarkChanged:)   name:OCBookmarkAuthenticationDataChangedNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_authenticationDataChangedLocally:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCAuthenticationMethod *authMethod, OCIPCNotificationName  _Nonnull notificationName) {
-			[authMethod _bookmarkChanged:nil];
+			[authMethod _authenticationDataChangedRemotely:YES];
 		}];
 	}
 
@@ -148,16 +149,24 @@
 	    [notification.name isEqual:NSExtensionHostWillResignActiveNotification])
 	{
 		// Flush cached authentication secret when device is locked or the user switches to another app
+		OCLogDebug(@"Received %@ notification: flush auth secret", notification.name);
 		[self flushCachedAuthenticationSecret];
 	}
 }
 
-- (void)_bookmarkChanged:(NSNotification *)notification
+- (void)_authenticationDataChangedLocally:(NSNotification *)notification
+{
+	[self _authenticationDataChangedRemotely:NO];
+}
+
+- (void)_authenticationDataChangedRemotely:(BOOL)remotely
 {
 	// Flush cached authentication secret so it is re-read from the bookmark. Right now we flush all cached
 	// secrets for every change of every bookmark. This could be optimized in the future, but given how rare
 	// such an event occurs and that performance impact should be almost imperceptible, it's probably not worth
 	// to put any time and effort into this.
+	OCLogDebug(@"Received %@ notification to flush auth secret", (remotely ? @"remote" : @"local"));
+
 	[self flushCachedAuthenticationSecret];
 }
 
@@ -233,17 +242,16 @@
 		{
 			cachedAuthenticationSecret = [self loadCachedAuthenticationSecretForConnection:connection];
 
+			_cachedAuthenticationSecret = cachedAuthenticationSecret;
+
 			if ([self respondsToSelector:@selector(cacheSecrets)])
 			{
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if (((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
+					if (!((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
 					{
 						@synchronized(self)
 						{
-							if (self->_cachedAuthenticationSecret == nil)
-							{
-								self->_cachedAuthenticationSecret = cachedAuthenticationSecret;
-							}
+							self->_cachedAuthenticationSecret = nil;
 						}
 					}
 				});
@@ -268,6 +276,7 @@
 	@synchronized(self)
 	{
 		_cachedAuthenticationSecret = nil;
+		_authenticationDataKnownInvalidDate = nil;
 	}
 }
 
@@ -295,6 +304,8 @@
 			{
 				error = OCError(OCErrorAuthorizationFailed);
 			}
+
+			OCErrorAddDateFromResponse(error, response);
 		}
 	}
 

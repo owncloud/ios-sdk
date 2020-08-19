@@ -762,6 +762,16 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 							return;
 						break;
 
+						case OCCoreSyncInstructionStopAndSideline:
+							// Stop processing
+							stopProcessing = YES;
+
+							// Update budget usage to allow execution of actions on other lanes in the meantime
+							UpdateRunningActionCategories(actionCategories, -1);
+
+							return;
+						break;
+
 						case OCCoreSyncInstructionRepeatLast:
 							// Repeat processing of record
 							return;
@@ -1103,11 +1113,9 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)
 	{
-		OCSyncAction *syncAction;
-
 		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
 
-		if ((syncAction = syncRecord.action) != nil)
+		if (syncRecord.action != nil)
 		{
 			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
 
@@ -1137,7 +1145,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
 
 		// Stop processing
-		return (OCCoreSyncInstructionStop);
+		return (OCCoreSyncInstructionStopAndSideline);
 	}
 
 	// Process sync record
@@ -1528,28 +1536,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 }
 
 #pragma mark - Sync issues utilities
-- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact
-{
-	OCSyncIssue *issue;
-	OCSyncRecord *syncRecord = syncContext.syncRecord;
-
-	issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-		[OCSyncIssueChoice cancelChoiceWithImpact:impact]
-	]];
-
-	[syncContext addSyncIssue:issue];
-
-	return (issue);
-}
-
 - (NSError *)handleSyncRecord:(OCSyncRecord *)syncRecord error:(NSError *)error
 {
 	if (error != nil)
 	{
-		if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
-		{
-			[self.delegate core:self handleError:error issue:nil];
-		}
+		[self sendError:error issue:nil];
 	}
 
 	return (error);
@@ -1613,9 +1604,9 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	{
 		NSProgress *progress;
 
-		if ((progress = syncRecord.progress.progress) != nil)
+		if (((progress = syncRecord.progress.progress) != nil) || (syncRecord.waitConditions.count > 0))
 		{
-	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 		}
 	}
 
@@ -1662,7 +1653,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 						progress.cancellable = NO;
 					}
 
-			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 				}
 				else
 				{

@@ -16,7 +16,7 @@
  *
  */
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 #import "OCConnection.h"
 #import "OCHTTPRequest.h"
@@ -42,6 +42,10 @@
 #import "NSString+OCPath.h"
 #import "OCMacros.h"
 #import "OCCore.h"
+#import "OCCellularManager.h"
+#import "OCCellularSwitch.h"
+#import "OCHTTPPolicyManager.h"
+#import "OCHTTPPolicyBookmark.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -86,7 +90,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCConnectionEndpointIDWellKnown			: @"/.well-known",
+		OCConnectionEndpointIDWellKnown			: @".well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
@@ -101,14 +105,30 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
+		OCConnectionForceBackgroundURLSessions		: @(NO),
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO)
 	});
 }
 
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
+{
+	if ([key isEqualToString:OCConnectionForceBackgroundURLSessions])
+	{
+		return (YES);
+	}
+
+	return (NO);
+}
+
 + (BOOL)backgroundURLSessionsAllowed
 {
+	if ([[self classSettingForOCClassSettingsKey:OCConnectionForceBackgroundURLSessions] boolValue])
+	{
+		return (YES);
+	}
+
 	if (@available(iOS 13.1, *))
 	{
 		if (OCVault.hostHasFileProvider && !OCProcessManager.isProcessExtension)
@@ -128,21 +148,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 + (BOOL)allowCellular
 {
-	NSNumber *allowCellularNumber;
-
-	if ((allowCellularNumber =[OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCConnectionAllowCellular]) == nil)
-	{
-		allowCellularNumber = [self classSettingForOCClassSettingsKey:OCConnectionAllowCellular];
-	}
-
-	return ([allowCellularNumber boolValue]);
-}
-
-+ (void)setAllowCellular:(BOOL)allowCellular
-{
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:allowCellular forKey:OCConnectionAllowCellular];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameConnectionSettingsChanged ignoreSelf:NO];
+	return ([[self classSettingForOCClassSettingsKey:OCConnectionAllowCellular] boolValue]);
 }
 
 + (void)setSetupHTTPPolicy:(OCConnectionSetupHTTPPolicy)setupHTTPPolicy
@@ -209,6 +215,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 		_usersByUserID = [NSMutableDictionary new];
 
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_connectionCertificateUserApproved) name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
+
 		// Get pipelines
 		[self spinUpPipelines];
 	}
@@ -218,6 +226,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (void)dealloc
 {
+	[NSNotificationCenter.defaultCenter removeObserver:self name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
+
 	[self.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline *pipeline, BOOL * _Nonnull stop) {
 		[OCHTTPPipelineManager.sharedPipelineManager returnPipelineWithIdentifier:pipeline.identifier completionHandler:nil];
 	}];
@@ -453,140 +463,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Handle certificate challenges
-- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler
-{
-	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
-	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
-
-	// Enforce bookmark certificate
-	if (_bookmark.certificate != nil)
-	{
-		BOOL extendedValidationPassed = NO;
-		NSString *extendedValidationRule = nil;
-
-		if ((extendedValidationRule = [self classSettingForOCClassSettingsKey:OCConnectionCertificateExtendedValidationRule]) != nil)
-		{
-			// Check extended validation rule
-			OCCertificateRuleChecker *ruleChecker = nil;
-
-			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:extendedValidationRule]) != nil)
-			{
-				extendedValidationPassed = [ruleChecker evaluateRule];
-			}
-		}
-		else
-		{
-			// Check if certificate SHA-256 fingerprints are identical
-			extendedValidationPassed = [_bookmark.certificate isEqual:certificate];
-		}
-
-		if (extendedValidationPassed)
-		{
-			fulfillsBookmarkRequirements = YES;
-		}
-		else
-		{
-			// Evaluate the renewal acceptance rule to determine if this certificate should be used instead
-			NSString *renewalAcceptanceRule = nil;
-
-			fulfillsBookmarkRequirements = NO;
-
-			OCLogWarning(@"Certificate %@ does not match bookmark certificate %@. Checking with rule: %@", OCLogPrivate(certificate), OCLogPrivate(_bookmark.certificate), OCLogPrivate(renewalAcceptanceRule));
-
-			if ((renewalAcceptanceRule = [self classSettingForOCClassSettingsKey:OCConnectionRenewedCertificateAcceptanceRule]) != nil)
-			{
-				OCCertificateRuleChecker *ruleChecker;
-
-				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:_bookmark.certificate newCertificate:certificate rule:renewalAcceptanceRule]) != nil)
-				{
-					fulfillsBookmarkRequirements = [ruleChecker evaluateRule];
-
-					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
-					{
-						// Auto-accept successor to user-accepted certificate that also would prompt for confirmation
-						if ((_bookmark.certificate.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
-						{
-							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
-
-							validationResult = OCCertificateValidationResultUserAccepted;
-						}
-
-						// Update bookmark certificate
-						_bookmark.certificate = certificate;
-						_bookmark.certificateModificationDate = [NSDate date];
-
-						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:_bookmark];
-
-						if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
-						{
-							[_delegate connectionCertificateUserApproved:self];
-						}
-
-						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(_bookmark), certificate);
-					}
-
-					defaultWouldProceed = fulfillsBookmarkRequirements;
-				}
-			}
-
-			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
-		}
-	}
-
-	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:request:certificate:validationResult:validationError:defaultProceedValue:proceedHandler:)])
-	{
-		// Consult delegate
-		[_delegate connection:self request:request certificate:certificate validationResult:validationResult validationError:validationError defaultProceedValue:fulfillsBookmarkRequirements proceedHandler:proceedHandler];
-	}
-	else
-	{
-		if (proceedHandler != nil)
-		{
-			NSError *errorIssue = nil;
-			BOOL doProceed = NO, changeUserAccepted = NO;
-
-			if (defaultWouldProceed && request.forceCertificateDecisionDelegation)
-			{
-				// enforce bookmark certificate where available
-				doProceed = fulfillsBookmarkRequirements;
-			}
-			else
-			{
-				// Default to safe option: reject
-				changeUserAccepted = (validationResult == OCCertificateValidationResultPromptUser);
-				doProceed = NO;
-			}
-
-			if (!doProceed)
-			{
-				errorIssue = OCError(OCErrorRequestServerCertificateRejected);
-
-				// Embed issue
-				errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
-					if (decision == OCIssueDecisionApprove)
-					{
-						if (changeUserAccepted)
-						{
-							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
-						}
-
-						self->_bookmark.certificate = certificate;
-						self->_bookmark.certificateModificationDate = [NSDate date];
-
-						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
-
-						if ((self.delegate!=nil) && [self.delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
-						{
-							[self.delegate connectionCertificateUserApproved:self];
-						}
-					}
-				}]];
-			}
-
-			proceedHandler(doProceed, errorIssue);
-		}
-	}
-}
+// -> moved to OCHTTPPolicyBookmark that's created on-the-fly by OCHTTPPolicyManager for now 
 
 #pragma mark - Post process request after it finished
 - (NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
@@ -604,8 +481,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	return (error);
 }
 
-- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
+- (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
+	// Authentication
 	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
 
 	if (authenticationAvailable)
@@ -647,7 +525,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 }
 
 #pragma mark - Rescheduling support
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(NSError *)error
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)incomingInstruction error:(NSError *)error
 {
 	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
 
@@ -663,6 +541,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	return (instruction);
+}
+
+#pragma mark - User certificate approval changes
+- (void)_connectionCertificateUserApproved
+{
+	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connectionCertificateUserApproved:)])
+	{
+		[_delegate connectionCertificateUserApproved:self];
+	}
 }
 
 #pragma mark - Connect & Disconnect
@@ -754,6 +641,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							}
 						}
 
+						OCErrorAddDateFromResponse(error, response);
+
 						connectProgress.localizedDescription = @"";
 						completionHandler(error, issue);
 						resultHandler(request, response, error);
@@ -776,6 +665,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				{
 					// An error occured
 					OCIssue *issue = error.embeddedIssue;
+
+					OCErrorAddDateFromResponse(error, response);
 
 					if (issue == nil)
 					{
@@ -828,6 +719,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 							if (((NSNumber *)serverStatus[@"maintenance"]).boolValue)
 							{
 								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
+
+								OCErrorAddDateFromResponse(maintenanceModeError, response);
 
 								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
@@ -1264,11 +1157,31 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 				break;
 
-				default:
+				default: {
 					event.path = request.userInfo[@"path"];
 					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
 
+					OCTUSHeader *tusHeader;
+
+					if ((tusHeader = [[OCTUSHeader alloc] initWithHTTPHeaderFields:request.httpResponse.headerFields]) != nil)
+					{
+						OCTUSSupport tusSupportLevel = tusHeader.supportFlags;
+
+						if (tusSupportLevel != OCTUSSupportNone)
+						{
+							for (OCItem *item in items)
+							{
+								if ([item.path isEqual:event.path])
+								{
+									item.tusInfo = tusHeader.info;
+									break;
+								}
+							}
+						}
+					}
+
 					event.result = items;
+				}
 				break;
 			}
 
@@ -1277,6 +1190,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				event.error = request.httpResponse.status.error;
 			}
 		}
+
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
@@ -1339,277 +1254,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Actions
 
 #pragma mark - File transfer: upload
-- (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
-{
-	OCProgress *requestProgress = nil;
-	NSURL *uploadURL;
-
-	if ((sourceURL == nil) || (newParentDirectory == nil))
-	{
-		return(nil);
-	}
-
-	if (fileName == nil)
-	{
-		if (replacedItem != nil)
-		{
-			fileName = replacedItem.name;
-		}
-		else
-		{
-			fileName = sourceURL.lastPathComponent;
-		}
-	}
-
-	if (![[NSFileManager defaultManager] fileExistsAtPath:sourceURL.path])
-	{
-		[eventTarget handleError:OCError(OCErrorFileNotFound) type:OCEventTypeUpload uuid:nil sender:self];
-
-		return(nil);
-	}
-
-	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
-	{
-		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:uploadURL];
-
-		request.method = OCHTTPMethodPUT;
-
-		// Set Content-Type
-		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
-
-		// Set conditions
-		if (replacedItem != nil)
-		{
-			// Ensure the upload fails if there's a different version at the target already
-			[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
-		}
-		else
-		{
-			// Ensure the upload fails if there's any file at the target already
-			[request setValue:@"*" forHeaderField:@"If-None-Match"];
-		}
-
-		// Set Content-Length
-		NSNumber *fileSize = nil;
-		if ([sourceURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
-		{
-			OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
-			[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
-		}
-
-		// Set modification date
-		NSDate *modDate = nil;
-		if ((modDate = options[OCConnectionOptionLastModificationDateKey]) == nil)
-		{
-			if (![sourceURL getResourceValue:&modDate forKey:NSURLAttributeModificationDateKey error:NULL])
-			{
-				modDate = nil;
-			}
-		}
-		if (modDate != nil)
-		{
-			[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
-		}
-
-		// Compute and set checksum header
-		OCChecksumHeaderString checksumHeaderValue = nil;
-		__block OCChecksum *checksum = nil;
-
-		if ((checksum = options[OCConnectionOptionChecksumKey]) == nil)
-		{
-			OCChecksumAlgorithmIdentifier checksumAlgorithmIdentifier = options[OCConnectionOptionChecksumAlgorithmKey];
-
-			if (checksumAlgorithmIdentifier==nil)
-			{
-				checksumAlgorithmIdentifier = _preferredChecksumAlgorithm;
-			}
-
-			OCSyncExec(checksumComputation, {
-				[OCChecksum computeForFile:sourceURL checksumAlgorithm:checksumAlgorithmIdentifier completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
-					checksum = computedChecksum;
-					OCSyncExecDone(checksumComputation);
-				}];
-			});
-		}
-
-		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
-		{
-			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
-		}
-
-		if ((sourceURL == nil) || (fileName == nil) || (newParentDirectory == nil) || (modDate == nil) || (fileSize == nil))
-		{
-			[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeUpload uuid:nil sender:self];
-			return(nil);
-		}
-
-		// Set meta data for handling
-		request.requiredSignals = self.actionSignals;
-		request.resultHandlerAction = @selector(_handleUploadFileResult:error:);
-		request.userInfo = @{
-			@"sourceURL" : sourceURL,
-			@"fileName" : fileName,
-			@"parentItem" : newParentDirectory,
-			@"modDate" : modDate,
-			@"fileSize" : fileSize,
-			@"checksum" : (checksum!=nil) ? checksum : @""
-		};
-		request.eventTarget = eventTarget;
-		request.bodyURL = sourceURL;
-		request.forceCertificateDecisionDelegation = YES;
-
-		// Attach to pipelines
-		[self attachToPipelines];
-
-		// Enqueue request
-		if (options[OCConnectionOptionRequestObserverKey] != nil)
-		{
-			request.requestObserver = options[OCConnectionOptionRequestObserverKey];
-		}
-
-		[[self transferPipelineForRequest:request withExpectedResponseLength:1000] enqueueRequest:request forPartitionID:self.partitionID];
-
-		requestProgress = request.progress;
-		requestProgress.progress.eventType = OCEventTypeUpload;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
-	}
-	else
-	{
-		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
-	}
-
-	return(requestProgress);
-}
-
-- (void)_handleUploadFileResult:(OCHTTPRequest *)request error:(NSError *)error
-{
-	NSString *fileName = request.userInfo[@"fileName"];
-	OCItem *parentItem = request.userInfo[@"parentItem"];
-
-	OCLogDebug(@"Handling file upload result with error=%@: %@", error, request);
-
-	if (request.httpResponse.status.isSuccess)
-	{
-		/*
-			Almost there! Only lacking permissions and mime type and we'd not have to do this PROPFIND 0.
-
-			{
-			    "Cache-Control" = "no-store, no-cache, must-revalidate";
-			    "Content-Length" = 0;
-			    "Content-Type" = "text/html; charset=UTF-8";
-			    Date = "Tue, 31 Jul 2018 09:35:22 GMT";
-			    Etag = "\"b4e54628946633eba3a601228e638f21\"";
-			    Expires = "Thu, 19 Nov 1981 08:52:00 GMT";
-			    Pragma = "no-cache";
-			    Server = Apache;
-			    "Strict-Transport-Security" = "max-age=15768000; preload";
-			    "content-security-policy" = "default-src 'none';";
-			    "oc-etag" = "\"b4e54628946633eba3a601228e638f21\"";
-			    "oc-fileid" = 00000066ocxll7pjzvku;
-			    "x-content-type-options" = nosniff;
-			    "x-download-options" = noopen;
-			    "x-frame-options" = SAMEORIGIN;
-			    "x-permitted-cross-domain-policies" = none;
-			    "x-robots-tag" = none;
-			    "x-xss-protection" = "1; mode=block";
-			}
-		*/
-
-		// Retrieve item information and continue in _handleUploadFileItemResult:error:
-		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-			@"alternativeEventType"  : @(OCEventTypeUpload),
-			@"_originalUserInfo"	: request.userInfo
-		} resultTarget:request.eventTarget];
-	}
-	else
-	{
-		OCEvent *event = nil;
-
-		if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload uuid:request.identifier attributes:nil]) != nil)
-		{
-			if (error != nil)
-			{
-				event.error = error;
-			}
-			else
-			{
-				if (request.error != nil)
-				{
-					event.error = request.error;
-				}
-				else
-				{
-					switch (request.httpResponse.status.code)
-					{
-						case OCHTTPStatusCodePRECONDITION_FAILED: {
-							NSString *errorDescription = nil;
-							OCChecksum *expectedChecksum = OCTypedCast(request.userInfo[@"checksum"], OCChecksum);
-
-							errorDescription = [NSString stringWithFormat:OCLocalized(@"Another item named %@ already exists in %@."), fileName, parentItem.name];
-							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
-
-							if (expectedChecksum != nil)
-							{
-								// Sometimes, a file uploads correctly but the connection is cut off just as the success response is transmitted back to the client,
-								// whose request may then be re-scheduled at a later time and receive a "PRECONDITION FAILED" response because a file already exists
-								// in this place. In order not to return an error if the file on the server equals the file to be uploaded, we first perform a PROPFIND
-								// check and compare the checksums
-
-								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-									@"alternativeEventType"  : @(OCEventTypeUpload),
-
-									// Return an error if checksum of local and remote file mismatch
-									@"checksumExpected" 	 : expectedChecksum,
-									@"checksumMismatchError" : event.error
-								} resultTarget:request.eventTarget];
-
-								return; // Do not deliver the event error just yet
-							}
-						}
-						break;
-
-						case OCHTTPStatusCodeINSUFFICIENT_STORAGE: {
-							NSString *errorDescription = nil;
-
-							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
-							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
-						}
-						break;
-
-						case OCHTTPStatusCodeFORBIDDEN: {
-							NSString *errorDescription = request.httpResponse.bodyParsedAsDAVError.davExceptionMessage;
-
-							if (errorDescription == nil)
-							{
-								errorDescription = OCLocalized(@"Uploads to this folder are not allowed.");
-							}
-
-							event.error = OCErrorWithDescription(OCErrorItemOperationForbidden, errorDescription);
-						}
-						break;
-
-						default: {
-							NSError *davError = [request.httpResponse bodyParsedAsDAVError];
-							NSString *davMessage = davError.davExceptionMessage;
-
-							if (davMessage != nil)
-							{
-								event.error = [request.httpResponse.status errorWithDescription:davMessage];
-							}
-							else
-							{
-								event.error = request.httpResponse.status.error;
-							}
-						}
-						break;
-					}
-				}
-			}
-
-			[request.eventTarget handleEvent:event sender:self];
-		}
-	}
-}
+// => please see OCConnection+Upload
 
 #pragma mark - File transfer: download
 - (OCProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
@@ -1640,6 +1285,12 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		request.autoResume = YES;
 
 		[request setValue:item.eTag forHeaderField:@"If-Match"];
+
+		// Apply cellular options
+		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
+		{
+			request.requiredCellularSwitch = options[OCConnectionOptionRequiredCellularSwitchKey];
+		}
 
 		if (options[OCConnectionOptionRequestObserverKey] != nil)
 		{
@@ -1712,6 +1363,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				}
 			}
 		}
+
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
@@ -1874,6 +1527,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -1964,6 +1619,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 
 					// Post event
+					OCErrorAddDateFromResponse(event.error, request.httpResponse);
 					[request.eventTarget handleEvent:event sender:self];
 				}];
 			}
@@ -2005,6 +1661,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (postEvent && (event!=nil))
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2137,6 +1795,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 					}
 
 					// Post event
+					OCErrorAddDateFromResponse(event.error, request.httpResponse);
 					[request.eventTarget handleEvent:event sender:self];
 				}];
 			}
@@ -2174,6 +1833,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (postEvent && (event!=nil))
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
+
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2313,6 +1974,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2463,6 +2125,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2551,6 +2214,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (event != nil)
 	{
+		OCErrorAddDateFromResponse(event.error, request.httpResponse);
 		[request.eventTarget handleEvent:event sender:self];
 	}
 }
@@ -2622,6 +2286,7 @@ OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"connection-
 OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"connection-renewed-certificate-acceptance-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
+OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
@@ -2633,7 +2298,7 @@ OCConnectionOptionKey OCConnectionOptionChecksumKey = @"checksum";
 OCConnectionOptionKey OCConnectionOptionChecksumAlgorithmKey = @"checksum-algorithm";
 OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
-
-OCIPCNotificationName OCIPCNotificationNameConnectionSettingsChanged = @"org.owncloud.connection-settings-changed";
+OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
+OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";

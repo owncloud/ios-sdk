@@ -177,9 +177,8 @@ OCAuthenticationMethodAutoRegister
 						if ([response.contentType hasSuffix:@"/json"])
 						{
 							NSError *error = nil;
-							NSDictionary<NSString *, id> *oidcConfig;
 
-							if ((oidcConfig = [response bodyConvertedDictionaryFromJSONWithError:&error]) != nil)
+							if ([response bodyConvertedDictionaryFromJSONWithError:&error] != nil)
 							{
 								// OIDC supported
 								completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, YES);

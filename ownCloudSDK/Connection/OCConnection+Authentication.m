@@ -238,7 +238,7 @@
 			
 			if ((authenticationMethod = self.authenticationMethod) != nil)
 			{
-				canSend = [self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+				canSend = [authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
 					// Share result with all pending Authentication Availability Handlers
 					@synchronized(pendingAuthenticationAvailabilityHandlers)
 					{

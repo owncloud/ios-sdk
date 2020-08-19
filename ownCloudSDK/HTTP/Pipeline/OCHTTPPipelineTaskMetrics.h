@@ -33,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSNumber *serverProcessingTimeInterval; //!< Number of seconds it took between the request was fully sent and the response started to be received
 @property(nullable,strong) NSNumber *responseReceiveTimeInterval; //!< Number of seconds it took to transfer the response
 
+#pragma mark - Time stamps
+@property(nullable,strong) NSDate *responseStartDate; //!< Date the reponse started to be received
+
 #pragma mark - Size metrics
 @property(nullable,strong) NSNumber *totalRequestSizeBytes; //!< Total number of bytes of the request
 @property(nullable,strong) NSNumber *totalResponseSizeBytes; //!< Total number of bytes of the response

@@ -32,12 +32,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) OCHTTPRequestID requestID;			//!< The OCHTTPRequestID this is the response to
 
+@property(strong,nullable) NSDate *date; 			//!< The date this response was initially created (typically identical to the date the response was received)
+
 @property(strong,nullable) OCCertificate *certificate;		//!< The certificate served by the server
 @property(assign) OCCertificateValidationResult certificateValidationResult; //!< The result of the validation of the certificate (if any). OCCertificateValidationResultNone if no validation has been performed yet.
 @property(strong,nullable) NSError *certificateValidationError; //!< Any error that occured during validation of the certificate (if any).
 
 @property(strong,nullable) OCHTTPStatus *status;		//!< The HTTP status returned by the server
-@property(strong,nullable) NSDictionary<NSString *, NSString *> *headerFields; //!< All HTTP header fields
+@property(strong,nullable) OCHTTPStaticHeaderFields headerFields;//!< All HTTP header fields
 
 @property(strong,nullable,nonatomic) NSHTTPURLResponse *httpURLResponse; //!< The NSHTTPURLResponse returned by the server. If set, is used to populate httpStatus and allHTTPHeaderFields.
 
@@ -71,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSDictionary *)bodyConvertedDictionaryFromJSONWithError:(NSError * _Nullable *)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
 - (nullable NSArray *)bodyConvertedArrayFromJSONWithError:(NSError * _Nullable *)error; //!< Returns the response body as array as converted by the JSON deserializer
 
-- (NSString *)responseDescription;
+- (NSString *)responseDescriptionPrefixed:(BOOL)prefixed;
 
 @end
 

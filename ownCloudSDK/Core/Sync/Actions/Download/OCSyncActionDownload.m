@@ -22,22 +22,69 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCCore+Claims.h"
 #import "OCWaitConditionMetaDataRefresh.h"
+#import "OCCellularManager.h"
+
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadOverwrite = @"download.overwrite";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadRetry = @"download.retry";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadCancel = @"download.cancel";
 
 @implementation OCSyncActionDownload
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierDownload);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Overwrite
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadOverwrite categoryName:nil choices:@[
+			// Delete local representation and reschedule download
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
+
+			// Keep local modifications and drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil],
+
+		// Retry
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadRetry categoryName:nil choices:@[
+			// Reschedule sync record
+			[OCSyncIssueChoice retryChoice],
+
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+		] options:nil],
+
+		// Cancel
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadCancel categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+		] options:nil],
+	]);
+}
 
 #pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierDownload;
-
 		self.options = options;
 
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryDownload ];
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryDownload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:item.size] ?
+				OCSyncActionCategoryDownloadWifiAndCellular :
+				OCSyncActionCategoryDownloadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -176,13 +223,7 @@
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil choices:@[
-						// Delete local representation and reschedule download
-						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
-
-						// Keep local modifications and drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
-				]];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil];
 
 				OCLogDebug(@"record %@ download: returning from scheduling with an issue (locallyModified)", syncContext.syncRecord);
 
@@ -246,12 +287,29 @@
 
 		if (![[NSFileManager defaultManager] fileExistsAtPath:temporaryDirectoryURL.path])
 		{
-			[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+			[[NSFileManager defaultManager] createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:NULL];
 		}
 
 		[self setupProgressSupportForItem:item options:&options syncContext:syncContext];
 
-		OCLogDebug(@"record %@ download: initiating download of %@", syncContext.syncRecord, item);
+		if (options != nil)
+		{
+			NSMutableDictionary *mutableOptions = [options mutableCopy];
+
+			// Determine cellular switch ID dependency
+			OCCellularSwitchIdentifier cellularSwitchID;
+
+			if ((cellularSwitchID = options[OCCoreOptionDependsOnCellularSwitch]) == nil)
+			{
+				cellularSwitchID = OCCellularSwitchIdentifierMain;
+			}
+
+			mutableOptions[OCConnectionOptionRequiredCellularSwitchKey] = cellularSwitchID;
+
+			options = mutableOptions;
+		}
+
+		OCLogDebug(@"record %@ download: initiating download (requiredCellularSwitch=%@) of %@", syncContext.syncRecord, options[OCConnectionOptionRequiredCellularSwitchKey], item);
 
 		if ((progress = [self.core.connection downloadItem:item to:temporaryFileURL options:options resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
 		{
@@ -324,13 +382,7 @@
 
 				useDownloadedFile = NO;
 
-				issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil choices:@[
-					// Reschedule sync record
-					[OCSyncIssueChoice retryChoice],
-
-					// Drop sync record
-					[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-				]];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil];
 
 				[syncContext addSyncIssue:issue];
 			}
@@ -349,10 +401,7 @@
 
 					useDownloadedFile = NO;
 
-					issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil choices:@[
-						// Drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-					]];
+					issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil];
 
 					[syncContext addSyncIssue:issue];
 				}
@@ -368,7 +417,7 @@
 			if (![[NSFileManager defaultManager] fileExistsAtPath:vaultItemParentURL.path])
 			{
 				// Create target directory
-				[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemParentURL withIntermediateDirectories:YES attributes:nil error:&error];
+				[[NSFileManager defaultManager] createDirectoryAtURL:vaultItemParentURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error];
 			}
 			else
 			{
@@ -530,7 +579,7 @@
 				// Create cancellation issue for any errors (TODO: extend options to include "Retry")
 				OCLogError(@"Wrapping download %@ error %@ into cancellation issue", item, downloadError);
 
-				[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+				[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 				[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 			}
 		}
@@ -629,3 +678,5 @@
 @end
 
 OCSyncActionCategory OCSyncActionCategoryDownload = @"download";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiOnly = @"download-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryDownloadWifiAndCellular = @"download-wifi-and-cellular";

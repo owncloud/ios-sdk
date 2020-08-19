@@ -34,6 +34,13 @@ typedef NS_ENUM(NSInteger, OCLogLevel)
 	OCLogLevelOff		//!< No logging
 };
 
+typedef NS_ENUM(NSInteger, OCLogFormat)
+{
+	OCLogFormatText, //!< Plain-text log format
+	OCLogFormatJSON, //!< Log every message as one line of detailed JSON
+	OCLogFormatJSONComposed //!< Log every message as one line of composed/simplified JSON
+};
+
 @class OCLogger;
 
 typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nullable functionName, NSString * _Nullable file, NSUInteger line, NSArray<OCLogTagName> * _Nullable * _Nullable pTags, NSString *_Nonnull * _Nonnull pLogMessage, uint64_t threadID, NSDate *timestamp); //!< Filter block. Returns YES if the message should be logged, NO otherwise. Can alter the log message via pLogMessage.
@@ -69,6 +76,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 }
 
 @property(assign,class) OCLogLevel logLevel;
+@property(readonly,class) OCLogFormat logFormat;
 @property(assign,class) BOOL maskPrivateData;
 @property(readonly,class) BOOL synchronousLoggingEnabled;
 @property(readonly,class) BOOL coloredLogging;
@@ -88,6 +96,9 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 + (nullable id)applyPrivacyMask:(nullable id)object;
 
 #pragma mark - Logging
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args NS_FORMAT_FUNCTION(7,0);
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ... NS_FORMAT_FUNCTION(7,8);
+
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args NS_FORMAT_FUNCTION(6,0);
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ... NS_FORMAT_FUNCTION(6,7);
 
@@ -126,8 +137,15 @@ extern OCClassSettingsKey OCClassSettingsKeyLogOmitTags;
 extern OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogOmitMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages;
+extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
+extern OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize;
+extern OCClassSettingsKey OCClassSettingsKeyLogFormat;
 
 extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
+
+@interface NSArray (OCLogTagMerge)
+- (NSArray<NSString *> *)arrayByMergingTagsFromArray:(NSArray<NSString *> *)mergeTags;
+@end
 
 NS_ASSUME_NONNULL_END
 
@@ -139,36 +157,65 @@ NS_ASSUME_NONNULL_END
 		[[(id<OCLogTagging>)obj logTags] arrayByAddingObjectsFromArray:(id _Nonnull)(extraTags)] ) : \
 	(extraTags))
 
-#define OCLogToggleEnabled(toggleID)		((toggleID!=nil) ? [OCLogger.sharedLogger isToggleEnabled:toggleID] : YES)
+#define OCLogMergeTags(obj,extraTags)	([obj conformsToProtocol:@protocol(OCLogTagging)] ? \
+	((extraTags==nil) ? \
+		[(id<OCLogTagging>)obj logTags] : \
+		[[(id<OCLogTagging>)obj logTags] arrayByMergingTagsFromArray:(id _Nonnull)(extraTags)] ) : \
+	(extraTags))
+
+#define OCLogToggleEnabled(toggleID)	((toggleID!=nil) ? [OCLogger.sharedLogger isToggleEnabled:toggleID] : YES)
+
+#define OCLoggingEnabled()		[OCLogger logsForLevel:OCLogLevelError]
 
 // Convenience logging (with auto-tags)
-#define OCLogDebug(format,...)   		if ([OCLogger logsForLevel:OCLogLevelDebug])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(self) message:format, ##__VA_ARGS__]; }
-#define OCLog(format,...)   			if ([OCLogger logsForLevel:OCLogLevelInfo])    {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo    functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(self) message:format, ##__VA_ARGS__]; }
-#define OCLogWarning(format,...)   		if ([OCLogger logsForLevel:OCLogLevelWarning]) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(self) message:format, ##__VA_ARGS__]; }
-#define OCLogError(format,...)   		if ([OCLogger logsForLevel:OCLogLevelError])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(self) message:format, ##__VA_ARGS__]; }
+#define _OC_LOG(obj,level,format,...)   if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(obj) message:format, ##__VA_ARGS__]; }
+
+#define OCLogDebug(format,...)		_OC_LOG(self, OCLogLevelDebug,   format, ##__VA_ARGS__)
+#define OCLog(format,...)   		_OC_LOG(self, OCLogLevelInfo,    format, ##__VA_ARGS__)
+#define OCLogWarning(format,...)   	_OC_LOG(self, OCLogLevelWarning, format, ##__VA_ARGS__)
+#define OCLogError(format,...)   	_OC_LOG(self, OCLogLevelError,   format, ##__VA_ARGS__)
 
 // Tagged logging (with auto-tags + extra-tags)
-#define OCTLogDebug(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelDebug])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCTLog(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelInfo])    {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo    functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCTLogWarning(extraTags, format,...)  if ([OCLogger logsForLevel:OCLogLevelWarning]) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCTLogError(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelError])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
+#define _OC_TLOG(obj,level,extraTags,format,...)	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
+
+#define OCTLogDebug(extraTags, format,...)	_OC_TLOG(self, OCLogLevelDebug,   extraTags, format, ##__VA_ARGS__)
+#define OCTLog(extraTags, format,...)		_OC_TLOG(self, OCLogLevelInfo,    extraTags, format, ##__VA_ARGS__)
+#define OCTLogWarning(extraTags, format,...)	_OC_TLOG(self, OCLogLevelWarning, extraTags, format, ##__VA_ARGS__)
+#define OCTLogError(extraTags, format,...)	_OC_TLOG(self, OCLogLevelError,   extraTags, format, ##__VA_ARGS__)
 
 // Tagged logging (with auto-tags + extra-tags + weakSelf)
-#define OCWTLogDebug(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelDebug])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(weakSelf,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCWTLog(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelInfo])    {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo    functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(weakSelf,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCWTLogWarning(extraTags, format,...)  if ([OCLogger logsForLevel:OCLogLevelWarning]) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(weakSelf,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCWTLogError(extraTags, format,...)   	if ([OCLogger logsForLevel:OCLogLevelError])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(weakSelf,extraTags) message:format, ##__VA_ARGS__]; }
+#define OCWTLogDebug(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelDebug,   extraTags, format, ##__VA_ARGS__)
+#define OCWTLog(extraTags, format,...)		_OC_TLOG(weakSelf, OCLogLevelInfo,    extraTags, format, ##__VA_ARGS__)
+#define OCWTLogWarning(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelWarning, extraTags, format, ##__VA_ARGS__)
+#define OCWTLogError(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelError,   extraTags, format, ##__VA_ARGS__)
 
-// Parametrized logging (with toggles, auto-tags, extra-tags)
-#define OCPLogDebug(toggleID, extraTags, format,...)   	if (([OCLogger logsForLevel:OCLogLevelDebug])   && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCPLog(toggleID, extraTags, format,...)   	if (([OCLogger logsForLevel:OCLogLevelInfo])    && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo    functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCPLogWarning(toggleID, extraTags, format,...)  if (([OCLogger logsForLevel:OCLogLevelWarning]) && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
-#define OCPLogError(toggleID, extraTags, format,...)   	if (([OCLogger logsForLevel:OCLogLevelError])   && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(self,extraTags) message:format, ##__VA_ARGS__]; }
+// Parametrized logging (with toggles, auto-tags, extra-tags) - checking for log level OCLogLevelError if forced, to determine if logging is enabled (if it doesn't log for errors, logging is turned off)
+#define _OC_PLOG(obj, level, forceLog, toggleID, extraTags, format,...)  if ([OCLogger logsForLevel:(forceLog ? OCLogLevelError : level)] && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:level force:forceLog functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
+
+#define OCPLogDebug(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelDebug,   NO, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPLog(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelInfo,    NO, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPLogWarning(toggleID, extraTags, format,...)  _OC_PLOG(self, OCLogLevelWarning, NO, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPLogError(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelError,   NO, toggleID, extraTags, format, ##__VA_ARGS__)
+
+// Parametrized forced logging (with toggles, auto-tags, extra-tags)
+#define OCPFLogDebug(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelDebug,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFLog(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFLogWarning(toggleID, extraTags, format,...) _OC_PLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFLogError(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelError,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
+
+// Parametrized forced logging (with toggles, auto-tags, merged extra-tags)
+#define _OC_PMLOG(obj, level, forceLog, toggleID, extraTags, format,...)  if ([OCLogger logsForLevel:(forceLog ? OCLogLevelError : level)] && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:level force:forceLog functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogMergeTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
+
+#define OCPFMLogDebug(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelDebug,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLog(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLogWarning(toggleID, extraTags, format,...) _OC_PMLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
+#define OCPFMLogError(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelError,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
 
 // Raw logging (with manual tags)
-#define OCRLogDebug(tags,format,...)   		if ([OCLogger logsForLevel:OCLogLevelDebug])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelDebug   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
-#define OCRLog(tags,format,...)   		if ([OCLogger logsForLevel:OCLogLevelInfo])    {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelInfo    functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
-#define OCRLogWarning(tags,format,...)   	if ([OCLogger logsForLevel:OCLogLevelWarning]) {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelWarning functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
-#define OCRLogError(tags,format,...)   		if ([OCLogger logsForLevel:OCLogLevelError])   {  [[OCLogger sharedLogger] appendLogLevel:OCLogLevelError   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
+#define _OC_RLOG(level,tags,format,...)   	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
+#define OCRLogDebug(tags,format,...)		_OC_RLOG(OCLogLevelDebug,   tags, format, ##__VA_ARGS__)
+#define OCRLog(tags,format,...)			_OC_RLOG(OCLogLevelInfo,    tags, format, ##__VA_ARGS__)
+#define OCRLogWarning(tags,format,...)		_OC_RLOG(OCLogLevelWarning, tags, format, ##__VA_ARGS__)
+#define OCRLogError(tags,format,...)		_OC_RLOG(OCLogLevelError,   tags, format, ##__VA_ARGS__)
 
 #define OCLogPrivate(obj) [OCLogger applyPrivacyMask:(obj)]

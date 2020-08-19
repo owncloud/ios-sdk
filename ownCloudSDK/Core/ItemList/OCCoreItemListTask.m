@@ -228,11 +228,19 @@
 											rootItem.parentFileID = parentDirectoryItem.fileID;
 										}
 
-										if (parentDirectoryItem.parentLocalID == nil)
+										if (rootItem.parentLocalID == nil)
 										{
 											rootItem.parentLocalID = parentDirectoryItem.localID;
 										}
 									}
+									else
+									{
+										OCLogWarning(@"Missing root item for %@", self.path);
+									}
+								}
+								else
+								{
+									OCLogWarning(@"No path!!");
 								}
 
 								self.changeHandler(self->_core, self);

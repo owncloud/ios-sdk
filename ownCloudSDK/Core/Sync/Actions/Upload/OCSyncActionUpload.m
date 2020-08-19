@@ -22,16 +22,42 @@
 #import "OCChecksum.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "NSDate+OCDateParser.h"
+#import "OCCellularManager.h"
+
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUploadKeepBoth = @"upload.keep-both";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUploadRetry = @"upload.retry";
 
 @implementation OCSyncActionUpload
 
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierUpload);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Keep both
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadKeepBoth categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]
+		] options:nil],
+
+		// Retry
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadRetry categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
+			[OCSyncIssueChoice retryChoice]
+		] options:nil]
+	]);
+}
+
 #pragma mark - Initializer
-- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy
+- (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy options:(NSDictionary<OCCoreOption,id> *)options
 {
 	if ((self = [super initWithItem:uploadItem]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierUpload;
-
 		self.parentItem = parentItem;
 
 		self.importFileURL = importFileURL;
@@ -41,7 +67,17 @@
 		self.actionEventType = OCEventTypeUpload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
 
-		self.categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryTransfer, OCSyncActionCategoryUpload ];
+		self.options = options;
+
+		self.categories = @[
+			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
+
+			OCSyncActionCategoryUpload,
+
+			([OCCellularManager.sharedManager cellularAccessAllowedFor:options[OCCoreOptionDependsOnCellularSwitch] transferSize:uploadItem.size] ?
+				OCSyncActionCategoryUploadWifiAndCellular :
+				OCSyncActionCategoryUploadWifiOnly)
+		];
 	}
 
 	return (self);
@@ -151,10 +187,23 @@
 				}];
 			});
 
+			// Determine cellular switch ID dependency
+			OCCellularSwitchIdentifier cellularSwitchID;
+
+			if ((cellularSwitchID = self.options[OCCoreOptionDependsOnCellularSwitch]) == nil)
+			{
+				cellularSwitchID = OCCellularSwitchIdentifierMain;
+			}
+
+			// Create segment folder
+			NSURL *segmentFolderURL = [[self.core.vault.rootURL URLByAppendingPathComponent:@"TUS"] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+
 			// Schedule the upload
 			NSDate *lastModificationDate = ((uploadItem.lastModified != nil) ? uploadItem.lastModified : [NSDate new]);
 			NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							segmentFolderURL,			OCConnectionOptionTemporarySegmentFolderURLKey,
 							lastModificationDate,			OCConnectionOptionLastModificationDateKey,
+							cellularSwitchID,			OCConnectionOptionRequiredCellularSwitchKey,
 							self.importFileChecksum, 	 	OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
 
@@ -282,26 +331,16 @@
 		{
 			// Create issue for cancellation for all other errors
 			OCSyncIssue *issue;
-			NSMutableArray <OCSyncIssueChoice *> *choices = [NSMutableArray new];
+			BOOL alreadyExists = [event.error isOCErrorWithCode:OCErrorItemAlreadyExists];
 
-			[choices addObject:[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]];
+			issue = [OCSyncIssue issueFromTemplate:(alreadyExists ? OCMessageTemplateIdentifierUploadKeepBoth : OCMessageTemplateIdentifierUploadRetry)
+						 forSyncRecord:syncContext.syncRecord
+							 level:OCIssueLevelError
+							 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
+						   description:event.error.localizedDescription
+						      metaData:nil];
 
-			if ([event.error isOCErrorWithCode:OCErrorItemAlreadyExists])
-			{
-				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]];
-//				[choices addObject:[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactDataLoss identifier:@"replaceExisting" label:OCLocalized(@"Replace existing") metaData:nil]];
-			}
-			else
-			{
-				[choices addObject:[OCSyncIssueChoice retryChoice]];
-			}
-
-			issue = [OCSyncIssue issueForSyncRecord:syncContext.syncRecord
-							  level:OCIssueLevelError
-							  title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
-						    description:event.error.localizedDescription
-						       metaData:nil
-							choices:choices];
+			[issue setAutoChoiceError:event.error forChoiceWithIdentifier:OCSyncIssueChoiceIdentifierRetry];
 
 			[syncContext addSyncIssue:issue];
 			[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
@@ -511,6 +550,8 @@
 	_replaceItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"replaceItem"];
 
 	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
+
+	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -525,8 +566,12 @@
 	[coder encodeObject:_replaceItem forKey:@"replaceItem"];
 
 	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
+
+	[coder encodeObject:_options forKey:@"options"];
 }
 
 @end
 
 OCSyncActionCategory OCSyncActionCategoryUpload = @"upload";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiOnly = @"upload-wifi-only";
+OCSyncActionCategory OCSyncActionCategoryUploadWifiAndCellular = @"upload-cellular-and-wifi";

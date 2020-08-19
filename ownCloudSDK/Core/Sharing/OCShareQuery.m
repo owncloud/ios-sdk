@@ -260,9 +260,7 @@
 		{
 			if (removedShare.identifier != nil)
 			{
-				OCShare *existingShare;
-
-				if ((existingShare = _sharesByID[removedShare.identifier]) != nil)
+				if (_sharesByID[removedShare.identifier] != nil)
 				{
 					[self updateQueryResultsWithBlock:^{
 						[self->_sharesByID removeObjectForKey:removedShare.identifier];

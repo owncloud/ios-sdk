@@ -18,15 +18,43 @@
 
 #import "OCSyncActionDelete.h"
 
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteWithForce = @"delete.withForce";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteCancel = @"delete.cancel";
+
 @implementation OCSyncActionDelete
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierDeleteLocal);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Cancel
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteCancel categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil],
+
+		// Cancel or Force Delete
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteWithForce categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+
+			// Reschedule sync record with match requirement turned off
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"forceDelete" label:OCLocalizedString(@"Delete",@"") metaData:nil]
+		] options:nil]
+	]);
+}
 
 #pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierDeleteLocal;
-
 		self.requireMatch = requireMatch;
 
 		self.actionEventType = OCEventTypeDelete;
@@ -253,13 +281,7 @@
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
-				issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-						// Drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-
-						// Reschedule sync record with match requirement turned off
-						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"forceDelete" label:OCLocalizedString(@"Delete",@"") metaData:nil]
-					]];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteWithForce forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 			}
 			break;
 
@@ -305,10 +327,7 @@
 
 		if ((issue==nil) && (title!=nil))
 		{
-			issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-					// Drop sync record
-					[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-				]];
+			issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteCancel forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 		}
 
 		if (issue != nil)
@@ -320,7 +339,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 
 		// Reschedule for all other errors

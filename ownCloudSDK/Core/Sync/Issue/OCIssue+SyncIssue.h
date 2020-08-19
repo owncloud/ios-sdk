@@ -19,13 +19,16 @@
 #import "OCCore.h"
 #import "OCIssue.h"
 #import "OCSyncIssue.h"
-#import "OCCore+SyncEngine.h"
+#import "OCCore.h"
+#import "OCMessageQueue.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCIssue (SyncIssue)
 
-+ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core resolutionResultHandler:(OCCoreSyncIssueResolutionResultHandler)resolutionResultHandler;
++ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue resolutionResultHandler:(OCCoreSyncIssueResolutionResultHandler)resolutionResultHandler;
+
++ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core;
 
 @end
 

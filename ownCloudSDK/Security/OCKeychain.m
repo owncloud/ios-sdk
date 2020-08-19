@@ -73,10 +73,9 @@
 	
 	if ((queryDict = [self _queryType:kSecReturnAttributes dictForAccount:account path:path]) != nil)
 	{
-		OSStatus status;
 		CFDictionaryRef outDict = nil;
 		
-		if ((status = SecItemCopyMatching((CFDictionaryRef)queryDict, (CFTypeRef *)&outDict)) == errSecSuccess)
+		if (SecItemCopyMatching((CFDictionaryRef)queryDict, (CFTypeRef *)&outDict) == errSecSuccess)
 		{
 			attrDict = (NSDictionary *)CFBridgingRelease(outDict);
 		}
@@ -88,28 +87,31 @@
 - (NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path
 {
 	NSMutableDictionary <NSString *, id> *queryDict;
-	CFDataRef outData = nil;
-	
+	CFDataRef outData = NULL;
+	OSStatus status = noErr;
+
 	if ((queryDict = [self _queryType:kSecReturnData dictForAccount:account path:path]) != nil)
 	{
-		OSStatus status;
-		
 		if ((status = SecItemCopyMatching((CFDictionaryRef)queryDict, (CFTypeRef *)&outData)) == errSecItemNotFound)
 		{
+			OCTLogDebug(@[@"Read"], @"No item found for %@:%@", account, path);
 			return (nil);
 		}
 	}
+
+	OCTLogDebug(@[@"Read"], @"For %@:%@ returned %@, status=%d", account, path, ((outData!=NULL) ? [NSString stringWithFormat:@"%ld bytes", (long)CFDataGetLength(outData)] : @"no data"), status);
 
 	return ((NSData *)CFBridgingRelease(outData));
 }
 
 - (NSError *)writeData:(NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path
 {
-	NSDictionary<NSString *, id> *itemAttributesForExistingItem;
 	OSStatus status = errSecSuccess;
 	NSError *error = nil;
-	
-	if ((itemAttributesForExistingItem = [self _attributesOfItemForAccount:account path:path]) != nil)
+
+	OCTLogDebug(@[@"Write"], @"Writing %lu bytes for %@:%@", (unsigned long)data.length, account, path);
+
+	if ([self _attributesOfItemForAccount:account path:path] != nil)
 	{
 		// Item already exists. Update it.
 		NSMutableDictionary <NSString *, id> *queryDict;
@@ -122,10 +124,14 @@
 				 		        (CFDictionaryRef)@{
 								(id)kSecValueData : data
 							});
+
+				OCTLogDebug(@[@"Write"], @"Overwrote %@:%@ with %lu new bytes, status=%d", account, path, (unsigned long)data.length, status);
 			}
 			else
 			{
 				status = SecItemDelete((CFDictionaryRef)queryDict);
+
+				OCTLogDebug(@[@"Delete"], @"Deleted %@:%@, status=%d", account, path, status);
 			}
 		}
 	}
@@ -143,7 +149,13 @@
 				queryDict[(id)kSecAttrAccessible] = (id)kSecAttrAccessibleAfterFirstUnlock;
 
 				status = SecItemAdd((CFDictionaryRef)queryDict, &result);
+
+				OCTLogDebug(@[@"Write"], @"Created %@:%@ with %lu new bytes, status=%d", account, path, (unsigned long)data.length, status);
 			}
+		}
+		else
+		{
+			OCTLogDebug(@[@"Delete"], @"%@:%@ does not exist", account, path);
 		}
 	}
 	
@@ -204,6 +216,17 @@
 	}
 
 	return (error);
+}
+
+#pragma mark - Log tagging
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"Keychain"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"Keychain"]);
 }
 
 @end

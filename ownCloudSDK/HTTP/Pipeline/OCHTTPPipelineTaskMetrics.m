@@ -87,6 +87,7 @@
 		if (((startDate = transactionMetrics.requestEndDate) != nil) && ((endDate = transactionMetrics.responseStartDate) != nil))
 		{
 			_serverProcessingTimeInterval = @([endDate timeIntervalSinceDate:startDate]);
+			_responseStartDate = endDate;
 		}
 
 		if (((startDate = transactionMetrics.responseStartDate) != nil) && ((endDate = transactionMetrics.responseEndDate) != nil))
@@ -153,6 +154,8 @@
 	[coder encodeObject:_serverProcessingTimeInterval forKey:@"server"];
 	[coder encodeObject:_responseReceiveTimeInterval forKey:@"response"];
 
+	[coder encodeObject:_responseStartDate forKey:@"responseStartDate"];
+
 	[coder encodeObject:_totalRequestSizeBytes forKey:@"totalOut"];
 	[coder encodeObject:_totalResponseSizeBytes forKey:@"totalIn"];
 }
@@ -169,6 +172,8 @@
 		_requestSendTimeInterval = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"request"];
 		_serverProcessingTimeInterval = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"server"];
 		_responseReceiveTimeInterval = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"response"];
+
+		_responseStartDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"responseStartDate"];
 
 		_totalRequestSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalOut"];
 		_totalResponseSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalIn"];

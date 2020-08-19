@@ -309,9 +309,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 	{
 		if (_trustRef == NULL)
 		{
-			SecCertificateRef certificateRef;
-		
-			if ((certificateRef = self.certificateRef) != NULL)
+			if (self.certificateRef != NULL)
 			{
 				SecPolicyRef policyRef;
 
@@ -605,7 +603,7 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 
 		if ((certificateRef = self.certificateRef) != NULL)
 		{
-			_publicKey = SecCertificateCopyPublicKey(self.certificateRef);
+			_publicKey = SecCertificateCopyKey(certificateRef);
 		}
 	}
 

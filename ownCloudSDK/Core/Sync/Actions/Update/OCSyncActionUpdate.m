@@ -19,14 +19,31 @@
 #import "OCSyncActionUpdate.h"
 #import "OCMacros.h"
 
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUpdateCancel = @"update.cancel";
+
 @implementation OCSyncActionUpdate
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierUpdate);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUpdateCancel categoryName:nil choices:@[
+			// Drop sync record (also restores previous metadata)
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil]
+	]);
+}
 
 - (instancetype)initWithItem:(OCItem *)item updateProperties:(NSArray <OCItemPropertyName> *)properties
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierUpdate;
-
 		self.updateProperties = properties;
 
 		self.actionEventType = OCEventTypeUpdate;
@@ -136,17 +153,13 @@
 			if (!updateStatus.isSuccess)
 			{
 				// Property couldn't be updated successfully
-				[syncContext addSyncIssue:[OCSyncIssue issueForSyncRecord:syncContext.syncRecord
-										    level:OCIssueLevelError
-										    title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
-									      description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
-										 metaData:nil
-										  choices:@[
-												// Drop sync record (also restores previous metadata)
-										  		[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
-											   ]
-							  ]
-				];
+				[syncContext addSyncIssue:[OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierUpdateCancel
+									   forSyncRecord:syncContext.syncRecord
+										   level:OCIssueLevelError
+										   title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
+									     description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
+										metaData:nil]
+				 ];
 
 				// Prevent removal of sync record, so it's still around for descheduling
 				allChangesSuccessful = NO;
@@ -169,7 +182,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 

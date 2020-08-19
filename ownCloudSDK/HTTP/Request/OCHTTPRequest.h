@@ -22,6 +22,7 @@
 #import "OCCertificate.h"
 #import "OCHTTPTypes.h"
 #import "OCProgress.h"
+#import "OCCellularSwitch.h"
 
 @class OCHTTPPipelineTask;
 
@@ -60,6 +61,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 @property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
 
+@property(strong) OCCellularSwitchIdentifier requiredCellularSwitch; //!< Switch that needs to be allowed before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
+
 @property(assign) BOOL autoResume;				//!< For GET requests, try to automatically resume transfer if connection is cut off
 @property(strong) OCHTTPRequestResumeInfo autoResumeInfo;	//!< Resume information for auto resume
 
@@ -79,6 +82,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(assign) BOOL downloadRequest;			//!< If the request is for the download of a file and the response body should be written to a file.
 @property(strong) NSURL *downloadedFileURL;		//!< If downloadRequest is YES, location of the downloaded file. It's possible to pre-occupy this field, in which case the temporary file will be copied to that URL when the download completes.
 @property(assign) BOOL downloadedFileIsTemporary;	//!< If YES, the downloadedFileURL points to a temporary file that will be removed automatically. If NO, downloadedFileURL points to a file that won't be removed automatically (== if downloadedFileURL was set before starting the download).
+
+@property(assign) BOOL avoidCellular;			//!< Request is not allowed to be sent over a cellular connection. Defaults to NO.
 
 @property(assign) BOOL isNonCritial;			//!< Request that are marked non-critical are allowed to be cancelled to speed up shutting down the connection queue
 
@@ -113,15 +118,16 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong) OCHTTPResponse *httpResponse;
 
 #pragma mark - Description
-+ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers;
-+ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers;
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed;
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix;
 
-- (NSString *)requestDescription;
+- (NSString *)requestDescriptionPrefixed:(BOOL)prefixed;
 
 @end
 
 extern OCHTTPMethod OCHTTPMethodGET;
 extern OCHTTPMethod OCHTTPMethodPOST;
+extern OCHTTPMethod OCHTTPMethodPATCH;
 extern OCHTTPMethod OCHTTPMethodHEAD;
 extern OCHTTPMethod OCHTTPMethodPUT;
 extern OCHTTPMethod OCHTTPMethodDELETE;

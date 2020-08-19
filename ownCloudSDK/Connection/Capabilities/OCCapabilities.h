@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCChecksumAlgorithm.h"
 #import "OCShare.h"
+#import "OCTUSHeader.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -54,6 +55,17 @@ typedef NSNumber* OCCapabilityBool;
 #pragma mark - DAV
 @property(readonly,nullable,nonatomic) NSString *davChunkingVersion;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *davReports;
+
+#pragma mark - TUS
+@property(readonly,nonatomic) BOOL tusSupported;
+@property(readonly,nullable,nonatomic) OCTUSCapabilities tusCapabilities;
+@property(readonly,nullable,nonatomic) NSArray<OCTUSVersion> *tusVersions;
+@property(readonly,nullable,nonatomic) OCTUSVersion tusResumable;
+@property(readonly,nullable,nonatomic) NSArray<OCTUSExtension> *tusExtensions;
+@property(readonly,nullable,nonatomic) NSNumber *tusMaxChunkSize;
+@property(readonly,nullable,nonatomic) OCHTTPMethod tusHTTPMethodOverride;
+
+@property(readonly,nullable,nonatomic) OCTUSHeader *tusCapabilitiesHeader; //!< .tusCapabilities translated into an OCTUSHeader
 
 #pragma mark - Files
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsPrivateLinks;

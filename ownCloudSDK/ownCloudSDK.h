@@ -55,6 +55,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCore+ItemUpdates.h>
 #import <ownCloudSDK/OCCore+DirectURL.h>
 #import <ownCloudSDK/OCCore+NameConflicts.h>
+#import <ownCloudSDK/OCScanJobActivity.h>
 #import <ownCloudSDK/NSString+NameConflicts.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
 
@@ -73,6 +74,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCoreConnectionStatusSignalProvider.h>
 
 #import <ownCloudSDK/OCBookmark.h>
+#import <ownCloudSDK/OCBookmark+Diagnostics.h>
 
 #import <ownCloudSDK/OCAuthenticationMethod.h>
 #import <ownCloudSDK/OCAuthenticationMethodBasicAuth.h>
@@ -95,6 +97,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCHTTPPipelineTaskMetrics.h>
 #import <ownCloudSDK/OCHTTPPipelineBackend.h>
 #import <ownCloudSDK/OCHTTPPipelineTaskCache.h>
+
+#import <ownCloudSDK/OCHTTPPolicyManager.h>
+#import <ownCloudSDK/OCHTTPPolicy.h>
 
 #import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
@@ -133,6 +138,20 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCActivityUpdate.h>
 
 #import <ownCloudSDK/OCSyncRecord.h>
+#import <ownCloudSDK/OCSyncRecordActivity.h>
+
+#import <ownCloudSDK/OCSyncIssue.h>
+#import <ownCloudSDK/OCSyncIssueChoice.h>
+#import <ownCloudSDK/OCMessageTemplate.h>
+#import <ownCloudSDK/OCIssue+SyncIssue.h>
+
+#import <ownCloudSDK/OCMessageQueue.h>
+#import <ownCloudSDK/OCMessage.h>
+#import <ownCloudSDK/OCMessageChoice.h>
+#import <ownCloudSDK/OCMessagePresenter.h>
+
+#import <ownCloudSDK/OCTUSHeader.h>
+#import <ownCloudSDK/NSString+TUSMetadata.h>
 
 #import <ownCloudSDK/NSURL+OCURLNormalization.h>
 #import <ownCloudSDK/NSURL+OCURLQueryParameterExtensions.h>
@@ -182,6 +201,17 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCProcessManager.h>
 #import <ownCloudSDK/OCProcessSession.h>
+
+#import <ownCloudSDK/OCCellularManager.h>
+#import <ownCloudSDK/OCCellularSwitch.h>
+
+#import <ownCloudSDK/OCNetworkMonitor.h>
+
+#import <ownCloudSDK/OCDiagnosticSource.h>
+#import <ownCloudSDK/OCDiagnosticNode.h>
+#import <ownCloudSDK/OCDatabase+Diagnostic.h>
+#import <ownCloudSDK/OCSyncRecord+Diagnostic.h>
+#import <ownCloudSDK/OCHTTPPipeline+Diagnostic.h>
 
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
 #import <ownCloudSDK/OCRateLimiter.h>

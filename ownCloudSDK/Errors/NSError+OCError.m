@@ -20,6 +20,9 @@
 
 #import "NSError+OCError.h"
 #import "OCMacros.h"
+#import "OCAuthenticationMethod.h"
+
+static NSString *OCErrorIssueKey = @"OCErrorIssue";
 
 @implementation NSError (OCError)
 
@@ -42,6 +45,7 @@
 {
 	id value = nil;
 	NSString *unlocalizedString = nil;
+	NSString *customErrorDescription = nil;
 	BOOL forceShortForm = NO;
 
 	if ([userInfoKey isEqualToString:@"NSDescription"] || [userInfoKey isEqualToString:NSLocalizedDescriptionKey])
@@ -71,6 +75,26 @@
 
 				case OCErrorAuthorizationFailed:
 					unlocalizedString = @"Authorization failed.";
+
+					if (error.userInfo[OCErrorInfoKey] != nil)
+					{
+						OCAuthenticationMethodIdentifier authMethodID = error.userInfo[OCErrorInfoKey][@"authMethod"];
+						NSString *jsonError = error.userInfo[OCErrorInfoKey][@"jsonError"];
+
+						if (authMethodID != nil)
+						{
+							authMethodID = [[authMethodID componentsSeparatedByString:@"."] lastObject];
+
+							if (jsonError != nil)
+							{
+								customErrorDescription = [NSString stringWithFormat:@"%@: %@", authMethodID, jsonError];
+							}
+							else
+							{
+								customErrorDescription = authMethodID;
+							}
+						}
+					}
 				break;
 
 				case OCErrorAuthorizationRedirect:
@@ -290,13 +314,23 @@
 	
 	if ((value==nil) && (unlocalizedString != nil))
 	{
-		if (((error.userInfo.count) > 0 && (!((error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo.count==1)))) && !forceShortForm)
+		if (customErrorDescription != nil)
 		{
-			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, customErrorDescription];
 		}
 		else
 		{
-			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+			if ((error.userInfo.count > 0) &&
+			    (!((error.userInfo.count==1) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil))) &&
+			    (!((error.userInfo.count==2) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo[OCErrorDateKey]!=nil))) &&
+			    !forceShortForm)
+			{
+				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+			}
+			else
+			{
+				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+			}
 		}
 	}
 
@@ -335,6 +369,55 @@
 	return (objc_getAssociatedObject(self, (__bridge const void *)OCErrorIssueKey));
 }
 
+#pragma mark - Error dating
+- (NSError *)withErrorDate:(nullable NSDate *)errorDate
+{
+	// Take a shortcut if there's no date in the error and none to be set
+	if (errorDate == nil)
+	{
+		if (self.errorDate == nil)
+		{
+			return (self);
+		}
+
+		errorDate = self.errorDate;
+	}
+
+	// Create new error with added errorDate
+	NSDictionary<NSErrorUserInfoKey,id> *errorUserInfo;
+	NSError *newError = nil;
+
+	if ((errorUserInfo = [self.userInfo mutableCopy]) != nil)
+	{
+		NSMutableDictionary<NSErrorUserInfoKey,id> *mutableErrorUserInfo = [errorUserInfo mutableCopy];
+
+		mutableErrorUserInfo[OCErrorDateKey] = errorDate;
+
+		errorUserInfo = mutableErrorUserInfo;
+	}
+	else
+	{
+		errorUserInfo = @{ OCErrorDateKey : errorDate };
+	}
+
+	newError = [NSError errorWithDomain:self.domain code:self.code userInfo:errorUserInfo];
+
+	// Preserve embeddedIssue metadata that's maintained as an associated object
+	OCIssue *embeddedIssue;
+
+	if ((embeddedIssue = self.embeddedIssue) != nil)
+	{
+		newError = [newError errorByEmbeddingIssue:embeddedIssue];
+	}
+
+	return (newError);
+}
+
+- (nullable NSDate *)errorDate
+{
+	return (self.userInfo[OCErrorDateKey]);
+}
+
 - (NSDictionary *)ocErrorInfoDictionary
 {
 	NSDictionary *errorInfoDictionary;
@@ -354,5 +437,5 @@
 
 NSErrorDomain OCErrorDomain = @"OCError";
 
-NSString *OCErrorInfoKey = @"OCErrorInfo";
-NSString *OCErrorIssueKey = @"OCErrorIssue";
+NSErrorUserInfoKey OCErrorInfoKey = @"OCErrorInfo";
+NSErrorUserInfoKey OCErrorDateKey = @"OCErrorDate";

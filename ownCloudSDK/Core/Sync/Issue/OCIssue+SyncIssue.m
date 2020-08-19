@@ -17,10 +17,13 @@
  */
 
 #import "OCIssue+SyncIssue.h"
+#import "OCCore+SyncEngine.h"
+#import "OCMessageQueue.h"
+#import "OCMessage.h"
 
 @implementation OCIssue (SyncIssue)
 
-+ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core resolutionResultHandler:(OCCoreSyncIssueResolutionResultHandler)resolutionResultHandler
++ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue resolutionResultHandler:(OCCoreSyncIssueResolutionResultHandler)resolutionResultHandler
 {
 	OCIssue *issue;
 	NSMutableArray <OCIssueChoice *> *choices = [NSMutableArray new];
@@ -32,6 +35,7 @@
 		if ((choice = [OCIssueChoice choiceWithType:syncChoice.type label:syncChoice.label handler:nil]) != nil)
 		{
 			choice.userInfo = syncChoice;
+			choice.autoChoiceForError = syncChoice.autoChoiceForError;
 
 			[choices addObject:choice];
 		}
@@ -41,6 +45,20 @@
 		OCSyncIssueChoice *syncChoice = (OCSyncIssueChoice *)issue.selectedChoice.userInfo;
 
 		resolutionResultHandler(syncChoice);
+	}];
+
+	issue.uuid = syncIssue.uuid;
+
+	return (issue);
+}
+
++ (instancetype)issueFromSyncIssue:(OCSyncIssue *)syncIssue forCore:(OCCore *)core
+{
+	OCIssue *issue;
+	__weak OCCore *weakCore = core;
+
+	issue = [OCIssue issueFromSyncIssue:syncIssue resolutionResultHandler:^(OCSyncIssueChoice *choice) {
+		[weakCore resolveSyncIssue:syncIssue withChoice:choice userInfo:syncIssue.routingInfo completionHandler:nil];
 	}];
 
 	return (issue);

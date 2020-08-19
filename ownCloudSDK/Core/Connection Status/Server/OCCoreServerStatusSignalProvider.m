@@ -17,6 +17,7 @@
  */
 
 #import "OCCoreServerStatusSignalProvider.h"
+#import "NSError+OCNetworkFailure.h"
 #import "OCMacros.h"
 
 @implementation OCCoreServerStatusSignalProvider
@@ -41,7 +42,7 @@
 			if (statusPollTimerActive)
 			{
 				self->_statusPollTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10] interval:10 target:self selector:@selector(_sendStatusPollRequest:) userInfo:nil repeats:YES];
-				[[NSRunLoop currentRunLoop] addTimer:self->_statusPollTimer forMode:NSRunLoopCommonModes];
+				[[NSRunLoop currentRunLoop] addTimer:self->_statusPollTimer forMode:NSDefaultRunLoopMode];
 			}
 			else
 			{
@@ -55,6 +56,18 @@
 - (void)_sendStatusPollRequest:(NSTimer *)timer
 {
 	[self.core.connection requestServerStatusWithCompletionHandler:^(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo) {
+		if (error != nil)
+		{
+			if (error.isNetworkFailureError)
+			{
+				self.shortDescription = OCLocalized(@"Network unavailable");
+			}
+			else if (error.userInfo[NSLocalizedDescriptionKey] != nil)
+			{
+				self.shortDescription = error.userInfo[NSLocalizedDescriptionKey];
+			}
+		}
+
 		if ((error == nil) && (statusInfo != nil))
 		{
 			NSNumber *maintenanceMode;
@@ -86,8 +99,8 @@
 {
 	@synchronized(self)
 	{
+		self.shortDescription = (error.isNetworkFailureError ? OCLocalized(@"Network unavailable") : ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused"));
 		self.state = OCCoreConnectionStatusSignalStateFalse;
-		self.shortDescription = ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused");
 
 		[self setStatusPollTimerActive:YES];
 	}

@@ -22,6 +22,7 @@
 #import "OCCore+ItemPolicies.h"
 #import "OCCore+ItemUpdates.h"
 #import "OCLogger.h"
+#import "OCCellularManager.h"
 
 @implementation OCItemPolicyProcessorAvailableOffline
 
@@ -157,7 +158,8 @@
 		if (matchingItem.cloudStatus == OCItemCloudStatusCloudOnly)
 		{
 			[self.core downloadItem:matchingItem options:@{
-				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline
+				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline,
+				OCCoreOptionDependsOnCellularSwitch : OCCellularSwitchIdentifierAvailableOffline
 			} resultHandler:nil];
 		}
 		else if (matchingItem.cloudStatus == OCItemCloudStatusLocalCopy)

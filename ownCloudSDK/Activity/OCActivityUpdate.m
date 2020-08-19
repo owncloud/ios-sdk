@@ -87,7 +87,7 @@
 	return (self);
 }
 
-- (instancetype)withProgress:(NSProgress *)progress
+- (instancetype)withProgress:(nullable NSProgress *)progress
 {
 	_updatesByKeyPath[@"progress"] = progress;
 

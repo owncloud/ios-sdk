@@ -33,6 +33,9 @@
 #import "OCActivityManager.h"
 #import "OCActivityUpdate.h"
 #import "OCRecipientSearchController.h"
+#import "OCSyncIssue.h"
+#import "OCMessageQueue.h"
+#import "OCScanJobActivity.h"
 
 @class OCCore;
 @class OCItem;
@@ -62,16 +65,18 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 {
 	OCCoreConnectionStatusOffline,		//!< The server or client device is currently offline
 	OCCoreConnectionStatusUnavailable,	//!< The server is in maintenance mode and returns with 503 Service Unavailable or /status.php returns "maintenance"=true
-	OCCoreConnectionStatusOnline,		//!< The server and client device are online
+	OCCoreConnectionStatusConnecting,	//!< The connection is available and the client is actively trying to connect to the server
+	OCCoreConnectionStatusOnline		//!< The server and client device are online
 };
 
 typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 {
-	OCCoreConnectionStatusSignalReachable = (1 << 0), //!< The server is reachable
-	OCCoreConnectionStatusSignalAvailable = (1 << 1), //!< The server is available (not in maintenance mode, not responding with unexpected responses)
-	OCCoreConnectionStatusSignalConnected = (1 << 2), //!< The OCConnection has connected successfully
+	OCCoreConnectionStatusSignalReachable	= (1 << 0),	//!< The server is reachable
+	OCCoreConnectionStatusSignalAvailable	= (1 << 1), 	//!< The server is available (not in maintenance mode, not responding with unexpected responses)
+	OCCoreConnectionStatusSignalConnecting	= (1 << 2),	//!< The OCCore is in the process of connecting
+	OCCoreConnectionStatusSignalConnected	= (1 << 3), 	//!< The OCConnection has connected successfully
 
-	OCCoreConnectionStatusSignalBitCount  = 3	  //!< Number of bits used for status signal
+	OCCoreConnectionStatusSignalBitCount	= 4		//!< Number of bits used for status signal
 };
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
@@ -110,6 +115,8 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
+
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
 
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
@@ -121,6 +128,9 @@ typedef id<NSObject> OCCoreItemTracking;
 @protocol OCCoreDelegate <NSObject>
 
 - (void)core:(OCCore *)core handleError:(nullable NSError *)error issue:(nullable OCIssue *)issue;
+
+@optional
+- (BOOL)core:(OCCore *)core handleSyncIssue:(nullable OCSyncIssue *)syncIssue; //!< Implement this method if you want to get a chance to handle sync issues before they are submitted to the core's OCMessageQueue. Return YES if you handled it, NO if it should still be submitted to the OCMessageQueue. Use [OCIssue issueFromSyncIssue:syncIssue forCore:core] to convert sync issues received this way to OCIssue instances.
 
 @end
 
@@ -155,7 +165,12 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCCoreConnectionStatusSignalProvider *_reachabilityStatusSignalProvider; // Wrapping OCReachabilityMonitor or nw_path_monitor
 	OCCoreServerStatusSignalProvider *_serverStatusSignalProvider; // Processes reports of connection refused and maintenance mode responses and performs status.php polls to detect the resolution of the issue
-	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_connectingStatusSignalProvider; // Glue to include the OCCore state (connecting) into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state (connected) into connection status (signal)
+	OCCoreConnectionStatusSignalProvider *_rejectedIssueSignalProvider; // Glue to include rejectedIssueSignatures into reachability
+
+	NSMutableSet<OCIssueSignature> *_unsolvedIssueSignatures;
+	NSMutableSet<OCIssueSignature> *_rejectedIssueSignatures;
 
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
@@ -171,7 +186,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
 	NSMutableSet <OCCoreDirectoryUpdateJobID> *_scheduledDirectoryUpdateJobIDs;
-	OCActivity *_scheduledDirectoryUpdateJobActivity;
+	OCScanJobActivity *_scheduledDirectoryUpdateJobActivity;
 	NSUInteger _totalScheduledDirectoryUpdateJobs;
 	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
@@ -249,6 +264,8 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesUsed; //!< The number of bytes used by the user's content.
 @property(readonly,strong,nullable) NSNumber *rootQuotaBytesTotal; //!< The total amount of space assigned/available to the user.
 
+@property(readonly,strong,nonatomic) OCMessageQueue *messageQueue;
+
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
 - (instancetype)initWithBookmark:(OCBookmark *)bookmark NS_DESIGNATED_INITIALIZER;
@@ -269,6 +286,9 @@ typedef id<NSObject> OCCoreItemTracking;
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item; //!< Unregisters a progress object for an item
 
 - (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
+
+#pragma mark - Error handling
+- (BOOL)sendError:(nullable NSError *)error issue:(nullable OCIssue *)issue; //!< If YES is returned, the error was sent to the OCCoreDelegate. If NO is returned, the error was not sent to the OCCoreDelegate.
 
 #pragma mark - Item lookup and information
 - (nullable OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
@@ -380,6 +400,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @interface OCCore (CommandCreateFolder)
 - (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreActionResultHandler)resultHandler;
 @end
 
 @interface OCCore (CommandDelete)
@@ -420,6 +441,8 @@ extern OCCoreOption OCCoreOptionAddFileClaim; //!< [OCClaim] A claim to add to a
 extern OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose; //!< [OCCoreClaimPurpose] Adds a temporary claim to the returned OCFile object (download) generated for the provided purpose. Makes sure the claim is automatically removed if the OCCore is still running when the object is deallocated. (default is OCCoreClaimPurposeNone)
 extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whether AvailableOffline should skip redundancy checks.
 extern OCCoreOption OCCoreOptionConvertExistingLocalDownloads; //!< [BOOL] Determines whether AvailableOffline should convert existing local copies to Available Offline managed items if they fall under a new Available Offline rule
+extern OCCoreOption OCCoreOptionLastModifiedDate; //!< [NSDate] For uploads, the date that should be used as last modified date for the uploaded file.
+extern OCCoreOption OCCoreOptionDependsOnCellularSwitch; //!< [OCCellularSwitchIdentifier] Tells the core to set the permission for cellular access according to the status of the provided OCCellularSwitchIdentifier (currently only supported for up- and downloads).
 
 extern OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey; //!< Vault.KVS-key with a NSNumber Boolean value. If the value is YES, available offline item policies are skipped.
 

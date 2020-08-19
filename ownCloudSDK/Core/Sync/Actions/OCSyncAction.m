@@ -28,11 +28,34 @@
 
 @implementation OCSyncAction
 
+#pragma mark - Class properties
++ (OCSyncActionIdentifier)identifier
+{
+	return (@"invalid-sync-action-identifier");
+}
+
+- (OCSyncActionIdentifier)identifier
+{
+	if (_identifier == nil)
+	{
+		return ([self.class identifier]);
+	}
+
+	return (_identifier);
+}
+
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item
 {
 	if ((self = [self init]) != nil)
 	{
+		_identifier = [self.class identifier];
+
+		if (_identifier == nil)
+		{
+			OCLogError(@"BUG: sync action %@ has a nil +identifier", self.class);
+		}
+
 		_localItem = item;
 		_archivedServerItem = ((item.remoteItem != nil) ? item.remoteItem : item);
 
@@ -177,6 +200,53 @@
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext
 {
 	return (NO);
+}
+
+#pragma mark - Issue generation
++ (NSArray<OCMessageTemplate *> *)issueTemplates
+{
+	NSMutableArray<OCMessageTemplate *> *templates = [NSMutableArray new];
+	OCSyncActionIdentifier actionIdentifier;
+
+	// Standard templates
+	if ((actionIdentifier = self.identifier) != nil)
+	{
+		// Standard cancellation template used by _addIssueForCancellationAndDeschedulingToContext:
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.dataLoss"] categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]
+		] options:nil]];
+
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDestructive"] categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil]];
+	}
+
+	// Action-specific templates
+	NSArray<OCMessageTemplate *> *actionIssueTemplates;
+
+	if ((actionIssueTemplates = self.actionIssueTemplates) != nil)
+	{
+		[templates addObjectsFromArray:actionIssueTemplates];
+	}
+
+	return (templates);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (nil);
+}
+
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact
+{
+	OCSyncIssue *issue;
+	OCSyncRecord *syncRecord = syncContext.syncRecord;
+
+	issue = [OCSyncIssue issueFromTemplate:[self.identifier stringByAppendingString:((impact == OCSyncIssueChoiceImpactDataLoss) ? @"._cancel.dataLoss" : @"._cancel.nonDestructive")] forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
+
+	[syncContext addSyncIssue:issue];
+
+	return (issue);
 }
 
 #pragma mark - Issue handling

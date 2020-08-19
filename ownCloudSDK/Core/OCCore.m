@@ -36,8 +36,7 @@
 #import "OCCoreManager.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "OCIPNotificationCenter.h"
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
-#import "OCCoreNetworkPathMonitorSignalProvider.h"
+#import "OCCoreNetworkMonitorSignalProvider.h"
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
@@ -51,6 +50,8 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCDeallocAction.h"
 #import "OCCore+ItemPolicies.h"
+#import "OCCore+MessageResponseHandler.h"
+#import "OCCore+MessageAutoresolver.h"
 
 @interface OCCore ()
 {
@@ -123,8 +124,14 @@
 				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
 
 				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+
 					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
-					OCSyncActionCategoryDownload : @(3)	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryUploadWifiOnly   	  : @(2), // Limit number of concurrent uploads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryUploadWifiAndCellular : @(3), // Limit number of concurrent uploads by WiFi and Cellular transfers to 3
+
+					OCSyncActionCategoryDownload : @(3),	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
 		OCCoreCookieSupportEnabled : @(NO)
 	});
@@ -165,6 +172,9 @@
 
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
 		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
+
+		_unsolvedIssueSignatures = [NSMutableSet new];
+		_rejectedIssueSignatures = [NSMutableSet new];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
@@ -216,14 +226,14 @@
 		{
 			// Adding cookie storage enabled cookie support
 			_connection.cookieStorage = [OCHTTPCookieStorage new];
-			_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
+			/*_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
 				if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
 				{
 					return (NO);
 				}
 
 				return (YES);
-			};
+			};*/
 		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
@@ -266,20 +276,20 @@
 
 		if (_reachabilityStatusSignalProvider == nil)
 		{
-			if (@available(iOS 12, *))
-			{
-				_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
-			}
-			else
-			{
-				_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
-			}
+			_reachabilityStatusSignalProvider = [OCCoreNetworkMonitorSignalProvider new];
 		}
+
+		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
-		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
+		[self addSignalProvider:_rejectedIssueSignalProvider];
+
 		[self addSignalProvider:_serverStatusSignalProvider];
+		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
@@ -381,9 +391,16 @@
 				// Attempt connecting
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
+
+				// Register as message autoResolver
+				[self.messageQueue addAutoResolver:self];
+
+				// Register as message response handler
+				[self.messageQueue addResponseHandler:self];
 			}
 			else
 			{
+				OCLogError(@"STOPPED CORE due to startError=%@", startError);
 				self->_attemptConnect = NO;
 				[self _updateState:OCCoreStateStopped];
 			}
@@ -539,6 +556,22 @@
 
 - (void)_attemptConnect
 {
+	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)
+	{
+		__weak OCCore *weakCore = self;
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), self->_queue, ^{
+			[weakCore __attemptConnect];
+		});
+	}
+	else
+	{
+		[self __attemptConnect];
+	}
+}
+
+- (void)__attemptConnect
+{
 	[self queueConnectivityBlock:^{
 		if ((self->_state == OCCoreStateReady) && self->_attemptConnect)
 		{
@@ -581,10 +614,7 @@
 					// Relay error and issues to delegate
 					if ((error != nil) || (issue != nil))
 					{
-						if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
-						{
-							[self->_delegate core:self handleError:error issue:issue];
-						}
+						[self sendError:error issue:issue];
 					}
 
 					dispatch_resume(self->_connectivityQueue);
@@ -778,6 +808,12 @@
 	}];
 }
 
+#pragma mark - Message queue
+- (OCMessageQueue *)messageQueue
+{
+	return (OCMessageQueue.globalQueue);
+}
+
 #pragma mark - Memory configuration
 - (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
 {
@@ -801,10 +837,19 @@
 	[_ipNotificationCenter addObserver:self forName:self.bookmark.coreUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core handleIPCChangeNotification];
 	}];
+
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core handleAuthDataChangedNotification];
+	}];
+
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification) name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
 }
 
 - (void)stopIPCObserveration
 {
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
+
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName];
 	[_ipNotificationCenter removeObserver:self forName:self.bookmark.coreUpdateNotificationName];
 }
 
@@ -845,10 +890,39 @@
 
 - (void)handleIPCChangeNotification
 {
+	if (self.state == OCCoreStateStopped)
+	{
+		OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (1)");
+		return;
+	}
+
 	OCLogDebug(@"Received IPC change notification");
 
 	[self queueBlock:^{
+		if (self.state == OCCoreStateStopped)
+		{
+		OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (2)");
+			return;
+		}
+
 		[self _checkForChangesByOtherProcessesAndUpdateQueries];
+	}];
+}
+
+- (void)handleAuthDataChangedNotification
+{
+	[self queueBlock:^{
+		if (self->_state == OCCoreStateRunning)
+		{
+			// Trigger a small request to check auth availabiltiy
+			[self startCheckingForUpdates];
+		}
+
+		if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
+		{
+			// Re-attempt connection
+			[self _attemptConnect];
+		}
 	}];
 }
 
@@ -954,6 +1028,117 @@
 
 		[self endActivity:@"Replaying changes since sync anchor"];
 	}];
+}
+
+#pragma mark - Error handling
+- (BOOL)sendError:(NSError *)error issue:(OCIssue *)issue
+{
+	if ((error != nil) || (issue != nil))
+	{
+		id<OCCoreDelegate> delegate;
+
+		if (((delegate = self.delegate) != nil) && [self.delegate respondsToSelector:@selector(core:handleError:issue:)])
+		{
+			if (issue != nil)
+			{
+				OCIssueSignature issueSignature = nil;
+
+				switch (issue.type)
+				{
+					case OCIssueTypeCertificate:
+					case OCIssueTypeURLRedirection:
+						if ((issueSignature = issue.signature) != nil)
+						{
+							@synchronized(_unsolvedIssueSignatures)
+							{
+								// Do not re-send unsolved issues
+								if ([_unsolvedIssueSignatures containsObject:issueSignature])
+								{
+									OCLogDebug(@"Blocked duplicate issue %@ (signature: %@)", issue, issueSignature);
+									return (NO);
+								}
+
+								// New unsolved issue -> add and add handler to issue
+								[_unsolvedIssueSignatures addObject:issueSignature];
+
+								__weak OCCore *weakCore = self;
+
+								[issue appendIssueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+									OCCore *strongCore;
+									NSMutableSet<OCIssueSignature> *unsolvedIssueSignatures;
+									NSMutableSet<OCIssueSignature> *rejectedIssueSignatures;
+
+									if (((strongCore = weakCore) != nil) &&
+									    ((unsolvedIssueSignatures = strongCore->_unsolvedIssueSignatures) != nil) &&
+									    ((rejectedIssueSignatures = strongCore->_rejectedIssueSignatures) != nil))
+									{
+										BOOL unsolvedListIsEmpty = NO;
+
+										if (decision == OCIssueDecisionApprove)
+										{
+											OCLogDebug(@"Issue %@ approved, removing from list of unsolved issue (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures removeObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if (decision == OCIssueDecisionReject)
+										{
+											OCLogDebug(@"Issue %@ rejected, removing from list of unsolved issue, adding to list of rejected issues (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures addObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if ((strongCore.state != OCCoreStateStopping) && (strongCore.state != OCCoreStateStopped))
+										{
+											[strongCore _updateRejectedIssueSignalProvider];
+
+											if (unsolvedListIsEmpty)
+											{
+												[strongCore connectionChangedState:strongCore.connection];
+											}
+										}
+									}
+								}];
+							}
+						}
+					break;
+
+					default:
+					break;
+				}
+			}
+
+			[delegate core:self handleError:error issue:issue];
+
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+- (void)_updateRejectedIssueSignalProvider
+{
+	BOOL rejectedListIsEmpty;
+
+	@synchronized(_unsolvedIssueSignatures)
+	{
+		rejectedListIsEmpty = (_rejectedIssueSignatures.count == 0);
+	}
+
+	_rejectedIssueSignalProvider.state = (rejectedListIsEmpty ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
 }
 
 #pragma mark - ## Commands
@@ -1161,7 +1346,7 @@
 			// No item for this path found in cache
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
-				// This path indicates a file - but maybe that's what what's wanted: retry by looking for a folder at that location instead.
+				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
 				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
@@ -1828,6 +2013,8 @@ OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
 OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
 OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
+OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
+OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 

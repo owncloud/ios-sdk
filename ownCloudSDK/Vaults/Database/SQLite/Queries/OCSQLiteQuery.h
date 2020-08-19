@@ -31,9 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(copy) OCSQLiteDBResultHandler resultHandler;
 
 #pragma mark - Queries
-+ (nullable instancetype)query:(NSString *)sqlQuery withParameters:(nullable NSArray <id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
-+ (nullable instancetype)query:(NSString *)sqlQuery withNamedParameters:(nullable NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
-+ (nullable instancetype)query:(NSString *)sqlQuery resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
++ (nullable instancetype)query:(OCSQLiteQueryString)sqlQuery withParameters:(nullable NSArray <id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
++ (nullable instancetype)query:(OCSQLiteQueryString)sqlQuery withNamedParameters:(nullable NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
++ (nullable instancetype)query:(OCSQLiteQueryString)sqlQuery resultHandler:(nullable OCSQLiteDBResultHandler)resultHandler;
 
 #pragma mark - SELECT query builder
 + (nullable instancetype)querySelectingColumns:(nullable NSArray<NSString *> *)columnNames fromTable:(NSString *)tableName where:(nullable NSDictionary <NSString *, id<NSObject>> *)matchValues orderBy:(nullable NSString *)orderBy limit:(nullable NSString *)limit resultHandler:(OCSQLiteDBResultHandler)resultHandler;

@@ -37,34 +37,27 @@ typedef NS_ENUM(NSInteger, OCHTTPPipelineState)
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol OCHTTPPipelinePolicyHandler <NSObject>
+
+#pragma mark - Certificate validation
+- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+
+@end
+
 @protocol OCHTTPPipelinePartitionHandler <NSObject>
 
 @property(strong,readonly) OCHTTPPipelinePartitionID partitionID; //!< The ID of the partition
 
 #pragma mark - Requirements
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError;
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError **)outError;
 
 #pragma mark - Scheduling
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
 
 - (nullable NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error;
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error;
 
-#pragma mark - Security policy (improved, allowing for scheduling requests without attached pipelineHandler)
-/*
-// OCHTTPPolicy should allow these things
-// - access request before scheduling (to add credentials)
-// - access request after certificate is known (to validate, apply custom policies)
-// - handle response and provide an instruction (to re-queue requests with failed validation or network errors)
-// - be fully serializable (for persistance in pipeline backend)
-
-- (NSArray<OCHTTPPolicy *> *)policiesForPipeline:(OCHTTPPipeline *)pipeline; //!< Array of policies that need to be fulfilled to let a request be sent. Called automatically at every attach. Call -[OCPipeline policiesChangedForPartition:] while attached to ask OCHTTPPipeline to call this.
-
-- (void)pipeline:(OCHTTPPipeline *)pipeline handlePolicy:(OCHTTPPolicy *)policy error:(NSError *)error; //!< Called whenever there is an error validating a security policy. Provides enough info to create an issue and the proceed handler allows reacting to it (f.ex. via error userinfo provide OCCertificate *certificate, BOOL userAcceptanceRequired, OCConnectionCertificateProceedHandler proceedHandler).
-*/
-
-#pragma mark - Certificate validation
-- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+@optional
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)inInstruction error:(nullable NSError *)error;
 
 #pragma mark - Mocking
 @optional

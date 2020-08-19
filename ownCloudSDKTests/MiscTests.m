@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 
 @interface MiscTests : XCTestCase
 
@@ -465,53 +464,7 @@
 	XCTAssert(executedJobCount==executedCompletionHandlerCount);
 }
 
-#pragma mark - Legacy Reachability
-- (void)testReachabilityInvalidHost
-{
-	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
-
-	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"non-existant.topleveldomain"];
-
-	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
-
-	[reachabilityStatusProvider providerWillBeAdded];
-	[reachabilityStatusProvider providerWasAdded];
-
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
-
-		[timeoutExpectation fulfill];
-	});
-
-	[self waitForExpectationsWithTimeout:2 handler:nil];
-
-	[reachabilityStatusProvider providerWillBeRemoved];
-	[reachabilityStatusProvider providerWasRemoved];
-}
-
-- (void)testReachabilityValidHost
-{
-	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
-
-	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"www.owncloud.com"];
-
-	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
-
-	[reachabilityStatusProvider providerWillBeAdded];
-	[reachabilityStatusProvider providerWasAdded];
-
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateTrue);
-
-		[timeoutExpectation fulfill];
-	});
-
-	[self waitForExpectationsWithTimeout:4 handler:nil];
-
-	[reachabilityStatusProvider providerWillBeRemoved];
-	[reachabilityStatusProvider providerWasRemoved];
-}
-
+#pragma mark - Rate limiter
 - (void)testRateLimiter
 {
 	XCTestExpectation *expectFirstInvocation = [self expectationWithDescription:@"Expect first invocation"];

@@ -46,6 +46,11 @@
 		_bookmarks = [NSMutableArray new];
 
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleBookmarkUpdatedNotification:) name:OCBookmarkUpdatedNotification object:nil];
+
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameBookmarkManagerListChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+			[self loadBookmarks];
+			[self postLocalChangeNotification];
+		}];
 	}
 
 	return(self);
@@ -53,6 +58,7 @@
 
 - (void)dealloc
 {
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameBookmarkManagerListChanged];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkUpdatedNotification object:nil];
 }
 
@@ -71,7 +77,7 @@
 	{
 		if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
 		{
-			NSMutableArray *loadedBookmarks = nil;
+			NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
 
 			@try
 			{
@@ -121,13 +127,21 @@
 
 			[bookmarkData writeToURL:self.bookmarkStoreURL atomically:YES];
 		}
+
+		[self postRemoteChangeNotification];
+		[self postLocalChangeNotification];
 	}
 }
 
 #pragma mark - Change notification
-- (void)postChangeNotification
+- (void)postLocalChangeNotification
 {
 	[NSNotificationCenter.defaultCenter postNotificationName:OCBookmarkManagerListChanged object:nil];
+}
+
+- (void)postRemoteChangeNotification
+{
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameBookmarkManagerListChanged ignoreSelf:YES];
 }
 
 - (void)handleBookmarkUpdatedNotification:(NSNotification *)updateNotification
@@ -153,7 +167,6 @@
 		[_bookmarks addObject:bookmark];
 	}
 
-	[self postChangeNotification];
 	[self saveBookmarks];
 }
 
@@ -166,7 +179,6 @@
 		[_bookmarks removeObject:bookmark];
 	}
 
-	[self postChangeNotification];
 	[self saveBookmarks];
 }
 
@@ -180,7 +192,6 @@
 		[_bookmarks insertObject:bookmark atIndex:toIndex];
 	}
 
-	[self postChangeNotification];
 	[self saveBookmarks];
 }
 
@@ -197,7 +208,6 @@
 
 	if (saveAndPostUpdate)
 	{
-		[self postChangeNotification];
 		[self saveBookmarks];
 	}
 
@@ -232,3 +242,4 @@
 @end
 
 NSNotificationName OCBookmarkManagerListChanged = @"OCBookmarkManagerListChanged";
+OCIPCNotificationName OCIPCNotificationNameBookmarkManagerListChanged = @"OCBookmarkManagerListChanged";

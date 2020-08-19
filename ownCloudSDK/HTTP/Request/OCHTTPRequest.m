@@ -250,6 +250,9 @@
 		{
 			urlRequest.HTTPBody = self.bodyData;
 		}
+
+		// Apply settings
+		urlRequest.allowsCellularAccess = !self.avoidCellular;
 	}
 
 	return (urlRequest);
@@ -294,35 +297,49 @@
 }
 
 #pragma mark - Description
-+ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
 {
-	NSString *contentType = headers[@"Content-Type"];
-	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"] || [contentType isEqualToString:@"application/x-www-form-urlencoded"];
+	NSString *contentType = [[headers[@"Content-Type"] componentsSeparatedByString:@"; "] firstObject];
+	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
+			       [contentType isEqualToString:@"application/xml"] ||
+			       [contentType isEqualToString:@"application/json"] ||
+			       [contentType isEqualToString:@"application/x-www-form-urlencoded"];
+
+	NSString*(^FormatReadableData)(NSData *data) = ^(NSData *data) {
+		NSString *readable = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+		if (prefixed && (readable != nil))
+		{
+			readable = [@"[body] " stringByAppendingString:[readable stringByReplacingOccurrencesOfString:[[NSString alloc] initWithFormat:@"\n"] withString:[[NSString alloc] initWithFormat:@"\n[body] "]]];
+		}
+
+		return (readable);
+	};
 
 	if (url != nil)
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:NSUTF8StringEncoding]);
+			return (FormatReadableData([NSData dataWithContentsOfURL:url]));
 		}
 
-		return ([NSString stringWithFormat:@"[Contents from %@]", url.path]);
+		return ([NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path]);
 	}
 
 	if (data != nil)
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+			return (FormatReadableData(data));
 		}
 
-		return ([NSString stringWithFormat:@"[%lu bytes of %@ data]", (unsigned long)data.length, contentType]);
+		return ([NSString stringWithFormat:@"%@[%lu bytes of %@ data]", (prefixed ? @"[body] " : @""), (unsigned long)data.length, contentType]);
 	}
 
 	return (nil);
 }
 
-+ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix
 {
 	NSMutableString *formattedHeaders = [NSMutableString new];
 
@@ -331,43 +348,56 @@
 		{
 			value = @"[redacted]";
 		}
-		[formattedHeaders appendFormat:@"%@: %@\n", headerField, value];
+		if (linePrefix != nil)
+		{
+			[formattedHeaders appendFormat:@"%@%@: %@\n", linePrefix, headerField, value];
+		}
+		else
+		{
+			[formattedHeaders appendFormat:@"%@: %@\n", headerField, value];
+		}
 	}];
 
 	return (formattedHeaders);
 }
 
-- (NSString *)requestDescription
+- (NSString *)requestDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *requestDescription = [NSMutableString new];
+	NSString *infoPrefix = (prefixed ? @"[info] " : @"");
+	NSString *headPrefix = (prefixed ? @"[header] " : @"");
 
-	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 
-	[requestDescription appendFormat:@"%@ %@ HTTP/1.1\nHost: %@\n", self.method, self.url.path, self.url.hostAndPort];
+	[requestDescription appendFormat:@"%@%@ %@ HTTP/1.1\n%@Host: %@\n", headPrefix, self.method, self.url.path, headPrefix, self.url.hostAndPort];
 	if (_autoResume && (_autoResumeInfo != nil))
 	{
-		[requestDescription appendFormat:@"[Auto-Resume: %lu | Info: %@]\n", (unsigned long)_autoResume, _autoResumeInfo.allKeys];
+		[requestDescription appendFormat:@"%@[Auto-Resume: %lu | Info: %@]\n", infoPrefix, (unsigned long)_autoResume, _autoResumeInfo.allKeys];
+	}
+	if (_avoidCellular)
+	{
+		[requestDescription appendFormat:@"%@[Avoid Cellular Transfer]\n", infoPrefix];
 	}
 	if (_bodyData != nil)
 	{
-		[requestDescription appendFormat:@"Content-Length: %lu\n", (unsigned long)_bodyData.length];
+		[requestDescription appendFormat:@"%@Content-Length: %lu\n", headPrefix, (unsigned long)_bodyData.length];
 	}
 	if (_bodyURL != nil)
 	{
 		NSNumber *fileSize = nil;
 		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
 		{
-			[requestDescription appendFormat:@"Content-Length: %lu\n", fileSize.unsignedIntegerValue];
+			[requestDescription appendFormat:@"%@Content-Length: %lu\n", headPrefix, fileSize.unsignedIntegerValue];
 		}
 	}
 	if (_headerFields.count > 0)
 	{
-		[requestDescription appendString:[OCHTTPRequest formattedHeaders:self.headerFields]];
+		[requestDescription appendString:[OCHTTPRequest formattedHeaders:self.headerFields withLinePrefix:(prefixed ? headPrefix : nil)]];
 	}
 
 	if (bodyDescription != nil)
 	{
-		[requestDescription appendFormat:@"\n%@\n", bodyDescription];
+		[requestDescription appendFormat:@"%@\n%@\n", headPrefix, bodyDescription];
 	}
 
 	return (requestDescription);
@@ -398,7 +428,9 @@
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
+
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
+		self.requiredCellularSwitch = [decoder decodeObjectOfClass:[NSString class] forKey:@"requiredCellularSwitch"];
 
 		self.autoResume 	= [decoder decodeBoolForKey:@"autoResume"];
 		self.autoResumeInfo	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoResumeInfo"];
@@ -412,6 +444,8 @@
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 		self.downloadedFileIsTemporary = [decoder decodeBoolForKey:@"downloadedFileIsTemporary"];
+
+		self.avoidCellular	= [decoder decodeBoolForKey:@"avoidCellular"];
 
 		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
 		self.cancelled		= [decoder decodeBoolForKey:@"cancelled"];
@@ -442,7 +476,8 @@
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
-	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredSignals 		forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredCellularSwitch 	forKey:@"requiredCellularSwitch"];
 
 	[coder encodeBool:_autoResume 		forKey:@"autoResume"];
 	[coder encodeObject:_autoResumeInfo	forKey:@"autoResumeInfo"];
@@ -457,6 +492,8 @@
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
 	[coder encodeBool:_downloadedFileIsTemporary forKey:@"downloadedFileIsTemporary"];
 
+	[coder encodeBool:_avoidCellular 	forKey:@"avoidCellular"];
+
 	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 	[coder encodeBool:_cancelled 		forKey:@"cancelled"];
 
@@ -467,6 +504,7 @@
 
 OCHTTPMethod OCHTTPMethodGET = @"GET";
 OCHTTPMethod OCHTTPMethodPOST = @"POST";
+OCHTTPMethod OCHTTPMethodPATCH = @"PATCH";
 OCHTTPMethod OCHTTPMethodHEAD = @"HEAD";
 OCHTTPMethod OCHTTPMethodPUT = @"PUT";
 OCHTTPMethod OCHTTPMethodDELETE = @"DELETE";

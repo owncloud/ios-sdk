@@ -37,7 +37,7 @@
 
 + (instancetype)withIdentifier:(OCActivityIdentifier)identifier description:(NSString *)description statusMessage:(nullable NSString *)statusMessage ranking:(NSInteger)ranking
 {
-	OCActivity *activity = [OCActivity new];
+	OCActivity *activity = [self new];
 
 	activity.identifier = identifier;
 	activity.localizedDescription = description;

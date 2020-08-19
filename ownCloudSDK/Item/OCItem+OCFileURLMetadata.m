@@ -8,7 +8,7 @@
 
 #import "OCItem+OCFileURLMetadata.h"
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 @implementation OCItem (OCFileURLMetadata)
 

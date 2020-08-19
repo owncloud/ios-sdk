@@ -215,7 +215,6 @@
 	}
 }
 
-
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
 {
 	OCLogDebug(@"queuing core return for bookmark %@", bookmark);
@@ -307,59 +306,6 @@
 	OCLogDebug(@"Handle events for background URL session: %@", identifier);
 
 	[OCHTTPPipelineManager.sharedPipelineManager handleEventsForBackgroundURLSession:identifier completionHandler:completionHandler];
-
-//	OCLogDebug(@"Handle events for background URL session: %@", identifier);
-//
-//	@synchronized(self)
-//	{
-//		if ((identifier != nil) && (completionHandler != nil))
-//		{
-//			NSUUID *sessionBookmarkUUID;
-//
-//			if ((sessionBookmarkUUID = [OCConnectionQueue uuidForBackgroundSessionIdentifier:identifier]) != nil)
-//			{
-//				OCBookmark *bookmark;
-//
-//				if ((bookmark = [[OCBookmarkManager sharedBookmarkManager] bookmarkForUUID:sessionBookmarkUUID]) != nil)
-//				{
-//					// Save completion handler
-//					[OCConnectionQueue setCompletionHandler:^{
-//						// Return core
-//						OCLogDebug(@"Done handling pending events for background URL session %@, bookmark %@", identifier, bookmark);
-//
-//						[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
-//							OCLogDebug(@"Calling completionHandler for pending events for background URL session %@, bookmark %@", identifier, bookmark);
-//							completionHandler();
-//						}];
-//					} forBackgroundSessionWithIdentifier:identifier];
-//
-//					// Request core, so it can pick up and handle this
-//					[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore *core, NSError *error) {
-//						if (core != nil)
-//						{
-//							// Resume pending background sessions
-//							OCLogDebug(@"Resuming pending background URL session %@ for bookmark %@", identifier, bookmark);
-//							[core.connection resumeBackgroundSessions];
-//						}
-//					}];
-//				}
-//				else
-//				{
-//					// No bookmark
-//					OCLogError(@"Bookmark %@ not found (from URL session ID %@)", sessionBookmarkUUID, identifier);
-//					completionHandler();
-//				}
-//			}
-//			else
-//			{
-//				OCLogError(@"Can't extract bookmark UUID from URL session ID: %@", identifier);
-//			}
-//		}
-//		else
-//		{
-//			OCLogError(@"Invalid parameters for handling background URL session events: (identifier=%@, completionHandler=%@)", identifier, completionHandler);
-//		}
-//	}
 }
 
 #pragma mark - Scheduling offline operations on cores

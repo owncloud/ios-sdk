@@ -22,6 +22,9 @@
 #import "OCShareQuery+Internal.h"
 #import "OCRecipientSearchController.h"
 #import "NSString+OCPath.h"
+#import "NSURL+OCPrivateLink.h"
+#import "NSProgress+OCExtensions.h"
+#import "OCLogger.h"
 
 @implementation OCCore (Sharing)
 
@@ -348,6 +351,41 @@
 }
 
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
+{
+	OCFileIDUniquePrefix fileIDUniquePrefix;
+	NSProgress *retrieveProgress = nil;
+
+	// Try to extract a FileID from the private link
+	if ((fileIDUniquePrefix = [privateLink fileIDUniquePrefixFromPrivateLinkInCore:self]) != nil)
+	{
+		// Try resolution from database first
+		retrieveProgress = [NSProgress indeterminateProgress];
+
+		[self.database retrieveCacheItemForFileIDUniquePrefix:fileIDUniquePrefix includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			if (item != nil)
+			{
+				OCLogDebug(@"Resolved private link %@ locally - using fileID %@ - to item %@", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix), OCLogPrivate(item));
+				completionHandler(nil, item);
+			}
+			else
+			{
+				OCLogDebug(@"Resolving private link %@ locally - using fileID %@ - failed: resolving via server…", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix));
+				NSProgress *progress = [self _retrieveItemForPrivateLink:privateLink completionHandler:completionHandler];
+				[retrieveProgress addChild:progress withPendingUnitCount:0];
+			}
+		}];
+	}
+	else
+	{
+		// Resolve via server
+		OCLogDebug(@"Resolving private link %@ via server…", OCLogPrivate(privateLink));
+		retrieveProgress = [self _retrieveItemForPrivateLink:privateLink completionHandler:completionHandler];
+	}
+
+	return (retrieveProgress);
+}
+
+- (nullable NSProgress *)_retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
 {
 	NSProgress *progress = [_connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, NSString * _Nullable path) {
 		if (error != nil)

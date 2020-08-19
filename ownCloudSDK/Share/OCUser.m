@@ -113,7 +113,7 @@
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
-	return ((_userName.hash << 1) ^ (_displayName.hash >> 1));
+	return ((_userName.hash << 1) ^ (_displayName.hash >> 1) ^ _emailAddress.hash ^ ((_forceIsRemote != nil) ? _forceIsRemote.boolValue : 0xEF));
 }
 
 - (BOOL)isEqual:(id)object
@@ -124,7 +124,7 @@
 	{
 		#define compareVar(var) ((otherUser->var == var) || [otherUser->var isEqual:var])
 
-		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData));
+		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData) && (otherUser->_forceIsRemote == _forceIsRemote));
 	}
 
 	return (NO);

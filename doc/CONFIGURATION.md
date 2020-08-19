@@ -31,7 +31,7 @@ This document provides an overview over the available sections and their setting
 		- default: `status.php`
 	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most prefered first).
 		- type: array
-		- default: `["com.owncloud.oauth2", "com.owncloud.basicauth"]`
+		- default: `["com.owncloud.openid-connect", "com.owncloud.oauth2", "com.owncloud.basicauth"]`
 	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
 		- type: array
 		- default: `nil`
@@ -52,9 +52,12 @@ This document provides an overview over the available sections and their setting
 	- `connection-minimum-server-version`:  The minimum server version required.
 		- type: string
 		- default: `9.0`
-	- `allow-background-url-sessions`: Allow the use of background URL sessions.
+	- `allow-background-url-sessions`: Allow the use of background URL sessions. Note: depending on iOS version, the app may still choose not to use them. This settings is overriden by `force-background-url-sessions`.
 		- type: boolean
 		- default: `true`
+	- `force-background-url-sessions`: Forces the use of background URL sessions. Overrides `allow-background-url-sessions`.
+		- type: boolean
+		- default: `false`
 	- `allow-cellular`: Allow the use of cellular connections.
 		- type: boolean
 		- default: `true`
@@ -129,6 +132,9 @@ This document provides an overview over the available sections and their setting
 	- `log-blank-filtered-messages`: Controls whether filtered out messages should still be logged, but with the message replaced with `-`. 
 		- type: boolean
 		- default: `false`
+	- `log-format`: Determines the format that log messages are saved in: `text` for standard logging as text, `json` for detailed JSON (one line per message), `json-composed` for a simpler JSON version where details are already merged into the message.
+		- type: string
+		- default: `text`
 
 ## OAuth2 / OpenID Connect
 
@@ -153,7 +159,7 @@ This document provides an overview over the available sections and their setting
 	- `oa2-expiration-override-seconds`: OAuth2 Expiration Override (**!! for testing only !!**) - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)
 		- type: integer
 		- default: none
-	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession` (`SFAuthenticationSession` on older iOS releases). Please also see Compule Time Configuration if you want to use this.
+	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compule Time Configuration if you want to use this.
 		- type: string
 		- default: none
 		- possible values: none, `UIWebView`
@@ -179,7 +185,7 @@ The inclusion and exclusion of some features can be controlled at compile time b
 
 ### Support for `UIWebView`-based authentication sessions
 
-By default, support for `UIWebView`-based authentication sessions is not included. If it is needed (f.ex. for MobileIron setups, where `ASWebAuthenticationSession` and `SFAuthenticationSession` are not supported), it needs to be configured by adding
+By default, support for `UIWebView`-based authentication sessions is not included. If it is needed (f.ex. for MobileIron setups, where `ASWebAuthenticationSession` is not supported), it needs to be configured by adding
 
 ```
 OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1

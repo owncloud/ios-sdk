@@ -27,14 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable,class,nonatomic) Class browserSessionClass;
 
-+ (BOOL)startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to SFAuthenticationSession and ASWebAuthenticationSession.
++ (BOOL)startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to ASWebAuthenticationSession.
 
 #pragma mark - PKCE support
 @property(strong,nullable) OCPKCE *pkce; //!< pre-configured PKCE object to use for Proof Key for Code Exchange
 
 #pragma mark - Subclassing points
-- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
+- (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
+- (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
 - (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken;
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;

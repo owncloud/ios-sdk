@@ -36,6 +36,7 @@
 #import "OCHTTPResponse+DAVError.h"
 #import "OCHTTPDAVRequest.h"
 #import "NSString+OCPath.h"
+#import "NSURL+OCPrivateLink.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -921,21 +922,9 @@
 - (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, NSString * _Nullable path))completionHandler
 {
 	NSProgress *progress = nil;
-	NSArray<NSString *> *pathComponents = nil;
-	NSString *privateFileID = nil;
+	OCPrivateLinkFileID privateFileID = nil;
 
-	if ((pathComponents = privateLink.path.pathComponents) != nil)
-	{
-		if (pathComponents.count > 1)
-		{
-			if ([[pathComponents objectAtIndex:pathComponents.count-2] isEqual:@"f"])
-			{
-				privateFileID = pathComponents.lastObject;
-			}
-		}
-	}
-
-	if (privateFileID != nil)
+	if ((privateFileID = privateLink.privateLinkFileID) != nil)
 	{
 		OCHTTPDAVRequest *davRequest;
 		NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVMeta options:nil];
@@ -945,10 +934,20 @@
 
 		[davRequest.xmlRequestPropAttribute addChildren:@[
 			[OCXMLNode elementWithName:@"oc:meta-path-for-user"],
-			// [OCXMLNode elementWithName:@"D:resourcetype"]
+			// [OCXMLNode elementWithName:@"D:resourcetype"] // The value returned for D:resourcetype is not correct. OC server will return d:collection for files, too.
 		]];
 
+		__weak OCConnection *weakSelf = self;
+
 		progress = [self sendRequest:davRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			OCConnection *strongSelf = weakSelf;
+
+			if (strongSelf == nil)
+			{
+				// End if connection object is gone
+				error = OCError(OCErrorInternal);
+			}
+
 			if ((error == nil) && (response.status.isSuccess))
 			{
 				NSArray <NSError *> *errors = nil;
@@ -961,13 +960,38 @@
 					if ((path = items.firstObject.path) != nil)
 					{
 						// OC Server will return "/Documents" for the documents folder => make sure to normalize the path to follow OCPath conventions in that case
-						// Update: the value of D:resourcetype is not correct. OC server will return d:collection for files, too.
-						// if (items.firstObject.type == OCItemTypeCollection)
-						// {
-						// 	path = [path normalizedDirectoryPath];
-						// }
+						// The value of D:resourcetype is not correct when requested with the same (resolution) request. OC server will return d:collection for files, too.
 
-						completionHandler(nil, path);
+						// Perform standard depth 0 PROPFIND on path to determine type
+						[strongSelf retrieveItemListAtPath:path depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
+							OCPath normalizedPath = nil;
+
+							if (error == nil)
+							{
+								OCItem *item;
+
+								if ((item = items.firstObject) != nil)
+								{
+									switch (item.type)
+									{
+										case OCItemTypeFile:
+											normalizedPath = path.normalizedFilePath;
+										break;
+
+										case OCItemTypeCollection:
+											normalizedPath = path.normalizedDirectoryPath;
+										break;
+
+										default:
+											normalizedPath = path;
+										break;
+									}
+								}
+							}
+
+							completionHandler(error, normalizedPath);
+						}];
+
 						return;
 					}
 				}

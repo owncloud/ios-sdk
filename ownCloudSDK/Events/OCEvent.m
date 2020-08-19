@@ -31,6 +31,7 @@
 #import "OCHTTPRequest.h"
 #import "OCHTTPResponse.h"
 #import "OCHTTPStatus.h"
+#import "OCHTTPPolicy.h"
 #import "OCImage.h"
 #import "OCItem.h"
 #import "OCItemPolicy.h"
@@ -44,6 +45,10 @@
 #import "OCSyncIssueChoice.h"
 #import "OCUser.h"
 #import "OCWaitCondition.h"
+#import "OCTUSJob.h"
+#import "OCTUSHeader.h"
+#import "OCMessageChoice.h"
+#import "OCMessage.h"
 
 @implementation OCEvent
 
@@ -85,6 +90,7 @@
 				OCHTTPRequest.class,
 				OCHTTPResponse.class,
 				OCHTTPStatus.class,
+				OCHTTPPolicy.class,
 				OCImage.class,
 				OCItem.class,
 				OCItemPolicy.class,
@@ -99,6 +105,11 @@
 				OCSyncIssueChoice.class,
 				OCUser.class,
 				OCWaitCondition.class,
+				OCTUSHeader.class,
+				OCTUSJob.class,
+				OCTUSJobSegment.class,
+				OCMessage.class,
+				OCMessageChoice.class,
 
 				// Foundation classes
 				NSArray.class,
@@ -244,7 +255,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file]);
+	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@%@%@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file, ((_ephermalUserInfo[@"_processSession"]!=nil)?[NSString stringWithFormat:@", processSession=%@",_ephermalUserInfo[@"_processSession"]]:@""), ((_ephermalUserInfo[@"_doProcess"]!=nil)?[NSString stringWithFormat:@", doProcess=%@",_ephermalUserInfo[@"_doProcess"]]:@"")]);
 }
 
 #pragma mark - Secure coding
@@ -257,19 +268,19 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_uuid = [decoder decodeObjectOfClass:[NSString class] forKey:@"uuid"];
+		_uuid = [decoder decodeObjectOfClass:NSString.class forKey:@"uuid"];
 
 		_eventType = [decoder decodeIntegerForKey:@"eventType"];
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
-		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
 		_depth = [decoder decodeIntegerForKey:@"depth"];
 
-		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
 		_file = [decoder decodeObjectOfClass:OCFile.class forKey:@"file"];
 
-		_error = [decoder decodeObjectOfClass:[NSError class] forKey:@"error"];
-		_result = [decoder decodeObjectOfClasses:[OCEvent safeClasses] forKey:@"result"];
+		_error = [decoder decodeObjectOfClass:NSError.class forKey:@"error"];
+		_result = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"result"];
 	}
 
 	return (self);

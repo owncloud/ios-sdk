@@ -1,13 +1,13 @@
 //
-//  OCCoreNetworkPathMonitorSignalProvider.h
+//  OCSyncAction+Diagnostic.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 10.01.19.
-//  Copyright © 2019 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 27.07.20.
+//  Copyright © 2020 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2019, ownCloud GmbH.
+ * Copyright (C) 2020, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -16,16 +16,12 @@
  *
  */
 
-#import "OCCoreConnectionStatusSignalProvider.h"
+#import "OCSyncAction.h"
+#import "OCDiagnosticSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCoreNetworkPathMonitorSignalProvider : OCCoreConnectionStatusSignalProvider
-{
-	NSString *_hostname;
-}
-
-- (instancetype)initWithHostname:(NSString *)hostname;
+@interface OCSyncAction (Diagnostic) <OCDiagnosticSource>
 
 @end
 

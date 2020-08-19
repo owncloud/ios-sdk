@@ -21,7 +21,7 @@
 #import "OCItem+OCFileURLMetadata.h"
 #import "OCCore+NameConflicts.h"
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 @implementation OCCore (CommandLocalImport)
 
@@ -48,18 +48,21 @@
 
 	if ((nameStyleNumber = options[OCCoreOptionAutomaticConflictResolutionNameStyle]) != nil)
 	{
-		__block NSString *outSuggestedName = nil;
-
-		OCSyncExec(checkForExistingItems, {
-			[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
-				outSuggestedName = suggestedName;
-				OCSyncExecDone(checkForExistingItems);
-			}];
-		});
-
-		if (outSuggestedName != nil)
+		if (nameStyleNumber.integerValue != OCCoreDuplicateNameStyleNone)
 		{
-			newFileName = outSuggestedName;
+			__block NSString *outSuggestedName = nil;
+
+			OCSyncExec(checkForExistingItems, {
+				[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+					outSuggestedName = suggestedName;
+					OCSyncExecDone(checkForExistingItems);
+				}];
+			});
+
+			if (outSuggestedName != nil)
+			{
+				newFileName = outSuggestedName;
+			}
 		}
 	}
 
@@ -167,10 +170,18 @@
 		return (nil);
 	}
 
+	// Override last modified date (if provided as option)
+	NSDate *lastModifiedOverrideDate;
+
+	if ((lastModifiedOverrideDate = OCTypedCast(options[OCCoreOptionLastModifiedDate], NSDate)) != nil)
+	{
+		placeholderItem.lastModified = lastModifiedOverrideDate;
+	}
+
 	// Enqueue sync record
 	NSProgress *progress;
 
-	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] cancellable:YES preflightResultHandler:^(NSError * _Nullable error) {
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO options:options] cancellable:YES preflightResultHandler:^(NSError * _Nullable error) {
 		// Invoke placeholder completion handler - AFTER it was added to the database as part of preflight
 		if (placeholderCompletionHandler != nil)
 		{

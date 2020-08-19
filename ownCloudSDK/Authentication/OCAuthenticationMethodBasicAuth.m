@@ -47,6 +47,11 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Data Tools
 + (NSDictionary *)_decodedAuthenticationData:(NSData *)authenticationData
 {
+	if (authenticationData == nil)
+	{
+		return (nil);
+	}
+
 	return ([NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]);
 }
 
@@ -151,6 +156,20 @@ OCAuthenticationMethodAutoRegister
 	return (authDataDict[OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey]);
 }
 
+#pragma mark - Handle responses before they are delivered to the request senders
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
+{
+	if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
+	{
+		// If a request returns with an UNAUTHORIZED status code, treat it as an authentication data known invalid date
+		[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+		self->_authenticationDataKnownInvalidDate = [NSDate new];
+		[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+	}
+
+	return ([super handleRequest:request response:response forConnection:connection withError:error]);
+}
+
 #pragma mark - Generate bookmark authentication data
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
@@ -178,6 +197,7 @@ OCAuthenticationMethodAutoRegister
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
+					OCErrorAddDateFromResponse(error, response);
 					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 				}
 				else
@@ -223,6 +243,8 @@ OCAuthenticationMethodAutoRegister
 						{
 							error = OCError(OCErrorAuthorizationFailed);
 						}
+
+						OCErrorAddDateFromResponse(error, response);
 
 						completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 					}

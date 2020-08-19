@@ -24,7 +24,11 @@
 #pragma mark - Command
 - (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
-	OCCorePlaceholderCompletionHandler placeholderCompletionHandler = options[OCCoreOptionPlaceholderCompletionHandler];
+	return ([self createFolder:folderName inside:parentItem options:options placeholderCompletionHandler:options[OCCoreOptionPlaceholderCompletionHandler] resultHandler:resultHandler]);
+}
+
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreActionResultHandler)resultHandler
+{
 	OCCorePlaceholderCompletionHandler intermediatePlaceholderCompletionHandler = nil;
 	__block OCItem *placeholderItem = nil;
 	__block NSError *placeholderError = nil;

@@ -177,29 +177,37 @@
 {
 	if (block == nil) { return; }
 
-	if (self.isBackgrounded == inBackground)
+	if (self.delegate != nil)
 	{
-		OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
-		block();
+		if (self.isBackgrounded == inBackground)
+		{
+			OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
+			block();
+		}
+		else
+		{
+			block = [block copy];
+
+			if (inBackground)
+			{
+				// Wrap background blocks into a background task to ensure background execution (app may otherwise be suspended beforehand)
+				[[[OCBackgroundTask backgroundTaskWithName:@"scheduled block" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
+					[task end];
+				}] start] endWhenDeallocating:block];
+			}
+
+			OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
+
+			@synchronized(_queuedBlocksByBackground)
+			{
+				[_queuedBlocksByBackground[@(inBackground)] addObject:block];
+			}
+		}
 	}
 	else
 	{
-		block = [block copy];
-
-		if (inBackground)
-		{
-			// Wrap background blocks into a background task to ensure background execution (app may otherwise be suspended beforehand)
-			[[[OCBackgroundTask backgroundTaskWithName:@"scheduled block" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
-				[task end];
-			}] start] endWhenDeallocating:block];
-		}
-
-		OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
-
-		@synchronized(_queuedBlocksByBackground)
-		{
-			[_queuedBlocksByBackground[@(inBackground)] addObject:block];
-		}
+		OCLogDebug(@"Running %@ block (%@) immediately: process has no concept of background/foreground", (inBackground ? @"background" : @"foreground"), block);
+		block();
 	}
 }
 
@@ -221,40 +229,42 @@
 
 	@synchronized(self)
 	{
-		if ([_tasks indexOfObjectIdenticalTo:task] == NSNotFound)
+		if (([_tasks indexOfObjectIdenticalTo:task] == NSNotFound) && (_delegate != nil))
 		{
 			task.started = YES;
 			[_tasks addObject:task];
 
 			OCLogDebug(@"Starting background task '%@' (delegate=%@)", task.name, _delegate);
 
-			if (_delegate != nil)
-			{
-				UIBackgroundTaskIdentifier taskID;
+			UIBackgroundTaskIdentifier taskID;
 
-				taskID = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
-					if (task.expirationHandler != nil)
-					{
-						task.expirationHandler(task);
-					}
-					else
-					{
-						[self endTask:task];
-					}
-				}];
-
-
-				if (taskID != UIBackgroundTaskInvalid)
+			taskID = [_delegate beginBackgroundTaskWithName:task.name expirationHandler:^{
+				if (task.expirationHandler != nil)
 				{
-					task.identifier = taskID;
-					taskStarted = YES;
+					task.expirationHandler(task);
 				}
 				else
 				{
-					task.started = NO;
-					[_tasks removeObjectIdenticalTo:task];
+					[self endTask:task];
 				}
+			}];
+
+
+			if (taskID != UIBackgroundTaskInvalid)
+			{
+				task.identifier = taskID;
+				taskStarted = YES;
 			}
+			else
+			{
+				task.started = NO;
+				[_tasks removeObjectIdenticalTo:task];
+			}
+		}
+		else if (_delegate == nil)
+		{
+			// Task not managed, so can't expire and we can drop the expiration handler
+			[task clearExpirationHandler];
 		}
 	}
 

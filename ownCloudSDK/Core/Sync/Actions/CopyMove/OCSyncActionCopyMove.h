@@ -31,8 +31,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSArray <OCLocalID> *associatedItemLocalIDs;
 @property(nullable,strong) NSSet <OCSyncLaneTag> *associatedItemLaneTags;
 
-- (instancetype)initWithItem:(OCItem *)item action:(OCSyncActionIdentifier)actionIdentifier targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename;
+- (instancetype)initWithItem:(OCItem *)item targetName:(NSString *)targetName targetParentItem:(OCItem *)targetParentItem isRename:(BOOL)isRename;
 
+@end
+
+@interface OCSyncActionCopy : OCSyncActionCopyMove
+@end
+
+@interface OCSyncActionMove : OCSyncActionCopyMove
 @end
 
 NS_ASSUME_NONNULL_END

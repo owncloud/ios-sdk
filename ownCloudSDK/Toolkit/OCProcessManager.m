@@ -58,11 +58,17 @@
 {
 	static OCProcessManager *sharedProcessManager;
 	static dispatch_once_t onceToken;
+	__block BOOL notifyFinishedLaunching = NO;
 
 	dispatch_once(&onceToken, ^{
 		sharedProcessManager = [OCProcessManager new];
-		[sharedProcessManager processDidFinishLaunching];
+		notifyFinishedLaunching = YES;
 	});
+
+	if (notifyFinishedLaunching)
+	{
+		[sharedProcessManager processDidFinishLaunching];
+	}
 
 	return (sharedProcessManager);
 }
@@ -437,6 +443,7 @@
 		_listening = YES;
 
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
+			OCLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
 			[observer receivedPong];
 		}];
 	}
