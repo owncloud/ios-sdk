@@ -1465,6 +1465,8 @@
 			task.response = nil;
 
 			[_backend updatePipelineTask:task];
+
+			[self setPipelineNeedsScheduling];
 		}
 
 		// Remove task
@@ -2006,7 +2008,7 @@
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
 	{
-		completionHandler(NULL);
+		completionHandler(nil);
 	}
 }
 

@@ -108,7 +108,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionForceBackgroundURLSessions		: @(NO),
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
-		OCConnectionAlwaysRequestPrivateLink		: @(NO)
+		OCConnectionAlwaysRequestPrivateLink		: @(NO),
+		OCConnectionTransparentTemporaryRedirect	: @(YES)
 	});
 }
 
@@ -533,6 +534,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		// Reschedule requested by auth method
 		instruction = OCHTTPRequestInstructionReschedule;
+	}
+
+	if (OCTypedCast([self classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
+	{
+		if (task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT)
+		{
+			// Reschedule 307 requests with redirect URL
+			NSURL *redirectURL = task.response.redirectURL;
+
+			if ([task.request.url.host isEqual:redirectURL.host]) // Require same host
+			{
+				task.request.url = redirectURL;
+				task.request.effectiveURL = nil;
+				instruction = OCHTTPRequestInstructionReschedule;
+			}
+		}
 	}
 
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
@@ -2290,6 +2307,7 @@ OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-u
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
+OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

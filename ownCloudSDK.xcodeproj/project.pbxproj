@@ -389,6 +389,7 @@
 		DCA35D7F24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D7D24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m */; };
 		DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA36D4B22A6B14200265534 /* OCPKCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA36D4E22A6B14200265534 /* OCPKCE.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA36D4C22A6B14200265534 /* OCPKCE.m */; };
+		DCA7A2C124EC81B000237085 /* CoreRedirectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA7A2C024EC81B000237085 /* CoreRedirectTests.m */; };
 		DCA8923020F5F13F00AEFF98 /* ownCloudMocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; };
 		DCA8923720F5F13F00AEFF98 /* ownCloudMockingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8923620F5F13F00AEFF98 /* ownCloudMockingTests.m */; };
 		DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8922920F5F13F00AEFF98 /* ownCloudMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1103,6 +1104,7 @@
 		DCA35D7D24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCWaitCondition+Diagnostic.m"; sourceTree = "<group>"; };
 		DCA36D4B22A6B14200265534 /* OCPKCE.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCPKCE.h; sourceTree = "<group>"; };
 		DCA36D4C22A6B14200265534 /* OCPKCE.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCPKCE.m; sourceTree = "<group>"; };
+		DCA7A2C024EC81B000237085 /* CoreRedirectTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreRedirectTests.m; sourceTree = "<group>"; };
 		DCA8921320F5E9D100AEFF98 /* OCMockManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMockManager.h; sourceTree = "<group>"; };
 		DCA8921420F5E9D100AEFF98 /* OCMockManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMockManager.m; sourceTree = "<group>"; };
 		DCA8921720F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+OCMocking.h"; sourceTree = "<group>"; };
@@ -2732,6 +2734,7 @@
 				DC5A20302074E8890083DB7D /* CoreTests.m */,
 				DC2F6371223A39A40063C2DA /* CoreSharingTests.m */,
 				DC38F88E20C8211100A30DE1 /* CoreSyncTests.m */,
+				DCA7A2C024EC81B000237085 /* CoreRedirectTests.m */,
 				DC594B1C21EFD25000B882C4 /* CoreManagerTests.m */,
 				DC03650520AAEFBD00F62732 /* DatabaseTests.m */,
 				DCB0A45B21B813A000FAC4E9 /* ExtensionTests.m */,
@@ -3737,6 +3740,7 @@
 				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,
 				DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */,
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
+				DCA7A2C124EC81B000237085 /* CoreRedirectTests.m in Sources */,
 				DCFBACF921BAB5F500943F76 /* OCDetailedPerformanceTestCase.m in Sources */,
 				DC5A20312074E8890083DB7D /* CoreTests.m in Sources */,
 				DC594B1F21EFD7F900B882C4 /* BookmarkManagerTests.m in Sources */,
