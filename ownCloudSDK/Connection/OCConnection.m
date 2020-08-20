@@ -538,12 +538,30 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 	if (OCTypedCast([self classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
 	{
-		if (task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT)
+		// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
+		if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
+		    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
 		{
-			// Reschedule 307 requests with redirect URL
 			NSURL *redirectURL = task.response.redirectURL;
+			BOOL rescheduleWithRedirectURL = NO;
 
-			if ((redirectURL != nil) && [task.request.url.host isEqual:redirectURL.host]) // Require same host
+			switch (task.request.redirectPolicy)
+			{
+				case OCHTTPRequestRedirectPolicyForbidden:
+					rescheduleWithRedirectURL = NO;
+				break;
+
+				case OCHTTPRequestRedirectPolicyAllowSameHost:
+				case OCHTTPRequestRedirectPolicyDefault:
+					rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
+				break;
+
+				case OCHTTPRequestRedirectPolicyAllowAnyHost:
+					rescheduleWithRedirectURL = YES;
+				break;
+			}
+
+			if (rescheduleWithRedirectURL && (redirectURL != nil))
 			{
 				task.request.url = redirectURL;
 				instruction = OCHTTPRequestInstructionReschedule;

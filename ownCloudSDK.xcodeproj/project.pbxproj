@@ -390,6 +390,8 @@
 		DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA36D4B22A6B14200265534 /* OCPKCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA36D4E22A6B14200265534 /* OCPKCE.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA36D4C22A6B14200265534 /* OCPKCE.m */; };
 		DCA7A2C124EC81B000237085 /* CoreRedirectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA7A2C024EC81B000237085 /* CoreRedirectTests.m */; };
+		DCA7AA8124EEA72F009EC604 /* OCHostSimulator+CookieRedirect.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA7AA7F24EEA72F009EC604 /* OCHostSimulator+CookieRedirect.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCA7AA8224EEA72F009EC604 /* OCHostSimulator+CookieRedirect.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA7AA8024EEA72F009EC604 /* OCHostSimulator+CookieRedirect.m */; };
 		DCA8923020F5F13F00AEFF98 /* ownCloudMocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; };
 		DCA8923720F5F13F00AEFF98 /* ownCloudMockingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8923620F5F13F00AEFF98 /* ownCloudMockingTests.m */; };
 		DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8922920F5F13F00AEFF98 /* ownCloudMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1105,6 +1107,8 @@
 		DCA36D4B22A6B14200265534 /* OCPKCE.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCPKCE.h; sourceTree = "<group>"; };
 		DCA36D4C22A6B14200265534 /* OCPKCE.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCPKCE.m; sourceTree = "<group>"; };
 		DCA7A2C024EC81B000237085 /* CoreRedirectTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreRedirectTests.m; sourceTree = "<group>"; };
+		DCA7AA7F24EEA72F009EC604 /* OCHostSimulator+CookieRedirect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHostSimulator+CookieRedirect.h"; sourceTree = "<group>"; };
+		DCA7AA8024EEA72F009EC604 /* OCHostSimulator+CookieRedirect.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHostSimulator+CookieRedirect.m"; sourceTree = "<group>"; };
 		DCA8921320F5E9D100AEFF98 /* OCMockManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMockManager.h; sourceTree = "<group>"; };
 		DCA8921420F5E9D100AEFF98 /* OCMockManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMockManager.m; sourceTree = "<group>"; };
 		DCA8921720F5E9EE00AEFF98 /* OCAuthenticationMethod+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethod+OCMocking.h"; sourceTree = "<group>"; };
@@ -2104,6 +2108,7 @@
 				DC72E4192061665D00189B9A /* OCHostSimulator.h */,
 				DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */,
 				DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */,
+				DCA7AA7E24EEA700009EC604 /* Cookie Redirect Simulator */,
 			);
 			path = "Host Simulator";
 			sourceTree = "<group>";
@@ -2513,6 +2518,15 @@
 			path = Diagnostics;
 			sourceTree = "<group>";
 		};
+		DCA7AA7E24EEA700009EC604 /* Cookie Redirect Simulator */ = {
+			isa = PBXGroup;
+			children = (
+				DCA7AA8024EEA72F009EC604 /* OCHostSimulator+CookieRedirect.m */,
+				DCA7AA7F24EEA72F009EC604 /* OCHostSimulator+CookieRedirect.h */,
+			);
+			path = "Cookie Redirect Simulator";
+			sourceTree = "<group>";
+		};
 		DCA8921B20F5ECF900AEFF98 /* Mocking Targets */ = {
 			isa = PBXGroup;
 			children = (
@@ -2882,6 +2896,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */,
+				DCA7AA8124EEA72F009EC604 /* OCHostSimulator+CookieRedirect.h in Headers */,
 				DCA8924C20F5F1BF00AEFF98 /* OCAuthenticationMethod+OCMocking.h in Headers */,
 				DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */,
 				599A45AB218C566C003CAB00 /* OCConnection+OCMocking.h in Headers */,
@@ -3465,6 +3480,7 @@
 				5966C8D62195A11600C8875E /* OCCoreManager+OCMocking.m in Sources */,
 				DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */,
 				DCA8924720F5F1BF00AEFF98 /* NSObject+OCSwizzle.m in Sources */,
+				DCA7AA8224EEA72F009EC604 /* OCHostSimulator+CookieRedirect.m in Sources */,
 				DC2D649D21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m in Sources */,
 				DCA8924920F5F1BF00AEFF98 /* OCMockManager.m in Sources */,
 				59F6476E219AD11600C016FD /* OCQuery+OCMocking.m in Sources */,

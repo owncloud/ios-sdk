@@ -18,7 +18,6 @@
 @interface CoreRedirectTests : XCTestCase
 {
 	OCHostSimulator *hostSimulator;
-	OCHTTPResponse *hostStatusResponse;
 	NSURL *originallyRequestedURL;
 
 	XCTestExpectation *_requestWithoutCookiesReceivedExpectation;
@@ -33,57 +32,31 @@
 - (void)setUp {
 	__weak CoreRedirectTests *weakSelf = self;
 
-	hostSimulator = [OCHostSimulator new];
-	hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
-		CoreRedirectTests *strongSelf = weakSelf;
+	hostSimulator = [OCHostSimulator cookieRedirectSimulatorWithRequestWithoutCookiesHandler:^{
+		CoreRedirectTests *strongSelf;
 
-		if ([request.url.path isEqual:@"/set/cookies"])
+		if ((strongSelf = weakSelf) != nil)
 		{
-			NSString *originalURLString = strongSelf->originallyRequestedURL.absoluteString;
-
-			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeTEMPORARY_REDIRECT headers:@{
-				@"Location" 	: originalURLString,
-				@"Set-Cookie"	: @"sessionCookie=value; Max-Age=2592000; Path=/"
-			} contentType:@"text/html" body:nil]);
-
-			[strongSelf->_requestForCookiesReceivedExpectation fulfill];
-			strongSelf->_requestForCookiesReceivedExpectation = nil;
-
-			return (YES);
-		}
-
-		if (request.headerFields[@"Cookie"] == nil)
-		{
-			strongSelf->originallyRequestedURL = request.url;
-
-			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeTEMPORARY_REDIRECT headers:@{
-				@"Location" : @"/set/cookies"
-			} contentType:@"text/html" body:nil]);
-
 			[strongSelf->_requestWithoutCookiesReceivedExpectation fulfill];
-			strongSelf->_requestWithoutCookiesReceivedExpectation = nil;
-
-			return (YES);
 		}
-		else
+	} requestForCookiesHandler:^{
+		CoreRedirectTests *strongSelf;
+
+		if ((strongSelf = weakSelf) != nil)
 		{
-			if (strongSelf->_requestWithoutCookiesReceivedExpectation == nil)
-			{
-				[strongSelf->_requestWithCookiesReceivedExpectation fulfill];
-				strongSelf->_requestWithCookiesReceivedExpectation = nil;
-			}
+			[strongSelf->_requestForCookiesReceivedExpectation fulfill];
 		}
+	} requestWithCookiesHandler:^{
+		CoreRedirectTests *strongSelf;
 
-		return (NO);
-	};
-	hostSimulator.unroutableRequestHandler = nil;
+		if ((strongSelf = weakSelf) != nil)
+		{
+			[strongSelf->_requestWithCookiesReceivedExpectation fulfill];
+		}
+	}];
 }
 
-- (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-}
-
-- (void)retrieveCertificateForBookmark:(OCBookmark *)bookmark response:(void(^)(OCCertificate *certificate, OCHTTPResponse *statusResponse))certificateHandler
+- (void)retrieveCertificateForBookmark:(OCBookmark *)bookmark response:(void(^)(OCCertificate *certificate))certificateHandler
 {
 	OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark];
 
@@ -93,28 +66,28 @@
 			bookmark.certificateModificationDate = NSDate.date;
 
 			[connection disconnectWithCompletionHandler:^{
-				certificateHandler(request.httpResponse.certificate, request.httpResponse);
+				certificateHandler(request.httpResponse.certificate);
 			}];
 		}];
 	}];
 }
 
-- (void)testCookieRedirect
+- (void)testCoreCookieRedirect
 {
-	XCTestExpectation *expectCertificate = [self expectationWithDescription:@"Receive certificate"];
-	XCTestExpectation *expectCoreDone = [self expectationWithDescription:@"Core done"];
+	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];
+	XCTestExpectation *coreDoneExpectation = [self expectationWithDescription:@"Core done"];
 	OCBookmark *bookmark = OCTestTarget.userBookmark;
 
 	_requestWithoutCookiesReceivedExpectation = [self expectationWithDescription:@"Request without cookies received"];
 	_requestForCookiesReceivedExpectation = [self expectationWithDescription:@"Request for cookies received"];
 	_requestWithCookiesReceivedExpectation = [self expectationWithDescription:@"Request with cookies received"];
 
-	[self retrieveCertificateForBookmark:bookmark response:^(OCCertificate *certificate, OCHTTPResponse *statusResponse) {
-		self->hostStatusResponse = statusResponse;
-
+	[self retrieveCertificateForBookmark:bookmark response:^(OCCertificate *certificate) {
 		self->hostSimulator.certificate = certificate;
 
 		NSLog(@"Certificate: %@", certificate);
+
+		OCLogDebug(@"===================== ACTUAL TEST =====================");
 
 		OCCore *core;
 
@@ -124,13 +97,81 @@
 			core.connection.cookieStorage = [OCHTTPCookieStorage new];
 
 			[core startWithCompletionHandler:^(id sender, NSError *error) {
+				XCTAssert(error == nil);
+
 				[core stopWithCompletionHandler:^(id sender, NSError *error) {
-					[expectCoreDone fulfill];
+					XCTAssert(error == nil);
+
+					[coreDoneExpectation fulfill];
 				}];
 			}];
 		}
 
-		[expectCertificate fulfill];
+		[certificateExpectation fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:40 handler:nil];
+}
+
+- (void)testConnectionSetupCookieRedirect
+{
+	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];
+	XCTestExpectation *prepareForSetupExpectaction = [self expectationWithDescription:@"Prepare for setup"];
+	XCTestExpectation *generateAuthDataExpectaction = [self expectationWithDescription:@"Generate auth data"];
+	XCTestExpectation *connectExpectaction = [self expectationWithDescription:@"Connect"];
+	XCTestExpectation *disconnectExpectaction = [self expectationWithDescription:@"Disonnect"];
+	OCBookmark *bookmark = [OCBookmark bookmarkForURL:[NSURL URLWithString:@"https://demo.owncloud.org/"]];
+
+	_requestWithoutCookiesReceivedExpectation = [self expectationWithDescription:@"Request without cookies received"];
+	_requestForCookiesReceivedExpectation = [self expectationWithDescription:@"Request for cookies received"];
+	_requestWithCookiesReceivedExpectation = [self expectationWithDescription:@"Request with cookies received"];
+
+	[self retrieveCertificateForBookmark:bookmark response:^(OCCertificate *certificate) {
+		OCConnection *connection;
+
+		OCLogDebug(@"===================== ACTUAL TEST =====================");
+
+		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+		{
+			connection.hostSimulator = self->hostSimulator;
+			connection.cookieStorage = [OCHTTPCookieStorage new];
+
+			[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods) {
+				XCTAssert(supportedMethods.count > 0);
+				XCTAssert(preferredAuthenticationMethods.count > 0);
+
+				OCLogDebug(@"issue=%@, suggestedURL=%@, supportedMethods=%@, preferredAuthenticationMethods=%@", issue, suggestedURL, supportedMethods, preferredAuthenticationMethods);
+
+				[prepareForSetupExpectaction fulfill];
+
+				[connection generateAuthenticationDataWithMethod:preferredAuthenticationMethods.lastObject options:@{
+					OCAuthenticationMethodUsernameKey   : @"demo",
+					OCAuthenticationMethodPassphraseKey : @"demo"
+				} completionHandler:^(NSError * _Nullable error, OCAuthenticationMethodIdentifier  _Nullable authenticationMethodIdentifier, NSData * _Nullable authenticationData) {
+					XCTAssert(error == nil);
+					XCTAssert(authenticationData != nil);
+					XCTAssert(authenticationMethodIdentifier != nil);
+
+					bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
+					bookmark.authenticationData = authenticationData;
+
+					[generateAuthDataExpectaction fulfill];
+
+					[connection connectWithCompletionHandler:^(NSError * _Nullable error, OCIssue * _Nullable issue) {
+						XCTAssert(error == nil);
+						XCTAssert(issue == nil);
+
+						[connection disconnectWithCompletionHandler:^{
+							[disconnectExpectaction fulfill];
+						}];
+
+						[connectExpectaction fulfill];
+					}];
+				}];
+			}];
+		}
+
+		[certificateExpectation fulfill];
 	}];
 
 	[self waitForExpectationsWithTimeout:40 handler:nil];

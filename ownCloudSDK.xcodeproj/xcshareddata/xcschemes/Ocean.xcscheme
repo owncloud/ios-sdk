@@ -109,9 +109,14 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-only-tags"
-            value = "[Request,Response,Cookies]"
+            key = "oc:log.log-colored"
+            value = "true"
             isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "oc:log.log-only-tags"
+            value = "[TEST,Request,Response,Cookies]"
+            isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "oc:log.log-omit-tags"

@@ -78,6 +78,8 @@
 	for (NSURL *detectionURL in detectionURLs)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
+
+		request.redirectPolicy = OCHTTPRequestRedirectPolicyForbidden;
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		

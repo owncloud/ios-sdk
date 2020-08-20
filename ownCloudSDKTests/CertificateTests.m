@@ -147,7 +147,7 @@
 	NSLog(@"certificate.publicKeyData.sha256Hash.asFingerPrintString=%@", demoCertNew.publicKeyData.sha256Hash.asFingerPrintString);
 	NSLog(@"certificate.commonName=%@", demoCertNew.commonName);
 
-	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"27 51 D8 33 A2 56 19 AC E6 18 F9 6B 0E 6F 9F 4A 48 4E 83 5D 32 7C 10 6C 93 59 B8 BF 05 E4 14 54\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"D3 E1 50 D7 2B 86 50 89 CF 4F 75 8A D2 E5 6D 1D 38 73 B5 F1 90 23 18 17 32 50 92 1F 35 AD F5 19\"") == YES);
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AA BB CC DD EE FF 00 11 22 33 44 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == NO);
 
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.passedValidationOrIsUserAccepted == true") == YES);
