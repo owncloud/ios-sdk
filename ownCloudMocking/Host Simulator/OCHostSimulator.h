@@ -22,18 +22,21 @@
 
 #import "OCHostSimulatorResponse.h"
 
-typedef void(^OCHostSimulatorResponseHandler)(NSError *error, OCHostSimulatorResponse *response);
+NS_ASSUME_NONNULL_BEGIN
 
+typedef void(^OCHostSimulatorResponseHandler)(NSError * _Nullable error, OCHostSimulatorResponse * _Nullable response);
 typedef BOOL(^OCHostSimulatorRequestHandler)(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler);
 
 @interface OCHostSimulator : NSObject <OCConnectionHostSimulator>
 
-@property(strong) OCCertificate *certificate;
-@property(strong) NSString *hostname;
+@property(nullable,strong) OCCertificate *certificate;
+@property(nullable,strong) NSString *hostname;
 
-@property(strong) NSDictionary <NSString *, OCHostSimulatorResponse *> *responseByPath;
+@property(nullable,strong) NSDictionary <NSString *, OCHostSimulatorResponse *> *responseByPath;
 
-@property(copy) OCHostSimulatorRequestHandler requestHandler;
-@property(copy) OCHostSimulatorRequestHandler unroutableRequestHandler;
+@property(nullable,copy) OCHostSimulatorRequestHandler requestHandler;
+@property(nullable,copy) OCHostSimulatorRequestHandler unroutableRequestHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END

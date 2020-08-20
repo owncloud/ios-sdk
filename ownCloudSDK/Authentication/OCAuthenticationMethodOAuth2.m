@@ -422,7 +422,7 @@ OCAuthenticationMethodAutoRegister
 	if (self.authenticationDataKnownInvalidDate != nil)
 	{
 		// Authentication data known to be invalid
-		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, @"Previous token refresh attempts indicated an invalid refresh_token."), NO);
+		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, OCLocalized(@"Previous token refresh attempts indicated an invalid refresh token.")), NO);
 		return (NO);
 	}
 
