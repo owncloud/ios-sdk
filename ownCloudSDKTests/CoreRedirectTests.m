@@ -99,7 +99,8 @@
 	}];
 }
 
-- (void)testCookieRedirect {
+- (void)testCookieRedirect
+{
 	XCTestExpectation *expectCertificate = [self expectationWithDescription:@"Receive certificate"];
 	XCTestExpectation *expectCoreDone = [self expectationWithDescription:@"Core done"];
 	OCBookmark *bookmark = OCTestTarget.userBookmark;

@@ -543,10 +543,9 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			// Reschedule 307 requests with redirect URL
 			NSURL *redirectURL = task.response.redirectURL;
 
-			if ([task.request.url.host isEqual:redirectURL.host]) // Require same host
+			if ((redirectURL != nil) && [task.request.url.host isEqual:redirectURL.host]) // Require same host
 			{
 				task.request.url = redirectURL;
-				task.request.effectiveURL = nil;
 				instruction = OCHTTPRequestInstructionReschedule;
 			}
 		}

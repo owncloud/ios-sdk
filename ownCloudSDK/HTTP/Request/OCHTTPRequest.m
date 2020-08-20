@@ -261,6 +261,7 @@
 - (void)scrubForRescheduling
 {
 	_httpResponse = nil;
+	_effectiveURL = nil;
 
 	if (_downloadRequest)
 	{
