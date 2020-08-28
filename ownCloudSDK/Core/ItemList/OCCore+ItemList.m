@@ -1583,7 +1583,14 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 {
 	@synchronized(_scheduledDirectoryUpdateJobIDs)
 	{
-		OCLogDebug(@"Remaining scheduled directory update jobs: %@ - pendingScheduledDirectoryUpdateJobs: %lu", _scheduledDirectoryUpdateJobIDs, _pendingScheduledDirectoryUpdateJobs);
+		if (OCLogger.logLevel == OCLogLevelVerbose)
+		{
+			OCLogVerbose(@"Remaining scheduled directory update jobs: %@ - pendingScheduledDirectoryUpdateJobs: %lu", _scheduledDirectoryUpdateJobIDs, _pendingScheduledDirectoryUpdateJobs);
+		}
+		else
+		{
+			OCLogDebug(@"Remaining scheduled directory update jobs: %lu - pendingScheduledDirectoryUpdateJobs: %lu", (unsigned long)_scheduledDirectoryUpdateJobIDs.count, _pendingScheduledDirectoryUpdateJobs);
+		}
 
 		// Check local count
 		if ((_scheduledDirectoryUpdateJobIDs.count == 0) && (_pendingScheduledDirectoryUpdateJobs == 0))
