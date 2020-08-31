@@ -174,6 +174,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 - (void)queueBlock:(dispatch_block_t)block
 {
+	// OCLogDebug(@"Queuing DB block from %@", NSThread.callStackSymbols);
 	[self.runLoopThread dispatchBlockToRunLoopAsync:block];
 }
 
