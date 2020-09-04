@@ -295,6 +295,11 @@
 	}
 }
 
+- (void)recreateRequestID
+{
+	_identifier = NSUUID.UUID.UUIDString; // Generate new UUID
+}
+
 #pragma mark - Cancel support
 - (void)cancel
 {

@@ -1461,6 +1461,11 @@
 
 			task.urlSessionID = nil;
 			task.urlSessionTaskID = nil;
+
+			// Use new Request-ID for rescheduled request
+			[task.request recreateRequestID];
+			task.requestID = task.request.identifier;
+
 			task.state = OCHTTPPipelineTaskStatePending;
 			task.response = nil;
 

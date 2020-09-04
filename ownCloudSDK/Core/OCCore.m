@@ -110,6 +110,14 @@
 	return (@"core");
 }
 
++ (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
+{
+	return (@[
+		OCCoreThumbnailAvailableForMIMETypePrefixes,
+		OCCoreCookieSupportEnabled
+	]);
+}
+
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
@@ -234,6 +242,8 @@
 
 				return (YES);
 			};*/
+
+			OCTLogDebug(@[@"Cookies"], @"Cookie support enabled with storage %@", _connection.cookieStorage);
 		}
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];

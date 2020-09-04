@@ -42,10 +42,16 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 @property(strong,readonly,class) OCClassSettingsIdentifier classSettingsIdentifier;
 + (nullable NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
+@optional
++ (nullable NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers; //!< Returns an array of OCClassSettingsKey whose values should be considered public (i.e. be ok to be logged in an overview). If not implemented, all OCClassSettingsKeys returned by defaultSettingsForIdentifier are considered public.
+
 @end
+
+typedef NSString* OCClassSettingsSourceIdentifier;
 
 @protocol OCClassSettingsSource <NSObject>
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier;
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
 @end
@@ -62,6 +68,9 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 - (void)clearSourceCache;
 
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
+
+- (NSDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, NSArray<NSDictionary<OCClassSettingsSourceIdentifier, id> *> *> *> *)settingsSnapshotForClasses:(nullable NSArray<Class> *)classes onlyPublic:(BOOL)onlyPublic;
+- (nullable NSString *)settingsSummaryForClasses:(nullable NSArray<Class> *)classes onlyPublic:(BOOL)onlyPublic;
 
 @end
 
