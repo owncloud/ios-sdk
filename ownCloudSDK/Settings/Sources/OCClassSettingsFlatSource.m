@@ -20,6 +20,11 @@
 
 @implementation OCClassSettingsFlatSource
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (@"flat");
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)

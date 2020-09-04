@@ -33,6 +33,11 @@
 
 @implementation OCClassSettingsFlatSourceEnvironment
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (@"env");
+}
+
 - (instancetype)initWithPrefix:(NSString *)prefix
 {
 	if ((self = [super init]) != nil)

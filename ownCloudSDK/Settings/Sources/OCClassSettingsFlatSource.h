@@ -30,6 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSDictionary <NSString *, id> *)flatSettingsDictionary; //!< Returns dictionary with keys in the form of [settingsIdentifier].[settingsKey] for *all* settings
 
-NS_ASSUME_NONNULL_END
-
 @end
+
+NS_ASSUME_NONNULL_END

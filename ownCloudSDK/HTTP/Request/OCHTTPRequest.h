@@ -110,6 +110,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (NSMutableURLRequest *)generateURLRequest; //!< Returns an NSURLRequest for this request.
 - (void)scrubForRescheduling;
 
+- (void)recreateRequestID; //!< Creates and sets a new request ID (for internal use only!)
+
 #pragma mark - Cancel support
 - (void)cancel;
 

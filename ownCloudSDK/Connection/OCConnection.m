@@ -87,6 +87,20 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	return (@"connection");
 }
 
++ (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
+{
+	return (@[
+		OCConnectionMinimumVersionRequired,
+		OCConnectionPreferredAuthenticationMethodIDs,
+		OCConnectionAllowBackgroundURLSessions,
+		OCConnectionForceBackgroundURLSessions,
+		OCConnectionAllowCellular,
+		OCConnectionPlainHTTPPolicy,
+		OCConnectionAlwaysRequestPrivateLink,
+		OCConnectionTransparentTemporaryRedirect
+	]);
+}
+
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{

@@ -29,6 +29,9 @@
 #import "OCMacros.h"
 #import <pthread/pthread.h>
 
+#import "OCConnection.h"
+#import "OCCore.h"
+
 static OCLogLevel sOCLogLevel;
 static BOOL sOCLogLevelInitialized;
 
@@ -760,7 +763,7 @@ static NSUInteger sOCLogMessageMaximumSize;
 				}
 			}
 
-			logIntro = [NSString stringWithFormat:@"Host: %@ %@ (%@)%@; SDK: %@; OS: %@ %@; Device: %@%@; Localizations: [%@]",
+			logIntro = [NSString stringWithFormat:@"Host: %@ %@ (%@)%@; SDK: %@; OS: %@ %@; Device: %@%@; Localizations: [%@]; Class Setttings: %@",
 				[mainBundle bundleIdentifier], // Bundle ID
 				[mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"], // Version
 				[mainBundle objectForInfoDictionaryKey:(__bridge NSString *)kCFBundleVersionKey], // Build version
@@ -769,7 +772,8 @@ static NSUInteger sOCLogMessageMaximumSize;
 				UIDevice.currentDevice.systemName, UIDevice.currentDevice.systemVersion, // OS name + version
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
-				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "]  // Localizations
+				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class ] onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;
