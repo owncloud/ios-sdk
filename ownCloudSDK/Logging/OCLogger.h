@@ -26,7 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, OCLogLevel)
 {
-	OCLogLevelDebug,	//!< Verbose information
+	OCLogLevelVerbose = -1, //!< Log level for very verbose information, suitable for low-level debugging
+
+	OCLogLevelDebug = 0,	//!< Log level for debug information
 	OCLogLevelInfo,		//!< Info log level
 	OCLogLevelWarning,	//!< Log level for warnings
 	OCLogLevelError,	//!< Log level for errors
@@ -170,6 +172,7 @@ NS_ASSUME_NONNULL_END
 // Convenience logging (with auto-tags)
 #define _OC_LOG(obj,level,format,...)   if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level   functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogGetTags(obj) message:format, ##__VA_ARGS__]; }
 
+#define OCLogVerbose(format,...)	_OC_LOG(self, OCLogLevelVerbose, format, ##__VA_ARGS__)
 #define OCLogDebug(format,...)		_OC_LOG(self, OCLogLevelDebug,   format, ##__VA_ARGS__)
 #define OCLog(format,...)   		_OC_LOG(self, OCLogLevelInfo,    format, ##__VA_ARGS__)
 #define OCLogWarning(format,...)   	_OC_LOG(self, OCLogLevelWarning, format, ##__VA_ARGS__)
@@ -178,12 +181,14 @@ NS_ASSUME_NONNULL_END
 // Tagged logging (with auto-tags + extra-tags)
 #define _OC_TLOG(obj,level,extraTags,format,...)	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
 
+#define OCTLogVerbose(extraTags, format,...)	_OC_TLOG(self, OCLogLevelVerbose, extraTags, format, ##__VA_ARGS__)
 #define OCTLogDebug(extraTags, format,...)	_OC_TLOG(self, OCLogLevelDebug,   extraTags, format, ##__VA_ARGS__)
 #define OCTLog(extraTags, format,...)		_OC_TLOG(self, OCLogLevelInfo,    extraTags, format, ##__VA_ARGS__)
 #define OCTLogWarning(extraTags, format,...)	_OC_TLOG(self, OCLogLevelWarning, extraTags, format, ##__VA_ARGS__)
 #define OCTLogError(extraTags, format,...)	_OC_TLOG(self, OCLogLevelError,   extraTags, format, ##__VA_ARGS__)
 
 // Tagged logging (with auto-tags + extra-tags + weakSelf)
+#define OCWTLogVerbose(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelVerbose, extraTags, format, ##__VA_ARGS__)
 #define OCWTLogDebug(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelDebug,   extraTags, format, ##__VA_ARGS__)
 #define OCWTLog(extraTags, format,...)		_OC_TLOG(weakSelf, OCLogLevelInfo,    extraTags, format, ##__VA_ARGS__)
 #define OCWTLogWarning(extraTags, format,...)	_OC_TLOG(weakSelf, OCLogLevelWarning, extraTags, format, ##__VA_ARGS__)
@@ -192,12 +197,14 @@ NS_ASSUME_NONNULL_END
 // Parametrized logging (with toggles, auto-tags, extra-tags) - checking for log level OCLogLevelError if forced, to determine if logging is enabled (if it doesn't log for errors, logging is turned off)
 #define _OC_PLOG(obj, level, forceLog, toggleID, extraTags, format,...)  if ([OCLogger logsForLevel:(forceLog ? OCLogLevelError : level)] && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:level force:forceLog functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
 
+#define OCPLogVerbose(toggleID, extraTags, format,...)  _OC_PLOG(self, OCLogLevelVerbose, NO, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPLogDebug(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelDebug,   NO, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPLog(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelInfo,    NO, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPLogWarning(toggleID, extraTags, format,...)  _OC_PLOG(self, OCLogLevelWarning, NO, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPLogError(toggleID, extraTags, format,...)   	_OC_PLOG(self, OCLogLevelError,   NO, toggleID, extraTags, format, ##__VA_ARGS__)
 
 // Parametrized forced logging (with toggles, auto-tags, extra-tags)
+#define OCPFLogVerbose(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelVerbose, YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFLogDebug(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelDebug,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFLog(toggleID, extraTags, format,...)	_OC_PLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFLogWarning(toggleID, extraTags, format,...) _OC_PLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
@@ -206,6 +213,7 @@ NS_ASSUME_NONNULL_END
 // Parametrized forced logging (with toggles, auto-tags, merged extra-tags)
 #define _OC_PMLOG(obj, level, forceLog, toggleID, extraTags, format,...)  if ([OCLogger logsForLevel:(forceLog ? OCLogLevelError : level)] && OCLogToggleEnabled(toggleID)) {  [[OCLogger sharedLogger] appendLogLevel:level force:forceLog functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogMergeTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
 
+#define OCPFMLogVerbose(toggleID, extraTags, format,...) _OC_PMLOG(self, OCLogLevelVerbose,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFMLogDebug(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelDebug,   YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFMLog(toggleID, extraTags, format,...)	_OC_PMLOG(self, OCLogLevelInfo,    YES, toggleID, extraTags, format, ##__VA_ARGS__)
 #define OCPFMLogWarning(toggleID, extraTags, format,...) _OC_PMLOG(self, OCLogLevelWarning, YES, toggleID, extraTags, format, ##__VA_ARGS__)
@@ -213,6 +221,7 @@ NS_ASSUME_NONNULL_END
 
 // Raw logging (with manual tags)
 #define _OC_RLOG(level,tags,format,...)   	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
+#define OCRLogVerbose(tags,format,...)		_OC_RLOG(OCLogLevelVerbose, tags, format, ##__VA_ARGS__)
 #define OCRLogDebug(tags,format,...)		_OC_RLOG(OCLogLevelDebug,   tags, format, ##__VA_ARGS__)
 #define OCRLog(tags,format,...)			_OC_RLOG(OCLogLevelInfo,    tags, format, ##__VA_ARGS__)
 #define OCRLogWarning(tags,format,...)		_OC_RLOG(OCLogLevelWarning, tags, format, ##__VA_ARGS__)

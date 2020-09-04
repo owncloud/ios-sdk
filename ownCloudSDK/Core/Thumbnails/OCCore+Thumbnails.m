@@ -92,7 +92,7 @@
 	progress.eventType = OCEventTypeRetrieveThumbnail;
 	progress.localizedDescription = OCLocalizedString(@"Retrieving thumbnail…", @"");
 
-	OCTLogDebug((thumbnailRequestTags = @[OCLogTagTypedID(@"ThumbnailRequest", thumbnailRequestUUID)]), @"Starting retrieval of thumbnail for %@, maximumSize:%@ scale:%f", item, NSStringFromCGSize(requestedMaximumSizeInPoints), scale);
+	OCTLogVerbose((thumbnailRequestTags = @[OCLogTagTypedID(@"ThumbnailRequest", thumbnailRequestUUID)]), @"Starting retrieval of thumbnail for %@, maximumSize:%@ scale:%f", item, NSStringFromCGSize(requestedMaximumSizeInPoints), scale);
 
 	if (fileID != nil)
 	{
@@ -110,7 +110,7 @@
 					if ([thumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
 					{
 						// The size is fine, too!
-						OCTLogDebug(thumbnailRequestTags, @"Providing final thumbnail from cache: %@", thumbnail);
+						OCTLogVerbose(thumbnailRequestTags, @"Providing final thumbnail from cache: %@", thumbnail);
 
 						retrieveHandler(nil, self, item, thumbnail, NO, progress);
 
@@ -121,13 +121,13 @@
 						// The size isn't sufficient
 						retrieveHandler(nil, self, item, thumbnail, YES, progress);
 
-						OCTLogDebug(thumbnailRequestTags, @"Returning smaller-sized thumbnail %@ as preview", thumbnail);
+						OCTLogVerbose(thumbnailRequestTags, @"Returning smaller-sized thumbnail %@ as preview", thumbnail);
 					}
 				}
 				else
 				{
 					// No it's not => remove outdated version from cache
-					OCTLogDebug(thumbnailRequestTags, @"Removing outdated/different thumbnail %@ from cache: item=(%@, %@), thumbnail=(%@, %@)", thumbnail, item.itemVersionIdentifier, item.thumbnailSpecID, thumbnail.itemVersionIdentifier, thumbnail.specID);
+					OCTLogVerbose(thumbnailRequestTags, @"Removing outdated/different thumbnail %@ from cache: item=(%@, %@), thumbnail=(%@, %@)", thumbnail, item.itemVersionIdentifier, item.thumbnailSpecID, thumbnail.itemVersionIdentifier, thumbnail.specID);
 
 					[self->_thumbnailCache removeObjectForKey:item.fileID];
 
@@ -138,12 +138,12 @@
 			// Should a thumbnail be requested?
 			if (requestThumbnail)
 			{
-				OCTLogDebug(thumbnailRequestTags, @"Starting thumbnail request");
+				OCTLogVerbose(thumbnailRequestTags, @"Starting thumbnail request");
 
 				if (!progress.cancelled)
 				{
 					// Thumbnail database
-					OCTLogDebug(thumbnailRequestTags, @"Starting thumbnail database request for version=%@, specID=%@, maximumSizeInPixels=%@", versionIdentifier, specID, NSStringFromCGSize(requestedMaximumSizeInPixels));
+					OCTLogVerbose(thumbnailRequestTags, @"Starting thumbnail database request for version=%@, specID=%@, maximumSizeInPixels=%@", versionIdentifier, specID, NSStringFromCGSize(requestedMaximumSizeInPixels));
 
 					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier specID:specID maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
 						OCItemThumbnail *cachedThumbnail = nil;
@@ -159,12 +159,12 @@
 							cachedThumbnail.specID = specID;
 							cachedThumbnail.itemVersionIdentifier = versionIdentifier;
 
-							OCTLogDebug(thumbnailRequestTags, @"Retrieved thumbnail from database: %@", cachedThumbnail);
+							OCTLogVerbose(thumbnailRequestTags, @"Retrieved thumbnail from database: %@", cachedThumbnail);
 
 							if ([cachedThumbnail canProvideForMaximumSizeInPixels:requestedMaximumSizeInPixels])
 							{
 								[self queueBlock:^{
-									OCTLogDebug(thumbnailRequestTags, @"Providing final thumbnail from database: %@", cachedThumbnail);
+									OCTLogVerbose(thumbnailRequestTags, @"Providing final thumbnail from database: %@", cachedThumbnail);
 
 									[self->_thumbnailCache setObject:cachedThumbnail forKey:fileID cost:(maxSize.width * maxSize.height * 4)];
 									retrieveHandler(nil, self, item, cachedThumbnail, NO, progress);
@@ -174,18 +174,18 @@
 							}
 							else
 							{
-								OCTLogDebug(thumbnailRequestTags, @"Size of retrieved thumbnail from database does not match requested size: %@", cachedThumbnail);
+								OCTLogVerbose(thumbnailRequestTags, @"Size of retrieved thumbnail from database does not match requested size: %@", cachedThumbnail);
 							}
 						}
 						else
 						{
-							OCTLogDebug(thumbnailRequestTags, @"No matching thumbnail found in database");
+							OCTLogVerbose(thumbnailRequestTags, @"No matching thumbnail found in database");
 						}
 
 						// Update the retrieveHandler with a thumbnail if it doesn't already have one
 						if ((thumbnail == nil) && (cachedThumbnail != nil))
 						{
-							OCTLogDebug(thumbnailRequestTags, @"Returning preview thumbnail from database: %@", cachedThumbnail);
+							OCTLogVerbose(thumbnailRequestTags, @"Returning preview thumbnail from database: %@", cachedThumbnail);
 							retrieveHandler(nil, self, item, cachedThumbnail, YES, progress);
 						}
 
@@ -206,7 +206,7 @@
 
 									self->_pendingThumbnailRequests[requestID] = retrieveHandlersQueue;
 
-									OCTLogDebug(thumbnailRequestTags, @"Creating request queue for thumbnail for %@", item.path);
+									OCTLogVerbose(thumbnailRequestTags, @"Creating request queue for thumbnail for %@", item.path);
 								}
 
 								if (retrieveHandlersQueue.count != 0)
@@ -214,7 +214,7 @@
 									// Another request is already pending
 									sendRequest = NO;
 
-									OCTLogDebug(thumbnailRequestTags, @"Another thumbnail request is already running for %@, enqueueing this request", item.path);
+									OCTLogVerbose(thumbnailRequestTags, @"Another thumbnail request is already running for %@, enqueueing this request", item.path);
 								}
 
 								[retrieveHandlersQueue addObject:retrieveHandler];
@@ -224,7 +224,7 @@
 									OCEventTarget *target;
 									NSProgress *retrieveProgress;
 
-									OCTLogDebug(thumbnailRequestTags, @"Requesting thumbnail for %@ from server", item.path);
+									OCTLogVerbose(thumbnailRequestTags, @"Requesting thumbnail for %@ from server", item.path);
 
 									// Define result event target
 									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
@@ -249,7 +249,7 @@
 						}
 						else
 						{
-							OCTLogDebug(thumbnailRequestTags, @"Thumbnail retrieval has been cancelled (1)");
+							OCTLogVerbose(thumbnailRequestTags, @"Thumbnail retrieval has been cancelled (1)");
 
 							if (retrieveHandler != nil)
 							{
@@ -260,7 +260,7 @@
 				}
 				else
 				{
-					OCTLogDebug(thumbnailRequestTags, @"Thumbnail retrieval has been cancelled (2)");
+					OCTLogVerbose(thumbnailRequestTags, @"Thumbnail retrieval has been cancelled (2)");
 
 					if (retrieveHandler != nil)
 					{
@@ -289,16 +289,16 @@
 		NSString *specID = OCTypedCast(event.userInfo[@"specID"], NSString);
 		NSString *requestID = OCTypedCast(event.ephermalUserInfo[@"requestID"], NSString);
 
-		OCLogDebug(@"Received thumbnail from server for %@, specID=%@, requestID=%@", item.path, specID, requestID);
+		OCLogVerbose(@"Received thumbnail from server for %@, specID=%@, requestID=%@", item.path, specID, requestID);
 
 		if ((event.error == nil) && (event.result != nil))
 		{
 			// Update cache
-			OCLogDebug(@"Updating thumbnail cache with %@", thumbnail);
+			OCLogVerbose(@"Updating thumbnail cache with %@", thumbnail);
 			[self->_thumbnailCache setObject:thumbnail forKey:itemVersionIdentifier.fileID];
 
 			// Store in database
-			OCLogDebug(@"Updating database with %@", thumbnail);
+			OCLogVerbose(@"Updating database with %@", thumbnail);
 			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
 		}
 
@@ -318,14 +318,14 @@
 				for (OCCoreThumbnailRetrieveHandler retrieveHandler in retrieveHandlersQueue)
 				{
 					NSString *thumbnailRequestUUID = [NSString stringWithFormat:@"%p", retrieveHandler];
-					OCTLogDebug(@[OCLogTagTypedID(@"ThumbnailRequest", thumbnailRequestUUID)], @"Providing final thumbnail from server: %@", thumbnail);
+					OCTLogVerbose(@[OCLogTagTypedID(@"ThumbnailRequest", thumbnailRequestUUID)], @"Providing final thumbnail from server: %@", thumbnail);
 					retrieveHandler(event.error, self, item, thumbnail, NO, nil);
 				}
 			});
 		}
 		else
 		{
-			OCLogDebug(@"Can't handle thumbnail response because of missing requestID");
+			OCLogVerbose(@"Can't handle thumbnail response because of missing requestID");
 		}
 	}];
 }

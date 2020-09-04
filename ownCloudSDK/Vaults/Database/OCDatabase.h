@@ -78,6 +78,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 }
 
 @property(strong) NSURL *databaseURL;
+@property(strong) NSURL *thumbnailDatabaseURL;
 
 @property(assign) NSUInteger removedItemRetentionLength;
 

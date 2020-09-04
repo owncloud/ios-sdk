@@ -319,3 +319,6 @@
 "Class" = "Class";
 "Identifier" = "Identifier";
 "Localized Description" = "Localized Description";
+"Database size" = "Database size";
+"Thumbnail database size" = "Thumbnail database size";
+"Vacuum" = "Vacuum";

@@ -137,7 +137,7 @@
 
 		if (runBlocks != nil)
 		{
-			OCLogDebug(@"Running %lu queued %@ blocks", runBlocks.count, (isBackgrounded ? @"background" : @"foreground"));
+			OCLogVerbose(@"Running %lu queued %@ blocks", runBlocks.count, (isBackgrounded ? @"background" : @"foreground"));
 
 			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 
@@ -148,7 +148,7 @@
 					@autoreleasepool {
 						if ((runBlock = runBlocks.firstObject) != nil)
 						{
-							OCLogDebug(@"Running queued %@ block %@", (isBackgrounded ? @"background" : @"foreground"), runBlock);
+							OCLogVerbose(@"Running queued %@ block %@", (isBackgrounded ? @"background" : @"foreground"), runBlock);
 							runBlock();
 
 							[runBlocks removeObjectAtIndex:0]; // Release immediately after execution in order to trigger the end of any observing OCBackgroundTask
@@ -181,7 +181,7 @@
 	{
 		if (self.isBackgrounded == inBackground)
 		{
-			OCLogDebug(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
+			OCLogVerbose(@"Running %@ block (%@)", (inBackground ? @"background" : @"foreground"), block);
 			block();
 		}
 		else
@@ -196,7 +196,7 @@
 				}] start] endWhenDeallocating:block];
 			}
 
-			OCLogDebug(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
+			OCLogVerbose(@"Queuing %@ block %@", (inBackground ? @"background" : @"foreground"), block);
 
 			@synchronized(_queuedBlocksByBackground)
 			{
@@ -206,7 +206,7 @@
 	}
 	else
 	{
-		OCLogDebug(@"Running %@ block (%@) immediately: process has no concept of background/foreground", (inBackground ? @"background" : @"foreground"), block);
+		OCLogVerbose(@"Running %@ block (%@) immediately: process has no concept of background/foreground", (inBackground ? @"background" : @"foreground"), block);
 		block();
 	}
 }
@@ -234,7 +234,7 @@
 			task.started = YES;
 			[_tasks addObject:task];
 
-			OCLogDebug(@"Starting background task '%@' (delegate=%@)", task.name, _delegate);
+			OCLogVerbose(@"Starting background task '%@' (delegate=%@)", task.name, _delegate);
 
 			UIBackgroundTaskIdentifier taskID;
 
@@ -282,7 +282,7 @@
 			[_tasks removeObjectAtIndex:taskIndex];
 			task.started = NO;
 
-			OCLogDebug(@"Ending background task '%@' (delegate=%@)", task.name, _delegate);
+			OCLogVerbose(@"Ending background task '%@' (delegate=%@)", task.name, _delegate);
 
 			if (_delegate != nil)
 			{

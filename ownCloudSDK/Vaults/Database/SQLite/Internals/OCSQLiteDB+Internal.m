@@ -68,7 +68,7 @@
 
 - (void)logMemoryStatistics
 {
-	if ((_db != NULL) && [OCLogger logsForLevel:OCLogLevelDebug])
+	if ((_db != NULL) && [OCLogger logsForLevel:OCLogLevelVerbose])
 	{
 		int ops[] = {
 			SQLITE_STATUS_MEMORY_USED,
@@ -91,7 +91,7 @@
 
 			sqlite3_status64(ops[idx], &current, &highwater, 0);
 
-			OCLog(@"%s | %lld | %lld", labels[idx], current, highwater);
+			OCLogVerbose(@"%s | %lld | %lld", labels[idx], current, highwater);
 		}
 
 		int db_ops[] = {
@@ -114,7 +114,7 @@
 
 			sqlite3_db_status(_db, db_ops[idx], &current, &highwater, 0);
 
-			OCLogDebug(@"%s | %d | %d", db_labels[idx], current, highwater);
+			OCLogVerbose(@"%s | %d | %d", db_labels[idx], current, highwater);
 		}
 	}
 }

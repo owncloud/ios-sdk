@@ -269,7 +269,7 @@
 
 - (void)reset
 {
-	OCLogDebug(@"Resetting %@", self);
+	OCLogVerbose(@"Resetting %@", self);
 
 	if (_sqlStatement != NULL)
 	{
