@@ -230,7 +230,7 @@
 		_warnedCertificates = [NSMutableArray new];
 
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
-		if (OCTypedCast([self classSettingForOCClassSettingsKey:OCCoreCookieSupportEnabled], NSNumber).boolValue == YES)
+		// if (OCTypedCast([self classSettingForOCClassSettingsKey:OCCoreCookieSupportEnabled], NSNumber).boolValue == YES)
 		{
 			// Adding cookie storage enabled cookie support
 			_connection.cookieStorage = [OCHTTPCookieStorage new];
