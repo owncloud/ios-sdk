@@ -47,7 +47,7 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
 @end
 
-typedef NSString* OCClassSettingsSourceIdentifier;
+typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @protocol OCClassSettingsSource <NSObject>
 
@@ -63,6 +63,7 @@ typedef NSString* OCClassSettingsSourceIdentifier;
 - (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults forClass:(Class<OCClassSettingsSupport>)theClass; //!< Registers additional defaults for a class. These are added to the defaults provided by the class itself. Can be used to provide additional settings from a subclass' +load method. A convenience method for this is available as +[NSObject registerOCClassSettingsDefaults:].
 
 - (void)addSource:(id <OCClassSettingsSource>)source;
+- (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID;
 - (void)removeSource:(id <OCClassSettingsSource>)source;
 
 - (void)clearSourceCache;

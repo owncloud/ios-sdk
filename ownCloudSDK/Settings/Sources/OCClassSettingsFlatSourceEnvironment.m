@@ -35,7 +35,7 @@
 
 - (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
 {
-	return (@"env");
+	return (OCClassSettingsSourceIdentifierEnvironment);
 }
 
 - (instancetype)initWithPrefix:(NSString *)prefix
@@ -158,3 +158,5 @@
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierEnvironment = @"env";

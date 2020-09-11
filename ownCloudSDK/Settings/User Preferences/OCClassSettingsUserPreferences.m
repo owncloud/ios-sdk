@@ -56,7 +56,7 @@
 
 - (nonnull OCClassSettingsSourceIdentifier)settingsSourceIdentifier
 {
-	return (@"user-prefs");
+	return (OCClassSettingsSourceIdentifierUserPreferences);
 }
 
 - (BOOL)setValue:(id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass
@@ -128,3 +128,5 @@
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierUserPreferences = @"user-prefs";

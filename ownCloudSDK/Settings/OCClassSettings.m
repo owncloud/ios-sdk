@@ -107,6 +107,49 @@
 	}
 }
 
+- (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID
+{
+	if (source == nil) { return; }
+
+	@synchronized(self)
+	{
+		if (_sources == nil)
+		{
+			_sources = [NSMutableArray new];
+			[_sources addObject:source];
+		}
+		else
+		{
+			__block NSInteger insertIndex = NSNotFound;
+
+			[_sources enumerateObjectsUsingBlock:^(id<OCClassSettingsSource>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+				if ([obj.settingsSourceIdentifier isEqual:beforeSourceID])
+				{
+					insertIndex = idx;
+					*stop = YES;
+				}
+
+				if ([obj.settingsSourceIdentifier isEqual:afterSourceID])
+				{
+					insertIndex = idx+1;
+					*stop = YES;
+				}
+			}];
+
+			if (insertIndex != NSNotFound)
+			{
+				[_sources insertObject:source atIndex:insertIndex];
+			}
+			else
+			{
+				[_sources addObject:source];
+			}
+		}
+
+		[self clearSourceCache];
+	}
+}
+
 - (void)removeSource:(id <OCClassSettingsSource>)source
 {
 	if (source == nil) { return; }

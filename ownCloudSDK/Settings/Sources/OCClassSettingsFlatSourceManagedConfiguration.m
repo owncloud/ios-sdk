@@ -22,7 +22,7 @@
 
 - (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
 {
-	return (@"managed");
+	return (OCClassSettingsSourceIdentifierManaged);
 }
 
 - (NSDictionary <NSString *, id> *)flatSettingsDictionary
@@ -31,3 +31,5 @@
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierManaged = @"managed";
