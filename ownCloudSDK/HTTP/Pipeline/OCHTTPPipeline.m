@@ -2048,11 +2048,11 @@
 				else
 				{
 					NSArray<id<OCHTTPPipelinePolicyHandler>> *policyHandlers;
-					id<OCHTTPPipelinePartitionHandler> partitionHandler;
+					id<OCHTTPPipelinePartitionHandler> partitionHandler = [self partitionHandlerForPartitionID:task.partitionID];
 
 					policyHandlers = (NSArray<id<OCHTTPPipelinePolicyHandler>> *)[OCHTTPPolicyManager.sharedManager applicablePoliciesForPipelinePartitionID:task.partitionID handler:partitionHandler];
 
-					if ((partitionHandler = [self partitionHandlerForPartitionID:task.partitionID]) != nil)
+					if (partitionHandler != nil)
 					{
 						if ([partitionHandler conformsToProtocol:@protocol(OCHTTPPipelinePolicyHandler)])
 						{

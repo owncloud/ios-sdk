@@ -2349,5 +2349,6 @@ OCConnectionOptionKey OCConnectionOptionGroupIDKey = @"group-id";
 OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals";
 OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
+OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
