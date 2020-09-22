@@ -118,7 +118,6 @@ OCAuthenticationMethodAutoRegister
 		OCAuthenticationMethodOAuth2RedirectURI 	  : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOAuth2ClientID 		  : @"mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1",
 		OCAuthenticationMethodOAuth2ClientSecret 	  : @"KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx",
-		OCAuthenticationMethodOAuth2BrowserSessionClass	  : @"operating-system"
 	});
 }
 
@@ -328,7 +327,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		NSString *className;
 
-		if ((className = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2BrowserSessionClass]) != nil)
+		if ((className = [OCAuthenticationMethod classSettingForOCClassSettingsKey:OCAuthenticationMethodBrowserSessionClass]) != nil)
 		{
 			if (![className isEqual:@"operating-system"])
 			{
@@ -377,6 +376,13 @@ OCAuthenticationMethodAutoRegister
 		#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
 		if (@available(iOS 13, *))
 		{
+			NSNumber *prefersEphermalNumber;
+
+			if ((prefersEphermalNumber = OCTypedCast([OCAuthenticationMethod classSettingForOCClassSettingsKey:OCAuthenticationMethodBrowserSessionPrefersEphermal], NSNumber)) != nil)
+			{
+				webAuthenticationSession.prefersEphemeralWebBrowserSession = prefersEphermalNumber.boolValue;
+			}
+
 			UIWindow *window = OCTypedCast(options[OCAuthenticationMethodPresentingViewControllerKey], UIViewController).view.window;
 
 			if (window == nil)
@@ -792,5 +798,4 @@ OCClassSettingsKey OCAuthenticationMethodOAuth2TokenEndpoint = @"oa2-token-endpo
 OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI = @"oa2-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID = @"oa2-client-id";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret = @"oa2-client-secret";
-OCClassSettingsKey OCAuthenticationMethodOAuth2BrowserSessionClass = @"oa2-browser-session-class";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ExpirationOverrideSeconds = @"oa2-expiration-override-seconds";

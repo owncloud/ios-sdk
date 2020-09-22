@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCLogTag.h"
+#import "OCClassSettings.h"
 
 @class OCConnection;
 @class OCHTTPRequest;
@@ -40,7 +41,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
 };
 
-@interface OCAuthenticationMethod : NSObject <OCLogTagging>
+@interface OCAuthenticationMethod : NSObject <OCLogTagging, OCClassSettingsSupport>
 {
 	NSDate *_authenticationDataKnownInvalidDate;
 
@@ -107,6 +108,10 @@ extern OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerK
 extern OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey; //!< Allow OCConnection to modify the OCBookmark with an upgraded URL, where an upgrade means that the hostname and base path must be identical and the protocol may only change from http to https. Any other change will be rejected and produce an OCErrorAuthorizationRedirect with userInfo[OCAuthorizationMethodAlternativeServerURLKey] for user approval (=> if the user approves, the app would update the URL in the bookmark accordingly and start authentication anew). This key is currently supported for
 
 extern NSString *OCAuthorizationMethodAlternativeServerURLKey; //!< Key for alternative server URL in -[NSError userInfo].
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication;
+extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass;
+extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal;
 
 NS_ASSUME_NONNULL_END
 

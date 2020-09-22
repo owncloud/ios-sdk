@@ -773,7 +773,7 @@ static NSUInteger sOCLogMessageMaximumSize;
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class ] onlyPublic:YES]  // Class Settings
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;
