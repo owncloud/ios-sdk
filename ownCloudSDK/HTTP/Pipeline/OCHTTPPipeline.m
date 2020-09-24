@@ -69,7 +69,7 @@
 
 	NSString *template = [self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingUserAgent];
 
-	if (((userAgent == nil) && (template != nil)) || (template != userAgentTemplate))
+	if (((userAgent == nil) && (template != nil)) || (![template isEqual:userAgentTemplate] && (template != userAgentTemplate)))
 	{
 		NSString *bundleName = @"App";
 
@@ -86,13 +86,13 @@
 			bundleName = @"App";
 		}
 
-		userAgent = [[[[[[[userAgentTemplate stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
-						     stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
-						     stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
-						     stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
-						     stringByReplacingOccurrencesOfString:@"{{device.model-id}}" withString:UIDevice.currentDevice.ocModelIdentifier]
-						     stringByReplacingOccurrencesOfString:@"{{os.name}}"  	withString:UIDevice.currentDevice.systemName]
-						     stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+		userAgent = [[[[[[[template 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
+						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
+						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
+						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
+						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
+						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
+						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
 		userAgentTemplate = template;
 	}
 
