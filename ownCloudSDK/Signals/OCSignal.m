@@ -17,7 +17,47 @@
  */
 
 #import "OCSignal.h"
+#import "OCEvent.h"
 
 @implementation OCSignal
+
++ (OCSignalUUID)generateUUID
+{
+	return (NSUUID.UUID.UUIDString);
+}
+
+- (instancetype)initWithUUID:(OCSignalUUID)uuid payload:(OCCodableDict)payload
+{
+	if ((self = [super init]) != nil)
+	{
+		_uuid = uuid;
+		_payload = payload;
+	}
+
+	return (self);
+}
+
+#pragma mark - Secure Coding
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+	if ((self = [super init]) != nil)
+	{
+		_uuid = [coder decodeObjectOfClass:NSString.class forKey:@"uuid"];
+		_payload = [coder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"payload"];
+	}
+
+	return (self);
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_uuid forKey:@"uuid"];
+	[coder encodeObject:_payload forKey:@"payload"];
+}
 
 @end

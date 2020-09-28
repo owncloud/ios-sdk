@@ -19,24 +19,27 @@
 #import <Foundation/Foundation.h>
 #import "OCSignal.h"
 #import "OCTypes.h"
+#import "OCAppIdentity.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCSignalConsumer;
 
 typedef NSString* OCSignalConsumerUUID;
-typedef void(^OCSignalHandler)(OCSignalConsumer *consumer, OCSignal *signal);
+typedef void(^OCSignalHandler)(OCSignalConsumer *consumer, NSUInteger index, OCSignal *signal);
 
-@interface OCSignalConsumer : NSObject
+@interface OCSignalConsumer : NSObject <NSSecureCoding>
 
 @property(readonly) OCSignalConsumerUUID uuid;
 
 @property(strong,nullable) OCSignalUUID signalUUID;
 
 @property(strong,nullable) OCCoreRunIdentifier runIdentifier;
-@property(strong,nullable) NSBundle *bundleIdentifier;
+@property(strong,nullable) OCAppComponentIdentifier componentIdentifier;;
 
 @property(copy,nullable) OCSignalHandler signalHandler;
+
+- (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID runIdentifier:(nullable OCCoreRunIdentifier)runIdentifier handler:(OCSignalHandler)handler;
 
 @end
 

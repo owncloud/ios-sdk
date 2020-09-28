@@ -17,20 +17,20 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCTypes.h"
 
 typedef NSString* OCSignalUUID;
-typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCCodableDict;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCSignal : NSObject
+@interface OCSignal : NSObject <NSSecureCoding>
 
 + (OCSignalUUID)generateUUID; //!< Generates a signal UUID 
 
 @property(readonly,strong) OCSignalUUID uuid;
-@property(readonly,strong) OCCodableDict payload;
+@property(readonly,nullable,strong) OCCodableDict payload;
 
-- (instancetype)initWithUUID:(OCSignalUUID)uuid payload:(OCCodableDict)payload;
+- (instancetype)initWithUUID:(OCSignalUUID)uuid payload:(nullable OCCodableDict)payload;
 
 @end
 

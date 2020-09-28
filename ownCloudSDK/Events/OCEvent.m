@@ -49,6 +49,9 @@
 #import "OCTUSHeader.h"
 #import "OCMessageChoice.h"
 #import "OCMessage.h"
+#import "OCSignal.h"
+#import "OCSignalConsumer.h"
+#import "OCSignalRecord.h"
 
 @implementation OCEvent
 
@@ -110,6 +113,9 @@
 				OCTUSJobSegment.class,
 				OCMessage.class,
 				OCMessageChoice.class,
+				OCSignalConsumer.class,
+				OCSignal.class,
+				OCSignalRecord.class,
 
 				// Foundation classes
 				NSArray.class,

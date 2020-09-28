@@ -54,6 +54,8 @@ typedef NSNumber* OCSyncRecordRevision;
 typedef NSNumber* OCSyncLaneID;
 typedef NSString* OCSyncLaneTag;
 
+typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCCodableDict;
+
 // typedef NSString* OCJobID; //!< Identifier uniquely identifying a job. Typically used as persistent ID across requests to track a job's connectivity status.
 
 #endif /* OCTypes_h */

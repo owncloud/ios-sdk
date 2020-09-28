@@ -22,7 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCSignalRecord : NSObject
+@interface OCSignalRecord : NSObject <NSSecureCoding>
 
 @property(readonly,strong) OCSignalUUID signalUUID;
 
@@ -31,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSArray<OCSignalConsumer *> *consumers;
 
 - (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID;
+
+- (void)addConsumer:(OCSignalConsumer *)consumer;
+
+- (void)removeConsumer:(OCSignalConsumer *)consumer;
+- (BOOL)removeConsumersMatching:(BOOL(^)(OCSignalConsumer *storedConsumer))matcher onlyFirstMatch:(BOOL)onlyFirstMatch;
 
 @end
 
