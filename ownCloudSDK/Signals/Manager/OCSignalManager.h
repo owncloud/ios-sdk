@@ -25,23 +25,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSignalManager : NSObject
 
-@property(strong, nullable) OCKeyValueStore *keyValueStore;
+@property(strong, readonly) OCKeyValueStore *keyValueStore;
+@property(strong, nullable) dispatch_queue_t deliveryQueue; //!< Queue to schedule remotely scheduled signal delivery on
 
-- (instancetype)initWithKeyValueStore:(OCKeyValueStore *)keyValueStore;
+- (instancetype)initWithKeyValueStore:(OCKeyValueStore *)keyValueStore deliveryQueue:(nullable dispatch_queue_t)deliveryQueue;
 
 #pragma mark - Consumer
 - (void)addConsumer:(OCSignalConsumer *)consumer;
 
 - (void)removeConsumer:(OCSignalConsumer *)consumer;
 - (void)removeConsumerWithUUID:(OCSignalConsumerUUID)consumerUUID;
-- (void)removeConsumersWithRunIdentifier:(OCCoreRunIdentifier)runIdentifier;
+- (void)removeConsumersWithRunIdentifier:(OCCoreRunIdentifier)runIdentifier otherThan:(BOOL)otherThan;
 - (void)removeConsumersWithComponentIdentifier:(OCAppComponentIdentifier)componentIdentifier;
 - (void)removeConsumersForSignalUUID:(OCSignalUUID)signalUUID;
 
 #pragma mark - Signals
-- (void)postSignal:(OCSignal *)signal;
+- (void)postSignal:(OCSignal *)signal; //!< Post signal. May immediately trigger local consumers.
 
-- (void)setShouldDeliverSignals;
+- (void)setNeedsSignalDelivery;
 - (void)deliverSignals;
 
 @end

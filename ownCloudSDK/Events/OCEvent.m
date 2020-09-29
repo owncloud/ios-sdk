@@ -113,8 +113,8 @@
 				OCTUSJobSegment.class,
 				OCMessage.class,
 				OCMessageChoice.class,
-				OCSignalConsumer.class,
 				OCSignal.class,
+				OCSignalConsumer.class,
 				OCSignalRecord.class,
 
 				// Foundation classes

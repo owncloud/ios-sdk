@@ -515,8 +515,6 @@
 		DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD9B8812379783200691929 /* UIDevice+ModelID.m */; };
 		DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDA306F21412A0100DB61A9 /* OCSyncAction.h */; };
 		DCDA307221412A0100DB61A9 /* OCSyncAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDA307021412A0100DB61A9 /* OCSyncAction.m */; };
-		DCDBB5D2252284E300FAD707 /* OCSignalStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDBB5D0252284E300FAD707 /* OCSignalStorage.h */; };
-		DCDBB5D3252284E300FAD707 /* OCSignalStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBB5D1252284E300FAD707 /* OCSignalStorage.m */; };
 		DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */; };
 		DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */; };
 		DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */; };
@@ -1251,8 +1249,6 @@
 		DCD9B8812379783200691929 /* UIDevice+ModelID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+ModelID.m"; sourceTree = "<group>"; };
 		DCDA306F21412A0100DB61A9 /* OCSyncAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncAction.h; sourceTree = "<group>"; };
 		DCDA307021412A0100DB61A9 /* OCSyncAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncAction.m; sourceTree = "<group>"; };
-		DCDBB5D0252284E300FAD707 /* OCSignalStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSignalStorage.h; sourceTree = "<group>"; };
-		DCDBB5D1252284E300FAD707 /* OCSignalStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSignalStorage.m; sourceTree = "<group>"; };
 		DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Setup.m"; sourceTree = "<group>"; };
 		DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Tools.m"; sourceTree = "<group>"; };
 		DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Authentication.m"; sourceTree = "<group>"; };
@@ -2531,16 +2527,11 @@
 			isa = PBXGroup;
 			children = (
 				DCA118332521402200775F18 /* Signal Handling.md */,
-				DCA1182425213E4E00775F18 /* OCSignalManager.m */,
-				DCA1182325213E4E00775F18 /* OCSignalManager.h */,
-				DCDBB5D1252284E300FAD707 /* OCSignalStorage.m */,
-				DCDBB5D0252284E300FAD707 /* OCSignalStorage.h */,
-				DCA1183525214B0A00775F18 /* OCSignalRecord.m */,
-				DCA1183425214B0A00775F18 /* OCSignalRecord.h */,
 				DCA1182825213E6700775F18 /* OCSignal.m */,
 				DCA1182725213E6700775F18 /* OCSignal.h */,
 				DCA1183025213EB300775F18 /* OCSignalConsumer.m */,
 				DCA1182F25213EB300775F18 /* OCSignalConsumer.h */,
+				DCDBB5D72523547D00FAD707 /* Manager */,
 			);
 			path = Signals;
 			sourceTree = "<group>";
@@ -2862,6 +2853,17 @@
 			path = Capabilities;
 			sourceTree = "<group>";
 		};
+		DCDBB5D72523547D00FAD707 /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				DCA1182425213E4E00775F18 /* OCSignalManager.m */,
+				DCA1182325213E4E00775F18 /* OCSignalManager.h */,
+				DCA1183525214B0A00775F18 /* OCSignalRecord.m */,
+				DCA1183425214B0A00775F18 /* OCSignalRecord.h */,
+			);
+			path = Manager;
+			sourceTree = "<group>";
+		};
 		DCE227CC22D60CF4000BE0A5 /* ItemPolicies */ = {
 			isa = PBXGroup;
 			children = (
@@ -2991,7 +2993,6 @@
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
 				DC8556ED204DEA2900189B9A /* OCHTTPDAVRequest.h in Headers */,
 				DC6DEEB124C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h in Headers */,
-				DCDBB5D2252284E300FAD707 /* OCSignalStorage.h in Headers */,
 				DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */,
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
@@ -3569,7 +3570,6 @@
 				DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */,
 				DC3CE066242A49E100AB8B88 /* OCMessagePresenter.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
-				DCDBB5D3252284E300FAD707 /* OCSignalStorage.m in Sources */,
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
