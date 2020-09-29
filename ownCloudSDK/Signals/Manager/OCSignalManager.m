@@ -18,6 +18,7 @@
 
 #import "OCSignalManager.h"
 #import "OCSignalRecord.h"
+#import "OCEvent.h"
 
 typedef NSMutableDictionary<OCSignalUUID,OCSignalRecord*>* OCSignalManagerStorage;
 
@@ -39,6 +40,7 @@ typedef NSMutableDictionary<OCSignalUUID,OCSignalRecord*>* OCSignalManagerStorag
 
 		_handlersByConsumerUUID = [NSMutableDictionary new];
 
+		[_keyValueStore registerClasses:OCEvent.safeClasses forKey:OCKeyValueStoreKeySignals];
 		[_keyValueStore addObserver:^(OCKeyValueStore * _Nonnull store, id  _Nullable owner, OCKeyValueStoreKey  _Nonnull key, id  _Nullable newValue) {
 			[(OCSignalManager *)owner setNeedsSignalDelivery];
 		} forKey:OCKeyValueStoreKeySignals withOwner:self initial:YES];
@@ -337,7 +339,7 @@ typedef NSMutableDictionary<OCSignalUUID,OCSignalRecord*>* OCSignalManagerStorag
 	{
 		if (consumer.signalHandler != nil)
 		{
-			consumer.signalHandler(consumer, 0, signalsByUUIDs[consumer.signalUUID]);
+			consumer.signalHandler(consumer, signalsByUUIDs[consumer.signalUUID]);
 			consumer.signalHandler = nil;
 		}
 	}

@@ -51,7 +51,7 @@
 		_uuid = [coder decodeObjectOfClass:NSString.class forKey:@"uuid"];
 		_signalUUID = [coder decodeObjectOfClass:NSString.class forKey:@"signalUUID"];
 
-		_runIdentifier = [coder decodeObjectOfClass:NSString.class forKey:@"runIdentifier"];
+		_runIdentifier = [coder decodeObjectOfClass:NSUUID.class forKey:@"runIdentifier"];
 		_componentIdentifier = [coder decodeObjectOfClass:NSString.class forKey:@"componentIdentifier"];
 	}
 

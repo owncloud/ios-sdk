@@ -370,11 +370,11 @@
 		DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC98BDF721E73EFF003B5658 /* Network.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		DC9B4D3922E987EF0089BF78 /* OCClaim.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3E20DC2281005A3DFC /* OCClaim.m */; };
 		DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCClaim.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DCA1182525213E4E00775F18 /* OCSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182325213E4E00775F18 /* OCSignalManager.h */; };
+		DCA1182525213E4E00775F18 /* OCSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182325213E4E00775F18 /* OCSignalManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA1182625213E4E00775F18 /* OCSignalManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA1182425213E4E00775F18 /* OCSignalManager.m */; };
-		DCA1182925213E6700775F18 /* OCSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182725213E6700775F18 /* OCSignal.h */; };
+		DCA1182925213E6700775F18 /* OCSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182725213E6700775F18 /* OCSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA1182A25213E6700775F18 /* OCSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA1182825213E6700775F18 /* OCSignal.m */; };
-		DCA1183125213EB300775F18 /* OCSignalConsumer.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182F25213EB300775F18 /* OCSignalConsumer.h */; };
+		DCA1183125213EB300775F18 /* OCSignalConsumer.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1182F25213EB300775F18 /* OCSignalConsumer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA1183225213EB300775F18 /* OCSignalConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA1183025213EB300775F18 /* OCSignalConsumer.m */; };
 		DCA1183625214B0A00775F18 /* OCSignalRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA1183425214B0A00775F18 /* OCSignalRecord.h */; };
 		DCA1183725214B0A00775F18 /* OCSignalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA1183525214B0A00775F18 /* OCSignalRecord.m */; };

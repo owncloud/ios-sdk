@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class OCSignalConsumer;
 
 typedef NSString* OCSignalConsumerUUID;
-typedef void(^OCSignalHandler)(OCSignalConsumer *consumer, NSUInteger index, OCSignal *signal);
+typedef void(^OCSignalHandler)(OCSignalConsumer *consumer, OCSignal *signal);
 
 @interface OCSignalConsumer : NSObject <NSSecureCoding>
 

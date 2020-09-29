@@ -171,6 +171,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCoreManager.h>
 #import <ownCloudSDK/OCBookmarkManager.h>
 
+#import <ownCloudSDK/OCSignal.h>
+#import <ownCloudSDK/OCSignalConsumer.h>
+#import <ownCloudSDK/OCSignalManager.h>
+
 #import <ownCloudSDK/OCChecksum.h>
 #import <ownCloudSDK/OCChecksumAlgorithm.h>
 #import <ownCloudSDK/OCChecksumAlgorithmSHA1.h>

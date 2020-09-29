@@ -39,6 +39,7 @@
 #import "OCEventQueue.h"
 #import "OCSQLiteTransaction.h"
 #import "OCBackgroundManager.h"
+#import "OCSignalManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
@@ -275,7 +276,29 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	if (action != nil)
 	{
+		resultHandler = [resultHandler copy];
+
 		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
+
+		if (resultHandler != nil)
+		{
+			OCSignalManager *signalManager;
+
+			if ((signalManager = self.signalManager) != nil)
+			{
+				OCSignalUUID signalUUID = OCSignal.generateUUID;
+
+				syncRecord.resultSignalUUID = signalUUID;
+
+				__weak OCCore *weakCore = self;
+
+				[signalManager addConsumer:[[OCSignalConsumer alloc] initWithSignalUUID:signalUUID runIdentifier:self.runIdentifier handler:^(OCSignalConsumer * _Nonnull consumer, OCSignal * _Nonnull signal) {
+					resultHandler((NSError *)signal.payload[@"error"], weakCore, (OCItem *)signal.payload[@"item"], signal.payload[@"parameter"]);
+				}]];
+
+				syncRecord.resultHandler = nil;
+			}
+		}
 
 		if (syncRecord.progress == nil)
 		{
