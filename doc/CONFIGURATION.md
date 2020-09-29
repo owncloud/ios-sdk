@@ -159,7 +159,7 @@ This document provides an overview over the available sections and their setting
 	- `oa2-expiration-override-seconds`: OAuth2 Expiration Override (**!! for testing only !!**) - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)
 		- type: integer
 		- default: none
-	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compule Time Configuration if you want to use this.
+	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.
 		- type: string
 		- default: none
 		- possible values: none, `UIWebView`

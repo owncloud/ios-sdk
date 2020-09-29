@@ -69,7 +69,7 @@
 
 	NSString *template = [self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingUserAgent];
 
-	if (((userAgent == nil) && (template != nil)) || (template != userAgentTemplate))
+	if (((userAgent == nil) && (template != nil)) || (![template isEqual:userAgentTemplate] && (template != userAgentTemplate)))
 	{
 		NSString *bundleName = @"App";
 
@@ -86,13 +86,13 @@
 			bundleName = @"App";
 		}
 
-		userAgent = [[[[[[[userAgentTemplate stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
-						     stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
-						     stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
-						     stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
-						     stringByReplacingOccurrencesOfString:@"{{device.model-id}}" withString:UIDevice.currentDevice.ocModelIdentifier]
-						     stringByReplacingOccurrencesOfString:@"{{os.name}}"  	withString:UIDevice.currentDevice.systemName]
-						     stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+		userAgent = [[[[[[[template 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
+						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
+						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
+						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
+						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
+						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
+						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
 		userAgentTemplate = template;
 	}
 
@@ -1461,10 +1461,17 @@
 
 			task.urlSessionID = nil;
 			task.urlSessionTaskID = nil;
+
+			// Use new Request-ID for rescheduled request
+			[task.request recreateRequestID];
+			task.requestID = task.request.identifier;
+
 			task.state = OCHTTPPipelineTaskStatePending;
 			task.response = nil;
 
 			[_backend updatePipelineTask:task];
+
+			[self setPipelineNeedsScheduling];
 		}
 
 		// Remove task
@@ -2006,7 +2013,7 @@
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
 	{
-		completionHandler(NULL);
+		completionHandler(nil);
 	}
 }
 
@@ -2041,11 +2048,11 @@
 				else
 				{
 					NSArray<id<OCHTTPPipelinePolicyHandler>> *policyHandlers;
-					id<OCHTTPPipelinePartitionHandler> partitionHandler;
+					id<OCHTTPPipelinePartitionHandler> partitionHandler = [self partitionHandlerForPartitionID:task.partitionID];
 
 					policyHandlers = (NSArray<id<OCHTTPPipelinePolicyHandler>> *)[OCHTTPPolicyManager.sharedManager applicablePoliciesForPipelinePartitionID:task.partitionID handler:partitionHandler];
 
-					if ((partitionHandler = [self partitionHandlerForPartitionID:task.partitionID]) != nil)
+					if (partitionHandler != nil)
 					{
 						if ([partitionHandler conformsToProtocol:@protocol(OCHTTPPipelinePolicyHandler)])
 						{

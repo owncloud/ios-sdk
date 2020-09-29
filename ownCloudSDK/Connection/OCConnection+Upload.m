@@ -620,15 +620,18 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
 
 		// Set conditions
-		if (replacedItem != nil)
+		if (!((NSNumber *)options[OCConnectionOptionForceReplaceKey]).boolValue)
 		{
-			// Ensure the upload fails if there's a different version at the target already
-			[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
-		}
-		else
-		{
-			// Ensure the upload fails if there's any file at the target already
-			[request setValue:@"*" forHeaderField:@"If-None-Match"];
+			if (replacedItem != nil)
+			{
+				// Ensure the upload fails if there's a different version at the target already
+				[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
+			}
+			else
+			{
+				// Ensure the upload fails if there's any file at the target already
+				[request setValue:@"*" forHeaderField:@"If-None-Match"];
+			}
 		}
 
 		// Set Content-Length

@@ -88,6 +88,8 @@
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
 "Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
 "Uploads to this folder are not allowed." = "Uploads to this folder are not allowed.";
+"Replace" = "Replace";
+"Keep both" = "Keep both";
 
 /* Download */
 "Downloading %@…" = "Downloading %@…";
@@ -319,3 +321,6 @@
 "Class" = "Class";
 "Identifier" = "Identifier";
 "Localized Description" = "Localized Description";
+"Database size" = "Database size";
+"Thumbnail database size" = "Thumbnail database size";
+"Vacuum" = "Vacuum";

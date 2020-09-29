@@ -91,6 +91,50 @@
 
 	OCWaitForCompletion(dbDiagnostic);
 
+	// Database file sizes
+	NSNumber *databaseFileSize = [self.databaseURL resourceValuesForKeys:@[ NSURLFileSizeKey] error:NULL][NSURLFileSizeKey];
+	NSNumber *thumbnailDatabaseFileSize = [self.thumbnailDatabaseURL resourceValuesForKeys:@[ NSURLFileSizeKey] error:NULL][NSURLFileSizeKey];
+	NSURL *databaseURL = self.databaseURL;
+	NSURL *thumbnailDatabaseURL = self.thumbnailDatabaseURL;
+
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Database size") content:[NSByteCountFormatter stringFromByteCount:databaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Thumbnail database size") content:[NSByteCountFormatter stringFromByteCount:thumbnailDatabaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
+
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Vacuum") action:^(OCDiagnosticContext * _Nullable context) {
+		if (context.database != nil)
+		{
+			[context.database.sqlDB executeQueryString:@"VACUUM"];
+		}
+		else
+		{
+			void (^VacuumDB)(NSURL *databaseURL) = ^(NSURL *dbFileURL){
+				OCSQLiteDB *sqlDB;
+
+				if ((sqlDB = [[OCSQLiteDB alloc] initWithURL:dbFileURL]) != nil)
+				{
+					[sqlDB openWithFlags:OCSQLiteOpenFlagsDefault completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+						__weak OCSQLiteDB *weakSelf = db;
+
+						OCWTLog(@[@"Vacuum"], @"Opened %@", db.databaseURL);
+
+						db.maxBusyRetryTimeInterval = 10; // Avoid busy timeout if another process performs large changes
+						[db executeQueryString:@"PRAGMA synchronous=FULL"]; // Force checkpoint / synchronization after every transaction
+
+						OCWTLog(@[@"Vacuum"], @"Vacuuming %@", db.databaseURL);
+						[db executeQueryString:@"VACUUM"];
+
+						[sqlDB closeWithCompletionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+							OCWTLog(@[@"Vacuum"], @"Closing %@", sqlDB.databaseURL);
+						}];
+					}];
+				}
+			};
+
+			VacuumDB(databaseURL);
+			VacuumDB(thumbnailDatabaseURL);
+		}
+	}]];
+
 	return (nodes);
 }
 

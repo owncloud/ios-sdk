@@ -126,7 +126,8 @@
 
 			if (error == nil)
 			{
-				NSString *thumbnailsDBPath = [[[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"] path];
+				self.thumbnailDatabaseURL = [[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"];
+				NSString *thumbnailsDBPath = self.thumbnailDatabaseURL.path;
 
 				self->_openCount++;
 

@@ -301,6 +301,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 			@"state"		: @(task.state),
 
+			@"requestID"		: task.requestID,
 			@"requestData"		: task.requestData,
 
 			@"responseData"		: OCSQLiteNullProtect(task.responseData),

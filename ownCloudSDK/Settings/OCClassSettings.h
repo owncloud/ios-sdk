@@ -42,10 +42,16 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 @property(strong,readonly,class) OCClassSettingsIdentifier classSettingsIdentifier;
 + (nullable NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
+@optional
++ (nullable NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers; //!< Returns an array of OCClassSettingsKey whose values should be considered public (i.e. be ok to be logged in an overview). If not implemented, all OCClassSettingsKeys returned by defaultSettingsForIdentifier are considered public.
+
 @end
+
+typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @protocol OCClassSettingsSource <NSObject>
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier;
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForIdentifier:(OCClassSettingsIdentifier)identifier;
 
 @end
@@ -57,11 +63,15 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 - (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults forClass:(Class<OCClassSettingsSupport>)theClass; //!< Registers additional defaults for a class. These are added to the defaults provided by the class itself. Can be used to provide additional settings from a subclass' +load method. A convenience method for this is available as +[NSObject registerOCClassSettingsDefaults:].
 
 - (void)addSource:(id <OCClassSettingsSource>)source;
+- (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID;
 - (void)removeSource:(id <OCClassSettingsSource>)source;
 
 - (void)clearSourceCache;
 
 - (nullable NSDictionary<OCClassSettingsKey, id> *)settingsForClass:(Class<OCClassSettingsSupport>)theClass;
+
+- (NSDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, NSArray<NSDictionary<OCClassSettingsSourceIdentifier, id> *> *> *> *)settingsSnapshotForClasses:(nullable NSArray<Class> *)classes onlyPublic:(BOOL)onlyPublic;
+- (nullable NSString *)settingsSummaryForClasses:(nullable NSArray<Class> *)classes onlyPublic:(BOOL)onlyPublic;
 
 @end
 

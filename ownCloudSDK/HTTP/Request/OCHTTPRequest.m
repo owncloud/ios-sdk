@@ -184,6 +184,16 @@
 	return (_httpResponse.error);
 }
 
+- (OCHTTPRequestRedirectPolicy)redirectPolicy
+{
+	if (_redirectPolicy == OCHTTPRequestRedirectPolicyDefault)
+	{
+		return (OCHTTPRequestRedirectPolicyAllowSameHost);
+	}
+
+	return (_redirectPolicy);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
@@ -261,6 +271,7 @@
 - (void)scrubForRescheduling
 {
 	_httpResponse = nil;
+	_effectiveURL = nil;
 
 	if (_downloadRequest)
 	{
@@ -282,6 +293,11 @@
 	{
 		_downloadedFileURL = nil;
 	}
+}
+
+- (void)recreateRequestID
+{
+	_identifier = NSUUID.UUID.UUIDString; // Generate new UUID
 }
 
 #pragma mark - Cancel support
@@ -378,6 +394,31 @@
 	{
 		[requestDescription appendFormat:@"%@[Avoid Cellular Transfer]\n", infoPrefix];
 	}
+	if (_redirectPolicy != OCHTTPRequestRedirectPolicyDefault)
+	{
+		NSString *redirectionPolicy = nil;
+
+		switch (_redirectPolicy)
+		{
+			case OCHTTPRequestRedirectPolicyDefault:
+				redirectionPolicy = @"default";
+			break;
+
+			case OCHTTPRequestRedirectPolicyForbidden:
+				redirectionPolicy = @"forbidden";
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowAnyHost:
+				redirectionPolicy = @"any host";
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowSameHost:
+				redirectionPolicy = @"same host";
+			break;
+		}
+
+		[requestDescription appendFormat:@"%@[Redirect Policy: %@]\n", infoPrefix, redirectionPolicy];
+	}
 	if (_bodyData != nil)
 	{
 		[requestDescription appendFormat:@"%@Content-Length: %lu\n", headPrefix, (unsigned long)_bodyData.length];
@@ -427,6 +468,8 @@
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
+		self.redirectPolicy	= [decoder decodeIntegerForKey:@"redirectPolicy"];
+
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
 
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
@@ -473,6 +516,8 @@
 	[coder encodeObject:_headerFields 	forKey:@"headerFields"];
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
+
+	[coder encodeInteger:_redirectPolicy 	forKey:@"redirectPolicy"];
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 

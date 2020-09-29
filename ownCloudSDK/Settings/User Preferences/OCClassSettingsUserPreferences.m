@@ -54,6 +54,11 @@
 	return (self.mainDictionary[classSettingsIdentifier]);
 }
 
+- (nonnull OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (OCClassSettingsSourceIdentifierUserPreferences);
+}
+
 - (BOOL)setValue:(id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass
 {
 	OCClassSettingsIdentifier classSettingsIdentifier;
@@ -123,3 +128,5 @@
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierUserPreferences = @"user-prefs";

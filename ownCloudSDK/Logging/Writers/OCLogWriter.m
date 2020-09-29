@@ -88,6 +88,10 @@ static NSDateFormatter *jsonDateFormatter;
 		{
 			switch (logLevel)
 			{
+				case OCLogLevelVerbose:
+					logLevelName = OCLogger.coloredLogging ? @"◻️" : @"[verb]";
+				break;
+
 				case OCLogLevelDebug:
 					logLevelName = OCLogger.coloredLogging ? @"⚪️" : @"[dbug]";
 				break;

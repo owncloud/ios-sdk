@@ -33,6 +33,15 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestObserverEvent)
 	OCHTTPRequestObserverEventTaskResume	//!< Return YES if the observer takes care of resuming the URL session task, NO if the observer doesn't.
 };
 
+typedef NS_ENUM(NSUInteger, OCHTTPRequestRedirectPolicy)
+{
+	OCHTTPRequestRedirectPolicyDefault,		//!< Default redirection policy, defaults to OCHTTPRequestRedirectPolicyAllowSameHost
+
+	OCHTTPRequestRedirectPolicyForbidden,		//!< The HTTP layer should not handle redirects, and return the response instead
+	OCHTTPRequestRedirectPolicyAllowSameHost,	//!< The HTTP layer should handle redirects transparently, but only to targets on the same host, otherwise return the response instead
+	OCHTTPRequestRedirectPolicyAllowAnyHost		//!< The HTTP layer should handle redirects transparently, to any target, even on other hosts
+};
+
 typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
 
 typedef NSString* OCHTTPRequestResumeInfoKey;
@@ -56,6 +65,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong) OCHTTPHeaderFields headerFields;//!< The HTTP headerfields to send alongside the request
 @property(strong,nonatomic) NSData *bodyData;		//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
+
+@property(assign,nonatomic) OCHTTPRequestRedirectPolicy redirectPolicy; //!< Controls transparent redirect handling for this request. Defaults to OCHTTPRequestRedirectPolicyAllowSameHost.
 
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
@@ -98,6 +109,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (void)prepareForScheduling; //!< Called directly before scheduling of a request begins.
 - (NSMutableURLRequest *)generateURLRequest; //!< Returns an NSURLRequest for this request.
 - (void)scrubForRescheduling;
+
+- (void)recreateRequestID; //!< Creates and sets a new request ID (for internal use only!)
 
 #pragma mark - Cancel support
 - (void)cancel;

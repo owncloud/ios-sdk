@@ -28,6 +28,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudMockingVersionString[];
 #import <ownCloudMocking/OCHostSimulator.h>
 #import <ownCloudMocking/OCHostSimulatorResponse.h>
 
+#import <ownCloudMocking/OCHostSimulator+CookieRedirect.h>
+
 #import <ownCloudMocking/OCMockManager.h>
 #import <ownCloudMocking/NSObject+OCMockManager.h>
 

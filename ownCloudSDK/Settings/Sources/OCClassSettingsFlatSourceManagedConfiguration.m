@@ -20,9 +20,16 @@
 
 @implementation OCClassSettingsFlatSourceManagedConfiguration
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (OCClassSettingsSourceIdentifierManaged);
+}
+
 - (NSDictionary <NSString *, id> *)flatSettingsDictionary
 {
 	return ([[NSUserDefaults standardUserDefaults] dictionaryForKey:@"com.apple.configuration.managed"]);
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierManaged = @"managed";

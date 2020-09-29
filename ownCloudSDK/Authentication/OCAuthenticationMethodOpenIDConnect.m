@@ -101,7 +101,11 @@ OCAuthenticationMethodAutoRegister
 
 	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection]) != nil)
 	{
-		[connection sendRequest:[OCHTTPRequest requestWithURL:openidConfigURL] ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
+
+		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyForbidden;
+
+		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;
 
 			if ((self->_openIDConfig = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)

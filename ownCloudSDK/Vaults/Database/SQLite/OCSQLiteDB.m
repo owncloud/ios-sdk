@@ -174,6 +174,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 - (void)queueBlock:(dispatch_block_t)block
 {
+	// OCLogDebug(@"Queuing DB block from %@", NSThread.callStackSymbols);
 	[self.runLoopThread dispatchBlockToRunLoopAsync:block];
 }
 
@@ -288,7 +289,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		{
 			// Instance already open
 			error = OCSQLiteDBError(OCSQLiteDBErrorAlreadyOpenedInInstance);
-			OCLogDebug(@"Attempt to open OCSQLiteDB %@ more than once", self->_databaseURL);
+			OCLogWarning(@"Attempt to open OCSQLiteDB %@ more than once", self->_databaseURL);
 		}
 
 		if (completionHandler != nil)
@@ -523,7 +524,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 				#if OCSQLITE_RAWLOG_ENABLED
 				if ((sqErr == SQLITE_ROW) && _logStatements)
 				{
-					OCTLogDebug(@[@"SQLLog"], @"%@ (stepping)", sqlQuery);
+					OCTLogVerbose(@[@"SQLLog"], @"%@ (stepping)", sqlQuery);
 				}
 				#endif /* OCSQLITE_RAWLOG_ENABLED */
 			} while (sqErr == SQLITE_ROW);
@@ -537,7 +538,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		#if OCSQLITE_RAWLOG_ENABLED
 		if (_logStatements)
 		{
-			OCTLogDebug(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
+			OCTLogVerbose(@[@"SQLLog"], @"%@ (error=%@)", sqlQuery, error);
 		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 	}
@@ -601,7 +602,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 		#if OCSQLITE_RAWLOG_ENABLED
 		if (_logStatements)
 		{
-			OCTLogDebug(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
+			OCTLogVerbose(@[@"SQLLog"], @"%@ [%@] (error=%@)", query.sqlQuery, query.parameters, error);
 		}
 		#endif /* OCSQLITE_RAWLOG_ENABLED */
 
@@ -664,7 +665,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	#if OCSQLITE_RAWLOG_ENABLED
 	if (_logStatements)
 	{
-		OCTLogDebug(@[@"SQL_Log"], @"%@", sqlQuery);
+		OCTLogVerbose(@[@"SQL_Log"], @"%@", sqlQuery);
 	}
 	#endif /* OCSQLITE_RAWLOG_ENABLED */
 
@@ -976,7 +977,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 	int walReturn, pngLog = 0, pnCkpt = 0;
 
 	walReturn = sqlite3_wal_checkpoint_v2(_db, NULL, SQLITE_CHECKPOINT_RESTART, &pngLog, &pnCkpt);
-	OCLogDebug(@"Checkpoint result=%d, pngLog=%d, pnCkpt=%d", walReturn, pngLog, pnCkpt);
+	OCLogVerbose(@"Checkpoint result=%d, pngLog=%d, pnCkpt=%d", walReturn, pngLog, pnCkpt);
 }
 
 #pragma mark - Background kill protection

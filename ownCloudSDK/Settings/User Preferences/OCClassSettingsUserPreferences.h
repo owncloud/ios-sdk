@@ -41,4 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierUserPreferences;
+
 NS_ASSUME_NONNULL_END
