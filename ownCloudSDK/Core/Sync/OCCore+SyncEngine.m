@@ -73,6 +73,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	_remoteSyncEngineTriggerAcknowledgements = [NSMutableDictionary new];
 	_remoteSyncEngineTimedOutSyncRecordIDs = [NSMutableSet new];
 
+	[self.signalManager removeConsumersWithComponentIdentifier:OCAppIdentity.sharedAppIdentity.componentIdentifier];
+
 	[self renewActiveProcessCoreRegistration];
 
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
@@ -111,6 +113,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	}
 
 	[_remoteSyncEngineTriggerAcknowledgements removeAllObjects];
+
+	[self.signalManager removeConsumersWithComponentIdentifier:OCAppIdentity.sharedAppIdentity.componentIdentifier];
 }
 
 #pragma mark - Sync Anchor
