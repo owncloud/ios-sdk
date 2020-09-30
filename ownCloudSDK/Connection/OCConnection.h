@@ -321,6 +321,14 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 @end
 
+#pragma mark - AVATARS
+@interface OCConnection (Avatars)
+
+#pragma mark - Avatars
+- (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler;
+
+@end
+
 #pragma mark - TOOLS
 @interface OCConnection (Tools)
 
@@ -373,6 +381,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
+extern OCConnectionEndpointID OCConnectionEndpointIDAvatars;
 
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
 

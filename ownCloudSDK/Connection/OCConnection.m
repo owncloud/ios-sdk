@@ -114,6 +114,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
+		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
@@ -832,6 +833,10 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 												[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
 													self.loggedInUser = loggedInUser;
+
+													[self retrieveAvatarForUser:loggedInUser existingETag:nil withSize:CGSizeMake(32,32) completionHandler:^(NSError * _Nullable error, BOOL unchanged, OCFileETag  _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData) {
+														OCLog(@"Avatar %@, %@", avatarContentType, avatarData);
+													}];
 
 													connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
@@ -2325,6 +2330,7 @@ OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
+OCConnectionEndpointID OCConnectionEndpointIDAvatars = @"endpoint-avatars";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
 

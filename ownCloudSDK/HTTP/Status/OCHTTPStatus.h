@@ -30,6 +30,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	// Redirection (3xx)
 	OCHTTPStatusCodeMOVED_PERMANENTLY = 301,
 	OCHTTPStatusCodeMOVED_TEMPORARILY = 302,
+	OCHTTPStatusCodeNOT_MODIFIED = 304,
 	OCHTTPStatusCodeTEMPORARY_REDIRECT = 307,
 
 	// Client Error (4xx)
