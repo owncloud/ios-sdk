@@ -48,6 +48,8 @@ static NSUInteger sOCLogMessageMaximumSize;
 }
 @end
 
+static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierLogLevel = @"log-level";
+
 @implementation OCLogger
 
 + (instancetype)sharedLogger
@@ -202,6 +204,11 @@ static NSUInteger sOCLogMessageMaximumSize;
 	return (nil);
 }
 
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
+{
+	return ([key isEqual:OCClassSettingsKeyLogLevel]);
+}
+
 #pragma mark - Settings
 + (OCLogLevel)logLevel
 {
@@ -209,12 +216,21 @@ static NSUInteger sOCLogMessageMaximumSize;
 	{
 		NSNumber *logLevelNumber = nil;
 
-		if ((logLevelNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) == nil)
-		{
-			logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel];
-		}
+		// Migrate log level setting from UserDefaults to OCClassSettingsUserPreferences
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			NSNumber *userDefaultsLogLevel;
 
-		if (logLevelNumber != nil)
+			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) != nil)
+			{
+				[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogLevel];
+			}
+
+			return (nil);
+		}];
+
+		if ((logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel]) != nil)
 		{
 			sOCLogLevel = [logLevelNumber integerValue];
 		}
@@ -243,9 +259,12 @@ static NSUInteger sOCLogMessageMaximumSize;
 {
 	sOCLogLevel = newLogLevel;
 
-	[OCAppIdentity.sharedAppIdentity.userDefaults setInteger:newLogLevel forKey:OCClassSettingsKeyLogLevel];
+	[self setUserPreferenceValue:@(newLogLevel) forClassSettingsKey:OCClassSettingsKeyLogLevel];
 
 	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+
+	OCPFSLog(nil, (@[@"LogIntro"]), @"Log level changed to %ld", (long)sOCLogLevel);
+	OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
 }
 
 + (OCLogFormat)logFormat

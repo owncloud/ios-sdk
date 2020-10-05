@@ -21,6 +21,7 @@
 #import "OCIPNotificationCenter.h"
 #import "OCLogToggle.h"
 #import "OCLogTag.h"
+#import "OCClassSettingsUserPreferences.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -62,7 +63,7 @@ typedef BOOL(^OCLogFilter)(OCLogger *logger, OCLogLevel logLevel, NSString * _Nu
 
 @end
 
-@interface OCLogger : NSObject <OCClassSettingsSupport>
+@interface OCLogger : NSObject <OCClassSettingsSupport, OCClassSettingsUserPreferencesSupport>
 {
 	BOOL _maskPrivateData;
 
