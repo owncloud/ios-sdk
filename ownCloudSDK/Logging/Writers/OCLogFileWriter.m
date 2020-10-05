@@ -99,6 +99,8 @@ static NSURL *sDefaultLogFileURL;
 		{
 			_isOpen = YES;
 
+			// Write the LogIntro synchronously to ensure these lines are written
+			// at the start of the logfile and can't get rerouted due to log rotation
 			OCPFSLog(nil, (@[@"LogIntro"]), @"Starting logging to %@", _logFileURL.path);
 			OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
 
