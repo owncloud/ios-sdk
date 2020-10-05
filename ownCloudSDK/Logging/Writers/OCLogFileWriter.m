@@ -127,9 +127,12 @@ static NSURL *sDefaultLogFileURL;
 					self->_logFileVnodeSource = nil;
 				}
 
-				if ((error = [self open]) != nil)
+				if (OCLoggingEnabled())
 				{
-					NSLog(@"Error re-opening writer %@: %@", self, error);
+					if ((error = [self open]) != nil)
+					{
+						NSLog(@"Error re-opening writer %@: %@", self, error);
+					}
 				}
 			});
 
@@ -184,10 +187,10 @@ static NSURL *sDefaultLogFileURL;
 	NSError *error = nil;
 
 	// Get contents of log directory
-	NSArray *urls = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:[OCAppIdentity.sharedAppIdentity appGroupLogsContainerURL]
-																			  includingPropertiesForKeys:@[NSURLCreationDateKey, NSURLFileSizeKey]
-																			  options:0
-																			  error:&error];
+	NSArray *urls = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:OCAppIdentity.sharedAppIdentity.appGroupLogsContainerURL
+						      includingPropertiesForKeys:@[NSURLCreationDateKey, NSURLFileSizeKey]
+									 options:0
+									   error:&error];
 
 	NSMutableArray<OCLogFileRecord*> *records = [NSMutableArray new];
 

@@ -671,6 +671,13 @@ static NSUInteger sOCLogMessageMaximumSize;
 
 - (void)_openAllWriters
 {
+	if (!OCLoggingEnabled())
+	{
+		// Logging is not enabled, so writer would not otherwise be opened
+		// Writers will be opened when the first message hits the write pipeline
+		return;
+	}
+
 	for (OCLogWriter *writer in _writers)
 	{
 		if (!writer.isOpen && writer.enabled)
