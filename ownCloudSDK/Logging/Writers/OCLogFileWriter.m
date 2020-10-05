@@ -99,8 +99,8 @@ static NSURL *sDefaultLogFileURL;
 		{
 			_isOpen = YES;
 
-			OCTLog((@[@"LogIntro"]), @"Starting logging to %@", _logFileURL.path);
-			OCTLog((@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
+			OCPFSLog(nil, (@[@"LogIntro"]), @"Starting logging to %@", _logFileURL.path);
+			OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
 
 			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME, OCLogger.sharedLogger.writeQueue);
 

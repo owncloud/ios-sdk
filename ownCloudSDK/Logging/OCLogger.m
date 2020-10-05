@@ -403,29 +403,29 @@ static NSUInteger sOCLogMessageMaximumSize;
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:NO forceSyncWrite:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force forceSyncWrite:(BOOL)forceSyncWrite functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
 	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel force:force functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:force forceSyncWrite:forceSyncWrite functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
-	[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+	[self appendLogLevel:logLevel force:NO forceSyncWrite:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force forceSyncWrite:(BOOL)forceSyncWrite functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
 	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
@@ -446,13 +446,13 @@ static NSUInteger sOCLogMessageMaximumSize;
 		timestamp = [NSDate date];
 		logMessage = [[NSString alloc] initWithFormat:formatString arguments:args];
 
-		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
+		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp forceSyncWrite:forceSyncWrite];
 	}
 }
 
-- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
+- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp forceSyncWrite:(BOOL)forceSyncWrite
 {
-	if (OCLogger.synchronousLoggingEnabled)
+	if (OCLogger.synchronousLoggingEnabled || forceSyncWrite)
 	{
 		@synchronized(self)
 		{
