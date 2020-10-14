@@ -38,6 +38,7 @@ typedef void(^OCWaitConditionEvaluationResultHandler)(OCWaitConditionState state
 }
 
 @property(strong,readonly) NSUUID *uuid;
+@property(nullable,strong,nonatomic,readonly) NSDate *nextRetryDate;
 
 - (void)evaluateWithOptions:(nullable OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler; //!< Evaluate the condition. Returns the outcome as state + error info.
 

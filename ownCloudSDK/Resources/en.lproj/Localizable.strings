@@ -100,7 +100,7 @@
 "File modified locally" = "File modified locally";
 "\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
 "Couldn't download %@" = "Couldn't download %@";
-"The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server.";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";

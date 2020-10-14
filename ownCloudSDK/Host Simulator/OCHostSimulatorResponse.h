@@ -18,7 +18,7 @@
 
 
 #import <Foundation/Foundation.h>
-#import <ownCloudSDK/ownCloudSDK.h>
+#import "OCHTTPStatus.h"
 
 @interface OCHostSimulatorResponse : NSObject
 

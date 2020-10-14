@@ -52,6 +52,7 @@
 #import "OCCore+ItemPolicies.h"
 #import "OCCore+MessageResponseHandler.h"
 #import "OCCore+MessageAutoresolver.h"
+#import "OCHostSimulatorManager.h"
 
 @interface OCCore ()
 {
@@ -245,6 +246,7 @@
 
 			OCTLogDebug(@[@"Cookies"], @"Cookie support enabled with storage %@", _connection.cookieStorage);
 		}
+		_connection.hostSimulator = [OCHostSimulatorManager.sharedManager hostSimulatorForLocation:OCExtensionLocationIdentifierAllCores for:self];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
@@ -1266,6 +1268,12 @@
 			{
 				[self queueBlock:^{
 					[self unregisterProgress:progress forLocalID:progress.localID];
+
+					if (progress.isCancelled)
+					{
+						self->_nextSchedulingDate = nil;
+						[self setNeedsToProcessSyncRecords];
+					}
 				}];
 			}
 		}
@@ -1930,9 +1938,15 @@
 			{
 				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
 				OCProgress *sourceProgress = nil;
+				__weak OCCore *weakCore = self;
 
 				resolvedProgress = [NSProgress indeterminateProgress];
 				resolvedProgress.cancellable = progress.cancellable;
+
+				resolvedProgress.cancellationHandler = ^{
+					[progress cancel];
+					[weakCore setNeedsToProcessSyncRecords];
+				};
 
 				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
 				{

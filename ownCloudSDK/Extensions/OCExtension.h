@@ -21,7 +21,6 @@
 #import "OCExtensionLocation.h"
 #import "OCExtensionContext.h"
 
-
 @class OCExtension;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -40,6 +39,8 @@ typedef OCExtensionPriority(^OCExtensionCustomContextMatcher)(OCExtensionContext
 
 @property(nullable,strong) OCExtensionRequirements features; //!< Requirements this extension satisfies
 
+@property(nullable,strong) OCExtensionMetadata extensionMetadata; //!< Dictionary with descriptive metadata (for presentation)
+
 @property(nullable,copy) OCExtensionObjectProvider objectProvider; //!< Block to provide the object to return for calls to -provideObjectForContext:error:.
 @property(nullable,copy) OCExtensionCustomContextMatcher customMatcher; //!< Block to manipulate the extension priority returned by -matchesContext: without having to subclass OCExtension
 
@@ -52,5 +53,10 @@ typedef OCExtensionPriority(^OCExtensionCustomContextMatcher)(OCExtensionContext
 - (nullable id)provideObjectForContext:(OCExtensionContext *)context; //!< Provides the object (usually a new instance of whatever the extension implements) for the provided context. Returns any errors in context.error.
 
 @end
+
+extern NSString *OCExtensionMetadataKeyName; //!< Name of the extension
+extern NSString *OCExtensionMetadataKeyDescription; //!< Describes the purpose of the extension
+extern NSString *OCExtensionMetadataKeyVersion; //!< Version of the extension
+extern NSString *OCExtensionMetadataKeyCopyright; //!< Copyright information for the extension
 
 NS_ASSUME_NONNULL_END

@@ -151,6 +151,8 @@
 		_metaData = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"metaData"];
 		_routingInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"routingInfo"];
 		_choices = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCSyncIssueChoice.class, nil] forKey:@"choices"];
+
+		_muted = [decoder decodeBoolForKey:@"muted"];
 	}
 
 	return (self);
@@ -172,6 +174,8 @@
 	[coder encodeObject:_metaData forKey:@"metaData"];
 	[coder encodeObject:_routingInfo forKey:@"routingInfo"];
 	[coder encodeObject:_choices forKey:@"choices"];
+
+	[coder encodeBool:_muted forKey:@"muted"];
 }
 
 #pragma mark - Description

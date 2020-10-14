@@ -103,6 +103,11 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
+#import <ownCloudSDK/OCHostSimulator.h>
+#import <ownCloudSDK/OCHostSimulatorResponse.h>
+#import <ownCloudSDK/OCHostSimulatorManager.h>
+#import <ownCloudSDK/OCExtension+HostSimulation.h>
+
 #import <ownCloudSDK/OCWaitCondition.h>
 
 #import <ownCloudSDK/OCEvent.h>

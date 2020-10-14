@@ -172,6 +172,8 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableSet<OCIssueSignature> *_unsolvedIssueSignatures;
 	NSMutableSet<OCIssueSignature> *_rejectedIssueSignatures;
 
+	NSDate *_nextSchedulingDate;
+
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
 	BOOL _needsToBroadcastSyncRecordActivityUpdates;

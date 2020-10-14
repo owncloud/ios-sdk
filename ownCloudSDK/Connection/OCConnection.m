@@ -1404,6 +1404,24 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				{
 					switch (request.httpResponse.status.code)
 					{
+						case OCHTTPStatusCodePRECONDITION_FAILED: {
+							NSError *davError;
+
+							if (((davError = request.httpResponse.bodyParsedAsDAVError) != nil) && (davError.code == OCDAVErrorItemDoesNotExist))
+							{
+								event.error = OCErrorFromError(OCErrorItemNotFound, davError);
+							}
+							else
+							{
+								event.error = OCErrorFromError(OCErrorItemChanged, request.httpResponse.status.error);
+							}
+						}
+						break;
+
+						case OCHTTPStatusCodeNOT_FOUND:
+							event.error = OCErrorFromError(OCErrorItemNotFound, request.httpResponse.status.error);
+						break;
+
 						default:
 							event.error = request.httpResponse.status.error;
 						break;
