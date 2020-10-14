@@ -566,6 +566,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				{
 					// Available offline download => restore item and end download effort
 					[self descheduleWithContext:syncContext];
+					syncContext.removedItems = syncContext.updatedItems;
+					syncContext.updatedItems = nil;
 
 					// Action complete and can be removed
 					[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
