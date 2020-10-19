@@ -851,10 +851,10 @@
 	}];
 
 	[_ipNotificationCenter addObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
-		[core handleAuthDataChangedNotification];
+		[core handleAuthDataChangedNotification:nil];
 	}];
 
-	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification) name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 }
 
 - (void)stopIPCObserveration
@@ -921,12 +921,19 @@
 	}];
 }
 
-- (void)handleAuthDataChangedNotification
+- (void)handleAuthDataChangedNotification:(NSNotification *)notification
 {
+	OCBookmark *notificationBookmark = OCTypedCast(notification.object, OCBookmark);
+
+	if (!((notification == nil) || ((notificationBookmark != nil) && [notificationBookmark.uuid isEqual:_bookmark.uuid])))
+	{
+		return;
+	}
+
 	[self queueBlock:^{
 		if (self->_state == OCCoreStateRunning)
 		{
-			// Trigger a small request to check auth availabiltiy
+			// Trigger a small request to check auth availability
 			[self startCheckingForUpdates];
 		}
 
