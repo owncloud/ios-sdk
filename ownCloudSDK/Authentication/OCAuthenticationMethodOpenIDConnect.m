@@ -17,6 +17,7 @@
  */
 
 #import "OCAuthenticationMethodOpenIDConnect.h"
+#import "OCAuthenticationMethod+OCTools.h"
 #import "OCConnection.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
@@ -24,18 +25,27 @@
 
 @implementation OCAuthenticationMethodOpenIDConnect
 
-// Automatically register
-OCAuthenticationMethodAutoRegister
-
 #pragma mark - Class settings
-+ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
++ (void)load
 {
-	NSMutableDictionary<NSString *,id> *defaultSettings = [[super defaultSettingsForIdentifier:identifier] mutableCopy];
+	// Automatically register
+	OCAuthenticationMethodAutoRegisterLoadCommand
 
-	defaultSettings[OCAuthenticationMethodOpenIDConnectRedirectURI] = @"oc://ios.owncloud.com";
-	defaultSettings[OCAuthenticationMethodOpenIDConnectScope] = @"openid offline_access email profile";
-
-	return (defaultSettings);
+	[self registerOCClassSettingsDefaults:@{
+		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
+		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile"
+	} metadata:@{
+		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
+			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Redirect URI",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC",
+		},
+		OCAuthenticationMethodOpenIDConnectScope : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Scope",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		}
+	}];
 }
 
 #pragma mark - Identification
@@ -147,7 +157,7 @@ OCAuthenticationMethodAutoRegister
 	NSURL *openidConfigURL;
 	NSArray <NSURL *> *oAuth2DetectionURLs;
 
-	if ((oAuth2DetectionURLs = [super detectionURLsForConnection:connection]) != nil)
+	if ((oAuth2DetectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil)
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{

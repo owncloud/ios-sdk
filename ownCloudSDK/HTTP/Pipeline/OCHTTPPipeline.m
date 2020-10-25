@@ -2482,6 +2482,19 @@
 	});
 }
 
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Connection
+		OCHTTPPipelineSettingUserAgent : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"A custom `User-Agent` to send with every HTTP request.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAvailable,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+	});
+}
+
 #pragma mark - Log tags
 + (nonnull NSArray<OCLogTagName> *)logTags
 {

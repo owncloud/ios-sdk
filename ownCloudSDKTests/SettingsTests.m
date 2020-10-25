@@ -39,4 +39,51 @@
 	XCTAssert ([[self classSettingForOCClassSettingsKey:@"test-value"] isEqual:@"custom"], @"test-value is 'custom': %@", [self classSettingForOCClassSettingsKey:@"test-value"]);
 }
 
+- (void)testMetadataAvailability
+{
+	NSURL *sdkDocsURL = [[NSBundle bundleForClass:self.class] URLForResource:@"class-settings-sdk" withExtension:nil];
+	NSArray<Class> *scanClasses = @[
+		OCCore.class,
+		OCConnection.class,
+		OCHTTPPipeline.class,
+		OCAuthenticationMethodOAuth2.class,
+		OCAuthenticationMethodOpenIDConnect.class,
+		OCLogger.class,
+		OCItemPolicyProcessor.class
+	];
+
+	NSString *missingMetadataList = @"";
+
+	for (Class scanClass in scanClasses)
+	{
+		NSSet<OCClassSettingsKey> *keys = [OCClassSettings.sharedSettings keysForClass:scanClass];
+
+		for (OCClassSettingsKey key in keys)
+		{
+			OCClassSettingsMetadata metadata;
+
+			metadata = [OCClassSettings.sharedSettings metadataForClass:scanClass key:key options:@{
+				OCClassSettingsMetadataOptionFillMissingValues : @(YES),
+				OCClassSettingsMetadataOptionAddDefaultValue : @(YES),
+				OCClassSettingsMetadataOptionExternalDocumentationFolders : @[
+					sdkDocsURL
+				]
+			}];
+
+			// Look for entries without metadata
+			if (metadata == nil)
+			{
+				missingMetadataList = [missingMetadataList stringByAppendingFormat:@"\n- %@: %@", NSStringFromClass(scanClass), [NSString flatIdentifierFromIdentifier:[scanClass classSettingsIdentifier] key:key]];
+			}
+
+			OCLog(@"%@ -> %@", key, metadata);
+		}
+	}
+
+	if (missingMetadataList.length > 0)
+	{
+		XCTFail(@"No metadata found for: %@", missingMetadataList);
+	}
+}
+
 @end

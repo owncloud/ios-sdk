@@ -25,8 +25,6 @@
 {
 	NSMutableArray <id <OCClassSettingsSource>> *_sources;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_overrideValuesByKeyByIdentifier;
-
-	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_registeredDefaultValuesByKeyByIdentifier;
 }
 
 @end
@@ -49,7 +47,18 @@
 	return(sharedClassSettings);
 }
 
-- (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults forClass:(Class<OCClassSettingsSupport>)theClass
+-(instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_validatedValuesByKeyByIdentifier = [NSMutableDictionary new];
+		_actualValuesByKeyByIdentifier = [NSMutableDictionary new];
+	}
+
+	return (self);
+}
+
+- (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults metadata:(nullable OCClassSettingsMetadataCollection)metaData forClass:(Class<OCClassSettingsSupport>)theClass
 {
 	OCClassSettingsIdentifier identifier;
 
@@ -71,6 +80,24 @@
 			}
 
 			[registeredDefaultValuesByKey addEntriesFromDictionary:defaults];
+
+			if (metaData != nil)
+			{
+				NSMutableArray<OCClassSettingsMetadataCollection> *registeredMetaDataCollections = nil;
+
+				if (_registeredMetaDataCollectionsByIdentifier == nil)
+				{
+					_registeredMetaDataCollectionsByIdentifier = [NSMutableDictionary new];
+				}
+
+				if ((registeredMetaDataCollections = _registeredMetaDataCollectionsByIdentifier[identifier]) == nil)
+				{
+					registeredMetaDataCollections = [NSMutableArray new];
+					_registeredMetaDataCollectionsByIdentifier[identifier] = registeredMetaDataCollections;
+				}
+
+				[registeredMetaDataCollections addObject:metaData];
+			}
 		}
 	}
 }
@@ -173,7 +200,7 @@
 	}
 }
 
-- (NSDictionary<OCClassSettingsKey,id> *)_overrideDictionaryForSettingsIdentifier:(OCClassSettingsIdentifier)settingsIdentifier
+- (NSMutableDictionary<OCClassSettingsKey,id> *)_overrideDictionaryForSettingsIdentifier:(OCClassSettingsIdentifier)settingsIdentifier
 {
 	NSMutableDictionary<OCClassSettingsKey,id> *overrideDict = nil;
 
@@ -221,7 +248,7 @@
 
 	if ((classSettingsIdentifier = [settingsClass classSettingsIdentifier]) != nil)
 	{
-		NSDictionary<NSString *, id> *overrideSettings = nil;
+		NSMutableDictionary<NSString *, id> *overrideSettings = nil;
 
 		// Use defaults provided by class
 		classSettings = [settingsClass defaultSettingsForIdentifier:classSettingsIdentifier];
@@ -238,6 +265,16 @@
 		// Merge override values from sources (if any)
 		if ((overrideSettings = [self _overrideDictionaryForSettingsIdentifier:classSettingsIdentifier]) != nil)
 		{
+			NSDictionary<OCClassSettingsKey, NSError *> *errorsByKey = [self validateDictionary:overrideSettings forClass:settingsClass];
+
+			if (errorsByKey != nil)
+			{
+				for (OCClassSettingsKey key in errorsByKey)
+				{
+					OCLogError(@"Rejecting value for %@.%@ setting: %@", classSettingsIdentifier, key, errorsByKey[key].localizedDescription);
+				}
+			}
+
 			if (classSettings != nil)
 			{
 				NSMutableDictionary<OCClassSettingsKey,id> *mergedClassSettings = nil;

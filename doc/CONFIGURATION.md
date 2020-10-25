@@ -29,7 +29,7 @@ This document provides an overview over the available sections and their setting
 	- `endpoint-status`: Endpoint to retrieve basic status information and detect an ownCloud installation
 		- type: string
 		- default: `status.php`
-	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most prefered first).
+	- `connection-preferred-authentication-methods`: Array of authentication methods in order of preference (most preferred first).
 		- type: array
 		- default: `["com.owncloud.openid-connect", "com.owncloud.oauth2", "com.owncloud.basicauth"]`
 	- `connection-allowed-authentication-methods`: Array of allowed authentication methods. Nil/Missing for no restrictions.
