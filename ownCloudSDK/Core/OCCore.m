@@ -1139,6 +1139,15 @@
 				}
 			}
 
+			if ([error.domain isEqual:OCHTTPStatusErrorDomain])
+			{
+				if (error.code >= 400)
+				{
+					[_serverStatusSignalProvider reportConnectionRefusedError:error];
+					return (YES);
+				}
+			}
+
 			[delegate core:self handleError:error issue:issue];
 
 			return (YES);

@@ -44,6 +44,7 @@
 "Network unavailable" = "Network unavailable";
 "Online" = "Online";
 "Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
+"Server returns status %ld" = "Server returns status %ld";
 
 /* Copies */
 "copy" = "copy";
