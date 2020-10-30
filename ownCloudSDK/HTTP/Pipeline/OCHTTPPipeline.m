@@ -2489,7 +2489,7 @@
 		OCHTTPPipelineSettingUserAgent : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"A custom `User-Agent` to send with every HTTP request.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAvailable,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},
 	});

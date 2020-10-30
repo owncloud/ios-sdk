@@ -51,7 +51,7 @@ extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDocDefaultValue; //!
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion; //!< None for no auto-expansion, Trailing for auto expansion if the value is identical to the end of a supported value. Defaults to None.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlags; //!< NSNumber-representation of OCClassSettingsFlags flags
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCustomValidationClass; //!< Name of the class to call +validateValue:forSettingsKey: on. Defaults to class a value is requested from, so this is only needed if validation should be handled by f.ex. a subclass.
-extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyStatus; //!< Support status of the setting. If not specified, defaults to OCClassSettingsKeyStatusAvailable.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyStatus; //!< Support status of the setting. If not specified, defaults to OCClassSettingsKeyStatusSupported.
 
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeBoolean;
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeInteger;
@@ -64,7 +64,7 @@ extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray;
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary;
 
 extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended; //!< Setting should be included in AppConfig.xml file for EMM vendors.
-extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusAvailable; //!< Setting is available in the production/release version.
+extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusSupported; //!< Setting is available in the production/release version.
 extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusAdvanced; //!< Setting is available in the production/release version, but considered an expert option.
 extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusDebugOnly; //!< Setting is only available in the debug version.
 

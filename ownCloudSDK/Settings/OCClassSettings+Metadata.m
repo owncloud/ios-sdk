@@ -156,7 +156,7 @@
 		if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
 
 		if (mutableMetadata[OCClassSettingsMetadataKeyAutoExpansion] == nil) { mutableMetadata[OCClassSettingsMetadataKeyAutoExpansion] = OCClassSettingsAutoExpansionNone; }
-		if (mutableMetadata[OCClassSettingsMetadataKeyStatus] == nil) { mutableMetadata[OCClassSettingsMetadataKeyStatus] = OCClassSettingsKeyStatusAvailable; }
+		if (mutableMetadata[OCClassSettingsMetadataKeyStatus] == nil) { mutableMetadata[OCClassSettingsMetadataKeyStatus] = OCClassSettingsKeyStatusSupported; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyKey] == nil) { mutableMetadata[OCClassSettingsMetadataKeyKey] = key; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] = [NSString flatIdentifierFromIdentifier:settingsIdentifier key:key]; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyIdentifier] = settingsIdentifier; }
@@ -233,7 +233,7 @@ OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray = @"array";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary = @"dictionary";
 
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended = @"recommended";
-OCClassSettingsKeyStatus OCClassSettingsKeyStatusAvailable = @"available";
+OCClassSettingsKeyStatus OCClassSettingsKeyStatusSupported = @"supported";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusAdvanced = @"advanced";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusDebugOnly = @"debugOnly";
 

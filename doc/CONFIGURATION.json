@@ -65,7 +65,7 @@
       "3" : "error",
       "4" : "off"
     },
-    "status" : "available",
+    "status" : "supported",
     "type" : "int"
   },
   {
@@ -170,7 +170,7 @@
     "description" : "Controls whether certain objects in log statements should be masked for privacy.",
     "flatIdentifier" : "log.log-privacy-mask",
     "key" : "log-privacy-mask",
-    "status" : "available",
+    "status" : "supported",
     "type" : "bool"
   },
   {
@@ -230,7 +230,7 @@
     "description" : "Enable or disable per-process, in-memory cookie storage.",
     "flatIdentifier" : "core.cookie-support-enabled",
     "key" : "cookie-support-enabled",
-    "status" : "available",
+    "status" : "supported",
     "type" : "bool"
   },
   {
@@ -264,7 +264,7 @@
     "description" : "A custom `User-Agent` to send with every HTTP request.\n\nThe following placeholders can be used to make it dynamic:\n- `{{app.build}}`: the build number of the app (f.ex. `123`)\n- `{{app.version}}`: the version of the app (f.ex. `1.2`)\n- `{{app.part}}`: the part of the app (more exactly: the name of the main bundle) from which the request was sent (f.ex. `App`, `ownCloud File Provider`)\n- `{{device.model}}`: the model of the device running the app (f.ex. `iPhone`, `iPad`)\n- `{{device.model-id}}`: the model identifier of the device running the app (f.ex. `iPhone8,1`)\n- `{{os.name}}` : the name of the operating system running on the device (f.ex. `iOS`, `iPadOS`)\n- `{{os.version}}`: the version of operating system running on the device (f.ex. `13.2.2`)\n",
     "flatIdentifier" : "http.user-agent",
     "key" : "user-agent",
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -277,16 +277,16 @@
     "key" : "connection-allowed-authentication-methods",
     "possibleValues" : [
       {
-        "description" : "OAuth2",
-        "value" : "com.owncloud.oauth2"
-      },
-      {
         "description" : "Basic Auth",
         "value" : "com.owncloud.basicauth"
       },
       {
         "description" : "OpenID Connect",
         "value" : "com.owncloud.openid-connect"
+      },
+      {
+        "description" : "OAuth2",
+        "value" : "com.owncloud.oauth2"
       }
     ],
     "status" : "recommended",
@@ -391,16 +391,16 @@
     "key" : "connection-preferred-authentication-methods",
     "possibleValues" : [
       {
-        "description" : "OAuth2",
-        "value" : "com.owncloud.oauth2"
-      },
-      {
         "description" : "Basic Auth",
         "value" : "com.owncloud.basicauth"
       },
       {
         "description" : "OpenID Connect",
         "value" : "com.owncloud.openid-connect"
+      },
+      {
+        "description" : "OAuth2",
+        "value" : "com.owncloud.oauth2"
       }
     ],
     "status" : "recommended",
@@ -743,7 +743,7 @@
       "operating-system" : "Use ASWebAuthenticationSession for browser sessions.",
       "UIWebView" : "Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag."
     },
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -755,7 +755,7 @@
     "description" : "Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https:\/\/developer.apple.com\/documentation\/authenticationservices\/aswebauthenticationsession\/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
     "flatIdentifier" : "authentication.browser-session-prefers-ephermal",
     "key" : "browser-session-prefers-ephermal",
-    "status" : "available",
+    "status" : "supported",
     "type" : "bool"
   },
   {
@@ -771,7 +771,7 @@
       "operating-system" : "Use ASWebAuthenticationSession for browser sessions.",
       "UIWebView" : "Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag."
     },
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -783,7 +783,7 @@
     "description" : "Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https:\/\/developer.apple.com\/documentation\/authenticationservices\/aswebauthenticationsession\/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
     "flatIdentifier" : "authentication.browser-session-prefers-ephermal",
     "key" : "browser-session-prefers-ephermal",
-    "status" : "available",
+    "status" : "supported",
     "type" : "bool"
   },
   {
@@ -795,7 +795,7 @@
     "description" : "OpenID Connect Scope",
     "flatIdentifier" : "authentication-oauth2.oidc-scope",
     "key" : "oidc-scope",
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -807,7 +807,7 @@
     "description" : "OpenID Connect Redirect URI",
     "flatIdentifier" : "authentication-oauth2.oidc-redirect-uri",
     "key" : "oidc-redirect-uri",
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -890,7 +890,7 @@
     "description" : "OpenID Connect Scope",
     "flatIdentifier" : "authentication-oauth2.oidc-scope",
     "key" : "oidc-scope",
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {
@@ -902,7 +902,7 @@
     "description" : "OpenID Connect Redirect URI",
     "flatIdentifier" : "authentication-oauth2.oidc-redirect-uri",
     "key" : "oidc-redirect-uri",
-    "status" : "available",
+    "status" : "supported",
     "type" : "string"
   },
   {

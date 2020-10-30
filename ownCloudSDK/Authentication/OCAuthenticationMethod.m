@@ -333,7 +333,7 @@
 		OCAuthenticationMethodBrowserSessionClass : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAvailable,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyPossibleValues : @{
 				@"operating-system" : @"Use ASWebAuthenticationSession for browser sessions.",
 				@"UIWebView" : @"Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag."
@@ -344,7 +344,7 @@
 		OCAuthenticationMethodBrowserSessionPrefersEphermal : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	: @"Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAvailable,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyCategory	: @"Authentication"
 		}
 	});
