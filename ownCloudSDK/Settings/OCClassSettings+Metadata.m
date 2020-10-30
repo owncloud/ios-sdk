@@ -19,6 +19,7 @@
 #import "OCClassSettings+Metadata.h"
 #import "NSString+OCClassSettings.h"
 #import "OCMacros.h"
+#import "OCLogger.h"
 
 @implementation OCClassSettings (Metadata)
 
@@ -55,6 +56,12 @@
 {
 	NSMutableSet<OCClassSettingsKey> *keys = nil;
 	OCClassSettingsIdentifier settingsIdentifier;
+
+	if (![settingsClass respondsToSelector:@selector(classSettingsIdentifier)])
+	{
+		OCLogWarning(@"%@ does not implement the classSettingsIdentifier method", NSStringFromClass(settingsClass));
+		return(nil);
+	}
 
 	if ((settingsIdentifier = [settingsClass classSettingsIdentifier]) != nil)
 	{
@@ -151,6 +158,9 @@
 		if (mutableMetadata[OCClassSettingsMetadataKeyAutoExpansion] == nil) { mutableMetadata[OCClassSettingsMetadataKeyAutoExpansion] = OCClassSettingsAutoExpansionNone; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyStatus] == nil) { mutableMetadata[OCClassSettingsMetadataKeyStatus] = OCClassSettingsKeyStatusAvailable; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyKey] == nil) { mutableMetadata[OCClassSettingsMetadataKeyKey] = key; }
+		if (mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] = [NSString flatIdentifierFromIdentifier:settingsIdentifier key:key]; }
+		if (mutableMetadata[OCClassSettingsMetadataKeyIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyIdentifier] = settingsIdentifier; }
+		if (mutableMetadata[OCClassSettingsMetadataKeyClassName] == nil) { mutableMetadata[OCClassSettingsMetadataKeyClassName] = NSStringFromClass(settingsClass); }
 	}
 
 	if ((metadata != nil) && ((extDocFolderURLs = OCTypedCast(options[OCClassSettingsMetadataOptionExternalDocumentationFolders], NSArray)) != nil))
@@ -199,14 +209,17 @@
 
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyType = @"type";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyKey = @"key";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyIdentifier = @"classIdentifier";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier = @"flatIdentifier";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName = @"className";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription = @"description";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory = @"category";
-OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possible-values";
-OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"auto-expansion";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possibleValues";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"autoExpansion";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue = @"value";
-OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDocDefaultValue = @"default-value";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDocDefaultValue = @"defaultValue";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlags = @"flags";
-OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCustomValidationClass = @"custom-validation-class";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCustomValidationClass = @"customValidationClass";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyStatus = @"status";
 
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeBoolean = @"bool";
@@ -214,19 +227,19 @@ OCClassSettingsMetadataType OCClassSettingsMetadataTypeInteger = @"int";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeFloat = @"float";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeDate = @"date";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeString = @"string";
-OCClassSettingsMetadataType OCClassSettingsMetadataTypeStringArray = @"string-array";
-OCClassSettingsMetadataType OCClassSettingsMetadataTypeNumberArray = @"number-array";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeStringArray = @"stringArray";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeNumberArray = @"numberArray";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray = @"array";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary = @"dictionary";
 
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended = @"recommended";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusAvailable = @"available";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusAdvanced = @"advanced";
-OCClassSettingsKeyStatus OCClassSettingsKeyStatusDebugOnly = @"debug-only";
+OCClassSettingsKeyStatus OCClassSettingsKeyStatusDebugOnly = @"debugOnly";
 
 OCClassSettingsAutoExpansion OCClassSettingsAutoExpansionNone = @"none";
 OCClassSettingsAutoExpansion OCClassSettingsAutoExpansionTrailing = @"trailing";
 
-OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingValues = @"fill-missing";
-OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue = @"add-default";
-OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders = @"doc-folders";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingValues = @"fillMissing";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue = @"addDefault";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders = @"docFolders";

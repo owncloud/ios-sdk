@@ -34,7 +34,10 @@ typedef NSString* OCClassSettingsMetadataOption NS_TYPED_ENUM;
 @end
 
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyType; //!< Expected type of value, expressed via a single OCClassSettingsMetadataType or an array of OCClassSettingsMetadataTypes.
-extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyKey; //!< Return-only key, with the settings key as value.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyKey; //!< Return-only key, with the OCClassSettingsKey as value.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyIdentifier; //!< Return-only key, with the OCClassSettingsIdentifier of the setting as value.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier; //!< Return-only key, with the OCClassSettingsFlatIdentifier of the setting as value.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName; //!< Return-only key, with the name of the Class associated with the settings.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription; //!< A description of the setting. If none is provided, a description should be made available in the settings-doc directory following the "[OCClassSettingsIdentifier].[OCClassSettingsKey].md" nomenclature
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory; //!< The name of the category the setting should be listed under.
 /// Possible values. Either of:

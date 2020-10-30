@@ -326,6 +326,10 @@
 		DC72E4332063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4312063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m */; };
 		DC72E4352063DF5C00189B9A /* SettingsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E4342063DF5C00189B9A /* SettingsTests.m */; };
 		DC72E4372063DF7700189B9A /* customSettings.plist in Resources */ = {isa = PBXBuildFile; fileRef = DC72E4362063DF7700189B9A /* customSettings.plist */; };
+		DC73F3AC254BF95C00CE5FA9 /* OCClassSettings+Documentation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC73F3AA254BF95C00CE5FA9 /* OCClassSettings+Documentation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC73F3AD254BF95C00CE5FA9 /* OCClassSettings+Documentation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC73F3AB254BF95C00CE5FA9 /* OCClassSettings+Documentation.m */; };
+		DC73F3BF254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = DC73F3BD254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC73F3C0254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m in Sources */ = {isa = PBXBuildFile; fileRef = DC73F3BE254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m */; };
 		DC75D30B214BF1BA00B6FB62 /* NSString+OCFormatting.h in Headers */ = {isa = PBXBuildFile; fileRef = DC75D309214BF1BA00B6FB62 /* NSString+OCFormatting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC75D30C214BF1BA00B6FB62 /* NSString+OCFormatting.m in Sources */ = {isa = PBXBuildFile; fileRef = DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */; };
 		DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */ = {isa = PBXBuildFile; fileRef = DC75D30D214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.h */; };
@@ -1064,6 +1068,10 @@
 		DC72E4312063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSourcePropertyList.m; sourceTree = "<group>"; };
 		DC72E4342063DF5C00189B9A /* SettingsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsTests.m; sourceTree = "<group>"; };
 		DC72E4362063DF7700189B9A /* customSettings.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = customSettings.plist; sourceTree = "<group>"; };
+		DC73F3AA254BF95C00CE5FA9 /* OCClassSettings+Documentation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCClassSettings+Documentation.h"; sourceTree = "<group>"; };
+		DC73F3AB254BF95C00CE5FA9 /* OCClassSettings+Documentation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCClassSettings+Documentation.m"; sourceTree = "<group>"; };
+		DC73F3BD254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSArray+ObjCRuntime.h"; sourceTree = "<group>"; };
+		DC73F3BE254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSArray+ObjCRuntime.m"; sourceTree = "<group>"; };
 		DC75D309214BF1BA00B6FB62 /* NSString+OCFormatting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCFormatting.h"; sourceTree = "<group>"; };
 		DC75D30A214BF1BA00B6FB62 /* NSString+OCFormatting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCFormatting.m"; sourceTree = "<group>"; };
 		DC75D30D214C015E00B6FB62 /* OCItem+OCItemCreationDebugging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCItemCreationDebugging.h"; sourceTree = "<group>"; };
@@ -1505,6 +1513,8 @@
 				DCA35D5B24CF6BEC00DBE2B0 /* NSArray+OCNullable.h */,
 				DCDC62E024D8A04900585261 /* NSArray+OCSegmentedProcessing.m */,
 				DCDC62DF24D8A04900585261 /* NSArray+OCSegmentedProcessing.h */,
+				DC73F3BE254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m */,
+				DC73F3BD254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h */,
 			);
 			path = Foundation;
 			sourceTree = "<group>";
@@ -2167,6 +2177,8 @@
 				DC1C7ABC253F3C65002F2B9F /* OCClassSettings+Validation.h */,
 				DC1C7AC1253F3CD9002F2B9F /* OCClassSettings+Metadata.m */,
 				DC1C7AC0253F3CD9002F2B9F /* OCClassSettings+Metadata.h */,
+				DC73F3AB254BF95C00CE5FA9 /* OCClassSettings+Documentation.m */,
+				DC73F3AA254BF95C00CE5FA9 /* OCClassSettings+Documentation.h */,
 				DC72E42B2063DBDD00189B9A /* Sources */,
 				DCD2D40022F058FC0071FB8F /* User Preferences */,
 				DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */,
@@ -3132,6 +3144,7 @@
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
 				DC6ABF68253462E700689C7B /* OCHostSimulatorResponse.h in Headers */,
+				DC73F3AC254BF95C00CE5FA9 /* OCClassSettings+Documentation.h in Headers */,
 				DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */,
 				DC4B116D2208306C0062BCDD /* OCHTTPPipeline.h in Headers */,
 				DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */,
@@ -3193,6 +3206,7 @@
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
+				DC73F3BF254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h in Headers */,
 				4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */,
 				DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */,
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
@@ -3651,7 +3665,9 @@
 				DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
+				DC73F3C0254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
+				DC73F3AD254BF95C00CE5FA9 /* OCClassSettings+Documentation.m in Sources */,
 				DC1D3DF32459B86200328EBC /* NSString+TUSMetadata.m in Sources */,
 				DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,

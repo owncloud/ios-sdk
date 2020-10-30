@@ -86,4 +86,32 @@
 	}
 }
 
+- (void)testUpdateConfigurationJSONFromMetadata
+{
+	NSURL *sdkDocsURL = [[NSBundle bundleForClass:self.class] URLForResource:@"class-settings-sdk" withExtension:nil];
+	NSArray<NSDictionary<OCClassSettingsMetadataKey, id> *> *docDict;
+
+	docDict = [OCClassSettings.sharedSettings documentationDictionaryWithOptions:@{
+		OCClassSettingsDocumentationOptionExternalDocumentationFolders : @[ sdkDocsURL ],
+		OCClassSettingsDocumentationOptionOnlyJSONTypes : @YES
+	}];
+
+	NSError *error = nil;
+	NSData *jsonData;
+
+	OCLogDebug(@"Doc Dict: %@", docDict);
+
+	if ((jsonData = [NSJSONSerialization dataWithJSONObject:docDict options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys|NSJSONWritingFragmentsAllowed error:&error]) != nil)
+	{
+		OCLogDebug(@"JSON: %@", [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+
+		NSString *jsonPath;
+
+		if ((jsonPath = NSProcessInfo.processInfo.environment[@"OC_SETTINGS_DOC_JSON"]) != nil)
+		{
+			[jsonData writeToFile:jsonPath atomically:YES];
+		}
+	}
+}
+
 @end

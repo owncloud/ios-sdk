@@ -43,6 +43,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCertificateRuleChecker.h>
 
 #import <ownCloudSDK/OCClassSettings.h>
+#import <ownCloudSDK/OCClassSettings+Documentation.h>
 #import <ownCloudSDK/OCClassSettings+Metadata.h>
 #import <ownCloudSDK/OCClassSettings+Validation.h>
 #import <ownCloudSDK/NSObject+OCClassSettings.h>
@@ -168,6 +169,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSString+OCPath.h>
 #import <ownCloudSDK/NSString+OCFormatting.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
+#import <ownCloudSDK/NSArray+ObjCRuntime.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
 
