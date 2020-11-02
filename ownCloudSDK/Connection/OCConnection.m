@@ -684,7 +684,41 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
-	// Authentication
+	// Authentication method validity
+	if (!_authMethodUnavailableChecked)
+	{
+		// Check against allowed authentication methods
+		NSArray<OCAuthenticationMethodIdentifier> *allowedAuthenticationMethods;
+
+		if ((allowedAuthenticationMethods = [self classSettingForOCClassSettingsKey:OCConnectionAllowedAuthenticationMethodIDs]) != nil)
+		{
+			OCAuthenticationMethodIdentifier authMethodIdentifier;
+
+			if ((allowedAuthenticationMethods.count > 0) && ((authMethodIdentifier = self.bookmark.authenticationMethodIdentifier) != nil))
+			{
+				if (![allowedAuthenticationMethods containsObject:authMethodIdentifier])
+				{
+					_authMethodUnavailable = YES;
+				}
+			}
+		}
+
+		// Save time for all following requests
+		_authMethodUnavailableChecked = YES;
+	}
+
+	if (_authMethodUnavailable)
+	{
+		// Authentication method no longer allowed / available
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorAuthorizationMethodNotAllowed);
+		}
+
+		return (NO);
+	}
+
+	// Authentication availability
 	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
 
 	if (authenticationAvailable)

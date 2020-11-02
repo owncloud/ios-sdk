@@ -120,4 +120,3 @@ NS_ASSUME_NONNULL_END
 #define OCAuthenticationMethodAutoRegister +(void)load{ \
 						OCAuthenticationMethodAutoRegisterLoadCommand \
 				       	   }
-

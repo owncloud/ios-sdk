@@ -117,6 +117,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSSet<OCConnectionSignalID> *_propFindSignals;
 	NSSet<OCConnectionSignalID> *_authSignals;
 
+	BOOL _authMethodUnavailable;
+	BOOL _authMethodUnavailableChecked;
+
 	BOOL _attachedToPipelines;
 
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;

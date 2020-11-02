@@ -157,7 +157,7 @@
 	NSURL *openidConfigURL;
 	NSArray <NSURL *> *oAuth2DetectionURLs;
 
-	if ((oAuth2DetectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil)
+	if ((oAuth2DetectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{

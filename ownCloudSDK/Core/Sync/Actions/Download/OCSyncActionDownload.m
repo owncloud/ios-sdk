@@ -607,7 +607,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]]
+						[[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]] withLocalizedDescription:OCLocalized(@"Waiting for metadata refresh")]
 					]];
 
 					handledError = YES;
@@ -620,15 +620,17 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 			if (!handledError && isTriggeredDownload)
 			{
+				NSUInteger maxResolutionRetries = 3;
+
 				// Retry triggered downloads up to 3 times, when metadata is updated - or after 10 seconds
-				if ((_resolutionRetries < 3) && (item.path != nil)) // limit retries until bringing up a user-facing error
+				if ((_resolutionRetries < maxResolutionRetries) && (item.path != nil)) // limit retries until bringing up a user-facing error
 				{
 					_resolutionRetries++;
 
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]]
+						[[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]] withLocalizedDescription:[NSString stringWithFormat:OCLocalized(@"Waiting to retry (%ld of %ld)"), _resolutionRetries, maxResolutionRetries]]
 					]];
 
 					// NSLog(@"Retry:retries=%lu", (unsigned long)_resolutionRetries);

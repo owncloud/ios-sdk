@@ -21,8 +21,11 @@
 #import "OCExtensionManager.h"
 #import "OCExtension+HostSimulation.h"
 
+#import <objc/runtime.h>
+
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRejectDownloads500 = @"reject-downloads-500";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierOnly404 = @"only-404";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @"five-seconds-of-404";
 
 @implementation OCHostSimulator (BuiltIn)
 
@@ -36,6 +39,11 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierOnly404 = @"only-404
 	// Only 404
 	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierOnly404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:nil provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self simulateOnly404]);
+	}]];
+
+	// Five seconds of 404
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierFiveSecondsOf404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:nil provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self fiveSecondsOf404]);
 	}]];
 }
 
@@ -77,6 +85,32 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierOnly404 = @"only-404
 		responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeNOT_FOUND headers:@{} contentType:@"text/html" body:nil]);
 
 		return (YES);
+	}]);
+}
+
+#pragma mark - Five seconds of 404
++ (OCHostSimulator *)fiveSecondsOf404
+{
+	static NSString *fiveSecondsOf404StartDateKey = @"fiveSecondsOf404";
+
+	// Respond to all requests with a 404 server errror
+	return ([self hostSimulatorWithRequestHandler:^BOOL(OCConnection * _Nonnull connection, OCHTTPRequest * _Nonnull request, OCHostSimulatorResponseHandler  _Nonnull responseHandler) {
+		NSDate *startDate;
+
+		if ((startDate = objc_getAssociatedObject(connection, (__bridge void *)fiveSecondsOf404StartDateKey)) == nil)
+		{
+			startDate = [NSDate new];
+			objc_setAssociatedObject(connection, (__bridge void *)fiveSecondsOf404StartDateKey, startDate, OBJC_ASSOCIATION_RETAIN);
+		}
+
+		if (startDate.timeIntervalSinceNow > -5)
+		{
+			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeNOT_FOUND headers:@{} contentType:@"text/html" body:nil]);
+
+			return (YES);
+		}
+
+		return (NO);
 	}]);
 }
 

@@ -240,7 +240,7 @@ OCAuthenticationMethodAutoRegister
 + (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
 {
 	NSArray <NSURL *> *detectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
-	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection];
+	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
 
 	detectionURLs = [detectionURLs arrayByAddingObject:tokenEndpointURL];
 
@@ -260,6 +260,7 @@ OCAuthenticationMethodAutoRegister
 			if ((tokenEndpointRequest.httpResponse.status.isRedirection) ||
 			    (tokenEndpointRequest.httpResponse.status.code == OCHTTPStatusCodeNOT_FOUND))
 			{
+				// Consider OAuth2 to be unavailable if the OAuth2 token endpoint responds with a redirect or 404
 				completionHandler(self.identifier, NO);
 				return;
 			}

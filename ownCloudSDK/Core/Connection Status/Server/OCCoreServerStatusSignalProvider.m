@@ -99,7 +99,14 @@
 {
 	@synchronized(self)
 	{
-		self.shortDescription = (error.isNetworkFailureError ? OCLocalized(@"Network unavailable") : ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused"));
+		if ([error.domain isEqual:OCHTTPStatusErrorDomain])
+		{
+			self.shortDescription = [NSString stringWithFormat:OCLocalized(@"Server returns status %ld"), (long)error.code];
+		}
+		else
+		{
+			self.shortDescription = (error.isNetworkFailureError ? OCLocalized(@"Network unavailable") : ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused"));
+		}
 		self.state = OCCoreConnectionStatusSignalStateFalse;
 
 		[self setStatusPollTimerActive:YES];
