@@ -687,7 +687,6 @@
 						BOOL schedule = YES;
 
 						// Check signal availability
-						if (task.request.requiredSignals.count > 0)
 						{
 							NSError *failWithError = nil;
 

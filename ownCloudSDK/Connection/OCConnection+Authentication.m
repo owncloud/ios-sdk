@@ -248,11 +248,11 @@
 						{
 							handler(error, authenticationIsAvailable);
 						}
-						
+
 						[pendingAuthenticationAvailabilityHandlers removeAllObjects];
 					};
-					
-					//
+
+					// Notify connection delegate in case of error
 					if ((error != nil) && (weakSelf!=nil) && (delegate!=nil) && [delegate respondsToSelector:@selector(connection:handleError:)])
 					{
 						[delegate connection:weakSelf handleError:error];

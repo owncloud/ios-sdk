@@ -293,12 +293,15 @@
 
 		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
 
+		_pauseConnectionSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
 		[self addSignalProvider:_rejectedIssueSignalProvider];
+		[self addSignalProvider:_pauseConnectionSignalProvider];
 
 		[self addSignalProvider:_serverStatusSignalProvider];
 		[self addSignalProvider:_connectingStatusSignalProvider];
@@ -1055,6 +1058,12 @@
 	if ((error != nil) || (issue != nil))
 	{
 		id<OCCoreDelegate> delegate;
+
+		if ([error isOCErrorWithCode:OCErrorAuthorizationMethodNotAllowed])
+		{
+			// Stop all connectivity via signal provider if an authentication method is not allowed
+			[_pauseConnectionSignalProvider setState:OCCoreConnectionStatusSignalStateFalse];
+		}
 
 		if (((delegate = self.delegate) != nil) && [self.delegate respondsToSelector:@selector(core:handleError:issue:)])
 		{
