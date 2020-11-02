@@ -105,6 +105,55 @@
 	});
 }
 
++ (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
+{
+	return ([key isEqual:OCClassSettingsKeyHostSimulatorActiveSimulations]);
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	OCExtensionContext *context = [OCExtensionContext contextWithLocation:[OCExtensionLocation locationOfType:OCExtensionTypeHostSimulator identifier:nil] requirements:nil preferences:nil];
+	NSMutableDictionary<OCHostSimulationIdentifier, NSString *> *hostSimulations = [NSMutableDictionary new];
+	NSError *error;
+	NSArray<OCExtensionMatch *> *matches;
+
+	if ((matches = [OCExtensionManager.sharedExtensionManager provideExtensionsForContext:context error:&error]) != nil)
+	{
+		for (OCExtensionMatch *match in matches)
+		{
+			OCExtension *simulationExtension = match.extension;
+			OCExtensionMetadata metadata = simulationExtension.extensionMetadata;
+
+			NSString *description = metadata[OCExtensionMetadataKeyName];
+
+			if (metadata[OCExtensionMetadataKeyDescription] != nil)
+			{
+				if (description == nil)
+				{
+					description = metadata[OCExtensionMetadataKeyDescription];
+				}
+				else
+				{
+					description = [description stringByAppendingFormat:@". %@", metadata[OCExtensionMetadataKeyDescription]];
+				}
+			}
+
+			hostSimulations[simulationExtension.identifier] = (description != nil) ? description : @"";
+		}
+	}
+
+	return (@{
+		// Connection
+		OCClassSettingsKeyHostSimulatorActiveSimulations : @{
+			OCClassSettingsMetadataKeyType 		 : OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	 : @"Active Host simulation extensions.",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	 : @"Connection",
+			OCClassSettingsMetadataKeyPossibleValues : hostSimulations
+		}
+	});
+}
+
 @end
 
 OCExtensionType OCExtensionTypeHostSimulator = @"host-simulator";

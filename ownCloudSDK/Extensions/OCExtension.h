@@ -54,9 +54,9 @@ typedef OCExtensionPriority(^OCExtensionCustomContextMatcher)(OCExtensionContext
 
 @end
 
-extern NSString *OCExtensionMetadataKeyName; //!< Name of the extension
-extern NSString *OCExtensionMetadataKeyDescription; //!< Describes the purpose of the extension
-extern NSString *OCExtensionMetadataKeyVersion; //!< Version of the extension
-extern NSString *OCExtensionMetadataKeyCopyright; //!< Copyright information for the extension
+extern OCExtensionMetadataKey OCExtensionMetadataKeyName; //!< Name of the extension
+extern OCExtensionMetadataKey OCExtensionMetadataKeyDescription; //!< Describes the purpose of the extension
+extern OCExtensionMetadataKey OCExtensionMetadataKeyVersion; //!< Version of the extension
+extern OCExtensionMetadataKey OCExtensionMetadataKeyCopyright; //!< Copyright information for the extension
 
 NS_ASSUME_NONNULL_END
