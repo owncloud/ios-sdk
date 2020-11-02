@@ -143,9 +143,14 @@ OCAuthenticationMethodAutoRegister
 	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2AuthorizationEndpoint]]);
 }
 
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection
++ (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection
 {
 	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]);
+}
+
+- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection
+{
+	return ([self.class tokenEndpointURLForConnection:connection]);
 }
 
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
@@ -191,12 +196,35 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Method Detection
 + (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
 {
-	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]);
+	NSArray <NSURL *> *detectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
+	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
+
+	detectionURLs = [detectionURLs arrayByAddingObject:tokenEndpointURL];
+
+	return (detectionURLs);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
-	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
+	NSURL *tokenEndpointURL;
+
+	if ((tokenEndpointURL = [self tokenEndpointURLForConnection:connection]) != nil)
+	{
+		OCHTTPRequest *tokenEndpointRequest;
+
+		if ((tokenEndpointRequest = serverResponses[tokenEndpointURL]) != nil)
+		{
+			if ((tokenEndpointRequest.httpResponse.status.isRedirection) ||
+			    (tokenEndpointRequest.httpResponse.status.code == OCHTTPStatusCodeNOT_FOUND))
+			{
+				// Consider OAuth2 to be unavailable if the OAuth2 token endpoint responds with a redirect or 404
+				completionHandler(self.identifier, NO);
+				return;
+			}
+		}
+	}
+
+	[self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler];
 }
 
 #pragma mark - Authentication Data Access

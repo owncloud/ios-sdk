@@ -115,7 +115,8 @@ extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal;
 
 NS_ASSUME_NONNULL_END
 
-#define OCAuthenticationMethodAutoRegister +(void)load{ \
-						[OCAuthenticationMethod registerAuthenticationMethodClass:self]; \
-				       	   }
+#define OCAuthenticationMethodAutoRegisterLoadCommand	[OCAuthenticationMethod registerAuthenticationMethodClass:self];
 
+#define OCAuthenticationMethodAutoRegister +(void)load{ \
+						OCAuthenticationMethodAutoRegisterLoadCommand \
+				       	   }
