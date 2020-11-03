@@ -42,6 +42,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			placeholderItem.parentLocalID = parentItem.localID;
 			placeholderItem.path = [parentItem.path pathForSubdirectoryWithName:folderName];
 			placeholderItem.lastModified = [NSDate date];
+			placeholderItem.permissions = OCItemPermissionCreateFile|OCItemPermissionCreateFolder|OCItemPermissionDelete|OCItemPermissionRename|OCItemPermissionMove;
 
 			self.placeholderItem = placeholderItem;
 		}
