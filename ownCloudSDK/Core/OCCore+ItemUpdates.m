@@ -235,6 +235,7 @@
 					{
 						// Only update queries that ..
 						if ((query.state == OCQueryStateIdle) || // .. have already gone through their complete, initial content update.
+						    ((query.state == OCQueryStateWaitingForServerReply) && (self.connectionStatus != OCCoreConnectionStatusOnline)) || // .. have not yet been able to factor in server replies because the connection isn't online.
 						    ((query.state == OCQueryStateContentsFromCache) && (self.connectionStatus != OCCoreConnectionStatusOnline))) // .. have not yet been able to go through their complete, initial content update because the connection isn't online.
 						{
 							__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
