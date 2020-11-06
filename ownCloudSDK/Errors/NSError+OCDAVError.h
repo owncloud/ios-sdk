@@ -28,8 +28,13 @@ typedef NS_ENUM(NSInteger, OCDAVError)
 	OCDAVErrorNone = -1,
 
 	OCDAVErrorUnknown,
+
+	// Exceptions
 	OCDAVErrorNotFound,
-	OCDAVErrorServiceUnavailable	//!< ownCloud server is in maintenance mode
+	OCDAVErrorServiceUnavailable,	//!< ownCloud server is in maintenance mode
+
+	// Headers
+	OCDAVErrorItemDoesNotExist
 };
 
 @interface NSError (OCDAVError) <OCXMLObjectCreation>

@@ -20,6 +20,7 @@
 #import "OCAppIdentity.h"
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
+#import "OCAppIdentity.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -52,7 +53,7 @@
 	OCBookmark *bookmark = [OCBookmark new];
 	
 	bookmark.url = url;
-	
+
 	return (bookmark);
 }
 
@@ -67,6 +68,16 @@
 	if ((self = [super init]) != nil)
 	{
 		_uuid = [NSUUID UUID];
+		_userInfo = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+			[NSDictionary dictionaryWithObjectsAndKeys:
+				NSDate.date, 						@"creation-date",
+				OCAppIdentity.sharedAppIdentity.appVersion, 		@"app-version",
+				OCAppIdentity.sharedAppIdentity.appBuildNumber,		@"app-build-number",
+				OCAppIdentity.sharedAppIdentity.sdkVersionString,	@"sdk-version",
+				OCAppIdentity.sharedAppIdentity.sdkCommit,		@"sdk-commit",
+				OCLogger.sharedLogger.logIntro,				@"log-intro",
+			nil], OCBookmarkUserInfoKeyBookmarkCreation,
+		nil];
 
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
 			[observerBookmark considerAuthenticationDataFlush];
@@ -337,6 +348,7 @@
 
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo = @"statusInfo";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
+OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creation";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

@@ -24,6 +24,9 @@ typedef NSString* OCExtensionLocationIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!< I
 
 typedef NSString* OCExtensionIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!< Identifier uniquely identifying the extension.
 
+typedef NSString* OCExtensionMetadataKey NS_TYPED_EXTENSIBLE_ENUM;
+typedef NSDictionary<OCExtensionMetadataKey,id>* OCExtensionMetadata;
+
 typedef NS_ENUM(NSUInteger,OCExtensionPriority)	 //!< Priority of the extension in comparison to others. Larger values rank higher.
 {
 	OCExtensionPriorityNoMatch = 0,	//!< Extension doesn't match

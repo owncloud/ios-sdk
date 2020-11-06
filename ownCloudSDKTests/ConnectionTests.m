@@ -713,6 +713,59 @@
 	OCLog(@"Done: %@", connection);
 }
 
+- (void)testVanishedFileDownload
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectItemNotFound = [self expectationWithDescription:@"Received favorite response"];
+	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
+		OCLog(@"User: %@", connection.loggedInUser.userName);
+
+		XCTAssert((error==nil), @"No error");
+		XCTAssert((issue==nil), @"No issue");
+		XCTAssert((connection!=nil), @"Connection!");
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				OCLog(@"Items at root: %@", items);
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectRootList fulfill];
+
+				for (OCItem *item in items)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						item.path = [[item.path stringByDeletingLastPathComponent] stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
+
+						[connection downloadItem:item to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							if ([event.error isOCErrorWithCode:OCErrorItemNotFound])
+							{
+								[expectItemNotFound fulfill];
+							}
+						} userInfo:nil ephermalUserInfo:nil]];
+
+						break;
+					}
+				}
+			}];
+		}
+		else
+		{
+			[expectRootList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
 	if ([keyPath isEqualToString:@"progress.fractionCompleted"])
@@ -1009,6 +1062,7 @@
 	NSArray *endpoints = @[ @"list", @"get", @"delete" ];
 	XCTAssert([capabilities.notificationEndpoints isEqualToArray:endpoints]);
 }
+
 
 - (void)_testPropFindZeroStresstest
 {

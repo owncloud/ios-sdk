@@ -91,11 +91,7 @@
 		DC20DE4C21BFCBC20096000B /* OCLogComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = DC20DE4A21BFCBC20096000B /* OCLogComponent.m */; };
 		DC20DE5021BFCEB00096000B /* OCLogToggle.h in Headers */ = {isa = PBXBuildFile; fileRef = DC20DE4E21BFCEB00096000B /* OCLogToggle.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */ = {isa = PBXBuildFile; fileRef = DC20DE4F21BFCEB00096000B /* OCLogToggle.m */; };
-		DC20DE5721C013090096000B /* OCHostSimulator.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E4192061665D00189B9A /* OCHostSimulator.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC20DE5821C013090096000B /* OCHostSimulatorResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC20DE5921C013290096000B /* ownCloudMocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCA8922720F5F13E00AEFF98 /* ownCloudMocking.framework */; };
-		DC20DE5A21C013C40096000B /* OCHostSimulator.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41A2061665D00189B9A /* OCHostSimulator.m */; };
-		DC20DE5B21C013C70096000B /* OCHostSimulatorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */; };
 		DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */ = {isa = PBXBuildFile; fileRef = DC20DE8D21C104DE0096000B /* OCLogTag.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC20DE9021C104DE0096000B /* OCLogTag.m in Sources */ = {isa = PBXBuildFile; fileRef = DC20DE8E21C104DE0096000B /* OCLogTag.m */; };
 		DC22669A22817DC600FB29EE /* OCVault+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC22669822817DC600FB29EE /* OCVault+Internal.h */; };
@@ -267,6 +263,16 @@
 		DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */ = {isa = PBXBuildFile; fileRef = DC68057C212EB438006C3B1F /* OCExtensionMatch.m */; };
 		DC680585212EC27B006C3B1F /* OCExtension+License.h in Headers */ = {isa = PBXBuildFile; fileRef = DC680583212EC27B006C3B1F /* OCExtension+License.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */ = {isa = PBXBuildFile; fileRef = DC680584212EC27B006C3B1F /* OCExtension+License.m */; };
+		DC6ABF67253462E100689C7B /* OCHostSimulator.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E4192061665D00189B9A /* OCHostSimulator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6ABF68253462E700689C7B /* OCHostSimulatorResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6ABF6B2534633E00689C7B /* OCHostSimulatorManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6ABF692534633E00689C7B /* OCHostSimulatorManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6ABF6C2534633E00689C7B /* OCHostSimulatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6ABF6A2534633E00689C7B /* OCHostSimulatorManager.m */; };
+		DC6ABF732534683800689C7B /* OCExtension+HostSimulation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6ABF712534683800689C7B /* OCExtension+HostSimulation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6ABF742534683800689C7B /* OCExtension+HostSimulation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6ABF722534683800689C7B /* OCExtension+HostSimulation.m */; };
+		DC6ABF752536058A00689C7B /* OCHostSimulatorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */; };
+		DC6ABF762536059200689C7B /* OCHostSimulator.m in Sources */ = {isa = PBXBuildFile; fileRef = DC72E41A2061665D00189B9A /* OCHostSimulator.m */; };
+		DC6ABF7925365CB100689C7B /* OCHostSimulator+BuiltIn.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6ABF7725365CB100689C7B /* OCHostSimulator+BuiltIn.h */; };
+		DC6ABF7A25365CB100689C7B /* OCHostSimulator+BuiltIn.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6ABF7825365CB100689C7B /* OCHostSimulator+BuiltIn.m */; };
 		DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFEB231FB9F8005FA5CB /* OCEventRecord.h */; };
 		DC6BFFEE231FB9F8005FA5CB /* OCEventRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */; };
 		DC6BFFF623206215005FA5CB /* OCEventQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFF423206215005FA5CB /* OCEventQueue.h */; };
@@ -975,6 +981,12 @@
 		DC68057C212EB438006C3B1F /* OCExtensionMatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCExtensionMatch.m; sourceTree = "<group>"; };
 		DC680583212EC27B006C3B1F /* OCExtension+License.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCExtension+License.h"; sourceTree = "<group>"; };
 		DC680584212EC27B006C3B1F /* OCExtension+License.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCExtension+License.m"; sourceTree = "<group>"; };
+		DC6ABF692534633E00689C7B /* OCHostSimulatorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHostSimulatorManager.h; sourceTree = "<group>"; };
+		DC6ABF6A2534633E00689C7B /* OCHostSimulatorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHostSimulatorManager.m; sourceTree = "<group>"; };
+		DC6ABF712534683800689C7B /* OCExtension+HostSimulation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCExtension+HostSimulation.h"; sourceTree = "<group>"; };
+		DC6ABF722534683800689C7B /* OCExtension+HostSimulation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCExtension+HostSimulation.m"; sourceTree = "<group>"; };
+		DC6ABF7725365CB100689C7B /* OCHostSimulator+BuiltIn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHostSimulator+BuiltIn.h"; sourceTree = "<group>"; };
+		DC6ABF7825365CB100689C7B /* OCHostSimulator+BuiltIn.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHostSimulator+BuiltIn.m"; sourceTree = "<group>"; };
 		DC6BFFEB231FB9F8005FA5CB /* OCEventRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventRecord.h; sourceTree = "<group>"; };
 		DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventRecord.m; sourceTree = "<group>"; };
 		DC6BFFF423206215005FA5CB /* OCEventQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventQueue.h; sourceTree = "<group>"; };
@@ -2104,11 +2116,16 @@
 		DC72E41C2061666900189B9A /* Host Simulator */ = {
 			isa = PBXGroup;
 			children = (
+				DC6ABF6A2534633E00689C7B /* OCHostSimulatorManager.m */,
+				DC6ABF692534633E00689C7B /* OCHostSimulatorManager.h */,
 				DC72E41A2061665D00189B9A /* OCHostSimulator.m */,
 				DC72E4192061665D00189B9A /* OCHostSimulator.h */,
 				DC72E41E206166C500189B9A /* OCHostSimulatorResponse.m */,
 				DC72E41D206166C500189B9A /* OCHostSimulatorResponse.h */,
-				DCA7AA7E24EEA700009EC604 /* Cookie Redirect Simulator */,
+				DC6ABF722534683800689C7B /* OCExtension+HostSimulation.m */,
+				DC6ABF712534683800689C7B /* OCExtension+HostSimulation.h */,
+				DC6ABF7825365CB100689C7B /* OCHostSimulator+BuiltIn.m */,
+				DC6ABF7725365CB100689C7B /* OCHostSimulator+BuiltIn.h */,
 			);
 			path = "Host Simulator";
 			sourceTree = "<group>";
@@ -2550,7 +2567,7 @@
 			isa = PBXGroup;
 			children = (
 				DCA8922920F5F13F00AEFF98 /* ownCloudMocking.h */,
-				DC72E41C2061666900189B9A /* Host Simulator */,
+				DCA7AA7E24EEA700009EC604 /* Cookie Redirect Simulator */,
 				DCA8924620F5F1A600AEFF98 /* Categories */,
 				DC5A054D20EF6A6C00B085DA /* Manager */,
 				DCA8921B20F5ECF900AEFF98 /* Mocking Targets */,
@@ -2705,6 +2722,7 @@
 				DC855707204FEA1500189B9A /* Authentication */,
 				DC51FD86247562A50069AB79 /* Cellular */,
 				DC4B12002209C24F0062BCDD /* HTTP */,
+				DC72E41C2061666900189B9A /* Host Simulator */,
 				DC855708204FEA3400189B9A /* Connection */,
 				DCF39B572458290200DEA137 /* TUS */,
 				DC4B11FB220996330062BCDD /* Progress */,
@@ -2901,12 +2919,10 @@
 				DCA8923920F5F13F00AEFF98 /* ownCloudMocking.h in Headers */,
 				599A45AB218C566C003CAB00 /* OCConnection+OCMocking.h in Headers */,
 				DCA8924A20F5F1BF00AEFF98 /* OCMockManager.h in Headers */,
-				DC20DE5721C013090096000B /* OCHostSimulator.h in Headers */,
 				DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */,
 				59F6476D219AD11600C016FD /* OCQuery+OCMocking.h in Headers */,
 				DCA8924820F5F1BF00AEFF98 /* NSObject+OCSwizzle.h in Headers */,
 				DCA8925220F5F57D00AEFF98 /* NSObject+OCMockManager.h in Headers */,
-				DC20DE5821C013090096000B /* OCHostSimulatorResponse.h in Headers */,
 				DC2D649C21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2934,6 +2950,7 @@
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DC2F6375223A61990063C2DA /* OCCoreQuery.h in Headers */,
 				DC1889802189EC2600CFB3F9 /* OCLogWriter.h in Headers */,
+				DC6ABF67253462E100689C7B /* OCHostSimulator.h in Headers */,
 				DC00DB1D219B120300C82737 /* OCHTTPDAVMultistatusResponse.h in Headers */,
 				DCC6567820CA696A00110A97 /* OCBookmarkManager.h in Headers */,
 				DCA36D4D22A6B14200265534 /* OCPKCE.h in Headers */,
@@ -2953,6 +2970,7 @@
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC1D4D3720DBD58E005A3DFC /* OCFile.h in Headers */,
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
+				DC6ABF6B2534633E00689C7B /* OCHostSimulatorManager.h in Headers */,
 				DCF39B552458268E00DEA137 /* OCTUSHeader.h in Headers */,
 				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
@@ -2978,6 +2996,7 @@
 				DC241E6E229549E200AEE068 /* OCAuthenticationMethodOpenIDConnect.h in Headers */,
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC2CD12B22E8E7FD0099C665 /* OCItemPolicyProcessorDownloadExpiration.h in Headers */,
+				DC6ABF732534683800689C7B /* OCExtension+HostSimulation.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DC3521782251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h in Headers */,
@@ -3072,6 +3091,7 @@
 				DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */,
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
+				DC6ABF68253462E700689C7B /* OCHostSimulatorResponse.h in Headers */,
 				DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */,
 				DC4B116D2208306C0062BCDD /* OCHTTPPipeline.h in Headers */,
 				DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */,
@@ -3104,6 +3124,7 @@
 				DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */,
 				DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */,
 				DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */,
+				DC6ABF7925365CB100689C7B /* OCHostSimulator+BuiltIn.h in Headers */,
 				DC3CE0482429FCDF00AB8B88 /* OCMessageQueue.h in Headers */,
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
 				DCDC62E124D8A04900585261 /* NSArray+OCSegmentedProcessing.h in Headers */,
@@ -3274,7 +3295,7 @@
 		DCC8F9A2202852A200EB6701 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1030;
+				LastUpgradeCheck = 1210;
 				ORGANIZATIONNAME = "ownCloud GmbH";
 				TargetAttributes = {
 					DC3094832057358800189B9A = {
@@ -3485,9 +3506,7 @@
 				DCA8924920F5F1BF00AEFF98 /* OCMockManager.m in Sources */,
 				59F6476E219AD11600C016FD /* OCQuery+OCMocking.m in Sources */,
 				599A45AA218C566C003CAB00 /* OCConnection+OCMocking.m in Sources */,
-				DC20DE5A21C013C40096000B /* OCHostSimulator.m in Sources */,
 				DC01969C20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.m in Sources */,
-				DC20DE5B21C013C70096000B /* OCHostSimulatorResponse.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3566,6 +3585,7 @@
 				DC9B4D3922E987EF0089BF78 /* OCClaim.m in Sources */,
 				DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */,
 				DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */,
+				DC6ABF6C2534633E00689C7B /* OCHostSimulatorManager.m in Sources */,
 				DCD2D40422F059190071FB8F /* OCClassSettingsUserPreferences.m in Sources */,
 				DC5D9E6924963DED00BFFE8E /* OCMessageChoice.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
@@ -3578,6 +3598,7 @@
 				DCB0A46021B828F400FAC4E9 /* OCCore+ConnectionStatus.m in Sources */,
 				DC188994218B031600CFB3F9 /* OCLogSource.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
+				DC6ABF752536058A00689C7B /* OCHostSimulatorResponse.m in Sources */,
 				DCDD9B2C22312ED80052A001 /* OCRateLimiter.m in Sources */,
 				DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */,
 				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
@@ -3627,6 +3648,7 @@
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC0AE4F32311C75300428681 /* OCKeyValueStack.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
+				DC6ABF762536059200689C7B /* OCHostSimulator.m in Sources */,
 				DCB6D05922A13E7500CA47C5 /* NSString+OCSQLTools.m in Sources */,
 				4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */,
 				DCA91F3021A0BDE400AEDFB4 /* OCSyncAction+FileProvider.m in Sources */,
@@ -3654,6 +3676,7 @@
 				DCE227D422D60D49000BE0A5 /* OCItemPolicy.m in Sources */,
 				DC07C29D2124526000B815A4 /* OCExtensionContext.m in Sources */,
 				DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */,
+				DC6ABF742534683800689C7B /* OCExtension+HostSimulation.m in Sources */,
 				DCDA307221412A0100DB61A9 /* OCSyncAction.m in Sources */,
 				DCC83308242E1B4600153F8C /* OCCore+MessageAutoresolver.m in Sources */,
 				DC2F63682239509E0063C2DA /* OCCore+Sharing.m in Sources */,
@@ -3674,6 +3697,7 @@
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
 				DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */,
 				DC381FC822C80BA400284699 /* OCCore+NameConflicts.m in Sources */,
+				DC6ABF7A25365CB100689C7B /* OCHostSimulator+BuiltIn.m in Sources */,
 				DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */,
 				DC5AD95522665AC800277DB0 /* OCHTTPPipelineTaskMetrics.m in Sources */,
 				DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */,
@@ -4026,7 +4050,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ownCloudMockingTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMockingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4042,7 +4066,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ownCloudMockingTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMockingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4101,7 +4125,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LOCALIZED_STRING_MACRO_NAMES = (
 					NSLocalizedString,
 					CFLocalizedString,
@@ -4111,7 +4135,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
-				TVOS_DEPLOYMENT_TARGET = 11.4;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -4162,7 +4186,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LOCALIZED_STRING_MACRO_NAMES = (
 					NSLocalizedString,
 					CFLocalizedString,
@@ -4171,7 +4195,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				TVOS_DEPLOYMENT_TARGET = 11.4;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";

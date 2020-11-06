@@ -20,6 +20,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NSString* OCClassSettingsUserPreferencesMigrationIdentifier;
+typedef NSNumber* OCClassSettingsUserPreferencesMigrationVersion;
+
 @protocol OCClassSettingsUserPreferencesSupport
 
 @optional
@@ -32,6 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(class,readonly,nonatomic,strong) OCClassSettingsUserPreferences *sharedUserPreferences;
 
 - (BOOL)setValue:(nullable id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass;
+
+#pragma mark - Versioned migration of settings
++ (void)migrateWithIdentifier:(OCClassSettingsUserPreferencesMigrationIdentifier)identifier version:(OCClassSettingsUserPreferencesMigrationVersion)version silent:(BOOL)silent perform:(NSError * _Nullable (^)(OCClassSettingsUserPreferencesMigrationVersion _Nullable lastMigrationVersion))migration;
 
 @end
 

@@ -18,6 +18,8 @@
 
 #import "OCClassSettingsUserPreferences.h"
 #import "OCAppIdentity.h"
+#import "OCKeyValueStore.h"
+#import "OCMacros.h"
 
 @implementation OCClassSettingsUserPreferences
 
@@ -116,6 +118,49 @@
 	}
 
 	self.mainDictionary = mainDictionary;
+}
+
+#pragma mark - Versioned migration of settings
++ (void)migrateWithIdentifier:(OCClassSettingsUserPreferencesMigrationIdentifier)identifier version:(OCClassSettingsUserPreferencesMigrationVersion)version silent:(BOOL)silent perform:(NSError * _Nullable (^)(OCClassSettingsUserPreferencesMigrationVersion _Nullable lastMigrationVersion))migration
+{
+	static OCKeyValueStore *migrationsStorage = nil;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSURL *migrationsKVSURL;
+
+		if ((migrationsKVSURL = [OCAppIdentity.sharedAppIdentity.appGroupContainerURL URLByAppendingPathComponent:@"migrations.dat"]) != nil)
+		{
+			migrationsStorage = [[OCKeyValueStore alloc] initWithURL:migrationsKVSURL identifier:@"migrations.global"];
+		}
+	});
+
+	[migrationsStorage updateObjectForKey:identifier usingModifier:^id _Nullable(id  _Nullable existingObject, BOOL * _Nonnull outDidModify) {
+		NSNumber *lastMigrationVersion = OCTypedCast(existingObject, NSNumber);
+
+		if (![lastMigrationVersion isEqual:version] && (lastMigrationVersion.integerValue < version.integerValue))
+		{
+			NSError *error;
+
+			if ((error = migration(lastMigrationVersion)) == nil)
+			{
+				*outDidModify = YES;
+				if (!silent)
+				{
+					OCLog(@"Migration %@ from version %@ to %@ succeeded", identifier, lastMigrationVersion, version);
+				}
+				return(version);
+			}
+
+			if (!silent)
+			{
+				OCLogError(@"Migration %@ from version %@ to %@ failed with error=%@", identifier, lastMigrationVersion, version, error);
+			}
+		}
+
+		*outDidModify = NO;
+		return (existingObject);
+	}];
 }
 
 @end

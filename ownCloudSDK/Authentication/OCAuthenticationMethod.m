@@ -312,6 +312,21 @@
 	return (error);
 }
 
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierAuthentication);
+}
+
++ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	return (@{
+		OCAuthenticationMethodBrowserSessionClass	  	: @"operating-system",
+		OCAuthenticationMethodBrowserSessionPrefersEphermal	: @(NO)
+	});
+}
+
+
 #pragma mark - Log tagging
 + (NSArray<OCLogTagName> *)logTags
 {
@@ -331,3 +346,7 @@ OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"
 OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
 
 NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication = @"authentication";
+OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass = @"browser-session-class";
+OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal = @"browser-session-prefers-ephermal";

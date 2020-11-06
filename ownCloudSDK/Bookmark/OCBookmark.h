@@ -71,6 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo; //!<  .userInfo key with a NSDictionary holding the info from "status.php".
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
+extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation; //!<  .userInfo key with a NSDictionary holding information on the creation of the bookmark.
 
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 

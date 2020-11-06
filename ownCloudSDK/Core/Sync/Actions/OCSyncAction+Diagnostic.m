@@ -25,7 +25,8 @@
 	return (@[
 		[OCDiagnosticNode withLabel:OCLocalized(@"Class") content:NSStringFromClass(self.class)],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Identifier") content:self.identifier],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Localized Description") content:self.localizedDescription]
+		[OCDiagnosticNode withLabel:OCLocalized(@"Localized Description") content:self.localizedDescription],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Item") content:self.localItem.description]
 	]);
 }
 

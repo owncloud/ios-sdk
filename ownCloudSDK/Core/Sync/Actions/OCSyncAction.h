@@ -123,6 +123,9 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 - (NSMutableSet <OCSyncLaneTag> *)generateLaneTagsFromItems:(NSArray<OCItem *> *)items; //!< Helper method to create lane tags from an array of items. Allow passing NSNull objects to simplify syntax using OCSyncActionWrapNullableItem.
 - (NSSet <OCSyncLaneTag> *)generateLaneTags; //!< Called by the -laneTags if no _laneTags is nil.
 
+#pragma mark - Debug description
+- (nullable NSString *)internalsDescription; 	//!< OCSyncAction provides a standard .description - this allows to extend it
+
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.
 - (void)decodeActionData:(NSCoder *)decoder;	//!< Called by -initWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.

@@ -18,8 +18,7 @@
 
 
 #import <Foundation/Foundation.h>
-#import <ownCloudSDK/ownCloudSDK.h>
-
+#import "OCConnection.h"
 #import "OCHostSimulatorResponse.h"
 
 NS_ASSUME_NONNULL_BEGIN

@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCLogTag.h"
+#import "OCClassSettings.h"
 
 @class OCConnection;
 @class OCHTTPRequest;
@@ -40,7 +41,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
 };
 
-@interface OCAuthenticationMethod : NSObject <OCLogTagging>
+@interface OCAuthenticationMethod : NSObject <OCLogTagging, OCClassSettingsSupport>
 {
 	NSDate *_authenticationDataKnownInvalidDate;
 
@@ -108,9 +109,14 @@ extern OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesK
 
 extern NSString *OCAuthorizationMethodAlternativeServerURLKey; //!< Key for alternative server URL in -[NSError userInfo].
 
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication;
+extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass;
+extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal;
+
 NS_ASSUME_NONNULL_END
 
-#define OCAuthenticationMethodAutoRegister +(void)load{ \
-						[OCAuthenticationMethod registerAuthenticationMethodClass:self]; \
-				       	   }
+#define OCAuthenticationMethodAutoRegisterLoadCommand	[OCAuthenticationMethod registerAuthenticationMethodClass:self];
 
+#define OCAuthenticationMethodAutoRegister +(void)load{ \
+						OCAuthenticationMethodAutoRegisterLoadCommand \
+				       	   }

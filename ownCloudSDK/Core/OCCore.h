@@ -168,9 +168,12 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCCoreConnectionStatusSignalProvider *_connectingStatusSignalProvider; // Glue to include the OCCore state (connecting) into connection status (signal)
 	OCCoreConnectionStatusSignalProvider *_connectionStatusSignalProvider; // Glue to include the OCConnection state (connected) into connection status (signal)
 	OCCoreConnectionStatusSignalProvider *_rejectedIssueSignalProvider; // Glue to include rejectedIssueSignatures into reachability
+	OCCoreConnectionStatusSignalProvider *_pauseConnectionSignalProvider; // Allows pausing all connectivity via reachability signal
 
 	NSMutableSet<OCIssueSignature> *_unsolvedIssueSignatures;
 	NSMutableSet<OCIssueSignature> *_rejectedIssueSignatures;
+
+	NSDate *_nextSchedulingDate;
 
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;

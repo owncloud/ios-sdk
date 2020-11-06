@@ -18,6 +18,8 @@
 
 #import "OCBookmark+Diagnostics.h"
 #import "OCAuthenticationMethodBasicAuth.h"
+#import "OCAuthenticationMethodOAuth2.h"
+#import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCMacros.h"
 
 @implementation OCBookmark (Diagnostics)
@@ -43,6 +45,22 @@
 			if ([self.authenticationMethodIdentifier isEqual:OCAuthenticationMethodIdentifierBasicAuth])
 			{
 				self.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:self.userName passphrase:NSUUID.UUID.UUIDString authenticationHeaderValue:NULL error:NULL];
+			}
+
+			if ([self.authenticationMethodIdentifier isEqual:OCAuthenticationMethodIdentifierOAuth2] || [self.authenticationMethodIdentifier isEqual:OCAuthenticationMethodIdentifierOpenIDConnect])
+			{
+				NSMutableDictionary *plist;
+
+				plist = [NSPropertyListSerialization propertyListWithData:self.authenticationData options:NSPropertyListMutableContainersAndLeaves format:NULL error:NULL];
+
+				if (plist != nil)
+				{
+					((NSMutableDictionary *)plist[@"tokenResponse"])[@"access_token"] = NSUUID.UUID.UUIDString;
+					((NSMutableDictionary *)plist[@"tokenResponse"])[@"refresh_token"] = NSUUID.UUID.UUIDString;
+					plist[@"bearerString"] = [@"Bearer " stringByAppendingString:((NSMutableDictionary *)plist[@"tokenResponse"])[@"access_token"]];
+
+					self.authenticationData = [NSPropertyListSerialization dataWithPropertyList:plist format:NSPropertyListBinaryFormat_v1_0 options:0 error:NULL];
+				}
 			}
 		}]
 	]);

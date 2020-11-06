@@ -498,7 +498,41 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
-	// Authentication
+	// Authentication method validity
+	if (!_authMethodUnavailableChecked)
+	{
+		// Check against allowed authentication methods
+		NSArray<OCAuthenticationMethodIdentifier> *allowedAuthenticationMethods;
+
+		if ((allowedAuthenticationMethods = [self classSettingForOCClassSettingsKey:OCConnectionAllowedAuthenticationMethodIDs]) != nil)
+		{
+			OCAuthenticationMethodIdentifier authMethodIdentifier;
+
+			if ((allowedAuthenticationMethods.count > 0) && ((authMethodIdentifier = self.bookmark.authenticationMethodIdentifier) != nil))
+			{
+				if (![allowedAuthenticationMethods containsObject:authMethodIdentifier])
+				{
+					_authMethodUnavailable = YES;
+				}
+			}
+		}
+
+		// Save time for all following requests
+		_authMethodUnavailableChecked = YES;
+	}
+
+	if (_authMethodUnavailable)
+	{
+		// Authentication method no longer allowed / available
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorAuthorizationMethodNotAllowed);
+		}
+
+		return (NO);
+	}
+
+	// Authentication availability
 	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
 
 	if (authenticationAvailable)
@@ -1404,6 +1438,24 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				{
 					switch (request.httpResponse.status.code)
 					{
+						case OCHTTPStatusCodePRECONDITION_FAILED: {
+							NSError *davError;
+
+							if (((davError = request.httpResponse.bodyParsedAsDAVError) != nil) && (davError.code == OCDAVErrorItemDoesNotExist))
+							{
+								event.error = OCErrorFromError(OCErrorItemNotFound, davError);
+							}
+							else
+							{
+								event.error = OCErrorFromError(OCErrorItemChanged, request.httpResponse.status.error);
+							}
+						}
+						break;
+
+						case OCHTTPStatusCodeNOT_FOUND:
+							event.error = OCErrorFromError(OCErrorItemNotFound, request.httpResponse.status.error);
+						break;
+
 						default:
 							event.error = request.httpResponse.status.error;
 						break;

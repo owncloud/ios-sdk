@@ -136,6 +136,19 @@ This document provides an overview over the available sections and their setting
 		- type: string
 		- default: `text`
 
+## Authentication
+
+- **Section ID**: `authentication`
+
+- **Settings**:
+	- `browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.
+		- type: string
+		- default: `operating-system`
+		- possible values: `operating-system`, `UIWebView`
+	- `browser-session-prefers-ephermal`: indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.
+		- type: bool
+		- default: `false`
+
 ## OAuth2 / OpenID Connect
 
 - **Section ID**: `authentication-oauth2`
@@ -159,10 +172,6 @@ This document provides an overview over the available sections and their setting
 	- `oa2-expiration-override-seconds`: OAuth2 Expiration Override (**!! for testing only !!**) - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)
 		- type: integer
 		- default: none
-	- `oa2-browser-session-class`: alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.
-		- type: string
-		- default: none
-		- possible values: none, `UIWebView`
 	- `oidc-redirect-uri`: OpenID Connect Redirect URI
 		- type: string
 		- default: `oc://ios.owncloud.com`

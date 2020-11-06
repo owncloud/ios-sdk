@@ -44,6 +44,7 @@
 "Network unavailable" = "Network unavailable";
 "Online" = "Online";
 "Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
+"Server returns status %ld" = "Server returns status %ld";
 
 /* Copies */
 "copy" = "copy";
@@ -100,7 +101,7 @@
 "File modified locally" = "File modified locally";
 "\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
 "Couldn't download %@" = "Couldn't download %@";
-"The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating downlod - or the file is no longer available on the server.";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";
@@ -116,6 +117,8 @@
 "Running" = "Running";
 "Failed" = "Failed";
 "Waiting for user" = "Waiting for user";
+"Waiting for metadata refresh" = "Waiting for metadata refresh";
+"Waiting to retry (%ld of %ld)" = "Waiting to retry (%ld of %ld)";
 
 /* Update */
 "\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
@@ -296,6 +299,9 @@
 
 // OCErrorPrivateLinkResolutionFailed
 "Resolution of private link failed." = "Resolution of private link failed.";
+
+// OCErrorAuthorizationMethodNotAllowed
+"Authentication method not allowed. Re-authentication needed." = "Authentication method not allowed. Re-authentication needed.";
 
 /* Diagnostic */
 "Files" = "Files";

@@ -51,6 +51,8 @@
 	OCSyncRecord *syncRecord = options[OCWaitConditionOptionSyncRecord];
 	OCSyncRecordID syncRecordID = syncRecord.recordID;
 
+	// NSLog(@"Retry:Evaluating %@ with %@", self, options);
+
 	if ((core = options[OCWaitConditionOptionCore]) != nil)
 	{
 		NSError *error = nil;
@@ -170,6 +172,11 @@
 	}
 
 	return ([super handleEvent:event withOptions:options sender:sender]);
+}
+
+- (NSDate *)nextRetryDate
+{
+	return (_expirationDate);
 }
 
 #pragma mark - Secure Coding

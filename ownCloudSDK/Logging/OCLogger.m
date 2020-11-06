@@ -48,6 +48,8 @@ static NSUInteger sOCLogMessageMaximumSize;
 }
 @end
 
+static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierLogLevel = @"log-level";
+
 @implementation OCLogger
 
 + (instancetype)sharedLogger
@@ -202,6 +204,11 @@ static NSUInteger sOCLogMessageMaximumSize;
 	return (nil);
 }
 
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
+{
+	return ([key isEqual:OCClassSettingsKeyLogLevel]);
+}
+
 #pragma mark - Settings
 + (OCLogLevel)logLevel
 {
@@ -209,12 +216,21 @@ static NSUInteger sOCLogMessageMaximumSize;
 	{
 		NSNumber *logLevelNumber = nil;
 
-		if ((logLevelNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) == nil)
-		{
-			logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel];
-		}
+		// Migrate log level setting from UserDefaults to OCClassSettingsUserPreferences
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			NSNumber *userDefaultsLogLevel;
 
-		if (logLevelNumber != nil)
+			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) != nil)
+			{
+				[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogLevel];
+			}
+
+			return (nil);
+		}];
+
+		if ((logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel]) != nil)
 		{
 			sOCLogLevel = [logLevelNumber integerValue];
 		}
@@ -243,9 +259,12 @@ static NSUInteger sOCLogMessageMaximumSize;
 {
 	sOCLogLevel = newLogLevel;
 
-	[OCAppIdentity.sharedAppIdentity.userDefaults setInteger:newLogLevel forKey:OCClassSettingsKeyLogLevel];
+	[self setUserPreferenceValue:@(newLogLevel) forClassSettingsKey:OCClassSettingsKeyLogLevel];
 
 	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+
+	OCPFSLog(nil, (@[@"LogIntro"]), @"Log level changed to %ld", (long)sOCLogLevel);
+	OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
 }
 
 + (OCLogFormat)logFormat
@@ -403,29 +422,29 @@ static NSUInteger sOCLogMessageMaximumSize;
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:NO forceSyncWrite:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force forceSyncWrite:(BOOL)forceSyncWrite functionName:(nullable NSString *)functionName file:(nullable NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString, ...
 {
 	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
 		va_list args;
 
 		va_start(args, formatString);
-		[self appendLogLevel:logLevel force:force functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+		[self appendLogLevel:logLevel force:force forceSyncWrite:forceSyncWrite functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 		va_end(args);
 	}
 }
 
 - (void)appendLogLevel:(OCLogLevel)logLevel functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
-	[self appendLogLevel:logLevel force:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
+	[self appendLogLevel:logLevel force:NO forceSyncWrite:NO functionName:functionName file:file line:line tags:tags message:formatString arguments:args];
 }
 
-- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
+- (void)appendLogLevel:(OCLogLevel)logLevel force:(BOOL)force forceSyncWrite:(BOOL)forceSyncWrite functionName:(NSString *)functionName file:(NSString *)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags message:(NSString *)formatString arguments:(va_list)args
 {
 	if ([OCLogger logsForLevel:logLevel] || (force && OCLoggingEnabled()))
 	{
@@ -446,13 +465,13 @@ static NSUInteger sOCLogMessageMaximumSize;
 		timestamp = [NSDate date];
 		logMessage = [[NSString alloc] initWithFormat:formatString arguments:args];
 
-		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp];
+		[self rawAppendLogLevel:logLevel functionName:functionName file:file line:line tags:tags logMessage:logMessage threadID:threadID timestamp:timestamp forceSyncWrite:forceSyncWrite];
 	}
 }
 
-- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp
+- (void)rawAppendLogLevel:(OCLogLevel)logLevel functionName:(NSString * _Nullable)functionName file:(NSString * _Nullable)file line:(NSUInteger)line tags:(nullable NSArray<OCLogTagName> *)tags logMessage:(NSString *)logMessage threadID:(uint64_t)threadID timestamp:(NSDate *)timestamp forceSyncWrite:(BOOL)forceSyncWrite
 {
-	if (OCLogger.synchronousLoggingEnabled)
+	if (OCLogger.synchronousLoggingEnabled || forceSyncWrite)
 	{
 		@synchronized(self)
 		{
@@ -671,6 +690,13 @@ static NSUInteger sOCLogMessageMaximumSize;
 
 - (void)_openAllWriters
 {
+	if (!OCLoggingEnabled())
+	{
+		// Logging is not enabled, so writer would not otherwise be opened
+		// Writers will be opened when the first message hits the write pipeline
+		return;
+	}
+
 	for (OCLogWriter *writer in _writers)
 	{
 		if (!writer.isOpen && writer.enabled)
@@ -773,7 +799,7 @@ static NSUInteger sOCLogMessageMaximumSize;
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class ] onlyPublic:YES]  // Class Settings
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;

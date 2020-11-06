@@ -308,6 +308,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorPrivateLinkResolutionFailed:
 					unlocalizedString = @"Resolution of private link failed.";
 				break;
+
+				case OCErrorAuthorizationMethodNotAllowed:
+					unlocalizedString = @"Authentication method not allowed. Re-authentication needed.";
+				break;
 			}
 		}
 	}
