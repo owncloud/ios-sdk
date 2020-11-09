@@ -163,6 +163,39 @@
 		if (mutableMetadata[OCClassSettingsMetadataKeyClassName] == nil) { mutableMetadata[OCClassSettingsMetadataKeyClassName] = NSStringFromClass(settingsClass); }
 	}
 
+	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionExpandPossibleValues], NSNumber).boolValue))
+	{
+		if ([metadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSDictionary.class])
+		{
+			if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
+
+			NSMutableArray<NSDictionary *> *mutablePossibleValues = [NSMutableArray new];
+
+			[(NSDictionary *)metadata[OCClassSettingsMetadataKeyPossibleValues] enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull value, NSString *  _Nonnull desc, BOOL * _Nonnull stop) {
+				[mutablePossibleValues addObject:@{
+					OCClassSettingsMetadataKeyValue : value,
+					OCClassSettingsMetadataKeyDescription : desc
+				}];
+			}];
+
+			mutableMetadata[OCClassSettingsMetadataKeyPossibleValues] = mutablePossibleValues;
+		}
+	}
+
+	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionSortPossibleValues], NSNumber).boolValue))
+	{
+		if ([metadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class])
+		{
+			if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
+
+			NSMutableArray<NSDictionary *> *mutablePossibleValues = [metadata[OCClassSettingsMetadataKeyPossibleValues] mutableCopy];
+
+			[mutablePossibleValues sortUsingDescriptors:@[ [NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeyValue ascending:YES] ]];
+
+			mutableMetadata[OCClassSettingsMetadataKeyPossibleValues] = mutablePossibleValues;
+		}
+	}
+
 	if ((metadata != nil) && ((extDocFolderURLs = OCTypedCast(options[OCClassSettingsMetadataOptionExternalDocumentationFolders], NSArray)) != nil))
 	{
 		if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
@@ -242,4 +275,6 @@ OCClassSettingsAutoExpansion OCClassSettingsAutoExpansionTrailing = @"trailing";
 
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingValues = @"fillMissing";
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue = @"addDefault";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionSortPossibleValues = @"sortPossibleValues";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExpandPossibleValues = @"expandPossibleValues";
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders = @"docFolders";

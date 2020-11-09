@@ -84,6 +84,7 @@
 {
 	NSMutableArray<NSDictionary<OCClassSettingsMetadataKey, id> *> *docDicts = [NSMutableArray new];
 	NSArray<Class<OCClassSettingsSupport>> *implementingClasses = [self implementingClasses];
+	NSMutableSet<OCClassSettingsFlatIdentifier> *flatIdentifiers = [NSMutableSet new];
 
 	for (Class<OCClassSettingsSupport> implementingClass in implementingClasses)
 	{
@@ -98,15 +99,24 @@
 				if ((metaData = [self metadataForClass:implementingClass key:key options:@{
 					OCClassSettingsMetadataOptionFillMissingValues : @(YES),
 					OCClassSettingsMetadataOptionAddDefaultValue : @(YES),
+					OCClassSettingsMetadataOptionSortPossibleValues : @(YES),
+					OCClassSettingsMetadataOptionExpandPossibleValues : @(YES),
 					OCClassSettingsMetadataOptionExternalDocumentationFolders : (options[OCClassSettingsDocumentationOptionExternalDocumentationFolders] ? options[OCClassSettingsDocumentationOptionExternalDocumentationFolders] : @[]),
 				}]) != nil)
 				{
-					if (((NSNumber *)options[OCClassSettingsDocumentationOptionOnlyJSONTypes]).boolValue)
-					{
-						metaData = [self _makeJSONSafe:metaData];
-					}
+					OCClassSettingsFlatIdentifier flatIdentifier = metaData[OCClassSettingsMetadataKeyFlatIdentifier];
 
-					[docDicts addObject:metaData];
+					if ((flatIdentifier != nil) && ![flatIdentifiers containsObject:flatIdentifier])
+					{
+						if (((NSNumber *)options[OCClassSettingsDocumentationOptionOnlyJSONTypes]).boolValue)
+						{
+							metaData = [self _makeJSONSafe:metaData];
+						}
+
+						[flatIdentifiers addObject:flatIdentifier];
+
+						[docDicts addObject:metaData];
+					}
 				}
 				else
 				{
@@ -115,6 +125,10 @@
 			}
 		}
 	}
+
+	[docDicts sortUsingDescriptors:@[
+		[NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeyFlatIdentifier ascending:YES]
+	]];
 
 	return (docDicts);
 }

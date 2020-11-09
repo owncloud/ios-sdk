@@ -73,6 +73,8 @@ extern OCClassSettingsAutoExpansion OCClassSettingsAutoExpansionTrailing; //!< D
 
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingValues; //!< If YES, missing values are added to the metadata dictionary.
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue; //!< If YES, the default value is added to the metadata dictionary.
+extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionSortPossibleValues; //!< If YES, sorts possible values alphabetically.
+extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExpandPossibleValues; //!< If YES, expands simple possible value dictionaries into array of dictionaries.
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders; //!< Array of NSURLs of folders to check for external documentation
 
 NS_ASSUME_NONNULL_END
