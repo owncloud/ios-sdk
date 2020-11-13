@@ -18,12 +18,26 @@
 
 #import "OCAuthenticationMethod+UIAppExtension.h"
 
+@protocol OCUIApplicationProtocol
+
++ (id<OCUIApplicationProtocol>)sharedApplication;
+- (UIApplicationState)applicationState;
+
+@end
+
 @implementation OCAuthenticationMethod (UIAppExtension)
 
 - (BOOL)cacheSecrets
 {
 	// Only cache secret if the app is running in the foreground and receiving events
-	return ([UIApplication sharedApplication].applicationState == UIApplicationStateActive);
+	Class uiApplicationClass;
+
+	if ((uiApplicationClass = NSClassFromString(@"UIApplication")) != nil)
+	{
+		return ([uiApplicationClass sharedApplication].applicationState == UIApplicationStateActive);
+	}
+
+	return (NO);
 }
 
 @end

@@ -34,6 +34,17 @@
 	[self registerOCClassSettingsDefaults:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile"
+	} metadata:@{
+		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
+			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Redirect URI",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC",
+		},
+		OCAuthenticationMethodOpenIDConnectScope : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Scope",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		}
 	}];
 }
 

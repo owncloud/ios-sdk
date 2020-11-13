@@ -121,6 +121,49 @@ OCAuthenticationMethodAutoRegister
 	});
 }
 
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Authentication
+		OCAuthenticationMethodOAuth2AuthorizationEndpoint : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 authorization endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2TokenEndpoint : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 token endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2RedirectURI : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Redirect URI.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ClientID : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Client ID.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ClientSecret : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Client Secret.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ExpirationOverrideSeconds : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Expiration Override - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+	});
+}
+
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type
 {

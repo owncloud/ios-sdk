@@ -84,7 +84,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	return (@"connection");
+	return (OCClassSettingsIdentifierConnection);
 }
 
 + (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
@@ -127,9 +127,186 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	});
 }
 
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
-	if ([key isEqualToString:OCConnectionForceBackgroundURLSessions])
+	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
+
+	for (Class authMethodClass in authMethodClasses)
+	{
+		OCAuthenticationMethodIdentifier authMethodIdentifier;
+		NSString *authMethodName = [authMethodClass name];
+
+		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
+		{
+			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
+				authMethodName,		OCClassSettingsMetadataKeyDescription,
+			nil]];
+		}
+	}
+
+	return (@{
+		// Connection
+		OCConnectionMinimumVersionRequired : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"The minimum server version required.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCConnectionAllowBackgroundURLSessions : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of background URL sessions. Note: depending on iOS version, the app may still choose not to use them. This settings is overriden by `force-background-url-sessions`.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCConnectionForceBackgroundURLSessions : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Forces the use of background URL sessions. Overrides `allow-background-url-sessions`.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
+		},
+
+		OCConnectionAllowCellular : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of cellular connections.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCConnectionPlainHTTPPolicy : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Policy regarding the use of plain (unencryped) HTTP URLs for creating bookmarks. A value of `warn` will create an issue (typically then presented to the user as a warning), but ultimately allow the creation of the bookmark. A value of `forbidden` will block the use of `http`-URLs for the creation of new bookmarks.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCConnectionAlwaysRequestPrivateLink : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection"
+		},
+
+		// Endpoints
+		OCConnectionEndpointIDWellKnown : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the .well-known endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDCapabilities : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving server capabilities.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDUser : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving information on logged in user.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDWebDAV : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDWebDAVMeta : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV metadata.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDStatus : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDThumbnail : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the thumbnail endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDShares : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the shares API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDRemoteShares : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the remote shares API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		OCConnectionEndpointIDRecipients : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the sharing recipient API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+		},
+
+		// Security
+		OCConnectionPreferredAuthenticationMethodIDs : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Array of authentication methods in order of preference (most preferred first).",
+			OCClassSettingsMetadataKeyPossibleValues: authMethodValues,
+			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+		},
+
+		OCConnectionAllowedAuthenticationMethodIDs : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Array of allowed authentication methods. Nil/Missing for no restrictions.",
+			OCClassSettingsMetadataKeyPossibleValues: authMethodValues,
+			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+		},
+
+		OCConnectionCertificateExtendedValidationRule: @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security"
+		},
+
+		OCConnectionRenewedCertificateAcceptanceRule: @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to `never` if the user should always be prompted when a server's certificate changed.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security"
+		},
+
+		OCConnectionTransparentTemporaryRedirect : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Controls whether 307 redirects are handled transparently at the HTTP pipeline level (by resending the headers and body).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security"
+		},
+	});
+}
+
++ (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
+{
+	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
 	{
 		return (YES);
 	}
@@ -2379,6 +2556,8 @@ OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-sh
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierConnection = @"connection";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

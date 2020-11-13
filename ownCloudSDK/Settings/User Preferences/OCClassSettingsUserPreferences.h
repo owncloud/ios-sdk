@@ -26,7 +26,7 @@ typedef NSNumber* OCClassSettingsUserPreferencesMigrationVersion;
 @protocol OCClassSettingsUserPreferencesSupport
 
 @optional
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key;
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key; //!< If implemented, preferences for the provided key are only allowed to be changed by the user if this method returns YES. If this method is not implemented, the decision hinges on the flags provided in metadata.
 
 @end
 

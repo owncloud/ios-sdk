@@ -17,7 +17,6 @@
  */
 
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCHostSimulator.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
