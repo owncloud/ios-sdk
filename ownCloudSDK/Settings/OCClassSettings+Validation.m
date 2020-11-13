@@ -349,13 +349,13 @@
 	resultHandler(error, resultValue);
 }
 
-- (nullable NSDictionary<OCClassSettingsKey, NSError *> *)validateDictionary:(NSMutableDictionary<OCClassSettingsKey, id> *)settingsDict forClass:(Class<OCClassSettingsSupport>)settingsClass
+- (nullable NSDictionary<OCClassSettingsKey, NSError *> *)validateDictionary:(NSMutableDictionary<OCClassSettingsKey, id> *)settingsDict forClass:(Class<OCClassSettingsSupport>)settingsClass updateCache:(BOOL)updateCacheOfValidValues
 {
 	__block NSMutableDictionary<OCClassSettingsKey, NSError *> *errorsByKey = nil;
 	NSArray<OCClassSettingsKey> *keys = [settingsDict allKeys];
 	OCClassSettingsIdentifier settingsIdentifier = [settingsClass classSettingsIdentifier];
 
-	@synchronized(self)
+	@synchronized(_validatedValuesByKeyByIdentifier)
 	{
 		if (_validatedValuesByKeyByIdentifier[settingsIdentifier] == nil)
 		{
@@ -372,7 +372,7 @@
 	{
 		BOOL needsValidation = YES;
 
-		@synchronized(self)
+		@synchronized(_validatedValuesByKeyByIdentifier)
 		{
 			// Check if the value has previously been checked and found valid
 			if ([_validatedValuesByKeyByIdentifier[settingsIdentifier][key] isEqual:settingsDict[key]])
@@ -402,11 +402,14 @@
 				// Update settings dictionary with validated value
 				settingsDict[key] = value;
 
-				@synchronized(self)
+				if (updateCacheOfValidValues)
 				{
-					// Store validated value and validation result - clear on errors
-					self->_validatedValuesByKeyByIdentifier[settingsIdentifier][key] = (error == nil) ? inputValue : nil;
-					self->_actualValuesByKeyByIdentifier[settingsIdentifier][key] = (error == nil) ? value : nil;
+					@synchronized(self->_validatedValuesByKeyByIdentifier)
+					{
+						// Store validated value and validation result - clear on errors
+						self->_validatedValuesByKeyByIdentifier[settingsIdentifier][key] = (error == nil) ? inputValue : nil;
+						self->_actualValuesByKeyByIdentifier[settingsIdentifier][key] = (error == nil) ? value : nil;
+					}
 				}
 			}];
 		}

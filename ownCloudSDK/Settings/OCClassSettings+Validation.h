@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)validateValue:(id)value forClass:(Class<OCClassSettingsSupport>)settingsClass key:(OCClassSettingsKey)key resultHandler:(void(^)(NSError * _Nullable error, id _Nullable value))resultHandler;
 
-- (nullable NSDictionary<OCClassSettingsKey, NSError *> *)validateDictionary:(NSMutableDictionary<OCClassSettingsKey, id> *)settingsDict forClass:(Class<OCClassSettingsSupport>)settingsClass;
+- (nullable NSDictionary<OCClassSettingsKey, NSError *> *)validateDictionary:(NSMutableDictionary<OCClassSettingsKey, id> *)settingsDict forClass:(Class<OCClassSettingsSupport>)settingsClass updateCache:(BOOL)updateCacheOfValidValues;
 
 @end
 

@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCLogTag.h"
 
 /*
 	OCClassSettings provides a central mechanism for storing class-specific settings:
@@ -49,14 +50,11 @@ typedef NSString* OCClassSettingsKeyStatus NS_TYPED_EXTENSIBLE_ENUM;
 
 typedef NS_OPTIONS(NSInteger, OCClassSettingsFlag)
 {
-	/* --- AS OF YET UNIMPLEMENTED --- */
-	OCClassSettingsFlagIsPrivate 	 	 = (1 << 0), //!< If [OCClassSettingsSupport publicClassSettingsIdentifiers] is not implemented, allows flagging the value of the key as private (in the sense defined by [OCClassSettingsSupport publicClassSettingsIdentifiers])
+	OCClassSettingsFlagIsPrivate 	 	= (1 << 0), //!< If [OCClassSettingsSupport publicClassSettingsIdentifiers] is not implemented, allows flagging the value of the key as private (in the sense defined by [OCClassSettingsSupport publicClassSettingsIdentifiers])
 
-	/* --- AS OF YET UNIMPLEMENTED --- */
 	OCClassSettingsFlagAllowUserPreferences = (1 << 1), //! If [OCClassSettingsUserPreferencesSupport allowUserPreferenceForClassSettingsKey:] is not implemented, allows modifying the value for the key via user preferences
 
-	/* --- AS OF YET UNIMPLEMENTED --- */
-	OCClassSettingsFlagDenyUserPreferences  = (1 << 2), //! If [OCClassSettingsUserPreferencesSupport allowUserPreferenceForClassSettingsKey:] is not implemented, denies modifying the value for the key via user preferences
+	OCClassSettingsFlagDenyUserPreferences  = (1 << 2)  //! If [OCClassSettingsUserPreferencesSupport allowUserPreferenceForClassSettingsKey:] is not implemented, denies modifying the value for the key via user preferences
 };
 
 @protocol OCClassSettingsSupport <NSObject>
@@ -85,13 +83,15 @@ typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @end
 
-@interface OCClassSettings : NSObject
+@interface OCClassSettings : NSObject <OCLogTagging>
 {
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableArray<OCClassSettingsMetadataCollection> *> *_registeredMetaDataCollectionsByIdentifier;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_registeredDefaultValuesByKeyByIdentifier;
 
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_validatedValuesByKeyByIdentifier;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_actualValuesByKeyByIdentifier;
+
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,NSNumber *> *> *_flagsByKeyByIdentifier;
 }
 
 @property(class, readonly, strong, nonatomic) OCClassSettings *sharedSettings;

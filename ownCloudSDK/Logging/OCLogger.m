@@ -204,11 +204,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	return (nil);
 }
 
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
-{
-	return ([key isEqual:OCClassSettingsKeyLogLevel]);
-}
-
 + (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
 	NSMutableDictionary<OCLogComponentIdentifier, NSString *> *descriptionsByComponentID = [NSMutableDictionary new];
@@ -241,7 +236,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				@(OCLogLevelWarning)	: @"warning",
 				@(OCLogLevelError)  	: @"error",
 				@(OCLogLevelOff)  	: @"off"
-			}
+			},
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
 		},
 
 		OCClassSettingsKeyLogPrivacyMask : @{
@@ -317,7 +313,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
 			OCClassSettingsMetadataKeyDescription 	 : @"Maximum length of a log message before the message is truncated. A value of 0 means no limit.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences) // here to have a deny variant and because it's not an interesting setting for user preferences
 		},
 
 		OCClassSettingsKeyLogColored : @{
@@ -859,7 +856,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if ((logToggle!=nil) && (logToggle.identifier != nil))
 	{
-		@synchronized(self)
+		@synchronized(_toggles)
 		{
 			if (_togglesByIdentifier[logToggle.identifier] == nil)
 			{
@@ -872,7 +869,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (NSArray<OCLogToggle *> *)toggles
 {
-	@synchronized(self)
+	@synchronized(_toggles)
 	{
 		return ([NSArray arrayWithArray:_toggles]);
 	}
@@ -880,7 +877,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (BOOL)isToggleEnabled:(OCLogComponentIdentifier)toggleIdentifier
 {
-	@synchronized(self)
+	@synchronized(_toggles)
 	{
 		return (_togglesByIdentifier[toggleIdentifier].enabled);
 	}

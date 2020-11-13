@@ -84,7 +84,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	return (@"connection");
+	return (OCClassSettingsIdentifierConnection);
 }
 
 + (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
@@ -167,6 +167,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Forces the use of background URL sessions. Overrides `allow-background-url-sessions`.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
 		},
 
 		OCConnectionAllowCellular : @{
@@ -306,16 +307,6 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 + (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
 {
 	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
-	{
-		return (YES);
-	}
-
-	return (NO);
-}
-
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
-{
-	if ([key isEqualToString:OCConnectionForceBackgroundURLSessions])
 	{
 		return (YES);
 	}
@@ -2565,6 +2556,8 @@ OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-sh
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierConnection = @"connection";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

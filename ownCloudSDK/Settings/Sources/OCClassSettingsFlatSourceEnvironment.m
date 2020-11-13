@@ -50,7 +50,7 @@
 	return(self);
 }
 
-- (NSDictionary<NSString *,id> *)flatSettingsDictionary
+- (NSDictionary<OCClassSettingsFlatIdentifier,id> *)flatSettingsDictionary
 {
 	if ((_prefix != nil) && (_flatSettingsDictionary == nil))
 	{

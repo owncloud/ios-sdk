@@ -17,6 +17,7 @@
  */
 
 #import "OCClassSettingsUserPreferences.h"
+#import "OCClassSettings+Metadata.h"
 #import "OCAppIdentity.h"
 #import "OCKeyValueStore.h"
 #import "OCMacros.h"
@@ -74,7 +75,13 @@
 		}
 		else
 		{
-			changeAllowed = YES;
+			OCClassSettingsFlag flags = [OCClassSettings.sharedSettings flagsForClass:theClass key:key];
+
+			if (((flags & OCClassSettingsFlagAllowUserPreferences) == OCClassSettingsFlagAllowUserPreferences) || // User preferences explicitely allowed
+			    ((flags & OCClassSettingsFlagDenyUserPreferences) == 0)) // User preferences not explicitely denied
+			{
+				changeAllowed = YES;
+			}
 		}
 
 		if (changeAllowed)

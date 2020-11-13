@@ -238,6 +238,39 @@
 	return (metadata);
 }
 
+- (OCClassSettingsFlag)flagsForClass:(Class<OCClassSettingsSupport>)settingsClass key:(OCClassSettingsKey)key
+{
+	id flag = nil;
+	OCClassSettingsIdentifier settingsIdentifier = [settingsClass classSettingsIdentifier];
+
+	@synchronized(self)
+	{
+		if ((flag = _flagsByKeyByIdentifier[settingsIdentifier][key]) == nil)
+		{
+			OCClassSettingsMetadata metadata;
+			NSNumber *flags;
+
+			if (((metadata = [OCClassSettings.sharedSettings metadataForClass:settingsClass key:key options:nil]) != nil) && ((flags = OCTypedCast(metadata[OCClassSettingsMetadataKeyFlags], NSNumber)) != nil))
+			{
+				flag = flags;
+			}
+			else
+			{
+				flag = NSNull.null;
+			}
+
+			if (_flagsByKeyByIdentifier[settingsIdentifier] == nil)
+			{
+				_flagsByKeyByIdentifier[settingsIdentifier] = [NSMutableDictionary new];
+			}
+
+			_flagsByKeyByIdentifier[settingsIdentifier][key] = flag;
+		}
+	}
+
+	return ([flag isKindOfClass:NSNull.class] ? 0 : ((NSNumber *)flag).unsignedIntegerValue);
+}
+
 @end
 
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyType = @"type";

@@ -20,6 +20,7 @@
 #import "OCClassSettingsFlatSourceManagedConfiguration.h"
 #import "OCClassSettingsFlatSourceEnvironment.h"
 #import "OCClassSettingsUserPreferences.h"
+#import "OCLogger.h"
 
 @interface OCClassSettings ()
 {
@@ -53,6 +54,8 @@
 	{
 		_validatedValuesByKeyByIdentifier = [NSMutableDictionary new];
 		_actualValuesByKeyByIdentifier = [NSMutableDictionary new];
+
+		_flagsByKeyByIdentifier = [NSMutableDictionary new];
 	}
 
 	return (self);
@@ -98,6 +101,8 @@
 
 				[registeredMetaDataCollections addObject:metaData];
 			}
+
+			[self clearSourceCache];
 		}
 	}
 }
@@ -197,12 +202,14 @@
 	@synchronized(self)
 	{
 		[_overrideValuesByKeyByIdentifier removeAllObjects];
+		[_flagsByKeyByIdentifier removeAllObjects];
 	}
 }
 
-- (NSMutableDictionary<OCClassSettingsKey,id> *)_overrideDictionaryForSettingsIdentifier:(OCClassSettingsIdentifier)settingsIdentifier
+- (NSMutableDictionary<OCClassSettingsKey,id> *)_overrideDictionaryForSettingsIdentifier:(OCClassSettingsIdentifier)settingsIdentifier managedByClass:(Class<OCClassSettingsSupport>)settingsClass
 {
 	NSMutableDictionary<OCClassSettingsKey,id> *overrideDict = nil;
+	dispatch_block_t completeLogErrors = nil;
 
 	@synchronized(self)
 	{
@@ -210,6 +217,8 @@
 		{
 			if ((overrideDict = _overrideValuesByKeyByIdentifier[settingsIdentifier]) == nil)
 			{
+				OCClassSettingsIdentifier classSettingsIdentifier = [settingsClass classSettingsIdentifier];
+
 				if (_overrideValuesByKeyByIdentifier == nil)
 				{
 					_overrideValuesByKeyByIdentifier = [NSMutableDictionary new];
@@ -217,13 +226,54 @@
 
 				for (id <OCClassSettingsSource> source in _sources)
 				{
-					NSDictionary<OCClassSettingsKey,id> *sourceOverrideDict;
+					NSDictionary<OCClassSettingsKey,id> *originalOverrideDict;
 
-					if ((sourceOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
+					if ((originalOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
 					{
-						if (overrideDict==nil) { overrideDict = [NSMutableDictionary new]; }
+						NSDictionary<OCClassSettingsKey, NSError *> *validationErrorsByKey;
+						NSMutableDictionary<OCClassSettingsKey,id> *sourceOverrideDict;
 
-						[overrideDict setValuesForKeysWithDictionary:sourceOverrideDict];
+						if (overrideDict==nil) { overrideDict = [NSMutableDictionary new]; }
+						sourceOverrideDict = [originalOverrideDict mutableCopy];
+
+						validationErrorsByKey = [self validateDictionary:sourceOverrideDict forClass:settingsClass updateCache:NO];
+
+						if (validationErrorsByKey.count > 0)
+						{
+							dispatch_block_t logErrors = ^{
+								for (OCClassSettingsKey key in validationErrorsByKey)
+								{
+									OCLogError(@"Rejecting value %@ [%@] for %@.%@ setting: %@", originalOverrideDict[key], NSStringFromClass([originalOverrideDict[key] class]), classSettingsIdentifier, key, validationErrorsByKey[key].localizedDescription);
+								}
+							};
+
+							if ([classSettingsIdentifier isEqual:OCClassSettingsIdentifierLog])
+							{
+								// Log log settings errors asyncronously to avoid a dead-lock
+								dispatch_async(dispatch_get_main_queue(), logErrors);
+							}
+							else
+							{
+								// Log errors from this method, but do it only later, to avoid being inside @synchronized(self) when doing so (deadlock due to logging settings could loom otherwise)
+								if (completeLogErrors == nil) {
+									completeLogErrors = logErrors;
+								} else {
+									dispatch_block_t previousLogErrors = completeLogErrors;
+									completeLogErrors = ^{
+										previousLogErrors();
+										logErrors();
+									};
+								}
+							}
+						}
+
+						for (OCClassSettingsKey srcKey in sourceOverrideDict)
+						{
+							if (validationErrorsByKey[srcKey] == nil)
+							{
+								overrideDict[srcKey] = sourceOverrideDict[srcKey];
+							}
+						}
 					}
 				}
 
@@ -235,6 +285,11 @@
 				}
 			}
 		}
+	}
+
+	if (completeLogErrors != nil)
+	{
+		completeLogErrors();
 	}
 
 	return (overrideDict);
@@ -263,15 +318,32 @@
 		}
 
 		// Merge override values from sources (if any)
-		if ((overrideSettings = [self _overrideDictionaryForSettingsIdentifier:classSettingsIdentifier]) != nil)
+		if ((overrideSettings = [self _overrideDictionaryForSettingsIdentifier:classSettingsIdentifier managedByClass:settingsClass]) != nil)
 		{
-			NSDictionary<OCClassSettingsKey, NSError *> *errorsByKey = [self validateDictionary:overrideSettings forClass:settingsClass];
+			NSDictionary<OCClassSettingsKey, NSError *> *errorsByKey;
+
+			@synchronized(self) // guard to protect in case overrideSettings was returned from the cached _overrideValuesByKeyByIdentifier
+			{
+				errorsByKey = [self validateDictionary:overrideSettings forClass:settingsClass updateCache:YES];
+			}
 
 			if (errorsByKey != nil)
 			{
-				for (OCClassSettingsKey key in errorsByKey)
+				dispatch_block_t logErrors = ^{
+					for (OCClassSettingsKey key in errorsByKey)
+					{
+						OCLogError(@"Rejecting value for %@.%@ setting: %@", classSettingsIdentifier, key, errorsByKey[key].localizedDescription);
+					}
+				};
+
+				if ([classSettingsIdentifier isEqual:OCClassSettingsIdentifierLog])
 				{
-					OCLogError(@"Rejecting value for %@.%@ setting: %@", classSettingsIdentifier, key, errorsByKey[key].localizedDescription);
+					// Log log settings errors asyncronously to avoid a dead-lock
+					dispatch_async(dispatch_get_main_queue(), logErrors);
+				}
+				else
+				{
+					logErrors();
 				}
 			}
 
@@ -321,12 +393,24 @@
 				{
 					if (classSettingDefaults != nil)
 					{
-						[keys addObjectsFromArray:classSettingDefaults.allKeys];
+						for (OCClassSettingsKey key in classSettingDefaults.allKeys)
+						{
+							if (([self flagsForClass:inspectClass key:key] & OCClassSettingsFlagIsPrivate) == 0)
+							{
+								[keys addObject:key];
+							}
+						}
 					}
 
 					if (_registeredDefaultValuesByKeyByIdentifier[settingsIdentifier] != nil)
 					{
-						[keys addObjectsFromArray:_registeredDefaultValuesByKeyByIdentifier[settingsIdentifier].allKeys];
+						for (OCClassSettingsKey key in _registeredDefaultValuesByKeyByIdentifier[settingsIdentifier].allKeys)
+						{
+							if (([self flagsForClass:inspectClass key:key] & OCClassSettingsFlagIsPrivate) == 0)
+							{
+								[keys addObject:key];
+							}
+						}
 					}
 				}
 
@@ -413,6 +497,17 @@
 	}
 
 	return (overview);
+}
+
+#pragma mark - Log tagging
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[ @"Settings" ]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[ @"Settings" ]);
 }
 
 @end

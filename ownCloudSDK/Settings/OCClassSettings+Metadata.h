@@ -31,6 +31,8 @@ typedef NSString* OCClassSettingsMetadataOption NS_TYPED_ENUM;
 
 - (nullable OCClassSettingsMetadata)metadataForClass:(Class<OCClassSettingsSupport>)settingsClass key:(OCClassSettingsKey)key options:(nullable NSDictionary<OCClassSettingsMetadataOption, id> *)options;
 
+- (OCClassSettingsFlag)flagsForClass:(Class<OCClassSettingsSupport>)settingsClass key:(OCClassSettingsKey)key;
+
 @end
 
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyType; //!< Expected type of value, expressed via a single OCClassSettingsMetadataType or an array of OCClassSettingsMetadataTypes.
