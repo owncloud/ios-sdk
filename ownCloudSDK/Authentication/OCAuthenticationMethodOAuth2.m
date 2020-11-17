@@ -160,7 +160,7 @@ OCAuthenticationMethodAutoRegister
 			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Expiration Override - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
-		},
+		}
 	});
 }
 
