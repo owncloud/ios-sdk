@@ -372,4 +372,169 @@
 	}
 }
 
+- (void)testAllowUserPreferences
+{
+	TestSettingsSource *settingsSource = [TestSettingsSource withSettingsDictionary:@{
+		OCClassSettingsIdentifierUserPreferences : @{
+			OCClassSettingsKeyUserPreferencesAllow : @[
+				[NSString flatIdentifierFromIdentifier:OCClassSettingsIdentifierLog key:OCClassSettingsKeyLogLevel]
+			]
+		}
+	}];
+
+	XCTAssert([OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert([OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+
+	// Add source with value
+	[[OCClassSettings sharedSettings] addSource:settingsSource];
+
+	// Check effect of addition of source
+	XCTAssert([OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert(![OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+
+	// Remove source
+	[[OCClassSettings sharedSettings] removeSource:settingsSource];
+
+	// Check effect of removal of source
+	XCTAssert([OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert([OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+}
+
+- (void)testDenyUserPreferences
+{
+	TestSettingsSource *settingsSource = [TestSettingsSource withSettingsDictionary:@{
+		OCClassSettingsIdentifierUserPreferences : @{
+			OCClassSettingsKeyUserPreferencesDisallow : @[
+				[NSString flatIdentifierFromIdentifier:OCClassSettingsIdentifierLog key:OCClassSettingsKeyLogLevel]
+			]
+		}
+	}];
+
+	XCTAssert([OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert([OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+
+	// Add source with value
+	[[OCClassSettings sharedSettings] addSource:settingsSource];
+
+	// Check effect of addition of source
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert([OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+
+	// Remove source
+	[[OCClassSettings sharedSettings] removeSource:settingsSource];
+
+	// Check effect of removal of source
+	XCTAssert([OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogLevel]);
+	XCTAssert([OCConnection userAllowedToSetPreferenceValueForClassSettingsKey:OCConnectionForceBackgroundURLSessions]);
+	XCTAssert(![OCLogger userAllowedToSetPreferenceValueForClassSettingsKey:OCClassSettingsKeyLogPrivacyMask]);
+}
+
+- (void)testAllowDenyChangeObservation
+{
+	TestSettingsSource *settingsSource = [TestSettingsSource withSettingsDictionary:@{
+		OCClassSettingsIdentifierUserPreferences : @{
+			OCClassSettingsKeyUserPreferencesDisallow : @[
+				[NSString flatIdentifierFromIdentifier:OCClassSettingsIdentifierLog key:OCClassSettingsKeyLogLevel]
+			]
+		}
+	}];
+	XCTestExpectation *expectInitialAllow = [self expectationWithDescription:@"Initial allow"];
+	__block XCTestExpectation *expectAllowChangeOne = [self expectationWithDescription:@"Follow-up deny"];
+	__block XCTestExpectation *expectAllowChangeTwo = [self expectationWithDescription:@"Follow-up allow"];
+
+	OCClassSetting *setting = [OCLogger classSettingForKey:OCClassSettingsKeyLogLevel];
+
+	[setting addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+		if (type & OCClassSettingChangeTypeInitial)
+		{
+			XCTAssert(setting.isUserConfigurable);
+			[expectInitialAllow fulfill];
+		}
+
+		if (type & OCClassSettingChangeTypeIsUserConfigurable)
+		{
+			if ((expectAllowChangeOne != nil) && !setting.isUserConfigurable)
+			{
+				[expectAllowChangeOne fulfill];
+				expectAllowChangeOne = nil;
+			}
+
+			if ((expectAllowChangeOne == nil) && (expectAllowChangeTwo != nil) && setting.isUserConfigurable)
+			{
+				[expectAllowChangeTwo fulfill];
+				expectAllowChangeTwo = nil;
+			}
+		}
+	} withOwner:self];
+
+	XCTAssert(setting.isUserConfigurable);
+
+	// Add source with value
+	[[OCClassSettings sharedSettings] addSource:settingsSource];
+
+	// Check effect of addition of source
+	XCTAssert(!setting.isUserConfigurable);
+
+	// Remove source
+	[[OCClassSettings sharedSettings] removeSource:settingsSource];
+
+	// Check effect of removal of source
+	XCTAssert(setting.isUserConfigurable);
+
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testValueChangeObservation
+{
+	TestSettingsSource *settingsSource = [TestSettingsSource withSettingsDictionary:@{
+		OCClassSettingsIdentifierLog : @{
+			OCClassSettingsKeyLogLevel : @(OCLogLevelVerbose)
+		}
+	}];
+	XCTestExpectation *expectInitialValue = [self expectationWithDescription:@"Initial value"];
+	__block XCTestExpectation *expectValueChange1 = [self expectationWithDescription:@"Value change"];
+	__block XCTestExpectation *expectValueChange2 = [self expectationWithDescription:@"Value reversal"];
+
+	OCClassSetting *setting = [OCLogger classSettingForKey:OCClassSettingsKeyLogLevel];
+
+	[setting addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+		NSLog(@"Change type: %ld, old: %@, new: %@", type, oldValue, newValue);
+
+		if (type & OCClassSettingChangeTypeInitial)
+		{
+			XCTAssert(oldValue == nil);
+			XCTAssert(![newValue isEqual:@(OCLogLevelVerbose)]);
+			[expectInitialValue fulfill];
+		}
+
+		if (type & OCClassSettingChangeTypeValue)
+		{
+			if ((expectValueChange1 != nil) && [newValue isEqual:@(OCLogLevelVerbose)])
+			{
+				[expectValueChange1 fulfill];
+				expectValueChange1 = nil;
+			}
+
+			if ((expectValueChange1 == nil) && (expectValueChange2 != nil) && ![newValue isEqual:@(OCLogLevelVerbose)])
+			{
+				[expectValueChange2 fulfill];
+				expectValueChange2 = nil;
+			}
+		}
+	} withOwner:self];
+
+	// Add source with value
+	[[OCClassSettings sharedSettings] addSource:settingsSource];
+
+	// Remove source
+	[[OCClassSettings sharedSettings] removeSource:settingsSource];
+
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
 @end

@@ -153,6 +153,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"The minimum server version required.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionAllowBackgroundURLSessions : @{
@@ -160,6 +161,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of background URL sessions. Note: depending on iOS version, the app may still choose not to use them. This settings is overriden by `force-background-url-sessions`.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionForceBackgroundURLSessions : @{
@@ -175,6 +177,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of cellular connections.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionPlainHTTPPolicy : @{
@@ -182,13 +185,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Policy regarding the use of plain (unencryped) HTTP URLs for creating bookmarks. A value of `warn` will create an issue (typically then presented to the user as a warning), but ultimately allow the creation of the bookmark. A value of `forbidden` will block the use of `http`-URLs for the creation of new bookmarks.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionAlwaysRequestPrivateLink : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Connection"
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		// Endpoints
@@ -197,6 +202,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the .well-known endpoint.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDCapabilities : @{
@@ -204,6 +210,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving server capabilities.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDUser : @{
@@ -211,6 +218,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving information on logged in user.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDWebDAV : @{
@@ -218,6 +226,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDWebDAVMeta : @{
@@ -225,6 +234,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV metadata.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDStatus : @{
@@ -232,6 +242,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDThumbnail : @{
@@ -239,6 +250,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the thumbnail endpoint.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDShares : @{
@@ -246,6 +258,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the shares API endpoint.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDRemoteShares : @{
@@ -253,6 +266,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the remote shares API endpoint.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDRecipients : @{
@@ -260,6 +274,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the sharing recipient API endpoint.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		// Security
@@ -270,6 +285,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
 			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionAllowedAuthenticationMethodIDs : @{
@@ -279,27 +295,31 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
 			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionCertificateExtendedValidationRule: @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Security"
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionRenewedCertificateAcceptanceRule: @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to `never` if the user should always be prompted when a server's certificate changed.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Security"
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionTransparentTemporaryRedirect : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether 307 redirects are handled transparently at the HTTP pipeline level (by resending the headers and body).",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Security"
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 	});
 }

@@ -583,7 +583,7 @@
 		DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCIssue.m */; };
 		DCF39B552458268E00DEA137 /* OCTUSHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF39B532458268E00DEA137 /* OCTUSHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF39B562458268E00DEA137 /* OCTUSHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF39B542458268E00DEA137 /* OCTUSHeader.m */; };
-		DCF95AEA25666FBB00806D2A /* OCClassSetting.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF95AE825666FBB00806D2A /* OCClassSetting.h */; };
+		DCF95AEA25666FBB00806D2A /* OCClassSetting.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF95AE825666FBB00806D2A /* OCClassSetting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF95AEB25666FBB00806D2A /* OCClassSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF95AE925666FBB00806D2A /* OCClassSetting.m */; };
 		DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */ = {isa = PBXBuildFile; fileRef = DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */; };
 		DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF621BAB35A00943F76 /* PerformanceTests.m */; };

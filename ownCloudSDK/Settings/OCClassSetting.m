@@ -152,7 +152,7 @@
 
 	if (changeType != OCClassSettingChangeTypeNone)
 	{
-		NSDictionary<id,NSMutableArray<OCClassSettingObserver> *> *observersByOwner = nil;
+		NSEnumerator *observerOwners = nil;
 		id oldValue = nil;
 
 		@synchronized(self)
@@ -160,14 +160,16 @@
 			oldValue = _lastValue;
 			_lastValue = newValue;
 
-			observersByOwner = [_observersByOwner dictionaryRepresentation];
-		}
+			observerOwners = [_observersByOwner keyEnumerator];
 
-		for (id owner in observersByOwner)
-		{
-			for (OCClassSettingObserver observer in observersByOwner[owner])
+			for (id owner in observerOwners)
 			{
-				observer(owner, self, changeType, oldValue, newValue);
+				NSMutableArray<OCClassSettingObserver> *observers = [_observersByOwner objectForKey:owner];
+
+				for (OCClassSettingObserver observer in observers)
+				{
+					observer(owner, self, changeType, oldValue, newValue);
+				}
 			}
 		}
 	}

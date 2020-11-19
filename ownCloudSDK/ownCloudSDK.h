@@ -42,6 +42,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCertificate.h>
 #import <ownCloudSDK/OCCertificateRuleChecker.h>
 
+#import <ownCloudSDK/OCClassSetting.h>
 #import <ownCloudSDK/OCClassSettings.h>
 #import <ownCloudSDK/OCClassSettings+Documentation.h>
 #import <ownCloudSDK/OCClassSettings+Metadata.h>

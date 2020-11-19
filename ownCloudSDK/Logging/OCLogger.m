@@ -243,7 +243,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		OCClassSettingsKeyLogPrivacyMask : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether certain objects in log statements should be masked for privacy.",
-			OCClassSettingsMetadataKeyCategory    	 : @"Logging"
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogEnabledComponents : @{
@@ -252,49 +253,56 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
 			OCClassSettingsMetadataKeyAutoExpansion  : OCClassSettingsAutoExpansionTrailing,
 			OCClassSettingsMetadataKeyPossibleValues : descriptionsByComponentID,
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogSynchronousLogging : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether log messages should be written synchronously (which can impact performance) or asynchronously (which can loose messages in case of a crash).",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogOnlyTags : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits all log messages not tagged with tags in this array.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogOmitTags : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits all log messages tagged with tags in this array.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogOnlyMatching : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	 : @"If set, only logs messages containing at least one of the exact terms in this array.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogOmitMatching : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits logs messages containing any of the exact terms in this array.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogBlankFilteredMessages : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether filtered out messages should still be logged, but with the message replaced with `-`.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogFormat : @{
@@ -307,6 +315,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				@"json-composed" : @"A simpler JSON version where details are already merged into the message.",
 			},
 			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogMaximumLogMessageSize : @{
@@ -314,21 +323,23 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			OCClassSettingsMetadataKeyDescription 	 : @"Maximum length of a log message before the message is truncated. A value of 0 means no limit.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
 			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences) // here to have a deny variant and because it's not an interesting setting for user preferences
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogColored : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether log levels should be replaced with colored emojis.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCClassSettingsKeyLogSingleLined : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether messages spanning more than one line should be broken into their individual lines and each be logged with the complete lead-in/lead-out sequence.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		}
 	});
 }
