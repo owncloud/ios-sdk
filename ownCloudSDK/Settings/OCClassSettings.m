@@ -136,6 +136,7 @@
 		[_sources addObject:source];
 
 		[self clearSourceCache];
+		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
 	}
 }
 
@@ -179,6 +180,7 @@
 		}
 
 		[self clearSourceCache];
+		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
 	}
 }
 
@@ -193,6 +195,7 @@
 			[_sources removeObjectIdenticalTo:source];
 
 			[self clearSourceCache];
+			[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
 		}
 	}
 }
@@ -511,3 +514,5 @@
 }
 
 @end
+
+NSNotificationName OCClassSettingsChangedNotification = @"OCClassSettingsChanged";

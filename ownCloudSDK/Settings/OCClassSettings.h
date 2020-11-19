@@ -111,6 +111,8 @@ typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @end
 
+extern NSNotificationName OCClassSettingsChangedNotification; //!< Posted with object==nil if any value could have changed, posted with object==flatIdentifier if a specific setting has changed
+
 NS_ASSUME_NONNULL_END
 
 #import "NSObject+OCClassSettings.h"
