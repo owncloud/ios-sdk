@@ -226,7 +226,6 @@
 			else
 			{
 				NSString *serverVersion = nil;
-				NSNumber *maintenanceMode = nil;
 				NSString *product = nil;
 
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
@@ -236,12 +235,9 @@
 					error = [self supportsServerVersion:serverVersion product:product longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict] allowHiddenVersion:YES];
 				}
 
-				if ((jsonDict!=nil) && ((maintenanceMode = jsonDict[@"maintenance"]) != nil))
+				if ((jsonDict!=nil) && ([OCConnection validateStatus:jsonDict] == OCConnectionStatusValidationResultMaintenance))
 				{
-					if (maintenanceMode.boolValue)
-					{
-						error = OCError(OCErrorServerInMaintenanceMode);
-					}
+					error = OCError(OCErrorServerInMaintenanceMode);
 				}
 
 				if ((error == nil) && (redirectionURL != nil))

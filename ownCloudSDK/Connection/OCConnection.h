@@ -60,6 +60,13 @@ typedef NS_ENUM(NSUInteger, OCConnectionSetupHTTPPolicy)
 	OCConnectionSetupHTTPPolicyForbidden		//!< Make setup fail when the user tries to use a plain-text HTTP URL
 };
 
+typedef NS_ENUM(NSUInteger, OCConnectionStatusValidationResult)
+{
+	OCConnectionStatusValidationResultOperational,	//!< Validation indicates an operational system
+	OCConnectionStatusValidationResultMaintenance,	//!< Validation indicates a system in maintenance mode
+	OCConnectionStatusValidationResultFailure	//!< Validation failed
+};
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol OCConnectionDelegate <NSObject>
@@ -122,6 +129,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	BOOL _attachedToPipelines;
 
+	BOOL _isValidatingConnection;
+
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
 
@@ -174,6 +183,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Server Status
 - (nullable NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError * _Nullable error, OCHTTPRequest * _Nullable request, NSDictionary<NSString *,id> * _Nullable statusInfo))completionHandler;
++ (OCConnectionStatusValidationResult)validateStatus:(nullable NSDictionary<NSString*, id> *)serverStatus;
 
 #pragma mark - Metadata actions
 - (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path

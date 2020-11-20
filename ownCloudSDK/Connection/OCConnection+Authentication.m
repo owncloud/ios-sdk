@@ -79,7 +79,7 @@
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
 
-		request.redirectPolicy = OCHTTPRequestRedirectPolicyForbidden;
+		request.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		

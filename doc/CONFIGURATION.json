@@ -411,12 +411,12 @@
     "category" : "Security",
     "classIdentifier" : "connection",
     "className" : "OCConnection",
-    "defaultValue" : true,
+    "defaultValue" : false,
     "description" : "Controls whether 307 redirects are handled transparently at the HTTP pipeline level (by resending the headers and body).",
     "flags" : 4,
     "flatIdentifier" : "connection.transparent-temporary-redirect",
     "key" : "transparent-temporary-redirect",
-    "status" : "advanced",
+    "status" : "debugOnly",
     "type" : "bool"
   },
   {
@@ -471,7 +471,7 @@
     "category" : "Connection",
     "classIdentifier" : "core",
     "className" : "OCCore",
-    "defaultValue" : false,
+    "defaultValue" : true,
     "description" : "Enable or disable per-process, in-memory cookie storage.",
     "flatIdentifier" : "core.cookie-support-enabled",
     "key" : "cookie-support-enabled",
@@ -527,16 +527,20 @@
     "key" : "active-simulations",
     "possibleValues" : [
       {
-        "description" : "Return status code 404 for every request.",
-        "value" : "only-404"
-      },
-      {
         "description" : "Return status code 404 for every request for the first five seconds.",
         "value" : "five-seconds-of-404"
       },
       {
+        "description" : "Return status code 404 for every request.",
+        "value" : "only-404"
+      },
+      {
         "description" : "Reject Downloads with status 500 responses.",
         "value" : "reject-downloads-500"
+      },
+      {
+        "description" : "Redirect any request without cookies to a cookie-setting endpoint, where cookies are set - and then redirect back.",
+        "value" : "simple-apm"
       }
     ],
     "status" : "debugOnly",
@@ -636,12 +640,12 @@
         "value" : "option.log-requests-and-responses"
       },
       {
-        "description" : "Standard error output",
-        "value" : "writer.stderr"
-      },
-      {
         "description" : "Log file",
         "value" : "writer.file"
+      },
+      {
+        "description" : "Standard error output",
+        "value" : "writer.stderr"
       }
     ],
     "status" : "advanced",
@@ -659,16 +663,16 @@
     "key" : "log-format",
     "possibleValues" : [
       {
+        "description" : "Detailed JSON (one line per message).",
+        "value" : "json"
+      },
+      {
         "description" : "A simpler JSON version where details are already merged into the message.",
         "value" : "json-composed"
       },
       {
         "description" : "Standard logging as text.",
         "value" : "text"
-      },
-      {
-        "description" : "Detailed JSON (one line per message).",
-        "value" : "json"
       }
     ],
     "status" : "advanced",
@@ -686,8 +690,20 @@
     "key" : "log-level",
     "possibleValues" : [
       {
+        "description" : "verbose",
+        "value" : -1
+      },
+      {
         "description" : "debug",
         "value" : 0
+      },
+      {
+        "description" : "info",
+        "value" : 1
+      },
+      {
+        "description" : "warning",
+        "value" : 2
       },
       {
         "description" : "error",
@@ -696,18 +712,6 @@
       {
         "description" : "off",
         "value" : 4
-      },
-      {
-        "description" : "warning",
-        "value" : 2
-      },
-      {
-        "description" : "verbose",
-        "value" : -1
-      },
-      {
-        "description" : "info",
-        "value" : 1
       }
     ],
     "status" : "supported",

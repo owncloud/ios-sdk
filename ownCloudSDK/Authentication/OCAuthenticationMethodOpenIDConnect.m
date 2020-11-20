@@ -113,7 +113,7 @@
 	{
 		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
-		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyForbidden;
+		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
 
 		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;

@@ -56,6 +56,8 @@
 
 static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyAuto;
 
+static NSString *OCConnectionValidatorKey = @"connection-validator";
+
 @implementation OCConnection
 
 @dynamic authenticationMethod;
@@ -123,7 +125,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO),
-		OCConnectionTransparentTemporaryRedirect	: @(YES)
+		OCConnectionTransparentTemporaryRedirect	: @(NO)
 	});
 }
 
@@ -317,7 +319,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionTransparentTemporaryRedirect : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether 307 redirects are handled transparently at the HTTP pipeline level (by resending the headers and body).",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"Security",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
@@ -695,6 +697,22 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
+	// Connection validation
+	if (_isValidatingConnection)
+	{
+		// Hold back unrelated requests while connection is validated
+		if (task.request.userInfo[OCConnectionValidatorKey] == nil)
+		{
+			OCTLog(@[ @"ConnectionValidator" ], @"Connection validation running - not sending request to %@ for now", OCLogPrivate(task.request.url));
+
+			return (NO);
+		}
+		else
+		{
+			OCTLog(@[ @"ConnectionValidator" ], @"Connection validation touching %@", OCLogPrivate(task.request.url));
+		}
+	}
+
 	// Authentication method validity
 	if (!_authMethodUnavailableChecked)
 	{
@@ -781,35 +799,112 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		instruction = OCHTTPRequestInstructionReschedule;
 	}
 
-	if (OCTypedCast([self classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
+	// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
+	if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
+	    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
 	{
-		// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
-		if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
-		    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
+		NSURL *redirectURL = task.response.redirectURL;
+		BOOL rescheduleWithRedirectURL = NO;
+		BOOL validateConnection = NO;
+
+		switch (task.request.redirectPolicy)
 		{
-			NSURL *redirectURL = task.response.redirectURL;
-			BOOL rescheduleWithRedirectURL = NO;
-
-			switch (task.request.redirectPolicy)
-			{
-				case OCHTTPRequestRedirectPolicyForbidden:
-					rescheduleWithRedirectURL = NO;
-				break;
-
-				case OCHTTPRequestRedirectPolicyAllowSameHost:
-				case OCHTTPRequestRedirectPolicyDefault:
-					rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
-				break;
-
-				case OCHTTPRequestRedirectPolicyAllowAnyHost:
-					rescheduleWithRedirectURL = YES;
-				break;
-			}
-
-			if (rescheduleWithRedirectURL && (redirectURL != nil))
-			{
-				task.request.url = redirectURL;
+			case OCHTTPRequestRedirectPolicyValidateConnection:
+				// Reschedule request for when connection validation has finished
 				instruction = OCHTTPRequestInstructionReschedule;
+				validateConnection = YES;
+
+			case OCHTTPRequestRedirectPolicyHandleLocally:
+				rescheduleWithRedirectURL = NO;
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowSameHost:
+			case OCHTTPRequestRedirectPolicyDefault:
+				rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowAnyHost:
+				rescheduleWithRedirectURL = YES;
+			break;
+		}
+
+		if (rescheduleWithRedirectURL && (task.request.redirectionHistory.count > task.request.maximumRedirectionDepth) && (task.request.maximumRedirectionDepth != 0))
+		{
+			// Limit maximum number of redirections to follow to .maximumRedirectionDepth
+			rescheduleWithRedirectURL = NO;
+		}
+
+		if (rescheduleWithRedirectURL && (redirectURL != nil))
+		{
+			task.request.redirectionHistory = (task.request.redirectionHistory == nil) ? @[ task.request.url, redirectURL ] : [task.request.redirectionHistory arrayByAddingObject:redirectURL];
+			task.request.url = redirectURL;
+
+			instruction = OCHTTPRequestInstructionReschedule;
+		}
+
+		if (validateConnection)
+		{
+			// Connection validator
+			if (!_isValidatingConnection)
+			{
+				__weak OCConnection *weakSelf = self;
+				_isValidatingConnection = YES;
+
+				OCTLog(@[ @"ConnectionValidator" ], @"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL);
+
+				OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
+
+				validatorRequest.userInfo = @{
+					OCConnectionValidatorKey : @(YES)
+				};
+
+				[validatorRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+				validatorRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
+
+				validatorRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+					OCConnection *connection;
+
+					if ((connection = weakSelf) != nil)
+					{
+						NSSet<OCHTTPPipeline *> *pipelines = connection.allHTTPPipelines;
+						NSError *error = nil;
+
+						OCTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
+
+						connection->_isValidatingConnection = NO;
+
+						switch ([OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&error]])
+						{
+							case OCConnectionStatusValidationResultFailure:
+								OCWTLogError(@[ @"ConnectionValidator" ], @"Connection validation failed after touching %@", request.redirectionHistory);
+							break;
+
+							case OCConnectionStatusValidationResultOperational:
+								OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation indicates operational server");
+							break;
+
+							case OCConnectionStatusValidationResultMaintenance:
+								OCWTLogWarning(@[ @"ConnectionValidator" ], @"Connection validation indicates server in maintenance mode");
+							break;
+						}
+
+						if (error != nil)
+						{
+							OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", error);
+						}
+
+						for (OCHTTPPipeline *pipeline in pipelines)
+						{
+							[pipeline setPipelineNeedsScheduling];
+						}
+					}
+				};
+
+				// Attach to pipelines
+				[self attachToPipelines];
+
+				// Send request to status endpoint
+				[self.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
 			}
 		}
 	}
@@ -993,18 +1088,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						}
 
 						// Check maintenance status
-						if ([serverStatus[@"maintenance"] isKindOfClass:[NSNumber class]])
+						if ([OCConnection validateStatus:serverStatus] == OCConnectionStatusValidationResultMaintenance)
 						{
-							if (((NSNumber *)serverStatus[@"maintenance"]).boolValue)
-							{
-								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
+							NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
 
-								OCErrorAddDateFromResponse(maintenanceModeError, response);
+							OCErrorAddDateFromResponse(maintenanceModeError, response);
 
-								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
+							completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
-								return;
-							}
+							return;
 						}
 
 						// Save server status to bookmark
@@ -1208,6 +1300,27 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	return (nil);
+}
+
++ (OCConnectionStatusValidationResult)validateStatus:(nullable NSDictionary<NSString*, id> *)serverStatus
+{
+	OCConnectionStatusValidationResult result = OCConnectionStatusValidationResultFailure;
+
+	if (OCTypedCast(serverStatus[@"maintenance"], NSNumber).boolValue)
+	{
+		result = OCConnectionStatusValidationResultMaintenance;
+	}
+	else
+	{
+		if (OCTypedCast(serverStatus[@"installed"], NSNumber).boolValue &&
+		    (OCTypedCast(serverStatus[@"version"], NSString) != nil) &&
+		    (OCTypedCast(serverStatus[@"versionstring"], NSString) != nil))
+		{
+			result = OCConnectionStatusValidationResultOperational;
+		}
+	}
+
+	return (result);
 }
 
 #pragma mark - Metadata actions

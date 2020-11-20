@@ -120,8 +120,8 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "oc:log.log-only-tags"
-            value = "[TEST,Request,Response,Cookies]"
-            isEnabled = "NO">
+            value = "[TEST,Request,Response,Cookies,ConnectionValidator]"
+            isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "oc:log.log-omit-tags"
