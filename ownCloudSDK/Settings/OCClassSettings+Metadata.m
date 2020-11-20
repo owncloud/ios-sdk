@@ -184,11 +184,11 @@
 
 	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionSortPossibleValues], NSNumber).boolValue))
 	{
-		if ([metadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class])
+		if ([metadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class] || [mutableMetadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class])
 		{
 			if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
 
-			NSMutableArray<NSDictionary *> *mutablePossibleValues = [metadata[OCClassSettingsMetadataKeyPossibleValues] mutableCopy];
+			NSMutableArray<NSDictionary *> *mutablePossibleValues = [mutableMetadata[OCClassSettingsMetadataKeyPossibleValues] mutableCopy];
 
 			[mutablePossibleValues sortUsingDescriptors:@[ [NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeyValue ascending:YES] ]];
 
