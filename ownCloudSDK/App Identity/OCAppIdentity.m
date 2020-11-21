@@ -17,6 +17,7 @@
  */
 
 #import "OCAppIdentity.h"
+#import "OCFeatureAvailability.h"
 
 @implementation OCAppIdentity
 
@@ -215,6 +216,25 @@
 	}
 
 	return (_userDefaults);
+}
+
+#pragma mark - Device/Environment/Build Capabilities
++ (BOOL)supportsFileProvider
+{
+	if (@available(iOS 14, *))
+	{
+		// File Provider should not be used if running as iOS App On Mac
+		if (NSProcessInfo.processInfo.isiOSAppOnMac)
+		{
+			return (NO);
+		}
+	}
+
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+	return (YES);
+	#else
+	return (NO);
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 }
 
 @end
