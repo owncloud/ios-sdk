@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *)basicAuthorizationValueForUsername:(NSString *)username passphrase:(NSString *)passPhrase;
 
-+ (nullable NSArray <NSURL *> *)detectionURLsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection;
++ (nullable NSArray <OCHTTPRequest *> *)detectionRequestsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection;
 
 + (void)detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses completionHandler:(void(^)(OCAuthenticationMethodIdentifier _Nullable identifier, BOOL supported))completionHandler;
 

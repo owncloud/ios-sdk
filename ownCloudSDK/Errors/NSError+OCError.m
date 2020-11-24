@@ -312,6 +312,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorAuthorizationMethodNotAllowed:
 					unlocalizedString = @"Authentication method not allowed. Re-authentication needed.";
 				break;
+
+				case OCErrorServerConnectionValidationFailed:
+					unlocalizedString = @"Connection validation failed.";
+				break;
 			}
 		}
 	}

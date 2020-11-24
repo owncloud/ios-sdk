@@ -152,16 +152,16 @@
 	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
 }
 
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
 	NSURL *openidConfigURL;
-	NSArray <NSURL *> *oAuth2DetectionURLs;
+	NSArray <OCHTTPRequest *> *oAuth2DetectionURLs;
 
-	if ((oAuth2DetectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
+	if ((oAuth2DetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{
-			return ([oAuth2DetectionURLs arrayByAddingObject:openidConfigURL]);
+			return ([oAuth2DetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
 		}
 	}
 

@@ -844,7 +844,21 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 		if (validateConnection)
 		{
-			// Connection validator
+			// Connection Validator
+			//
+			// In case an unexpected response is received, the Connection Validator kicks in to validate the connection before
+			// sending any new requests. This is typically needed for APMs (Access Policy Manager) that can intercept random requests
+			// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
+			// original URL.
+			//
+			// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
+			// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
+			// response. If no valid response can be retrieved, an OCErrorServerConnectionValidationFailed error is returned.
+			//
+			// When using an OCCore, the OCErrorServerConnectionValidationFailed error triggers the core's maintenance mode handling,
+			// which periodically polls status.php - and puts the core offline until a valid status.php response is received, at
+			// which point the core resumes.
+			//
 			if (!_isValidatingConnection)
 			{
 				__weak OCConnection *weakSelf = self;
@@ -854,6 +868,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 				OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
 
+				// Mark as validator request
 				validatorRequest.userInfo = @{
 					OCConnectionValidatorKey : @(YES)
 				};
@@ -866,31 +881,86 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 					if ((connection = weakSelf) != nil)
 					{
+						NSError *jsonError = nil, *resultError = nil;
+						OCConnectionStatusValidationResult validationResult = [OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&jsonError]];
 						NSSet<OCHTTPPipeline *> *pipelines = connection.allHTTPPipelines;
-						NSError *error = nil;
 
-						OCTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
+						OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
 
-						connection->_isValidatingConnection = NO;
-
-						switch ([OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&error]])
+						switch (validationResult)
 						{
 							case OCConnectionStatusValidationResultFailure:
 								OCWTLogError(@[ @"ConnectionValidator" ], @"Connection validation failed after touching %@", request.redirectionHistory);
+
+								// \/ Below is code to do a follow-up authenticated request to the WebDAV endpoint - in case we determine it is needed in the future.
+								//    For now, connection validation is limited to status.php.
+								//
+								//if (connection.authenticationMethod != nil)
+								//{
+								//	// Attempt an authenticated request to the WebDAV endpoint
+
+								//	// Generate PROPFIND for D:supported-method-set on bare WebDAV endpoint
+								//	OCHTTPDAVRequest *validateAuthRequest;
+								//	validateAuthRequest = [OCHTTPDAVRequest propfindRequestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+								//	validateAuthRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally; // Don't follow redirects, return directly
+
+								//	[validateAuthRequest.xmlRequestPropAttribute addChildren:@[
+								//		[OCXMLNode elementWithName:@"D:supported-method-set"],
+								//	]];
+
+								//	// Mark as validator request
+								//	validateAuthRequest.userInfo = @{
+								//		OCConnectionValidatorKey : @(YES)
+								//	};
+								//	[validateAuthRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+
+								//	// Add any available authentication header
+								//	[connection.authenticationMethod authorizeRequest:validateAuthRequest forConnection:connection];
+
+								//	// Handle result
+								//	validateAuthRequest.ephermalResultHandler = ^{
+								//		OCConnection *connection;
+
+								//		if ((connection = weakSelf) != nil)
+								//		{
+								//		}
+								//	};
+
+								//	// Send request to status endpoint
+								//	[connection.ephermalPipeline enqueueRequest:validateAuthRequest forPartitionID:connection.partitionID];
+								//}
+								//else
+								//{
+								resultError = OCError(OCErrorServerConnectionValidationFailed);
+								connection->_isValidatingConnection = NO;
+								//}
 							break;
 
 							case OCConnectionStatusValidationResultOperational:
 								OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation indicates operational server");
+								connection->_isValidatingConnection = NO;
 							break;
 
 							case OCConnectionStatusValidationResultMaintenance:
 								OCWTLogWarning(@[ @"ConnectionValidator" ], @"Connection validation indicates server in maintenance mode");
+								resultError = OCError(OCErrorServerInMaintenanceMode);
+								connection->_isValidatingConnection = NO;
 							break;
 						}
 
-						if (error != nil)
+						if (jsonError != nil)
 						{
-							OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", error);
+							OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", jsonError);
+						}
+
+						if (resultError != nil)
+						{
+							OCWTLogError(@[ @"ConnectionValidator" ], @"Error validating connection: %@", resultError);
+
+							if ([connection.delegate respondsToSelector:@selector(connection:handleError:)])
+							{
+								[connection.delegate connection:connection handleError:resultError];
+							}
 						}
 
 						for (OCHTTPPipeline *pipeline in pipelines)
@@ -1314,7 +1384,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	{
 		if (OCTypedCast(serverStatus[@"installed"], NSNumber).boolValue &&
 		    (OCTypedCast(serverStatus[@"version"], NSString) != nil) &&
-		    (OCTypedCast(serverStatus[@"versionstring"], NSString) != nil))
+		    (OCTypedCast(serverStatus[@"productname"], NSString) != nil))
 		{
 			result = OCConnectionStatusValidationResultOperational;
 		}

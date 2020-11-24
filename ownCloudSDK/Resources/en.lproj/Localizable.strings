@@ -303,6 +303,9 @@
 // OCErrorAuthorizationMethodNotAllowed
 "Authentication method not allowed. Re-authentication needed." = "Authentication method not allowed. Re-authentication needed.";
 
+// OCErrorServerConnectionValidationFailed
+"Connection validation failed." = "Connection validation failed.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

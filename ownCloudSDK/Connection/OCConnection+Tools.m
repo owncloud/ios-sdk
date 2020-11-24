@@ -78,6 +78,15 @@
 			}
 		}
 
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		{
+			// Ensure WebDAV endpoint path is slash-terminated
+			if (![url.absoluteString hasSuffix:@"/"])
+			{
+				url = [NSURL URLWithString:[url.absoluteString stringByAppendingString:@"/"]];
+			}
+		}
+
 		return (url);
 	}
 

@@ -69,8 +69,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 @property(readonly,nonatomic,nullable) NSDate *authenticationDataKnownInvalidDate; //!< The date the .authenticationData was last known to be invalid. Reset to nil when -flushCachedAuthenticationSecret is called.
 
 #pragma mark - Authentication Method Detection
-+ (nullable NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionURLsForConnection:) and then returns result via the completionHandler.
++ (nullable NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionRequestsForConnection:) and then returns result via the completionHandler.
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.

@@ -171,7 +171,7 @@
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
 	return(nil);
 }

@@ -237,14 +237,14 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
-	NSArray <NSURL *> *detectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
+	NSArray <OCHTTPRequest *> *detectionRequests = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
 	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
 
-	detectionURLs = [detectionURLs arrayByAddingObject:tokenEndpointURL];
+	detectionRequests = [detectionRequests arrayByAddingObject:[OCHTTPRequest requestWithURL:tokenEndpointURL]];
 
-	return (detectionURLs);
+	return (detectionRequests);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
