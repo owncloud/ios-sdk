@@ -859,10 +859,30 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			// which periodically polls status.php - and puts the core offline until a valid status.php response is received, at
 			// which point the core resumes.
 			//
-			if (!_isValidatingConnection)
+			// The Connection Validator is rate-limited to avoid excessive retries triggered by receiving redirects consistently.
+			//
+			BOOL doValidateConnection = NO;
+
+			@synchronized(self)
+			{
+				if (!_isValidatingConnection)
+				{
+					_isValidatingConnection = YES;
+					doValidateConnection = YES;
+				}
+			}
+
+			if (doValidateConnection)
 			{
 				__weak OCConnection *weakSelf = self;
-				_isValidatingConnection = YES;
+
+				@synchronized(self)
+				{
+					if (_connectionValidationRateLimiter == nil)
+					{
+						_connectionValidationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:3.0];
+					}
+				}
 
 				OCTLog(@[ @"ConnectionValidator" ], @"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL);
 
@@ -932,19 +952,28 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 								//else
 								//{
 								resultError = OCError(OCErrorServerConnectionValidationFailed);
-								connection->_isValidatingConnection = NO;
+								@synchronized(connection)
+								{
+									connection->_isValidatingConnection = NO;
+								}
 								//}
 							break;
 
 							case OCConnectionStatusValidationResultOperational:
 								OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation indicates operational server");
-								connection->_isValidatingConnection = NO;
+								@synchronized(connection)
+								{
+									connection->_isValidatingConnection = NO;
+								}
 							break;
 
 							case OCConnectionStatusValidationResultMaintenance:
 								OCWTLogWarning(@[ @"ConnectionValidator" ], @"Connection validation indicates server in maintenance mode");
 								resultError = OCError(OCErrorServerInMaintenanceMode);
-								connection->_isValidatingConnection = NO;
+								@synchronized(connection)
+								{
+									connection->_isValidatingConnection = NO;
+								}
 							break;
 						}
 
@@ -970,11 +999,16 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 					}
 				};
 
-				// Attach to pipelines
-				[self attachToPipelines];
+				// Rate limit connection validation
+				[_connectionValidationRateLimiter runRateLimitedBlock:^{
+					OCConnection *connection = weakSelf;
 
-				// Send request to status endpoint
-				[self.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
+					// Attach to pipelines
+					[connection attachToPipelines];
+
+					// Send request to status endpoint
+					[connection.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
+				}];
 			}
 		}
 	}

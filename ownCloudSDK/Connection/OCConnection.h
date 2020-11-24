@@ -32,6 +32,7 @@
 #import "OCHTTPTypes.h"
 #import "OCHTTPCookieStorage.h"
 #import "OCCapabilities.h"
+#import "OCRateLimiter.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -130,6 +131,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _attachedToPipelines;
 
 	BOOL _isValidatingConnection;
+	OCRateLimiter *_connectionValidationRateLimiter;
 
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
