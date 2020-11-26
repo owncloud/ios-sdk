@@ -100,7 +100,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorPrivateLinkInvalidFormat, //!< Private link format invalid.
 	OCErrorPrivateLinkResolutionFailed, //!< Resolution of private link failed
 
-	OCErrorAuthorizationMethodNotAllowed //!< Authentication method not allowed. Re-authentication needed.
+	OCErrorAuthorizationMethodNotAllowed, //!< Authentication method not allowed. Re-authentication needed.
+	OCErrorAuthorizationMethodUnknown //!< Authentication method unknown.
 };
 
 @class OCIssue;

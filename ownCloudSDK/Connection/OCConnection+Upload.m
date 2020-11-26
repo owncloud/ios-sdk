@@ -205,30 +205,38 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	// Create TUS job
 	OCTUSJob *tusJob;
-	NSURL *creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path];
+	NSURL *creationURL;
 
-	if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
+	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
-		tusJob.fileName = fileName;
-		tusJob.fileSize = fileSize;
-		tusJob.fileModDate = modificationDate;
-		tusJob.fileChecksum = checksum;
-
-		tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
-
-		tusJob.eventTarget = eventTarget;
-
-		if (tusJob.maxSegmentSize == 0)
+		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
 		{
-			NSNumber *capabilitiesTusMaxChunkSize;
+			tusJob.fileName = fileName;
+			tusJob.fileSize = fileSize;
+			tusJob.fileModDate = modificationDate;
+			tusJob.fileChecksum = checksum;
 
-			if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+			tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
+
+			tusJob.eventTarget = eventTarget;
+
+			if (tusJob.maxSegmentSize == 0)
 			{
-				tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
-			}
-		}
+				NSNumber *capabilitiesTusMaxChunkSize;
 
-		tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+				if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+				{
+					tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
+				}
+			}
+
+			tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+		}
+	}
+	else
+	{
+		// WebDAV root could not be generated (likely due to lack of username)
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
 	}
 
 	return (tusProgress);
@@ -686,6 +694,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
 	}
 

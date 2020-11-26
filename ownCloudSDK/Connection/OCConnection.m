@@ -639,7 +639,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	/*
 		Follow the https://github.com/owncloud/administration/tree/master/redirectServer playbook:
-	
+
+		0) (not in the playback) Check authentication data availability
+			- if existant: proceed
+			- if not: return error
+
 		1) Check status endpoint
 			- if redirection: create issue & complete
 			- if error: check bookmark's originURL for redirection, create issue & complete
@@ -660,6 +664,16 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		NSProgress *connectProgress = [NSProgress new];
 		OCHTTPRequest *statusRequest;
+
+		// Check for authentication data
+		if (self.bookmark.authenticationData == nil)
+		{
+			// No authentication data -> return error
+			NSError *error = OCError(OCErrorAuthorizationNoMethodData);
+			completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+
+			return (nil);
+		}
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -908,7 +922,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	else
 	{
 		// Return error
-		NSError *error = OCError(OCErrorAuthorizationNoMethodData);
+		NSError *error = OCError(OCErrorAuthorizationMethodUnknown);
 		completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 	}
 
@@ -1108,62 +1122,70 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSURL *endpointURL;
 
-	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) != nil)
 	{
-		// davRequest.requiredSignals = self.actionSignals;
-		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
-		davRequest.userInfo = @{
-			@"path" : path,
-			@"depth" : @(depth),
-			@"endpointURL" : endpointURL,
-			@"options" : ((options != nil) ? options : [NSNull null])
-		};
-		davRequest.eventTarget = eventTarget;
-		davRequest.downloadRequest = YES;
-		davRequest.priority = NSURLSessionTaskPriorityHigh;
-		davRequest.forceCertificateDecisionDelegation = YES;
-
-		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
-			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
-		}
+			// davRequest.requiredSignals = self.actionSignals;
+			davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
+			davRequest.userInfo = @{
+				@"path" : path,
+				@"depth" : @(depth),
+				@"endpointURL" : endpointURL,
+				@"options" : ((options != nil) ? options : [NSNull null])
+			};
+			davRequest.eventTarget = eventTarget;
+			davRequest.downloadRequest = YES;
+			davRequest.priority = NSURLSessionTaskPriorityHigh;
+			davRequest.forceCertificateDecisionDelegation = YES;
 
-		if (options[OCConnectionOptionIsNonCriticalKey] != nil)
-		{
-			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
-		}
+			if (options[OCConnectionOptionRequestObserverKey] != nil)
+			{
+				davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+			}
 
-		if (options[OCConnectionOptionGroupIDKey] != nil)
-		{
-			davRequest.groupID = options[OCConnectionOptionGroupIDKey];
-		}
+			if (options[OCConnectionOptionIsNonCriticalKey] != nil)
+			{
+				davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
+			}
 
-		if (options[OCConnectionOptionRequiredSignalsKey] != nil)
-		{
-			davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
-		}
+			if (options[OCConnectionOptionGroupIDKey] != nil)
+			{
+				davRequest.groupID = options[OCConnectionOptionGroupIDKey];
+			}
 
-		// Attach to pipelines
-		[self attachToPipelines];
+			if (options[OCConnectionOptionRequiredSignalsKey] != nil)
+			{
+				davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
+			}
 
-		// Enqueue request
-		if (options[@"alternativeEventType"] != nil)
-		{
-			[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			// Attach to pipelines
+			[self attachToPipelines];
+
+			// Enqueue request
+			if (options[@"alternativeEventType"] != nil)
+			{
+				[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			}
+			else
+			{
+				[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			}
+
+			progress = davRequest.progress.progress;
+			progress.eventType = OCEventTypeRetrieveItemList;
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 		}
 		else
 		{
-			[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
 		}
-
-		progress = davRequest.progress.progress;
-		progress.eventType = OCEventTypeRetrieveItemList;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
 	}
 
@@ -1391,6 +1413,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload uuid:nil sender:self];
 	}
 
@@ -1565,6 +1588,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate uuid:nil sender:self];
 	}
 
@@ -1615,6 +1640,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 				if (event.result == nil)
 				{
+					// WebDAV root (endpointURL) might not have been generated (likely due to lack of username)
 					event.error = OCError(OCErrorInternal);
 				}
 			}
@@ -1676,6 +1702,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder uuid:nil sender:self];
 	}
 
@@ -1844,6 +1871,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:eventType uuid:nil sender:self];
 	}
 
@@ -1978,6 +2006,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete uuid:nil sender:self];
 	}
 
@@ -2106,6 +2135,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			// Preview API (OC 10.0.9+)
 			url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
+			if (url == nil)
+			{
+				// WebDAV root could not be generated (likely due to lack of username)
+				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+				return (nil);
+			}
+
 			// Add path
 			if (item.path != nil)
 			{
@@ -2130,6 +2166,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		{
 			// Thumbnail API (OC < 10.0.9)
 			url = [self URLForEndpoint:OCConnectionEndpointIDThumbnail options:nil];
+
+			if (url == nil)
+			{
+				// WebDAV root could not be generated (likely due to lack of username)
+				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+				return (nil);
+			}
 
 			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
 
@@ -2237,6 +2280,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	NSMutableArray<OCXMLNode *> *filterRulesXML = [NSMutableArray new];
 	OCHTTPDAVRequest *request;
 
+	if (endpointURL == nil)
+	{
+		// WebDAV root could not be generated (likely due to lack of username)
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeFilterFiles uuid:nil sender:self];
+
+		return (nil);
+	}
+
 	for (OCItemPropertyName propertyName in filterRules)
 	{
 		if ([propertyName isEqual:OCItemPropertyNameIsFavorite])
@@ -2296,13 +2347,21 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				NSArray <NSError *> *errors = nil;
 				NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if (endpointURL != nil)
 				{
-					event.result = items;
+					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+					{
+						event.result = items;
+					}
+					else
+					{
+						event.error = errors.firstObject;
+					}
 				}
 				else
 				{
-					event.error = errors.firstObject;
+					// WebDAV root could not be generated (likely due to lack of username)
+					event.error = OCError(OCErrorInternal);
 				}
 			}
 			else

@@ -45,6 +45,7 @@
 				}
 				else
 				{
+					OCLogError(@"Could not generate path for endpoint %@ because the username is missing", endpoint);
 					endpointPath = nil;
 				}
 			}
@@ -79,6 +80,10 @@
 		}
 
 		return (url);
+	}
+	else
+	{
+		OCLogError(@"Path for endpoint %@ with options %@ could not be generated", endpoint, options);
 	}
 
 	return (nil);
