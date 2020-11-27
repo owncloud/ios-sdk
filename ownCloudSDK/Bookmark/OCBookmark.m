@@ -30,6 +30,8 @@
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
+
+	NSString *_lastUsername;
 }
 @end
 
@@ -142,6 +144,15 @@
 			[[OCAppIdentity sharedAppIdentity].keychain writeData:_authenticationData toKeychainItemForAccount:_uuid.UUIDString path:@"authenticationData"];
 		}
 
+		// Update cached/last user name
+		NSString *username;
+
+		if ((username = self.userName) != nil)
+		{
+			// TODO: make configurable if user name may be stored in bookmarks
+			_lastUsername = username;
+		}
+
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:self.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
@@ -196,7 +207,7 @@
 		}
 	}
 
-	return (nil);
+	return (_lastUsername);
 }
 
 #pragma mark - Certificate approval
@@ -228,6 +239,8 @@
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
 	_authenticationValidationDate = sourceBookmark.authenticationValidationDate;
 
+	_lastUsername = sourceBookmark->_lastUsername;
+
 	_userInfo = sourceBookmark.userInfo;
 }
 
@@ -254,6 +267,8 @@
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
+		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
+
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
@@ -276,6 +291,8 @@
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
+
+	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
 	if (_userInfo.count > 0)
 	{

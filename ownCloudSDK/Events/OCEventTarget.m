@@ -98,7 +98,7 @@
 
 	event.error = error;
 
-	[[OCEvent eventHandlerWithIdentifier:_eventHandlerIdentifier] handleEvent:event sender:sender];
+	[self handleEvent:event sender:sender];
 }
 
 #pragma mark - Secure Coding

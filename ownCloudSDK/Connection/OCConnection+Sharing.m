@@ -870,8 +870,15 @@
 	{
 		// Private link needs to be retrieved from server
 		NSProgress *progress = nil;
-		NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+		NSURL *endpointURL;
 		OCHTTPDAVRequest *davRequest;
+
+		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) == nil)
+		{
+			// WebDAV root could not be generated (likely due to lack of username)
+			completionHandler(OCError(OCErrorInternal), nil);
+			return (nil);
+		}
 
 		davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[endpointURL URLByAppendingPathComponent:item.path] depth:0];
 		davRequest.requiredSignals = self.propFindSignals;

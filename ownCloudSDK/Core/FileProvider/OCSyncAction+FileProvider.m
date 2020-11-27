@@ -27,7 +27,7 @@
 - (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext * _Nonnull)syncContext
 {
 	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
-	if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
+	if (OCVault.hostHasFileProvider && self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 	{
 		/*
 		 Check if a placeholder/file already exists here before registering this URL session for the item. Otherwise, the SDK may find itself on

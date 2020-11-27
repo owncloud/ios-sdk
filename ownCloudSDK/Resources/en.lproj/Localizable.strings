@@ -303,6 +303,9 @@
 // OCErrorAuthorizationMethodNotAllowed
 "Authentication method not allowed. Re-authentication needed." = "Authentication method not allowed. Re-authentication needed.";
 
+// OCErrorAuthorizationMethodUnknown
+"Authentication method unknown." = "Authentication method unknown.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";
