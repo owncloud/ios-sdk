@@ -244,6 +244,11 @@
 	_userInfo = sourceBookmark.userInfo;
 }
 
+- (void)setLastUserName:(NSString *)userName
+{
+	_lastUsername = userName;
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
