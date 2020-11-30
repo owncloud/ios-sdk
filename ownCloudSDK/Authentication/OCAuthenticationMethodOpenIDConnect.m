@@ -223,6 +223,28 @@
 }
 
 #pragma mark - Generate bookmark authentication data
+- (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
+{
+	NSString *username;
+
+	if ((username = connection.bookmark.userName) != nil)
+	{
+		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+
+		/*
+			As per https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest:
+
+			OPTIONAL. Hint to the Authorization Server about the login identifier the End-User might use to log in (if necessary). This hint can be used by an RP if it first asks the End-User for their e-mail address (or other identifier) and then wants to pass that value as a hint to the discovered authorization service. It is RECOMMENDED that the hint value match the value used for discovery. This value MAY also be a phone number in the format specified for the phone_number Claim. The use of this parameter is left to the OP's discretion.
+		*/
+
+		mutableParameters[@"login_hint"] = username;
+
+		return (mutableParameters);
+	}
+
+	return (parameters);
+}
+
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
 	[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {

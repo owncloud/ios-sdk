@@ -289,6 +289,25 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Generate bookmark authentication data
+- (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
+{
+// 	** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
+//	** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
+//
+//	NSString *username;
+//
+//	if ((username = connection.bookmark.userName) != nil)
+//	{
+//		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+//
+//		mutableParameters[@"user"] = username;
+//
+//		return (mutableParameters);
+//	}
+
+	return (parameters);
+}
+
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
 	if (completionHandler==nil) { return; }
@@ -298,20 +317,24 @@ OCAuthenticationMethodAutoRegister
 		NSURL *authorizationRequestURL;
 
 		// Generate Authorization Request URL
-		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection] urlByAppendingQueryParameters:@{
-						// OAuth2
-						@"response_type"  	 : @"code",
-						@"client_id" 	  	 : [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID],
-						@"redirect_uri"   	 : [self redirectURIForConnection:connection],
+		NSDictionary<NSString *,NSString *> *parameters = @{
+			// OAuth2
+			@"response_type"  	 : @"code",
+			@"client_id" 	  	 : [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID],
+			@"redirect_uri"   	 : [self redirectURIForConnection:connection],
 
-						// OAuth2 PKCE
-						@"code_challenge" 	 : (self.pkce.codeChallenge != nil) ? self.pkce.codeChallenge : ((NSString *)NSNull.null),
-						@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
+			// OAuth2 PKCE
+			@"code_challenge" 	 : (self.pkce.codeChallenge != nil) ? self.pkce.codeChallenge : ((NSString *)NSNull.null),
+			@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
 
-						// OIDC
-						@"scope"	  	 : (self.scope != nil)  ? self.scope  : ((NSString *)NSNull.null),
-						@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
-					  } replaceExisting:NO];
+			// OIDC
+			@"scope"	  	 : (self.scope != nil)  ? self.scope  : ((NSString *)NSNull.null),
+			@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
+		};
+
+		parameters = [self prepareAuthorizationRequestParameters:parameters forConnection:connection options:options];
+
+		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection] urlByAppendingQueryParameters:parameters replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {

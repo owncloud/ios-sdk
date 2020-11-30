@@ -62,6 +62,10 @@
 					self.authenticationData = [NSPropertyListSerialization dataWithPropertyList:plist format:NSPropertyListBinaryFormat_v1_0 options:0 error:NULL];
 				}
 			}
+		}],
+
+		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Authentication Data") 	action:^(OCDiagnosticContext * _Nullable context) {
+			self.authenticationData = nil;
 		}]
 	]);
 }
