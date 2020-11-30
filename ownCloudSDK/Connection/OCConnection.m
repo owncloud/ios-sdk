@@ -805,14 +805,13 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	{
 		NSURL *redirectURL = task.response.redirectURL;
 		BOOL rescheduleWithRedirectURL = NO;
-		BOOL validateConnection = NO;
 
 		switch (task.request.redirectPolicy)
 		{
 			case OCHTTPRequestRedirectPolicyValidateConnection:
 				// Reschedule request for when connection validation has finished
 				instruction = OCHTTPRequestInstructionReschedule;
-				validateConnection = YES;
+				[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
 
 			case OCHTTPRequestRedirectPolicyHandleLocally:
 				rescheduleWithRedirectURL = NO;
@@ -841,176 +840,6 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 			instruction = OCHTTPRequestInstructionReschedule;
 		}
-
-		if (validateConnection)
-		{
-			// Connection Validator
-			//
-			// In case an unexpected response is received, the Connection Validator kicks in to validate the connection before
-			// sending any new requests. This is typically needed for APMs (Access Policy Manager) that can intercept random requests
-			// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
-			// original URL.
-			//
-			// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
-			// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
-			// response. If no valid response can be retrieved, an OCErrorServerConnectionValidationFailed error is returned.
-			//
-			// When using an OCCore, the OCErrorServerConnectionValidationFailed error triggers the core's maintenance mode handling,
-			// which periodically polls status.php - and puts the core offline until a valid status.php response is received, at
-			// which point the core resumes.
-			//
-			// The Connection Validator is rate-limited to avoid excessive retries triggered by receiving redirects consistently.
-			//
-			BOOL doValidateConnection = NO;
-
-			@synchronized(self)
-			{
-				if (!_isValidatingConnection)
-				{
-					_isValidatingConnection = YES;
-					doValidateConnection = YES;
-				}
-			}
-
-			if (doValidateConnection)
-			{
-				__weak OCConnection *weakSelf = self;
-
-				@synchronized(self)
-				{
-					if (_connectionValidationRateLimiter == nil)
-					{
-						_connectionValidationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:3.0];
-					}
-				}
-
-				OCTLog(@[ @"ConnectionValidator" ], @"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL);
-
-				OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
-
-				// Mark as validator request
-				validatorRequest.userInfo = @{
-					OCConnectionValidatorKey : @(YES)
-				};
-
-				[validatorRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
-				validatorRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
-
-				validatorRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
-					OCConnection *connection;
-
-					if ((connection = weakSelf) != nil)
-					{
-						NSError *jsonError = nil, *resultError = nil;
-						OCConnectionStatusValidationResult validationResult = [OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&jsonError]];
-						NSSet<OCHTTPPipeline *> *pipelines = connection.allHTTPPipelines;
-
-						OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
-
-						switch (validationResult)
-						{
-							case OCConnectionStatusValidationResultFailure:
-								OCWTLogError(@[ @"ConnectionValidator" ], @"Connection validation failed after touching %@", request.redirectionHistory);
-
-								// \/ Below is code to do a follow-up authenticated request to the WebDAV endpoint - in case we determine it is needed in the future.
-								//    For now, connection validation is limited to status.php.
-								//
-								//if (connection.authenticationMethod != nil)
-								//{
-								//	// Attempt an authenticated request to the WebDAV endpoint
-
-								//	// Generate PROPFIND for D:supported-method-set on bare WebDAV endpoint
-								//	OCHTTPDAVRequest *validateAuthRequest;
-								//	validateAuthRequest = [OCHTTPDAVRequest propfindRequestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
-								//	validateAuthRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally; // Don't follow redirects, return directly
-
-								//	[validateAuthRequest.xmlRequestPropAttribute addChildren:@[
-								//		[OCXMLNode elementWithName:@"D:supported-method-set"],
-								//	]];
-
-								//	// Mark as validator request
-								//	validateAuthRequest.userInfo = @{
-								//		OCConnectionValidatorKey : @(YES)
-								//	};
-								//	[validateAuthRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
-
-								//	// Add any available authentication header
-								//	[connection.authenticationMethod authorizeRequest:validateAuthRequest forConnection:connection];
-
-								//	// Handle result
-								//	validateAuthRequest.ephermalResultHandler = ^{
-								//		OCConnection *connection;
-
-								//		if ((connection = weakSelf) != nil)
-								//		{
-								//		}
-								//	};
-
-								//	// Send request to status endpoint
-								//	[connection.ephermalPipeline enqueueRequest:validateAuthRequest forPartitionID:connection.partitionID];
-								//}
-								//else
-								//{
-								resultError = OCError(OCErrorServerConnectionValidationFailed);
-								@synchronized(connection)
-								{
-									connection->_isValidatingConnection = NO;
-								}
-								//}
-							break;
-
-							case OCConnectionStatusValidationResultOperational:
-								OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation indicates operational server");
-								@synchronized(connection)
-								{
-									connection->_isValidatingConnection = NO;
-								}
-							break;
-
-							case OCConnectionStatusValidationResultMaintenance:
-								OCWTLogWarning(@[ @"ConnectionValidator" ], @"Connection validation indicates server in maintenance mode");
-								resultError = OCError(OCErrorServerInMaintenanceMode);
-								@synchronized(connection)
-								{
-									connection->_isValidatingConnection = NO;
-								}
-							break;
-						}
-
-						if (jsonError != nil)
-						{
-							OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", jsonError);
-						}
-
-						if (resultError != nil)
-						{
-							OCWTLogError(@[ @"ConnectionValidator" ], @"Error validating connection: %@", resultError);
-
-							if ([connection.delegate respondsToSelector:@selector(connection:handleError:)])
-							{
-								[connection.delegate connection:connection handleError:resultError];
-							}
-						}
-
-						for (OCHTTPPipeline *pipeline in pipelines)
-						{
-							[pipeline setPipelineNeedsScheduling];
-						}
-					}
-				};
-
-				// Rate limit connection validation
-				[_connectionValidationRateLimiter runRateLimitedBlock:^{
-					OCConnection *connection = weakSelf;
-
-					// Attach to pipelines
-					[connection attachToPipelines];
-
-					// Send request to status endpoint
-					[connection.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
-				}];
-			}
-		}
 	}
 
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
@@ -1019,6 +848,233 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	}
 
 	return (instruction);
+}
+
+#pragma mark - Connection validation
+- (void)validateConnectionWithReason:(NSString *)validationReason
+{
+	// Connection Validator
+	//
+	// In case an unexpected response is received, the Connection Validator kicks in to validate the connection before
+	// sending any new requests. This is typically needed for APMs (Access Policy Manager) that can intercept random requests
+	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
+	// original URL.
+	//
+	// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
+	// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
+	// response. If no valid response can be retrieved, the status test is assumed to have failed, otherwise succeeded.
+	//
+	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
+	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
+	// as failed.
+	//
+	// If not more tests have failed than succeed, the Connection Validation has succeeded and the connection is resumed,
+	// otherwise failed. On failure, a OCErrorServerConnectionValidationFailed error is emitted.
+	//
+	// When using an OCCore, the OCErrorServerConnectionValidationFailed error triggers the core's maintenance mode handling,
+	// which periodically polls status.php - and puts the core offline until a valid status.php response is received, at
+	// which point the core resumes.
+	//
+	// The Connection Validator is rate-limited to avoid excessive retries triggered by receiving redirects consistently.
+	//
+	BOOL doValidateConnection = NO;
+
+	@synchronized(self)
+	{
+		if (!_isValidatingConnection)
+		{
+			_isValidatingConnection = YES;
+			doValidateConnection = YES;
+		}
+	}
+
+	if (doValidateConnection)
+	{
+		__weak OCConnection *weakSelf = self;
+
+		__block NSUInteger failedValidationsCount = 0;
+		__block NSUInteger succeededValidationsCount = 0;
+		__block NSError *validationError = nil;
+
+		@synchronized(self)
+		{
+			if (_connectionValidationRateLimiter == nil)
+			{
+				_connectionValidationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:3.0];
+			}
+		}
+
+		void(^EndValidation)(NSError *error) = ^(NSError *error){
+			OCConnection *connection;
+
+			if ((connection = weakSelf) != nil)
+			{
+				@synchronized(connection)
+				{
+					if (!connection->_isValidatingConnection)
+					{
+						OCWTLogWarning(@[ @"ConnectionValidator" ], @"Attempt to end connection validation more than once - returning early");
+						return;
+					}
+				}
+
+				// If an error has been provided directly, force-use it
+				if (error != nil)
+				{
+					validationError = error;
+				}
+
+				// If no other error has yet been reported, but the validation has failed as a whol, return OCErrorServerConnectionValidationFailed
+				if ((succeededValidationsCount < failedValidationsCount) && (validationError == nil))
+				{
+					validationError = OCError(OCErrorServerConnectionValidationFailed);
+				}
+
+				// End validation
+				@synchronized(connection)
+				{
+					connection->_isValidatingConnection = NO;
+				}
+
+				// Return validation error
+				if (validationError != nil)
+				{
+					OCWTLogError(@[ @"ConnectionValidator" ], @"Validation failed (%lu : %lu) with error: %@", succeededValidationsCount, failedValidationsCount, validationError);
+
+					if ([connection.delegate respondsToSelector:@selector(connection:handleError:)])
+					{
+						[connection.delegate connection:connection handleError:validationError];
+					}
+				}
+				else
+				{
+					OCWTLog(@[ @"ConnectionValidator" ], @"Validation succeeded (%lu : %lu) - resuming connection", (unsigned long)succeededValidationsCount, failedValidationsCount);
+				}
+
+				// Resume pipelines
+				NSSet<OCHTTPPipeline *> *pipelines = connection.allHTTPPipelines;
+
+				for (OCHTTPPipeline *pipeline in pipelines)
+				{
+					[pipeline setPipelineNeedsScheduling];
+				}
+			}
+		};
+
+		OCTLog(@[ @"ConnectionValidator" ], validationReason);
+
+		OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
+
+		// Mark as validator request
+		validatorRequest.userInfo = @{
+			OCConnectionValidatorKey : @(YES)
+		};
+
+		[validatorRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+		validatorRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
+
+		validatorRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			OCConnection *connection;
+
+			if ((connection = weakSelf) != nil)
+			{
+				NSError *jsonError = nil;
+				OCConnectionStatusValidationResult validationResult = [OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&jsonError]];
+
+				OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
+
+				if (jsonError != nil)
+				{
+					OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", jsonError);
+				}
+
+				switch (validationResult)
+				{
+					case OCConnectionStatusValidationResultFailure:
+						OCWTLogError(@[ @"ConnectionValidator" ], @"Status validation failed after touching %@", request.redirectionHistory);
+
+						failedValidationsCount++;
+					break;
+
+					case OCConnectionStatusValidationResultOperational:
+						OCWTLog(@[ @"ConnectionValidator" ], @"Status validation successful, indicates operational server");
+
+						succeededValidationsCount++;
+					break;
+
+					case OCConnectionStatusValidationResultMaintenance:
+						OCWTLogWarning(@[ @"ConnectionValidator" ], @"Status validation indicates server in maintenance mode");
+
+						validationError = OCError(OCErrorServerInMaintenanceMode);
+
+						succeededValidationsCount++;
+					break;
+				}
+
+				if (connection.authenticationMethod != nil)
+				{
+					// Attempt an authenticated request to the WebDAV endpoint
+
+					// Generate PROPFIND for D:supported-method-set on bare WebDAV endpoint
+					OCHTTPDAVRequest *validateAuthRequest;
+					validateAuthRequest = [OCHTTPDAVRequest propfindRequestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+					validateAuthRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally; // Don't follow redirects, return directly
+
+					[validateAuthRequest.xmlRequestPropAttribute addChildren:@[
+						[OCXMLNode elementWithName:@"D:supported-method-set"],
+					]];
+
+					// Mark as validator request
+					validateAuthRequest.userInfo = @{
+						OCConnectionValidatorKey : @(YES)
+					};
+					[validateAuthRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+
+					// Add any available authentication header
+					[connection.authenticationMethod authorizeRequest:validateAuthRequest forConnection:connection];
+
+					// Handle result
+					validateAuthRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+						if (response.status.isSuccess)
+						{
+							OCWTLog(@[ @"ConnectionValidator" ], @"Authentication validation succeeded");
+
+							// TODO: validate returned content
+
+							succeededValidationsCount++;
+						}
+						else
+						{
+							OCWTLogError(@[ @"ConnectionValidator" ], @"Authentication validation failed (status %lu)", (unsigned long)response.status.code);
+
+							failedValidationsCount++;
+						}
+
+						EndValidation(nil);
+					};
+
+					// Send request to status endpoint
+					[connection.ephermalPipeline enqueueRequest:validateAuthRequest forPartitionID:connection.partitionID];
+				}
+				else
+				{
+					// No authentication method available - end validation early
+					EndValidation(nil);
+				}
+			}
+		};
+
+		// Rate limit connection validation
+		[_connectionValidationRateLimiter runRateLimitedBlock:^{
+			OCConnection *connection = weakSelf;
+
+			// Attach to pipelines
+			[connection attachToPipelines];
+
+			// Send request to status endpoint
+			[connection.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
+		}];
+	}
 }
 
 #pragma mark - User certificate approval changes
