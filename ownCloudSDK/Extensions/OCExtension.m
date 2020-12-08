@@ -177,3 +177,8 @@
 }
 
 @end
+
+OCExtensionMetadataKey OCExtensionMetadataKeyName = @"name";
+OCExtensionMetadataKey OCExtensionMetadataKeyDescription = @"description";
+OCExtensionMetadataKey OCExtensionMetadataKeyVersion = @"version";
+OCExtensionMetadataKey OCExtensionMetadataKeyCopyright = @"copyright";

@@ -38,10 +38,15 @@ typedef void(^OCWaitConditionEvaluationResultHandler)(OCWaitConditionState state
 }
 
 @property(strong,readonly) NSUUID *uuid;
+@property(nullable,strong,nonatomic,readonly) NSDate *nextRetryDate;
+
+@property(nullable,strong) NSString *localizedDescription; //!< Localized description of what the wait condition is waiting for, for presentation in status overviews.
 
 - (void)evaluateWithOptions:(nullable OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler; //!< Evaluate the condition. Returns the outcome as state + error info.
 
 - (BOOL)handleEvent:(OCEvent *)event withOptions:(OCWaitConditionOptions)options sender:(id)sender; //!< Handle OCEvent directed at this condition. Return NO if the waitCondition did not handle the event, YES if it did.
+
+- (instancetype)withLocalizedDescription:(NSString *)localizedDescription;
 
 @end
 

@@ -33,6 +33,20 @@
 	[self registerOCClassSettingsDefaults:@{
 		OCClassSettingsKeyItemPolicyLocalCopyExpirationEnabled : @(YES), // Enabled
 		OCClassSettingsKeyItemPolicyLocalCopyExpiration : @(60 * 60 * 24 * 7) // 7 days
+	} metadata:@{
+		OCClassSettingsKeyItemPolicyLocalCopyExpirationEnabled : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether local copies should automatically be removed after they haven't been downloaded, modified or opened for a period of time.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Policies",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+		},
+
+		OCClassSettingsKeyItemPolicyLocalCopyExpiration : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	 : @"The number of seconds that a file hasn't been downloaded, modified or opened after which the local copy is removed.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Policies",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced
+		}
 	}];
 }
 

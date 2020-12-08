@@ -204,6 +204,11 @@
 	}
 }
 
+- (BOOL)cancelled
+{
+	return (_cancelled || _progress.isCancelled);
+}
+
 + (BOOL)supportsSecureCoding
 {
 	return(YES);

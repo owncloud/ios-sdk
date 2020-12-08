@@ -88,6 +88,9 @@ typedef NSString* OCMessageThreadIdentifier;
 
 - (instancetype)initWithOrigin:(OCMessageOriginIdentifier)originIdentifier bookmarkUUID:(OCBookmarkUUID)bookmarkUUID title:(NSString *)localizedTitle description:(nullable NSString *)localizedDescription choices:(NSArray<OCMessageChoice *> *)choices;
 
+#pragma mark - Mute
+- (void)mute; //!< When used on creation, mutes a message so it is not presented to the user
+
 @end
 
 extern OCMessageOriginIdentifier OCMessageOriginIdentifierSyncEngine; //!< Message origin is the sync engine

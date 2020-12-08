@@ -63,7 +63,7 @@
 	}
 }
 
-- (nullable NSDictionary<NSString *, id> *)flatSettingsDictionary
+- (nullable NSDictionary<OCClassSettingsFlatIdentifier, id> *)flatSettingsDictionary
 {
 	return(@{});
 }

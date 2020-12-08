@@ -123,9 +123,12 @@
 				[messages addObject:newMessage];
 				*outDidModify = YES;
 
-				if ((messagePresenter = [self presenterForMessage:newMessage addToProcessedBy:YES]) != nil)
+				if (!newMessage.presentedToUser)
 				{
-					newMessage.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
+					if ((messagePresenter = [self presenterForMessage:newMessage addToProcessedBy:YES]) != nil)
+					{
+						newMessage.lockingProcess = OCProcessManager.sharedProcessManager.processSession;
+					}
 				}
 			}
 

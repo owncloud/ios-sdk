@@ -98,7 +98,12 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorUnnormalizedPath, //!< The provided path is not normalized.
 
 	OCErrorPrivateLinkInvalidFormat, //!< Private link format invalid.
-	OCErrorPrivateLinkResolutionFailed //!< Resolution of private link failed
+	OCErrorPrivateLinkResolutionFailed, //!< Resolution of private link failed
+
+	OCErrorAuthorizationMethodNotAllowed, //!< Authentication method not allowed. Re-authentication needed.
+	OCErrorAuthorizationMethodUnknown, //!< Authentication method unknown.
+
+	OCErrorServerConnectionValidationFailed //!< Validation of connection failed.
 };
 
 @class OCIssue;

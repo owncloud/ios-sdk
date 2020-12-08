@@ -21,6 +21,7 @@
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
+#import "OCConnection.h"
 
 @implementation OCHTTPRequest
 
@@ -34,6 +35,8 @@
 		__weak OCHTTPRequest *weakSelf = self;
 
 		_identifier = NSUUID.UUID.UUIDString;
+
+		_maximumRedirectionDepth = 5;
 
 		self.method = OCHTTPMethodGET;
 	
@@ -188,7 +191,14 @@
 {
 	if (_redirectPolicy == OCHTTPRequestRedirectPolicyDefault)
 	{
-		return (OCHTTPRequestRedirectPolicyAllowSameHost);
+		if (OCTypedCast([OCConnection classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
+		{
+			return (OCHTTPRequestRedirectPolicyAllowSameHost);
+		}
+		else
+		{
+			return (OCHTTPRequestRedirectPolicyValidateConnection);
+		}
 	}
 
 	return (_redirectPolicy);
@@ -404,8 +414,8 @@
 				redirectionPolicy = @"default";
 			break;
 
-			case OCHTTPRequestRedirectPolicyForbidden:
-				redirectionPolicy = @"forbidden";
+			case OCHTTPRequestRedirectPolicyHandleLocally:
+				redirectionPolicy = @"handle locally";
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowAnyHost:
@@ -414,6 +424,10 @@
 
 			case OCHTTPRequestRedirectPolicyAllowSameHost:
 				redirectionPolicy = @"same host";
+			break;
+
+			case OCHTTPRequestRedirectPolicyValidateConnection:
+				redirectionPolicy = @"validate connection";
 			break;
 		}
 
@@ -469,6 +483,8 @@
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
 		self.redirectPolicy	= [decoder decodeIntegerForKey:@"redirectPolicy"];
+		self.maximumRedirectionDepth = [decoder decodeIntegerForKey:@"maximumRedirectionDepth"];
+		self.redirectionHistory = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSURL.class, nil] forKey:@"redirectionHistory"];
 
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
 
@@ -517,7 +533,9 @@
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 
-	[coder encodeInteger:_redirectPolicy 	forKey:@"redirectPolicy"];
+	[coder encodeInteger:_redirectPolicy 		forKey:@"redirectPolicy"];
+	[coder encodeInteger:_maximumRedirectionDepth 	forKey:@"maximumRedirectionDepth"];
+	[coder encodeObject:_redirectionHistory 	forKey:@"redirectionHistory"];
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 

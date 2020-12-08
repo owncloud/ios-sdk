@@ -53,6 +53,7 @@
 #import "OCCore+MessageResponseHandler.h"
 #import "OCCore+MessageAutoresolver.h"
 #import "OCSignalManager.h"
+#import "OCHostSimulatorManager.h"
 
 @interface OCCore ()
 {
@@ -144,7 +145,55 @@
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(NO)
+		OCCoreCookieSupportEnabled : @(YES)
+	});
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Connection
+		OCCoreThumbnailAvailableForMIMETypePrefixes : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `[\"*\"]` turns on thumbnail loading for all items.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideReachabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the reachability signal, so the host is always considered reachable (`true`) or unreachable (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideAvailabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreCookieSupportEnabled : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Enable or disable per-process, in-memory cookie storage.",
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreActionConcurrencyBudgets : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeDictionary,
+			OCClassSettingsMetadataKeyDescription 	: @"Concurrency budgets available for sync actions by action category.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection"
+		},
+
+		// Privacy
+		OCCoreAddAcceptLanguageHeader : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Add an `Accept-Language` HTTP header using the preferred languages set on the device.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Privacy"
+		},
 	});
 }
 
@@ -250,6 +299,7 @@
 
 			OCTLogDebug(@[@"Cookies"], @"Cookie support enabled with storage %@", _connection.cookieStorage);
 		}
+		_connection.hostSimulator = [OCHostSimulatorManager.sharedManager hostSimulatorForLocation:OCExtensionLocationIdentifierAllCores for:self];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
 		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
@@ -296,12 +346,15 @@
 
 		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
 
+		_pauseConnectionSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
 		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
 		[self addSignalProvider:_rejectedIssueSignalProvider];
+		[self addSignalProvider:_pauseConnectionSignalProvider];
 
 		[self addSignalProvider:_serverStatusSignalProvider];
 		[self addSignalProvider:_connectingStatusSignalProvider];
@@ -854,10 +907,10 @@
 	}];
 
 	[_ipNotificationCenter addObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
-		[core handleAuthDataChangedNotification];
+		[core handleAuthDataChangedNotification:nil];
 	}];
 
-	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification) name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 }
 
 - (void)stopIPCObserveration
@@ -924,12 +977,19 @@
 	}];
 }
 
-- (void)handleAuthDataChangedNotification
+- (void)handleAuthDataChangedNotification:(NSNotification *)notification
 {
+	OCBookmark *notificationBookmark = OCTypedCast(notification.object, OCBookmark);
+
+	if (!((notification == nil) || ((notificationBookmark != nil) && [notificationBookmark.uuid isEqual:_bookmark.uuid])))
+	{
+		return;
+	}
+
 	[self queueBlock:^{
 		if (self->_state == OCCoreStateRunning)
 		{
-			// Trigger a small request to check auth availabiltiy
+			// Trigger a small request to check auth availability
 			[self startCheckingForUpdates];
 		}
 
@@ -1052,6 +1112,12 @@
 	{
 		id<OCCoreDelegate> delegate;
 
+		if ([error isOCErrorWithCode:OCErrorAuthorizationMethodNotAllowed])
+		{
+			// Stop all connectivity via signal provider if an authentication method is not allowed
+			[_pauseConnectionSignalProvider setState:OCCoreConnectionStatusSignalStateFalse];
+		}
+
 		if (((delegate = self.delegate) != nil) && [self.delegate respondsToSelector:@selector(core:handleError:issue:)])
 		{
 			if (issue != nil)
@@ -1132,6 +1198,15 @@
 
 					default:
 					break;
+				}
+			}
+
+			if ([error.domain isEqual:OCHTTPStatusErrorDomain])
+			{
+				if (error.code >= 400)
+				{
+					[_serverStatusSignalProvider reportConnectionRefusedError:error];
+					return (YES);
 				}
 			}
 
@@ -1271,6 +1346,12 @@
 			{
 				[self queueBlock:^{
 					[self unregisterProgress:progress forLocalID:progress.localID];
+
+					if (progress.isCancelled)
+					{
+						self->_nextSchedulingDate = nil;
+						[self setNeedsToProcessSyncRecords];
+					}
 				}];
 			}
 		}
@@ -1935,9 +2016,15 @@
 			{
 				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
 				OCProgress *sourceProgress = nil;
+				__weak OCCore *weakCore = self;
 
 				resolvedProgress = [NSProgress indeterminateProgress];
 				resolvedProgress.cancellable = progress.cancellable;
+
+				resolvedProgress.cancellationHandler = ^{
+					[progress cancel];
+					[weakCore setNeedsToProcessSyncRecords];
+				};
 
 				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
 				{

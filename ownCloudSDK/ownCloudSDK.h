@@ -42,8 +42,14 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCertificate.h>
 #import <ownCloudSDK/OCCertificateRuleChecker.h>
 
+#import <ownCloudSDK/OCClassSetting.h>
 #import <ownCloudSDK/OCClassSettings.h>
+#import <ownCloudSDK/OCClassSettings+Documentation.h>
+#import <ownCloudSDK/OCClassSettings+Metadata.h>
+#import <ownCloudSDK/OCClassSettings+Validation.h>
 #import <ownCloudSDK/NSObject+OCClassSettings.h>
+#import <ownCloudSDK/NSError+OCClassSettings.h>
+#import <ownCloudSDK/NSString+OCClassSettings.h>
 #import <ownCloudSDK/OCClassSettingsFlatSource.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourceManagedConfiguration.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourcePropertyList.h>
@@ -103,6 +109,12 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCHTTPDAVMultistatusResponse.h>
 
+#import <ownCloudSDK/OCHostSimulator.h>
+#import <ownCloudSDK/OCHostSimulatorResponse.h>
+#import <ownCloudSDK/OCHostSimulatorManager.h>
+#import <ownCloudSDK/OCHostSimulator+BuiltIn.h>
+#import <ownCloudSDK/OCExtension+HostSimulation.h>
+
 #import <ownCloudSDK/OCWaitCondition.h>
 
 #import <ownCloudSDK/OCEvent.h>
@@ -159,6 +171,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSString+OCPath.h>
 #import <ownCloudSDK/NSString+OCFormatting.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
+#import <ownCloudSDK/NSArray+ObjCRuntime.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
 

@@ -418,12 +418,19 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, self.localizedDescription]);
+	NSString *internals = self.internalsDescription;
+
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@%@, description: %@>", NSStringFromClass(self.class), self, _identifier, ((internals != nil) ? [NSString stringWithFormat:@", %@", internals] : @""), self.localizedDescription]);
 }
 
 - (NSString *)privacyMaskedDescription
 {
 	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, OCLogPrivate(self.localizedDescription)]);
+}
+
+- (NSString *)internalsDescription
+{
+	return (nil);
 }
 
 @end

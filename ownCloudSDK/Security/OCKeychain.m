@@ -172,6 +172,21 @@
 	return ([self writeData:nil toKeychainItemForAccount:account path:path]);
 }
 
+- (NSError *)wipe
+{
+	OSStatus status = errSecSuccess;
+	NSMutableDictionary <NSString *, id> *queryDict;
+	
+	if ((queryDict = [self _queryType:NULL dictForAccount:nil path:nil]) != nil)
+	{
+		status = SecItemDelete((CFDictionaryRef)queryDict);
+
+		OCTLogDebug(@[@"Wipe"], @"Delete all items, status=%d", status);
+	}
+
+	return ((status != errSecSuccess) ? [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil] : nil);
+}
+
 - (id)readObjectFromKeychainItemForAccount:(NSString *)account path:(NSString *)path allowedClasses:(NSSet<Class> *)allowedClasses rootClass:(Class)rootClass error:(NSError **)outError
 {
 	NSData *data;

@@ -306,9 +306,21 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 		if (syncRecord.progress == nil)
 		{
+			__weak OCCore *weakSelf = self;
+			__weak OCProgress *weakSyncProgress;
+			OCProgress *syncProgress;
+
 			progress = [NSProgress indeterminateProgress];
 
-			syncRecord.progress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+			syncProgress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+			weakSyncProgress = syncProgress;
+
+			progress.cancellationHandler = ^{
+				[weakSyncProgress cancel];
+				[weakSelf setNeedsToProcessSyncRecords];
+			};
+
+			syncRecord.progress = syncProgress;
 		}
 		else
 		{
@@ -1142,6 +1154,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	{
 		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
 
+		_nextSchedulingDate = nil;
+
 		if (syncRecord.action != nil)
 		{
 			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
@@ -1170,6 +1184,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	if (![self processWaitConditionsOfSyncRecord:syncRecord error:outError])
 	{
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
+
+		[self _scheduleNextWaitConditionRunForRecord:syncRecord];
 
 		// Stop processing
 		return (OCCoreSyncInstructionStopAndSideline);
@@ -1413,7 +1429,50 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		};
 	}
 
+	[self _scheduleNextWaitConditionRunForRecord:syncContext.syncRecord];
+
 	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+}
+
+- (void)_scheduleNextWaitConditionRunForRecord:(OCSyncRecord *)syncRecord
+{
+	if (syncRecord.waitConditions.count > 0)
+	{
+		// Find next retry date (if any) of existing and new wait conditions for this sync record
+		for (OCWaitCondition *waitCondition in syncRecord.waitConditions)
+		{
+			NSDate *nextRetryDate;
+
+			if ((nextRetryDate = waitCondition.nextRetryDate) != nil)
+			{
+				NSTimeInterval retryInterval = nextRetryDate.timeIntervalSinceNow;
+
+				// NSLog(@"Retry:next(se)=%@;interval=%f;nextScheduled=%@", nextRetryDate,retryInterval,_nextSchedulingDate);
+
+				if (retryInterval > 0)
+				{
+					if ((_nextSchedulingDate == nil) || (_nextSchedulingDate.timeIntervalSinceNow < 0) || ((_nextSchedulingDate != nil) && (_nextSchedulingDate.timeIntervalSinceReferenceDate > nextRetryDate.timeIntervalSinceReferenceDate)))
+					{
+						__weak OCCore *weakSelf = self;
+
+						_nextSchedulingDate = nextRetryDate;
+
+						dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(retryInterval * NSEC_PER_SEC)), _queue, ^{
+							OCCore *strongCore = weakSelf;
+
+							// NSLog(@"Retry:doing(se)=%@, %@", nextRetryDate, strongCore);
+
+							if (strongCore != nil)
+							{
+								strongCore->_nextSchedulingDate = nil;
+								[strongCore setNeedsToProcessSyncRecords];
+							}
+						});
+					}
+				}
+			}
+		}
+	}
 }
 
 #pragma mark - Sync event queueing

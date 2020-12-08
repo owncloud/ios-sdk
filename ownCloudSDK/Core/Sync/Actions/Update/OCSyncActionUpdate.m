@@ -157,7 +157,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 									   forSyncRecord:syncContext.syncRecord
 										   level:OCIssueLevelError
 										   title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
-									     description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
+									     description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %lu",nil), (unsigned long)updateStatus.code]
 										metaData:nil]
 				 ];
 

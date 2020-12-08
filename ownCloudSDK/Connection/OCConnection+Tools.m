@@ -45,6 +45,7 @@
 				}
 				else
 				{
+					OCLogError(@"Could not generate path for endpoint %@ because the username is missing", endpoint);
 					endpointPath = nil;
 				}
 			}
@@ -78,7 +79,20 @@
 			}
 		}
 
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		{
+			// Ensure WebDAV endpoint path is slash-terminated
+			if (![url.absoluteString hasSuffix:@"/"])
+			{
+				url = [NSURL URLWithString:[url.absoluteString stringByAppendingString:@"/"]];
+			}
+		}
+
 		return (url);
+	}
+	else
+	{
+		OCLogError(@"Path for endpoint %@ with options %@ could not be generated", endpoint, options);
 	}
 
 	return (nil);

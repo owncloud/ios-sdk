@@ -123,9 +123,9 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
-	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
+	return ([self detectionRequestsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler

@@ -32,6 +32,7 @@
 #import "OCHTTPTypes.h"
 #import "OCHTTPCookieStorage.h"
 #import "OCCapabilities.h"
+#import "OCRateLimiter.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -58,6 +59,13 @@ typedef NS_ENUM(NSUInteger, OCConnectionSetupHTTPPolicy)
 	OCConnectionSetupHTTPPolicyAllow,		//!< Allow plain-text HTTP URL during setup without warning (** for unit tests only **).
 	OCConnectionSetupHTTPPolicyWarn,		//!< Ask the user when trying to use a plain-text HTTP URL during setup
 	OCConnectionSetupHTTPPolicyForbidden		//!< Make setup fail when the user tries to use a plain-text HTTP URL
+};
+
+typedef NS_ENUM(NSUInteger, OCConnectionStatusValidationResult)
+{
+	OCConnectionStatusValidationResultOperational,	//!< Validation indicates an operational system
+	OCConnectionStatusValidationResultMaintenance,	//!< Validation indicates a system in maintenance mode
+	OCConnectionStatusValidationResultFailure	//!< Validation failed
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -117,7 +125,13 @@ NS_ASSUME_NONNULL_BEGIN
 	NSSet<OCConnectionSignalID> *_propFindSignals;
 	NSSet<OCConnectionSignalID> *_authSignals;
 
+	BOOL _authMethodUnavailable;
+	BOOL _authMethodUnavailableChecked;
+
 	BOOL _attachedToPipelines;
+
+	BOOL _isValidatingConnection;
+	OCRateLimiter *_connectionValidationRateLimiter;
 
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }
@@ -171,6 +185,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Server Status
 - (nullable NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError * _Nullable error, OCHTTPRequest * _Nullable request, NSDictionary<NSString *,id> * _Nullable statusInfo))completionHandler;
++ (OCConnectionStatusValidationResult)validateStatus:(nullable NSDictionary<NSString*, id> *)serverStatus;
 
 #pragma mark - Metadata actions
 - (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path
@@ -375,6 +390,8 @@ extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierConnection;
 
 extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of preferred authentication methods in order of preference, starting with the most preferred. Defaults to @[ OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ]. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]

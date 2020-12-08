@@ -44,6 +44,16 @@
 	return (NO);
 }
 
+- (NSString *)waitConditionDescription
+{
+	if (_waitConditions.firstObject.localizedDescription != nil)
+	{
+		return (_waitConditions.firstObject.localizedDescription);
+	}
+
+	return (nil);
+}
+
 @end
 
 @implementation OCSyncRecordActivity
@@ -86,6 +96,16 @@
 	}
 }
 
+- (void)setWaitConditionDescription:(NSString *)waitConditionDescription
+{
+	if ((![_waitConditionDescription isEqual:waitConditionDescription]) || (_localizedStatusMessage == nil))
+	{
+		_waitConditionDescription = waitConditionDescription;
+
+		[self _computeStateAndMessage];
+	}
+}
+
 - (void)_computeStateAndMessage
 {
 	switch (_recordState)
@@ -93,7 +113,7 @@
 		case OCSyncRecordStatePending:
 		case OCSyncRecordStateReady:
 			self.state = OCActivityStatePending;
-			self.localizedStatusMessage = OCLocalized(@"Pending");
+			self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalized(@"Pending");
 		break;
 
 		case OCSyncRecordStateProcessing:
@@ -101,7 +121,7 @@
 			if (self.waitingForUser)
 			{
 				self.state = OCActivityStatePaused;
-				self.localizedStatusMessage = OCLocalized(@"Waiting for user");
+				self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalized(@"Waiting for user");
 			}
 			else
 			{
@@ -125,6 +145,7 @@
 {
 	_updatesByKeyPath[@"recordState"] = @(syncRecord.state);
 	_updatesByKeyPath[@"waitingForUser"] = @(syncRecord.waitingForUser);
+	_updatesByKeyPath[@"waitConditionDescription"] = (syncRecord.waitConditionDescription != nil) ? syncRecord.waitConditionDescription : NSNull.null;
 
 	return (self);
 }

@@ -56,6 +56,8 @@
 
 static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolicyAuto;
 
+static NSString *OCConnectionValidatorKey = @"connection-validator";
+
 @implementation OCConnection
 
 @dynamic authenticationMethod;
@@ -84,7 +86,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
-	return (@"connection");
+	return (OCClassSettingsIdentifierConnection);
 }
 
 + (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
@@ -123,13 +125,210 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO),
-		OCConnectionTransparentTemporaryRedirect	: @(YES)
+		OCConnectionTransparentTemporaryRedirect	: @(NO)
 	});
 }
 
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
-	if ([key isEqualToString:OCConnectionForceBackgroundURLSessions])
+	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
+
+	for (Class authMethodClass in authMethodClasses)
+	{
+		OCAuthenticationMethodIdentifier authMethodIdentifier;
+		NSString *authMethodName = [authMethodClass name];
+
+		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
+		{
+			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
+				authMethodName,		OCClassSettingsMetadataKeyDescription,
+			nil]];
+		}
+	}
+
+	return (@{
+		// Connection
+		OCConnectionMinimumVersionRequired : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"The minimum server version required.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionAllowBackgroundURLSessions : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of background URL sessions. Note: depending on iOS version, the app may still choose not to use them. This settings is overriden by `force-background-url-sessions`.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionForceBackgroundURLSessions : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Forces the use of background URL sessions. Overrides `allow-background-url-sessions`.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
+		},
+
+		OCConnectionAllowCellular : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Allow the use of cellular connections.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionPlainHTTPPolicy : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Policy regarding the use of plain (unencryped) HTTP URLs for creating bookmarks. A value of `warn` will create an issue (typically then presented to the user as a warning), but ultimately allow the creation of the bookmark. A value of `forbidden` will block the use of `http`-URLs for the creation of new bookmarks.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionAlwaysRequestPrivateLink : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		// Endpoints
+		OCConnectionEndpointIDWellKnown : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the .well-known endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDCapabilities : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving server capabilities.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDUser : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for retrieving information on logged in user.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDWebDAV : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDWebDAVMeta : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to use for WebDAV metadata.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDStatus : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDThumbnail : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the thumbnail endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDShares : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the shares API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDRemoteShares : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the remote shares API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDRecipients : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Path of the sharing recipient API endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		// Security
+		OCConnectionPreferredAuthenticationMethodIDs : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Array of authentication methods in order of preference (most preferred first).",
+			OCClassSettingsMetadataKeyPossibleValues: authMethodValues,
+			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionAllowedAuthenticationMethodIDs : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Array of allowed authentication methods. Nil/Missing for no restrictions.",
+			OCClassSettingsMetadataKeyPossibleValues: authMethodValues,
+			OCClassSettingsMetadataKeyAutoExpansion : OCClassSettingsAutoExpansionTrailing,
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusRecommended,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionCertificateExtendedValidationRule: @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionRenewedCertificateAcceptanceRule: @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to `never` if the user should always be prompted when a server's certificate changed.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionTransparentTemporaryRedirect : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Controls whether 307 redirects are handled transparently at the HTTP pipeline level (by resending the headers and body).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+	});
+}
+
++ (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
+{
+	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
 	{
 		return (YES);
 	}
@@ -498,7 +697,57 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 - (BOOL)pipeline:(nonnull OCHTTPPipeline *)pipeline meetsSignalRequirements:(nonnull NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError * _Nullable __autoreleasing * _Nullable)outError
 {
-	// Authentication
+	// Connection validation
+	if (_isValidatingConnection)
+	{
+		// Hold back unrelated requests while connection is validated
+		if (task.request.userInfo[OCConnectionValidatorKey] == nil)
+		{
+			OCTLog(@[ @"ConnectionValidator" ], @"Connection validation running - not sending request to %@ for now", OCLogPrivate(task.request.url));
+
+			return (NO);
+		}
+		else
+		{
+			OCTLog(@[ @"ConnectionValidator" ], @"Connection validation touching %@", OCLogPrivate(task.request.url));
+		}
+	}
+
+	// Authentication method validity
+	if (!_authMethodUnavailableChecked)
+	{
+		// Check against allowed authentication methods
+		NSArray<OCAuthenticationMethodIdentifier> *allowedAuthenticationMethods;
+
+		if ((allowedAuthenticationMethods = [self classSettingForOCClassSettingsKey:OCConnectionAllowedAuthenticationMethodIDs]) != nil)
+		{
+			OCAuthenticationMethodIdentifier authMethodIdentifier;
+
+			if ((allowedAuthenticationMethods.count > 0) && ((authMethodIdentifier = self.bookmark.authenticationMethodIdentifier) != nil))
+			{
+				if (![allowedAuthenticationMethods containsObject:authMethodIdentifier])
+				{
+					_authMethodUnavailable = YES;
+				}
+			}
+		}
+
+		// Save time for all following requests
+		_authMethodUnavailableChecked = YES;
+	}
+
+	if (_authMethodUnavailable)
+	{
+		// Authentication method no longer allowed / available
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorAuthorizationMethodNotAllowed);
+		}
+
+		return (NO);
+	}
+
+	// Authentication availability
 	BOOL authenticationAvailable = [self isSignalOn:OCConnectionSignalIDAuthenticationAvailable];
 
 	if (authenticationAvailable)
@@ -550,36 +799,50 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		instruction = OCHTTPRequestInstructionReschedule;
 	}
 
-	if (OCTypedCast([self classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
+	// Handle 302 and 307 status
+	if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
+	    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
 	{
-		// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
-		if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
-		    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
+		NSURL *redirectURL = task.response.redirectURL;
+		BOOL rescheduleWithRedirectURL = NO;
+
+		switch (task.request.redirectPolicy)
 		{
-			NSURL *redirectURL = task.response.redirectURL;
-			BOOL rescheduleWithRedirectURL = NO;
+			case OCHTTPRequestRedirectPolicyDefault: // handled in OCHTTPRequest.redirectPolicy, so this value won't typically occur here
 
-			switch (task.request.redirectPolicy)
-			{
-				case OCHTTPRequestRedirectPolicyForbidden:
-					rescheduleWithRedirectURL = NO;
-				break;
-
-				case OCHTTPRequestRedirectPolicyAllowSameHost:
-				case OCHTTPRequestRedirectPolicyDefault:
-					rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
-				break;
-
-				case OCHTTPRequestRedirectPolicyAllowAnyHost:
-					rescheduleWithRedirectURL = YES;
-				break;
-			}
-
-			if (rescheduleWithRedirectURL && (redirectURL != nil))
-			{
-				task.request.url = redirectURL;
+			case OCHTTPRequestRedirectPolicyValidateConnection:
+				// Reschedule request for when connection validation has finished
 				instruction = OCHTTPRequestInstructionReschedule;
-			}
+
+				// Trigger connection validation
+				[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
+
+			case OCHTTPRequestRedirectPolicyHandleLocally:
+				rescheduleWithRedirectURL = NO;
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowSameHost:
+				// Reschedule request with redirect URL, using same HTTP method and body
+				rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowAnyHost:
+				rescheduleWithRedirectURL = YES;
+			break;
+		}
+
+		if (rescheduleWithRedirectURL && (task.request.redirectionHistory.count > task.request.maximumRedirectionDepth) && (task.request.maximumRedirectionDepth != 0))
+		{
+			// Limit maximum number of redirections to follow to .maximumRedirectionDepth
+			rescheduleWithRedirectURL = NO;
+		}
+
+		if (rescheduleWithRedirectURL && (redirectURL != nil))
+		{
+			task.request.redirectionHistory = (task.request.redirectionHistory == nil) ? @[ task.request.url, redirectURL ] : [task.request.redirectionHistory arrayByAddingObject:redirectURL];
+			task.request.url = redirectURL;
+
+			instruction = OCHTTPRequestInstructionReschedule;
 		}
 	}
 
@@ -589,6 +852,233 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 
 	return (instruction);
+}
+
+#pragma mark - Connection validation
+- (void)validateConnectionWithReason:(NSString *)validationReason
+{
+	// Connection Validator
+	//
+	// In case an unexpected response is received, the Connection Validator kicks in to validate the connection before
+	// sending any new requests. This is typically needed for APMs (Access Policy Manager) that can intercept random requests
+	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
+	// original URL.
+	//
+	// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
+	// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
+	// response. If no valid response can be retrieved, the status test is assumed to have failed, otherwise succeeded.
+	//
+	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
+	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
+	// as failed.
+	//
+	// If not more tests have failed than succeed, the Connection Validation has succeeded and the connection is resumed,
+	// otherwise failed. On failure, a OCErrorServerConnectionValidationFailed error is emitted.
+	//
+	// When using an OCCore, the OCErrorServerConnectionValidationFailed error triggers the core's maintenance mode handling,
+	// which periodically polls status.php - and puts the core offline until a valid status.php response is received, at
+	// which point the core resumes.
+	//
+	// The Connection Validator is rate-limited to avoid excessive retries triggered by receiving redirects consistently.
+	//
+	BOOL doValidateConnection = NO;
+
+	@synchronized(self)
+	{
+		if (!_isValidatingConnection)
+		{
+			_isValidatingConnection = YES;
+			doValidateConnection = YES;
+		}
+	}
+
+	if (doValidateConnection)
+	{
+		__weak OCConnection *weakSelf = self;
+
+		__block NSUInteger failedValidationsCount = 0;
+		__block NSUInteger succeededValidationsCount = 0;
+		__block NSError *validationError = nil;
+
+		@synchronized(self)
+		{
+			if (_connectionValidationRateLimiter == nil)
+			{
+				_connectionValidationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:3.0];
+			}
+		}
+
+		void(^EndValidation)(NSError *error) = ^(NSError *error){
+			OCConnection *connection;
+
+			if ((connection = weakSelf) != nil)
+			{
+				@synchronized(connection)
+				{
+					if (!connection->_isValidatingConnection)
+					{
+						OCWTLogWarning(@[ @"ConnectionValidator" ], @"Attempt to end connection validation more than once - returning early");
+						return;
+					}
+				}
+
+				// If an error has been provided directly, force-use it
+				if (error != nil)
+				{
+					validationError = error;
+				}
+
+				// If no other error has yet been reported, but the validation has failed as a whol, return OCErrorServerConnectionValidationFailed
+				if ((succeededValidationsCount < failedValidationsCount) && (validationError == nil))
+				{
+					validationError = OCError(OCErrorServerConnectionValidationFailed);
+				}
+
+				// End validation
+				@synchronized(connection)
+				{
+					connection->_isValidatingConnection = NO;
+				}
+
+				// Return validation error
+				if (validationError != nil)
+				{
+					OCWTLogError(@[ @"ConnectionValidator" ], @"Validation failed (%lu : %lu) with error: %@", succeededValidationsCount, failedValidationsCount, validationError);
+
+					if ([connection.delegate respondsToSelector:@selector(connection:handleError:)])
+					{
+						[connection.delegate connection:connection handleError:validationError];
+					}
+				}
+				else
+				{
+					OCWTLog(@[ @"ConnectionValidator" ], @"Validation succeeded (%lu : %lu) - resuming connection", (unsigned long)succeededValidationsCount, failedValidationsCount);
+				}
+
+				// Resume pipelines
+				NSSet<OCHTTPPipeline *> *pipelines = connection.allHTTPPipelines;
+
+				for (OCHTTPPipeline *pipeline in pipelines)
+				{
+					[pipeline setPipelineNeedsScheduling];
+				}
+			}
+		};
+
+		OCTLog(@[ @"ConnectionValidator" ], @"Starting connection validation. Reason: %@", validationReason);
+
+		OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
+
+		// Mark as validator request
+		validatorRequest.userInfo = @{
+			OCConnectionValidatorKey : @(YES)
+		};
+
+		[validatorRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+		validatorRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
+
+		validatorRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			OCConnection *connection;
+
+			if ((connection = weakSelf) != nil)
+			{
+				NSError *jsonError = nil;
+				OCConnectionStatusValidationResult validationResult = [OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&jsonError]];
+
+				OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@", request.redirectionHistory);
+
+				if (jsonError != nil)
+				{
+					OCWTLogError(@[ @"ConnectionValidator" ], @"Error decoding status JSON: %@", jsonError);
+				}
+
+				switch (validationResult)
+				{
+					case OCConnectionStatusValidationResultFailure:
+						OCWTLogError(@[ @"ConnectionValidator" ], @"Status validation failed after touching %@", request.redirectionHistory);
+
+						failedValidationsCount++;
+					break;
+
+					case OCConnectionStatusValidationResultOperational:
+						OCWTLog(@[ @"ConnectionValidator" ], @"Status validation successful, indicates operational server");
+
+						succeededValidationsCount++;
+					break;
+
+					case OCConnectionStatusValidationResultMaintenance:
+						OCWTLogWarning(@[ @"ConnectionValidator" ], @"Status validation indicates server in maintenance mode");
+
+						validationError = OCError(OCErrorServerInMaintenanceMode);
+
+						succeededValidationsCount++;
+					break;
+				}
+
+				if (connection.authenticationMethod != nil)
+				{
+					// Attempt an authenticated request to the WebDAV endpoint
+
+					// Generate PROPFIND for D:supported-method-set on bare WebDAV endpoint
+					OCHTTPDAVRequest *validateAuthRequest;
+					validateAuthRequest = [OCHTTPDAVRequest propfindRequestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
+					validateAuthRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally; // Don't follow redirects, return directly
+
+					[validateAuthRequest.xmlRequestPropAttribute addChildren:@[
+						[OCXMLNode elementWithName:@"D:supported-method-set"],
+					]];
+
+					// Mark as validator request
+					validateAuthRequest.userInfo = @{
+						OCConnectionValidatorKey : @(YES)
+					};
+					[validateAuthRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+
+					// Add any available authentication header
+					[connection.authenticationMethod authorizeRequest:validateAuthRequest forConnection:connection];
+
+					// Handle result
+					validateAuthRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+						if (response.status.isSuccess)
+						{
+							OCWTLog(@[ @"ConnectionValidator" ], @"Authentication validation succeeded");
+
+							// TODO: validate returned content
+
+							succeededValidationsCount++;
+						}
+						else
+						{
+							OCWTLogError(@[ @"ConnectionValidator" ], @"Authentication validation failed (status %lu)", (unsigned long)response.status.code);
+
+							failedValidationsCount++;
+						}
+
+						EndValidation(nil);
+					};
+
+					// Send request to status endpoint
+					[connection.ephermalPipeline enqueueRequest:validateAuthRequest forPartitionID:connection.partitionID];
+				}
+				else
+				{
+					// No authentication method available - end validation early
+					EndValidation(nil);
+				}
+			}
+		};
+
+		// Rate limit connection validation
+		[_connectionValidationRateLimiter runRateLimitedBlock:^{
+			OCConnection *connection = weakSelf;
+
+			// Attach to pipelines
+			[connection attachToPipelines];
+
+			// Send request to status endpoint
+			[connection.ephermalPipeline enqueueRequest:validatorRequest forPartitionID:self.partitionID];
+		}];
+	}
 }
 
 #pragma mark - User certificate approval changes
@@ -605,7 +1095,11 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	/*
 		Follow the https://github.com/owncloud/administration/tree/master/redirectServer playbook:
-	
+
+		0) (not in the playback) Check authentication data availability
+			- if existant: proceed
+			- if not: return error
+
 		1) Check status endpoint
 			- if redirection: create issue & complete
 			- if error: check bookmark's originURL for redirection, create issue & complete
@@ -626,6 +1120,16 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	{
 		NSProgress *connectProgress = [NSProgress new];
 		OCHTTPRequest *statusRequest;
+
+		// Check for authentication data
+		if (self.bookmark.authenticationData == nil)
+		{
+			// No authentication data -> return error
+			NSError *error = OCError(OCErrorAuthorizationNoMethodData);
+			completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+
+			return (nil);
+		}
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -762,18 +1266,15 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 						}
 
 						// Check maintenance status
-						if ([serverStatus[@"maintenance"] isKindOfClass:[NSNumber class]])
+						if ([OCConnection validateStatus:serverStatus] == OCConnectionStatusValidationResultMaintenance)
 						{
-							if (((NSNumber *)serverStatus[@"maintenance"]).boolValue)
-							{
-								NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
+							NSError *maintenanceModeError = OCError(OCErrorServerInMaintenanceMode);
 
-								OCErrorAddDateFromResponse(maintenanceModeError, response);
+							OCErrorAddDateFromResponse(maintenanceModeError, response);
 
-								completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
+							completionHandler(maintenanceModeError, [OCIssue issueForError:maintenanceModeError level:OCIssueLevelError issueHandler:nil]);
 
-								return;
-							}
+							return;
 						}
 
 						// Save server status to bookmark
@@ -874,7 +1375,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	else
 	{
 		// Return error
-		NSError *error = OCError(OCErrorAuthorizationNoMethodData);
+		NSError *error = OCError(OCErrorAuthorizationMethodUnknown);
 		completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 	}
 
@@ -979,6 +1480,27 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	return (nil);
 }
 
++ (OCConnectionStatusValidationResult)validateStatus:(nullable NSDictionary<NSString*, id> *)serverStatus
+{
+	OCConnectionStatusValidationResult result = OCConnectionStatusValidationResultFailure;
+
+	if (OCTypedCast(serverStatus[@"maintenance"], NSNumber).boolValue)
+	{
+		result = OCConnectionStatusValidationResultMaintenance;
+	}
+	else
+	{
+		if (OCTypedCast(serverStatus[@"installed"], NSNumber).boolValue &&
+		    (OCTypedCast(serverStatus[@"version"], NSString) != nil) &&
+		    (OCTypedCast(serverStatus[@"productname"], NSString) != nil))
+		{
+			result = OCConnectionStatusValidationResultOperational;
+		}
+	}
+
+	return (result);
+}
+
 #pragma mark - Metadata actions
 - (NSMutableArray <OCXMLNode *> *)_davItemAttributes
 {
@@ -1074,62 +1596,70 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSURL *endpointURL;
 
-	if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
+	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) != nil)
 	{
-		// davRequest.requiredSignals = self.actionSignals;
-		davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
-		davRequest.userInfo = @{
-			@"path" : path,
-			@"depth" : @(depth),
-			@"endpointURL" : endpointURL,
-			@"options" : ((options != nil) ? options : [NSNull null])
-		};
-		davRequest.eventTarget = eventTarget;
-		davRequest.downloadRequest = YES;
-		davRequest.priority = NSURLSessionTaskPriorityHigh;
-		davRequest.forceCertificateDecisionDelegation = YES;
-
-		if (options[OCConnectionOptionRequestObserverKey] != nil)
+		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
-			davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
-		}
+			// davRequest.requiredSignals = self.actionSignals;
+			davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
+			davRequest.userInfo = @{
+				@"path" : path,
+				@"depth" : @(depth),
+				@"endpointURL" : endpointURL,
+				@"options" : ((options != nil) ? options : [NSNull null])
+			};
+			davRequest.eventTarget = eventTarget;
+			davRequest.downloadRequest = YES;
+			davRequest.priority = NSURLSessionTaskPriorityHigh;
+			davRequest.forceCertificateDecisionDelegation = YES;
 
-		if (options[OCConnectionOptionIsNonCriticalKey] != nil)
-		{
-			davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
-		}
+			if (options[OCConnectionOptionRequestObserverKey] != nil)
+			{
+				davRequest.requestObserver = options[OCConnectionOptionRequestObserverKey];
+			}
 
-		if (options[OCConnectionOptionGroupIDKey] != nil)
-		{
-			davRequest.groupID = options[OCConnectionOptionGroupIDKey];
-		}
+			if (options[OCConnectionOptionIsNonCriticalKey] != nil)
+			{
+				davRequest.isNonCritial = ((NSNumber *)options[OCConnectionOptionIsNonCriticalKey]).boolValue;
+			}
 
-		if (options[OCConnectionOptionRequiredSignalsKey] != nil)
-		{
-			davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
-		}
+			if (options[OCConnectionOptionGroupIDKey] != nil)
+			{
+				davRequest.groupID = options[OCConnectionOptionGroupIDKey];
+			}
 
-		// Attach to pipelines
-		[self attachToPipelines];
+			if (options[OCConnectionOptionRequiredSignalsKey] != nil)
+			{
+				davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
+			}
 
-		// Enqueue request
-		if (options[@"alternativeEventType"] != nil)
-		{
-			[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			// Attach to pipelines
+			[self attachToPipelines];
+
+			// Enqueue request
+			if (options[@"alternativeEventType"] != nil)
+			{
+				[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			}
+			else
+			{
+				[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			}
+
+			progress = davRequest.progress.progress;
+			progress.eventType = OCEventTypeRetrieveItemList;
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 		}
 		else
 		{
-			[self.ephermalPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+			[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
 		}
-
-		progress = davRequest.progress.progress;
-		progress.eventType = OCEventTypeRetrieveItemList;
-		progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
 	}
 
@@ -1357,6 +1887,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDownload uuid:nil sender:self];
 	}
 
@@ -1404,6 +1935,24 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				{
 					switch (request.httpResponse.status.code)
 					{
+						case OCHTTPStatusCodePRECONDITION_FAILED: {
+							NSError *davError;
+
+							if (((davError = request.httpResponse.bodyParsedAsDAVError) != nil) && (davError.code == OCDAVErrorItemDoesNotExist))
+							{
+								event.error = OCErrorFromError(OCErrorItemNotFound, davError);
+							}
+							else
+							{
+								event.error = OCErrorFromError(OCErrorItemChanged, request.httpResponse.status.error);
+							}
+						}
+						break;
+
+						case OCHTTPStatusCodeNOT_FOUND:
+							event.error = OCErrorFromError(OCErrorItemNotFound, request.httpResponse.status.error);
+						break;
+
 						default:
 							event.error = request.httpResponse.status.error;
 						break;
@@ -1513,6 +2062,8 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpdate uuid:nil sender:self];
 	}
 
@@ -1563,6 +2114,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 
 				if (event.result == nil)
 				{
+					// WebDAV root (endpointURL) might not have been generated (likely due to lack of username)
 					event.error = OCError(OCErrorInternal);
 				}
 			}
@@ -1624,6 +2176,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeCreateFolder uuid:nil sender:self];
 	}
 
@@ -1792,6 +2345,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:eventType uuid:nil sender:self];
 	}
 
@@ -1926,6 +2480,7 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeDelete uuid:nil sender:self];
 	}
 
@@ -2054,6 +2609,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			// Preview API (OC 10.0.9+)
 			url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
+			if (url == nil)
+			{
+				// WebDAV root could not be generated (likely due to lack of username)
+				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+				return (nil);
+			}
+
 			// Add path
 			if (item.path != nil)
 			{
@@ -2078,6 +2640,13 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 		{
 			// Thumbnail API (OC < 10.0.9)
 			url = [self URLForEndpoint:OCConnectionEndpointIDThumbnail options:nil];
+
+			if (url == nil)
+			{
+				// WebDAV root could not be generated (likely due to lack of username)
+				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+				return (nil);
+			}
 
 			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
 
@@ -2185,6 +2754,14 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 	NSMutableArray<OCXMLNode *> *filterRulesXML = [NSMutableArray new];
 	OCHTTPDAVRequest *request;
 
+	if (endpointURL == nil)
+	{
+		// WebDAV root could not be generated (likely due to lack of username)
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeFilterFiles uuid:nil sender:self];
+
+		return (nil);
+	}
+
 	for (OCItemPropertyName propertyName in filterRules)
 	{
 		if ([propertyName isEqual:OCItemPropertyNameIsFavorite])
@@ -2244,13 +2821,21 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 				NSArray <NSError *> *errors = nil;
 				NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if (endpointURL != nil)
 				{
-					event.result = items;
+					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+					{
+						event.result = items;
+					}
+					else
+					{
+						event.error = errors.firstObject;
+					}
 				}
 				else
 				{
-					event.error = errors.firstObject;
+					// WebDAV root could not be generated (likely due to lack of username)
+					event.error = OCError(OCErrorInternal);
 				}
 			}
 			else
@@ -2327,6 +2912,8 @@ OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-sh
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierConnection = @"connection";
 
 OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";

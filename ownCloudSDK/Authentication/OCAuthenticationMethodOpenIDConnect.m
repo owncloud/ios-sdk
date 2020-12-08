@@ -17,6 +17,7 @@
  */
 
 #import "OCAuthenticationMethodOpenIDConnect.h"
+#import "OCAuthenticationMethod+OCTools.h"
 #import "OCConnection.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
@@ -24,18 +25,27 @@
 
 @implementation OCAuthenticationMethodOpenIDConnect
 
-// Automatically register
-OCAuthenticationMethodAutoRegister
-
 #pragma mark - Class settings
-+ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
++ (void)load
 {
-	NSMutableDictionary<NSString *,id> *defaultSettings = [[super defaultSettingsForIdentifier:identifier] mutableCopy];
+	// Automatically register
+	OCAuthenticationMethodAutoRegisterLoadCommand
 
-	defaultSettings[OCAuthenticationMethodOpenIDConnectRedirectURI] = @"oc://ios.owncloud.com";
-	defaultSettings[OCAuthenticationMethodOpenIDConnectScope] = @"openid offline_access email profile";
-
-	return (defaultSettings);
+	[self registerOCClassSettingsDefaults:@{
+		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
+		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile"
+	} metadata:@{
+		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
+			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Redirect URI",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC",
+		},
+		OCAuthenticationMethodOpenIDConnectScope : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Scope",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		}
+	}];
 }
 
 #pragma mark - Identification
@@ -103,7 +113,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
-		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyForbidden;
+		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
 
 		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;
@@ -142,16 +152,16 @@ OCAuthenticationMethodAutoRegister
 	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
 }
 
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
 	NSURL *openidConfigURL;
-	NSArray <NSURL *> *oAuth2DetectionURLs;
+	NSArray <OCHTTPRequest *> *oAuth2DetectionURLs;
 
-	if ((oAuth2DetectionURLs = [super detectionURLsForConnection:connection]) != nil)
+	if ((oAuth2DetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{
-			return ([oAuth2DetectionURLs arrayByAddingObject:openidConfigURL]);
+			return ([oAuth2DetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
 		}
 	}
 
@@ -213,6 +223,28 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Generate bookmark authentication data
+- (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
+{
+	NSString *username;
+
+	if ((username = connection.bookmark.userName) != nil)
+	{
+		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+
+		/*
+			As per https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest:
+
+			OPTIONAL. Hint to the Authorization Server about the login identifier the End-User might use to log in (if necessary). This hint can be used by an RP if it first asks the End-User for their e-mail address (or other identifier) and then wants to pass that value as a hint to the discovered authorization service. It is RECOMMENDED that the hint value match the value used for discovery. This value MAY also be a phone number in the format specified for the phone_number Claim. The use of this parameter is left to the OP's discretion.
+		*/
+
+		mutableParameters[@"login_hint"] = username;
+
+		return (mutableParameters);
+	}
+
+	return (parameters);
+}
+
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
 	[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {

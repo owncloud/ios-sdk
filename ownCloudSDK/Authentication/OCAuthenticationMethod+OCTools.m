@@ -25,13 +25,16 @@
 	return ([NSString stringWithFormat:@"Basic %@", [[[NSString stringWithFormat:@"%@:%@", username, passPhrase] dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0]]);
 }
 
-+ (NSArray <NSURL *> *)detectionURLsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection
++ (NSArray <OCHTTPRequest *> *)detectionRequestsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection
 {
 	NSURL *webDavEndpointURL;
 	
 	if ((webDavEndpointURL = [connection URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil]) != nil)
 	{
-		return (@[ webDavEndpointURL ]);
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:webDavEndpointURL];
+		request.method = OCHTTPMethodPROPFIND;
+
+		return (@[ request ]);
 	}
 
 	return(nil);
