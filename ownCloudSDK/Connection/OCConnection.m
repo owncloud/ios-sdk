@@ -799,7 +799,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		instruction = OCHTTPRequestInstructionReschedule;
 	}
 
-	// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
+	// Handle 302 and 307 status
 	if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
 	    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
 	{
@@ -808,9 +808,13 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 		switch (task.request.redirectPolicy)
 		{
+			case OCHTTPRequestRedirectPolicyDefault: // handled in OCHTTPRequest.redirectPolicy, so this value won't typically occur here
+
 			case OCHTTPRequestRedirectPolicyValidateConnection:
 				// Reschedule request for when connection validation has finished
 				instruction = OCHTTPRequestInstructionReschedule;
+
+				// Trigger connection validation
 				[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
 
 			case OCHTTPRequestRedirectPolicyHandleLocally:
@@ -818,7 +822,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowSameHost:
-			case OCHTTPRequestRedirectPolicyDefault:
+				// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
 				rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
 			break;
 
@@ -961,7 +965,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			}
 		};
 
-		OCTLog(@[ @"ConnectionValidator" ], validationReason);
+		OCTLog(@[ @"ConnectionValidator" ], @"Starting connection validation. Reason: %@", validationReason);
 
 		OCHTTPRequest *validatorRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]];
 
@@ -981,7 +985,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 				NSError *jsonError = nil;
 				OCConnectionStatusValidationResult validationResult = [OCConnection validateStatus:[response bodyConvertedDictionaryFromJSONWithError:&jsonError]];
 
-				OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@ - ending validation and scheduling queued requests", request.redirectionHistory);
+				OCWTLog(@[ @"ConnectionValidator" ], @"Connection validation received response after touching %@", request.redirectionHistory);
 
 				if (jsonError != nil)
 				{
