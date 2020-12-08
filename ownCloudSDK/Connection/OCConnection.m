@@ -822,7 +822,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowSameHost:
-				// Reschedule 302 and 307 requests with redirect URL and same HTTP method and body
+				// Reschedule request with redirect URL, using same HTTP method and body
 				rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
 			break;
 
