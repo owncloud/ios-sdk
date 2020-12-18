@@ -1801,6 +1801,7 @@
 		NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 			if (((partitionID==nil) || ((partitionID!=nil) && [task.partitionID isEqual:partitionID])) && task.request.isNonCritial)
 			{
+				OCLogDebug(@"Cancelling non-critical task %@", task.taskID);
 				[self _cancelTask:task];
 			}
 		}];

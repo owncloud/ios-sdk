@@ -1438,7 +1438,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 	for (OCHTTPPipeline *pipeline in pipelines)
 	{
-		OCLogDebug(@"cancelling non-critical requests from pipeline %@", pipeline);
+		OCLogDebug(@"cancelling non-critical requests from pipeline %@ for partitionID %@", pipeline, self.partitionID);
 
 		// Cancel non-critical requests
 		[pipeline cancelNonCriticalRequestsForPartitionID:self.partitionID];
