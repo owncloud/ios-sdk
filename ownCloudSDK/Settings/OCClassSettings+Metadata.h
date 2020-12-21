@@ -42,6 +42,7 @@ extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier; //!<
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName; //!< Return-only key, with the name of the Class associated with the settings.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription; //!< A description of the setting. If none is provided, a description should be made available in the settings-doc directory following the "[OCClassSettingsIdentifier].[OCClassSettingsKey].md" nomenclature
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory; //!< The name of the category the setting should be listed under.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag; //!< The name of the catagory as "tag" (without spaces and lowercase)
 /// Possible values. Either of:
 ///
 /// - a dictionary, where the keys represent possible values, and the value is the description (f.ex. { @"allow-all" : @"Allows all.", … })
@@ -77,6 +78,7 @@ extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingVal
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue; //!< If YES, the default value is added to the metadata dictionary.
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionSortPossibleValues; //!< If YES, sorts possible values alphabetically.
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExpandPossibleValues; //!< If YES, expands simple possible value dictionaries into array of dictionaries.
+extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddCategoryTags; //!< If YES, adds a compact version of the category through lowercasing and removing spaces as "category tag"
 extern OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders; //!< Array of NSURLs of folders to check for external documentation
 
 NS_ASSUME_NONNULL_END
