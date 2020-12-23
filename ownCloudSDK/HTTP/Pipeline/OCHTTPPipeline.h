@@ -80,9 +80,6 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _urlSessionInvalidated;
 	BOOL _alwaysUseDownloadTasks;
 
-	// Settings
-	BOOL _insertXRequestID;
-
 	// Scheduling
 	NSMapTable<OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
 

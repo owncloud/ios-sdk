@@ -1902,7 +1902,7 @@
 #pragma mark - Busy count
 - (void)beginActivity:(NSString *)description
 {
-	OCLogDebug(@"Beginning activity '%@' ..", description);
+	OCLogVerbose(@"Beginning activity '%@' ..", description);
 	
 	@synchronized(OCCore.class)
 	{
@@ -1922,7 +1922,7 @@
 
 - (void)endActivity:(NSString *)description
 {
-	OCLogDebug(@"Ended activity '%@' ..", description);
+	OCLogVerbose(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
 		BOOL allActivitiesEnded = NO;
 

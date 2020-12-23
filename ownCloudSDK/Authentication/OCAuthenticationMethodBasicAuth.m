@@ -141,7 +141,7 @@ OCAuthenticationMethodAutoRegister
 	if ((authorizationHeaderValue = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		return (@{
-			@"Authorization" : authorizationHeaderValue
+			OCHTTPHeaderFieldNameAuthorization : authorizationHeaderValue
 		});
 	}
 
@@ -192,7 +192,7 @@ OCAuthenticationMethodAutoRegister
 			request = [OCHTTPRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 			[request setValue:@"json" forParameter:@"format"];
 
-			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
+			[request setValue:authenticationHeaderValue forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)

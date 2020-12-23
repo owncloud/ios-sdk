@@ -30,6 +30,7 @@
 #import <pthread/pthread.h>
 
 #import "OCConnection.h"
+#import "OCClassSetting.h"
 #import "OCCore.h"
 
 static OCLogLevel sOCLogLevel;
@@ -50,6 +51,7 @@ static OCLogger *sharedLogger;
 @end
 
 static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierLogLevel = @"log-level";
+static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierMaskPrivateData = @"log-mask-private-data";
 
 @implementation OCLogger
 
@@ -61,6 +63,9 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		OCLogFileSource *stdErrLogger;
 
 		sharedLogger = [OCLogger new];
+
+		// Ensure log level is being observed
+		[OCLogger logLevel];
 
 		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"OS" logger:sharedLogger]) != nil)
 		{
@@ -349,8 +354,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if (!sOCLogLevelInitialized)
 	{
-		NSNumber *logLevelNumber = nil;
-
 		// Migrate log level setting from UserDefaults to OCClassSettingsUserPreferences
 		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
 			NSNumber *userDefaultsLogLevel;
@@ -365,14 +368,19 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			return (nil);
 		}];
 
-		if ((logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel]) != nil)
-		{
-			sOCLogLevel = [logLevelNumber integerValue];
-		}
-		else
-		{
-			sOCLogLevel = OCLogLevelOff;
-		}
+		// Set up initial sOCLogLevel value and keep track of changes via the observer
+		[[self classSettingForKey:OCClassSettingsKeyLogLevel] addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+			NSNumber *logLevelNumber;
+
+			if ((logLevelNumber = OCTypedCast(newValue, NSNumber)) != nil)
+			{
+				sOCLogLevel = logLevelNumber.intValue;
+			}
+			else
+			{
+				sOCLogLevel = OCLogLevelOff;
+			}
+		} withOwner:self];
 
 		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
 
@@ -395,8 +403,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	sOCLogLevel = newLogLevel;
 
 	[self setUserPreferenceValue:@(newLogLevel) forClassSettingsKey:OCClassSettingsKeyLogLevel];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
 
 	OCPFSLog(nil, (@[@"LogIntro"]), @"Log level changed to %ld", (long)sOCLogLevel);
 	OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
@@ -436,21 +442,33 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if (!sOCLogMaskPrivateDataInitialized)
 	{
-		NSNumber *maskPrivateDataNumber = nil;
+		// Migrate mask private data setting from UserDefaults to OCClassSettingsUserPreferences
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierMaskPrivateData version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			NSNumber *maskPrivateDataNumber;
 
-		if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogPrivacyMask]) == nil)
-		{
-			maskPrivateDataNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
-		}
+			if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogPrivacyMask]) != nil)
+			{
+				[self setUserPreferenceValue:maskPrivateDataNumber forClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
 
-		if (maskPrivateDataNumber != nil)
-		{
-			sOCLogMaskPrivateData = maskPrivateDataNumber.boolValue;
-		}
-		else
-		{
-			sOCLogMaskPrivateData = YES;
-		}
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogPrivacyMask];
+			}
+
+			return (nil);
+		}];
+
+		// Set up initial sOCLogMaskPrivateData value and keep track of changes via the observer
+		[[self classSettingForKey:OCClassSettingsKeyLogPrivacyMask] addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+			NSNumber *maskPrivateDataNumber = nil;
+
+			if ((maskPrivateDataNumber = OCTypedCast(newValue, NSNumber)) != nil)
+			{
+				sOCLogMaskPrivateData = maskPrivateDataNumber.boolValue;
+			}
+			else
+			{
+				sOCLogMaskPrivateData = YES;
+			}
+		} withOwner:self];
 
 		sOCLogMaskPrivateDataInitialized = YES;
 	}
@@ -462,9 +480,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	sOCLogMaskPrivateData = maskPrivateData;
 
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:maskPrivateData forKey:OCClassSettingsKeyLogPrivacyMask];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+	[self setUserPreferenceValue:@(maskPrivateData) forClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
 }
 
 + (BOOL)coloredLogging
@@ -520,12 +536,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				self->_mainThreadThreadID = mainThreadID;
 			}
 		});
-
-		// Register log settings listener
-		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameLogSettingsChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogger * _Nonnull logger, OCIPCNotificationName  _Nonnull notificationName) {
-			sOCLogLevelInitialized = NO;
-			sOCLogMaskPrivateDataInitialized = NO;
-		}];
 	}
 
 	return (self);
@@ -533,8 +543,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (void)dealloc
 {
-	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameLogSettingsChanged];
-
 	[self _closeAllWriters];
 
 	for (OCLogSource *source in _sources)
@@ -1002,5 +1010,3 @@ OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filt
 OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
 OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
 OCClassSettingsKey OCClassSettingsKeyLogFormat = @"log-format";
-
-OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";

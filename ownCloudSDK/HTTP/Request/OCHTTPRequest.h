@@ -113,7 +113,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (NSMutableURLRequest *)generateURLRequest; //!< Returns an NSURLRequest for this request.
 - (void)scrubForRescheduling;
 
-- (void)recreateRequestID; //!< Creates and sets a new request ID (for internal use only!)
+- (OCHTTPRequestID)recreateRequestID; //!< Creates and sets a new request ID on .identifier and the X-Request-ID header (for internal use only!)
 
 #pragma mark - Cancel support
 - (void)cancel;
@@ -125,10 +125,10 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 - (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters;
 
-- (NSString *)valueForHeaderField:(NSString *)headerField;
-- (void)setValue:(NSString *)value forHeaderField:(NSString *)headerField;
+- (NSString *)valueForHeaderField:(OCHTTPHeaderFieldName)headerField;
+- (void)setValue:(NSString *)value forHeaderField:(OCHTTPHeaderFieldName)headerField;
 
-- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields;
+- (void)addHeaderFields:(NSDictionary<OCHTTPHeaderFieldName,NSString*> *)headerFields;
 
 #pragma mark - Response
 @property(strong) OCHTTPResponse *httpResponse;
@@ -156,6 +156,21 @@ extern OCHTTPMethod OCHTTPMethodPROPPATCH;
 extern OCHTTPMethod OCHTTPMethodREPORT;
 extern OCHTTPMethod OCHTTPMethodLOCK;
 extern OCHTTPMethod OCHTTPMethodUNLOCK;
+
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator;
 
 extern OCProgressPathElementIdentifier OCHTTPRequestGlobalPath;
 

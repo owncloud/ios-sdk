@@ -16,8 +16,8 @@
  *
  */
 
-
 #import "OCHostSimulatorResponse.h"
+#import "OCHTTPRequest.h"
 
 @implementation OCHostSimulatorResponse
 
@@ -33,10 +33,10 @@
 
 	if (contentType != nil)
 	{
-		mutableHeaders[@"Content-Type"] = contentType;
+		mutableHeaders[OCHTTPHeaderFieldNameContentType] = contentType;
 	}
 
-	mutableHeaders[@"Content-Length"] = [@(bodyData.length) stringValue];
+	mutableHeaders[OCHTTPHeaderFieldNameContentLength] = [@(bodyData.length) stringValue];
 
 	simulatorResponse = [[OCHostSimulatorResponse alloc] init];
 	simulatorResponse.url = url;

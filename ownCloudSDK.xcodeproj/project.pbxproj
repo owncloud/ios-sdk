@@ -520,6 +520,8 @@
 		DCD63276223BB1710090169E /* OCCapabilities.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD63274223BB1710090169E /* OCCapabilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD63277223BB1710090169E /* OCCapabilities.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD63275223BB1710090169E /* OCCapabilities.m */; };
 		DCD6327B223BE0980090169E /* capabilities.json in Resources */ = {isa = PBXBuildFile; fileRef = DCD6327A223BE0980090169E /* capabilities.json */; };
+		DCD7AA442580E5A5000CD155 /* NSURLSessionTask+Debug.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD7AA422580E5A5000CD155 /* NSURLSessionTask+Debug.h */; };
+		DCD7AA452580E5A5000CD155 /* NSURLSessionTask+Debug.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD7AA432580E5A5000CD155 /* NSURLSessionTask+Debug.m */; };
 		DCD9B8822379783200691929 /* UIDevice+ModelID.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD9B8802379783200691929 /* UIDevice+ModelID.h */; };
 		DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD9B8812379783200691929 /* UIDevice+ModelID.m */; };
 		DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDA306F21412A0100DB61A9 /* OCSyncAction.h */; };
@@ -1274,6 +1276,8 @@
 		DCD63274223BB1710090169E /* OCCapabilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCapabilities.h; sourceTree = "<group>"; };
 		DCD63275223BB1710090169E /* OCCapabilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCapabilities.m; sourceTree = "<group>"; };
 		DCD6327A223BE0980090169E /* capabilities.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capabilities.json; sourceTree = "<group>"; };
+		DCD7AA422580E5A5000CD155 /* NSURLSessionTask+Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLSessionTask+Debug.h"; sourceTree = "<group>"; };
+		DCD7AA432580E5A5000CD155 /* NSURLSessionTask+Debug.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLSessionTask+Debug.m"; sourceTree = "<group>"; };
 		DCD9B8802379783200691929 /* UIDevice+ModelID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIDevice+ModelID.h"; sourceTree = "<group>"; };
 		DCD9B8812379783200691929 /* UIDevice+ModelID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+ModelID.m"; sourceTree = "<group>"; };
 		DCDA306F21412A0100DB61A9 /* OCSyncAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncAction.h; sourceTree = "<group>"; };
@@ -2070,6 +2074,8 @@
 				DCA35D7024D00A9700DBE2B0 /* OCHTTPPipeline+Diagnostic.h */,
 				DCA35D7524D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m */,
 				DCA35D7424D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h */,
+				DCD7AA432580E5A5000CD155 /* NSURLSessionTask+Debug.m */,
+				DCD7AA422580E5A5000CD155 /* NSURLSessionTask+Debug.h */,
 			);
 			path = Pipeline;
 			sourceTree = "<group>";
@@ -3012,6 +3018,7 @@
 				DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */,
 				DC6ABF6B2534633E00689C7B /* OCHostSimulatorManager.h in Headers */,
 				DCF39B552458268E00DEA137 /* OCTUSHeader.h in Headers */,
+				DCD7AA442580E5A5000CD155 /* NSURLSessionTask+Debug.h in Headers */,
 				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
 				DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */,
@@ -3809,6 +3816,7 @@
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,
 				DC166E9F2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
+				DCD7AA452580E5A5000CD155 /* NSURLSessionTask+Debug.m in Sources */,
 				DC6BFFF723206215005FA5CB /* OCEventQueue.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
 				DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */,

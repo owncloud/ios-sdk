@@ -233,7 +233,7 @@
 			{
 				if ([request.headerFields[@"Authorization"] containsString:@"Bearer "])
 				{
-					[request setValue:basicAuthString forHeaderField:@"Authorization"];
+					[request setValue:basicAuthString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 				}
 			}
 
@@ -410,7 +410,7 @@
 			{
 				if ([request.headerFields[@"Authorization"] containsString:@"Bearer "])
 				{
-					[request setValue:basicAuthString forHeaderField:@"Authorization"];
+					[request setValue:basicAuthString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 				}
 			}
 

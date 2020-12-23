@@ -99,7 +99,7 @@
 {
 	NSString *locationURLString;
 
-	if ((locationURLString = self.headerFields[@"Location"]) != nil)
+	if ((locationURLString = self.headerFields[OCHTTPHeaderFieldNameLocation]) != nil)
 	{
 		return ([[NSURL URLWithString:locationURLString relativeToURL:self.httpURLResponse.URL] absoluteURL]);
 	}
@@ -111,7 +111,7 @@
 {
 	NSString *contentType;
 
-	if ((contentType = self.headerFields[@"Content-Type"]) != nil)
+	if ((contentType = self.headerFields[OCHTTPHeaderFieldNameContentType]) != nil)
 	{
 		contentType = [contentType componentsSeparatedByString:@";"].firstObject;
 

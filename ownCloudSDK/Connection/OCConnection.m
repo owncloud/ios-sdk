@@ -46,6 +46,7 @@
 #import "OCCellularSwitch.h"
 #import "OCHTTPPolicyManager.h"
 #import "OCHTTPPolicyBookmark.h"
+#import "OCHTTPRequest.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -640,21 +641,6 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 #pragma mark - Prepare request
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request
 {
-	// Insert X-Request-ID for tracing
-	{
-		NSString *xRequestID = request.identifier;
-
-		if (xRequestID == nil)
-		{
-			xRequestID = NSUUID.UUID.UUIDString;
-		}
-
-		if (xRequestID != nil)
-		{
-			[request setValue:xRequestID forHeaderField:@"X-Request-ID"];
-		}
-	}
-
 	// Authorization
 	if ([request.requiredSignals containsObject:OCConnectionSignalIDAuthenticationAvailable])
 	{
@@ -974,7 +960,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			OCConnectionValidatorKey : @(YES)
 		};
 
-		[validatorRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+		[validatorRequest setValue:@"iOS" forHeaderField:OCHTTPHeaderFieldNameOCConnectionValidator];
 		validatorRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
 
 		validatorRequest.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
@@ -1032,7 +1018,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 					validateAuthRequest.userInfo = @{
 						OCConnectionValidatorKey : @(YES)
 					};
-					[validateAuthRequest setValue:@"iOS" forHeaderField:@"OC-Connection-Validator"];
+					[validateAuthRequest setValue:@"iOS" forHeaderField:OCHTTPHeaderFieldNameOCConnectionValidator];
 
 					// Add any available authentication header
 					[connection.authenticationMethod authorizeRequest:validateAuthRequest forConnection:connection];
@@ -1862,7 +1848,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		request.forceCertificateDecisionDelegation = YES;
 		request.autoResume = YES;
 
-		[request setValue:item.eTag forHeaderField:@"If-Match"];
+		[request setValue:item.eTag forHeaderField:OCHTTPHeaderFieldNameIfMatch];
 
 		// Apply cellular options
 		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
@@ -2330,9 +2316,9 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 			request.forceCertificateDecisionDelegation = YES;
 
-			[request setValue:[destinationURL absoluteString] forHeaderField:@"Destination"];
-			[request setValue:@"infinity" forHeaderField:@"Depth"];
-			[request setValue:@"F" forHeaderField:@"Overwrite"]; // "F" for False, "T" for True
+			[request setValue:[destinationURL absoluteString] forHeaderField:OCHTTPHeaderFieldNameDestination];
+			[request setValue:@"infinity" forHeaderField:OCHTTPHeaderFieldNameDepth];
+			[request setValue:@"F" forHeaderField:OCHTTPHeaderFieldNameOverwrite]; // "F" for False, "T" for True
 
 			// Attach to pipelines
 			[self attachToPipelines];
@@ -2463,7 +2449,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		{
 			if (item.type != OCItemTypeCollection) // Right now, If-Match returns a 412 response when used with directories. This appears to be a bug. TODO: enforce this for directories as well when future versions address the issue
 			{
-				[request setValue:item.eTag forHeaderField:@"If-Match"];
+				[request setValue:item.eTag forHeaderField:OCHTTPHeaderFieldNameIfMatch];
 			}
 		}
 
@@ -2717,7 +2703,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
 				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
 
-				thumbnail.mimeType = request.httpResponse.headerFields[@"Content-Type"];
+				thumbnail.mimeType = request.httpResponse.headerFields[OCHTTPHeaderFieldNameContentType];
 
 				if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
 				{
