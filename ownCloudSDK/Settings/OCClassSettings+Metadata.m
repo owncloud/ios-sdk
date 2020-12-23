@@ -182,6 +182,18 @@
 		}
 	}
 
+	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionAddCategoryTags], NSNumber).boolValue))
+	{
+		if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
+
+		NSString *category;
+
+		if ((category = mutableMetadata[OCClassSettingsMetadataKeyCategory]) != nil)
+		{
+			mutableMetadata[OCClassSettingsMetadataKeyCategoryTag] = [[category lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
+		}
+	}
+
 	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionSortPossibleValues], NSNumber).boolValue))
 	{
 		if ([metadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class] || [mutableMetadata[OCClassSettingsMetadataKeyPossibleValues] isKindOfClass:NSArray.class])
@@ -280,6 +292,7 @@ OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier = @"flatIden
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName = @"className";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription = @"description";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory = @"category";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag = @"categoryTag";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possibleValues";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"autoExpansion";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue = @"value";
@@ -310,4 +323,5 @@ OCClassSettingsMetadataOption OCClassSettingsMetadataOptionFillMissingValues = @
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddDefaultValue = @"addDefault";
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionSortPossibleValues = @"sortPossibleValues";
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExpandPossibleValues = @"expandPossibleValues";
+OCClassSettingsMetadataOption OCClassSettingsMetadataOptionAddCategoryTags = @"addCompactCategory";
 OCClassSettingsMetadataOption OCClassSettingsMetadataOptionExternalDocumentationFolders = @"docFolders";
