@@ -64,10 +64,10 @@
 
 		for (OCHTTPPipelineID pipelineID in persistentPipelineIDs)
 		{
-			OCLogDebug(@"Setting up pipeline=%@ for persistance", pipelineID);
+			OCLogVerbose(@"Setting up pipeline=%@ for persistance", pipelineID);
 
 			[OCHTTPPipelineManager.sharedPipelineManager requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-				OCLogDebug(@"Started pipeline=%@ (%@) for persistance with error=%@", pipelineID, pipeline, error);
+				OCLogVerbose(@"Started pipeline=%@ (%@) for persistance with error=%@", pipelineID, pipeline, error);
 			}];
 		}
 	});
@@ -107,7 +107,7 @@
 
 		if (![[NSFileManager defaultManager] createDirectoryAtURL:backendRootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 		{
-			OCLogDebug(@"Creation of %@ failed with error=%@", backendRootURL, error);
+			OCLogVerbose(@"Creation of %@ failed with error=%@", backendRootURL, error);
 		}
 
 		_backend = [[OCHTTPPipelineBackend alloc] initWithSQLDB:[[OCSQLiteDB alloc] initWithURL:backendDBURL] temporaryFilesRoot:backendTemporaryFilesRootURL];
@@ -276,12 +276,12 @@
 
 		OCHTTPPipeline *pipeline;
 
-		OCLogDebug(@"Request for pipelineID=%@", pipelineID);
+		OCLogVerbose(@"Request for pipelineID=%@", pipelineID);
 
 		if ([OCLogger logsForLevel:OCLogLevelDebug])
 		{
 			completionHandler = ^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-				OCLogDebug(@"Served request for pipelineID=%@ with pipeline=%@, error=%@", pipelineID, pipeline, error);
+				OCLogVerbose(@"Served request for pipelineID=%@ with pipeline=%@, error=%@", pipelineID, pipeline, error);
 
 				completionHandler(pipeline, error);
 			};
@@ -436,7 +436,7 @@
 {
 	NSArray <NSString *> *idComponents;
 
-	OCLogDebug(@"Handling events for backgroundURLSession %@", sessionIdentifier);
+	OCLogVerbose(@"Handling events for backgroundURLSession %@", sessionIdentifier);
 
 	if (((idComponents = [sessionIdentifier componentsSeparatedByString:@";"]) != nil) && (idComponents.count == 2))
 	{
@@ -444,35 +444,35 @@
 		NSString *bundleIdentifier = [idComponents lastObject];
 		__weak OCHTTPPipelineManager *weakSelf = self;
 		dispatch_block_t returnPipelineAndCallCompletionHandlerBlock = ^{
-			OCLogDebug(@"Done handling events for backgroundURLSession %@", sessionIdentifier);
+			OCLogVerbose(@"Done handling events for backgroundURLSession %@", sessionIdentifier);
 			if (completionHandler != nil)
 			{
 				completionHandler();
 			}
 
 			[weakSelf returnPipelineWithIdentifier:pipelineID completionHandler:^{
-				OCLogDebug(@"Returned background event handling pipeline %@ for %@", pipelineID, sessionIdentifier);
+				OCLogVerbose(@"Returned background event handling pipeline %@ for %@", pipelineID, sessionIdentifier);
 			}];
 		};
 
 		if ([bundleIdentifier isEqual:self.backend.bundleIdentifier])
 		{
 			// This queue belongs to this process
-			OCLogDebug(@"Handling backgroundURLSession requests for app");
+			OCLogVerbose(@"Handling backgroundURLSession requests for app");
 
 			[self setEventHandlingFinishedBlock:returnPipelineAndCallCompletionHandlerBlock forURLSessionIdentifier:sessionIdentifier];
 
 			[self requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-				OCLogDebug(@"Request for background event handling pipeline for %@ returned with pipeline=%@, error=%@", sessionIdentifier, pipeline, error);
+				OCLogVerbose(@"Request for background event handling pipeline for %@ returned with pipeline=%@, error=%@", sessionIdentifier, pipeline, error);
 			}];
 		}
 		else
 		{
 			// This queue belongs to another process (likely an extension)
-			OCLogDebug(@"Handling backgroundURLSession requests for extension");
+			OCLogVerbose(@"Handling backgroundURLSession requests for extension");
 
 			[self requestPipelineWithIdentifier:pipelineID completionHandler:^(OCHTTPPipeline * _Nullable pipeline, NSError * _Nullable error) {
-				OCLogDebug(@"Request for background event handling pipeline for %@ returned with pipeline=%@, error=%@", sessionIdentifier, pipeline, error);
+				OCLogVerbose(@"Request for background event handling pipeline for %@ returned with pipeline=%@, error=%@", sessionIdentifier, pipeline, error);
 
 				[pipeline attachBackgroundURLSessionWithConfiguration:[self _backgroundURLSessionConfigurationWithIdentifier:sessionIdentifier] handlingCompletionHandler:returnPipelineAndCallCompletionHandlerBlock];
 			}];
@@ -480,7 +480,7 @@
 	}
 	else
 	{
-		OCLogDebug(@"Can't handle events for unknown formatted backgroundURLSession %@", sessionIdentifier);
+		OCLogError(@"Can't handle events for unknown formatted backgroundURLSession %@", sessionIdentifier);
 		completionHandler();
 	}
 }

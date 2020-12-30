@@ -101,6 +101,7 @@
 					OCClassSettingsMetadataOptionAddDefaultValue : @(YES),
 					OCClassSettingsMetadataOptionSortPossibleValues : @(YES),
 					OCClassSettingsMetadataOptionExpandPossibleValues : @(YES),
+					OCClassSettingsMetadataOptionAddCategoryTags: @(YES),
 					OCClassSettingsMetadataOptionExternalDocumentationFolders : (options[OCClassSettingsDocumentationOptionExternalDocumentationFolders] ? options[OCClassSettingsDocumentationOptionExternalDocumentationFolders] : @[]),
 				}]) != nil)
 				{

@@ -144,8 +144,6 @@ extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
 extern OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize;
 extern OCClassSettingsKey OCClassSettingsKeyLogFormat;
 
-extern OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged;
-
 @interface NSArray (OCLogTagMerge)
 - (NSArray<NSString *> *)arrayByMergingTagsFromArray:(NSArray<NSString *> *)mergeTags;
 @end

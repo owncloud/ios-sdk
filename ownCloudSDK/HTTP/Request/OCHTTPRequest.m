@@ -40,7 +40,10 @@
 
 		self.method = OCHTTPMethodGET;
 	
-		self.headerFields = [NSMutableDictionary new];
+		self.headerFields = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+			// Insert request.identifier as X-Request-ID for tracing and to be able to reidentify the task later
+			_identifier, OCHTTPHeaderFieldNameXRequestID,
+		nil];
 		self.parameters = [NSMutableDictionary new];
 
 		NSProgress *progress = [NSProgress indeterminateProgress];
@@ -226,9 +229,9 @@
 			// (source: http://www.openradar.me/24076063)
 			self.bodyData = [[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding];
 
-			if (_headerFields[@"Content-Type"] == nil)
+			if (_headerFields[OCHTTPHeaderFieldNameContentType] == nil)
 			{
-				[self setValue:@"application/x-www-form-urlencoded" forHeaderField:@"Content-Type"];
+				[self setValue:@"application/x-www-form-urlencoded" forHeaderField:OCHTTPHeaderFieldNameContentType];
 			}
 		}
 		else
@@ -305,9 +308,21 @@
 	}
 }
 
-- (void)recreateRequestID
+- (OCHTTPRequestID)recreateRequestID
 {
-	_identifier = NSUUID.UUID.UUIDString; // Generate new UUID
+	OCHTTPRequestID newID = NSUUID.UUID.UUIDString; // Generate new UUID
+
+	// Update .identifier
+	_identifier = newID;
+
+	// Update value in X-Request-ID header
+	if ([self valueForHeaderField:OCHTTPHeaderFieldNameXRequestID] != nil)
+	{
+		[self setValue:newID forHeaderField:OCHTTPHeaderFieldNameXRequestID];
+	}
+
+	// Return new ID
+	return (newID);
 }
 
 #pragma mark - Cancel support
@@ -325,7 +340,7 @@
 #pragma mark - Description
 + (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
 {
-	NSString *contentType = [[headers[@"Content-Type"] componentsSeparatedByString:@"; "] firstObject];
+	NSString *contentType = [[headers[OCHTTPHeaderFieldNameContentType] componentsSeparatedByString:@"; "] firstObject];
 	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
 			       [contentType isEqualToString:@"application/xml"] ||
 			       [contentType isEqualToString:@"application/json"] ||
@@ -370,10 +385,20 @@
 	NSMutableString *formattedHeaders = [NSMutableString new];
 
 	[headers enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull headerField, NSString * _Nonnull value, BOOL * _Nonnull stop) {
-		if ([headerField isEqualToString:@"Authorization"])
+		if ([headerField isEqualToString:OCHTTPHeaderFieldNameAuthorization])
 		{
-			value = @"[redacted]";
+			NSArray<NSString *> *authorizationComponents = [value componentsSeparatedByString:@" "];
+
+			if (authorizationComponents.count > 1)
+			{
+				value = [authorizationComponents[0] stringByAppendingString:@" [redacted]"];
+			}
+			else
+			{
+				value = @"[redacted]";
+			}
 		}
+
 		if (linePrefix != nil)
 		{
 			[formattedHeaders appendFormat:@"%@%@: %@\n", linePrefix, headerField, value];
@@ -456,6 +481,11 @@
 	}
 
 	return (requestDescription);
+}
+
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, method: %@, url: %@, effectiveURL: %@%@%@>", NSStringFromClass(self.class), self, self.identifier, self.method, self.url, self.effectiveURL, ((self.bodyData != nil) ? [NSString stringWithFormat:@", bodyData=%lu bytes", self.bodyData.length] : @""), ((self.bodyURL != nil) ? [NSString stringWithFormat:@", bodyURL=%@", self.bodyURL.absoluteString] : @"")]);
 }
 
 #pragma mark - Secure Coding
@@ -581,6 +611,22 @@ OCHTTPMethod OCHTTPMethodREPORT = @"REPORT";
 OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
 OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation = @"Location";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization = @"Authorization";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID = @"X-Request-ID";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination = @"Destination";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite = @"Overwrite";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch = @"If-Match";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch = @"If-None-Match";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent = @"User-Agent";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime = @"X-OC-MTime";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum = @"OC-Checksum";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator = @"OC-Connection-Validator";
+
 OCProgressPathElementIdentifier OCHTTPRequestGlobalPath = @"_httpRequest";
 
 OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData = @"_systemResumeData";
+

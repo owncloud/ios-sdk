@@ -23,6 +23,8 @@
 #import "OCMacros.h"
 #import "NSString+OCClassSettings.h"
 
+static OCIPCNotificationName OCIPCNotificationNameClassSettingsUserPreferencesChanged = @"com.owncloud.class-settings.user-preferences.changed";
+
 @implementation OCClassSettingsUserPreferences
 
 + (instancetype)sharedUserPreferences
@@ -34,6 +36,24 @@
 	});
 
 	return (sharedClassSettingsUserPreferences);
+}
+
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameClassSettingsUserPreferencesChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+			[OCClassSettings.sharedSettings clearSourceCache];
+			[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
+		}];
+	}
+
+	return (self);
+}
+
+- (void)dealloc
+{
+	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameClassSettingsUserPreferencesChanged];
 }
 
 - (NSMutableDictionary<OCClassSettingsIdentifier, NSDictionary<OCClassSettingsKey, id> *> *)mainDictionary
@@ -77,6 +97,9 @@
 		}
 
 		[OCClassSettings.sharedSettings clearSourceCache];
+
+		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:[NSString flatIdentifierFromIdentifier:classSettingsIdentifier key:key]];
+		[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameClassSettingsUserPreferencesChanged ignoreSelf:YES];
 	}
 
 	return (changeAllowed);
@@ -157,8 +180,6 @@
 	}
 
 	self.mainDictionary = mainDictionary;
-
-	[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:[NSString flatIdentifierFromIdentifier:classSettingsIdentifier key:key]];
 }
 
 #pragma mark - Versioned migration of settings

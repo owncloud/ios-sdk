@@ -228,7 +228,7 @@ OCAuthenticationMethodAutoRegister
 		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
 		{
 			return (@{
-				@"Authorization" : authorizationHeaderValue
+				OCHTTPHeaderFieldNameAuthorization : authorizationHeaderValue
 			});
 		}
 	}
@@ -720,7 +720,7 @@ OCAuthenticationMethodAutoRegister
 		[tokenRequest addParameters:parameters];
 
 		[tokenRequest setValue:[OCAuthenticationMethod basicAuthorizationValueForUsername:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID] passphrase:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]]
-				    forHeaderField:@"Authorization"];
+				    forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 		
 		// Send Token Request
 		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
@@ -829,7 +829,7 @@ OCAuthenticationMethodAutoRegister
 							// Retrieve user_id if it wasn't provided with the token request response
 							[connection retrieveLoggedInUserWithRequestCustomization:^(OCHTTPRequest * _Nonnull request) {
 								request.requiredSignals = nil;
-								[request setValue:bearerString forHeaderField:@"Authorization"];
+								[request setValue:bearerString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 							} completionHandler:^(NSError * _Nullable error, OCUser * _Nullable loggedInUser) {
 								if (error == nil)
 								{
