@@ -23,6 +23,7 @@
 #import "OCCore.h"
 #import "OCLogger.h"
 #import "OCActivity.h"
+#import "OCSignal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -57,6 +58,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 	NSMutableArray <OCWaitCondition *> *_newWaitConditions;
 
+	OCSignalUUID _resultSignalUUID;
 	OCCoreActionResultHandler _resultHandler;
 }
 
@@ -85,6 +87,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,nullable) NSArray <OCWaitCondition *> *waitConditions; //!< If state==OCSyncRecordStateProcessing, the conditions that need to be fulfilled before proceeding.
 
 #pragma mark - Result, cancel and progress handling
+@property(strong,nullable) OCSignalUUID resultSignalUUID;
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 @property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
 

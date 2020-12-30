@@ -23,6 +23,7 @@
 #import "OCProcessManager.h"
 #import "OCWaitConditionIssue.h"
 #import "OCSyncRecordActivity.h"
+#import "OCSignalManager.h"
 
 @implementation OCSyncRecord
 
@@ -36,6 +37,7 @@
 @synthesize state = _state;
 @synthesize inProgressSince = _inProgressSince;
 
+@synthesize resultSignalUUID = _resultSignalUUID;
 @synthesize resultHandler = _resultHandler;
 @synthesize progress = _progress;
 
@@ -194,7 +196,18 @@
 
 - (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter
 {
-	OCLogDebug(@"Sync record %@ completed with error=%@ item=%@ parameter=%@, resultHandler=%d", OCLogPrivate(self), OCLogPrivate(error), OCLogPrivate(item), OCLogPrivate(parameter), (_resultHandler!=nil));
+	OCLogDebug(@"Sync record %@ completed with error=%@ item=%@ parameter=%@, resultSignalUUID=%@, resultHandler=%d", OCLogPrivate(self), OCLogPrivate(error), OCLogPrivate(item), OCLogPrivate(parameter), _resultSignalUUID, (_resultHandler!=nil));
+
+	if ((_resultSignalUUID != nil) && (core.signalManager != nil))
+	{
+		OCMutableCodableDict payload = [[NSMutableDictionary alloc] initWithCapacity:3];
+
+		payload[@"error"] = error;
+		payload[@"item"] = item;
+		payload[@"parameter"] = parameter;
+
+		[core.signalManager postSignal:[[OCSignal alloc] initWithUUID:_resultSignalUUID payload:payload]];
+	}
 
 	if (_resultHandler != nil)
 	{
@@ -227,6 +240,8 @@
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
 
+		_resultSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"resultSignalUUID"];
+
 		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
 		_waitConditions = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCWaitCondition.class, nil] forKey:@"waitConditions"];
@@ -250,6 +265,8 @@
 
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
+
+	[coder encodeObject:_resultSignalUUID forKey:@"resultSignalUUID"];
 
 	[coder encodeObject:_progress forKey:@"progress"];
 
