@@ -384,6 +384,12 @@
 		}
 	}
 
+	if (request == nil)
+	{
+		OCLogError(@"Attempt to insert nil request in partition %@", partitionID);
+		return;
+	}
+
 	// Update progress object
 	if (request.progress.progress == nil)
 	{
@@ -1035,6 +1041,11 @@
 
 					task.urlSessionTaskID = @(urlSessionTask.taskIdentifier);
 					task.urlSessionID = _urlSessionIdentifier;
+
+					// Make sure .urlSessionTaskID and X-Request-ID (and any changes to it due to recreation) are persisted before calling -resume, as the
+					// backend *could* take longer than the first callbacks from NSURLSession (particularly for the certificate), which would then not
+					// be routable and lead to the NSURLSessionTask be deemed to be an UNKNOWN TASK
+					[_backend updatePipelineTask:task];
 
 					// Connect task progress to request progress
 					request.progress.progress.totalUnitCount += 200;
