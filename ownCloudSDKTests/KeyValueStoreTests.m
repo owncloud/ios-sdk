@@ -269,7 +269,7 @@
 			XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@"final"]);
 		});
 
-		[self waitForExpectationsWithTimeout:10.0 handler:nil];
+		[self waitForExpectationsWithTimeout:20.0 handler:nil];
 
 		keyValueStore1 = nil;
 		keyValueStore2 = nil;

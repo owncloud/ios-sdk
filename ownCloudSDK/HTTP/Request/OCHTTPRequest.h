@@ -38,7 +38,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestRedirectPolicy)
 	OCHTTPRequestRedirectPolicyDefault,		//!< Default redirection policy, defaults to OCHTTPRequestRedirectPolicyValidateConnection (OCHTTPRequestRedirectPolicyAllowSameHost if OCConnectionTransparentTemporaryRedirect is active)
 
 	OCHTTPRequestRedirectPolicyHandleLocally,	//!< The HTTP layer should not handle redirects, and return the original (redirection) response for local handling instead
-	OCHTTPRequestRedirectPolicyAllowSameHost,	//!< The HTTP layer should handle redirects transparently, but only to targets on the same host, otherwise return the response instead
+	OCHTTPRequestRedirectPolicyAllowSameHost,	//!< The HTTP layer should handle redirects transparently, but only to targets on the same host and scheme, otherwise return the response instead
 	OCHTTPRequestRedirectPolicyAllowAnyHost,	//!< The HTTP layer should handle redirects transparently, to any target, even on other hosts
 	OCHTTPRequestRedirectPolicyValidateConnection	//!< The HTTP layer should handle redirects as global exception, triggering a connection validation and - upon success - a retry of the original request
 };

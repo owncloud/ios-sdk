@@ -259,11 +259,17 @@
 	user.emailAddress = @"em@il.address";
 	user.avatarData = [NSData data];
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:user];
+	#pragma clang diagnostic pop
 
 	XCTAssert(userData!=nil);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	OCUser *deserializedUser = [NSKeyedUnarchiver unarchiveObjectWithData:userData];
+	#pragma clang diagnostic pop
 
 	XCTAssert([deserializedUser.displayName isEqual:user.displayName]);
 	XCTAssert([deserializedUser.userName isEqual:user.userName]);

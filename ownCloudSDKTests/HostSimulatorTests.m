@@ -66,6 +66,7 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+// Test deactivated because the corresponding error is no longer emitted
 - (void)testSimulatorMissingCertificate
 {
 	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
@@ -105,6 +106,14 @@
 							@"Www-Authenticate" : @"Bearer realm=\"\", Basic realm=\"\""
 						}
 						contentType:@"application/xml"
+						body:@""],
+
+		@"/index.php/apps/oauth2/api/v1/token" :
+			[OCHostSimulatorResponse responseWithURL:nil
+						statusCode:OCHTTPStatusCodeUNAUTHORIZED
+						headers:@{
+						}
+						contentType:@"application/json"
 						body:@""]
 
 	};

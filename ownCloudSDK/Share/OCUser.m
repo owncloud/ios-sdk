@@ -124,7 +124,7 @@
 	{
 		#define compareVar(var) ((otherUser->var == var) || [otherUser->var isEqual:var])
 
-		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData) && (otherUser->_forceIsRemote == _forceIsRemote));
+		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData) && compareVar(_forceIsRemote));
 	}
 
 	return (NO);
@@ -140,6 +140,7 @@
 	user->_emailAddress = _emailAddress;
 	user->_avatarData = _avatarData;
 	user->_avatar = _avatar;
+	user->_forceIsRemote = _forceIsRemote;
 
 	return (user);
 }
@@ -158,6 +159,7 @@
 		self.displayName = [decoder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
 		self.emailAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"emailAddress"];
 		self.avatarData = [decoder decodeObjectOfClass:[NSData class] forKey:@"avatarData"];
+		_forceIsRemote = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"forceIsRemote"];
 	}
 
 	return (self);
@@ -169,6 +171,7 @@
 	[coder encodeObject:self.displayName forKey:@"displayName"];
 	[coder encodeObject:self.emailAddress forKey:@"emailAddress"];
 	[coder encodeObject:self.avatarData forKey:@"avatarData"];
+	[coder encodeObject:_forceIsRemote forKey:@"forceIsRemote"];
 }
 
 #pragma mark - Description

@@ -1472,6 +1472,8 @@
 		else
 		{
 			// Item not in cache - create full-fledged query
+			__block BOOL lastSentItemWasNil = YES;
+
 			query = [OCQuery queryForPath:path];
 			query.includeRootItem = YES;
 
@@ -1490,6 +1492,16 @@
 							break;
 						}
 					}
+
+					if ((item == nil) &&
+					    lastSentItemWasNil &&
+					    !isFirstInvocation)
+					{
+						// Avoid multiple invocations of tracking handler if the item is still nil
+						return;
+					}
+
+					lastSentItemWasNil = (item == nil);
 
 					if (item != nil)
 					{

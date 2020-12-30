@@ -38,6 +38,7 @@
 		if ((strongSelf = weakSelf) != nil)
 		{
 			[strongSelf->_requestWithoutCookiesReceivedExpectation fulfill];
+			strongSelf->_requestWithoutCookiesReceivedExpectation = nil;
 		}
 	} requestForCookiesHandler:^{
 		CoreRedirectTests *strongSelf;
@@ -45,6 +46,7 @@
 		if ((strongSelf = weakSelf) != nil)
 		{
 			[strongSelf->_requestForCookiesReceivedExpectation fulfill];
+			strongSelf->_requestForCookiesReceivedExpectation = nil;
 		}
 	} requestWithCookiesHandler:^{
 		CoreRedirectTests *strongSelf;
@@ -52,6 +54,7 @@
 		if ((strongSelf = weakSelf) != nil)
 		{
 			[strongSelf->_requestWithCookiesReceivedExpectation fulfill];
+			strongSelf->_requestWithCookiesReceivedExpectation = nil;
 		}
 	}];
 }
@@ -72,6 +75,7 @@
 	}];
 }
 
+#warning testCoreCookieRedirect fails
 - (void)testCoreCookieRedirect
 {
 	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];
@@ -113,6 +117,7 @@
 	[self waitForExpectationsWithTimeout:40 handler:nil];
 }
 
+#warning testConnectionSetupCookieRedirect fails
 - (void)testConnectionSetupCookieRedirect
 {
 	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];

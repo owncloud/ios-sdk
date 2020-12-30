@@ -797,19 +797,23 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			case OCHTTPRequestRedirectPolicyDefault: // handled in OCHTTPRequest.redirectPolicy, so this value won't typically occur here
 
 			case OCHTTPRequestRedirectPolicyValidateConnection:
-				// Reschedule request for when connection validation has finished
-				instruction = OCHTTPRequestInstructionReschedule;
+				if ([task.request.url.host isEqual:redirectURL.host] && [task.request.url.scheme isEqual:redirectURL.scheme]) // Limit connection validation to same host
+				{
+					// Reschedule request for when connection validation has finished
+					instruction = OCHTTPRequestInstructionReschedule;
 
-				// Trigger connection validation
-				[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
+					// Trigger connection validation
+					[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
+				}
 
 			case OCHTTPRequestRedirectPolicyHandleLocally:
 				rescheduleWithRedirectURL = NO;
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowSameHost:
-				// Reschedule request with redirect URL, using same HTTP method and body
-				rescheduleWithRedirectURL = [task.request.url.host isEqual:redirectURL.host];
+				// Require same host and scheme
+				rescheduleWithRedirectURL = 	[task.request.url.host isEqual:redirectURL.host] &&
+								[task.request.url.scheme isEqual:redirectURL.scheme];
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowAnyHost:
@@ -825,6 +829,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 		if (rescheduleWithRedirectURL && (redirectURL != nil))
 		{
+			// Reschedule request with redirect URL, using same HTTP method and body
 			task.request.redirectionHistory = (task.request.redirectionHistory == nil) ? @[ task.request.url, redirectURL ] : [task.request.redirectionHistory arrayByAddingObject:redirectURL];
 			task.request.url = redirectURL;
 

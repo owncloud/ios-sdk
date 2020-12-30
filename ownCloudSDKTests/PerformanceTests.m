@@ -18,6 +18,7 @@
 @implementation PerformanceTests
 
 #pragma mark - PROPFIND XML decoding performance
+// Test deactivated because the private API used in this test (+knownMemoryMetrics) is no longer available
 - (void)testPROPFINDXMLDecodingPerformance
 {
 	[self measureBlock:^{

@@ -331,7 +331,7 @@
 		hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 			BOOL fixAuthentication = YES;
 
-			OCLogDebug(@"headerFields[Authorization]=%@", request.headerFields[@"Authorization"]);
+			OCLogDebug(@"headerFields[Authorization]=%@, path=%@", request.headerFields[@"Authorization"], request.url.absoluteString);
 
 			if ([request.url.absoluteString hasSuffix:@"index.php/apps/oauth2/api/v1/token"])
 			{
@@ -381,7 +381,7 @@
 				return (YES);
 			}
 
-			if ([request.url.absoluteString hasSuffix:@"remote.php/dav/files"])
+			if ([request.url.absoluteString hasSuffix:@"remote.php/dav/files/"])
 			{
 				if ([request.headerFields[@"Authorization"] isEqualToString:@"Bearer refreshedAccessToken"])
 				{

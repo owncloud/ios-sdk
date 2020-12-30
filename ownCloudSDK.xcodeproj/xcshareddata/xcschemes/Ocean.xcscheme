@@ -61,7 +61,16 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "HostSimulatorTests/testSimulatorMissingCertificate">
+               </Test>
+               <Test
                   Identifier = "OCDetailedPerformanceTestCase">
+               </Test>
+               <Test
+                  Identifier = "PerformanceTests">
+               </Test>
+               <Test
+                  Identifier = "PerformanceTests/testPROPFINDXMLDecodingPerformance">
                </Test>
             </SkippedTests>
          </TestableReference>
@@ -104,11 +113,6 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "OC_SETTINGS_DOC_JSON"
-            value = "${PROJECT_DIR}/doc/CONFIGURATION.json"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
             key = "oc:log.log-synchronous"
             value = "true"
             isEnabled = "YES">
@@ -121,6 +125,11 @@
          <EnvironmentVariable
             key = "oc:log.log-only-tags"
             value = "[TEST,Request,Response,Cookies,ConnectionValidator]"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "oc:log.log-enabled-components"
+            value = "[writer.stderr,writer.file,option.log-requests-and-responses]"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
@@ -137,6 +146,11 @@
             key = "oc:core.cookie-support-enabled"
             value = "true"
             isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "OC_SETTINGS_DOC_JSON"
+            value = "${PROJECT_DIR}/doc/CONFIGURATION.json"
+            isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>

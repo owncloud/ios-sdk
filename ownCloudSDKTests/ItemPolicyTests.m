@@ -538,7 +538,10 @@
 
 	OCLogDebug(@"%@", coreBoundClaim);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	NSData *claimData = [NSKeyedArchiver archivedDataWithRootObject:coreBoundClaim];
+	#pragma clang diagnostic pop
 
 	OCClaim *restoredClaim = [NSKeyedUnarchiver unarchivedObjectOfClass:[OCClaim class] fromData:claimData error:nil];
 

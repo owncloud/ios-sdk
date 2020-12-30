@@ -91,7 +91,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	return (error);
 }
 
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)inInstruction error:(nullable NSError *)error
 {
 	if (self.instructionForFinishedTask != nil)
 	{
@@ -256,6 +256,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 // - Add request while detached, wait 3 seconds, then attach and receive response (+ check number of pending finished tasks at various points)
 // - Detach, send new request, wait 3 seconds, fail if response was received inbetween, check number of pending finished tasks to be 1
 // - Reattach, receive queued response, stop pipeline
+#warning testDetachedFinalQueueing fails
 - (void)testDetachedFinalQueueing
 {
 	XCTestExpectation *pipelineStartedExpectation = [self expectationWithDescription:@"pipeline started"];
@@ -347,6 +348,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
+#warning testDetachedFinalQueueingWithDownloadRequests fails
 - (void)testDetachedFinalQueueingWithDownloadRequests
 {
 	_forceDownloads = YES;
@@ -611,6 +613,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 // - queue one final request for each of partitions while detached
 // - attach first partition, verify that it gets the right response and that the second request's response is not yet delivered
 // - attach second parition, verify that it gets the right response and that certificates match between first partition and second partition (testing certificate caching)
+#warning testPartitionIsolation fails
 - (void)testPartitionIsolation
 {
 	XCTestExpectation *pipelineStartedExpectation = [self expectationWithDescription:@"pipeline started"];
@@ -720,6 +723,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
+#warning testPartitionIsolationWithDownloadRequests fails
 - (void)testPartitionIsolationWithDownloadRequests
 {
 	_forceDownloads = YES;
@@ -1571,6 +1575,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 // - Checks that all requests have been scheduled and finished
 // - Checks that some requests finished with cancellation error
 // - Uses ephermal result handlers instead, so this test can only pass if the backend preserves them
+#warning testPipelineRecoveryWithReusedBackend fails
 - (void)testPipelineRecoveryWithReusedBackend
 {
 	XCTestExpectation *pipelineStartedExpectation = [self expectationWithDescription:@"pipeline started"];
@@ -2080,6 +2085,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 // - after 3 seconds, inspects the database for pending deliveries
 // - then destroys the partition
 // - checks that nothing is pending delivery anymore
+#warning testPartitionDestructionWithPendingDelivery fails
 - (void)testPartitionDestructionWithPendingDelivery
 {
 	XCTestExpectation *pipelineStartedExpectation = [self expectationWithDescription:@"pipeline started"];

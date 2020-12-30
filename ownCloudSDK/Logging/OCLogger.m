@@ -34,6 +34,7 @@
 #import "OCCore.h"
 
 static OCLogLevel sOCLogLevel;
+static BOOL sOCLoggerSharedInitialized;
 static BOOL sOCLogLevelInitialized;
 
 static BOOL sOCLogMaskPrivateData;
@@ -178,6 +179,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		}
 
 		OCIPNotificationCenter.loggingEnabled = ![[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSynchronousLogging] boolValue];
+
+		sOCLoggerSharedInitialized = YES;
 	});
 	
 	return (sharedLogger);
@@ -229,6 +232,20 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		descriptionsByComponentID[writer.identifier] = description;
 	}
 
+	OCClassSettingsMetadata logModulesMetadata = @{
+		OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+		OCClassSettingsMetadataKeyDescription 	 : @"List of enabled logging system components.",
+		OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+		OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+		OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+	};
+
+	if ((descriptionsByComponentID.count > 0) && sOCLoggerSharedInitialized)
+	{
+		logModulesMetadata = [logModulesMetadata mutableCopy];
+		((NSMutableDictionary *)logModulesMetadata)[OCClassSettingsMetadataKeyPossibleValues] = logModulesMetadata;
+	}
+
 	return (@{
 		OCClassSettingsKeyLogLevel : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
@@ -252,15 +269,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
-		OCClassSettingsKeyLogEnabledComponents : @{
-			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
-			OCClassSettingsMetadataKeyDescription 	 : @"List of enabled logging system components.",
-			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyAutoExpansion  : OCClassSettingsAutoExpansionTrailing,
-			OCClassSettingsMetadataKeyPossibleValues : descriptionsByComponentID,
-			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
-		},
+		OCClassSettingsKeyLogEnabledComponents : logModulesMetadata,
 
 		OCClassSettingsKeyLogSynchronousLogging : @{
 			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,

@@ -682,7 +682,7 @@
 					// Task is pending
 					if (taskGroupID != nil)
 					{
-						NSMutableArray <OCHTTPPipelineTask *> *schedulableTasks;
+						NSMutableArray <OCHTTPPipelineTask *> *schedulableTasks = nil;
 						BOOL schedule = YES;
 
 						// Check signal availability
