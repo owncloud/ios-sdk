@@ -14,6 +14,29 @@
 #import "OCTestTarget.h"
 #import "OCItem+OCItemCreationDebugging.h"
 
+@interface CoreSyncTestsIssueDismisser : NSObject <OCCoreDelegate>
+@end
+
+@implementation CoreSyncTestsIssueDismisser
+
+- (BOOL)core:(OCCore *)core handleSyncIssue:(OCSyncIssue *)syncIssue
+{
+	OCLog(@"Received and will consume sync issue: %@", syncIssue);
+
+	OCIssue *issue = [OCIssue issueFromSyncIssue:syncIssue forCore:core];
+
+	[issue cancel];
+
+	return (NO);
+}
+
+- (void)core:(OCCore *)core handleError:(nullable NSError *)error issue:(nullable OCIssue *)issue
+{
+	OCLog(@"Consumer received error %@, issue %@", error, issue);
+}
+
+@end
+
 @interface CoreSyncTests : XCTestCase
 
 @end
@@ -981,7 +1004,6 @@
 	}];
 }
 
-#warning testMove fails
 - (void)testMove
 {
 	OCBookmark *bookmark = nil;
@@ -1009,6 +1031,7 @@
 	__block OCLocalID localIDFolderInitial=nil, localIDFolderAfterMove=nil, localIDFolderMoveBack=nil, localIDFolderQueryAfterMove=nil, localIDFolderQueryMoveBack=nil;
 	__block OCLocalID localIDFileParentInitial=nil, localIDFolderParentInitial=nil, localIDRootInitial=nil, localIDFileParentMoveBack=nil, localIDFolderParentMoveBack=nil;
 	__block OCLocalID localIDTargetFolderInitial=nil, localIDFileParentAfterMove=nil, localIDFolderParentAfterMove=nil;
+	CoreSyncTestsIssueDismisser *issueDismisser = [CoreSyncTestsIssueDismisser new];
 
 	// Create bookmark for demo.owncloud.org
 	bookmark = [OCBookmark bookmarkForURL:OCTestTarget.secureTargetURL];
@@ -1017,6 +1040,7 @@
 
 	// Create core with it
 	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.delegate = issueDismisser;
 	core.automaticItemListUpdatesEnabled = NO;
 
 	// Start core

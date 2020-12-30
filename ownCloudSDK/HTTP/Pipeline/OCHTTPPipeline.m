@@ -565,7 +565,7 @@
 		// Only schedule if pipeline is started
 		if (_state != OCHTTPPipelineStateStarted)
 		{
-			OCLogWarning(@"Attempt to schedule before pipeline is started.");
+			OCLogWarning(@"Attempt to schedule while pipeline is not started (state = %ld).", _state);
 			return;
 		}
 
@@ -689,7 +689,13 @@
 						{
 							NSError *failWithError = nil;
 
-							schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals forTask:task failWithError:&failWithError];
+							// Only check for signals on final requests if more than one signal has been set (several unit tests with "final" requests depend on this) or the partitionHandler currently is available
+							// !! For non-final requests, the Connection Validator depends on -meetsSignalRequirements:forTask:failWithError: being called !!
+							if (!task.requestFinal || (task.requestFinal && (task.request.requiredSignals.count > 0)) || (partitionHandler != nil))
+							{
+								// This call is also made if partitionHandler is nil, resulting in schedule = NO
+								schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals forTask:task failWithError:&failWithError];
+							}
 
 							if (!schedule && (failWithError!=nil))
 							{
@@ -1458,7 +1464,7 @@
 		}
 
 		// Reschedule request if instructed so
-		if (requestInstruction == OCHTTPRequestInstructionReschedule) // TODO: inspect why there even is a OCHTTPRequestInstructionReschedule coming from the FP .. (and maybe define a OCHTTPRequestInstructionReissue?!) (this is most likely specific to the feature/sync-ng branch)
+		if (requestInstruction == OCHTTPRequestInstructionReschedule)
 		{
 			[task.request scrubForRescheduling];
 

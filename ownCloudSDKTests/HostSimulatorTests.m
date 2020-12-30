@@ -67,17 +67,17 @@
 }
 
 // Test deactivated because the corresponding error is no longer emitted
-- (void)testSimulatorMissingCertificate
-{
-	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
-		XCTAssert(issue.issues.count==1, @"1 issue found");
-
-		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
-		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
-
-		XCTAssert((issue.issues[0].error.code == OCErrorCertificateMissing), @"Error is that certificate is missing");
-	}];
-}
+//- (void)testSimulatorMissingCertificate
+//{
+//	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+//		XCTAssert(issue.issues.count==1, @"1 issue found");
+//
+//		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
+//		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
+//
+//		XCTAssert((issue.issues[0].error.code == OCErrorCertificateMissing), @"Error is that certificate is missing");
+//	}];
+//}
 
 - (void)testSimulatorSimulatedNotFoundResponses
 {

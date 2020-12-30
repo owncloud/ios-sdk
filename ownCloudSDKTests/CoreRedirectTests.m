@@ -75,7 +75,6 @@
 	}];
 }
 
-#warning testCoreCookieRedirect fails
 - (void)testCoreCookieRedirect
 {
 	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];
@@ -117,7 +116,6 @@
 	[self waitForExpectationsWithTimeout:40 handler:nil];
 }
 
-#warning testConnectionSetupCookieRedirect fails
 - (void)testConnectionSetupCookieRedirect
 {
 	XCTestExpectation *certificateExpectation = [self expectationWithDescription:@"Receive certificate"];

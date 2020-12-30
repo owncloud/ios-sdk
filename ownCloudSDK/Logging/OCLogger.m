@@ -243,7 +243,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	if ((descriptionsByComponentID.count > 0) && sOCLoggerSharedInitialized)
 	{
 		logModulesMetadata = [logModulesMetadata mutableCopy];
-		((NSMutableDictionary *)logModulesMetadata)[OCClassSettingsMetadataKeyPossibleValues] = logModulesMetadata;
+		((NSMutableDictionary *)logModulesMetadata)[OCClassSettingsMetadataKeyPossibleValues] = descriptionsByComponentID;
 	}
 
 	return (@{
