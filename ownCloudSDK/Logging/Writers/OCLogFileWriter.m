@@ -104,7 +104,7 @@ static NSURL *sDefaultLogFileURL;
 			OCPFSLog(nil, (@[@"LogIntro"]), @"Starting logging to %@", _logFileURL.path);
 			OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
 
-			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME, OCLogger.sharedLogger.writeQueue);
+			_logFileVnodeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, _logFileFD, DISPATCH_VNODE_RENAME|DISPATCH_VNODE_DELETE, OCLogger.sharedLogger.writeQueue);
 
 			dispatch_source_set_event_handler(_logFileVnodeSource, ^{
 				// Close and re-open current file
