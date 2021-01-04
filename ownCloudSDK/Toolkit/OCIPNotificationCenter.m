@@ -101,15 +101,15 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) == nil)
 		{
-			handlersByObserver = [NSMutableDictionary new];
+			handlersByObserver = [NSMapTable weakToStrongObjectsMapTable];
 			_handlersByObserverByNotificationName[name] = handlersByObserver;
 		}
 
-		handlersByObserver[[NSValue valueWithNonretainedObject:observer]] = [handler copy];
+		[handlersByObserver setObject:[handler copy] forKey:observer];
 
 		if (handlersByObserver.count == 1)
 		{
@@ -127,15 +127,13 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) != nil)
 		{
-			NSValue *observerValue = [NSValue valueWithNonretainedObject:observer];
-
-			if (handlersByObserver[observerValue] != nil)
+			if ([handlersByObserver objectForKey:observer] != nil)
 			{
-				[handlersByObserver removeObjectForKey:observerValue];
+				[handlersByObserver removeObjectForKey:observer];
 
 				if (handlersByObserver.count == 0)
 				{
@@ -170,7 +168,7 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 		NSNumber *ignoreCountNumber = _ignoreCountsByNotificationName[name];
 		NSUInteger ignoreCount;
 
@@ -190,16 +188,20 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) != nil)
 		{
-			[handlersByObserver enumerateKeysAndObjectsUsingBlock:^(NSValue * _Nonnull observerValue, OCIPNotificationHandler  _Nonnull notificationHandler, BOOL * _Nonnull stop) {
-				id observer = [observerValue nonretainedObjectValue];
+			for (id observer in handlersByObserver)
+			{
+				OCIPNotificationHandler notificationHandler;
 
-				if (OCIPNotificationCenter.loggingEnabled)
+				if ((notificationHandler = [handlersByObserver objectForKey:observer]) != nil)
 				{
-					OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
-				}
+					if (OCIPNotificationCenter.loggingEnabled)
+					{
+						OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
+					}
 
-				notificationHandler(self, observer, name);
-			}];
+					notificationHandler(self, observer, name);
+				}
+			}
 		}
 	}
 }

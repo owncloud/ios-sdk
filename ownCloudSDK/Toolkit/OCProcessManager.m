@@ -89,14 +89,15 @@
 		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		// Set up ping-pong
+		__weak OCProcessManager *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:[OCProcessManager pingNotificationNameForSession:_processSession] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessManager *processManager, OCIPCNotificationName  _Nonnull notificationName) {
-			OCLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
+			OCWLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
 
 			// Refresh state file
 			[processManager writeStateFileForSession:processManager.processSession];
 
 			// Respond with a pong to pings directed at this process
-			OCLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
+			OCWLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
 			[notificationCenter postNotificationForName:[OCProcessManager pongNotificationNameForSession:processManager.processSession] ignoreSelf:YES];
 		}];
 
@@ -442,8 +443,9 @@
 
 		_listening = YES;
 
+		__weak OCProcessPing *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
-			OCLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
+			OCWLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
 			[observer receivedPong];
 		}];
 	}
@@ -501,7 +503,6 @@
 
 		if (_completionHandler != nil)
 		{
-
 			if (_session != nil)
 			{
 				_session = [[OCProcessManager sharedProcessManager] readSessionFromStateFileURL:[[OCProcessManager sharedProcessManager] stateFileURLForSession:_session]];

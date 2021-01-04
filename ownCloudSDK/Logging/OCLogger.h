@@ -179,6 +179,12 @@ NS_ASSUME_NONNULL_END
 #define OCLogWarning(format,...)   	_OC_LOG(self, OCLogLevelWarning, format, ##__VA_ARGS__)
 #define OCLogError(format,...)   	_OC_LOG(self, OCLogLevelError,   format, ##__VA_ARGS__)
 
+#define OCWLogVerbose(format,...)	_OC_LOG(weakSelf, OCLogLevelVerbose, format, ##__VA_ARGS__)
+#define OCWLogDebug(format,...)		_OC_LOG(weakSelf, OCLogLevelDebug,   format, ##__VA_ARGS__)
+#define OCWLog(format,...)   		_OC_LOG(weakSelf, OCLogLevelInfo,    format, ##__VA_ARGS__)
+#define OCWLogWarning(format,...)   	_OC_LOG(weakSelf, OCLogLevelWarning, format, ##__VA_ARGS__)
+#define OCWLogError(format,...)   	_OC_LOG(weakSelf, OCLogLevelError,   format, ##__VA_ARGS__)
+
 // Tagged logging (with auto-tags + extra-tags)
 #define _OC_TLOG(obj,level,extraTags,format,...)	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:OCLogAddTags(obj,extraTags) message:format, ##__VA_ARGS__]; }
 
