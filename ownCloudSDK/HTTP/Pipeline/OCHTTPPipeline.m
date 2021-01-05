@@ -783,7 +783,8 @@
 				break;
 
 				case OCHTTPPipelineTaskStateCompleted:
-					// Task is completed
+					// Task is completed, attempt delivery
+					[self _deliverResultForTask:task];
 					return;
 				break;
 			}

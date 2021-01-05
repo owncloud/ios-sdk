@@ -161,6 +161,9 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 #pragma mark - Deliver notifications
 - (void)deliverNotificationForName:(OCIPCNotificationName)name
 {
+	NSArray<id> *observers = nil;
+	NSMutableArray<dispatch_block_t> *notifyBlocks = nil;
+
 	if (OCIPNotificationCenter.loggingEnabled)
 	{
 		OCLogDebug(@"Received notification '%@'", name);
@@ -188,21 +191,32 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) != nil)
 		{
-			for (id observer in handlersByObserver)
+			observers = NSAllMapTableKeys(handlersByObserver); // Simple enumeration could fail due to mutation while enumeration, so we grab an array of the observers and iterate over that
+			notifyBlocks = [NSMutableArray new];
+
+			for (id observer in observers)
 			{
 				OCIPNotificationHandler notificationHandler;
 
 				if ((notificationHandler = [handlersByObserver objectForKey:observer]) != nil)
 				{
-					if (OCIPNotificationCenter.loggingEnabled)
-					{
-						OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
-					}
+					// Queue notification calls for later, to avoid deadlock due to @synchronized()
+					[notifyBlocks addObject:^{
+						if (OCIPNotificationCenter.loggingEnabled)
+						{
+							OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
+						}
 
-					notificationHandler(self, observer, name);
+						notificationHandler(self, observer, name);
+					}];
 				}
 			}
 		}
+	}
+
+	for (dispatch_block_t notificationBlock in notifyBlocks)
+	{
+		notificationBlock();
 	}
 }
 

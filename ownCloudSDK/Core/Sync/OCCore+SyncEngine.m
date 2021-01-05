@@ -307,6 +307,12 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		syncRecord.progress.cancellable = cancellable;
 		progress.cancellable = cancellable;
 
+		if (resultHandler == nil)
+		{
+			// Without resultHandler, the syncRecord can be processed on any process
+			syncRecord.isProcessIndependent = YES;
+		}
+
 		[self submitSyncRecord:syncRecord withPreflightResultHandler:preflightResultHandler];
 	}
 
@@ -551,6 +557,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 - (void)processSyncRecordsIfNeeded
 {
 	[self beginActivity:@"process sync records if needed"];
+
+	// Trigger HTTP pipeline scheduling on all pipelines so outstanding HTTP responses in the queue do get delivered
+	[self.connection.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline * _Nonnull pipeline, BOOL * _Nonnull stop) {
+		[pipeline setPipelineNeedsScheduling];
+	}];
 
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
@@ -1014,7 +1025,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	// Check originating process session
 	// (ensures that completionHandlers and progress objects provided in/by that process can be called - and that sync issues are delivered first on the originating process)
-	if (syncRecord.originProcessSession != nil)
+	if ((syncRecord.originProcessSession != nil) && !syncRecord.isProcessIndependent)
 	{
 		// Check that the record has not been exempt from origin process session checks
 	 	if ((syncRecord.recordID != nil) && ![_remoteSyncEngineTimedOutSyncRecordIDs containsObject:syncRecord.recordID])
