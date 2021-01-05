@@ -300,7 +300,7 @@
 				*stop = YES;
 			}
 
-			// [db logMemoryStatistics];
+			[db logMemoryStatistics];
 			[db flushCache];
 
 			if ((processed == total) || (error != nil))
@@ -372,7 +372,7 @@
 				*stop = YES;
 			}
 
-			// [db logMemoryStatistics];
+			[db logMemoryStatistics];
 			[db flushCache];
 
 			if ((processed == total) || (error != nil))
