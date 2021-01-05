@@ -1165,9 +1165,16 @@ static OCConnectionSetupHTTPPolicy sSetupHTTPPolicy = OCConnectionSetupHTTPPolic
 			[self attachToPipelines];
 
 			// Enqueue request
-			if (options[@"alternativeEventType"] != nil)
+			if ((options[@"alternativeEventType"] != nil) || [options[@"longLived"] boolValue])
 			{
-				[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+				if (OCConnection.backgroundURLSessionsAllowed)
+				{
+					[self.longLivedPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+				}
+				else
+				{
+					[self.commandPipeline enqueueRequest:davRequest forPartitionID:self.partitionID];
+				}
 			}
 			else
 			{

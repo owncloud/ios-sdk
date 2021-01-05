@@ -310,7 +310,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		if (resultHandler == nil)
 		{
 			// Without resultHandler, the syncRecord can be processed on any process
-			syncRecord.isProcessIndependent = YES;
+			// syncRecord.isProcessIndependent = YES; // commented out for now to limit the number of changes in 11.4.5
 		}
 
 		[self submitSyncRecord:syncRecord withPreflightResultHandler:preflightResultHandler];
@@ -557,11 +557,6 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 - (void)processSyncRecordsIfNeeded
 {
 	[self beginActivity:@"process sync records if needed"];
-
-	// Trigger HTTP pipeline scheduling on all pipelines so outstanding HTTP responses in the queue do get delivered
-	[self.connection.allHTTPPipelines enumerateObjectsUsingBlock:^(OCHTTPPipeline * _Nonnull pipeline, BOOL * _Nonnull stop) {
-		[pipeline setPipelineNeedsScheduling];
-	}];
 
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
