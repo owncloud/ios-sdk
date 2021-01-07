@@ -47,9 +47,9 @@
 
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleBookmarkUpdatedNotification:) name:OCBookmarkUpdatedNotification object:nil];
 
-		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameBookmarkManagerListChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-			[self loadBookmarks];
-			[self postLocalChangeNotification];
+		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameBookmarkManagerListChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmarkManager * _Nonnull bookmarkManager, OCIPCNotificationName  _Nonnull notificationName) {
+			[bookmarkManager loadBookmarks];
+			[bookmarkManager postLocalChangeNotification];
 		}];
 	}
 

@@ -75,7 +75,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	[self renewActiveProcessCoreRegistration];
 
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
-		[notificationCenter postNotificationForName:[core notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:OCProcessManager.sharedProcessManager.processSession] ignoreSelf:YES];
+		[core scheduleInCoreQueue:^{
+			// Post on core queue to ensure an answer is only posted if the core is actually functional
+			[notificationCenter postNotificationForName:[core notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:OCProcessManager.sharedProcessManager.processSession] ignoreSelf:YES];
+		}];
+
 		[core setNeedsToProcessSyncRecords];
 	}];
 
@@ -302,6 +306,12 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 		syncRecord.progress.cancellable = cancellable;
 		progress.cancellable = cancellable;
+
+		if (resultHandler == nil)
+		{
+			// Without resultHandler, the syncRecord can be processed on any process
+			// syncRecord.isProcessIndependent = YES; // commented out for now to limit the number of changes in 11.4.5
+		}
 
 		[self submitSyncRecord:syncRecord withPreflightResultHandler:preflightResultHandler];
 	}
@@ -1010,7 +1020,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	// Check originating process session
 	// (ensures that completionHandlers and progress objects provided in/by that process can be called - and that sync issues are delivered first on the originating process)
-	if (syncRecord.originProcessSession != nil)
+	if ((syncRecord.originProcessSession != nil) && !syncRecord.isProcessIndependent)
 	{
 		// Check that the record has not been exempt from origin process session checks
 	 	if ((syncRecord.recordID != nil) && ![_remoteSyncEngineTimedOutSyncRecordIDs containsObject:syncRecord.recordID])
@@ -1324,7 +1334,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		// Start timeout for acknowledgement
 		NSDate *triggerDate = [NSDate new];
 
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(7 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			[weakSelf checkRemoteSyncEngineTriggerAckForSyncRecordID:syncRecord.recordID processSession:processSession triggerDate:triggerDate];
 		});
 	}

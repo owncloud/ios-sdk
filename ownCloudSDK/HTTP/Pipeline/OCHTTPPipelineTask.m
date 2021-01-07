@@ -109,25 +109,20 @@
 
 #pragma mark - Serialized properties
 #define RETURN_LAZY_DESERIALIZE(valueVar,dataVar) \
-	if (valueVar != nil) \
-	{ \
-		return (valueVar); \
-	} \
-	else \
+	if (valueVar == nil) \
 	{ \
 		if (dataVar != nil) \
 		{ \
 			valueVar = [NSKeyedUnarchiver unarchiveObjectWithData:dataVar]; \
 		} \
 	} \
+	\
+	dataVar = nil; \
+	\
 	return (valueVar)
 
 #define RETURN_LAZY_SERIALIZE(valueVar,dataVar) \
-	if (dataVar != nil) \
-	{ \
-		return (dataVar); \
-	} \
-	else \
+	if (dataVar == nil) \
 	{ \
 		if (valueVar != nil) \
 		{ \
@@ -140,10 +135,17 @@
 		valueVar = value; \
 		dataVar = nil
 
-#define SET_DATA(data,dataVar,valueVar) \
-		valueVar = nil; \
-		dataVar = data
+- (void)setRequestID:(OCHTTPRequestID)requestID
+{
+	_requestID = requestID;
 
+	// A change of .requestID indicates a change to the request as well, so
+	// drop the requestData to force re-creation
+	if (self.request != nil)
+	{
+		_requestData = nil;
+	}
+}
 
 // request & requestData
 - (OCHTTPRequest *)request

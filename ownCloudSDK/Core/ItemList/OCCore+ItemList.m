@@ -1234,7 +1234,29 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
 
-					[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:((notBefore != nil) ? @{ OCConnectionOptionIsNonCriticalKey : @(YES) } : nil) resultTarget:eventTarget];
+					NSDictionary<OCConnectionOptionKey,id> *options = nil;
+
+					// Send requests on the long-lived pipeline when
+					// background sessions are allowed, to wake them
+					// up and prompt them to deliver their responses
+					// on a regular basis (otherwise might take an
+					// undefined amount of time for NSURLSession to
+					// deliver responses)
+					if (notBefore != nil)
+					{
+						options = @{
+							OCConnectionOptionIsNonCriticalKey : @(YES),
+							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						};
+					}
+					else
+					{
+						options = @{
+							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						};
+					}
+
+					[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:options resultTarget:eventTarget];
 				}
 			};
 

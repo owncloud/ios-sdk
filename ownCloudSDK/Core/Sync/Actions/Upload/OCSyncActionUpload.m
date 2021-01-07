@@ -345,7 +345,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
 
-	// Call resultHandler (and give file provider a chance to attach an uploadingError
+	// Call resultHandler (and give file provider a chance to attach an uploadingError)
 	[syncContext completeWithError:event.error core:self.core item:(OCItem *)event.result parameter:self.localItem];
 
 	if (event.error != nil)

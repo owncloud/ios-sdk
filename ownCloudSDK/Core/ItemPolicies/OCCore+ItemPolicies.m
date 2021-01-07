@@ -377,8 +377,8 @@
 	[self loadItemPoliciesWithCompletionHandler:nil];
 
 	// Listen to change notifications
-	[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:self.itemPoliciesChangedNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		[self invalidateItemPolicies];
+	[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:self.itemPoliciesChangedNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core invalidateItemPolicies];
 	}];
 }
 
