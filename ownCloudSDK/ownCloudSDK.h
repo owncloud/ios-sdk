@@ -91,6 +91,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCapabilities.h>
 
 #import <ownCloudSDK/OCHTTPRequest.h>
+#import <ownCloudSDK/OCHTTPRequest+JSON.h>
 #import <ownCloudSDK/OCHTTPResponse.h>
 #import <ownCloudSDK/OCHTTPDAVRequest.h>
 

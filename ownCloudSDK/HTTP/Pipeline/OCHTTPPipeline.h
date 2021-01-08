@@ -113,6 +113,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable,readonly) NSString *urlSessionIdentifier;
 
+#pragma mark - User Agent
++ (nullable NSString *)stringForTemplate:(NSString *)userAgentTemplate variables:(nullable NSDictionary<NSString *, NSString *> *)variables;
+
 #pragma mark - Lifecycle
 - (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration;
 

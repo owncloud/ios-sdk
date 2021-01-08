@@ -309,6 +309,9 @@
 // OCErrorServerConnectionValidationFailed
 "Connection validation failed." = "Connection validation failed.";
 
+// OCErrorAuthorizationClientRegistrationFailed
+"Client registration failed." = "Client registration failed.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

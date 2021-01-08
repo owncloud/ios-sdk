@@ -320,6 +320,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorServerConnectionValidationFailed:
 					unlocalizedString = @"Connection validation failed.";
 				break;
+
+				case OCErrorAuthorizationClientRegistrationFailed:
+					unlocalizedString = @"Client registration failed.";
+				break;
 			}
 		}
 	}

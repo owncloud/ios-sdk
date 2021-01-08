@@ -276,7 +276,9 @@
 	@synchronized(self)
 	{
 		_cachedAuthenticationSecret = nil;
+		[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 		_authenticationDataKnownInvalidDate = nil;
+		[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 	}
 }
 

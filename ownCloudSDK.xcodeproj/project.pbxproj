@@ -386,6 +386,8 @@
 		DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC98BDF721E73EFF003B5658 /* Network.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		DC9B4D3922E987EF0089BF78 /* OCClaim.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3E20DC2281005A3DFC /* OCClaim.m */; };
 		DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCClaim.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */; };
 		DCA35D4D24CF685B00DBE2B0 /* OCDiagnosticNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D4B24CF685B00DBE2B0 /* OCDiagnosticNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA35D4E24CF685B00DBE2B0 /* OCDiagnosticNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA35D4C24CF685B00DBE2B0 /* OCDiagnosticNode.m */; };
 		DCA35D5524CF688700DBE2B0 /* OCDiagnosticSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D5324CF688700DBE2B0 /* OCDiagnosticSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1134,6 +1136,8 @@
 		DC98BDF321E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreNetworkMonitorSignalProvider.h; sourceTree = "<group>"; };
 		DC98BDF421E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreNetworkMonitorSignalProvider.m; sourceTree = "<group>"; };
 		DC98BDF721E73EFF003B5658 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
+		DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPRequest+JSON.h"; sourceTree = "<group>"; };
+		DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPRequest+JSON.m"; sourceTree = "<group>"; };
 		DCA35D4B24CF685B00DBE2B0 /* OCDiagnosticNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDiagnosticNode.h; sourceTree = "<group>"; };
 		DCA35D4C24CF685B00DBE2B0 /* OCDiagnosticNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDiagnosticNode.m; sourceTree = "<group>"; };
 		DCA35D5324CF688700DBE2B0 /* OCDiagnosticSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDiagnosticSource.h; sourceTree = "<group>"; };
@@ -2089,6 +2093,8 @@
 				DC8556EB204DEA2900189B9A /* OCHTTPDAVRequest.h */,
 				DC00DB1C219B120300C82737 /* OCHTTPDAVMultistatusResponse.m */,
 				DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */,
+				DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */,
+				DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */,
 			);
 			path = Request;
 			sourceTree = "<group>";
@@ -3073,6 +3079,7 @@
 				DCDD9B18222989E50052A001 /* OCRecipient.h in Headers */,
 				DCADC03F2072774200DB8E83 /* OCQuery+Internal.h in Headers */,
 				DC4A2C5E20D4608100A47260 /* OCIssueChoice.h in Headers */,
+				DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */,
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
@@ -3599,6 +3606,7 @@
 				DC3CE066242A49E100AB8B88 /* OCMessagePresenter.m in Sources */,
 				DCD038A12542CA4500F97534 /* NSString+OCClassSettings.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
+				DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */,
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,

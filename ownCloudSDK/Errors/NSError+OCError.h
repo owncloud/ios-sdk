@@ -103,7 +103,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorAuthorizationMethodNotAllowed, //!< Authentication method not allowed. Re-authentication needed.
 	OCErrorAuthorizationMethodUnknown, //!< Authentication method unknown.
 
-	OCErrorServerConnectionValidationFailed //!< Validation of connection failed.
+	OCErrorServerConnectionValidationFailed, //!< Validation of connection failed.
+
+	OCErrorAuthorizationClientRegistrationFailed //!< Client registration failed
 };
 
 @class OCIssue;

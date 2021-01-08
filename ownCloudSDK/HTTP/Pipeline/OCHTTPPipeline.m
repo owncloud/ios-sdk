@@ -63,6 +63,42 @@
 @implementation OCHTTPPipeline
 
 #pragma mark - User agent
++ (nullable NSString *)stringForTemplate:(NSString *)userAgentTemplate variables:(nullable NSDictionary<NSString *, NSString *> *)variables
+{
+	NSString *bundleName = @"App";
+	__block NSString *userAgent = nil;
+
+	if (OCProcessManager.isProcessExtension)
+	{
+		if ((bundleName = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleNameKey]) == nil)
+		{
+			bundleName = NSBundle.mainBundle.bundlePath.lastPathComponent.stringByDeletingPathExtension;
+		}
+	}
+
+	if (bundleName == nil)
+	{
+		bundleName = @"App";
+	}
+
+	userAgent = [[[[[[[userAgentTemplate 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
+						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
+						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
+						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
+						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
+						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
+						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+
+	if (variables != nil)
+	{
+		[variables enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull varName, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+			userAgent = [userAgent stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{{%@}}", varName] withString:value];
+		}];
+	}
+
+	return (userAgent);
+}
+
 + (nullable NSString *)userAgent
 {
 	static NSString *userAgent = nil;
@@ -72,28 +108,7 @@
 
 	if (((userAgent == nil) && (template != nil)) || (![template isEqual:userAgentTemplate] && (template != userAgentTemplate)))
 	{
-		NSString *bundleName = @"App";
-
-		if (OCProcessManager.isProcessExtension)
-		{
-			if ((bundleName = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleNameKey]) == nil)
-			{
-				bundleName = NSBundle.mainBundle.bundlePath.lastPathComponent.stringByDeletingPathExtension;
-			}
-		}
-
-		if (bundleName == nil)
-		{
-			bundleName = @"App";
-		}
-
-		userAgent = [[[[[[[template 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
-						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
-						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
-						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
-						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
-						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
-						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+		userAgent = [self stringForTemplate:template variables:nil];
 		userAgentTemplate = template;
 	}
 
