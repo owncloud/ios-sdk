@@ -964,7 +964,7 @@
 	[self queueBlock:^{
 		if (self.state == OCCoreStateStopped)
 		{
-		OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (2)");
+			OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (2)");
 			return;
 		}
 

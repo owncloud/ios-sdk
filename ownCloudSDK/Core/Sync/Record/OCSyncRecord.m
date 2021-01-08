@@ -227,6 +227,7 @@
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
 
+		_isProcessIndependent = [decoder decodeBoolForKey:@"isProcessIndependent"];
 		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
 		_waitConditions = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCWaitCondition.class, nil] forKey:@"waitConditions"];
@@ -251,6 +252,7 @@
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
 
+	[coder encodeBool:_isProcessIndependent forKey:@"isProcessIndependent"];
 	[coder encodeObject:_progress forKey:@"progress"];
 
 	[coder encodeObject:_waitConditions forKey:@"waitConditions"];
@@ -300,12 +302,12 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _action]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, _action]);
 }
 
 - (NSString *)privacyMaskedDescription
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, OCLogPrivate(_action)]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, OCLogPrivate(_action)]);
 }
 
 @end

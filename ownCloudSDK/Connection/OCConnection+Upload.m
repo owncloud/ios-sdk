@@ -401,7 +401,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 				// Retrieve item information
 				[self retrieveItemListAtPath:tusJob.futureItemPath depth:0 options:@{
-					@"alternativeEventType"  : @(OCEventTypeUpload),
+					@"alternativeEventType"  		: @(OCEventTypeUpload),
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 				} resultTarget:tusJob.eventTarget];
 			}
 			else
@@ -743,7 +744,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 		// Retrieve item information
 		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-			@"alternativeEventType"  : @(OCEventTypeUpload)
+			@"alternativeEventType"  		: @(OCEventTypeUpload),
+			OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 		} resultTarget:request.eventTarget];
 	}
 	else
@@ -781,7 +783,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								// check and compare the checksums
 
 								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-									@"alternativeEventType"  : @(OCEventTypeUpload),
+									@"alternativeEventType"  		: @(OCEventTypeUpload),
+									OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
 
 									// Return an error if checksum of local and remote file mismatch
 									@"checksumExpected" 	 : expectedChecksum,
