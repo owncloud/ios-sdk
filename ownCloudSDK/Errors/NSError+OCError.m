@@ -324,6 +324,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorAuthorizationClientRegistrationFailed:
 					unlocalizedString = @"Client registration failed.";
 				break;
+
+				case OCErrorAuthorizationNotMatchingRequiredUserID:
+					unlocalizedString = @"The logged in user is not matching the required user ID.";
+				break;
 			}
 		}
 	}

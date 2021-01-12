@@ -51,7 +51,7 @@ typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
 - (NSString *)clientID;
 - (NSString *)clientSecret;
 
-- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError * _Nullable error, NSDictionary * _Nullable jsonResponseDict, NSData * _Nullable authenticationData))completionHandler;
+- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters options:(nullable OCAuthenticationMethodDetectionOptions)options requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError * _Nullable error, NSDictionary * _Nullable jsonResponseDict, NSData * _Nullable authenticationData))completionHandler;
 
 @end
 

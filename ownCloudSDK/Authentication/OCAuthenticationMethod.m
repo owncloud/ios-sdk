@@ -369,6 +369,7 @@ OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey = @"username";
 OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey = @"passphrase";
 OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"presentingViewController";
 OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
+OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey = @"requiredUsername";
 
 NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";
 

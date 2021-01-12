@@ -106,6 +106,7 @@ extern OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey; //!< For pas
 extern OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey; //!< For passphrase-based authentication methods: the passphrase (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey; //!< The UIViewController to use when presenting a view controller (for f.ex. token-based authentication mechanisms like OAuth2) (value type: UIViewController*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey; //!< Allow OCConnection to modify the OCBookmark with an upgraded URL, where an upgrade means that the hostname and base path must be identical and the protocol may only change from http to https. Any other change will be rejected and produce an OCErrorAuthorizationRedirect with userInfo[OCAuthorizationMethodAlternativeServerURLKey] for user approval (=> if the user approves, the app would update the URL in the bookmark accordingly and start authentication anew). This key is currently supported for
+extern OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey; //!< For token-based authentication methods: only generate bookmark data tokens if they allow logging in as the provided username / user ID. Return an OCErrorAuthorizationNotMatchingRequiredUserID error otherwise.
 
 extern NSString *OCAuthorizationMethodAlternativeServerURLKey; //!< Key for alternative server URL in -[NSError userInfo].
 

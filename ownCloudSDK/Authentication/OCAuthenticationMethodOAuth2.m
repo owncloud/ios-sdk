@@ -390,6 +390,7 @@ OCAuthenticationMethodAutoRegister
 								// OAuth2 PKCE
 								@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
 							}
+							options:options
 							requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
@@ -631,6 +632,7 @@ OCAuthenticationMethodAutoRegister
 
 			[self 	sendTokenRequestToConnection:connection
 				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken]
+				options:nil
 				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 					OCLogDebug(@"Token refresh finished with error=%@, jsonResponseDict=%@", error, OCLogPrivate(jsonResponseDict));
@@ -694,7 +696,7 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
-- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
+- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters options:(OCAuthenticationMethodDetectionOptions)options requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
 	OCHTTPRequest *tokenRequest;
 	NSDictionary<NSString *, id> *previousAuthSecret = (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken) ? [self cachedAuthenticationSecretForConnection:connection] : nil;
@@ -724,7 +726,7 @@ OCAuthenticationMethodAutoRegister
 		[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
 			if (error == nil)
 			{
-				[self sendTokenRequestToConnection:connection withParameters:parameters requestType:requestType completionHandler:completionHandler];
+				[self sendTokenRequestToConnection:connection withParameters:parameters options:options requestType:requestType completionHandler:completionHandler];
 			}
 			else
 			{
@@ -825,6 +827,31 @@ OCAuthenticationMethodAutoRegister
 							NSError *error = nil;
 							NSDictionary *authenticationDataDict;
 							NSData *authenticationData;
+							NSString *requiredUserID;
+
+							if ((requiredUserID = options[OCAuthenticationMethodRequiredUsernameKey]) != nil)
+							{
+								NSString *newUserID;
+								NSError *error = nil;
+
+								if ((newUserID = jsonResponseDict[@"user_id"]) != nil)
+								{
+									if (![requiredUserID isEqual:newUserID])
+									{
+										error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"You logged in as user %@, but must log in as user %@. Please retry."), newUserID, requiredUserID]));
+									}
+								}
+								else
+								{
+									error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"Login as user %@ required. Please retry."), requiredUserID]));
+								}
+
+								if (error != nil)
+								{
+									completionHandler(error, nil, nil);
+									return;
+								}
+							}
 
 							authenticationDataDict = @{
 								OA2ExpirationDate : validUntil,

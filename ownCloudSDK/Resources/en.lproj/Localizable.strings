@@ -312,6 +312,11 @@
 // OCErrorAuthorizationClientRegistrationFailed
 "Client registration failed." = "Client registration failed.";
 
+// OCErrorAuthorizationNotMatchingRequiredUserID
+"The logged in user is not matching the required user ID." = "The logged in user is not matching the required user ID.";
+"You logged in as user %@, but must log in as user %@. Please retry." = "You logged in as user %@, but must log in as user %@. Please retry.";
+"Login as user %@ required. Please retry." = "Login as user %@ required. Please retry.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

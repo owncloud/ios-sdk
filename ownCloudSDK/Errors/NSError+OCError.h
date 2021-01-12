@@ -105,7 +105,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorServerConnectionValidationFailed, //!< Validation of connection failed.
 
-	OCErrorAuthorizationClientRegistrationFailed //!< Client registration failed
+	OCErrorAuthorizationClientRegistrationFailed, //!< Client registration failed
+	OCErrorAuthorizationNotMatchingRequiredUserID //!< The logged in user is not matching the required user ID.
 };
 
 @class OCIssue;

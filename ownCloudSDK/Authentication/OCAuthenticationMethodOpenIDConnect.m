@@ -587,9 +587,9 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 }
 
 #pragma mark - Requests
-- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
+- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters options:(nullable OCAuthenticationMethodDetectionOptions)options requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
-	[super sendTokenRequestToConnection:connection withParameters:parameters requestType:requestType completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData) {
+	[super sendTokenRequestToConnection:connection withParameters:parameters options:options requestType:requestType completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData) {
 		if (error != nil)
 		{
 			// Force client re-registration in case of an error
