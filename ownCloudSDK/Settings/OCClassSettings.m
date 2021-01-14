@@ -356,7 +356,10 @@
 
 				mergedClassSettings = [[NSMutableDictionary alloc] initWithDictionary:classSettings];
 
-				[mergedClassSettings addEntriesFromDictionary:overrideSettings];
+				@synchronized(self) // guard to protect in case overrideSettings was returned from the cached _overrideValuesByKeyByIdentifier
+				{
+					[mergedClassSettings addEntriesFromDictionary:overrideSettings];
+				}
 
 				classSettings = mergedClassSettings;
 			}
