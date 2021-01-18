@@ -145,6 +145,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError, OCErrorDateKey : ((underlyingError.errorDate != nil) ? underlyingError.errorDate : [NSDate new]) }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
 
+#define OCErrorWithDescriptionFromError(errorCode,description,underlyingError) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, [NSDate new], OCErrorDateKey, underlyingError, NSUnderlyingErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Like the OCErrorWithDescription macro, but allows to specifiy an underlying error, too
+
 #define OCErrorAddDateFromResponse(error,response) if (response.date != nil) \
 	{ \
 		error = [error withErrorDate:response.date]; \

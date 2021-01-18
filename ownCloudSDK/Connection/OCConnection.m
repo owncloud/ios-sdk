@@ -1947,6 +1947,20 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						}
 						break;
 
+						case OCHTTPStatusCodeFORBIDDEN: {
+							NSError *davError;
+
+							if ((davError = request.httpResponse.bodyParsedAsDAVError) != nil)
+							{
+								event.error = OCErrorWithDescriptionFromError(OCErrorItemInsufficientPermissions, davError.davExceptionMessage, davError);
+							}
+							else
+							{
+								event.error = OCErrorFromError(OCErrorItemInsufficientPermissions, request.httpResponse.status.error);
+							}
+						}
+						break;
+
 						case OCHTTPStatusCodeNOT_FOUND:
 							event.error = OCErrorFromError(OCErrorItemNotFound, request.httpResponse.status.error);
 						break;
