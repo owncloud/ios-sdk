@@ -2913,11 +2913,11 @@ OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierConnection = @"connection";
 
-OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"connection-preferred-authentication-methods";
-OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"connection-allowed-authentication-methods";
-OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"connection-certificate-extended-validation-rule";
-OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"connection-renewed-certificate-acceptance-rule";
-OCClassSettingsKey OCConnectionMinimumVersionRequired = @"connection-minimum-server-version";
+OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"preferred-authentication-methods";
+OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"allowed-authentication-methods";
+OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"certificate-extended-validation-rule";
+OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"renewed-certificate-acceptance-rule";
+OCClassSettingsKey OCConnectionMinimumVersionRequired = @"minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-url-sessions";
 OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";

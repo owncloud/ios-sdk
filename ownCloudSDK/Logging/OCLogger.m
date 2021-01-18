@@ -1006,16 +1006,16 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
 
-OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log-level";
-OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log-privacy-mask";
-OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"log-enabled-components";
-OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"log-synchronous";
-OCClassSettingsKey OCClassSettingsKeyLogColored = @"log-colored";
-OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"log-only-tags";
-OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
-OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
-OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
-OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
-OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
-OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
-OCClassSettingsKey OCClassSettingsKeyLogFormat = @"log-format";
+OCClassSettingsKey OCClassSettingsKeyLogLevel = @"level";
+OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"privacy-mask";
+OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"enabled-components";
+OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"synchronous";
+OCClassSettingsKey OCClassSettingsKeyLogColored = @"colored";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"only-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"omit-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"only-matching";
+OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"omit-matching";
+OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"blank-filtered-messages";
+OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"single-lined";
+OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"maximum-message-size";
+OCClassSettingsKey OCClassSettingsKeyLogFormat = @"format";
