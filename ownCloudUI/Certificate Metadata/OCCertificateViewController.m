@@ -136,15 +136,18 @@
 
 	if (self.presentingViewController != nil)
 	{
-		UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(_done:)];
+		if (self.navigationController.viewControllers.firstObject == self)
+		{
+			UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(_done:)];
 
-		if (self.compareCertificate != nil)
-		{
-			self.navigationItem.leftBarButtonItem = doneItem;
-		}
-		else
-		{
-			self.navigationItem.rightBarButtonItem = doneItem;
+			if (self.compareCertificate != nil)
+			{
+				self.navigationItem.leftBarButtonItem = doneItem;
+			}
+			else
+			{
+				self.navigationItem.rightBarButtonItem = doneItem;
+			}
 		}
 	}
 
