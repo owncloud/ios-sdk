@@ -19,6 +19,8 @@
 #import <UIKit/UIKit.h>
 #import <ownCloudSDK/OCCertificate.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCCertificateViewController : UITableViewController
 {
 	OCCertificate *_certificate;
@@ -28,12 +30,17 @@
 	UIColor *_lineValueColor;
 }
 
-@property(strong,nonatomic) OCCertificate *certificate;
+@property(strong,nonatomic) OCCertificate *certificate; //!< The certificate to parse and present to the user
+@property(strong,nonatomic,nullable) OCCertificate *compareCertificate; //!< The certificate to compare against
 
 @property(strong,nonatomic) UIColor *sectionHeaderTextColor;
 @property(strong,nonatomic) UIColor *lineTitleColor;
 @property(strong,nonatomic) UIColor *lineValueColor;
 
-- (instancetype)initWithCertificate:(OCCertificate *)certificate;
+@property(assign,nonatomic) BOOL showDifferences; //!< Show/hide differences between the certificates
+
+- (instancetype)initWithCertificate:(OCCertificate *)certificate compareCertificate:(nullable OCCertificate *)compareCertificate;
 
 @end
+
+NS_ASSUME_NONNULL_END
