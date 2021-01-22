@@ -65,6 +65,8 @@ extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeStringArray;
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeNumberArray;
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray;
 extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary;
+extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionaryArray;
+extern OCClassSettingsMetadataType OCClassSettingsMetadataTypeURLString;
 
 extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended; //!< Setting should be included in AppConfig.xml file for EMM vendors.
 extern OCClassSettingsKeyStatus OCClassSettingsKeyStatusSupported; //!< Setting is available in the production/release version.

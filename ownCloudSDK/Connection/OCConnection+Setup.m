@@ -352,20 +352,25 @@
 				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
-					if (![[url lastPathComponent] isEqual:@"owncloud"])
-					{
-						if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
-						{
-							AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
-						}
-					
-						urlForCreationOfRedirectionIssueIfSuccessful = url;
-						urlForTryingRootURL = url;
 
-						url = [url URLByAppendingPathComponent:@"owncloud"];
-						continue;
-					}
-					else
+					// /owncloud/ subfolder installation detection
+					// (removed by commenting out (consider removing permanently Oct 2021 or later))
+					//
+					// if (![[url lastPathComponent] isEqual:@"owncloud"])
+					// {
+					// 	if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
+					// 	{
+					// 		AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+					// 	}
+					//
+					// 	urlForCreationOfRedirectionIssueIfSuccessful = url;
+					// 	urlForTryingRootURL = url;
+					//
+					// 	url = [url URLByAppendingPathComponent:@"owncloud"];
+					// 	continue;
+					// }
+					// else
+
 					{
 						// Check server root directory for a redirect
 						if (urlForTryingRootURL != nil)
@@ -433,7 +438,22 @@
 				{
 					if (![_bookmark.url isEqual:url])
 					{
-						AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+						if (![_bookmark.url.host isEqual:url.host] ||
+						    ![_bookmark.url.scheme isEqual:url.scheme])
+						{
+							// Redirect to different host or scheme
+							AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+						}
+						else
+						{
+							// Redirect on same host, using same scheme
+							if (_bookmark.originURL == nil)
+							{
+								_bookmark.originURL = self->_bookmark.url;
+							}
+
+							_bookmark.url = url;
+						}
 					}
 
 					urlForCreationOfRedirectionIssueIfSuccessful = nil;

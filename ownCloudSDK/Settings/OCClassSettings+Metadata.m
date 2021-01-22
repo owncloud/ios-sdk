@@ -310,6 +310,8 @@ OCClassSettingsMetadataType OCClassSettingsMetadataTypeStringArray = @"stringArr
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeNumberArray = @"numberArray";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray = @"array";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary = @"dictionary";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionaryArray = @"dictionaryArray";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeURLString = @"urlString";
 
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended = @"recommended";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusSupported = @"supported";
