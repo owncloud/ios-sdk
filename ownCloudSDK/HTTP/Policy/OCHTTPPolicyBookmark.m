@@ -22,6 +22,7 @@
 #import "OCCertificateRuleChecker.h"
 #import "OCLogger.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @interface OCHTTPPolicyBookmark ()
 {
@@ -190,7 +191,7 @@
 			OCErrorAddDateFromResponse(errorIssue, request.httpResponse);
 
 			// Embed issue
-			errorIssue = [errorIssue errorByEmbeddingIssue:[OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+			OCIssue *issue = [OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 				if (decision == OCIssueDecisionApprove)
 				{
 					if (changeUserAccepted)
@@ -204,7 +205,14 @@
 					[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:bookmark];
 					[bookmark postCertificateUserApprovalUpdateNotification];
 				}
-			}]];
+			}];
+
+			if (validationResult == OCCertificateValidationResultPassed)
+			{
+				issue.localizedTitle = OCLocalized(@"Certificate changed");
+			}
+
+			errorIssue = [errorIssue errorByEmbeddingIssue:issue];
 		}
 
 		proceedHandler(doProceed, errorIssue);
