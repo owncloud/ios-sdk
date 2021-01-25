@@ -1487,11 +1487,21 @@
 			task.urlSessionTaskID = nil;
 
 			// Use new Request-ID for rescheduled request
-			OCHTTPRequestID oldRequestID = task.requestID;
+			if (task.request.autoResumeInfo == nil)
+			{
+				// Only recreate request IDs for requests that are NOT based on auto resume info
+				// as it appears that it is not possible to change the headers for these, so that
+				// the response would trigger an "UNKNOWN TASK" error.
+				OCHTTPRequestID oldRequestID = task.requestID;
 
-			task.requestID = [task.request recreateRequestID];
+				task.requestID = [task.request recreateRequestID];
 
-			OCLogVerbose(@"Recreated identifier for request: %@ -> %@", oldRequestID, task.requestID);
+				OCLogVerbose(@"Recreated identifier for request: %@ -> %@", oldRequestID, task.requestID);
+			}
+			else
+			{
+				OCLogVerbose(@"Reusing identifier %@ for request because it is resumed and headers can't be changed", task.requestID);
+			}
 
 			task.state = OCHTTPPipelineTaskStatePending;
 			task.response = nil;
