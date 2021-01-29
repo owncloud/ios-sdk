@@ -33,6 +33,9 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Origin URL")			content:self.originURL.absoluteString],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Certificate Date")		content:self.certificateModificationDate.description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Certificate") 	action:^(OCDiagnosticContext * _Nullable context) {
+			self.certificate = [OCCertificate certificateWithCertificateData:[NSData new] hostName:self.url.host];
+		}],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"User Name")			content:self.userName],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Method")			content:self.authenticationMethodIdentifier],
