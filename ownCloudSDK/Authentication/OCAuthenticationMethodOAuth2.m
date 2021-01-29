@@ -607,12 +607,17 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Token management
-- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection
 {
 	return (@{
 		@"grant_type"    : @"refresh_token",
 		@"refresh_token" : refreshToken,
 	});
+}
+
+- (NSString *)tokenRequestAuthorizationHeaderForType:(OCAuthenticationOAuth2TokenRequestType)requestType connection:(OCConnection *)connection
+{
+	return ([OCAuthenticationMethod basicAuthorizationValueForUsername:self.clientID passphrase:self.clientSecret]);
 }
 
 - (void)_refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
@@ -631,7 +636,7 @@ OCAuthenticationMethodAutoRegister
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 
 			[self 	sendTokenRequestToConnection:connection
-				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken]
+				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken connection:connection]
 				options:nil
 				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
@@ -749,7 +754,7 @@ OCAuthenticationMethodAutoRegister
 		
 		[tokenRequest addParameters:parameters];
 
-		[tokenRequest setValue:[OCAuthenticationMethod basicAuthorizationValueForUsername:[self clientID] passphrase:[self clientSecret]] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
+		[tokenRequest setValue:[self tokenRequestAuthorizationHeaderForType:requestType connection:connection] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 		
 		// Send Token Request
 		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {

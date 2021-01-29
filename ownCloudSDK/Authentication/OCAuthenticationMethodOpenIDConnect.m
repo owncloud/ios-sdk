@@ -127,15 +127,40 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectRedirectURI]);
 }
 
-- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection
 {
-	NSMutableDictionary<NSString *, NSString *> *refreshParameters = [[super tokenRefreshParametersForRefreshToken:refreshToken] mutableCopy];
+	NSMutableDictionary<NSString *, NSString *> *refreshParameters = [[super tokenRefreshParametersForRefreshToken:refreshToken connection:connection] mutableCopy];
 
 	refreshParameters[@"client_id"] = self.clientID;
 	refreshParameters[@"client_secret"] = self.clientSecret;
 	refreshParameters[@"scope"] = self.scope;
 
 	return (refreshParameters);
+}
+
+- (NSString *)tokenRequestAuthorizationHeaderForType:(OCAuthenticationOAuth2TokenRequestType)requestType connection:(OCConnection *)connection
+{
+	if (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken)
+	{
+		// Use the client_id and client_secret used when the token was issued
+		NSString *clientID = nil, *clientSecret = nil;
+		NSDictionary<NSString *, id> *authSecret;
+
+		if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
+		{
+			clientID = authSecret[OIDCKeyPathClientID];
+			clientSecret = authSecret[OIDCKeyPathClientSecret];
+		}
+
+		if (clientID == nil) { clientID = self.clientID; }
+		if (clientSecret == nil) { clientSecret = self.clientSecret; }
+
+		OCTLogDebug(@[@"ClientRegistration"], @"Sending token refrsh request with clientID=%@, clientSecret=%@", OCLogPrivate(clientID), OCLogPrivate(clientSecret));
+
+		return ([OCAuthenticationMethod basicAuthorizationValueForUsername:clientID passphrase:clientSecret]);
+	}
+
+	return ([super tokenRequestAuthorizationHeaderForType:requestType connection:connection]);
 }
 
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
@@ -305,6 +330,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 						self->_clientRegistrationResponse = registrationResponseDict;
 						self->_clientRegistrationEndpointURL = registrationEndpointURL;
 
+						OCTLogDebug(@[@"ClientRegistration"], @"Registered clientID=%@, clientSecret=%@", OCLogPrivate(clientID), OCLogPrivate(clientSecret));
+
 						self->_clientID = clientID;
 						self->_clientSecret = clientSecret;
 
@@ -451,6 +478,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		{
 			_clientSecret = [authSecret valueForKeyPath:OIDCKeyPathClientSecret];
 		}
+
+		OCTLogDebug(@[@"ClientRegistration"], @"Loaded from secret: clientID=%@, clientSecret=%@", OCLogPrivate(_clientID), OCLogPrivate(_clientSecret));
 	}
 
 	return (authSecret);
@@ -499,6 +528,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (void)_clearClientRegistrationData
 {
+	OCTLogDebug(@[@"ClientRegistration"], @"Clearing client registration data");
+
 	_openIDConfig = nil;
 
 	_clientRegistrationResponse = nil;
@@ -593,6 +624,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		if (error != nil)
 		{
 			// Force client re-registration in case of an error
+			OCTLogDebug(@[@"ClientRegistration"], @"Token request error %@ => clear registration", error);
 			[self _clearClientRegistrationData];
 		}
 		completionHandler(error, jsonResponseDict, authenticationData);
