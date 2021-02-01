@@ -151,7 +151,7 @@
 		}
 	}
 
-	if (self.compareCertificate != nil)
+	if ((self.compareCertificate != nil) && ![self.compareCertificate isEqual:self.certificate])
 	{
 		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:OCLocalizedString(@"Show ±", nil) style:UIBarButtonItemStylePlain target:self action:@selector(toggleShowDifferences:)];
 		[self _updateDiffLabel];
