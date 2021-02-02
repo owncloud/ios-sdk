@@ -324,7 +324,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 					NSNumber *clientSecretExpiresAt=nil;
 
 					if (((clientID = OCTypedCast(registrationResponseDict[@"client_id"], NSString)) != nil) &&
-					    ((clientSecret = OCTypedCast(registrationResponseDict[@"client_secret"], NSString)) != nil) &&
+					    ((clientSecret = OCTypedCast(registrationResponseDict[@"client_secret"], NSString)) != nil)) &&
 					    ((clientSecretExpiresAt = OCTypedCast(registrationResponseDict[@"client_secret_expires_at"], NSNumber)) != nil))
 					{
 						self->_clientRegistrationResponse = registrationResponseDict;
@@ -338,13 +338,19 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 						// OIDC spec: "REQUIRED if client_secret is issued. Time at which the client_secret will
 						// expire or 0 if it will not expire. Its value is a JSON number representing the number
 						// of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time."
-						self->_clientRegistrationExpirationDate = [NSDate dateWithTimeIntervalSince1970:clientSecretExpiresAt.doubleValue];
+
+						// As per https://github.com/owncloud/openidconnect/issues/142#issuecomment-771732045,
+						// implementations may return 0 for non-expiring client_id_client_secret pairs
+						if (clientSecretExpiresAt.intValue != 0)
+						{
+							self->_clientRegistrationExpirationDate = [NSDate dateWithTimeIntervalSince1970:clientSecretExpiresAt.doubleValue];
+						}
 
 						error = nil;
 					}
 					else
 					{
-						error = OCErrorWithDescriptionAndUserInfo(OCErrorAuthorizationClientRegistrationFailed, @"client_id or client_secret missing from registration response.", @"jsonResponse", registrationResponseDict);
+						error = OCErrorWithDescriptionAndUserInfo(OCErrorAuthorizationClientRegistrationFailed, @"client_id, client_secret or client_secret_expires_at missing from registration response.", @"jsonResponse", registrationResponseDict);
 					}
 				}
 				else
