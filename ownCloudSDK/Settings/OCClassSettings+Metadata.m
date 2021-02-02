@@ -90,6 +90,26 @@
 				}
 			}
 		}
+
+		// Fetch from registered metadata
+		if (_registeredMetaDataCollectionsByIdentifier[settingsIdentifier] != nil)
+		{
+			NSArray<OCClassSettingsMetadataCollection> *metadataCollections;
+
+			if ((metadataCollections = _registeredMetaDataCollectionsByIdentifier[settingsIdentifier]) != nil)
+			{
+				for (OCClassSettingsMetadataCollection metadataCollection in metadataCollections)
+				{
+					NSArray<OCClassSettingsKey> *metadataKeys;
+
+					if ((metadataKeys = metadataCollection.allKeys) != nil)
+					{
+						if (keys == nil) { keys = [NSMutableSet new]; }
+						[keys addObjectsFromArray:metadataKeys];
+					}
+				}
+			}
+		}
 	}
 
 	return (keys);
@@ -310,6 +330,8 @@ OCClassSettingsMetadataType OCClassSettingsMetadataTypeStringArray = @"stringArr
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeNumberArray = @"numberArray";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeArray = @"array";
 OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionary = @"dictionary";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeDictionaryArray = @"dictionaryArray";
+OCClassSettingsMetadataType OCClassSettingsMetadataTypeURLString = @"urlString";
 
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusRecommended = @"recommended";
 OCClassSettingsKeyStatus OCClassSettingsKeyStatusSupported = @"supported";

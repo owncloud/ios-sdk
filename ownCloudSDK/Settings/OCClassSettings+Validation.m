@@ -117,6 +117,15 @@
 		}
 	}
 
+	if ([type isEqual:OCClassSettingsMetadataTypeURLString])
+	{
+		// Validation
+		if ([value isKindOfClass:NSString.class])
+		{
+			return ([NSURL URLWithString:value]);
+		}
+	}
+
 	if ([type isEqual:OCClassSettingsMetadataTypeNumberArray])
 	{
 		// Validation
@@ -150,6 +159,25 @@
 		// Validation
 		if ([value isKindOfClass:NSDictionary.class])
 		{
+			return (value);
+		}
+	}
+
+	if ([type isEqual:OCClassSettingsMetadataTypeDictionaryArray])
+	{
+		// Validation
+		if ([value isKindOfClass:NSArray.class])
+		{
+			NSArray *checkArray = value;
+
+			for (id object in checkArray)
+			{
+				if (![object isKindOfClass:NSDictionary.class])
+				{
+					return (nil);
+				}
+			}
+
 			return (value);
 		}
 	}
