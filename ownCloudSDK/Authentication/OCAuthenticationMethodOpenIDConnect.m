@@ -324,7 +324,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 					NSNumber *clientSecretExpiresAt=nil;
 
 					if (((clientID = OCTypedCast(registrationResponseDict[@"client_id"], NSString)) != nil) &&
-					    ((clientSecret = OCTypedCast(registrationResponseDict[@"client_secret"], NSString)) != nil)) &&
+					    ((clientSecret = OCTypedCast(registrationResponseDict[@"client_secret"], NSString)) != nil) &&
 					    ((clientSecretExpiresAt = OCTypedCast(registrationResponseDict[@"client_secret_expires_at"], NSNumber)) != nil))
 					{
 						self->_clientRegistrationResponse = registrationResponseDict;
