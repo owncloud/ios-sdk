@@ -132,6 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	BOOL _isValidatingConnection;
 	OCRateLimiter *_connectionValidationRateLimiter;
+	NSCountedSet<NSString *> *_connectionValidationTriggeringURLs;
 
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 }

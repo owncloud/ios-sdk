@@ -1266,7 +1266,7 @@
 							//  & a request providing a certificate on the background session
 							//  & process being terminated
 							//  & result of the request being provided to the new process
-							OCLogError(@"Certificate missing for %@: %@", response, OCError(OCErrorCertificateMissing));
+							OCLogWarning(@"Certificate missing for %@: %@", response, OCError(OCErrorCertificateMissing));
 							// response.httpError = OCError(OCErrorCertificateMissing);
 						}
 					}

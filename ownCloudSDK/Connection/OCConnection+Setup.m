@@ -279,7 +279,7 @@
 	
 	BOOL completed = NO;
 	NSURL *urlForCreationOfRedirectionIssueIfSuccessful = nil;
-	NSMutableSet<NSString *> *triedRootURLStrings = [NSMutableSet new];
+	NSCountedSet<NSString *> *triedRootURLStrings = [NSCountedSet new];
 
 	// Plain-text HTTP check
 	if ([url.scheme.lowercaseString isEqualToString:@"http"])
@@ -334,15 +334,17 @@
 	{
 		NSURL *newBookmarkURL = nil;
 		OCHTTPRequest *statusRequest = nil;
+		NSString *absoluteURLString = url.absoluteString;
 
-		if ([triedRootURLStrings containsObject:url.absoluteString] || (url==nil))
+		if ((absoluteURLString==nil) ||
+		   ((absoluteURLString != nil) && ([triedRootURLStrings countForObject:absoluteURLString] >= 1))) // Limit requests per URL to 1
 		{
 			// No new URL to try. Detection failed.
 			AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 			break;
 		}
 
-		[triedRootURLStrings addObject:url.absoluteString];
+		[triedRootURLStrings addObject:absoluteURLString];
 
 		if ((error = MakeStatusRequest(url, &statusRequest, &newBookmarkURL)) != nil)
 		{
@@ -392,8 +394,6 @@
 						AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 						completed = YES;
 					}
-
-					urlForCreationOfRedirectionIssueIfSuccessful = nil;
 				}
 				else
 				{
@@ -456,7 +456,9 @@
 			AddIssue([OCIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCIssueLevelError issueHandler:nil]);
 			completed = YES;
 		}
-		
+
+		requestCount++;
+
 		urlForCreationOfRedirectionIssueIfSuccessful = nil;
 	};
 	

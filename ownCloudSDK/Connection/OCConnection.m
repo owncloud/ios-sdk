@@ -778,6 +778,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 - (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)incomingInstruction error:(NSError *)error
 {
 	OCHTTPRequestInstruction instruction = OCHTTPRequestInstructionDeliver;
+	NSURL *taskRequestURL = task.request.url;
+	BOOL considerSuccessfulRequest = YES;
 
 	if ([error isOCErrorWithCode:OCErrorAuthorizationRetry])
 	{
@@ -797,13 +799,18 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			case OCHTTPRequestRedirectPolicyDefault: // handled in OCHTTPRequest.redirectPolicy, so this value won't typically occur here
 
 			case OCHTTPRequestRedirectPolicyValidateConnection:
-				if ([task.request.url.host isEqual:redirectURL.host] && [task.request.url.scheme isEqual:redirectURL.scheme]) // Limit connection validation to same host
+				if ([taskRequestURL.host isEqual:redirectURL.host] && [taskRequestURL.scheme isEqual:redirectURL.scheme]) // Limit connection validation to same host
 				{
-					// Reschedule request for when connection validation has finished
-					instruction = OCHTTPRequestInstructionReschedule;
+					considerSuccessfulRequest = NO;
 
-					// Trigger connection validation
-					[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", task.request.url, redirectURL]];
+					if ([self shouldTriggerConnectionValidationDueToResponseToURL:taskRequestURL]) // Avoid infinite loops
+					{
+						// Reschedule request for when connection validation has finished
+						instruction = OCHTTPRequestInstructionReschedule;
+
+						// Trigger connection validation
+						[self validateConnectionWithReason:[NSString stringWithFormat:@"Redirect from %@ to %@ received - starting connection validator", taskRequestURL, redirectURL] dueToResponseToURL:taskRequestURL];
+					}
 				}
 
 			case OCHTTPRequestRedirectPolicyHandleLocally:
@@ -837,6 +844,14 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		}
 	}
 
+	@synchronized(self)
+	{
+		if (!_isValidatingConnection && considerSuccessfulRequest)
+		{
+			[self reportSuccessfulResponseToURL:taskRequestURL];
+		}
+	}
+
 	if ((_delegate!=nil) && [_delegate respondsToSelector:@selector(connection:instructionForFinishedRequest:withResponse:error:defaultsTo:)])
 	{
 		instruction = [_delegate connection:self instructionForFinishedRequest:task.request withResponse:task.response error:error defaultsTo:instruction];
@@ -846,7 +861,45 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 }
 
 #pragma mark - Connection validation
-- (void)validateConnectionWithReason:(NSString *)validationReason
+- (BOOL)shouldTriggerConnectionValidationDueToResponseToURL:(NSURL *)triggeringURL
+{
+	/*
+		Infinite Loop detection / prevention:
+		- increments a counter for the URL whose response triggered a connection validation
+		- decrements the counter when receiving a response from the same URL that no longer would trigger a connection validation (bringing it back to 0, ideally)
+		- if the response to the URL triggered validation more than 3 times, the response is delivered instead of triggering validation
+ 	*/
+	@synchronized(self)
+	{
+		if ((triggeringURL != nil) && ([_connectionValidationTriggeringURLs countForObject:triggeringURL.absoluteString] < 3))
+		{
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+- (void)reportSuccessfulResponseToURL:(NSURL *)successResponseURL
+{
+	if (successResponseURL != nil)
+	{
+		@synchronized(self)
+		{
+			NSString *successResponseURLString = nil;
+
+			if ((_connectionValidationTriggeringURLs != nil) &&
+			    ((successResponseURLString = successResponseURL.absoluteString) != nil) &&
+			    ([_connectionValidationTriggeringURLs countForObject:successResponseURLString] > 0)
+			   )
+			{
+				[_connectionValidationTriggeringURLs removeObject:successResponseURLString];
+			}
+		}
+	}
+}
+
+- (void)validateConnectionWithReason:(NSString *)validationReason dueToResponseToURL:(NSURL *)triggeringURL
 {
 	// Connection Validator
 	//
@@ -880,6 +933,16 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		{
 			_isValidatingConnection = YES;
 			doValidateConnection = YES;
+
+			if (triggeringURL != nil)
+			{
+				if (_connectionValidationTriggeringURLs == nil)
+				{
+					_connectionValidationTriggeringURLs = [NSCountedSet new];
+				}
+
+				[_connectionValidationTriggeringURLs addObject:triggeringURL.absoluteString];
+			}
 		}
 	}
 
