@@ -188,7 +188,7 @@
 					}
 				}
 			}
-			else if (request.httpResponse.status.isRedirection)
+			else if (request.httpResponse.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY)
 			{
 				NSURL *redirectionURL;
 				
@@ -353,7 +353,7 @@
 				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
-					if (statusRequest.httpResponse.status.isRedirection)
+					if (statusRequest.httpResponse.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY)
 					{
 					 	if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
 					 	{
