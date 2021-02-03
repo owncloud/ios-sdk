@@ -279,8 +279,7 @@
 	
 	BOOL completed = NO;
 	NSURL *urlForCreationOfRedirectionIssueIfSuccessful = nil;
-	NSURL *urlForTryingRootURL = nil;
-	NSURL *lastURLTried = nil;
+	NSMutableSet<NSString *> *triedRootURLStrings = [NSMutableSet new];
 
 	// Plain-text HTTP check
 	if ([url.scheme.lowercaseString isEqualToString:@"http"])
@@ -336,14 +335,14 @@
 		NSURL *newBookmarkURL = nil;
 		OCHTTPRequest *statusRequest = nil;
 
-		if ((lastURLTried!=nil) && ([lastURLTried isEqual:url]))
+		if ([triedRootURLStrings containsObject:url.absoluteString] || (url==nil))
 		{
-			// No new URLs to try. Detection failed.
+			// No new URL to try. Detection failed.
 			AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 			break;
 		}
 
-		lastURLTried = url;
+		[triedRootURLStrings addObject:url.absoluteString];
 
 		if ((error = MakeStatusRequest(url, &statusRequest, &newBookmarkURL)) != nil)
 		{
@@ -352,63 +351,49 @@
 				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
-
-					// /owncloud/ subfolder installation detection
-					// (removed by commenting out (consider removing permanently Oct 2021 or later))
-					//
-					// if (![[url lastPathComponent] isEqual:@"owncloud"])
-					// {
-					// 	if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
-					// 	{
-					// 		AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
-					// 	}
-					//
-					// 	urlForCreationOfRedirectionIssueIfSuccessful = url;
-					// 	urlForTryingRootURL = url;
-					//
-					// 	url = [url URLByAppendingPathComponent:@"owncloud"];
-					// 	continue;
-					// }
-					// else
-
+					if (statusRequest.httpResponse.status.isRedirection)
 					{
-						// Check server root directory for a redirect
-						if (urlForTryingRootURL != nil)
-						{
-							OCHTTPRequest *rootURLRequest = nil;
-							NSURL *rootURL = urlForTryingRootURL;
-
-							if ((error = MakeRequest(rootURL, &rootURLRequest)) != nil)
+					 	if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
+					 	{
+					 		// Record previous redirect as issue
+							if (![_bookmark.url isEqual:url])
 							{
-								// Network Error
-								AddIssue([OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
-								completed = YES;
-							}
-							else
-							{
-								// Check response for redirect
-								if (rootURLRequest.httpResponse.status.isRedirection)
+								if (![_bookmark.url.host isEqual:url.host] ||
+								    ![_bookmark.url.scheme isEqual:url.scheme])
 								{
-									if (rootURLRequest.httpResponse.redirectURL != nil)
+									// Redirect to different host or scheme
+							 		AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+								}
+								else
+								{
+									// Redirect on same host, using same scheme
+									if (_bookmark.originURL == nil)
 									{
-										urlForCreationOfRedirectionIssueIfSuccessful = urlForTryingRootURL;
-										url = rootURLRequest.httpResponse.redirectURL;
-										urlForTryingRootURL = nil;
-
-										continue;
+										_bookmark.originURL = self->_bookmark.url;
 									}
+
+									_bookmark.url = url;
 								}
 							}
+					 	}
 
-							urlForTryingRootURL = nil;
-						}
-						else
+						if (statusRequest.httpResponse.redirectURL != nil)
 						{
-							// This is just not an ownCloud server
-							AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
-							completed = YES;
+							// Save data needed to record this redirection as issue in case the redirect succeeds
+							urlForCreationOfRedirectionIssueIfSuccessful = url;
+							url = statusRequest.httpResponse.redirectURL;
+
+							continue;
 						}
 					}
+					else
+					{
+						// This is just not an ownCloud server
+						AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
+						completed = YES;
+					}
+
+					urlForCreationOfRedirectionIssueIfSuccessful = nil;
 				}
 				else
 				{
