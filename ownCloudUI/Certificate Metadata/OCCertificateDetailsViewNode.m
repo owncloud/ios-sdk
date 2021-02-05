@@ -147,6 +147,12 @@
 
 						if (previousSectionValueDict != nil)
 						{
+							// Ensure previousValue is a string
+							if (![previousValue isKindOfClass:NSString.class])
+							{
+								previousValue = [previousValue description];
+							}
+
 							node.previousValue = previousValue;
 
 							if ((value != nil) && (previousValue == nil))

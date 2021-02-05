@@ -372,6 +372,7 @@ OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"
 OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey = @"requiredUsername";
 
 NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";
+NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey = @"alternativeServerURLOriginURL";
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication = @"authentication";
 OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass = @"browser-session-class";

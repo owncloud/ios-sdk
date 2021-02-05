@@ -210,6 +210,11 @@
 			if (validationResult == OCCertificateValidationResultPassed)
 			{
 				issue.localizedTitle = OCLocalized(@"Certificate changed");
+
+				if (validationResult == OCCertificateValidationResultPassed)
+				{
+					issue.localizedDescription = [NSString stringWithFormat:NSLocalizedString(@"The certificate for %@ passes TLS validation but doesn't pass the acceptance rule to replace the certificate for %@.", nil), certificate.hostName, bookmark.certificate.hostName];
+				}
 			}
 
 			errorIssue = [errorIssue errorByEmbeddingIssue:issue];

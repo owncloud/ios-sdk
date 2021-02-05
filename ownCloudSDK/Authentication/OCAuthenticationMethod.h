@@ -109,6 +109,7 @@ extern OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesK
 extern OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey; //!< For token-based authentication methods: only generate bookmark data tokens if they allow logging in as the provided username / user ID. Return an OCErrorAuthorizationNotMatchingRequiredUserID error otherwise.
 
 extern NSString *OCAuthorizationMethodAlternativeServerURLKey; //!< Key for alternative server URL in -[NSError userInfo].
+extern NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey; //!< Key for the URL from where the alternative server URL was requested.
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication;
 extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass;

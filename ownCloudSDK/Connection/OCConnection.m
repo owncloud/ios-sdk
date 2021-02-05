@@ -1226,24 +1226,34 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						if ((responseRedirectURL = response.redirectURL) != nil)
 						{
 							NSURL *alternativeBaseURL;
-							
+
 							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
 							{
 								// Create an issue if the redirectURL replicates the path of our target URL
-								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
-									if (decision == OCIssueDecisionApprove)
-									{
-										self->_bookmark.url = alternativeBaseURL;
-									}
-								}];
 							}
 							else
 							{
 								// Create an error if the redirectURL does not replicate the path of our target URL
-								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:responseRedirectURL issueHandler:nil];
-								issue.level = OCIssueLevelError;
+								alternativeBaseURL = responseRedirectURL;
+							}
 
-								error = OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
+							if (alternativeBaseURL != nil)
+							{
+								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+									if (decision == OCIssueDecisionApprove)
+									{
+										if (self->_bookmark.originURL == nil)
+										{
+											self->_bookmark.originURL = self->_bookmark.url;
+										}
+
+										self->_bookmark.url = alternativeBaseURL;
+
+										[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self->_bookmark];
+									}
+								}];
+
+								error = [OCErrorWithInfo(OCErrorServerBadRedirection, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL }) errorByEmbeddingIssue:issue];
 							}
 						}
 

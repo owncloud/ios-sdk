@@ -176,7 +176,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;
 
-			if ((self->_openIDConfig = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+			if ((error == nil) && ((self->_openIDConfig = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil))
 			{
 				self.pkce = [OCPKCE new]; // Enable PKCE
 
@@ -203,6 +203,27 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 			}
 			else
 			{
+				if ((error == nil) && (response.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY) && (response.redirectURL != nil))
+				{
+					NSURL *alternativeBaseURL;
+
+					if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:response.redirectURL originalURL:request.url]) == nil)
+					{
+						alternativeBaseURL = response.redirectURL;
+					}
+
+					if (alternativeBaseURL != nil)
+					{
+						error = OCErrorWithInfo(OCErrorAuthorizationRedirect, (@{
+							OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL,
+							OCAuthorizationMethodAlternativeServerURLOriginURLKey : request.url
+						}));
+					}
+				}
+
+				if (error == nil) { error = jsonError; }
+				if (error == nil) { error = OCError(OCErrorInternal); }
+
 				completionHandler(error);
 			}
 		}];

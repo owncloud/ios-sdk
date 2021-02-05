@@ -608,15 +608,6 @@
 }
 
 #pragma mark - Attempt Connect
-- (void)attemptConnect:(BOOL)doAttempt
-{
-	[self queueBlock:^{
-		self->_attemptConnect = doAttempt;
-
-		[self _attemptConnect];
-	}];
-}
-
 - (void)_attemptConnect
 {
 	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)

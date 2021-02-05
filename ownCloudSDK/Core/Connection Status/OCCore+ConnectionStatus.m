@@ -423,6 +423,12 @@
 			}
 		}
 
+		// Certificate was rejected
+		if (([error isOCErrorWithCode:OCErrorRequestServerCertificateRejected]) && (error.embeddedIssue != nil))
+		{
+			[self sendError:nil issue:error.embeddedIssue];
+		}
+
 		// Authorization failed
 		if ([error isOCErrorWithCode:OCErrorAuthorizationFailed])
 		{
