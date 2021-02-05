@@ -182,7 +182,7 @@ typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for tw
 					{
 						NSURL *alternativeBaseURL;
 				
-						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url]) != nil)
+						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 						{
 							error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
 						}

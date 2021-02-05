@@ -19,7 +19,6 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 #import <ownCloudMocking/ownCloudMocking.h>
-#import "OCAuthenticationMethod+OCTools.h"
 
 #import "OCTestTarget.h"
 
@@ -598,6 +597,34 @@
 	}
 
 	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+- (void)testRedirectionBaseExtraction
+{
+	NSURL *baseURL;
+
+	// https://origin.server/status.php -> https://target.server/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/status.php -> https://origin.server/owncloud/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+
+	// https://origin.server/status.php -> https://origin.server/owncloud/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert(baseURL == nil);
+
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
 }
 
 #pragma mark - Sorting and filtering

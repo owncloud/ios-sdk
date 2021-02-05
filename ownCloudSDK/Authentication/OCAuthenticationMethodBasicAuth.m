@@ -226,13 +226,9 @@ OCAuthenticationMethodAutoRegister
 						{
 							NSURL *alternativeBaseURL;
 
-							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 							{
 								error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
-							}
-							else
-							{
-								error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 							}
 						}
 					}

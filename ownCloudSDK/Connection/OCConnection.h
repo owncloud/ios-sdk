@@ -346,8 +346,8 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 - (nullable NSURL *)URLForEndpointPath:(OCPath)endpointPath; //!< Returns the URL of the endpoint at the supplied endpointPath
 
 #pragma mark - Base URL Extract
-+ (nullable NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL;
-- (nullable NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL;
++ (nullable NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL;
+- (nullable NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL;
 
 #pragma mark - Safe upgrades
 + (BOOL)isAlternativeBaseURL:(NSURL *)alternativeBaseURL safeUpgradeForPreviousBaseURL:(NSURL *)baseURL;

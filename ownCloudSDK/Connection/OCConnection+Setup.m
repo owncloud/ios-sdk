@@ -244,7 +244,7 @@
 				{
 					NSURL *suggestedURL = nil;
 					
-					if ((suggestedURL = [[self class] extractBaseURLFromRedirectionTargetURL:redirectionURL originalURL:statusURL originalBaseURL:url]) != nil)
+					if ((suggestedURL = [[self class] extractBaseURLFromRedirectionTargetURL:redirectionURL originalURL:statusURL originalBaseURL:url fallbackToRedirectionTargetURL:YES]) != nil)
 					{
 						if (outSuggestedURL != NULL)
 						{

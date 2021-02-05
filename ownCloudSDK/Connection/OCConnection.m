@@ -1227,17 +1227,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						{
 							NSURL *alternativeBaseURL;
 
-							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
-							{
-								// Create an issue if the redirectURL replicates the path of our target URL
-							}
-							else
-							{
-								// Create an error if the redirectURL does not replicate the path of our target URL
-								alternativeBaseURL = responseRedirectURL;
-							}
-
-							if (alternativeBaseURL != nil)
+							if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 							{
 								issue = [OCIssue issueForRedirectionFromURL:self->_bookmark.url toSuggestedURL:alternativeBaseURL issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 									if (decision == OCIssueDecisionApprove)

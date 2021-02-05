@@ -50,7 +50,7 @@
 
 	OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
 
-	[certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *nodes) {
+	[certificate certificateDetailsViewNodesComparedTo:nil withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *nodes) {
 		OCLog(@"DetailsViewNodes: %@", nodes);
 
 		XCTAssert(nodes!=nil);

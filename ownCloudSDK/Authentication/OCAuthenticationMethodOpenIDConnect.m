@@ -203,16 +203,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 			}
 			else
 			{
-				if ((error == nil) && (response.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY) && (response.redirectURL != nil))
+				if ((error == nil) && (response.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY) && (response.redirectURL != nil) && (request.url != nil))
 				{
 					NSURL *alternativeBaseURL;
 
-					if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:response.redirectURL originalURL:request.url]) == nil)
-					{
-						alternativeBaseURL = response.redirectURL;
-					}
-
-					if (alternativeBaseURL != nil)
+					if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:response.redirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 					{
 						error = OCErrorWithInfo(OCErrorAuthorizationRedirect, (@{
 							OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL,

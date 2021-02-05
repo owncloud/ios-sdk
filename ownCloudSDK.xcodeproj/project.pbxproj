@@ -573,7 +573,7 @@
 		DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2DB20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m */; };
 		DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
 		DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */; };
+		DCEEB2E52044B0A400189B9A /* OCAuthenticationMethod+OCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E32044B0A400189B9A /* OCAuthenticationMethod+OCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2E42044B0A400189B9A /* OCAuthenticationMethod+OCTools.m */; };
 		DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2E72046BC2600189B9A /* OCHTTPStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2E82046BC2600189B9A /* OCHTTPStatus.m */; };
