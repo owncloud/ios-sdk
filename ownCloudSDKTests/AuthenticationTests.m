@@ -609,8 +609,26 @@
 	NSLog(@"baseURL=%@", baseURL);
 	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
 
+	// https://origin.server/ -> https://target.server/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/ -> https://target.server/owncloud/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
+
 	// https://origin.server/status.php -> https://target.server/
 	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/ -> https://target.server/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
 
 	NSLog(@"baseURL=%@", baseURL);
 	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
@@ -632,6 +650,18 @@
 
 	NSLog(@"baseURL=%@", baseURL);
 	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+
+	// https://origin.server/dav/files/ -> https://origin.server/owncloud/dav/files/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/dav/files/"] originalURL:[NSURL URLWithString:@"https://origin.server/dav/files/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+
+	// https://origin.server/dav/files/ -> https://target.server/owncloud/dav/files/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/dav/files/"] originalURL:[NSURL URLWithString:@"https://origin.server/dav/files/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
 
 	// https://origin.server/status.php -> https://origin.server/owncloud/
 	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];

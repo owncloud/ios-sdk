@@ -158,8 +158,19 @@
 		}
 	}
 
-	// Fallback to redirectionTargetURL
-	return(fallbackToRedirectionTargetURL ? redirectionTargetURL : nil);
+	// Strip common suffixes from redirectionTargetURL
+	if (fallbackToRedirectionTargetURL)
+	{
+		if ([redirectionTargetURL.lastPathComponent isEqual:@"status.php"])
+		{
+			redirectionTargetURL = redirectionTargetURL.URLByDeletingLastPathComponent;
+		}
+
+		// Fallback to redirectionTargetURL
+		return (redirectionTargetURL);
+	}
+
+	return(nil);
 }
 
 #pragma mark - Safe upgrades
