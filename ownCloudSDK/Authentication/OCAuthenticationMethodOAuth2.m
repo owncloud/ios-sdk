@@ -29,6 +29,8 @@
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
+#import "OCLockManager.h"
+#import "OCLockRequest.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -622,10 +624,30 @@ OCAuthenticationMethodAutoRegister
 
 - (void)_refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
+	__weak OCAuthenticationMethodOAuth2 *weakSelf = self;
+
+	OCLockRequest *lockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[NSString stringWithFormat:@"authentication-data-update:%@", connection.bookmark.uuid] acquiredHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
+		// Wait for exclusive lock on authentication data before performing the refresh
+		[weakSelf __refreshTokenForConnection:connection availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+			// Invoke original availabilityHandler
+			availabilityHandler(error, authenticationIsAvailable);
+
+			// Release lock
+			[lock releaseLock];
+		}];
+	}];
+
+	[OCLockManager.sharedLockManager requestLock:lockRequest];
+}
+
+- (void)__refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+{
 	NSDictionary<NSString *, id> *authSecret;
 	NSError *error=nil;
 
 	OCLogDebug(@"Token refresh started");
+
+	[self flushCachedAuthenticationSecret];
 
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{

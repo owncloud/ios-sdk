@@ -245,7 +245,7 @@
 				// Lock not invalid, if it is one of our own, keep it alive
 				if ([invalidatedLockIdentifiers containsObject:lock.identifier])
 				{
-					if ([lock keepAlive])
+					if ([lock keepAlive:*outDidModify]) // Force keep alive if any other change has already occured, otherwise use -keepAlive default logic
 					{
 						*outDidModify = YES;
 					}
@@ -262,42 +262,45 @@
 		}
 
 		// Fulfill requests
-		for (OCLockRequest *request in self->_requests)
+		@synchronized(self->_requests)
 		{
-			OCLock *lock = database.lockByResourceIdentifier[request.resourceIdentifier];
-
-			if (lock == nil)
+			for (OCLockRequest *request in self->_requests)
 			{
-				if (request.invalidated || ((request.lockNeededHandler != nil) && !request.lockNeededHandler(request)))
+				OCLock *lock = database.lockByResourceIdentifier[request.resourceIdentifier];
+
+				if (lock == nil)
 				{
-					// Request processed, schedule for removal
-					if (processedRequests == nil) { processedRequests = [NSMutableArray new]; }
-					[processedRequests addObject:request];
+					if (request.invalidated || ((request.lockNeededHandler != nil) && !request.lockNeededHandler(request)))
+					{
+						// Request processed, schedule for removal
+						if (processedRequests == nil) { processedRequests = [NSMutableArray new]; }
+						[processedRequests addObject:request];
+					}
+					else
+					{
+						// Create lock
+						lock = [[OCLock alloc] initWithIdentifier:request.resourceIdentifier];
+						lock.manager = self;
+
+						// Add to database
+						database.lockByResourceIdentifier[request.resourceIdentifier] = lock;
+
+						// Store in request
+						request.lock = lock;
+
+						// Schedule requests for notification and removal
+						if (processedRequests == nil) { processedRequests = [NSMutableArray new]; }
+						[processedRequests addObject:request];
+
+						*outDidModify = YES;
+					}
 				}
 				else
 				{
-					// Create lock
-					lock = [[OCLock alloc] initWithIdentifier:request.resourceIdentifier];
-					lock.manager = self;
-
-					// Add to database
-					database.lockByResourceIdentifier[request.resourceIdentifier] = lock;
-
-					// Store in request
-					request.lock = lock;
-
-					// Schedule requests for notification and removal
-					if (processedRequests == nil) { processedRequests = [NSMutableArray new]; }
-					[processedRequests addObject:request];
-
-					*outDidModify = YES;
-				}
-			}
-			else
-			{
-				if ((nextRelevantExpirationDate == nil) || ((nextRelevantExpirationDate != nil) && (lock.expirationDate.timeIntervalSinceReferenceDate < nextRelevantExpirationDate.timeIntervalSinceReferenceDate)))
-				{
-					nextRelevantExpirationDate = lock.expirationDate;
+					if ((nextRelevantExpirationDate == nil) || ((nextRelevantExpirationDate != nil) && (lock.expirationDate.timeIntervalSinceReferenceDate < nextRelevantExpirationDate.timeIntervalSinceReferenceDate)))
+					{
+						nextRelevantExpirationDate = lock.expirationDate;
+					}
 				}
 			}
 		}

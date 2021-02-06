@@ -38,10 +38,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isValid;
 
 - (instancetype)initWithIdentifier:(OCLockResourceIdentifier)resourceIdentifier;
-
-- (BOOL)keepAlive;
-
 - (void)releaseLock;
+
+#pragma mark - Internal API
+- (BOOL)keepAlive:(BOOL)force; //!< Private API, has no effect outside OCLockManager
 
 @end
 

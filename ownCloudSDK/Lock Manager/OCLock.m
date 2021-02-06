@@ -28,7 +28,7 @@
 		_identifier = NSUUID.UUID.UUIDString;
 		_resourceIdentifier = resourceIdentifier;
 
-		[self keepAlive];
+		[self keepAlive:YES];
 	}
 
 	return (self);
@@ -45,9 +45,9 @@
 	return (YES);
 }
 
-- (BOOL)keepAlive
+- (BOOL)keepAlive:(BOOL)force
 {
-	if (_expirationDate.timeIntervalSinceNow < (OCLockExpirationInterval * 0.8))
+	if (force || (_expirationDate.timeIntervalSinceNow < (OCLockExpirationInterval * 0.8)))
 	{
 		_expirationDate = [NSDate dateWithTimeIntervalSinceNow:OCLockExpirationInterval];
 
