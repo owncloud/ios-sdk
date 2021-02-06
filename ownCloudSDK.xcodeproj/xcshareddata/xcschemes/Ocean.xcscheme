@@ -109,7 +109,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "oc:log.level"
-            value = "0"
+            value = "-1"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
