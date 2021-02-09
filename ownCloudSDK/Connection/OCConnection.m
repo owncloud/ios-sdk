@@ -47,6 +47,7 @@
 #import "OCHTTPPolicyManager.h"
 #import "OCHTTPPolicyBookmark.h"
 #import "OCHTTPRequest.h"
+#import "NSURL+OCURLNormalization.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -799,7 +800,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			case OCHTTPRequestRedirectPolicyDefault: // handled in OCHTTPRequest.redirectPolicy, so this value won't typically occur here
 
 			case OCHTTPRequestRedirectPolicyValidateConnection:
-				if ([taskRequestURL.host isEqual:redirectURL.host] && [taskRequestURL.scheme isEqual:redirectURL.scheme]) // Limit connection validation to same host
+				if ([taskRequestURL hasSameSchemeHostAndPortAs:redirectURL]) // Limit connection validation to same scheme/host/port
 				{
 					considerSuccessfulRequest = NO;
 

@@ -335,6 +335,7 @@
 		NSURL *newBookmarkURL = nil;
 		OCHTTPRequest *statusRequest = nil;
 		NSString *absoluteURLString = url.absoluteString;
+		NSURL *baseURL = nil;
 
 		if ((absoluteURLString==nil) ||
 		   ((absoluteURLString != nil) && ([triedRootURLStrings countForObject:absoluteURLString] >= 1))) // Limit requests per URL to 1
@@ -348,6 +349,8 @@
 
 		if ((error = MakeStatusRequest(url, &statusRequest, &newBookmarkURL)) != nil)
 		{
+			baseURL = url;
+
 			if ([error isOCErrorWithCode:OCErrorServerDetectionFailed])
 			{
 				if (statusRequest.httpResponse.status.code != 0)
@@ -383,7 +386,8 @@
 						{
 							// Save data needed to record this redirection as issue in case the redirect succeeds
 							urlForCreationOfRedirectionIssueIfSuccessful = url;
-							url = statusRequest.httpResponse.redirectURL;
+
+							url = [OCConnection extractBaseURLFromRedirectionTargetURL:statusRequest.httpResponse.redirectURL originalURL:statusRequest.effectiveURL originalBaseURL:baseURL fallbackToRedirectionTargetURL:YES];
 
 							continue;
 						}

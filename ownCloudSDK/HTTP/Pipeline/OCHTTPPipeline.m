@@ -1178,6 +1178,7 @@
 		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
+		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"-> %@ %@", request.method, request.effectiveURL);
 		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:         %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
 	}
 
@@ -1294,6 +1295,7 @@
 		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
+		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
 		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
 	}
 

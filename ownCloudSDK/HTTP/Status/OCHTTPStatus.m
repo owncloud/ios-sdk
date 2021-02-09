@@ -53,6 +53,105 @@
 	return (_code >= 400);
 }
 
+- (NSString *)name
+{
+	switch (_code)
+	{
+		case OCHTTPStatusCodeOK:
+			return (@"OK");
+		break;
+
+		case OCHTTPStatusCodeCREATED:
+			return (@"CREATED");
+		break;
+
+		case OCHTTPStatusCodeNO_CONTENT:
+			return (@"NO CONTENT");
+		break;
+		case OCHTTPStatusCodePARTIAL_CONTENT:
+			return (@"PARTIAL CONTENT");
+		break;
+
+		case OCHTTPStatusCodeMULTI_STATUS:
+			return (@"MULTI STATUS");
+		break;
+
+		case OCHTTPStatusCodeMOVED_PERMANENTLY:
+			return (@"MOVED PERMANENTLY");
+		break;
+
+		case OCHTTPStatusCodeMOVED_TEMPORARILY:
+			return (@"MOVED TEMPORARILY");
+		break;
+
+		case OCHTTPStatusCodeTEMPORARY_REDIRECT:
+			return (@"TEMPORARY REDIRECT");
+		break;
+
+		case OCHTTPStatusCodePERMANENT_REDIRECT:
+			return (@"PERMANENT REDIRECT");
+		break;
+
+		case OCHTTPStatusCodeBAD_REQUEST:
+			return (@"BAD REQUEST");
+		break;
+
+		case OCHTTPStatusCodeUNAUTHORIZED:
+			return (@"UNAUTHORIZED");
+		break;
+
+		case OCHTTPStatusCodeFORBIDDEN:
+			return (@"FORBIDDEN");
+		break;
+
+		case OCHTTPStatusCodeNOT_FOUND:
+			return (@"NOT FOUND");
+		break;
+
+		case OCHTTPStatusCodeMETHOD_NOT_ALLOWED:
+			return (@"METHOD NOT ALLOWD");
+		break;
+
+		case OCHTTPStatusCodeCONFLICT:
+			return (@"CONFLICT");
+		break;
+
+		case OCHTTPStatusCodePRECONDITION_FAILED:
+			return (@"PRECONDITION FAILED");
+		break;
+
+		case OCHTTPStatusCodePAYLOAD_TOO_LARGE:
+			return (@"PAYLOAD TOO LARGE");
+		break;
+
+		case OCHTTPStatusCodeLOCKED:
+			return (@"LOCKED");
+		break;
+
+		case OCHTTPStatusCodeINTERNAL_SERVER_ERROR:
+			return (@"INTERNAL SERVER ERROR");
+		break;
+
+		case OCHTTPStatusCodeNOT_IMPLEMENTED:
+			return (@"NOT IMPLEMENTED");
+		break;
+
+		case OCHTTPStatusCodeBAD_GATEWAY:
+			return (@"BAD GATEWAY");
+		break;
+
+		case OCHTTPStatusCodeSERVICE_UNAVAILABLE:
+			return (@"SERVICE UNAVAILABLE");
+		break;
+
+		case OCHTTPStatusCodeINSUFFICIENT_STORAGE:
+			return (@"INSUFFICIENT STORAGE");
+		break;
+	}
+
+	return (@(_code).stringValue);
+}
+
 #pragma mark - Error creation
 - (NSError *)error
 {

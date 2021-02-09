@@ -65,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isRedirection;
 @property(readonly,nonatomic) BOOL isError;
 
+@property(readonly,nonatomic,strong) NSString *name;
+
 + (instancetype)HTTPStatusWithCode:(OCHTTPStatusCode)code;
 - (instancetype)initWithCode:(OCHTTPStatusCode)code;
 
