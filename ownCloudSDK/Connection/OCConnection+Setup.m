@@ -18,6 +18,7 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "NSURL+OCURLNormalization.h"
 #import "OCMacros.h"
 
 @implementation OCConnection (Setup)
@@ -363,8 +364,7 @@
 					 		// Record previous redirect as issue
 							if (![_bookmark.url isEqual:url])
 							{
-								if (![_bookmark.url.host isEqual:url.host] ||
-								    ![_bookmark.url.scheme isEqual:url.scheme])
+								if (![_bookmark.url hasSameSchemeHostAndPortAs:url])
 								{
 									// Redirect to different host or scheme
 							 		AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
@@ -427,8 +427,7 @@
 				{
 					if (![_bookmark.url isEqual:url])
 					{
-						if (![_bookmark.url.host isEqual:url.host] ||
-						    ![_bookmark.url.scheme isEqual:url.scheme])
+						if (![_bookmark.url hasSameSchemeHostAndPortAs:url])
 						{
 							// Redirect to different host or scheme
 							AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);

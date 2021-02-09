@@ -820,8 +820,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 			case OCHTTPRequestRedirectPolicyAllowSameHost:
 				// Require same host and scheme
-				rescheduleWithRedirectURL = 	[task.request.url.host isEqual:redirectURL.host] &&
-								[task.request.url.scheme isEqual:redirectURL.scheme];
+				rescheduleWithRedirectURL = [task.request.url hasSameSchemeHostAndPortAs:redirectURL];
 			break;
 
 			case OCHTTPRequestRedirectPolicyAllowAnyHost:
