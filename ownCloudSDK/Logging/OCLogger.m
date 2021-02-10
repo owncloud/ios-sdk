@@ -364,14 +364,28 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	if (!sOCLogLevelInitialized)
 	{
 		// Migrate log level setting from UserDefaults to OCClassSettingsUserPreferences
-		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
-			NSNumber *userDefaultsLogLevel;
-
-			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-level"]) != nil)
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(2) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			if (lastMigrationVersion == nil)
 			{
-				[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+				// From user defaults "log-level" to user preferences "log"."level"
+				NSNumber *userDefaultsLogLevel;
 
-				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-level"];
+				if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-level"]) != nil)
+				{
+					[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+
+					[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-level"];
+				}
+			}
+			else
+			{
+				// From user preferences "log"."log-level" to "log"."level"
+				NSNumber *userDefaultsLogLevel;
+
+				if ((userDefaultsLogLevel = [OCClassSettingsUserPreferences.sharedUserPreferences settingsForIdentifier:OCClassSettingsIdentifierLog][@"log-level"]) != nil)
+				{
+					[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+				}
 			}
 
 			return (nil);
