@@ -367,11 +367,11 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
 			NSNumber *userDefaultsLogLevel;
 
-			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) != nil)
+			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-level"]) != nil)
 			{
 				[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
 
-				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogLevel];
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-level"];
 			}
 
 			return (nil);
@@ -455,11 +455,11 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierMaskPrivateData version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
 			NSNumber *maskPrivateDataNumber;
 
-			if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogPrivacyMask]) != nil)
+			if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-privacy-mask"]) != nil)
 			{
 				[self setUserPreferenceValue:maskPrivateDataNumber forClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
 
-				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogPrivacyMask];
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-privacy-mask"];
 			}
 
 			return (nil);
