@@ -19,25 +19,50 @@
 #import <UIKit/UIKit.h>
 #import <ownCloudSDK/OCCertificate.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NSString* OCCertificateDetailsColor;
+typedef NSString* OCCertificateDetailUniqueID;
+
+typedef NS_ENUM(NSInteger, OCCertificateChangeType)
+{
+	OCCertificateChangeTypeNone,
+	OCCertificateChangeTypeChanged,
+	OCCertificateChangeTypeAdded,
+	OCCertificateChangeTypeRemoved
+};
+
 @interface OCCertificateDetailsViewNode : NSObject
 
-@property(strong) NSString *certificateKey;
+@property(strong,nullable) NSString *certificateKey;
+@property(strong,nullable) OCCertificateDetailUniqueID uniqueKey;
 
-@property(strong) NSString *title;
-@property(strong) NSString *value;
+@property(assign) OCCertificateChangeType changeType;
 
-@property(strong) OCCertificate *certificate;
+@property(strong,nullable) NSString *title;
 
-@property(strong) UIColor *valueColor;
+@property(strong,nullable) NSString *value;
+@property(strong,nullable) NSString *previousValue;
 
-@property(strong) NSMutableArray *children;
+@property(strong,nullable) OCCertificate *certificate;
+@property(strong,nullable) OCCertificate *previousCertificate;
+
+@property(strong,nullable) UIColor *valueColor;
+
+@property(strong,nullable) NSMutableArray *children;
  
 @property(readonly,nonatomic) BOOL useFixedWidthFont;
 
 #pragma mark - Parsing for presentation
-+ (NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)certificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
++ (nullable NSArray <OCCertificateDetailsViewNode *> *)certificateDetailsViewNodesForCertificate:(OCCertificate *)certificate differencesFrom:(nullable OCCertificate *)previousCertificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
 
 #pragma mark - Attributed string
-+ (NSAttributedString *)attributedStringWithCertificateDetails:(NSArray <OCCertificateDetailsViewNode *> *)certificateDetails;
++ (NSAttributedString *)attributedStringWithCertificateDetails:(NSArray <OCCertificateDetailsViewNode *> *)certificateDetails colors:(nullable NSDictionary<OCCertificateDetailsColor, UIColor *> *)colors;
 
 @end
+
+extern OCCertificateDetailsColor OCCertificateDetailsColorSectionHeader;
+extern OCCertificateDetailsColor OCCertificateDetailsColorLineTitle;
+extern OCCertificateDetailsColor OCCertificateDetailsColorLineValue;
+
+NS_ASSUME_NONNULL_END

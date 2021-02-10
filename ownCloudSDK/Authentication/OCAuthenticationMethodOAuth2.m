@@ -29,6 +29,8 @@
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
+#import "OCLockManager.h"
+#import "OCLockRequest.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -36,20 +38,14 @@ static OA2DictKeyPath OA2ExpirationDate	= @"expirationDate";
 
 static OA2DictKeyPath OA2TokenResponse  = @"tokenResponse";
 static OA2DictKeyPath OA2BearerString   = @"bearerString";
+
+// FOR ADDITIONS, ALSO UPDATE -postProcessAuthenticationDataDict: !!
 static OA2DictKeyPath OA2AccessToken    = @"tokenResponse.access_token";
 static OA2DictKeyPath OA2RefreshToken   = @"tokenResponse.refresh_token";
 static OA2DictKeyPath OA2ExpiresInSecs  = @"tokenResponse.expires_in";
-static OA2DictKeyPath OA2TokenType      = @"tokenResponse.token_type";
-static OA2DictKeyPath OA2MessageURL     = @"tokenResponse.message_url";
 static OA2DictKeyPath OA2UserID         = @"tokenResponse.user_id";
 
 #define OA2RefreshSafetyMarginInSeconds 120
-
-typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
-{
-	OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode,
-	OCAuthenticationOAuth2TokenRequestTypeRefreshToken
-};
 
 #ifndef __IPHONE_13_0
 #define __IPHONE_13_0    130000
@@ -121,6 +117,49 @@ OCAuthenticationMethodAutoRegister
 	});
 }
 
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Authentication
+		OCAuthenticationMethodOAuth2AuthorizationEndpoint : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 authorization endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2TokenEndpoint : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 token endpoint.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2RedirectURI : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Redirect URI.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ClientID : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Client ID.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ClientSecret : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Client Secret.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2ExpirationOverrideSeconds : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Expiration Override - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		}
+	});
+}
+
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type
 {
@@ -163,6 +202,30 @@ OCAuthenticationMethodAutoRegister
 	completionHandler(OCError(OCErrorFeatureNotImplemented));
 }
 
+- (NSDictionary<NSString *, id> *)postProcessAuthenticationDataDict:(NSDictionary<NSString *, id> *)authDataDict
+{
+	NSDictionary<NSString *, id> *tokenResponseDict;
+
+	// JSON *could* contain unneeded/unrelated NSNull.null values, which can't be serialized as NSPropertyList, so limit
+	// the entries in the response dictionary to what is actually needed
+	if ((tokenResponseDict = authDataDict[OA2TokenResponse]) != nil)
+	{
+		NSMutableDictionary<NSString *, id> *condensedAuthDataDict = [authDataDict mutableCopy];
+		NSMutableDictionary<NSString *, id> *condensedTokenResponse = [NSMutableDictionary new];
+
+		condensedTokenResponse[@"access_token"] = tokenResponseDict[@"access_token"];
+		condensedTokenResponse[@"refresh_token"] = tokenResponseDict[@"refresh_token"];
+		condensedTokenResponse[@"expires_in"] = tokenResponseDict[@"expires_in"];
+		condensedTokenResponse[@"user_id"] = tokenResponseDict[@"user_id"];
+
+		condensedAuthDataDict[OA2TokenResponse] = condensedTokenResponse;
+
+		return (condensedAuthDataDict);
+	}
+
+	return (authDataDict);
+}
+
 - (nullable NSString *)scope
 {
 	return (nil);
@@ -171,6 +234,16 @@ OCAuthenticationMethodAutoRegister
 - (nullable NSString *)prompt
 {
 	return (nil);
+}
+
+- (NSString *)clientID
+{
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID]);
+}
+
+- (NSString *)clientSecret
+{
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]);
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
@@ -185,7 +258,7 @@ OCAuthenticationMethodAutoRegister
 		if ((authorizationHeaderValue = [authSecret valueForKeyPath:OA2BearerString]) != nil)
 		{
 			return (@{
-				@"Authorization" : authorizationHeaderValue
+				OCHTTPHeaderFieldNameAuthorization : authorizationHeaderValue
 			});
 		}
 	}
@@ -194,14 +267,14 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
-	NSArray <NSURL *> *detectionURLs = [self detectionURLsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
+	NSArray <OCHTTPRequest *> *detectionRequests = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
 	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
 
-	detectionURLs = [detectionURLs arrayByAddingObject:tokenEndpointURL];
+	detectionRequests = [detectionRequests arrayByAddingObject:[OCHTTPRequest requestWithURL:tokenEndpointURL]];
 
-	return (detectionURLs);
+	return (detectionRequests);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
@@ -246,6 +319,25 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Generate bookmark authentication data
+- (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
+{
+// 	** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
+//	** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
+//
+//	NSString *username;
+//
+//	if ((username = connection.bookmark.userName) != nil)
+//	{
+//		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+//
+//		mutableParameters[@"user"] = username;
+//
+//		return (mutableParameters);
+//	}
+
+	return (parameters);
+}
+
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
 	if (completionHandler==nil) { return; }
@@ -255,20 +347,24 @@ OCAuthenticationMethodAutoRegister
 		NSURL *authorizationRequestURL;
 
 		// Generate Authorization Request URL
-		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection] urlByAppendingQueryParameters:@{
-						// OAuth2
-						@"response_type"  	 : @"code",
-						@"client_id" 	  	 : [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID],
-						@"redirect_uri"   	 : [self redirectURIForConnection:connection],
+		NSDictionary<NSString *,NSString *> *parameters = @{
+			// OAuth2
+			@"response_type"  	 : @"code",
+			@"client_id" 	  	 : [self clientID],
+			@"redirect_uri"   	 : [self redirectURIForConnection:connection],
 
-						// OAuth2 PKCE
-						@"code_challenge" 	 : (self.pkce.codeChallenge != nil) ? self.pkce.codeChallenge : ((NSString *)NSNull.null),
-						@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
+			// OAuth2 PKCE
+			@"code_challenge" 	 : (self.pkce.codeChallenge != nil) ? self.pkce.codeChallenge : ((NSString *)NSNull.null),
+			@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
 
-						// OIDC
-						@"scope"	  	 : (self.scope != nil)  ? self.scope  : ((NSString *)NSNull.null),
-						@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
-					  } replaceExisting:NO];
+			// OIDC
+			@"scope"	  	 : (self.scope != nil)  ? self.scope  : ((NSString *)NSNull.null),
+			@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
+		};
+
+		parameters = [self prepareAuthorizationRequestParameters:parameters forConnection:connection options:options];
+
+		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection] urlByAppendingQueryParameters:parameters replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {
@@ -286,7 +382,7 @@ OCAuthenticationMethodAutoRegister
 						OCLogDebug(@"Auth session concluded with authorization code: %@", OCLogPrivate(authorizationCode));
 
 						// Send Access Token Request
-						[self 	_sendTokenRequestToConnection:connection
+						[self 	sendTokenRequestToConnection:connection
 						       	withParameters:@{
 								// OAuth2
 								@"grant_type"    : @"authorization_code",
@@ -296,6 +392,7 @@ OCAuthenticationMethodAutoRegister
 								// OAuth2 PKCE
 								@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
 							}
+							options:options
 							requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
 							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
@@ -512,7 +609,7 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Token management
-- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection
 {
 	return (@{
 		@"grant_type"    : @"refresh_token",
@@ -520,12 +617,37 @@ OCAuthenticationMethodAutoRegister
 	});
 }
 
+- (NSString *)tokenRequestAuthorizationHeaderForType:(OCAuthenticationOAuth2TokenRequestType)requestType connection:(OCConnection *)connection
+{
+	return ([OCAuthenticationMethod basicAuthorizationValueForUsername:self.clientID passphrase:self.clientSecret]);
+}
+
 - (void)_refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
+{
+	__weak OCAuthenticationMethodOAuth2 *weakSelf = self;
+
+	OCLockRequest *lockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[NSString stringWithFormat:@"authentication-data-update:%@", connection.bookmark.uuid] acquiredHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
+		// Wait for exclusive lock on authentication data before performing the refresh
+		[weakSelf __refreshTokenForConnection:connection availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+			// Invoke original availabilityHandler
+			availabilityHandler(error, authenticationIsAvailable);
+
+			// Release lock
+			[lock releaseLock];
+		}];
+	}];
+
+	[OCLockManager.sharedLockManager requestLock:lockRequest];
+}
+
+- (void)__refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
 {
 	NSDictionary<NSString *, id> *authSecret;
 	NSError *error=nil;
 
 	OCLogDebug(@"Token refresh started");
+
+	[self flushCachedAuthenticationSecret];
 
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
@@ -535,8 +657,9 @@ OCAuthenticationMethodAutoRegister
 		{
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 
-			[self 	_sendTokenRequestToConnection:connection
-				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken]
+			[self 	sendTokenRequestToConnection:connection
+				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken connection:connection]
+				options:nil
 				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken
 				completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
 					OCLogDebug(@"Token refresh finished with error=%@, jsonResponseDict=%@", error, OCLogPrivate(jsonResponseDict));
@@ -600,7 +723,7 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
-- (void)_sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
+- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters options:(OCAuthenticationMethodDetectionOptions)options requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData))completionHandler
 {
 	OCHTTPRequest *tokenRequest;
 	NSDictionary<NSString *, id> *previousAuthSecret = (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken) ? [self cachedAuthenticationSecretForConnection:connection] : nil;
@@ -630,7 +753,7 @@ OCAuthenticationMethodAutoRegister
 		[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
 			if (error == nil)
 			{
-				[self _sendTokenRequestToConnection:connection withParameters:parameters requestType:requestType completionHandler:completionHandler];
+				[self sendTokenRequestToConnection:connection withParameters:parameters options:options requestType:requestType completionHandler:completionHandler];
 			}
 			else
 			{
@@ -653,8 +776,7 @@ OCAuthenticationMethodAutoRegister
 		
 		[tokenRequest addParameters:parameters];
 
-		[tokenRequest setValue:[OCAuthenticationMethod basicAuthorizationValueForUsername:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID] passphrase:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]]
-				    forHeaderField:@"Authorization"];
+		[tokenRequest setValue:[self tokenRequestAuthorizationHeaderForType:requestType connection:connection] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 		
 		// Send Token Request
 		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
@@ -732,6 +854,31 @@ OCAuthenticationMethodAutoRegister
 							NSError *error = nil;
 							NSDictionary *authenticationDataDict;
 							NSData *authenticationData;
+							NSString *requiredUserID;
+
+							if ((requiredUserID = options[OCAuthenticationMethodRequiredUsernameKey]) != nil)
+							{
+								NSString *newUserID;
+								NSError *error = nil;
+
+								if ((newUserID = jsonResponseDict[@"user_id"]) != nil)
+								{
+									if (![requiredUserID isEqual:newUserID])
+									{
+										error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"You logged in as user %@, but must log in as user %@. Please retry."), newUserID, requiredUserID]));
+									}
+								}
+								else
+								{
+									error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"Login as user %@ required. Please retry."), requiredUserID]));
+								}
+
+								if (error != nil)
+								{
+									completionHandler(error, nil, nil);
+									return;
+								}
+							}
 
 							authenticationDataDict = @{
 								OA2ExpirationDate : validUntil,
@@ -739,11 +886,18 @@ OCAuthenticationMethodAutoRegister
 								OA2TokenResponse  : jsonResponseDict
 							};
 
+							// Give opportunity to add additional keys
+							authenticationDataDict = [self postProcessAuthenticationDataDict:authenticationDataDict];
+
 							OCLogDebug(@"Token authorization succeeded with: %@", OCLogPrivate(authenticationDataDict));
 
 							if ((authenticationData = [NSPropertyListSerialization dataWithPropertyList:authenticationDataDict format:NSPropertyListBinaryFormat_v1_0 options:0 error:&error]) != nil)
 							{
 								completionHandler(nil, jsonResponseDict, authenticationData);
+							}
+							else if (error != nil)
+							{
+								completionHandler(OCErrorFromError(OCErrorInternal, error), nil, nil);
 							}
 							else if (error == nil)
 							{
@@ -763,7 +917,7 @@ OCAuthenticationMethodAutoRegister
 							// Retrieve user_id if it wasn't provided with the token request response
 							[connection retrieveLoggedInUserWithRequestCustomization:^(OCHTTPRequest * _Nonnull request) {
 								request.requiredSignals = nil;
-								[request setValue:bearerString forHeaderField:@"Authorization"];
+								[request setValue:bearerString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 							} completionHandler:^(NSError * _Nullable error, OCUser * _Nullable loggedInUser) {
 								if (error == nil)
 								{

@@ -26,15 +26,16 @@ typedef NSNumber* OCClassSettingsUserPreferencesMigrationVersion;
 @protocol OCClassSettingsUserPreferencesSupport
 
 @optional
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key;
++ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key; //!< If implemented, preferences for the provided key are only allowed to be changed by the user if this method returns YES. If this method is not implemented, the decision hinges on the flags provided in metadata.
 
 @end
 
-@interface OCClassSettingsUserPreferences : NSObject <OCClassSettingsSource>
+@interface OCClassSettingsUserPreferences : NSObject <OCClassSettingsSource, OCClassSettingsSupport>
 
 @property(class,readonly,nonatomic,strong) OCClassSettingsUserPreferences *sharedUserPreferences;
 
 - (BOOL)setValue:(nullable id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass;
+- (BOOL)userAllowedToSetKey:(OCClassSettingsKey)key ofClass:(Class<OCClassSettingsSupport>)theClass;
 
 #pragma mark - Versioned migration of settings
 + (void)migrateWithIdentifier:(OCClassSettingsUserPreferencesMigrationIdentifier)identifier version:(OCClassSettingsUserPreferencesMigrationVersion)version silent:(BOOL)silent perform:(NSError * _Nullable (^)(OCClassSettingsUserPreferencesMigrationVersion _Nullable lastMigrationVersion))migration;
@@ -43,10 +44,18 @@ typedef NSNumber* OCClassSettingsUserPreferencesMigrationVersion;
 
 @interface NSObject (OCClassSettingsUserPreferences)
 
++ (BOOL)userAllowedToSetPreferenceValueForClassSettingsKey:(OCClassSettingsKey)key;
+- (BOOL)userAllowedToSetPreferenceValueForClassSettingsKey:(OCClassSettingsKey)key;
+
 + (BOOL)setUserPreferenceValue:(nullable id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key;
+- (BOOL)setUserPreferenceValue:(nullable id<NSSecureCoding>)value forClassSettingsKey:(OCClassSettingsKey)key;
 
 @end
 
 extern OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierUserPreferences;
+
+extern OCClassSettingsKey OCClassSettingsKeyUserPreferencesAllow;
+extern OCClassSettingsKey OCClassSettingsKeyUserPreferencesDisallow;
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierUserPreferences;
 
 NS_ASSUME_NONNULL_END

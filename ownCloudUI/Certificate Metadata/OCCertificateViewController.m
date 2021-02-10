@@ -88,6 +88,7 @@
 @interface OCCertificateViewController ()
 {
 	NSArray <OCCertificateDetailsViewNode *> *_sectionNodes;
+	UIFont *_regularFont;
 }
 
 @end
@@ -100,11 +101,12 @@
 @synthesize lineTitleColor = _lineTitleColor;
 @synthesize lineValueColor = _lineValueColor;
 
-- (instancetype)initWithCertificate:(OCCertificate *)certificate
+- (instancetype)initWithCertificate:(OCCertificate *)certificate compareCertificate:(nullable OCCertificate *)compareCertificate
 {
 	if ((self = [self initWithStyle:UITableViewStyleGrouped]) != nil)
 	{
 		self.certificate = certificate;
+		self.compareCertificate = compareCertificate;
 	}
 
 	return (self);
@@ -124,6 +126,8 @@
 	_sectionHeaderTextColor = [UIColor blackColor];
 	_lineTitleColor = [UIColor grayColor];
 	_lineValueColor = [UIColor blackColor];
+
+	_regularFont = [UIFont monospacedDigitSystemFontOfSize:[UIFont systemFontSize] weight:UIFontWeightRegular];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -132,7 +136,25 @@
 
 	if (self.presentingViewController != nil)
 	{
-		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(_done:)];
+		if (self.navigationController.viewControllers.firstObject == self)
+		{
+			UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(_done:)];
+
+			if (self.compareCertificate != nil)
+			{
+				self.navigationItem.leftBarButtonItem = doneItem;
+			}
+			else
+			{
+				self.navigationItem.rightBarButtonItem = doneItem;
+			}
+		}
+	}
+
+	if ((self.compareCertificate != nil) && ![self.compareCertificate isEqual:self.certificate])
+	{
+		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:OCLocalizedString(@"Show ±", nil) style:UIBarButtonItemStylePlain target:self action:@selector(toggleShowDifferences:)];
+		[self _updateDiffLabel];
 	}
 
 	self.navigationItem.title = OCLocalizedString(@"Certificate Details", @"");
@@ -152,7 +174,7 @@
 
 	if (_certificate != nil)
 	{
-		[_certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+		[_certificate certificateDetailsViewNodesComparedTo:(self.showDifferences ? self.compareCertificate : nil) withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 			dispatch_async(dispatch_get_main_queue(), ^{
 				self->_sectionNodes = detailsViewNodes;
 				[self.tableView reloadData];
@@ -174,19 +196,62 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	NSMutableAttributedString *attributedText = nil;
 	OCCertificateDetailsViewNode *node = _sectionNodes[indexPath.section].children[indexPath.row];
+	OCCertificateTableCell *cell = (OCCertificateTableCell *)[tableView dequeueReusableCellWithIdentifier:(node.useFixedWidthFont ? @"certCellMono" : @"certCell") forIndexPath:indexPath];
 
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:(node.useFixedWidthFont ? @"certCellMono" : @"certCell") forIndexPath:indexPath];
+	cell.titleLabel.text = node.title.uppercaseString;
 
-	((OCCertificateTableCell *)cell).titleLabel.text = node.title.uppercaseString;
-	((OCCertificateTableCell *)cell).descriptionLabel.text = node.value;
+	UIColor *descriptionColor = (node.valueColor != nil) ? node.valueColor : _lineValueColor;
 
-	((OCCertificateTableCell *)cell).titleLabel.textColor = _lineTitleColor;
-	((OCCertificateTableCell *)cell).descriptionLabel.textColor = (node.valueColor != nil) ? node.valueColor : _lineValueColor;
+	switch (node.changeType)
+	{
+		case OCCertificateChangeTypeNone:
+			cell.descriptionLabel.attributedText = nil;
+			cell.descriptionLabel.text = node.value;
+		break;
+
+		case OCCertificateChangeTypeChanged:
+			attributedText = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"⊕ %@\n⊖ %@", node.value, node.previousValue]];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : descriptionColor, NSFontAttributeName : _regularFont  } range:NSMakeRange(0, 2)];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : UIColor.systemGreenColor } range:NSMakeRange(2, node.value.length)];
+
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : descriptionColor, NSFontAttributeName : _regularFont  } range:NSMakeRange(attributedText.length-node.previousValue.length-2, 2)];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : UIColor.systemRedColor } range:NSMakeRange(attributedText.length-node.previousValue.length, node.previousValue.length)];
+		break;
+
+		case OCCertificateChangeTypeAdded:
+			attributedText = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"⊕ %@", node.value]];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : descriptionColor, NSFontAttributeName : _regularFont  } range:NSMakeRange(0, 2)];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : UIColor.systemGreenColor } range:NSMakeRange(2, node.value.length)];
+		break;
+
+		case OCCertificateChangeTypeRemoved:
+			attributedText = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"⊖ %@", node.previousValue]];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : descriptionColor, NSFontAttributeName : _regularFont } range:NSMakeRange(0, 2)];
+			[attributedText setAttributes:@{ NSForegroundColorAttributeName : UIColor.systemRedColor } range:NSMakeRange(2, node.previousValue.length)];
+		break;
+	}
+
+	cell.titleLabel.textColor = _lineTitleColor;
+
+	if (attributedText != nil)
+	{
+		cell.descriptionLabel.text = nil;
+		cell.descriptionLabel.attributedText = attributedText;
+	}
+	else
+	{
+		cell.descriptionLabel.textColor = descriptionColor;
+	}
 
 	if (node.certificate != nil)
 	{
 		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+	}
+	else
+	{
+		cell.accessoryType = UITableViewCellAccessoryNone;
 	}
 
 	return cell;
@@ -253,7 +318,9 @@
 
 	if (node.certificate != nil)
 	{
-		OCCertificateViewController *viewController = [[[self class] alloc] initWithCertificate:node.certificate];
+		OCCertificateViewController *viewController = [[[self class] alloc] initWithCertificate:node.certificate compareCertificate:node.previousCertificate];
+
+		viewController.showDifferences = self.showDifferences;
 
 		[self.navigationController pushViewController:viewController animated:YES];
 	}
@@ -276,6 +343,50 @@
 {
 	_lineValueColor = lineValueColor;
 	[self.tableView reloadData];
+}
+
+#pragma mark - Differences
+- (void)setShowDifferences:(BOOL)showDifferences
+{
+	_showDifferences = showDifferences;
+
+	if (_showDifferences && (_compareCertificate != nil))
+	{
+		[_certificate certificateDetailsViewNodesComparedTo:_compareCertificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				self->_sectionNodes = detailsViewNodes;
+				[self.tableView reloadData];
+			});
+		}];
+	}
+	else
+	{
+		[_certificate certificateDetailsViewNodesComparedTo:(self.showDifferences ? self.compareCertificate : nil) withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				self->_sectionNodes = detailsViewNodes;
+				[self.tableView reloadData];
+			});
+		}];
+	}
+}
+
+- (void)toggleShowDifferences:(id)sender
+{
+	self.showDifferences = !self.showDifferences;
+
+	[self _updateDiffLabel];
+}
+
+- (void)_updateDiffLabel
+{
+	if (_showDifferences)
+	{
+		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Hide ±", nil);
+	}
+	else
+	{
+		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Show ±", nil);
+	}
 }
 
 @end

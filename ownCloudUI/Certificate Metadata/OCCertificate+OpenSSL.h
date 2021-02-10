@@ -24,11 +24,13 @@
 
 typedef NSString* OCCertificateMetadataKey NS_TYPED_ENUM;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCCertificate (OpenSSL)
 
-- (NSDictionary<OCCertificateMetadataKey, id> *)metaDataWithError:(NSError **)error;
+- (nullable NSDictionary<OCCertificateMetadataKey, id> *)metaDataWithError:(NSError **)error;
 
-- (void)certificateDetailsViewNodesWithValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
+- (void)certificateDetailsViewNodesComparedTo:(nullable OCCertificate *)previousCertificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler;
 
 @end
 
@@ -64,3 +66,5 @@ extern OCCertificateMetadataKey OCCertificateMetadataExtensionsKey;
 extern OCCertificateMetadataKey OCCertificateMetadataExtensionIdentifierKey;
 extern OCCertificateMetadataKey OCCertificateMetadataExtensionNameKey;
 extern OCCertificateMetadataKey OCCertificateMetadataExtensionDescriptionKey;
+
+NS_ASSUME_NONNULL_END

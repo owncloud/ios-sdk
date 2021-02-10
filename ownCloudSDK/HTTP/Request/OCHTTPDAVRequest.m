@@ -37,8 +37,8 @@
 			[OCXMLNode elementWithName:@"D:prop"]
 		]]
 	];
-	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
-	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:@"Depth"];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
+	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:OCHTTPHeaderFieldNameDepth];
 
 	return (request);
 }
@@ -54,7 +54,7 @@
 			[OCXMLNode namespaceWithName:@"oc" stringValue:@"http://owncloud.org/ns"]
 		] children:contentNodes]
 	];
-	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
 
 	return (request);
 }
@@ -70,7 +70,7 @@
 			[OCXMLNode namespaceWithName:@"oc" stringValue:@"http://owncloud.org/ns"]
 		] children:contentNodes]
 	];
-	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
 
 	return (request);
 }

@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCLogTag.h"
 
 /*
 	OCClassSettings provides a central mechanism for storing class-specific settings:
@@ -37,6 +38,25 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString* OCClassSettingsIdentifier NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
+typedef NSString* OCClassSettingsFlatIdentifier; //!< Flat identifier, composed as "[OCClassSettingsIdentifier].[OCClassSettingsKey]". See NSString+OCClassSettings for convenience methods.
+
+typedef NSString* OCClassSettingsMetadataKey NS_TYPED_EXTENSIBLE_ENUM;
+typedef NSDictionary<OCClassSettingsMetadataKey,id>* OCClassSettingsMetadata;
+typedef NSDictionary<OCClassSettingsKey,OCClassSettingsMetadata>* OCClassSettingsMetadataCollection;
+
+typedef NSString* OCClassSettingsMetadataType NS_TYPED_EXTENSIBLE_ENUM;
+
+typedef NSString* OCClassSettingsKeyStatus NS_TYPED_EXTENSIBLE_ENUM;
+
+typedef NS_OPTIONS(NSInteger, OCClassSettingsFlag)
+{
+	OCClassSettingsFlagIsPrivate 	 	= (1 << 0), //!< If [OCClassSettingsSupport publicClassSettingsIdentifiers] is not implemented, allows flagging the value of the key as private (in the sense defined by [OCClassSettingsSupport publicClassSettingsIdentifiers])
+
+	OCClassSettingsFlagAllowUserPreferences = (1 << 1), //! If [OCClassSettingsUserPreferencesSupport allowUserPreferenceForClassSettingsKey:] is not implemented, allows modifying the value for the key via user preferences
+
+	OCClassSettingsFlagDenyUserPreferences  = (1 << 2)  //! If [OCClassSettingsUserPreferencesSupport allowUserPreferenceForClassSettingsKey:] is not implemented, denies modifying the value for the key via user preferences
+};
+
 @protocol OCClassSettingsSupport <NSObject>
 
 @property(strong,readonly,class) OCClassSettingsIdentifier classSettingsIdentifier;
@@ -44,6 +64,13 @@ typedef NSString* OCClassSettingsKey NS_TYPED_EXTENSIBLE_ENUM;
 
 @optional
 + (nullable NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers; //!< Returns an array of OCClassSettingsKey whose values should be considered public (i.e. be ok to be logged in an overview). If not implemented, all OCClassSettingsKeys returned by defaultSettingsForIdentifier are considered public.
+
+// Metadata support
++ (nullable OCClassSettingsMetadata)classSettingsMetadataForKey:(OCClassSettingsKey)key; //!< Returns the metadata for a specific OCClassSettingsKey. (used first, if implemented)
++ (nullable OCClassSettingsMetadataCollection)classSettingsMetadata; //!< Returns a collection of metadata, split by OCClassSettingsKey. (used if -classSettingsMetadataRecordForKey: is not implemented or returned nil).
++ (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key; //!< If +classSettingsMetadataForKey: or +classSettingsMetadata returns dynamic content for a OCClassSettingsKey, it must implement this method and return YES here. If this method is not implemented - or the method returns NO for a OCClassSettingsKey, the returned metadata is considered static - and therefore can be cached for faster and more efficient access.
+
++ (nullable NSError *)validateValue:(nullable id)value forSettingsKey:(OCClassSettingsKey)key; //!< Optional validation of values for a specific OCClassSettingsKey. Return nil if validation has passed - or if no validation was performed. Standard validation is performed before calling this method.
 
 @end
 
@@ -56,11 +83,20 @@ typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @end
 
-@interface OCClassSettings : NSObject
+@interface OCClassSettings : NSObject <OCLogTagging>
+{
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableArray<OCClassSettingsMetadataCollection> *> *_registeredMetaDataCollectionsByIdentifier;
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_registeredDefaultValuesByKeyByIdentifier;
+
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_validatedValuesByKeyByIdentifier;
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_actualValuesByKeyByIdentifier;
+
+	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,NSNumber *> *> *_flagsByKeyByIdentifier;
+}
 
 @property(class, readonly, strong, nonatomic) OCClassSettings *sharedSettings;
 
-- (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults forClass:(Class<OCClassSettingsSupport>)theClass; //!< Registers additional defaults for a class. These are added to the defaults provided by the class itself. Can be used to provide additional settings from a subclass' +load method. A convenience method for this is available as +[NSObject registerOCClassSettingsDefaults:].
+- (void)registerDefaults:(NSDictionary<OCClassSettingsKey, id> *)defaults metadata:(nullable OCClassSettingsMetadataCollection)metaData forClass:(Class<OCClassSettingsSupport>)theClass; //!< Registers additional defaults for a class. These are added to the defaults provided by the class itself. Can be used to provide additional settings from a subclass' +load method. A convenience method for this is available as +[NSObject registerOCClassSettingsDefaults:].
 
 - (void)addSource:(id <OCClassSettingsSource>)source;
 - (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID;
@@ -75,6 +111,10 @@ typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 
 @end
 
+extern NSNotificationName OCClassSettingsChangedNotification; //!< Posted with object==nil if any value could have changed, posted with object==flatIdentifier if a specific setting has changed
+
 NS_ASSUME_NONNULL_END
 
 #import "NSObject+OCClassSettings.h"
+#import "OCClassSettings+Validation.h"
+#import "OCClassSettings+Metadata.h"

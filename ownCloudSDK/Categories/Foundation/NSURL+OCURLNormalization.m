@@ -20,6 +20,8 @@
 
 @implementation NSURL (OCURLNormalization)
 
+@dynamic effectivePort;
+
 + (NSURL *)URLWithUsername:(NSString **)outUserName password:(NSString **)outPassword afterNormalizingURLString:(NSString *)urlString protocolWasPrepended:(BOOL *)outProtocolWasPrepended;
 {
 	NSURL *url = nil;
@@ -89,6 +91,24 @@
 	}
 
 	return (url);
+}
+
+- (NSNumber *)effectivePort
+{
+	NSNumber *port = self.port;
+
+	if (port == nil)
+	{
+		if      ([self.scheme isEqual:@"http"])  { port =  @(80); }
+		else if ([self.scheme isEqual:@"https"]) { port = @(443); }
+	}
+
+	return (port);
+}
+
+- (BOOL)hasSameSchemeHostAndPortAs:(NSURL *)otherURL
+{
+	return ([otherURL.scheme isEqual:self.scheme] && [otherURL.host isEqual:self.host] && [otherURL.effectivePort isEqual:self.effectivePort]);
 }
 
 @end

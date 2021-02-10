@@ -67,15 +67,15 @@
 		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
-				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
+				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate compareCertificate:nil]] animated:YES completion:nil];
 
-				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate differencesFrom:nil withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 
 					[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 						NSError *parseError;
 						NSMutableAttributedString *attributedString;
 
-						attributedString = [[NSMutableAttributedString alloc] initWithAttributedString:[OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes]];
+						attributedString = [[NSMutableAttributedString alloc] initWithAttributedString:[OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes colors:nil]];
 
 						[attributedString appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"\n\n------\nCertificate metadata:\n%@\nError: %@", [certificate metaDataWithError:&parseError], parseError]]];
 

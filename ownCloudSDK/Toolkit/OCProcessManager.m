@@ -111,6 +111,17 @@
 		// Set up process notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processWillTerminate) name:UIApplicationWillTerminateNotification object:nil];
 
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidBecomeActiveNotification object:nil];
+
 		// Scan for invalid sessions
 		[self scanSessions];
 	}
@@ -128,6 +139,17 @@
 
 	// Remove process notifications
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidBecomeActiveNotification object:nil];
 }
 
 #pragma mark - IPC
@@ -280,6 +302,49 @@
 - (void)processWillTerminate
 {
 	[self removeStateFileForSession:_processSession];
+}
+
+- (void)handleStateChange:(NSNotification *)notification
+{
+	if ([notification.name isEqual:NSExtensionHostDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did become active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did enter background");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will resign active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will enter foreground");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did become active");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did enter background");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will resign active");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will enter foreground");
+	}
 }
 
 #pragma mark - Session validity

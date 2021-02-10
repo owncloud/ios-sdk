@@ -69,8 +69,8 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 @property(readonly,nonatomic,nullable) NSDate *authenticationDataKnownInvalidDate; //!< The date the .authenticationData was last known to be invalid. Reset to nil when -flushCachedAuthenticationSecret is called.
 
 #pragma mark - Authentication Method Detection
-+ (nullable NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
-+ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionURLsForConnection:) and then returns result via the completionHandler.
++ (nullable NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
++ (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionRequestsForConnection:) and then returns result via the completionHandler.
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.
@@ -106,8 +106,10 @@ extern OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey; //!< For pas
 extern OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey; //!< For passphrase-based authentication methods: the passphrase (value type: NSString*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey; //!< The UIViewController to use when presenting a view controller (for f.ex. token-based authentication mechanisms like OAuth2) (value type: UIViewController*)
 extern OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey; //!< Allow OCConnection to modify the OCBookmark with an upgraded URL, where an upgrade means that the hostname and base path must be identical and the protocol may only change from http to https. Any other change will be rejected and produce an OCErrorAuthorizationRedirect with userInfo[OCAuthorizationMethodAlternativeServerURLKey] for user approval (=> if the user approves, the app would update the URL in the bookmark accordingly and start authentication anew). This key is currently supported for
+extern OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey; //!< For token-based authentication methods: only generate bookmark data tokens if they allow logging in as the provided username / user ID. Return an OCErrorAuthorizationNotMatchingRequiredUserID error otherwise.
 
 extern NSString *OCAuthorizationMethodAlternativeServerURLKey; //!< Key for alternative server URL in -[NSError userInfo].
+extern NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey; //!< Key for the URL from where the alternative server URL was requested.
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication;
 extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass;

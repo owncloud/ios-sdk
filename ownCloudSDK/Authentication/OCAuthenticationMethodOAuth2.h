@@ -23,6 +23,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
+{
+	OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode,
+	OCAuthenticationOAuth2TokenRequestTypeRefreshToken
+};
+
 @interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod <OCClassSettingsSupport>
 
 @property(strong,nullable,class,nonatomic) Class browserSessionClass;
@@ -36,10 +42,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
 - (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
-- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken;
+- (NSDictionary<NSString *, NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options;
+- (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection;
+- (NSDictionary<NSString *, id> *)postProcessAuthenticationDataDict:(NSDictionary<NSString *, id> *)authDataDict;
 - (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;
 - (nullable NSString *)scope;
 - (nullable NSString *)prompt;
+- (NSString *)clientID;
+- (NSString *)clientSecret;
+- (NSString *)tokenRequestAuthorizationHeaderForType:(OCAuthenticationOAuth2TokenRequestType)requestType connection:(OCConnection *)connection;
+
+- (void)sendTokenRequestToConnection:(OCConnection *)connection withParameters:(NSDictionary<NSString*,NSString*> *)parameters options:(nullable OCAuthenticationMethodDetectionOptions)options requestType:(OCAuthenticationOAuth2TokenRequestType)requestType completionHandler:(void(^)(NSError * _Nullable error, NSDictionary * _Nullable jsonResponseDict, NSData * _Nullable authenticationData))completionHandler;
 
 @end
 

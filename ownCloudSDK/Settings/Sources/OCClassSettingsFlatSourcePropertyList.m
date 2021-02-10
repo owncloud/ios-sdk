@@ -62,7 +62,7 @@
 	return (self);
 }
 
-- (NSDictionary<NSString *,id> *)flatSettingsDictionary
+- (NSDictionary<OCClassSettingsFlatIdentifier,id> *)flatSettingsDictionary
 {
 	return (_flatSettingsDictionary);
 }

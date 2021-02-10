@@ -21,6 +21,7 @@
 #import "OCAuthenticationMethodOAuth2.h"
 #import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCMacros.h"
+#import "OCBookmarkManager.h"
 
 @implementation OCBookmark (Diagnostics)
 
@@ -31,8 +32,20 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Name") 			content:self.name],
 		[OCDiagnosticNode withLabel:OCLocalized(@"URL") 			content:self.url.absoluteString],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Origin URL")			content:self.originURL.absoluteString],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Use Origin URL as URL") 	action:^(OCDiagnosticContext * _Nullable context) {
+			if (self.originURL != nil)
+			{
+				self.url = self.originURL;
+				self.originURL = nil;
+
+				[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self];
+			}
+		}],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Certificate Date")		content:self.certificateModificationDate.description],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Certificate") 	action:^(OCDiagnosticContext * _Nullable context) {
+			self.certificate = [OCCertificate certificateWithCertificateData:[NSData new] hostName:self.url.host];
+		}],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"User Name")			content:self.userName],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Method")			content:self.authenticationMethodIdentifier],

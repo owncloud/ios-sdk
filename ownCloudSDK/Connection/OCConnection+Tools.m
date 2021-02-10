@@ -79,6 +79,15 @@
 			}
 		}
 
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		{
+			// Ensure WebDAV endpoint path is slash-terminated
+			if (![url.absoluteString hasSuffix:@"/"])
+			{
+				url = [NSURL URLWithString:[url.absoluteString stringByAppendingString:@"/"]];
+			}
+		}
+
 		return (url);
 	}
 	else
@@ -114,16 +123,18 @@
 }
 
 #pragma mark - Base URL Extract
-- (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL
+- (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL
 {
-	return ([[self class] extractBaseURLFromRedirectionTargetURL:inRedirectionTargetURL originalURL:inOriginalURL originalBaseURL:[_bookmark.url absoluteURL]]);
+	return ([[self class] extractBaseURLFromRedirectionTargetURL:inRedirectionTargetURL originalURL:inOriginalURL originalBaseURL:[_bookmark.url absoluteURL] fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL]);
 }
 
-+ (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL
++ (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL
 {
 	NSURL *originalBaseURL = [inOriginalBaseURL absoluteURL];
 	NSURL *originalURL = [inOriginalURL absoluteURL];
 	NSURL *redirectionTargetURL = [inRedirectionTargetURL absoluteURL];
+
+	// Find root from redirects based on https://github.com/owncloud/administration/blob/master/redirectServer/Readme.md
 
 	if ((originalBaseURL!=nil) && (originalURL!=nil))
 	{
@@ -139,13 +150,26 @@
 					
 					if (endpointPathRange.location != NSNotFound)
 					{
+						// redirectURL replicates the path originally targeted URL
 						return ([NSURL URLWithString:[redirectionTargetURL.absoluteString substringToIndex:endpointPathRange.location]]);
 					}
 				}
 			}
 		}
 	}
-	
+
+	// Strip common suffixes from redirectionTargetURL
+	if (fallbackToRedirectionTargetURL)
+	{
+		if ([redirectionTargetURL.lastPathComponent isEqual:@"status.php"])
+		{
+			redirectionTargetURL = redirectionTargetURL.URLByDeletingLastPathComponent;
+		}
+
+		// Fallback to redirectionTargetURL
+		return (redirectionTargetURL);
+	}
+
 	return(nil);
 }
 

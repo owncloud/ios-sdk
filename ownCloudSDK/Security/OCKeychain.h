@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)writeData:(nullable NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)removeKeychainItemForAccount:(NSString *)account path:(NSString *)path;
+- (nullable NSError *)wipe;
 
 #pragma mark - Object interface
 - (nullable id)readObjectFromKeychainItemForAccount:(NSString *)account path:(NSString *)path allowedClasses:(NSSet<Class> *)allowedClasses rootClass:(Class)rootClass error:(NSError * _Nullable * _Nullable)outError;

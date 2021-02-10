@@ -34,6 +34,7 @@
 #import "OCCellularManager.h"
 #import "OCNetworkMonitor.h"
 #import "OCHTTPPolicyManager.h"
+#import "NSURLSessionTask+Debug.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -62,6 +63,42 @@
 @implementation OCHTTPPipeline
 
 #pragma mark - User agent
++ (nullable NSString *)stringForTemplate:(NSString *)userAgentTemplate variables:(nullable NSDictionary<NSString *, NSString *> *)variables
+{
+	NSString *bundleName = @"App";
+	__block NSString *userAgent = nil;
+
+	if (OCProcessManager.isProcessExtension)
+	{
+		if ((bundleName = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleNameKey]) == nil)
+		{
+			bundleName = NSBundle.mainBundle.bundlePath.lastPathComponent.stringByDeletingPathExtension;
+		}
+	}
+
+	if (bundleName == nil)
+	{
+		bundleName = @"App";
+	}
+
+	userAgent = [[[[[[[userAgentTemplate 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
+						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
+						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
+						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
+						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
+						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
+						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+
+	if (variables != nil)
+	{
+		[variables enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull varName, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+			userAgent = [userAgent stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{{%@}}", varName] withString:value];
+		}];
+	}
+
+	return (userAgent);
+}
+
 + (nullable NSString *)userAgent
 {
 	static NSString *userAgent = nil;
@@ -71,28 +108,7 @@
 
 	if (((userAgent == nil) && (template != nil)) || (![template isEqual:userAgentTemplate] && (template != userAgentTemplate)))
 	{
-		NSString *bundleName = @"App";
-
-		if (OCProcessManager.isProcessExtension)
-		{
-			if ((bundleName = [NSBundle.mainBundle objectForInfoDictionaryKey:(__bridge id)kCFBundleNameKey]) == nil)
-			{
-				bundleName = NSBundle.mainBundle.bundlePath.lastPathComponent.stringByDeletingPathExtension;
-			}
-		}
-
-		if (bundleName == nil)
-		{
-			bundleName = @"App";
-		}
-
-		userAgent = [[[[[[[template 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
-						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
-						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
-						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
-						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
-						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
-						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+		userAgent = [self stringForTemplate:template variables:nil];
 		userAgentTemplate = template;
 	}
 
@@ -110,8 +126,6 @@
 		_cachedCertificatesByHostnameAndPort = [NSMutableDictionary new];
 		_taskIDsInDelivery = [NSMutableSet new];
 		_partitionEmptyHandlers = [NSMutableDictionary new];
-
-		_insertXRequestID = YES;
 
 		_attachedURLSessionsByIdentifier = [NSMutableDictionary new];
 		_sessionCompletionHandlersByIdentifiers = [NSMutableDictionary new];
@@ -219,7 +233,7 @@
 					// Queue this block so that any operations to be queued from the current run have a chance to before closing down
 					[self queueBlock:^{
 						// Wait for outstanding operations to finish
-						OCLogDebug(@"Waiting for outstanding operations to finish");
+						OCLogVerbose(@"Waiting for outstanding operations to finish");
 
 						dispatch_group_notify(self->_busyGroup, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
 							@autoreleasepool
@@ -230,7 +244,7 @@
 										self->_state = OCHTTPPipelineStateStopped;
 									}
 
-									OCLogDebug(@"Calling stopCompletionHandler %p", completionHandler);
+									OCLogVerbose(@"Calling stopCompletionHandler %p", completionHandler);
 									completionHandler(self, error);
 								}];
 							}
@@ -414,12 +428,6 @@
 		request.downloadRequest = YES;
 	}
 
-	if ((request != nil) && (request.identifier != nil) && _insertXRequestID)
-	{
-		// Insert X-Request-ID for tracing
-		[request setValue:request.identifier forHeaderField:@"X-Request-ID"];
-	}
-
 	if ((pipelineTask = [[OCHTTPPipelineTask alloc] initWithRequest:request pipeline:self partition:partitionID]) != nil)
 	{
 		pipelineTask.requestFinal = isFinal;
@@ -428,7 +436,7 @@
 
 		if ((error = [_backend addPipelineTask:pipelineTask]) != nil)
 		{
-			OCLogError(@"Error adding pipelineTask=%@: %@", pipelineTask.taskID, error);
+			OCLogError(@"Error adding pipelineTask=%@ for request=%@: %@", pipelineTask.taskID, request, error);
 		}
 
 		[self setPipelineNeedsScheduling];
@@ -572,7 +580,7 @@
 		// Only schedule if pipeline is started
 		if (_state != OCHTTPPipelineStateStarted)
 		{
-			OCLogWarning(@"Attempt to schedule before pipeline is started.");
+			OCLogWarning(@"Attempt to schedule while pipeline is not started (state = %ld).", _state);
 			return;
 		}
 
@@ -689,14 +697,20 @@
 					// Task is pending
 					if (taskGroupID != nil)
 					{
-						NSMutableArray <OCHTTPPipelineTask *> *schedulableTasks;
+						NSMutableArray <OCHTTPPipelineTask *> *schedulableTasks = nil;
 						BOOL schedule = YES;
 
 						// Check signal availability
 						{
 							NSError *failWithError = nil;
 
-							schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals forTask:task failWithError:&failWithError];
+							// Only check for signals on final requests if more than one signal has been set (several unit tests with "final" requests depend on this) or the partitionHandler currently is available
+							// !! For non-final requests, the Connection Validator depends on -meetsSignalRequirements:forTask:failWithError: being called !!
+							if (!task.requestFinal || (task.requestFinal && (task.request.requiredSignals.count > 0)) || (partitionHandler != nil))
+							{
+								// This call is also made if partitionHandler is nil, resulting in schedule = NO
+								schedule = [partitionHandler pipeline:self meetsSignalRequirements:task.request.requiredSignals forTask:task failWithError:&failWithError];
+							}
 
 							if (!schedule && (failWithError!=nil))
 							{
@@ -795,7 +809,7 @@
 		OCLogError(@"Error enumerating tasks during scheduling: enumerationError=%@", enumerationError);
 	}
 
-	// OCLogDebug(@"Scheduler state: schedulableTasksByGroupID=%@, blockedGroupIDs=%@, remainingSlots=%d, recentlyScheduledGroupIDs=%@", schedulableTasksByGroupID, blockedGroupIDs, remainingSlots, _recentlyScheduledGroupIDs);
+	// OCLogVerbose(@"Scheduler state: schedulableTasksByGroupID=%@, blockedGroupIDs=%@, remainingSlots=%d, recentlyScheduledGroupIDs=%@", schedulableTasksByGroupID, blockedGroupIDs, remainingSlots, _recentlyScheduledGroupIDs);
 
 	// Filter and sort tasks
 	if (schedulableTasksByGroupID.count > 0)
@@ -840,7 +854,7 @@
 			}
 		}
 
-		// OCLogDebug(@"schedulableGroupIDs=%@", schedulableGroupIDs);
+		// OCLogVerbose(@"schedulableGroupIDs=%@", schedulableGroupIDs);
 
 		// Prioritize requests from groups whose requests have never been scheduled even higher (by inserting them at the top)
 		for (OCHTTPRequestGroupID groupID in schedulableGroupIDs)
@@ -868,7 +882,7 @@
 			[scheduleTasks addObjectsFromArray:tasks];
 		}
 
-		// OCLogDebug(@"scheduleTasks=%@", scheduleTasks);
+		// OCLogVerbose(@"scheduleTasks=%@", scheduleTasks);
 
 		// Reduce to maximum of remainingSlots
 		if (scheduleTasks.count > remainingSlots)
@@ -876,7 +890,7 @@
 			[scheduleTasks removeObjectsInRange:NSMakeRange(remainingSlots, scheduleTasks.count-remainingSlots)];
 		}
 
-		// OCLogDebug(@"scheduleTasksShortened=%@", scheduleTasks);
+		// OCLogVerbose(@"scheduleTasksShortened=%@", scheduleTasks);
 
 		// Update recentlyScheduledGroupIDs
 		for (OCHTTPPipelineTask *task in scheduleTasks)
@@ -970,7 +984,7 @@
 
 			if ((userAgent = [OCHTTPPipeline userAgent]) != nil)
 			{
-				[request setValue:userAgent forHeaderField:@"User-Agent"];
+				[request setValue:userAgent forHeaderField:OCHTTPHeaderFieldNameUserAgent];
 			}
 
 			// Invoke host simulation (if any)
@@ -1027,7 +1041,7 @@
 					}
 					@catch (NSException *exception)
 					{
-						OCLogDebug(@"Exception creating a task: %@", exception);
+						OCLogError(@"Exception creating a task: %@", exception);
 						error = OCErrorWithInfo(OCErrorException, @{ @"exception" : exception });
 					}
 				}
@@ -1055,7 +1069,7 @@
 					task.state = OCHTTPPipelineTaskStateRunning;
 					updateTask = YES;
 
-					OCLogDebug(@"saved request for taskIdentifier <%ld>, URL: %@, %p", urlSessionTask.taskIdentifier, urlRequest, self);
+					OCLogVerbose(@"saved request for [%@], request=%@, %p", urlSessionTask.requestIdentityDescription, urlRequest, self);
 
 					// Start task
 					if (resumeSessionTask)
@@ -1128,7 +1142,7 @@
 
 					if (resumeSessionTask)
 					{
-						OCLogDebug(@"resuming request for taskIdentifier <%ld>, URL: %@, %p", urlSessionTask.taskIdentifier, urlRequest, self);
+						OCLogVerbose(@"resuming request for [%@], request=%@, %p", urlSessionTask.requestIdentityDescription, urlRequest, self);
 						urlSessionTask.resumeTaskDate = [NSDate new];
 						[urlSessionTask resume];
 					}
@@ -1164,6 +1178,7 @@
 		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
+		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"-> %@ %@", request.method, request.effectiveURL);
 		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:         %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
 	}
 
@@ -1252,7 +1267,7 @@
 							//  & a request providing a certificate on the background session
 							//  & process being terminated
 							//  & result of the request being provided to the new process
-							OCLogError(@"Certificate missing for %@: %@", response, OCError(OCErrorCertificateMissing));
+							OCLogWarning(@"Certificate missing for %@: %@", response, OCError(OCErrorCertificateMissing));
 							// response.httpError = OCError(OCErrorCertificateMissing);
 						}
 					}
@@ -1280,6 +1295,7 @@
 		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
+		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
 		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
 	}
 
@@ -1319,7 +1335,7 @@
 		};
 		BOOL skipPartitionInstructionDecision = NO;
 
-		OCLogDebug(@"Delivering result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
+		OCLogVerbose(@"Delivering result for taskID=%@, requestID=%@ to partition handler %@", task.taskID, task.request.identifier, partitionHandler);
 
 		// Add to _taskIDsInDelivery, so delivery isn't retried until async work has finished.
 		// (=> since this tracked in-memory, a crash/app termination will automatically result in delivery being retried)
@@ -1327,7 +1343,7 @@
 		{
 			if ([taskIDsInDelivery containsObject:task.taskID])
 			{
-				OCLogDebug(@"Skipping delivering result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
+				OCLogVerbose(@"Skipping delivering result for taskID=%@, requestID=%@ to partition handler %@", task.taskID, task.request.identifier, partitionHandler);
 				return (NO);
 			}
 
@@ -1352,7 +1368,7 @@
 
 			[self evaluateCertificate:task.response.certificate forTask:task proceedHandler:proceedHandler];
 
-			OCLogDebug(@"Certificate evaluation during delivery of taskID=%@ to partition handler %@ halted delivery", task.taskID, partitionHandler);
+			OCLogVerbose(@"Certificate evaluation during delivery of taskID=%@, requestID=%@ to partition handler %@ halted delivery", task.taskID, task.request.identifier, partitionHandler);
 
 			return (NO);
 		}
@@ -1398,7 +1414,7 @@
 			}
 		}
 
-		OCLogDebug(@"Entering post-processing of result for taskID=%@ with skipPartitionInstructionDecision=%d, error=%@", task.taskID, skipPartitionInstructionDecision, error);
+		OCLogVerbose(@"Entering post-processing of result for taskID=%@, requestID=%@ with skipPartitionInstructionDecision=%d, error=%@", task.taskID, task.request.identifier, skipPartitionInstructionDecision, error);
 
 		// Give connection a chance to pass it off to authentication methods / interpret the error before delivery to the sender
 		if ([partitionHandler respondsToSelector:@selector(pipeline:postProcessFinishedTask:error:)])
@@ -1415,7 +1431,7 @@
 			}
 		}
 
-		OCLogDebug(@"Leaving post-processing of result for taskID=%@ with requestInstruction=%lu, error=%@", task.taskID, (unsigned long)requestInstruction, error);
+		OCLogVerbose(@"Leaving post-processing of result for taskID=%@, requestID=%@ with requestInstruction=%lu, error=%@", task.taskID, task.request.identifier, (unsigned long)requestInstruction, error);
 
 		// Deliver to target
 		if (requestInstruction == OCHTTPRequestInstructionDeliver)
@@ -1434,7 +1450,7 @@
 					removeTask = YES;
 					undeliverable = NO;
 
-					OCLogDebug(@"Delivered result for taskID=%@ to partition handler %@", task.taskID, partitionHandler);
+					OCLogVerbose(@"Delivered result for taskID=%@, requestID=%@ to partition handler %@", task.taskID, task.request.identifier, partitionHandler);
 				}
 			}
 			else
@@ -1445,7 +1461,7 @@
 					removeTask = YES;
 					undeliverable = NO;
 
-					OCLogDebug(@"Delivered result for taskID=%@ to ephermal result handler %@", task.taskID, task.request.ephermalResultHandler);
+					OCLogVerbose(@"Delivered result for taskID=%@, requestID=%@ to ephermal result handler %@", task.taskID, task.request.identifier, task.request.ephermalResultHandler);
 				}
 			}
 
@@ -1473,8 +1489,21 @@
 			task.urlSessionTaskID = nil;
 
 			// Use new Request-ID for rescheduled request
-			[task.request recreateRequestID];
-			task.requestID = task.request.identifier;
+			if (task.request.autoResumeInfo == nil)
+			{
+				// Only recreate request IDs for requests that are NOT based on auto resume info
+				// as it appears that it is not possible to change the headers for these, so that
+				// the response would trigger an "UNKNOWN TASK" error.
+				OCHTTPRequestID oldRequestID = task.requestID;
+
+				task.requestID = [task.request recreateRequestID];
+
+				OCLogVerbose(@"Recreated identifier for request: %@ -> %@", oldRequestID, task.requestID);
+			}
+			else
+			{
+				OCLogVerbose(@"Reusing identifier %@ for request because it is resumed and headers can't be changed", task.requestID);
+			}
 
 			task.state = OCHTTPPipelineTaskStatePending;
 			task.response = nil;
@@ -1489,7 +1518,7 @@
 		{
 			if (task.urlSessionTaskID != nil)
 			{
-				OCLogDebug(@"Removing request %@ with taskIdentifier <%@>", OCLogPrivate(task.request.url), task.urlSessionTaskID);
+				OCLogVerbose(@"Removing request %@ [%@] with taskIdentifier <%@>", OCLogPrivate(task.request.url), task.request.identifier, task.urlSessionTaskID);
 			}
 
 			[self.backend removePipelineTask:task];
@@ -1502,7 +1531,7 @@
 			[taskIDsInDelivery removeObject:task.taskID];
 		}
 
-		OCLogDebug(@"Delivery result for taskID=%@: requestInstruction=%lu, removeTask=%d", task.taskID, (unsigned long)requestInstruction, removeTask);
+		OCLogVerbose(@"Delivery result for taskID=%@ [%@]: requestInstruction=%lu, removeTask=%d", task.taskID, task.request.identifier, (unsigned long)requestInstruction, removeTask);
 	}
 	else
 	{
@@ -1515,7 +1544,7 @@
 			[_backend updatePipelineTask:task];
 		}
 
-		OCLogDebug(@"Delivery result for taskID=%@: removeTask=%d, bundleID=%@, allowHandlingByAnyProcess=%d", task.taskID, removeTask, task.bundleID, allowHandlingByAnyProcess);
+		OCLogVerbose(@"Delivery result for taskID=%@ [%@]: removeTask=%d, bundleID=%@, allowHandlingByAnyProcess=%d", task.taskID, task.request.identifier, removeTask, task.bundleID, allowHandlingByAnyProcess);
 	}
 
 	return (removeTask);
@@ -1579,7 +1608,7 @@
 	[self queueInline:^{
 		OCHTTPPipelinePartitionID partitionID = [partitionHandler partitionID];
 
-		OCLogDebug(@"Enter detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
+		OCLogVerbose(@"Enter detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
 
 		if (partitionID != nil)
 		{
@@ -1600,7 +1629,7 @@
 			OCLogError(@"Can't detach handler (%@) since no partition could be retrieved from it: %@", partitionHandler, partitionID);
 		}
 
-		OCLogDebug(@"Leave detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
+		OCLogVerbose(@"Leave detachPartitionHandler %@ (%@), _partitionHandlersByID=%@", partitionHandler, partitionID, self->_partitionHandlersByID);
 
 		if (completionHandler != nil)
 		{
@@ -1660,7 +1689,7 @@
 #pragma mark - Remove partition
 - (void)destroyPartition:(OCHTTPPipelinePartitionID)partitionID completionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCLogDebug(@"destroy partitionID=%@", partitionID);
+	OCLogVerbose(@"destroy partitionID=%@", partitionID);
 
 	[self queueBlock:^{
 		// Prevent further scheduling for partitionID
@@ -1785,7 +1814,7 @@
 #pragma mark - Shutdown
 - (void)finishTasksAndInvalidateWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	OCLogDebug(@"finish tasks and invalidate");
+	OCLogVerbose(@"finish tasks and invalidate");
 
 	_invalidationCompletionHandler = completionHandler;
 
@@ -1798,7 +1827,7 @@
 
 - (void)invalidateAndCancelWithCompletionHandler:(dispatch_block_t)completionHandler
 {
-	OCLogDebug(@"cancel tasks and invalidate");
+	OCLogVerbose(@"cancel tasks and invalidate");
 
 	_invalidationCompletionHandler = completionHandler;
 
@@ -1812,6 +1841,7 @@
 		NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 			if (((partitionID==nil) || ((partitionID!=nil) && [task.partitionID isEqual:partitionID])) && task.request.isNonCritial)
 			{
+				OCLogVerbose(@"Cancelling non-critical task %@", task.taskID);
 				[self _cancelTask:task];
 			}
 		}];
@@ -1928,7 +1958,7 @@
 	{
 		_urlSessionInvalidated = YES;
 
-		OCLogDebug(@"did become invalid with error=%@, running invalidationCompletionHandler %p", error, _invalidationCompletionHandler);
+		OCLogVerbose(@"did become invalid with error=%@, running invalidationCompletionHandler %p", error, _invalidationCompletionHandler);
 
 		if (_invalidationCompletionHandler != nil)
 		{
@@ -1938,7 +1968,7 @@
 	}
 	else
 	{
-		OCLogDebug(@"%@ did become invalid with error=%@, removing from _attachedURLSessionsByIdentifier", session, error);
+		OCLogVerbose(@"%@ did become invalid with error=%@, removing from _attachedURLSessionsByIdentifier", session, error);
 
 		[self queueBlock:^{
 			// Drop urlSession
@@ -1956,11 +1986,11 @@
 	NSError *backendError = nil;
 	OCHTTPPipelineTask *task;
 
-	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
+	OCLogVerbose(@"Task [%@] didCompleteWithError=%@", urlSessionTask.requestIdentityDescription, error);
 
 	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
 	{
-		OCLogDebug(@"Known task [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  error);
+		OCLogVerbose(@"Known task [%@] didCompleteWithError=%@", urlSessionTask.requestIdentityDescription,  error);
 
 		[self addMetrics:task.metrics withTask:urlSessionTask];
 
@@ -1980,13 +2010,14 @@
 	}
 	else
 	{
-		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didCompleteWithError=%@, backendError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), error, backendError);
+		OCLogError(@"UNKNOWN TASK [%@] didCompleteWithError=%@, backendError=%@", urlSessionTask.requestIdentityDescription, error, backendError);
+		[_backend dumpDBTable];
 	}
 }
 
 - (void)URLSession:(NSURLSession *)session taskIsWaitingForConnectivity:(NSURLSessionTask *)urlSessionTask
 {
-	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] taskIsWaitingForConnectivity", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL));
+	OCLogVerbose(@"Task [%@] taskIsWaitingForConnectivity", urlSessionTask.requestIdentityDescription);
 }
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)urlSessionTask didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
@@ -1996,10 +2027,10 @@
 
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
+		NSString *XRequestID = [urlSessionTask.currentRequest valueForHTTPHeaderField:OCHTTPHeaderFieldNameXRequestID];
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
 
-		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics: %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), [metrics compactSummaryWithTask:urlSessionTask]);
+		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [%@] didFinishCollectingMetrics: %@", urlSessionTask.requestIdentityDescription, [metrics compactSummaryWithTask:urlSessionTask]);
 	}
 
 	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
@@ -2008,7 +2039,8 @@
 	}
 	else
 	{
-		OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] didFinishCollectingMetrics, backendError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), backendError);
+		OCLogError(@"UNKNOWN TASK [%@] didFinishCollectingMetrics, backendError=%@", urlSessionTask.requestIdentityDescription, backendError);
+		[_backend dumpDBTable];
 	}
 }
 
@@ -2018,7 +2050,7 @@
         newRequest:(NSURLRequest *)request
         completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
 {
-	OCLogDebug(@"Task [taskIdentifier=<%lu>, url=%@] wants to perform redirection from %@ to %@ via %@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL),  OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(request.URL), response);
+	OCLogVerbose(@"Task [%@] wants to perform redirection from %@ to %@ via %@", urlSessionTask.requestIdentityDescription, OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(request.URL), response);
 
 	// Don't allow redirections. Deliver the redirect response instead - these really need to be handled locally on a case-by-case basis.
 	if (completionHandler != nil)
@@ -2114,7 +2146,7 @@
         didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
         completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
-	OCLogDebug(@"%@: %@ => protection space: %@ method: %@", OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
+	OCLogVerbose(@"[%@]: %@ => protection space: %@ method: %@", urlSessionTask.requestIdentityDescription, OCLogPrivate(challenge), OCLogPrivate(challenge.protectionSpace), challenge.protectionSpace.authenticationMethod);
 
 	if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodServerTrust])
 	{
@@ -2165,7 +2197,7 @@
 			}
 			else
 			{
-				OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@] task:didReceiveChallenge=%@, dbError=%@", urlSessionTask.taskIdentifier, OCLogPrivate(urlSessionTask.currentRequest.URL), OCLogPrivate(challenge), dbError);
+				OCLogError(@"UNKNOWN TASK [%@] task:didReceiveChallenge=%@, dbError=%@", urlSessionTask.requestIdentityDescription, OCLogPrivate(challenge), dbError);
 				[_backend dumpDBTable];
 			}
 		}
@@ -2203,7 +2235,7 @@
 		}
 		else
 		{
-			OCLogError(@"UNKNOWN TASK [taskIdentifier=<%lu>, url=%@, dbError=%@] dataTask:didReceiveDate:", urlSessionDataTask.taskIdentifier, OCLogPrivate(urlSessionDataTask.currentRequest.URL), dbError);
+			OCLogError(@"UNKNOWN TASK [%@, dbError=%@] dataTask:didReceiveData:", urlSessionDataTask.requestIdentityDescription, dbError);
 		}
 	}];
 }
@@ -2284,8 +2316,8 @@
 		[self.backend updatePipelineTask:task];
 	}
 
-	OCLogDebug(@"%@ [taskIdentifier=<%lu>]: downloadTask:didFinishDownloadingToURL: %@, dbError=%@", urlSessionDownloadTask.currentRequest.URL, urlSessionDownloadTask.taskIdentifier, location, dbError);
-	// OCLogDebug(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
+	OCLogVerbose(@"[%@]: downloadTask:didFinishDownloadingToURL: %@, dbError=%@", urlSessionDownloadTask.requestIdentityDescription, location, dbError);
+	// OCLogVerbose(@"DOWNLOADTASK FINISHED: %@ %@ %@", downloadTask, location, request);
 }
 
 #pragma mark - Cellular Switch / Network observation
@@ -2453,7 +2485,7 @@
 
 		confidenceLevel = (CGFloat)1.0 / ((((CGFloat)(requestSize*requestSize) / (CGFloat)largestSendBytes) + ((CGFloat)(responseSize*responseSize) / (CGFloat)largestReceivesBytes)) / ((CGFloat)(requestSize + responseSize)));
 
-		OCLogDebug(@"weightedAverage sendBPS=%@, receiveBPS=%@, transportationDelay=%@ - bytesToSend=%lu, bytesToReceive=%lu - estimatedTimeToComplete=%.02f, confidenceLevel=%.03f", averageSendBytesPerSecond, averageReceiveBytesPerSecond, averageTransportationDelay, requestSize, responseSize, estimatedTimeToComplete, confidenceLevel);
+		OCLogVerbose(@"weightedAverage sendBPS=%@, receiveBPS=%@, transportationDelay=%@ - bytesToSend=%lu, bytesToReceive=%lu - estimatedTimeToComplete=%.02f, confidenceLevel=%.03f", averageSendBytesPerSecond, averageReceiveBytesPerSecond, averageTransportationDelay, requestSize, responseSize, estimatedTimeToComplete, confidenceLevel);
 
 		if (outConfidence != NULL)
 		{
@@ -2489,6 +2521,19 @@
 {
 	return (@{
 		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})"
+	});
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Connection
+		OCHTTPPipelineSettingUserAgent : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"A custom `User-Agent` to send with every HTTP request.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
 	});
 }
 

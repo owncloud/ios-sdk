@@ -123,9 +123,9 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
-	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
+	return ([self detectionRequestsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
@@ -141,7 +141,7 @@ OCAuthenticationMethodAutoRegister
 	if ((authorizationHeaderValue = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		return (@{
-			@"Authorization" : authorizationHeaderValue
+			OCHTTPHeaderFieldNameAuthorization : authorizationHeaderValue
 		});
 	}
 
@@ -192,7 +192,7 @@ OCAuthenticationMethodAutoRegister
 			request = [OCHTTPRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 			[request setValue:@"json" forParameter:@"format"];
 
-			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
+			[request setValue:authenticationHeaderValue forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
@@ -226,13 +226,9 @@ OCAuthenticationMethodAutoRegister
 						{
 							NSURL *alternativeBaseURL;
 
-							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 							{
 								error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
-							}
-							else
-							{
-								error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 							}
 						}
 					}

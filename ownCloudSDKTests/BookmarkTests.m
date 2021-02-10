@@ -81,8 +81,11 @@
 	testObject.string = @"SECRETSTRING";
 	testObject.data = [@"SECRETDATA" dataUsingEncoding:NSUTF8StringEncoding];
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	serializedData = [NSKeyedArchiver archivedDataWithRootObject:testObject];
-	
+	#pragma clang diagnostic pop
+
 	XCTAssert(([serializedData rangeOfData:secretStringData options:0 range:NSMakeRange(0, serializedData.length)].location != NSNotFound), @"SECRETSTRING must be findable inside the serialized data");
 	XCTAssert(([serializedData rangeOfData:testObject.data options:0 range:NSMakeRange(0, serializedData.length)].location != NSNotFound), @"SECRETDATA must be findable inside the serialized data");
 }

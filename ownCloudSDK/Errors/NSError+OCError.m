@@ -316,6 +316,18 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorAuthorizationMethodUnknown:
 					unlocalizedString = @"Authentication method unknown.";
 				break;
+
+				case OCErrorServerConnectionValidationFailed:
+					unlocalizedString = @"Connection validation failed.";
+				break;
+
+				case OCErrorAuthorizationClientRegistrationFailed:
+					unlocalizedString = @"Client registration failed.";
+				break;
+
+				case OCErrorAuthorizationNotMatchingRequiredUserID:
+					unlocalizedString = @"The logged in user is not matching the required user ID.";
+				break;
 			}
 		}
 	}

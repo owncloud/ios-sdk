@@ -101,7 +101,12 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorPrivateLinkResolutionFailed, //!< Resolution of private link failed
 
 	OCErrorAuthorizationMethodNotAllowed, //!< Authentication method not allowed. Re-authentication needed.
-	OCErrorAuthorizationMethodUnknown //!< Authentication method unknown.
+	OCErrorAuthorizationMethodUnknown, //!< Authentication method unknown.
+
+	OCErrorServerConnectionValidationFailed, //!< Validation of connection failed.
+
+	OCErrorAuthorizationClientRegistrationFailed, //!< Client registration failed
+	OCErrorAuthorizationNotMatchingRequiredUserID //!< The logged in user is not matching the required user ID.
 };
 
 @class OCIssue;
@@ -139,6 +144,8 @@ NS_ASSUME_NONNULL_BEGIN
 #define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo, OCErrorDateKey : [NSDate new] }] //!< Like the OCError macro, but allows for an error specific info value
 
 #define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError, OCErrorDateKey : ((underlyingError.errorDate != nil) ? underlyingError.errorDate : [NSDate new]) }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+
+#define OCErrorWithDescriptionFromError(errorCode,description,underlyingError) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, [NSDate new], OCErrorDateKey, underlyingError, NSUnderlyingErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Like the OCErrorWithDescription macro, but allows to specifiy an underlying error, too
 
 #define OCErrorAddDateFromResponse(error,response) if (response.date != nil) \
 	{ \

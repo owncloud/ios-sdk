@@ -83,15 +83,12 @@
 {
 	XCTestExpectation *offlineOperationExpectation = [self expectationWithDescription:@"expect offline operation to run"];
 	OCBookmark *bookmark = [OCTestTarget userBookmark];
-	__block __weak OCCore *core1=nil, *core2=nil;
-	__block NSValue *core1Address = NULL, *core2Address = NULL;
+	__block OCCoreRunIdentifier core1RunID = nil, core2RunID = nil;
 
 	@autoreleasepool {
 		[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
-			core1 = core;
-
 			OCLog(@"Started core1=%@", core);
-			core1Address = [NSValue valueWithPointer:(__bridge const void *)core];
+			core1RunID = core.runIdentifier;
 
 			// Calling -returnCoreForBookmark/-requestCoreForBookmark: directly in the completionHandler of -requestCoreForBookmark: would dead-lock
 			dispatch_async(dispatch_get_main_queue(), ^{
@@ -101,10 +98,9 @@
 					}];
 
 					[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
-						core2 = core;
 
 						OCLog(@"Started core2=%@", core);
-						core2Address = [NSValue valueWithPointer:(__bridge const void *)core];
+						core2RunID = core.runIdentifier;
 
 						[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
 							OCLog(@"Returned core2");
@@ -124,9 +120,9 @@
 
 	[self waitForExpectationsWithTimeout:30 handler:nil];
 
-	OCLog(@"core1=%p, core2=%p", core1Address.pointerValue, core2Address.pointerValue);
+	OCLog(@"core1RunID=%@, core2RunID=%@", core1RunID, core2RunID);
 
-	XCTAssert(![core1Address isEqual:core2Address]);
+	XCTAssert(![core1RunID isEqual:core2RunID]);
 }
 
 @end

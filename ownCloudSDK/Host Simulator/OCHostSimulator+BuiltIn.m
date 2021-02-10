@@ -26,24 +26,46 @@
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRejectDownloads500 = @"reject-downloads-500";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierOnly404 = @"only-404";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @"five-seconds-of-404";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierSimpleAPM = @"simple-apm";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"recovering-apm";
 
 @implementation OCHostSimulator (BuiltIn)
 
 + (void)load
 {
 	// Reject Downloads 500
-	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierRejectDownloads500 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:nil provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierRejectDownloads500 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Reject Downloads with status 500 responses."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self simulateRejectDownloads500]);
 	}]];
 
 	// Only 404
-	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierOnly404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:nil provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierOnly404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Return status code 404 for every request."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self simulateOnly404]);
 	}]];
 
 	// Five seconds of 404
-	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierFiveSecondsOf404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:nil provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierFiveSecondsOf404 locations:@[ OCExtensionLocationIdentifierAllCores ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Return status code 404 for every request for the first five seconds."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self fiveSecondsOf404]);
+	}]];
+
+	// Simple APM
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierSimpleAPM locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Redirect any request without cookies to a cookie-setting endpoint, where cookies are set - and then redirect back."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self cookieRedirectSimulatorWithRequestWithoutCookiesHandler:nil requestForCookiesHandler:nil requestWithCookiesHandler:nil]);
+	}]];
+
+	// Recovering APM
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierRecoveringAPM locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Redirect any request without cookies to a bogus endpoint for 30 seconds, then to a cookie-setting endpoint, where cookies are set - and then redirect back."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self cookieRedirectSimulatorWithRequestWithoutCookiesHandler:nil requestForCookiesHandler:nil requestWithCookiesHandler:nil bogusTimeout:30]);
 	}]];
 }
 
@@ -112,6 +134,91 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @
 
 		return (NO);
 	}]);
+}
+
+#pragma mark - Cookie redirection / APM simulator
++ (instancetype)cookieRedirectSimulatorWithRequestWithoutCookiesHandler:(dispatch_block_t)requestWithoutCookiesHandler requestForCookiesHandler:(dispatch_block_t)requestForCookiesHandler requestWithCookiesHandler:(dispatch_block_t)requestWithCookiesHandler
+{
+	return ([self cookieRedirectSimulatorWithRequestWithoutCookiesHandler:requestWithoutCookiesHandler requestForCookiesHandler:requestForCookiesHandler requestWithCookiesHandler:requestWithCookiesHandler bogusTimeout:0]);
+}
+
++ (instancetype)cookieRedirectSimulatorWithRequestWithoutCookiesHandler:(dispatch_block_t)requestWithoutCookiesHandler requestForCookiesHandler:(dispatch_block_t)requestForCookiesHandler requestWithCookiesHandler:(dispatch_block_t)requestWithCookiesHandler bogusTimeout:(NSTimeInterval)bogusTimeout
+{
+	OCHostSimulator *hostSimulator;
+	__block NSURL *originallyRequestedURL = nil;
+	__block dispatch_block_t requestWithoutCookiesHandlerBlock = requestWithoutCookiesHandler;
+	__block dispatch_block_t requestForCookiesHandlerBlock = requestForCookiesHandler;
+	__block dispatch_block_t requestWithCookiesHandlerBlock = requestWithCookiesHandler;
+	__block NSDate *firstRequestDate = nil;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		if (bogusTimeout > 0)
+		{
+			if (firstRequestDate == nil)
+			{
+				firstRequestDate = [NSDate new];
+			}
+
+			if ((-[firstRequestDate timeIntervalSinceNow]) < bogusTimeout)
+			{
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeTEMPORARY_REDIRECT headers:@{
+					@"Location" : @"/bogus/endpoint"
+				} contentType:@"text/html" body:nil]);
+
+				return (YES);
+			}
+		}
+
+		if ([request.url.path isEqual:@"/set/cookies"])
+		{
+			NSString *originalURLString = originallyRequestedURL.absoluteString;
+
+			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeTEMPORARY_REDIRECT headers:@{
+				@"Location" 	: originalURLString,
+				@"Set-Cookie"	: @"sessionCookie=value; Max-Age=2592000; Path=/"
+			} contentType:@"text/html" body:nil]);
+
+			if (requestForCookiesHandlerBlock != nil)
+			{
+				requestForCookiesHandlerBlock();
+				requestForCookiesHandlerBlock = nil;
+			}
+
+			return (YES);
+		}
+
+		if (request.headerFields[@"Cookie"] == nil)
+		{
+			originallyRequestedURL = request.url;
+
+			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeTEMPORARY_REDIRECT headers:@{
+				@"Location" : @"/set/cookies"
+			} contentType:@"text/html" body:nil]);
+
+			if (requestWithoutCookiesHandlerBlock != nil)
+			{
+				requestWithoutCookiesHandlerBlock();
+				requestWithoutCookiesHandlerBlock = nil;
+			}
+
+			return (YES);
+		}
+		else
+		{
+			if (requestWithCookiesHandlerBlock != nil)
+			{
+				requestWithCookiesHandlerBlock();
+				requestWithCookiesHandlerBlock = nil;
+			}
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
 }
 
 @end

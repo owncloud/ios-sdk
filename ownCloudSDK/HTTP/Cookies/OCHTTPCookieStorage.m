@@ -186,7 +186,7 @@ typedef NSString* OCHTTPCookieName;
 {
 	if (cookies.count == 0) { return; }
 
-	OCTLogDebug(@[@"Store"], @"Store cookies: %@", cookies);
+	OCTLogVerbose(@[@"Store"], @"Store cookies: %@", cookies);
 
 	@synchronized(self)
 	{
@@ -263,7 +263,7 @@ typedef NSString* OCHTTPCookieName;
 		}
 	}
 
-	OCTLogDebug(@[@"Retrieve"], @"Retrieved cookies for URL %@: %@", url, matchingCookies);
+	OCTLogVerbose(@[@"Retrieve"], @"Retrieved cookies for URL %@: %@", url, matchingCookies);
 
 	return (matchingCookies);
 }

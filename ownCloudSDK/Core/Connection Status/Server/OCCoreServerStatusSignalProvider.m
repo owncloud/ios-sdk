@@ -70,16 +70,11 @@
 
 		if ((error == nil) && (statusInfo != nil))
 		{
-			NSNumber *maintenanceMode;
-
-			if ((maintenanceMode = statusInfo[@"maintenance"]) != nil)
+			if ([OCConnection validateStatus:statusInfo] == OCConnectionStatusValidationResultOperational)
 			{
-				if (!maintenanceMode.boolValue)
-				{
-					self.shortDescription = nil;
-					self.state = OCCoreConnectionStatusSignalStateTrue;
-					[self setStatusPollTimerActive:NO];
-				}
+				self.shortDescription = nil;
+				self.state = OCCoreConnectionStatusSignalStateTrue;
+				[self setStatusPollTimerActive:NO];
 			}
 		}
 	}];

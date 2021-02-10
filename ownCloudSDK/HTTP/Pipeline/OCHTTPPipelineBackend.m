@@ -29,8 +29,11 @@
 // High verbosity
 // #define TaskDescription(task) task
 
+// Medium verbosity
+#define TaskDescription(task) [NSString stringWithFormat:@"taskID=%@, requestID=%@, request.identifier=%@", task.taskID, task.requestID, task.request.identifier]
+
 // Low verbosity
-#define TaskDescription(task) task.taskID
+// #define TaskDescription(task) task.taskID
 
 static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
@@ -240,13 +243,13 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 #pragma mark - Task access
 - (NSError *)addPipelineTask:(OCHTTPPipelineTask *)task
 {
-	OCTLogDebug(@[@"enter"], @"addPipelineTask: task=%@", TaskDescription(task));
+	OCTLogVerbose(@[@"enter"], @"addPipelineTask: task=%@", TaskDescription(task));
 
 	return([_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
 		__block NSError *insertionError = nil;
 
 		// Persist in database
-		[db executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCHTTPPipelineTasksTableName rowValues:@{
+		NSDictionary<NSString *,id<NSObject>> *rowValues = @{
 			@"pipelineID" 		: task.pipelineID,
 			@"bundleID"		: task.bundleID,
 
@@ -261,7 +264,11 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			@"requestData"		: task.requestData,
 
 			@"requestFinal"		: @(task.requestFinal)
-		} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, NSNumber * _Nullable rowID) {
+		};
+
+		OCTLogVerbose(@[@"values"], @"Inserting into tasks table: %@", rowValues);
+
+		[db executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCHTTPPipelineTasksTableName rowValues:rowValues resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, NSNumber * _Nullable rowID) {
 			task.taskID = rowID;
 
 			insertionError = error;
@@ -270,7 +277,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 		// Update cache
 		[self->_taskCache updateWithTask:task remove:NO];
 
-		OCTLogDebug(@[@"leave"], @"addPipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, insertionError, TaskDescription(task));
+		OCTLogVerbose(@[@"leave"], @"addPipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, insertionError, TaskDescription(task));
 
 		if (insertionError != nil)
 		{
@@ -283,7 +290,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 - (NSError *)updatePipelineTask:(OCHTTPPipelineTask *)task
 {
-	OCTLogDebug(@[@"enter"], @"updatePipelineTask: task=%@", TaskDescription(task));
+	OCTLogVerbose(@[@"enter"], @"updatePipelineTask: task=%@", TaskDescription(task));
 
 	if (task.taskID == nil)
 	{
@@ -293,7 +300,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 	return([_sqlDB executeOperationSync:^NSError * _Nullable(OCSQLiteDB * _Nonnull db) {
 		__block NSError *updateError = nil;
-		[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:task.taskID inTable:OCHTTPPipelineTasksTableName withRowValues:@{
+		NSDictionary<NSString *,id<NSObject>> *rowValues = @{
 			@"bundleID" 		: task.bundleID,
 
 			@"urlSessionID" 	: OCSQLiteNullProtect(task.urlSessionID),
@@ -305,7 +312,11 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			@"requestData"		: task.requestData,
 
 			@"responseData"		: OCSQLiteNullProtect(task.responseData),
-		} completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+		};
+
+		OCTLogVerbose(@[@"values"], @"Updating tasks table for taskID=%@: %@", task.taskID, rowValues);
+
+		[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:task.taskID inTable:OCHTTPPipelineTasksTableName withRowValues:rowValues completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
 			updateError = error;
 		}]];
 
@@ -317,7 +328,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			OCLogError(@"Error updating task=%@: %@", task, updateError);
 		}
 
-		OCTLogDebug(@[@"leave"], @"updatePipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, updateError, TaskDescription(task));
+		OCTLogVerbose(@[@"leave"], @"updatePipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, updateError, TaskDescription(task));
 
 		return (updateError);
 	}]);
@@ -325,7 +336,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 - (NSError *)removePipelineTask:(OCHTTPPipelineTask *)task
 {
-	OCTLogDebug(@[@"enter"], @"removePipelineTask: task=%@", TaskDescription(task));
+	OCTLogVerbose(@[@"enter"], @"removePipelineTask: task=%@", TaskDescription(task));
 
 	if (task.taskID == nil)
 	{
@@ -348,7 +359,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			OCLogError(@"Error removing task=%@: %@", task, removeError);
 		}
 
-		OCTLogDebug(@[@"leave"], @"removePipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, removeError, TaskDescription(task));
+		OCTLogVerbose(@[@"leave"], @"removePipelineTask: task.taskID=%@, error=%@, task=%@", task.taskID, removeError, TaskDescription(task));
 
 		return (removeError);
 	}]);
@@ -356,7 +367,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 - (NSError *)removeAllTasksForPipeline:(OCHTTPPipelineID)pipelineID partition:(OCHTTPPipelinePartitionID)partitionID
 {
-	OCTLogDebug(@[@"enter"], @"removeAllTasksForPipeline: pipelineID=%@, partitionID=%@", pipelineID, partitionID);
+	OCTLogVerbose(@[@"enter"], @"removeAllTasksForPipeline: pipelineID=%@, partitionID=%@", pipelineID, partitionID);
 
 	if ((pipelineID == nil) || (partitionID == nil))
 	{
@@ -377,7 +388,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 		// Update cache
 		[self->_taskCache removeAllTasksForPipeline:pipelineID partition:partitionID];
 
-		OCTLogDebug(@[@"leave"], @"removeAllTasksForPipeline: pipelineID=%@, partitionID=%@, removeError=%@", pipelineID, partitionID, removeError);
+		OCTLogVerbose(@[@"leave"], @"removeAllTasksForPipeline: pipelineID=%@, partitionID=%@, removeError=%@", pipelineID, partitionID, removeError);
 
 		return (removeError);
 	}]);
@@ -422,6 +433,8 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 		*outDBError = dbError;
 	}
 
+	OCLogVerbose(@"Retrieve task where %@ - return task=%@, dbError=%@", whereConditions, task, dbError);
+
 	return (task);
 }
 
@@ -444,7 +457,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 	OCHTTPPipelineTask *task;
 
-	NSString *XRequestID = [urlSessionTask.currentRequest.allHTTPHeaderFields objectForKey:@"X-Request-ID"];
+	NSString *XRequestID = [urlSessionTask.currentRequest valueForHTTPHeaderField:OCHTTPHeaderFieldNameXRequestID];
 
 	/*
 		WARNING: urlSessionTask.taskIdentifier is not unique!

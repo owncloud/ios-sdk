@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1210"
+   LastUpgradeVersion = "1230"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -61,7 +61,16 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "HostSimulatorTests/testSimulatorMissingCertificate">
+               </Test>
+               <Test
                   Identifier = "OCDetailedPerformanceTestCase">
+               </Test>
+               <Test
+                  Identifier = "PerformanceTests">
+               </Test>
+               <Test
+                  Identifier = "PerformanceTests/testPROPFINDXMLDecodingPerformance">
                </Test>
             </SkippedTests>
          </TestableReference>
@@ -99,32 +108,37 @@
       </BuildableProductRunnable>
       <EnvironmentVariables>
          <EnvironmentVariable
-            key = "oc:log.log-level"
-            value = "0"
+            key = "oc:log.level"
+            value = "-1"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-synchronous"
+            key = "oc:log.synchronous"
             value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-colored"
+            key = "oc:log.colored"
             value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-only-tags"
-            value = "[TEST,Request,Response,Cookies]"
+            key = "oc:log.only-tags"
+            value = "[TEST,Request,Response,Cookies,ConnectionValidator]"
             isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-omit-tags"
+            key = "oc:log.enabled-components"
+            value = "[writer.stderr,writer.file,option.log-requests-and-responses]"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "oc:log.omit-tags"
             value = "[BGMAN]"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "oc:log.log-single-lined"
+            key = "oc:log.single-lined"
             value = "false"
             isEnabled = "YES">
          </EnvironmentVariable>
@@ -132,6 +146,11 @@
             key = "oc:core.cookie-support-enabled"
             value = "true"
             isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "OC_SETTINGS_DOC_JSON"
+            value = "${PROJECT_DIR}/doc/CONFIGURATION.json"
+            isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>

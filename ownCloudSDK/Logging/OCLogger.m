@@ -30,9 +30,11 @@
 #import <pthread/pthread.h>
 
 #import "OCConnection.h"
+#import "OCClassSetting.h"
 #import "OCCore.h"
 
 static OCLogLevel sOCLogLevel;
+static BOOL sOCLoggerSharedInitialized;
 static BOOL sOCLogLevelInitialized;
 
 static BOOL sOCLogMaskPrivateData;
@@ -41,6 +43,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 static OCLogFormat sOCLogFormat;
 static BOOL sOCLogSingleLined;
 static NSUInteger sOCLogMessageMaximumSize;
+static OCLogger *sharedLogger;
 
 @interface OCLogger ()
 {
@@ -49,18 +52,21 @@ static NSUInteger sOCLogMessageMaximumSize;
 @end
 
 static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierLogLevel = @"log-level";
+static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPreferencesMigrationIdentifierMaskPrivateData = @"log-mask-private-data";
 
 @implementation OCLogger
 
 + (instancetype)sharedLogger
 {
 	static dispatch_once_t onceToken;
-	static OCLogger *sharedLogger;
 
 	dispatch_once(&onceToken, ^{
 		OCLogFileSource *stdErrLogger;
 
 		sharedLogger = [OCLogger new];
+
+		// Ensure log level is being observed
+		[OCLogger logLevel];
 
 		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"OS" logger:sharedLogger]) != nil)
 		{
@@ -173,6 +179,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		}
 
 		OCIPNotificationCenter.loggingEnabled = ![[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSynchronousLogging] boolValue];
+
+		sOCLoggerSharedInitialized = YES;
 	});
 	
 	return (sharedLogger);
@@ -191,7 +199,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		return (@{
 			OCClassSettingsKeyLogLevel		   : @(OCLogLevelOff),
 			OCClassSettingsKeyLogPrivacyMask	   : @(NO),
-			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile, OCLogOptionLogRequestsAndResponses ],
+			OCClassSettingsKeyLogEnabledComponents	   : @[ OCLogComponentIdentifierWriterStandardError, OCLogComponentIdentifierWriterFile ],
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
 			OCClassSettingsKeyLogColored		   : @(NO),
@@ -204,9 +212,150 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	return (nil);
 }
 
-+ (BOOL)allowUserPreferenceForClassSettingsKey:(OCClassSettingsKey)key
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
-	return ([key isEqual:OCClassSettingsKeyLogLevel]);
+	NSMutableDictionary<OCLogComponentIdentifier, NSString *> *descriptionsByComponentID = [NSMutableDictionary new];
+
+	for (OCLogToggle *toggle in sharedLogger.toggles)
+	{
+		NSString *description = toggle.localizedName;
+		if (description == nil) { description = @""; }
+
+		descriptionsByComponentID[toggle.identifier] = description;
+	}
+
+	for (OCLogWriter *writer in sharedLogger.writers)
+	{
+		NSString *description = writer.name;
+		if (description == nil) { description = @""; }
+
+		descriptionsByComponentID[writer.identifier] = description;
+	}
+
+	OCClassSettingsMetadata logModulesMetadata = @{
+		OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+		OCClassSettingsMetadataKeyDescription 	 : @"List of enabled logging system components.",
+		OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+		OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+		OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+	};
+
+	if ((descriptionsByComponentID.count > 0) && sOCLoggerSharedInitialized)
+	{
+		logModulesMetadata = [logModulesMetadata mutableCopy];
+		((NSMutableDictionary *)logModulesMetadata)[OCClassSettingsMetadataKeyPossibleValues] = descriptionsByComponentID;
+	}
+
+	return (@{
+		OCClassSettingsKeyLogLevel : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	 : @"Log level",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				@(OCLogLevelVerbose)	: @"verbose",
+				@(OCLogLevelDebug)	: @"debug",
+				@(OCLogLevelInfo)	: @"info",
+				@(OCLogLevelWarning)	: @"warning",
+				@(OCLogLevelError)  	: @"error",
+				@(OCLogLevelOff)  	: @"off"
+			},
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
+		},
+
+		OCClassSettingsKeyLogPrivacyMask : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether certain objects in log statements should be masked for privacy.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogEnabledComponents : logModulesMetadata,
+
+		OCClassSettingsKeyLogSynchronousLogging : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether log messages should be written synchronously (which can impact performance) or asynchronously (which can loose messages in case of a crash).",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogOnlyTags : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits all log messages not tagged with tags in this array.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogOmitTags : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits all log messages tagged with tags in this array.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogOnlyMatching : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	 : @"If set, only logs messages containing at least one of the exact terms in this array.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogOmitMatching : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	 : @"If set, omits logs messages containing any of the exact terms in this array.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogBlankFilteredMessages : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether filtered out messages should still be logged, but with the message replaced with `-`.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogFormat : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	 : @"Determines the format that log messages are saved in",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				@"text" : @"Standard logging as text.",
+				@"json" : @"Detailed JSON (one line per message).",
+				@"json-composed" : @"A simpler JSON version where details are already merged into the message.",
+			},
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogMaximumLogMessageSize : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	 : @"Maximum length of a log message before the message is truncated. A value of 0 means no limit.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogColored : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether log levels should be replaced with colored emojis.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogSingleLined : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether messages spanning more than one line should be broken into their individual lines and each be logged with the complete lead-in/lead-out sequence.",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		}
+	});
 }
 
 #pragma mark - Settings
@@ -214,30 +363,47 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if (!sOCLogLevelInitialized)
 	{
-		NSNumber *logLevelNumber = nil;
-
 		// Migrate log level setting from UserDefaults to OCClassSettingsUserPreferences
-		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
-			NSNumber *userDefaultsLogLevel;
-
-			if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogLevel]) != nil)
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierLogLevel version:@(2) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			if (lastMigrationVersion == nil)
 			{
-				[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+				// From user defaults "log-level" to user preferences "log"."level"
+				NSNumber *userDefaultsLogLevel;
 
-				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:OCClassSettingsKeyLogLevel];
+				if ((userDefaultsLogLevel = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-level"]) != nil)
+				{
+					[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+
+					[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-level"];
+				}
+			}
+			else
+			{
+				// From user preferences "log"."log-level" to "log"."level"
+				NSNumber *userDefaultsLogLevel;
+
+				if ((userDefaultsLogLevel = [OCClassSettingsUserPreferences.sharedUserPreferences settingsForIdentifier:OCClassSettingsIdentifierLog][@"log-level"]) != nil)
+				{
+					[self setUserPreferenceValue:userDefaultsLogLevel forClassSettingsKey:OCClassSettingsKeyLogLevel];
+				}
 			}
 
 			return (nil);
 		}];
 
-		if ((logLevelNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogLevel]) != nil)
-		{
-			sOCLogLevel = [logLevelNumber integerValue];
-		}
-		else
-		{
-			sOCLogLevel = OCLogLevelOff;
-		}
+		// Set up initial sOCLogLevel value and keep track of changes via the observer
+		[[self classSettingForKey:OCClassSettingsKeyLogLevel] addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+			NSNumber *logLevelNumber;
+
+			if ((logLevelNumber = OCTypedCast(newValue, NSNumber)) != nil)
+			{
+				sOCLogLevel = logLevelNumber.intValue;
+			}
+			else
+			{
+				sOCLogLevel = OCLogLevelOff;
+			}
+		} withOwner:self];
 
 		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
 
@@ -260,8 +426,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 	sOCLogLevel = newLogLevel;
 
 	[self setUserPreferenceValue:@(newLogLevel) forClassSettingsKey:OCClassSettingsKeyLogLevel];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
 
 	OCPFSLog(nil, (@[@"LogIntro"]), @"Log level changed to %ld", (long)sOCLogLevel);
 	OCPFSLog(nil, (@[@"LogIntro"]), @"%@", OCLogger.sharedLogger.logIntro);
@@ -301,21 +465,33 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if (!sOCLogMaskPrivateDataInitialized)
 	{
-		NSNumber *maskPrivateDataNumber = nil;
+		// Migrate mask private data setting from UserDefaults to OCClassSettingsUserPreferences
+		[OCClassSettingsUserPreferences migrateWithIdentifier:OCClassSettingsUserPreferencesMigrationIdentifierMaskPrivateData version:@(1) silent:YES perform:^NSError * _Nullable(OCClassSettingsUserPreferencesMigrationVersion  _Nullable lastMigrationVersion) {
+			NSNumber *maskPrivateDataNumber;
 
-		if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:OCClassSettingsKeyLogPrivacyMask]) == nil)
-		{
-			maskPrivateDataNumber = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
-		}
+			if ((maskPrivateDataNumber = [OCAppIdentity.sharedAppIdentity.userDefaults objectForKey:@"log-privacy-mask"]) != nil)
+			{
+				[self setUserPreferenceValue:maskPrivateDataNumber forClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
 
-		if (maskPrivateDataNumber != nil)
-		{
-			sOCLogMaskPrivateData = maskPrivateDataNumber.boolValue;
-		}
-		else
-		{
-			sOCLogMaskPrivateData = YES;
-		}
+				[OCAppIdentity.sharedAppIdentity.userDefaults removeObjectForKey:@"log-privacy-mask"];
+			}
+
+			return (nil);
+		}];
+
+		// Set up initial sOCLogMaskPrivateData value and keep track of changes via the observer
+		[[self classSettingForKey:OCClassSettingsKeyLogPrivacyMask] addObserver:^(id  _Nonnull owner, OCClassSetting * _Nonnull setting, OCClassSettingChangeType type, id  _Nullable oldValue, id  _Nullable newValue) {
+			NSNumber *maskPrivateDataNumber = nil;
+
+			if ((maskPrivateDataNumber = OCTypedCast(newValue, NSNumber)) != nil)
+			{
+				sOCLogMaskPrivateData = maskPrivateDataNumber.boolValue;
+			}
+			else
+			{
+				sOCLogMaskPrivateData = YES;
+			}
+		} withOwner:self];
 
 		sOCLogMaskPrivateDataInitialized = YES;
 	}
@@ -327,9 +503,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	sOCLogMaskPrivateData = maskPrivateData;
 
-	[OCAppIdentity.sharedAppIdentity.userDefaults setBool:maskPrivateData forKey:OCClassSettingsKeyLogPrivacyMask];
-
-	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameLogSettingsChanged ignoreSelf:YES];
+	[self setUserPreferenceValue:@(maskPrivateData) forClassSettingsKey:OCClassSettingsKeyLogPrivacyMask];
 }
 
 + (BOOL)coloredLogging
@@ -385,12 +559,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				self->_mainThreadThreadID = mainThreadID;
 			}
 		});
-
-		// Register log settings listener
-		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCIPCNotificationNameLogSettingsChanged withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCLogger * _Nonnull logger, OCIPCNotificationName  _Nonnull notificationName) {
-			sOCLogLevelInitialized = NO;
-			sOCLogMaskPrivateDataInitialized = NO;
-		}];
 	}
 
 	return (self);
@@ -398,8 +566,6 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (void)dealloc
 {
-	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:OCIPCNotificationNameLogSettingsChanged];
-
 	[self _closeAllWriters];
 
 	for (OCLogSource *source in _sources)
@@ -732,7 +898,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 {
 	if ((logToggle!=nil) && (logToggle.identifier != nil))
 	{
-		@synchronized(self)
+		@synchronized(_toggles)
 		{
 			if (_togglesByIdentifier[logToggle.identifier] == nil)
 			{
@@ -745,7 +911,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (NSArray<OCLogToggle *> *)toggles
 {
-	@synchronized(self)
+	@synchronized(_toggles)
 	{
 		return ([NSArray arrayWithArray:_toggles]);
 	}
@@ -753,7 +919,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 - (BOOL)isToggleEnabled:(OCLogComponentIdentifier)toggleIdentifier
 {
-	@synchronized(self)
+	@synchronized(_toggles)
 	{
 		return (_togglesByIdentifier[toggleIdentifier].enabled);
 	}
@@ -854,18 +1020,16 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierLog = @"log";
 
-OCClassSettingsKey OCClassSettingsKeyLogLevel = @"log-level";
-OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"log-privacy-mask";
-OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"log-enabled-components";
-OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"log-synchronous";
-OCClassSettingsKey OCClassSettingsKeyLogColored = @"log-colored";
-OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"log-only-tags";
-OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"log-omit-tags";
-OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"log-only-matching";
-OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"log-omit-matching";
-OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"log-blank-filtered-messages";
-OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"log-single-lined";
-OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"log-maximum-message-size";
-OCClassSettingsKey OCClassSettingsKeyLogFormat = @"log-format";
-
-OCIPCNotificationName OCIPCNotificationNameLogSettingsChanged = @"org.owncloud.log-settings-changed";
+OCClassSettingsKey OCClassSettingsKeyLogLevel = @"level";
+OCClassSettingsKey OCClassSettingsKeyLogPrivacyMask = @"privacy-mask";
+OCClassSettingsKey OCClassSettingsKeyLogEnabledComponents = @"enabled-components";
+OCClassSettingsKey OCClassSettingsKeyLogSynchronousLogging = @"synchronous";
+OCClassSettingsKey OCClassSettingsKeyLogColored = @"colored";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyTags = @"only-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOmitTags = @"omit-tags";
+OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"only-matching";
+OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"omit-matching";
+OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"blank-filtered-messages";
+OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"single-lined";
+OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"maximum-message-size";
+OCClassSettingsKey OCClassSettingsKeyLogFormat = @"format";

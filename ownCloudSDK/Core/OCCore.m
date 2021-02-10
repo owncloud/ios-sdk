@@ -142,7 +142,55 @@
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(NO)
+		OCCoreCookieSupportEnabled : @(YES)
+	});
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Connection
+		OCCoreThumbnailAvailableForMIMETypePrefixes : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `[\"*\"]` turns on thumbnail loading for all items.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideReachabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the reachability signal, so the host is always considered reachable (`true`) or unreachable (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideAvailabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreCookieSupportEnabled : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Enable or disable per-process, in-memory cookie storage.",
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreActionConcurrencyBudgets : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeDictionary,
+			OCClassSettingsMetadataKeyDescription 	: @"Concurrency budgets available for sync actions by action category.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection"
+		},
+
+		// Privacy
+		OCCoreAddAcceptLanguageHeader : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Add an `Accept-Language` HTTP header using the preferred languages set on the device.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Privacy"
+		},
 	});
 }
 
@@ -560,15 +608,6 @@
 }
 
 #pragma mark - Attempt Connect
-- (void)attemptConnect:(BOOL)doAttempt
-{
-	[self queueBlock:^{
-		self->_attemptConnect = doAttempt;
-
-		[self _attemptConnect];
-	}];
-}
-
 - (void)_attemptConnect
 {
 	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)
@@ -1424,6 +1463,8 @@
 		else
 		{
 			// Item not in cache - create full-fledged query
+			__block BOOL lastSentItemWasNil = YES;
+
 			query = [OCQuery queryForPath:path];
 			query.includeRootItem = YES;
 
@@ -1442,6 +1483,16 @@
 							break;
 						}
 					}
+
+					if ((item == nil) &&
+					    lastSentItemWasNil &&
+					    !isFirstInvocation)
+					{
+						// Avoid multiple invocations of tracking handler if the item is still nil
+						return;
+					}
+
+					lastSentItemWasNil = (item == nil);
 
 					if (item != nil)
 					{
@@ -1854,7 +1905,7 @@
 #pragma mark - Busy count
 - (void)beginActivity:(NSString *)description
 {
-	OCLogDebug(@"Beginning activity '%@' ..", description);
+	OCLogVerbose(@"Beginning activity '%@' ..", description);
 	
 	@synchronized(OCCore.class)
 	{
@@ -1874,7 +1925,7 @@
 
 - (void)endActivity:(NSString *)description
 {
-	OCLogDebug(@"Ended activity '%@' ..", description);
+	OCLogVerbose(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
 		BOOL allActivitiesEnded = NO;
 
