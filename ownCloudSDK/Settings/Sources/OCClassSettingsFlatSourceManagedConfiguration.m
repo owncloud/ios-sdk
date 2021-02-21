@@ -17,6 +17,7 @@
  */
 
 #import "OCClassSettingsFlatSourceManagedConfiguration.h"
+#import "NSDictionary+OCExpand.h"
 
 @implementation OCClassSettingsFlatSourceManagedConfiguration
 
@@ -27,6 +28,9 @@
 		// As per https://developer.apple.com/business/documentation/MDM-Protocol-Reference.pdf (page 70), NSUserDefaultsDidChangeNotification is posted
 		// when MDMs push new settings
 		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_userDefaultsChanged:) name:NSUserDefaultsDidChangeNotification object:nil];
+
+		// Keep record of the initial settings
+		_lastSettings = [self rawSettingsDictionary];
 	}
 
 	return (self);
@@ -39,7 +43,15 @@
 
 - (void)_userDefaultsChanged:(NSNotification *)notification
 {
-	[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
+	NSDictionary *settings = [self rawSettingsDictionary];
+
+	if (![settings isEqual:_lastSettings] && (settings != _lastSettings))
+	{
+		_lastSettings = settings;
+
+		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
+		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsManagedSettingsChanged object:nil];
+	}
 }
 
 - (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
@@ -49,9 +61,15 @@
 
 - (NSDictionary <OCClassSettingsFlatIdentifier, id> *)flatSettingsDictionary
 {
+	return ([[self rawSettingsDictionary] expandedDictionary]);
+}
+
+- (NSDictionary <OCClassSettingsFlatIdentifier, id> *)rawSettingsDictionary
+{
 	return ([[NSUserDefaults standardUserDefaults] dictionaryForKey:@"com.apple.configuration.managed"]);
 }
 
 @end
 
 OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierManaged = @"managed";
+NSNotificationName OCClassSettingsManagedSettingsChanged = @"OCClassSettingsManagedSettingsChanged";

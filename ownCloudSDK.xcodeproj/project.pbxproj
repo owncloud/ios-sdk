@@ -524,6 +524,8 @@
 		DCD6327B223BE0980090169E /* capabilities.json in Resources */ = {isa = PBXBuildFile; fileRef = DCD6327A223BE0980090169E /* capabilities.json */; };
 		DCD7AA442580E5A5000CD155 /* NSURLSessionTask+Debug.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD7AA422580E5A5000CD155 /* NSURLSessionTask+Debug.h */; };
 		DCD7AA452580E5A5000CD155 /* NSURLSessionTask+Debug.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD7AA432580E5A5000CD155 /* NSURLSessionTask+Debug.m */; };
+		DCD8439A25E1BEE5008D9BBA /* NSDictionary+OCExpand.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD8439825E1BEE5008D9BBA /* NSDictionary+OCExpand.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCD8439B25E1BEE5008D9BBA /* NSDictionary+OCExpand.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD8439925E1BEE5008D9BBA /* NSDictionary+OCExpand.m */; };
 		DCD9B8822379783200691929 /* UIDevice+ModelID.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD9B8802379783200691929 /* UIDevice+ModelID.h */; };
 		DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD9B8812379783200691929 /* UIDevice+ModelID.m */; };
 		DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDA306F21412A0100DB61A9 /* OCSyncAction.h */; };
@@ -1289,6 +1291,8 @@
 		DCD6327A223BE0980090169E /* capabilities.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capabilities.json; sourceTree = "<group>"; };
 		DCD7AA422580E5A5000CD155 /* NSURLSessionTask+Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLSessionTask+Debug.h"; sourceTree = "<group>"; };
 		DCD7AA432580E5A5000CD155 /* NSURLSessionTask+Debug.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLSessionTask+Debug.m"; sourceTree = "<group>"; };
+		DCD8439825E1BEE5008D9BBA /* NSDictionary+OCExpand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+OCExpand.h"; sourceTree = "<group>"; };
+		DCD8439925E1BEE5008D9BBA /* NSDictionary+OCExpand.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+OCExpand.m"; sourceTree = "<group>"; };
 		DCD9B8802379783200691929 /* UIDevice+ModelID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIDevice+ModelID.h"; sourceTree = "<group>"; };
 		DCD9B8812379783200691929 /* UIDevice+ModelID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+ModelID.m"; sourceTree = "<group>"; };
 		DCDA306F21412A0100DB61A9 /* OCSyncAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncAction.h; sourceTree = "<group>"; };
@@ -2230,6 +2234,8 @@
 				DC72E4302063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h */,
 				DC1889782189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m */,
 				DC1889772189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h */,
+				DCD8439925E1BEE5008D9BBA /* NSDictionary+OCExpand.m */,
+				DCD8439825E1BEE5008D9BBA /* NSDictionary+OCExpand.h */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -3021,6 +3027,7 @@
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
 				DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */,
 				DCA91F2F21A0BDE400AEDFB4 /* OCSyncAction+FileProvider.h in Headers */,
+				DCD8439A25E1BEE5008D9BBA /* NSDictionary+OCExpand.h in Headers */,
 				DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */,
 				DC22669A22817DC600FB29EE /* OCVault+Internal.h in Headers */,
 				DCC8F9BC202852A200EB6701 /* ownCloudSDK.h in Headers */,
@@ -3807,6 +3814,7 @@
 				DC708CE5214135E200FE43CA /* OCSyncActionDownload.m in Sources */,
 				DCEEB2E62044B0A400189B9A /* OCAuthenticationMethod+OCTools.m in Sources */,
 				DCA35D7724D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m in Sources */,
+				DCD8439B25E1BEE5008D9BBA /* NSDictionary+OCExpand.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
 				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
