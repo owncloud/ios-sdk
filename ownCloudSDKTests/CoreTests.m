@@ -1729,4 +1729,57 @@
 	}];
 }
 
+- (void)testBookmarkItemResolution
+{
+	XCTestExpectation *expectCoreToFindItem = [self expectationWithDescription:@"Core finds item"];
+	XCTestExpectation *expectLocalIDToResolve = [self expectationWithDescription:@"Local ID resolves to core"];
+	XCTestExpectation *expectCoreToReturn = [self expectationWithDescription:@"Core returned"];
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	__block OCLocalID testLocalID = nil;
+	__block OCItem *testItem = nil;
+
+	[OCBookmarkManager.sharedBookmarkManager addBookmark:bookmark];
+
+	[OCCoreManager.sharedCoreManager requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {
+				if (changeset.queryResult.count > 0)
+				{
+					testItem = changeset.queryResult.firstObject;
+					testLocalID = testItem.localID;
+
+					[expectCoreToFindItem fulfill];
+
+					OCLog(@"Using item for testing retrieval: %@", testItem);
+
+					[OCCoreManager.sharedCoreManager returnCoreForBookmark:bookmark completionHandler:^{
+
+						[OCCoreManager.sharedCoreManager requestCoreForBookmarkWithItemWithLocalID:testLocalID setup:nil completionHandler:^(NSError * _Nullable error, OCCore * _Nullable core, OCItem * _Nullable item) {
+							OCLog(@"Found core %@ and item %@ (error %@)", core, item, error);
+
+							if ((core != nil) && ([item.localID isEqual:testLocalID]))
+							{
+								[expectLocalIDToResolve fulfill];
+
+								[OCCoreManager.sharedCoreManager returnCoreForBookmark:core.bookmark completionHandler:^{
+									[expectCoreToReturn fulfill];
+								}];
+							}
+						}];
+
+					}];
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:30 handler:nil];
+
+	[OCBookmarkManager.sharedBookmarkManager removeBookmark:bookmark];
+}
+
 @end
