@@ -17,6 +17,7 @@
  */
 
 #import "OCTUSHeader.h"
+#import "OCChecksumAlgorithmSHA1.h"
 
 @interface OCTUSHeader ()
 {
@@ -47,6 +48,7 @@
 	if ((self = [super init]) != nil)
 	{
 		[self _populateFromTusSupport:OCTUSInfoGetSupport(info)];
+		[self _populateFromTusChecksumAlgorithm:OCTUSInfoGetChecksumAlgorithmSupport(info)];
 
 		UInt64 maxSize = OCTUSInfoGetMaximumSize(info);
 
@@ -61,7 +63,7 @@
 
 - (void)_populateFromTusSupport:(OCTUSSupport)support
 {
-	NSString *extensions[5];
+	NSString *extensions[10];
 	NSUInteger extensionCount = 0;
 
 	#define ExpandFlag(flag,extension) \
@@ -74,6 +76,9 @@
 	ExpandFlag(OCTUSSupportExtensionCreation, 		OCTUSExtensionCreation)
 	ExpandFlag(OCTUSSupportExtensionCreationWithUpload, 	OCTUSExtensionCreationWithUpload)
 	ExpandFlag(OCTUSSupportExtensionExpiration, 		OCTUSExtensionExpiration)
+	ExpandFlag(OCTUSSupportExtensionChecksum, 		OCTUSExtensionChecksum)
+	ExpandFlag(OCTUSSupportExtensionPartialChecksum, 	OCTUSExtensionPartialChecksum)
+	ExpandFlag(OCTUSSupportExtensionUploadTag, 		OCTUSExtensionUploadTag)
 
 	if (extensionCount > 0)
 	{
@@ -81,9 +86,29 @@
 	}
 }
 
+- (void)_populateFromTusChecksumAlgorithm:(OCTUSChecksumAlgorithmSupport)algorithmSupport
+{
+	NSString *algorithms[10];
+	NSUInteger algorithmCount = 0;
+
+	#define ExpandAlgorithm(flag,algorithm) \
+		if (OCTUSIsSupported(algorithmSupport, flag)) \
+		{ \
+			algorithms[algorithmCount] = algorithm; \
+			algorithmCount++; \
+		}
+
+	ExpandAlgorithm(OCTUSChecksumAlgorithmSupportSHA1,	OCChecksumAlgorithmIdentifierSHA1)
+
+	if (algorithmCount > 0)
+	{
+		_checksumAlgorithms = [[NSArray alloc] initWithObjects:algorithms count:algorithmCount];
+	}
+}
+
 - (void)_populateFromHTTPHeaders:(OCHTTPStaticHeaderFields)headerFields
 {
-	NSString *tusVersion, *tusResumable, *tusExtensions, *tusMaxSize, *uploadOffset, *uploadLength;
+	NSString *tusVersion, *tusResumable, *tusExtensions, *tusChecksumAlgorithm, *tusMaxSize, *uploadOffset, *uploadLength, *uploadTag, *uploadChecksum;
 
 	if ((tusVersion = headerFields[OCTUSHeaderNameTusVersion]) != nil)
 	{
@@ -104,6 +129,11 @@
 		_extensions = [tusExtensions componentsSeparatedByString:@","];
 	}
 
+	if ((tusChecksumAlgorithm = headerFields[OCTUSHeaderNameTusChecksumAlgorithm]) != nil)
+	{
+		_checksumAlgorithms = [tusChecksumAlgorithm.uppercaseString componentsSeparatedByString:@","];
+	}
+
 	if ((tusMaxSize = headerFields[OCTUSHeaderNameTusMaxSize]) != nil)
 	{
 		_maximumSize = @(tusMaxSize.longLongValue);
@@ -117,6 +147,16 @@
 	if ((uploadLength = headerFields[OCTUSHeaderNameUploadLength]) != nil)
 	{
 		_uploadLength = @(uploadLength.longLongValue);
+	}
+
+	if ((uploadTag = headerFields[OCTUSHeaderNameUploadTag]) != nil)
+	{
+		_uploadTag = uploadTag;
+	}
+
+	if ((uploadChecksum = headerFields[OCTUSHeaderNameUploadChecksum]) != nil)
+	{
+		_uploadChecksum = [OCChecksum checksumFromTUSString:uploadChecksum];
 	}
 }
 
@@ -171,6 +211,11 @@
 		headerFields[OCTUSHeaderNameTusExtension] = [_extensions componentsJoinedByString:@","];
 	}
 
+	if (_checksumAlgorithms != nil)
+	{
+		headerFields[OCTUSHeaderNameTusChecksumAlgorithm] = [_checksumAlgorithms componentsJoinedByString:@","].lowercaseString;
+	}
+
 	if (_maximumSize != nil)
 	{
 		headerFields[OCTUSHeaderNameTusMaxSize] = _maximumSize.stringValue;
@@ -184,6 +229,16 @@
 	if (_uploadLength != nil)
 	{
 		headerFields[OCTUSHeaderNameUploadLength] = _uploadLength.stringValue;
+	}
+
+	if (_uploadChecksum != nil)
+	{
+		headerFields[OCTUSHeaderNameUploadChecksum] = _uploadChecksum.tusString;
+	}
+
+	if (_uploadTag != nil)
+	{
+		headerFields[OCTUSHeaderNameUploadTag] = _uploadTag;
 	}
 
 	if ((_uploadMetadata!=nil) || (_uploadMetadataString != nil))
@@ -205,9 +260,24 @@
 		if ([_extensions containsObject:OCTUSExtensionCreation])		{ support |= OCTUSSupportExtensionCreation; }
 		if ([_extensions containsObject:OCTUSExtensionCreationWithUpload]) 	{ support |= OCTUSSupportExtensionCreationWithUpload; }
 		if ([_extensions containsObject:OCTUSExtensionExpiration]) 		{ support |= OCTUSSupportExtensionExpiration; }
+		if ([_extensions containsObject:OCTUSExtensionChecksum]) 		{ support |= OCTUSSupportExtensionChecksum; }
+		if ([_extensions containsObject:OCTUSExtensionPartialChecksum]) 	{ support |= OCTUSSupportExtensionPartialChecksum; }
+		if ([_extensions containsObject:OCTUSExtensionUploadTag]) 		{ support |= OCTUSSupportExtensionUploadTag; }
 	}
 
 	return (support);
+}
+
+- (OCTUSChecksumAlgorithmSupport)checksumAlgorithmFlags
+{
+	OCTUSChecksumAlgorithmSupport algorithmSupport = OCTUSChecksumAlgorithmSupportNone;
+
+	if (_checksumAlgorithms.count > 0)
+	{
+		if ([_checksumAlgorithms containsObject:OCChecksumAlgorithmIdentifierSHA1]) { algorithmSupport |= OCTUSChecksumAlgorithmSupportSHA1; }
+	}
+
+	return (algorithmSupport);
 }
 
 - (OCTUSInfo)info
@@ -215,6 +285,7 @@
 	OCTUSInfo info = 0;
 
 	OCTUSInfoSetSupport(info, self.supportFlags);
+	OCTUSInfoSetChecksumAlgorithmSupport(info, self.checksumAlgorithmFlags);
 	OCTUSInfoSetMaximumSize(info, self.maximumSize.unsignedLongLongValue);
 
 	return (info);
@@ -236,11 +307,15 @@
 
 		_versions = [coder decodeObjectOfClasses:allowedClasses forKey:@"versions"];
 		_extensions = [coder decodeObjectOfClasses:allowedClasses forKey:@"extensions"];
+		_checksumAlgorithms = [coder decodeObjectOfClasses:allowedClasses forKey:@"checksumAlgorithms"];
 
 		_maximumSize = [coder decodeObjectOfClass:NSNumber.class forKey:@"maximumSize"];
 		_maximumChunkSize = [coder decodeObjectOfClass:NSNumber.class forKey:@"maximumChunkSize"];
 		_uploadOffset = [coder decodeObjectOfClass:NSNumber.class forKey:@"uploadOffset"];
 		_uploadLength = [coder decodeObjectOfClass:NSNumber.class forKey:@"uploadLength"];
+
+		_uploadChecksum = [coder decodeObjectOfClass:OCChecksum.class forKey:@"uploadChecksum"];
+		_uploadTag = [coder decodeObjectOfClass:NSString.class forKey:@"uploadTag"];
 
 		_uploadMetadataString = [coder decodeObjectOfClass:NSString.class forKey:@"uploadMetadata"];
 	}
@@ -254,11 +329,15 @@
 
 	[coder encodeObject:_versions forKey:@"versions"];
 	[coder encodeObject:_extensions forKey:@"extensions"];
+	[coder encodeObject:_checksumAlgorithms forKey:@"checksumAlgorithms"];
 
 	[coder encodeObject:_maximumSize forKey:@"maximumSize"];
 	[coder encodeObject:_maximumChunkSize forKey:@"maximumChunkSize"];
 	[coder encodeObject:_uploadOffset forKey:@"uploadOffset"];
 	[coder encodeObject:_uploadLength forKey:@"uploadLength"];
+
+	[coder encodeObject:_uploadChecksum forKey:@"uploadChecksum"];
+	[coder encodeObject:_uploadTag forKey:@"uploadTag"];
 
 	[coder encodeObject:self.uploadMetadataString forKey:@"uploadMetadata"];
 }
@@ -269,10 +348,16 @@ const OCTUSHeaderName OCTUSHeaderNameTusVersion = @"Tus-Version";
 const OCTUSHeaderName OCTUSHeaderNameTusResumable = @"Tus-Resumable";
 const OCTUSHeaderName OCTUSHeaderNameTusExtension = @"Tus-Extension";
 const OCTUSHeaderName OCTUSHeaderNameTusMaxSize = @"Tus-Max-Size";
+const OCTUSHeaderName OCTUSHeaderNameTusChecksumAlgorithm = @"Tus-Checksum-Algorithm";
 const OCTUSHeaderName OCTUSHeaderNameUploadOffset = @"Upload-Offset";
 const OCTUSHeaderName OCTUSHeaderNameUploadLength = @"Upload-Length";
 const OCTUSHeaderName OCTUSHeaderNameUploadMetadata = @"Upload-Metadata";
+const OCTUSHeaderName OCTUSHeaderNameUploadChecksum = @"Upload-Checksum";
+const OCTUSHeaderName OCTUSHeaderNameUploadTag = @"Upload-Tag";
 
 const OCTUSExtension OCTUSExtensionCreation = @"creation";
 const OCTUSExtension OCTUSExtensionCreationWithUpload = @"creation-with-upload";
 const OCTUSExtension OCTUSExtensionExpiration = @"expiration";
+const OCTUSExtension OCTUSExtensionChecksum = @"checksum";
+const OCTUSExtension OCTUSExtensionPartialChecksum = @"partial-checksum";
+const OCTUSExtension OCTUSExtensionUploadTag = @"upload-tag";

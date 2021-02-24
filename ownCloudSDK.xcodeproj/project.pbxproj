@@ -579,6 +579,8 @@
 		DCEE0B5725E68C53006534B5 /* OCBookmarkManager+ItemResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEE0B5525E68C53006534B5 /* OCBookmarkManager+ItemResolution.m */; };
 		DCEE0B6F25E697AF006534B5 /* OCCoreManager+ItemResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEE0B6D25E697AF006534B5 /* OCCoreManager+ItemResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEE0B7025E697AF006534B5 /* OCCoreManager+ItemResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEE0B6E25E697AF006534B5 /* OCCoreManager+ItemResolution.m */; };
+		DCEE0B9F25E700D2006534B5 /* OCChecksum+TUS.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEE0B9D25E700D2006534B5 /* OCChecksum+TUS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCEE0BA025E700D2006534B5 /* OCChecksum+TUS.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEE0B9E25E700D2006534B5 /* OCChecksum+TUS.m */; };
 		DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D42042312500189B9A /* ConnectionTests.m */; };
 		DCEEB2D82042F84B00189B9A /* NSObject+OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */; };
@@ -1350,6 +1352,8 @@
 		DCEE0B5525E68C53006534B5 /* OCBookmarkManager+ItemResolution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmarkManager+ItemResolution.m"; sourceTree = "<group>"; };
 		DCEE0B6D25E697AF006534B5 /* OCCoreManager+ItemResolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+ItemResolution.h"; sourceTree = "<group>"; };
 		DCEE0B6E25E697AF006534B5 /* OCCoreManager+ItemResolution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCoreManager+ItemResolution.m"; sourceTree = "<group>"; };
+		DCEE0B9D25E700D2006534B5 /* OCChecksum+TUS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCChecksum+TUS.h"; sourceTree = "<group>"; };
+		DCEE0B9E25E700D2006534B5 /* OCChecksum+TUS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCChecksum+TUS.m"; sourceTree = "<group>"; };
 		DCEEB2D42042312500189B9A /* ConnectionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionTests.m; sourceTree = "<group>"; };
 		DCEEB2D62042F84B00189B9A /* NSObject+OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+OCClassSettings.h"; sourceTree = "<group>"; };
 		DCEEB2D72042F84B00189B9A /* NSObject+OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OCClassSettings.m"; sourceTree = "<group>"; };
@@ -2990,6 +2994,8 @@
 				DCE451A32459AD3F0074363F /* OCTUSJob.h */,
 				DC1D3DF12459B86200328EBC /* NSString+TUSMetadata.m */,
 				DC1D3DF02459B86200328EBC /* NSString+TUSMetadata.h */,
+				DCEE0B9E25E700D2006534B5 /* OCChecksum+TUS.m */,
+				DCEE0B9D25E700D2006534B5 /* OCChecksum+TUS.h */,
 			);
 			path = TUS;
 			sourceTree = "<group>";
@@ -3240,6 +3246,7 @@
 				DCC6567420CA695600110A97 /* OCCoreManager.h in Headers */,
 				DCDC62E124D8A04900585261 /* NSArray+OCSegmentedProcessing.h in Headers */,
 				DC72E42E2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.h in Headers */,
+				DCEE0B9F25E700D2006534B5 /* OCChecksum+TUS.h in Headers */,
 				DC2F636B2239523A0063C2DA /* OCShareQuery.h in Headers */,
 				DCB0A46421B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.h in Headers */,
 				DC6CF8242195D7C90013B9F9 /* OCSyncActionUpdate.h in Headers */,
@@ -3718,6 +3725,7 @@
 				DC188994218B031600CFB3F9 /* OCLogSource.m in Sources */,
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
 				DC6ABF752536058A00689C7B /* OCHostSimulatorResponse.m in Sources */,
+				DCEE0BA025E700D2006534B5 /* OCChecksum+TUS.m in Sources */,
 				DCDD9B2C22312ED80052A001 /* OCRateLimiter.m in Sources */,
 				DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */,
 				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
