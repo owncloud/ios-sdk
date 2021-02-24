@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCoreManager (ItemResolution)
 
-- (void)requestCoreForBookmarkWithItemWithLocalID:(OCLocalID)localID setup:(void(^)(OCCore * _Nullable core, NSError * _Nullable error))setupHandler completionHandler:(void(^)(NSError * _Nullable error, OCCore * _Nullable core, OCItem * _Nullable item))completionHandler;
+- (void)requestCoreForBookmarkWithItemWithLocalID:(OCLocalID)localID setup:(nullable void(^)(OCCore * _Nullable core, NSError * _Nullable error))setupHandler completionHandler:(void(^)(NSError * _Nullable error, OCCore * _Nullable core, OCItem * _Nullable item))completionHandler;
 
 @end
 
