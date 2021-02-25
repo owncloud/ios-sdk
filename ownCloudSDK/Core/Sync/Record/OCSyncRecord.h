@@ -85,6 +85,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,nullable) NSArray <OCWaitCondition *> *waitConditions; //!< If state==OCSyncRecordStateProcessing, the conditions that need to be fulfilled before proceeding.
 
 #pragma mark - Result, cancel and progress handling
+@property(assign) BOOL isProcessIndependent; //!< Indicates that this action can be run on any process, not only .originProcessSession
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 @property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
 

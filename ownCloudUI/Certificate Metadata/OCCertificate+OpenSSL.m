@@ -470,9 +470,9 @@
 	return (metaData);
 }
 
-- (void)certificateDetailsViewNodesWithValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
+- (void)certificateDetailsViewNodesComparedTo:(nullable OCCertificate *)previousCertificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
 {
-	[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:self withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+	[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:self differencesFrom:previousCertificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 		validationCompletionHandler(detailsViewNodes);
 	}];
 }

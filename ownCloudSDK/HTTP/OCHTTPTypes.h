@@ -23,8 +23,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCHTTPMethod NS_TYPED_ENUM;
-typedef NSDictionary<NSString*,NSString*>* OCHTTPStaticHeaderFields;
-typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPHeaderFields;
+typedef NSString* OCHTTPHeaderFieldName NS_TYPED_ENUM;
+typedef NSDictionary<OCHTTPHeaderFieldName,NSString*>* OCHTTPStaticHeaderFields;
+typedef NSMutableDictionary<OCHTTPHeaderFieldName,NSString*>* OCHTTPHeaderFields;
 typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPRequestParameters;
 
 typedef float OCHTTPRequestPriority;

@@ -1,3 +1,20 @@
+## 11.5 version
+
+- Class Settings 
+	- metadata support
+	- validation support
+	- documentation support
+	- new OCClassSetting class makes class settings observable and more approachable
+- Host Simulator now part of the SDK
+- Connection Validator
+- refined, more powerful detection of available authentication methods
+- OpenID Connect Dynamic Client Registration support
+- Certificate Diffing support
+- Improved HTTP logging
+- Extended redirection handling and new policies
+- Improved error handling
+- Fixed unit tests and added nullability information to many classes
+
 ## 1.1.2 version
 
 - Fix for long delays before starting a request on iOS 13.1

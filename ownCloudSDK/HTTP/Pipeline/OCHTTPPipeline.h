@@ -80,9 +80,6 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _urlSessionInvalidated;
 	BOOL _alwaysUseDownloadTasks;
 
-	// Settings
-	BOOL _insertXRequestID;
-
 	// Scheduling
 	NSMapTable<OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
 
@@ -115,6 +112,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) NSUInteger maximumConcurrentRequests; //!< The maximum number of concurrently running requests. A value of 0 means no limit.
 
 @property(strong,nullable,readonly) NSString *urlSessionIdentifier;
+
+#pragma mark - User Agent
++ (nullable NSString *)stringForTemplate:(NSString *)userAgentTemplate variables:(nullable NSDictionary<NSString *, NSString *> *)variables;
 
 #pragma mark - Lifecycle
 - (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration;

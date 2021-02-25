@@ -89,7 +89,10 @@
 
 			if ((_object = [NSKeyedUnarchiver unarchivedObjectOfClasses:decodeClasses fromData:_data error:&error]) == nil)
 			{
-				OCLogError(@"Error decoding object from data: %@", error);
+				if (error != nil)
+				{
+					OCLogError(@"Error decoding object from data: %@", error);
+				}
 			}
 		}
 

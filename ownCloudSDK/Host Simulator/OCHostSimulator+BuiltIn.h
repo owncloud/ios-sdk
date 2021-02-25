@@ -1,8 +1,8 @@
 //
-//  OCHostSimulator+CookieRedirect.h
-//  ownCloudMocking
+//  OCHostSimulator+BuiltIn.h
+//  ownCloudSDK
 //
-//  Created by Felix Schwarz on 20.08.20.
+//  Created by Felix Schwarz on 14.10.20.
 //  Copyright © 2020 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,12 +16,11 @@
  *
  */
 
-#import <ownCloudSDK/ownCloudSDK.h>
 #import "OCHostSimulator.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCHostSimulator (CookieRedirect)
+@interface OCHostSimulator (BuiltIn)
 
 /// Host Simulator to test behaviour where a server redirects (with 302 or 307) to a separate endpoint to clear or set cookies
 /// @param requestWithoutCookiesHandler Block that's called by the Host Simulator when it receives the first request without cookies.

@@ -21,9 +21,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCClassSettingsFlatSourceManagedConfiguration : OCClassSettingsFlatSource
+{
+	NSDictionary *_lastSettings;
+}
 
 @end
 
 extern OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierManaged;
+extern NSNotificationName OCClassSettingsManagedSettingsChanged; //!< This notification is posted when a change in the managed settings (MDM) was detected.
 
 NS_ASSUME_NONNULL_END

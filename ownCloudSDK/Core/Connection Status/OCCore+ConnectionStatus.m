@@ -381,6 +381,24 @@
 	}];
 }
 
+- (void)connection:(OCConnection *)connection handleError:(NSError *)error
+{
+	if ([error isOCError])
+	{
+		switch (error.code)
+		{
+			case OCErrorServerConnectionValidationFailed:
+				// See comment for "Connection Validator" for background
+				[_serverStatusSignalProvider reportConnectionRefusedError:error];
+			break;
+
+			case OCErrorServerInMaintenanceMode:
+				[self reportResponseIndicatingMaintenanceMode];
+			break;
+		}
+	}
+}
+
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
 {
 	if (error != nil)
@@ -403,6 +421,12 @@
 			{
 				return (OCHTTPRequestInstructionReschedule);
 			}
+		}
+
+		// Certificate was rejected
+		if (([error isOCErrorWithCode:OCErrorRequestServerCertificateRejected]) && (error.embeddedIssue != nil))
+		{
+			[self sendError:nil issue:error.embeddedIssue];
 		}
 
 		// Authorization failed

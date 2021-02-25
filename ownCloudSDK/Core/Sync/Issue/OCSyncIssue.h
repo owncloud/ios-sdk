@@ -47,6 +47,7 @@ typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCSyncIssueRoutingInfo;
 @property(nullable,strong) NSString *localizedDescription;
 
 @property(strong,nullable) OCMessageTemplateIdentifier templateIdentifier; //!< Identifier used to categorize the issue
+@property(assign) BOOL muted; //!< Mutes messages created from this sync issue
 
 @property(nullable,strong) OCSyncIssueMetadata metaData;
 

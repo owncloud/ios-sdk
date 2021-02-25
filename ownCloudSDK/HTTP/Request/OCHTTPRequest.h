@@ -35,11 +35,12 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestObserverEvent)
 
 typedef NS_ENUM(NSUInteger, OCHTTPRequestRedirectPolicy)
 {
-	OCHTTPRequestRedirectPolicyDefault,		//!< Default redirection policy, defaults to OCHTTPRequestRedirectPolicyAllowSameHost
+	OCHTTPRequestRedirectPolicyDefault,		//!< Default redirection policy, defaults to OCHTTPRequestRedirectPolicyValidateConnection (OCHTTPRequestRedirectPolicyAllowSameHost if OCConnectionTransparentTemporaryRedirect is active)
 
-	OCHTTPRequestRedirectPolicyForbidden,		//!< The HTTP layer should not handle redirects, and return the response instead
-	OCHTTPRequestRedirectPolicyAllowSameHost,	//!< The HTTP layer should handle redirects transparently, but only to targets on the same host, otherwise return the response instead
-	OCHTTPRequestRedirectPolicyAllowAnyHost		//!< The HTTP layer should handle redirects transparently, to any target, even on other hosts
+	OCHTTPRequestRedirectPolicyHandleLocally,	//!< The HTTP layer should not handle redirects, and return the original (redirection) response for local handling instead
+	OCHTTPRequestRedirectPolicyAllowSameHost,	//!< The HTTP layer should handle redirects transparently, but only to targets on the same host and scheme, otherwise return the response instead
+	OCHTTPRequestRedirectPolicyAllowAnyHost,	//!< The HTTP layer should handle redirects transparently, to any target, even on other hosts
+	OCHTTPRequestRedirectPolicyValidateConnection	//!< The HTTP layer should handle redirects as global exception, triggering a connection validation and - upon success - a retry of the original request
 };
 
 typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
@@ -66,7 +67,9 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong,nonatomic) NSData *bodyData;		//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
 
-@property(assign,nonatomic) OCHTTPRequestRedirectPolicy redirectPolicy; //!< Controls transparent redirect handling for this request. Defaults to OCHTTPRequestRedirectPolicyAllowSameHost.
+@property(assign,nonatomic) OCHTTPRequestRedirectPolicy redirectPolicy; //!< Controls redirect handling for this request. Defaults to OCHTTPRequestRedirectPolicyDefault.
+@property(assign,nonatomic) NSUInteger maximumRedirectionDepth; //!< Maximum number of redirects to follow before failing. Defaults to 5.
+@property(strong,nonatomic) NSArray<NSURL *> *redirectionHistory; //!< URLs visited during redirection, starting with the original URL.
 
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
@@ -110,7 +113,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (NSMutableURLRequest *)generateURLRequest; //!< Returns an NSURLRequest for this request.
 - (void)scrubForRescheduling;
 
-- (void)recreateRequestID; //!< Creates and sets a new request ID (for internal use only!)
+- (OCHTTPRequestID)recreateRequestID; //!< Creates and sets a new request ID on .identifier and the X-Request-ID header (for internal use only!)
 
 #pragma mark - Cancel support
 - (void)cancel;
@@ -122,10 +125,10 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 - (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters;
 
-- (NSString *)valueForHeaderField:(NSString *)headerField;
-- (void)setValue:(NSString *)value forHeaderField:(NSString *)headerField;
+- (NSString *)valueForHeaderField:(OCHTTPHeaderFieldName)headerField;
+- (void)setValue:(NSString *)value forHeaderField:(OCHTTPHeaderFieldName)headerField;
 
-- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields;
+- (void)addHeaderFields:(NSDictionary<OCHTTPHeaderFieldName,NSString*> *)headerFields;
 
 #pragma mark - Response
 @property(strong) OCHTTPResponse *httpResponse;
@@ -153,6 +156,21 @@ extern OCHTTPMethod OCHTTPMethodPROPPATCH;
 extern OCHTTPMethod OCHTTPMethodREPORT;
 extern OCHTTPMethod OCHTTPMethodLOCK;
 extern OCHTTPMethod OCHTTPMethodUNLOCK;
+
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator;
 
 extern OCProgressPathElementIdentifier OCHTTPRequestGlobalPath;
 

@@ -20,18 +20,25 @@
 
 @implementation NSObject (OCClassSettings)
 
-+ (void)registerOCClassSettingsDefaults:(NSDictionary<OCClassSettingsKey, id> *)additionalDefaults
++ (void)registerOCClassSettingsDefaults:(NSDictionary<OCClassSettingsKey, id> *)additionalDefaults metadata:(nullable OCClassSettingsMetadataCollection)metaData
 {
 	if (additionalDefaults==nil) { return; }
 
-	[OCClassSettings.sharedSettings registerDefaults:additionalDefaults forClass:self];
+	[OCClassSettings.sharedSettings registerDefaults:additionalDefaults metadata:metaData forClass:self];
+}
+
++ (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key
+{
+	if (key==nil) { return(nil); }
+
+	return ([[OCClassSettings.sharedSettings settingsForClass:self.class] objectForKey:key]);
 }
 
 - (nullable id)classSettingForOCClassSettingsKey:(OCClassSettingsKey)key
 {
 	if (key==nil) { return(nil); }
 
-	return ([[[OCClassSettings sharedSettings] settingsForClass:[self class]] objectForKey:key]);
+	return ([[OCClassSettings.sharedSettings settingsForClass:self.class] objectForKey:key]);
 }
 
 @end

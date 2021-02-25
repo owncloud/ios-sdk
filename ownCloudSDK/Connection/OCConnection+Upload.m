@@ -205,30 +205,38 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	// Create TUS job
 	OCTUSJob *tusJob;
-	NSURL *creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path];
+	NSURL *creationURL;
 
-	if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
+	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
-		tusJob.fileName = fileName;
-		tusJob.fileSize = fileSize;
-		tusJob.fileModDate = modificationDate;
-		tusJob.fileChecksum = checksum;
-
-		tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
-
-		tusJob.eventTarget = eventTarget;
-
-		if (tusJob.maxSegmentSize == 0)
+		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
 		{
-			NSNumber *capabilitiesTusMaxChunkSize;
+			tusJob.fileName = fileName;
+			tusJob.fileSize = fileSize;
+			tusJob.fileModDate = modificationDate;
+			tusJob.fileChecksum = checksum;
 
-			if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+			tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
+
+			tusJob.eventTarget = eventTarget;
+
+			if (tusJob.maxSegmentSize == 0)
 			{
-				tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
-			}
-		}
+				NSNumber *capabilitiesTusMaxChunkSize;
 
-		tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+				if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+				{
+					tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
+				}
+			}
+
+			tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+		}
+	}
+	else
+	{
+		// WebDAV root could not be generated (likely due to lack of username)
+		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
 	}
 
 	return (tusProgress);
@@ -344,7 +352,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 						// Prepare header for inclusion of creation-with-upload data
 						reqTusHeader.uploadOffset = @(0);
 
-						[request setValue:@"application/offset+octet-stream" forHeaderField:@"Content-Type"];
+						[request setValue:@"application/offset+octet-stream" forHeaderField:OCHTTPHeaderFieldNameContentType];
 					}
 				}
 
@@ -393,7 +401,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 				// Retrieve item information
 				[self retrieveItemListAtPath:tusJob.futureItemPath depth:0 options:@{
-					@"alternativeEventType"  : @(OCEventTypeUpload),
+					@"alternativeEventType"  		: @(OCEventTypeUpload),
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 				} resultTarget:tusJob.eventTarget];
 			}
 			else
@@ -420,7 +429,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				reqTusHeader.uploadOffset = tusJob.uploadOffset;
 				// reqTusHeader.uploadLength = @(segment.size);
 				[request addHeaderFields:reqTusHeader.httpHeaderFields];
-				[request setValue:@"application/offset+octet-stream" forHeaderField:@"Content-Type"];
+				[request setValue:@"application/offset+octet-stream" forHeaderField:OCHTTPHeaderFieldNameContentType];
 
 				// Add userInfo
 				request.userInfo = @{
@@ -617,7 +626,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		request.method = OCHTTPMethodPUT;
 
 		// Set Content-Type
-		[request setValue:@"application/octet-stream" forHeaderField:@"Content-Type"];
+		[request setValue:@"application/octet-stream" forHeaderField:OCHTTPHeaderFieldNameContentType];
 
 		// Set conditions
 		if (!((NSNumber *)options[OCConnectionOptionForceReplaceKey]).boolValue)
@@ -625,28 +634,28 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			if (replacedItem != nil)
 			{
 				// Ensure the upload fails if there's a different version at the target already
-				[request setValue:replacedItem.eTag forHeaderField:@"If-Match"];
+				[request setValue:replacedItem.eTag forHeaderField:OCHTTPHeaderFieldNameIfMatch];
 			}
 			else
 			{
 				// Ensure the upload fails if there's any file at the target already
-				[request setValue:@"*" forHeaderField:@"If-None-Match"];
+				[request setValue:@"*" forHeaderField:OCHTTPHeaderFieldNameIfNoneMatch];
 			}
 		}
 
 		// Set Content-Length
 		OCLogDebug(@"Uploading file %@ (%@ bytes)..", OCLogPrivate(fileName), fileSize);
-		[request setValue:fileSize.stringValue forHeaderField:@"Content-Length"];
+		[request setValue:fileSize.stringValue forHeaderField:OCHTTPHeaderFieldNameContentLength];
 
 		// Set modification date
-		[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:@"X-OC-MTime"];
+		[request setValue:[@((SInt64)[modDate timeIntervalSince1970]) stringValue] forHeaderField:OCHTTPHeaderFieldNameXOCMTime];
 
 		// Set checksum header
 		OCChecksumHeaderString checksumHeaderValue = nil;
 
 		if ((checksum != nil) && ((checksumHeaderValue = checksum.headerString) != nil))
 		{
-			[request setValue:checksumHeaderValue forHeaderField:@"OC-Checksum"];
+			[request setValue:checksumHeaderValue forHeaderField:OCHTTPHeaderFieldNameOCChecksum];
 		}
 
 		// Set meta data for handling
@@ -686,6 +695,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	}
 	else
 	{
+		// WebDAV root could not be generated (likely due to lack of username)
 		[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeUpload uuid:nil sender:self];
 	}
 
@@ -734,7 +744,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 		// Retrieve item information
 		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-			@"alternativeEventType"  : @(OCEventTypeUpload)
+			@"alternativeEventType"  		: @(OCEventTypeUpload),
+			OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 		} resultTarget:request.eventTarget];
 	}
 	else
@@ -772,7 +783,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								// check and compare the checksums
 
 								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
-									@"alternativeEventType"  : @(OCEventTypeUpload),
+									@"alternativeEventType"  		: @(OCEventTypeUpload),
+									OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
 
 									// Return an error if checksum of local and remote file mismatch
 									@"checksumExpected" 	 : expectedChecksum,

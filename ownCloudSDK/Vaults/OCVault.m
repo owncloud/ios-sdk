@@ -55,7 +55,7 @@
 	static BOOL didAutoDetectFromInfoPlist = NO;
 	static BOOL hostHasFileProvider = NO;
 
-	if (!didAutoDetectFromInfoPlist)
+	if (!didAutoDetectFromInfoPlist && OCAppIdentity.supportsFileProvider)
 	{
 		NSNumber *hasFileProvider;
 
@@ -85,8 +85,11 @@
 		_uuid = bookmark.uuid;
 
 		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
-		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
-		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
+		if (OCVault.hostHasFileProvider)
+		{
+			_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
+			_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
+		}
 		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 	}
 	

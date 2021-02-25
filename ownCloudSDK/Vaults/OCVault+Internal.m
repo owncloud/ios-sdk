@@ -214,7 +214,10 @@
 										if ([parentPath isEqualToString:@"/"] || [parentPath isEqualToString:@""])
 										{
 											#if OC_FEATURE_AVAILABLE_FILEPROVIDER
-											[updateDirectoryLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+											if (OCVault.hostHasFileProvider)
+											{
+												[updateDirectoryLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+											}
 											#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 										}
 										else if (item.parentLocalID != nil)
@@ -315,7 +318,10 @@
 	if (addRoot)
 	{
 		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
-		[changedDirectoriesLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+		if (OCVault.hostHasFileProvider)
+		{
+			[changedDirectoriesLocalIDs addObject:NSFileProviderRootContainerItemIdentifier];
+		}
 		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 	}
 
@@ -326,22 +332,30 @@
 - (void)signalChangesInDirectoriesWithLocalIDs:(NSSet <OCLocalID> *)changedDirectoriesLocalIDs
 {
 	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
-	dispatch_async(dispatch_get_main_queue(), ^{
-		NSFileProviderManager *fileProviderManager = [self fileProviderManager];
+	if (OCVault.hostHasFileProvider)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSFileProviderManager *fileProviderManager = [self fileProviderManager];
 
-		for (OCLocalID changedDirectoryLocalID in changedDirectoriesLocalIDs)
-		{
-			OCLogDebug(@"Signaling changes to file provider manager %@ for item localID=%@", fileProviderManager, OCLogPrivate(changedDirectoryLocalID));
+			for (OCLocalID changedDirectoryLocalID in changedDirectoriesLocalIDs)
+			{
+				OCLogDebug(@"Signaling changes to file provider manager %@ for item localID=%@", fileProviderManager, OCLogPrivate(changedDirectoryLocalID));
 
-			[self signalEnumeratorForContainerItemIdentifier:changedDirectoryLocalID];
-		}
-	});
+				[self signalEnumeratorForContainerItemIdentifier:changedDirectoryLocalID];
+			}
+		});
+	}
 	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 }
 
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 - (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID
 {
+	if (!OCVault.hostHasFileProvider)
+	{
+		return;
+	}
+
 	@synchronized(_fileProviderSignalCountByContainerItemIdentifiersLock)
 	{
 		NSNumber *currentSignalCount = _fileProviderSignalCountByContainerItemIdentifiers[changedDirectoryLocalID];
@@ -368,6 +382,11 @@
 - (void)_scheduleSignalForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID
 {
 	NSTimeInterval minimumSignalInterval = 0.2; // effectively throttle FP container update notifications to at most once per [minimumSignalInterval]
+
+	if (!OCVault.hostHasFileProvider)
+	{
+		return;
+	}
 
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(minimumSignalInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		NSFileProviderManager *fileProviderManager;

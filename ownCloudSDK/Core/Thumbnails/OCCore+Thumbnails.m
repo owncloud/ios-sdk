@@ -34,7 +34,7 @@
 	static BOOL loadThumbnailsForAll=NO, loadThumbnailsForNone=NO;
 
 	dispatch_once(&onceToken, ^{
-		supportedPrefixes = [[[OCClassSettings sharedSettings] settingsForClass:[OCCore class]] objectForKey:OCCoreThumbnailAvailableForMIMETypePrefixes];
+		supportedPrefixes = [self classSettingForOCClassSettingsKey:OCCoreThumbnailAvailableForMIMETypePrefixes];
 
 		if (supportedPrefixes.count == 0)
 		{

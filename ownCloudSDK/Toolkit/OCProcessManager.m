@@ -89,14 +89,15 @@
 		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		// Set up ping-pong
+		__weak OCProcessManager *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:[OCProcessManager pingNotificationNameForSession:_processSession] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessManager *processManager, OCIPCNotificationName  _Nonnull notificationName) {
-			OCLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
+			OCWLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
 
 			// Refresh state file
 			[processManager writeStateFileForSession:processManager.processSession];
 
 			// Respond with a pong to pings directed at this process
-			OCLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
+			OCWLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
 			[notificationCenter postNotificationForName:[OCProcessManager pongNotificationNameForSession:processManager.processSession] ignoreSelf:YES];
 		}];
 
@@ -109,6 +110,17 @@
 
 		// Set up process notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processWillTerminate) name:UIApplicationWillTerminateNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidBecomeActiveNotification object:nil];
 
 		// Scan for invalid sessions
 		[self scanSessions];
@@ -127,6 +139,17 @@
 
 	// Remove process notifications
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidBecomeActiveNotification object:nil];
 }
 
 #pragma mark - IPC
@@ -279,6 +302,49 @@
 - (void)processWillTerminate
 {
 	[self removeStateFileForSession:_processSession];
+}
+
+- (void)handleStateChange:(NSNotification *)notification
+{
+	if ([notification.name isEqual:NSExtensionHostDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did become active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did enter background");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will resign active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will enter foreground");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did become active");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did enter background");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will resign active");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will enter foreground");
+	}
 }
 
 #pragma mark - Session validity
@@ -442,8 +508,9 @@
 
 		_listening = YES;
 
+		__weak OCProcessPing *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
-			OCLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
+			OCWLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
 			[observer receivedPong];
 		}];
 	}
@@ -501,7 +568,6 @@
 
 		if (_completionHandler != nil)
 		{
-
 			if (_session != nil)
 			{
 				_session = [[OCProcessManager sharedProcessManager] readSessionFromStateFileURL:[[OCProcessManager sharedProcessManager] stateFileURLForSession:_session]];

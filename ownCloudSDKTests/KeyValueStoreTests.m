@@ -65,9 +65,11 @@
 - (void)setUp
 {
 	NSURL *temporaryDirectoryURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
-	keyValueStoreURL = [temporaryDirectoryURL URLByAppendingPathComponent:[NSUUID UUID].UUIDString];
+	NSError *error =nil;
+	[NSFileManager.defaultManager createDirectoryAtURL:temporaryDirectoryURL withIntermediateDirectories:YES attributes:nil error:&error];
+	keyValueStoreURL = [temporaryDirectoryURL URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
 
-	OCLogDebug(@"Using keyValueStoreURL=%@", keyValueStoreURL);
+	OCLogDebug(@"Using keyValueStoreURL=%@, error=%@", keyValueStoreURL, error);
 }
 
 - (void)tearDown
@@ -269,7 +271,7 @@
 			XCTAssert([[keyValueStore2 readObjectForKey:@"test"] isEqual:@"final"]);
 		});
 
-		[self waitForExpectationsWithTimeout:10.0 handler:nil];
+		[self waitForExpectationsWithTimeout:120.0 handler:nil];
 
 		keyValueStore1 = nil;
 		keyValueStore2 = nil;
@@ -358,7 +360,7 @@
 			});
 		}
 
-		[self waitForExpectationsWithTimeout:10.0 * concurrentStores handler:nil];
+		[self waitForExpectationsWithTimeout:15.0 * concurrentStores handler:nil];
 
 		NSLog(@"%@", keyValueStores);
 	}
@@ -406,7 +408,7 @@
 			[expectTimeout fulfill];
 		});
 
-		[self waitForExpectationsWithTimeout:10.0 handler:nil];
+		[self waitForExpectationsWithTimeout:15.0 handler:nil];
 	}
 }
 

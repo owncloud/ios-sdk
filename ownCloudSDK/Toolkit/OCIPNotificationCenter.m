@@ -101,15 +101,15 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) == nil)
 		{
-			handlersByObserver = [NSMutableDictionary new];
+			handlersByObserver = [NSMapTable weakToStrongObjectsMapTable];
 			_handlersByObserverByNotificationName[name] = handlersByObserver;
 		}
 
-		handlersByObserver[[NSValue valueWithNonretainedObject:observer]] = [handler copy];
+		[handlersByObserver setObject:[handler copy] forKey:observer];
 
 		if (handlersByObserver.count == 1)
 		{
@@ -127,15 +127,13 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) != nil)
 		{
-			NSValue *observerValue = [NSValue valueWithNonretainedObject:observer];
-
-			if (handlersByObserver[observerValue] != nil)
+			if ([handlersByObserver objectForKey:observer] != nil)
 			{
-				[handlersByObserver removeObjectForKey:observerValue];
+				[handlersByObserver removeObjectForKey:observer];
 
 				if (handlersByObserver.count == 0)
 				{
@@ -163,6 +161,9 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 #pragma mark - Deliver notifications
 - (void)deliverNotificationForName:(OCIPCNotificationName)name
 {
+	NSArray<id> *observers = nil;
+	NSMutableArray<dispatch_block_t> *notifyBlocks = nil;
+
 	if (OCIPNotificationCenter.loggingEnabled)
 	{
 		OCLogDebug(@"Received notification '%@'", name);
@@ -170,7 +171,7 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 	@synchronized(self)
 	{
-		NSMutableDictionary<NSValue *, OCIPNotificationHandler> *handlersByObserver;
+		NSMapTable<id, OCIPNotificationHandler> *handlersByObserver;
 		NSNumber *ignoreCountNumber = _ignoreCountsByNotificationName[name];
 		NSUInteger ignoreCount;
 
@@ -190,17 +191,32 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 
 		if ((handlersByObserver = _handlersByObserverByNotificationName[name]) != nil)
 		{
-			[handlersByObserver enumerateKeysAndObjectsUsingBlock:^(NSValue * _Nonnull observerValue, OCIPNotificationHandler  _Nonnull notificationHandler, BOOL * _Nonnull stop) {
-				id observer = [observerValue nonretainedObjectValue];
+			observers = NSAllMapTableKeys(handlersByObserver); // Simple enumeration could fail due to mutation while enumeration, so we grab an array of the observers and iterate over that
+			notifyBlocks = [NSMutableArray new];
 
-				if (OCIPNotificationCenter.loggingEnabled)
+			for (id observer in observers)
+			{
+				OCIPNotificationHandler notificationHandler;
+
+				if ((notificationHandler = [handlersByObserver objectForKey:observer]) != nil)
 				{
-					OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
-				}
+					// Queue notification calls for later, to avoid deadlock due to @synchronized()
+					[notifyBlocks addObject:^{
+						if (OCIPNotificationCenter.loggingEnabled)
+						{
+							OCLogDebug(@"Delivering notification '%@' to %@", name, OCLogPrivate(observer));
+						}
 
-				notificationHandler(self, observer, name);
-			}];
+						notificationHandler(self, observer, name);
+					}];
+				}
+			}
 		}
+	}
+
+	for (dispatch_block_t notificationBlock in notifyBlocks)
+	{
+		notificationBlock();
 	}
 }
 

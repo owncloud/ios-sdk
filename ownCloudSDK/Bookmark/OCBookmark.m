@@ -20,6 +20,7 @@
 #import "OCAppIdentity.h"
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
+#import "OCAppIdentity.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -29,6 +30,8 @@
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
+
+	NSString *_lastUsername;
 }
 @end
 
@@ -52,7 +55,7 @@
 	OCBookmark *bookmark = [OCBookmark new];
 	
 	bookmark.url = url;
-	
+
 	return (bookmark);
 }
 
@@ -67,6 +70,16 @@
 	if ((self = [super init]) != nil)
 	{
 		_uuid = [NSUUID UUID];
+		_userInfo = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+			[NSDictionary dictionaryWithObjectsAndKeys:
+				NSDate.date, 						@"creation-date",
+				OCAppIdentity.sharedAppIdentity.appVersion, 		@"app-version",
+				OCAppIdentity.sharedAppIdentity.appBuildNumber,		@"app-build-number",
+				OCAppIdentity.sharedAppIdentity.sdkVersionString,	@"sdk-version",
+				OCAppIdentity.sharedAppIdentity.sdkCommit,		@"sdk-commit",
+				OCLogger.sharedLogger.logIntro,				@"log-intro",
+			nil], OCBookmarkUserInfoKeyBookmarkCreation,
+		nil];
 
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
 			[observerBookmark considerAuthenticationDataFlush];
@@ -131,6 +144,15 @@
 			[[OCAppIdentity sharedAppIdentity].keychain writeData:_authenticationData toKeychainItemForAccount:_uuid.UUIDString path:@"authenticationData"];
 		}
 
+		// Update cached/last user name
+		NSString *username;
+
+		if ((username = self.userName) != nil)
+		{
+			// TODO: make configurable if user name may be stored in bookmarks
+			_lastUsername = username;
+		}
+
 		[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkAuthenticationDataChangedNotification object:self];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:OCBookmark.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
 		[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:self.bookmarkAuthUpdateNotificationName ignoreSelf:YES];
@@ -185,7 +207,7 @@
 		}
 	}
 
-	return (nil);
+	return (_lastUsername);
 }
 
 #pragma mark - Certificate approval
@@ -217,7 +239,14 @@
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
 	_authenticationValidationDate = sourceBookmark.authenticationValidationDate;
 
+	_lastUsername = sourceBookmark->_lastUsername;
+
 	_userInfo = sourceBookmark.userInfo;
+}
+
+- (void)setLastUserName:(NSString *)userName
+{
+	_lastUsername = userName;
 }
 
 #pragma mark - Secure Coding
@@ -243,6 +272,8 @@
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
+		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
+
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
@@ -265,6 +296,8 @@
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
+
+	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
 	if (_userInfo.count > 0)
 	{
@@ -337,6 +370,7 @@
 
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo = @"statusInfo";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
+OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creation";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

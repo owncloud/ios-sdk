@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCHTTPPipelineTaskState state;		//!< The processing state of the pipeline task
 
-@property(strong) OCHTTPRequestID requestID;			//!< The request's unique requestID
+@property(strong,nonatomic) OCHTTPRequestID requestID;			//!< The request's unique requestID
 
 @property(nullable,strong,nonatomic) OCHTTPRequest *request;		//!< The request. Lazily deserializes .requestData as needed.
 @property(nullable,strong,nonatomic,readonly) NSData *requestData;	//!< The serialized request. Lazily serializes .request as needed.

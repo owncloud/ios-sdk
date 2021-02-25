@@ -53,6 +53,8 @@
 
 		_syncIssue = syncIssue;
 		_bookmarkUUID = core.bookmark.uuid;
+
+		_presentedToUser = syncIssue.muted;
 	}
 
 	return (self);
@@ -91,6 +93,12 @@
 - (BOOL)autoRemove
 {
 	return ((_originIdentifier != nil) && [_originIdentifier isEqual:OCMessageOriginIdentifierDynamic]);
+}
+
+#pragma mark - Mute
+- (void)mute
+{
+	_presentedToUser = YES;
 }
 
 #pragma mark - Unified content access

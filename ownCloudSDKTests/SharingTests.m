@@ -59,7 +59,10 @@
 
 				[expectShareCreated fulfill];
 
+				#pragma clang diagnostic push
+				#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 				XCTAssert([[NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:newShare]] isEqual:newShare]); // Test OCShare archive/dearchive/comparison
+				#pragma clang diagnostic pop
 
 				[connection retrieveShareWithID:newShare.identifier options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable share) {
 					OCLog(@"Retrieved new share with error=%@, share=%@", error, share);
@@ -917,7 +920,10 @@
 
 			for (OCRecipient *recipient in recipients)
 			{
+				#pragma clang diagnostic push
+				#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 				XCTAssert([[NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:recipient]] isEqual:recipient]); // Test OCRecipient/OCUser/OCGroup archive/dearchive/comparison
+				#pragma clang diagnostic pop
 
 				if (recipient.type == OCRecipientTypeUser)
 				{

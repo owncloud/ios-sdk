@@ -16,7 +16,6 @@
  *
  */
 
-
 #import "OCHostSimulator.h"
 
 @implementation OCHostSimulator

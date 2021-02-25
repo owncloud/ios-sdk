@@ -350,7 +350,7 @@
 				[expectUploadStart fulfill];
 				expectUploadStart = nil;
 
-				[core importFileNamed:uploadName at:query.rootItem fromURL:uploadFileURL isSecurityScoped:NO options:nil placeholderCompletionHandler:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, id  _Nullable parameter) {
+				[core importFileNamed:uploadName at:query.rootItem fromURL:uploadFileURL isSecurityScoped:NO options:@{ OCCoreOptionImportByCopying : @(YES) } placeholderCompletionHandler:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, id  _Nullable parameter) {
 					XCTAssert(error == nil, @"Import failed with error: %@", error);
 					XCTAssert(item != nil);
 
@@ -538,7 +538,10 @@
 
 	OCLogDebug(@"%@", coreBoundClaim);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	NSData *claimData = [NSKeyedArchiver archivedDataWithRootObject:coreBoundClaim];
+	#pragma clang diagnostic pop
 
 	OCClaim *restoredClaim = [NSKeyedUnarchiver unarchivedObjectOfClass:[OCClaim class] fromData:claimData error:nil];
 

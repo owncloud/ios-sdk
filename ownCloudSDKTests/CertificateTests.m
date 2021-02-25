@@ -50,7 +50,7 @@
 
 	OCLog(@"Certificate metadata: %@ Error: %@", metaData, parseError);
 
-	[certificate certificateDetailsViewNodesWithValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *nodes) {
+	[certificate certificateDetailsViewNodesComparedTo:nil withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *nodes) {
 		OCLog(@"DetailsViewNodes: %@", nodes);
 
 		XCTAssert(nodes!=nil);
@@ -66,7 +66,7 @@
 {
 	NSArray <NSURL *> *urlsToTest = @[
 		[NSURL URLWithString:@"https://owncloud.org/"],
-		[NSURL URLWithString:@"https://www.braintreegateway.com/"]
+		[NSURL URLWithString:@"https://api.braintreegateway.com/"]
 	];
 
 	for (NSURL *urlToTest in urlsToTest)
@@ -85,6 +85,7 @@
 
 			proceedHandler(YES, nil);
 		};
+		request.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
 
 		[connection sendSynchronousRequest:request];
 	}
@@ -147,7 +148,7 @@
 	NSLog(@"certificate.publicKeyData.sha256Hash.asFingerPrintString=%@", demoCertNew.publicKeyData.sha256Hash.asFingerPrintString);
 	NSLog(@"certificate.commonName=%@", demoCertNew.commonName);
 
-	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"D3 E1 50 D7 2B 86 50 89 CF 4F 75 8A D2 E5 6D 1D 38 73 B5 F1 90 23 18 17 32 50 92 1F 35 AD F5 19\"") == YES);
+	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"35 69 BC 3A ED 7D B6 74 BE D8 CA 7D 4D 20 4F E8 BB 99 81 83 E1 BF 75 56 F6 B4 E8 5D 01 8A D3 42\"") == YES);
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.publicKeyData.sha256Hash.asFingerPrintString == \"AA BB CC DD EE FF 00 11 22 33 44 0A 13 34 93 5B 08 1C 89 FB 73 BD 4C 2E 67 02 3F FD DB D9 8E 79\"") == NO);
 
 	XCTAssert(RunCheck(demoCertNew, nil, @"certificate.passedValidationOrIsUserAccepted == true") == YES);

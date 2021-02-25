@@ -32,6 +32,7 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeMOVED_TEMPORARILY = 302,
 	OCHTTPStatusCodeNOT_MODIFIED = 304,
 	OCHTTPStatusCodeTEMPORARY_REDIRECT = 307,
+	OCHTTPStatusCodePERMANENT_REDIRECT = 308,
 
 	// Client Error (4xx)
 	OCHTTPStatusCodeBAD_REQUEST = 400,
@@ -64,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isSuccess;
 @property(readonly,nonatomic) BOOL isRedirection;
 @property(readonly,nonatomic) BOOL isError;
+
+@property(readonly,nonatomic,strong) NSString *name;
 
 + (instancetype)HTTPStatusWithCode:(OCHTTPStatusCode)code;
 - (instancetype)initWithCode:(OCHTTPStatusCode)code;

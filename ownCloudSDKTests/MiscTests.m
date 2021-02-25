@@ -259,11 +259,17 @@
 	user.emailAddress = @"em@il.address";
 	user.avatarData = [NSData data];
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:user];
+	#pragma clang diagnostic pop
 
 	XCTAssert(userData!=nil);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	OCUser *deserializedUser = [NSKeyedUnarchiver unarchiveObjectWithData:userData];
+	#pragma clang diagnostic pop
 
 	XCTAssert([deserializedUser.displayName isEqual:user.displayName]);
 	XCTAssert([deserializedUser.userName isEqual:user.userName]);
@@ -753,6 +759,62 @@
 	XCTAssert(![@"/path" isUnnormalizedPath]);
 	XCTAssert(![@"/path/two" isUnnormalizedPath]);
 	XCTAssert(![@"/path/two/" isUnnormalizedPath]);
+
+}
+
+#pragma mark - NSDictionary+OCExpand
+- (void)testDictionaryExpansion
+{
+	NSDictionary *dictToExpand = @{
+		@"test$[0].index" 		 : @(0),
+		@"test$[0].name"  		 : @"hello",
+		@"test$[0].attributes.highlight" : @(true),
+		@"test$[0].nicknames[0]" 	 : @"hi",
+		@"test$[0].nicknames[2]" 	 : @"howdy",
+		@"test$[0].nicknames.[1]" 	 : @"hey",
+
+		@"test$[1].index" 		 : @(1),
+		@"test$[1].name"  		 : @"maxwell",
+		@"test$[1].attributes.highlight" : @(false),
+		@"test$[1].nicknames.[0]" 	 : @"max",
+		@"test$[1].nicknames[1]" 	 : @"maxy",
+
+		@"unrelated.settings.with.dots"	 : @"oc"
+	};
+
+	NSDictionary *expectedDict = @{
+		@"test" : @[
+				@{
+					@"attributes" : @{
+							@"highlight" : @(1),
+					},
+					@"index" : @(0),
+					@"name" : @"hello",
+					@"nicknames" : @[
+							@"hi",
+							@"hey",
+							@"howdy"
+					]
+				},
+				@{
+					@"attributes" : @{
+							@"highlight" : @(0)
+					},
+					@"index" : @(1),
+					@"name" : @"maxwell",
+					@"nicknames" : @[
+							@"max",
+							@"maxy"
+					]
+				}
+		],
+
+		@"unrelated.settings.with.dots" : @"oc"
+	};
+
+	NSDictionary *expandedDict = [dictToExpand expandedDictionary];
+
+	XCTAssert([expandedDict isEqual:expectedDict], @"Expansion didn't yield expected result: expanded: %@, expected: %@", expandedDict, expectedDict);
 
 }
 
