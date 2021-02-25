@@ -88,7 +88,7 @@
 
 - (void)_populateFromTusChecksumAlgorithm:(OCTUSChecksumAlgorithmSupport)algorithmSupport
 {
-	NSString *algorithms[10];
+	NSString *algorithms[5];
 	NSUInteger algorithmCount = 0;
 
 	#define ExpandAlgorithm(flag,algorithm) \

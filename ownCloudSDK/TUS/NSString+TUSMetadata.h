@@ -34,7 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *OCTUSMetadataNilValue; //!< Value for keys that should be encoded solely as keys, but without value
 
+// Specified in tus protocol
 extern OCTUSMetadataKey OCTUSMetadataKeyFileName;
-extern OCTUSMetadataKey OCTUSMetadataKeyChecksum;
+
+// ownCloud specific (marked with OC)
+extern OCTUSMetadataKey OCTUSMetadataKeyOCChecksum;
 
 NS_ASSUME_NONNULL_END

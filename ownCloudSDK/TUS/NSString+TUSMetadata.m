@@ -90,5 +90,5 @@
 NSString *OCTUSMetadataNilValue = @"";
 
 OCTUSMetadataKey OCTUSMetadataKeyFileName = @"filename";
-OCTUSMetadataKey OCTUSMetadataKeyChecksum = @"checksum";
+OCTUSMetadataKey OCTUSMetadataKeyOCChecksum = @"checksum";
 

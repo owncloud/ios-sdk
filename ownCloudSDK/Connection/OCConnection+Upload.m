@@ -159,6 +159,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	- [ ] use If-Match / If-None-Match with uploads
 	- [ ] look for and use returned OC-Fileid and OC-ETag
 	- [ ] handle little gap between upload finish and response not received via checksums
+	- [x] support Upload Tag extension
+	- [ ] support Checksum and Partial Checksum extension
 */
 
 + (NSUInteger)tusSmallFileThreshold
@@ -246,6 +248,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 {
 	OCProgress *tusProgress = nil;
 	BOOL useCreationWithUpload = OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionCreationWithUpload);
+	BOOL useUploadTag = OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionUploadTag);
 	NSUInteger maxCreationWithUploadSize = NSUIntegerMax;
 	OCHTTPRequest *request = nil;
 
@@ -307,7 +310,9 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	OCTUSHeader *reqTusHeader = [OCTUSHeader new];
 	reqTusHeader.version = @"1.0.0";
 
-	if (tusJob.uploadURL == nil)
+	if ((tusJob.uploadURL == nil) &&
+	    (!useUploadTag || (useUploadTag && (tusJob.uploadTag == nil)))
+	   )
 	{
 		// Create file for upload and determine upload URL
 		request = [OCHTTPRequest requestWithURL:tusJob.creationURL];
@@ -317,8 +322,17 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		reqTusHeader.uploadLength = tusJob.fileSize;
 		reqTusHeader.uploadMetadata = @{
 			OCTUSMetadataKeyFileName : tusJob.fileName,
-			OCTUSMetadataKeyChecksum : [NSString stringWithFormat:@"%@ %@", tusJob.fileChecksum.algorithmIdentifier, tusJob.fileChecksum.checksum]
+			OCTUSMetadataKeyOCChecksum : [NSString stringWithFormat:@"%@ %@", tusJob.fileChecksum.algorithmIdentifier, tusJob.fileChecksum.checksum]
 		};
+
+		if (useUploadTag) // server supports upload-tag
+		{
+			if (tusJob.uploadTag == nil) {
+				tusJob.uploadTag = NSUUID.UUID.UUIDString;
+			}
+
+			reqTusHeader.uploadTag = tusJob.uploadTag;
+		}
 
 		if (useCreationWithUpload && // server supports creation-with-upload
 		    (tusJob.fileSize != nil) && // file size is known
@@ -378,7 +392,21 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		if (tusJob.uploadOffset == nil)
 		{
 			// Determine .uploadOffset
-			request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
+			if (useUploadTag && (tusJob.uploadTag != nil) && (tusJob.uploadURL == nil))
+			{
+				// Uploads with Upload-Tag extension need to support HEAD requests to the creation URL
+				// to discover the .uploadURL and current offset
+				request = [OCHTTPRequest requestWithURL:tusJob.creationURL];
+
+				// Add Upload-Tag
+				reqTusHeader.uploadTag = tusJob.uploadTag;
+			}
+			else
+			{
+				// Target the uploadURL
+				request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
+			}
+
 			request.method = OCHTTPMethodHEAD;
 
 			// Compose header
@@ -538,6 +566,14 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		{
 			OCTUSHeader *tusHeader = [[OCTUSHeader alloc] initWithHTTPHeaderFields:request.httpResponse.headerFields];
 
+			if ((tusJob.uploadTag != nil) && (tusJob.uploadURL == nil) && (request.httpResponse.redirectURL != nil))
+			{
+				// Extract missing uploadURL from response to HEAD request with Upload-Tag
+				tusJob.uploadURL = request.httpResponse.redirectURL;
+
+				OCTLogDebug(@[@"TUS"], @"TUS HEAD response provides Upload-URL %@", tusJob.uploadURL);
+			}
+
 			if (tusHeader.uploadOffset != nil)
 			{
 				OCTLogDebug(@[@"TUS"], @"TUS HEAD response indicates uploadOffset of %@ / %@", tusHeader.uploadOffset, tusJob.fileSize);
@@ -547,8 +583,22 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			}
 			else
 			{
-				OCTLogError(@[@"TUS"], @"TUS HEAD response lacks expected Upload-Offset");
-				[request.eventTarget handleError:OCError(OCErrorResponseUnknownFormat) type:OCEventTypeUpload uuid:nil sender:self];
+				if (tusJob.uploadTag != nil)
+				{
+					OCTLogWarning(@[@"TUS"], @"TUS HEAD response indicates Upload-Tag is not known by the server or has expired");
+
+					// Resetting the uploadTag of the job here ensures a new one is generated as needed and the upload is
+					// re-attempted from the start
+					tusJob.uploadTag = nil;
+
+					// Retry upload
+					[self _continueTusJob:tusJob lastTask:task];
+				}
+				else
+				{
+					OCTLogError(@[@"TUS"], @"TUS HEAD response lacks expected Upload-Offset");
+					[request.eventTarget handleError:OCError(OCErrorResponseUnknownFormat) type:OCEventTypeUpload uuid:nil sender:self];
+				}
 			}
 		}
 		else
