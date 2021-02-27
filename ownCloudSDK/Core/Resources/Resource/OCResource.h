@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCResourceType type;
 @property(strong) OCResourceIdentifier identifier;
 @property(strong,nullable) OCResourceVersion version;
+@property(strong,nullable) OCResourceStructureDescription structureDescription;
 
 @property(assign) OCResourceStatus status;
 
