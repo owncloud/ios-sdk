@@ -341,7 +341,7 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 @interface OCConnection (Avatars)
 
 #pragma mark - Avatars
-- (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler;
+- (nullable NSProgress *)retrieveAvatarDataForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler;
 
 @end
 

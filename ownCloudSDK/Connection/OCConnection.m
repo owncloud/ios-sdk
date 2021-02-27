@@ -1389,7 +1389,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 												[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
 													self.loggedInUser = loggedInUser;
 
-													[self retrieveAvatarForUser:loggedInUser existingETag:nil withSize:CGSizeMake(32,32) completionHandler:^(NSError * _Nullable error, BOOL unchanged, OCFileETag  _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData) {
+													[self retrieveAvatarDataForUser:loggedInUser existingETag:nil withSize:CGSizeMake(32,32) completionHandler:^(NSError * _Nullable error, BOOL unchanged, OCFileETag  _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData) {
 														OCLog(@"Avatar %@, %@", avatarContentType, avatarData);
 													}];
 

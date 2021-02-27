@@ -29,7 +29,7 @@
 	- the response comes with an ETag that only changes when the avatar is changed
 */
 
-- (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler
+- (nullable NSProgress *)retrieveAvatarDataForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler
 {
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
