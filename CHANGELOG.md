@@ -1,3 +1,10 @@
+## 11.5.2 version
+
+- Support for MDM setting hierarchies with flat keys
+- Item Resolution
+  - New method to request OCCore and OCItem for a provided OCLocalID
+  - New method to find the OCBookmark that contains a provided OCLocalID
+
 ## 11.5 version
 
 - Class Settings 

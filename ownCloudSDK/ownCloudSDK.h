@@ -53,6 +53,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCClassSettingsFlatSource.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourceManagedConfiguration.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourcePropertyList.h>
+#import <ownCloudSDK/NSDictionary+OCExpand.h>
 
 #import <ownCloudSDK/OCCore.h>
 #import <ownCloudSDK/OCCore+FileProvider.h>
@@ -188,7 +189,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCache.h>
 
 #import <ownCloudSDK/OCCoreManager.h>
+#import <ownCloudSDK/OCCoreManager+ItemResolution.h>
 #import <ownCloudSDK/OCBookmarkManager.h>
+#import <ownCloudSDK/OCBookmarkManager+ItemResolution.h>
 
 #import <ownCloudSDK/OCChecksum.h>
 #import <ownCloudSDK/OCChecksumAlgorithm.h>
