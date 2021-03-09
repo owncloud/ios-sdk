@@ -81,13 +81,31 @@
 		bundleName = @"App";
 	}
 
+	NSString *deviceName = nil;
+	NSString *deviceModel = nil;
+	NSString *osName = nil;
+	NSString *osVersion = nil;
+
+#if TARGET_OS_IPHONEOS
+	deviceName = UIDevice.currentDevice.model;
+	deviceModel = UIDevice.currentDevice.ocModelIdentifier;
+	osName = UIDevice.currentDevice.systemName;
+	osVersion = UIDevice.currentDevice.systemVersion;
+#else
+	// TODO: Use IOService apis
+	deviceName = [[NSHost currentHost] name];
+	deviceModel = @"Mac";
+	osName = @"macOS";
+	osVersion = @"11.2";
+#endif
+
 	userAgent = [[[[[[[userAgentTemplate 	stringByReplacingOccurrencesOfString:@"{{app.build}}"   	withString:OCAppIdentity.sharedAppIdentity.appBuildNumber]
 						stringByReplacingOccurrencesOfString:@"{{app.version}}" 	withString:OCAppIdentity.sharedAppIdentity.appVersion]
 						stringByReplacingOccurrencesOfString:@"{{app.part}}"    	withString:bundleName]
-						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:UIDevice.currentDevice.model]
-						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:UIDevice.currentDevice.ocModelIdentifier]
-						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:UIDevice.currentDevice.systemName]
-						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:UIDevice.currentDevice.systemVersion];
+						stringByReplacingOccurrencesOfString:@"{{device.model}}" 	withString:deviceName]
+						stringByReplacingOccurrencesOfString:@"{{device.model-id}}" 	withString:deviceModel]
+						stringByReplacingOccurrencesOfString:@"{{os.name}}"  		withString:osName]
+						stringByReplacingOccurrencesOfString:@"{{os.version}}"  	withString:osVersion];
 
 	if (variables != nil)
 	{
@@ -1094,6 +1112,7 @@
 
 							__weak OCHTTPPipeline *weakSelf = self;
 
+#if TARGET_OS_IPHONEOS
 							[[[OCBackgroundTask backgroundTaskWithName:[NSString stringWithFormat:@"OCHTTPPipeline <%ld>: %@", urlSessionTaskID, absoluteURLString] expirationHandler:^(OCBackgroundTask *backgroundTask){
 								// Task needs to end in the expiration handler - or the app will be terminated by iOS
 								OCWTLogWarning(nil, @"background task for request %@ with taskIdentifier <%ld> expired", absoluteURLString, urlSessionTaskID);
@@ -1131,6 +1150,7 @@
 
 								[backgroundTask end];
 							}] start] endWhenDeallocating:task];
+#endif
 						}
 
 						// Notify request observer

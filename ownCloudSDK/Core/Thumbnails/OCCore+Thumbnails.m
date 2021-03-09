@@ -82,17 +82,20 @@
 
 	retrieveHandler = [retrieveHandler copy];
 
+#if TARGET_OS_IPHONEOS
 	if (scale == 0)
 	{
 		scale = UIScreen.mainScreen.scale;
 	}
-
+#endif
 	requestedMaximumSizeInPixels = CGSizeMake(floor(requestedMaximumSizeInPoints.width * scale), floor(requestedMaximumSizeInPoints.height * scale));
 
 	progress.eventType = OCEventTypeRetrieveThumbnail;
 	progress.localizedDescription = OCLocalizedString(@"Retrieving thumbnail…", @"");
 
+#if TARGET_OS_IPHONEOS
 	OCTLogVerbose((thumbnailRequestTags = @[OCLogTagTypedID(@"ThumbnailRequest", thumbnailRequestUUID)]), @"Starting retrieval of thumbnail for %@, maximumSize:%@ scale:%f", item, NSStringFromCGSize(requestedMaximumSizeInPoints), scale);
+#endif
 
 	if (fileID != nil)
 	{
@@ -143,7 +146,9 @@
 				if (!progress.cancelled)
 				{
 					// Thumbnail database
+#if TARGET_OS_IPHONE
 					OCTLogVerbose(thumbnailRequestTags, @"Starting thumbnail database request for version=%@, specID=%@, maximumSizeInPixels=%@", versionIdentifier, specID, NSStringFromCGSize(requestedMaximumSizeInPixels));
+#endif
 
 					[self.vault.database retrieveThumbnailDataForItemVersion:versionIdentifier specID:specID maximumSizeInPixels:requestedMaximumSizeInPixels completionHandler:^(OCDatabase *db, NSError *error, CGSize maxSize, NSString *mimeType, NSData *thumbnailData) {
 						OCItemThumbnail *cachedThumbnail = nil;
@@ -228,7 +233,11 @@
 
 									// Define result event target
 									target = [OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:@{
+#if TARGET_OS_IPHONE
 										@"requestedMaximumSize" : [NSValue valueWithCGSize:requestedMaximumSizeInPixels],
+#else
+										@"requestedMaximumSize" : [NSValue valueWithSize:requestedMaximumSizeInPixels],
+#endif
 										@"scale" : @(scale),
 										OCEventUserInfoKeyItemVersionIdentifier : item.itemVersionIdentifier,
 										@"specID" : item.thumbnailSpecID,

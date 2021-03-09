@@ -16,7 +16,9 @@
  *
  */
 
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IOS */
 
 #import "OCMacros.h"
 #import "OCKeyValueStore.h"
@@ -133,11 +135,12 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		__weak OCKeyValueStore *weakSelf = self;
 
+#if TARGET_OS_IPHONEOS
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore initial read" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
-
+#endif
 		OCSyncExec(waitForCoordinator, {
 			[_coordinationQueue addOperationWithBlock:^{
 				self->_coordinator = [[NSFileCoordinator alloc] initWithFilePresenter:nil];
@@ -155,13 +158,15 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 				}];
 			}];
 		});
-
+#if TARGET_OS_IPHONEOS
 		[backgroundTask end];
+#endif
 
+#if TARGET_OS_IPHONE
 		// See https://developer.apple.com/documentation/foundation/nsfilepresenter (File Presenters and iOS): file presenters needs to removed and re-added to prevent deadlocks in other apps
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
-
+#endif
 		[self _setupUpdateNotifications];
 	}
 
@@ -172,8 +177,10 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 {
 	[self _teardownUpdateNotifications];
 
+#if TARGET_OS_IPHONE
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+#endif
 }
 
 #pragma mark - Class registration
@@ -653,11 +660,12 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		__weak OCKeyValueStore *weakSelf = self;
 
+#if TARGET_OS_IPHONEOS
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateFromStoreContentsAtURL" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
-
+#endif
 		[strongSelf->_coordinator coordinateReadingItemAtURL:url options:0 error:&error byAccessor:^(NSURL * _Nonnull newURL) {
 			// OCLogDebug(@"Read from %@", newURL);
 
@@ -683,8 +691,9 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 				OCWTLogError(nil, @"File doesn't exist at %@", newURL);
 			}
 		}];
-
+#if TARGET_OS_IPHONEOS
 		[backgroundTask end];
+#endif
 	}];
 }
 
@@ -695,11 +704,12 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 
 		__weak OCKeyValueStore *weakSelf = self;
 
+#if TARGET_OS_IPHONEOS
 		OCBackgroundTask *backgroundTask = [[OCBackgroundTask backgroundTaskWithName:@"OCKeyValueStore updateStoreContentsWithModifications" expirationHandler:^(OCBackgroundTask * _Nonnull task) {
 			OCWTLogWarning(nil, @"%@ background task expired", task.name);
 			[task end];
 		}] start];
-
+#endif
 		[self->_coordinator coordinateReadingItemAtURL:self.url options:0 writingItemAtURL:self.url options:NSFileCoordinatorWritingForReplacing error:&error byAccessor:^(NSURL * _Nonnull newReadingURL, NSURL * _Nonnull newWritingURL) {
 			OCKeyValueStoreDictionary latestStoreContents;
 			dispatch_block_t completionHandler = inCompletionHandler;
@@ -762,8 +772,9 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 				completionHandler();
 			}
 		}];
-
+#if TARGET_OS_IPHONEOS
 		[backgroundTask end];
+#endif
 	}];
 }
 

@@ -16,6 +16,8 @@
  *
  */
 
+#ifdef TARGET_OS_IOS
+
 #import <UIKit/UIKit.h>
 
 #import "OCFeatureAvailability.h"
@@ -36,3 +38,5 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 #endif /* OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION */
+
+#endif

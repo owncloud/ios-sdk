@@ -16,6 +16,8 @@
  *
  */
 
+#if TARGET_OS_IPHONE
+
 #import "UIDevice+ModelID.h"
 #include <sys/sysctl.h>
 
@@ -52,3 +54,5 @@
 }
 
 @end
+
+#endif

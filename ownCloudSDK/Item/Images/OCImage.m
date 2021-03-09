@@ -68,9 +68,9 @@
 	return (returnData);
 }
 
-- (UIImage *)image
+- (Image *)image
 {
-	UIImage *returnImage = nil;
+	Image *returnImage = nil;
 
 	[_processingLock lock]; // Lock
 
@@ -104,22 +104,25 @@
 	return (returnImage);
 }
 
-- (UIImage *)decodeImage
+- (Image *)decodeImage
 {
-	UIImage *image = nil;
+    Image *image = nil;
 
 	if (self.data != nil)
 	{
+#ifdef TARGET_OS_MAC
+#else
 		image = [[UIImage alloc] initWithData:self.data];
+#endif
 	}
 
 	return (image);
 }
 
-- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError *error, UIImage *image))completionHandler
+- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError *error, Image *image))completionHandler
 {
 	BOOL imageAlreadyLoaded = NO;
-	UIImage *image = nil;
+    Image *image = nil;
 
 	@synchronized(self)
 	{
@@ -132,7 +135,7 @@
 		else
 		{
 			dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-				UIImage *image = nil;
+                Image *image = nil;
 
 				image = self.image;
 

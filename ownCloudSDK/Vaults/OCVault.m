@@ -30,6 +30,8 @@
 #import "OCFeatureAvailability.h"
 #import "OCHTTPPolicyManager.h"
 
+#import <TargetConditionals.h>
+
 @implementation OCVault
 
 @synthesize uuid = _uuid;
@@ -138,7 +140,12 @@
 		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		if (OCVault.hostHasFileProvider)
 		{
-			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+#if TARGET_OS_MAC
+            NSFileProviderDomain *domain = [[NSFileProviderDomain alloc] initWithIdentifier:[_uuid UUIDString] displayName:@"ownCloud"];
+            _filesRootURL = [NSFileProviderManager managerForDomain:domain];
+#else
+            _filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+#endif
 		}
 		else
 		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */

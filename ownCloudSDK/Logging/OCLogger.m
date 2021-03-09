@@ -16,7 +16,10 @@
  *
  */
 
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#endif
+
 #import <sys/utsname.h>
 
 #import "OCLogger.h"
@@ -947,8 +950,10 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				[mainBundle objectForInfoDictionaryKey:(__bridge NSString *)kCFBundleVersionKey], // Build version
 				logHostCommit,
 				OCAppIdentity.sharedAppIdentity.sdkVersionString, // SDK version
+#if TARGET_OS_IOS
 				UIDevice.currentDevice.systemName, UIDevice.currentDevice.systemVersion, // OS name + version
 				UIDevice.currentDevice.model, // Device model
+#endif
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
 				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings

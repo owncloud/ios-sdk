@@ -33,10 +33,12 @@
 	return (self);
 }
 
+#if TARGET_OS_IPHONEOS
 - (UIViewController *)hostViewController
 {
 	return (_options[OCAuthenticationMethodPresentingViewControllerKey]);
 }
+#endif
 
 - (BOOL)start
 {

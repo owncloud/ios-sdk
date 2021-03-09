@@ -983,6 +983,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 #pragma mark - Background kill protection
 - (void)enterProcessing
 {
+#if TARGET_OS_IPHONEOS
 	// Create background task if entering processing for the first time since leaving it (or at all)
 	if (_backgroundTask == nil)
 	{
@@ -997,7 +998,7 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			// OCTLogDebug(@[@"SQLBackground"], @"OCSQLiteDB entered background task");
 		}
 	}
-
+#endif
 	// Increase processing count
 	_processingCount++;
 }

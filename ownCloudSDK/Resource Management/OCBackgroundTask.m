@@ -16,6 +16,7 @@
  *
  */
 
+#if TARGET_OS_IPHONEOS
 #import "OCBackgroundTask.h"
 #import "OCBackgroundManager.h"
 #import "OCDeallocAction.h"
@@ -70,3 +71,4 @@
 }
 
 @end
+#endif

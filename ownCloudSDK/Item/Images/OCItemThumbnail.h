@@ -22,9 +22,14 @@
 
 @interface OCItemThumbnail : OCImage <NSSecureCoding>
 {
-	CGSize _maximumSizeInPixels;
 
-	NSMutableDictionary <NSValue *, UIImage *> *_imageByRequestedMaximumSize;
+#ifdef TARGET_OS_IOS
+	CGSize _maximumSizeInPixels;
+#else
+	NSSize _maximumSizeInPixels;
+#endif
+
+	NSMutableDictionary <NSValue *, Image *> *_imageByRequestedMaximumSize;
 
 	OCItemVersionIdentifier *_itemVersionIdentifier;
 
@@ -37,7 +42,7 @@
 
 @property(strong) NSString *specID;
 
-- (BOOL)requestImageForSize:(CGSize)maximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
+- (BOOL)requestImageForSize:(CGSize)maximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, Image *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
 
 - (BOOL)canProvideForMaximumSizeInPixels:(CGSize)maximumSizeInPixels;
 

@@ -16,7 +16,9 @@
  *
  */
 
+#if TARGET_OS_IPHONEOS
 #import <UIKit/UIKit.h>
+#endif
 #import "OCCache.h"
 
 @implementation OCCache
@@ -33,7 +35,9 @@
 		_recentlyUsedKeys = [NSMutableArray new];
 		_costByKey = [NSMutableDictionary new];
 
+#if TARGET_OS_IPHONEOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_receivedMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+#endif
 	}
 
 	return(self);
@@ -41,7 +45,9 @@
 
 - (void)dealloc
 {
+#if TARGET_OS_IPHONEOS
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+#endif
 }
 
 #pragma mark - Retrieval

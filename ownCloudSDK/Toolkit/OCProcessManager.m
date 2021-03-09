@@ -16,7 +16,9 @@
  *
  */
 
+#ifdef TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#endif
 #import <sys/types.h>
 #import <sys/sysctl.h>
 
@@ -108,6 +110,7 @@
 			[processManager loadSessions];
 		}];
 
+#if TARGET_OS_IPHONEOS
 		// Set up process notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processWillTerminate) name:UIApplicationWillTerminateNotification object:nil];
 
@@ -121,7 +124,7 @@
 
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillEnterForegroundNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidBecomeActiveNotification object:nil];
-
+#endif
 		// Scan for invalid sessions
 		[self scanSessions];
 	}
@@ -137,6 +140,7 @@
 	// Shut down refreshes
 	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:[OCProcessManager sessionsUpdatedNotification]];
 
+#if TARGET_OS_IPHONEOS
 	// Remove process notifications
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
 
@@ -150,6 +154,7 @@
 
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillEnterForegroundNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidBecomeActiveNotification object:nil];
+#endif
 }
 
 #pragma mark - IPC
@@ -306,11 +311,11 @@
 
 - (void)handleStateChange:(NSNotification *)notification
 {
+#if TARGET_OS_IPHONEOS
 	if ([notification.name isEqual:NSExtensionHostDidBecomeActiveNotification])
 	{
 		OCTLogDebug(@[@"State"], @"Extension Host did become active");
 	}
-
 	if ([notification.name isEqual:NSExtensionHostDidEnterBackgroundNotification])
 	{
 		OCTLogDebug(@[@"State"], @"Extension Host did enter background");
@@ -345,6 +350,7 @@
 	{
 		OCTLogDebug(@[@"State"], @"App will enter foreground");
 	}
+#endif
 }
 
 #pragma mark - Session validity

@@ -2682,7 +2682,11 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		request.eventTarget = eventTarget;
 		request.userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
 			item.itemVersionIdentifier,	OCEventUserInfoKeyItemVersionIdentifier,
+#if TARGET_OS_IPHONEOS
 			[NSValue valueWithCGSize:size],	@"maximumSize",
+#else
+			[NSValue valueWithSize:size],	@"maximumSize",
+#endif
 		nil];
 		request.resultHandlerAction = @selector(_handleRetrieveThumbnailResult:error:);
 
@@ -2727,7 +2731,11 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			{
 				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
 				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
+#if TARGET_OS_MACOS
 				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
+#else
+				NSSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).sizeValue;
+#endif
 
 				thumbnail.mimeType = request.httpResponse.headerFields[OCHTTPHeaderFieldNameContentType];
 

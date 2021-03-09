@@ -17,26 +17,30 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
+#if TARGET_OS_IOS
 @protocol OCBackgroundManagerDelegate <NSObject>
-
 - (UIApplicationState)applicationState;
-
 - (NSTimeInterval)backgroundTimeRemaining;
-
 - (UIBackgroundTaskIdentifier)beginBackgroundTaskWithName:(nullable NSString *)taskName expirationHandler:(void(^ __nullable)(void))expirationHandler;
 - (void)endBackgroundTask:(UIBackgroundTaskIdentifier)identifier;
-
 @end
+#endif
 
 @class OCBackgroundTask;
 
 @interface OCBackgroundManager : NSObject
 
+
+#if TARGET_OS_IOS
 @property(weak,nonatomic) id <OCBackgroundManagerDelegate> delegate; //!< Typically UIApplication.sharedApplication (not available in extensions)
+#endif
 
 #pragma mark - Shared instance
 @property(class,readonly,nonatomic,strong) OCBackgroundManager *sharedBackgroundManager;

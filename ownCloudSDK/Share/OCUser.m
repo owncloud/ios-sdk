@@ -100,11 +100,15 @@
 	return (nil);
 }
 
-- (UIImage *)avatar
+- (Image *)avatar
 {
 	if ((_avatar == nil) && (_avatarData != nil))
 	{
-		_avatar = [UIImage imageWithData:self.avatarData];
+#ifdef TARGET_OS_MAC
+        _avatar = [[NSImage alloc] initWithData:self.avatarData];
+#else
+		_avatar = [Image imageWithData:self.avatarData];
+#endif
 	}
 
 	return (_avatar);

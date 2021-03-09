@@ -16,7 +16,10 @@
  *
  */
 
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IOS */
+
 #import "OCAuthenticationMethod.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -28,7 +31,11 @@ typedef void(^OCAuthenticationBrowserSessionCompletionHandler)(NSURL *_Nullable 
 @property(strong,readonly) NSURL *url;
 @property(strong,readonly) NSString *scheme;
 @property(nullable,strong,readonly) OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options;
+
+#if TARGET_OS_IOS
 @property(nullable,strong,readonly,nonatomic) UIViewController *hostViewController; //!< Convenience accessor for options[OCAuthenticationMethodPresentingViewControllerKey]
+#endif
+
 @property(copy) OCAuthenticationBrowserSessionCompletionHandler completionHandler;
 
 - (instancetype)initWithURL:(NSURL *)authorizationRequestURL callbackURLScheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(OCAuthenticationBrowserSessionCompletionHandler)completionHandler;

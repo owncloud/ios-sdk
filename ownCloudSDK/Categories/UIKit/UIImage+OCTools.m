@@ -18,6 +18,8 @@
 
 #import "UIImage+OCTools.h"
 
+#ifndef TARGET_OS_OSX
+
 @implementation UIImage (OCTools)
 
 + (CGSize)sizeThatFits:(CGSize)sourceSize into:(CGSize)maximumSize
@@ -95,3 +97,5 @@
 }
 
 @end
+
+#endif

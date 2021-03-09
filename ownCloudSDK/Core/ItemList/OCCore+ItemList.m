@@ -1181,8 +1181,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				if (self->_scheduledDirectoryUpdateJobActivity == nil)
 				{
+#if TARGET_IPHONE_OS
 					// If none is ongoing, start a new check for updates
 					[self _checkForUpdatesNotBefore:nil inBackground:OCBackgroundManager.sharedBackgroundManager.isBackgrounded completionHandler:completionHandler];
+#else
+					[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:completionHandler];
+#endif
 				}
 				else
 				{
@@ -1220,7 +1224,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	__weak OCCore *weakSelf = self;
 
+#if TARGET_OS_IPHONEOS
 	[[OCBackgroundManager sharedBackgroundManager] scheduleBlock:^{
+#endif
 		OCCore *strongSelf = weakSelf;
 
 		if (strongSelf != nil)
@@ -1269,7 +1275,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				scheduleUpdateCheck();
 			}
 		}
+#if TARGET_OS_IPHONEOS
 	} inBackground:inBackground];
+#endif
 }
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender

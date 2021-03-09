@@ -17,6 +17,7 @@
  */
 
 #import "OCItemThumbnail.h"
+
 #import "UIImage+OCTools.h"
 
 @implementation OCItemThumbnail
@@ -25,19 +26,27 @@
 
 @synthesize specID = _specID;
 
-- (BOOL)requestImageForSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image))completionHandler
+- (BOOL)requestImageForSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, Image *image))completionHandler
 {
 	CGSize requestedMaximumSizeInPixels;
 	NSValue *requestedMaximumSizeInPixelsValue;
-	UIImage *existingImage = nil;
+	Image *existingImage = nil;
 
 	if (scale==0)
 	{
+#if TARGET_OS_IPHONEOS
 		scale = UIScreen.mainScreen.scale;
+#else
+		scale = 1.0;
+#endif
 	}
 
 	requestedMaximumSizeInPixels = CGSizeMake(requestedMaximumSizeInPoints.width * scale, requestedMaximumSizeInPoints.height * scale);
+#if TARGET_OS_IPHONEOS
 	requestedMaximumSizeInPixelsValue = [NSValue valueWithCGSize:requestedMaximumSizeInPixels];
+#else
+	requestedMaximumSizeInPixelsValue = [NSValue valueWithSize:NSSizeFromCGSize(requestedMaximumSizeInPixels)];
+#endif
 
 	@synchronized(self)
 	{
@@ -53,12 +62,12 @@
 	{
 		// No existing image, compute async
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-			UIImage *returnImage = nil;
+			Image *returnImage = nil;
 
 			[self->_processingLock lock]; // Lock to make any subsequent (possibly identical) computations wait until this one is done, in order not to do the same computations twice
 
 			{
-				UIImage *sourceImage = nil;
+				Image *sourceImage = nil;
 
 				// Check if, by now, what is being requested is already there
 				@synchronized(self)
@@ -72,7 +81,11 @@
 
 						for (NSValue *otherMaximumSizeValue in self->_imageByRequestedMaximumSize)
 						{
+#if TARGET_OS_IPHONEOS
 							CGSize otherMaximumSize = otherMaximumSizeValue.CGSizeValue;
+#else
+							CGSize otherMaximumSize = otherMaximumSizeValue.sizeValue;
+#endif
 
 							if ((otherMaximumSize.width < requestedMaximumSizeInPixels.width) || (otherMaximumSize.height < requestedMaximumSizeInPixels.height))
 							{
@@ -98,6 +111,7 @@
 
 					if (sourceImage != nil)
 					{
+#if TARGET_OS_IPHONEOS
 						if ((returnImage = [sourceImage scaledImageFittingInSize:requestedMaximumSizeInPoints scale:scale]) != nil)
 						{
 							@synchronized(self)
@@ -106,6 +120,14 @@
 								[self->_imageByRequestedMaximumSize setObject:returnImage forKey:requestedMaximumSizeInPixelsValue];
 							}
 						}
+#else
+						returnImage = sourceImage;
+						@synchronized(self)
+						{
+							[self->_imageByRequestedMaximumSize removeAllObjects];
+							[self->_imageByRequestedMaximumSize setObject:returnImage forKey:requestedMaximumSizeInPixelsValue];
+						}
+#endif
 					}
 				}
 			}
@@ -145,7 +167,11 @@
 {
 	[super encodeWithCoder:coder];
 
-	[coder encodeCGSize:_maximumSizeInPixels 	forKey:@"maximumSizeInPixels"];
+#if TARGET_OS_IPHONE
+	[coder encodeCGSize:_maximumSizeInPixels forKey:@"maximumSizeInPixels"];
+#else
+	[coder encodeSize:_maximumSizeInPixels forKey:@"maximumSizeInPixels"];
+#endif
 	[coder encodeObject:_itemVersionIdentifier    	forKey:@"itemVersionIdentifier"];
 	[coder encodeObject:_specID   			forKey:@"specID"];
 }
@@ -154,7 +180,11 @@
 {
 	if ((self = [super initWithCoder:decoder]) != nil)
 	{
+#if TARGET_OS_IPHONE
 		_maximumSizeInPixels = [decoder decodeCGSizeForKey:@"maximumSizeInPixels"];
+#else
+		_maximumSizeInPixels = [decoder decodeSizeForKey:@"maximumSizeInPixels"];
+#endif
 		_itemVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"itemVersionIdentifier"];
 		_specID = [decoder decodeObjectOfClass:[NSString class] forKey:@"specID"];
 	}

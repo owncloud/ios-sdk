@@ -16,13 +16,13 @@
  *
  */
 
-#import <UIKit/UIKit.h>
+#import "OCImage.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCUser : NSObject <NSSecureCoding, NSCopying>
 {
-	UIImage *_avatar;
+	Image *_avatar;
 	NSNumber *_forceIsRemote;
 }
 
@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
 
-@property(nullable,readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
+@property(nullable,readonly,nonatomic) OCImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
 
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote;

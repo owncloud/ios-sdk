@@ -15,8 +15,10 @@
  * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
  *
  */
-
+#if TARGET_OS_IPHONEOS
 #import <UIKit/UIKit.h>
+#endif
+
 #import "OCFeatureAvailability.h"
 #if OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION
 #import <AuthenticationServices/AuthenticationServices.h>

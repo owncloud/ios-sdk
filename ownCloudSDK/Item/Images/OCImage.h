@@ -16,7 +16,19 @@
  *
  */
 
+#import <TargetConditionals.h>
+
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+#else
 #import <UIKit/UIKit.h>
+#endif
+
+#ifdef TARGET_OS_MAC
+typedef NSImage Image;
+#else
+typedef UIImage Image;
+#endif
 
 @interface OCImage : NSObject <NSSecureCoding>
 {
@@ -24,7 +36,7 @@
 	NSData *_data;
 	NSString *_mimeType;
 
-	UIImage *_image;
+    Image *_image;
 
 	NSRecursiveLock *_processingLock;
 }
@@ -33,10 +45,10 @@
 @property(strong,nonatomic) NSData *data; //!< Binary data of the image. If none is present, tries to synchronously load the data from the URL.
 @property(strong) NSString *mimeType; //!< MIME-Type of the image
 
-@property(strong,nonatomic) UIImage *image; //!< The decoded image. Attention: if not decoded already, decodes .data synchronously. For best performance, use -requestImageWithCompletionHandler:
+@property(strong,nonatomic) Image *image; //!< The decoded image. Attention: if not decoded already, decodes .data synchronously. For best performance, use -requestImageWithCompletionHandler:
 
-- (UIImage *)decodeImage; //!< Called by .image if data hasn't yet been decoded.
+- (Image *)decodeImage; //!< Called by .image if data hasn't yet been decoded.
 
-- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError *error, UIImage *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
+- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError *error, Image *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
 
 @end

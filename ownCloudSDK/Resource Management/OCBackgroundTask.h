@@ -17,7 +17,10 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#ifndef TARGET_OS_MAC
 #import <UIKit/UIKit.h>
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,7 +30,9 @@ typedef void(^OCBackgroundTaskExpirationHandler)(OCBackgroundTask *task);
 
 @interface OCBackgroundTask : NSObject
 
+#ifndef TARGET_OS_MAC
 @property(assign) UIBackgroundTaskIdentifier identifier;
+#endif
 @property(readonly,strong) NSString *name;
 
 @property(assign) BOOL started;

@@ -16,6 +16,7 @@
  *
  */
 
+#if TARGET_OS_IPHONE_OS
 #import "OCBackgroundManager.h"
 #import "OCBackgroundTask.h"
 #import "OCProcessManager.h"
@@ -304,3 +305,4 @@
 }
 
 @end
+#endif

@@ -22,6 +22,8 @@
 #import "OCVault+Internal.h"
 #import "OCFeatureAvailability.h"
 
+#import <TargetConditionals.h>
+
 @implementation OCSyncAction (FileProviderProgressReporting)
 
 - (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext * _Nonnull)syncContext
@@ -39,8 +41,11 @@
 		 */
 		NSURL *localURL, *placeholderURL;
 
-		if (((localURL = [self.core localURLForItem:item]) != nil) &&
-		    ((placeholderURL = [NSFileProviderManager placeholderURLForURL:localURL]) != nil))
+		if (((localURL = [self.core localURLForItem:item]) != nil)
+#ifndef TARGET_OS_MAC
+            && ((placeholderURL = [NSFileProviderManager placeholderURLForURL:localURL]) != nil)
+#endif
+            )
 		{
 			if ([[NSFileManager defaultManager] fileExistsAtPath:placeholderURL.path])
 			{

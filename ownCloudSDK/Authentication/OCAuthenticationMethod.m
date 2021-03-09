@@ -16,7 +16,9 @@
  *
  */
 
+#if TARGET_OS_IPHONEOS
 #import <UIKit/UIKit.h>
+#endif
 
 #import "OCAuthenticationMethod.h"
 #import "OCBookmark.h"
@@ -122,8 +124,10 @@
 {
 	if ((self = [super init]) != nil)
 	{
+#if !TARGET_OS_MAC
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
+#endif
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_authenticationDataChangedLocally:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCAuthenticationMethod *authMethod, OCIPCNotificationName  _Nonnull notificationName) {
@@ -139,12 +143,15 @@
 	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
 
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:nil];
+#if TARGET_OS_IPHONEOS
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
+#endif
 }
 
 - (void)_hostStatusChanged:(NSNotification *)notification
 {
+#if TARGET_OS_IPHONEOS
 	if ([notification.name isEqual:UIApplicationWillResignActiveNotification] ||
 	    [notification.name isEqual:NSExtensionHostWillResignActiveNotification])
 	{
@@ -152,6 +159,7 @@
 		OCLogDebug(@"Received %@ notification: flush auth secret", notification.name);
 		[self flushCachedAuthenticationSecret];
 	}
+#endif
 }
 
 - (void)_authenticationDataChangedLocally:(NSNotification *)notification

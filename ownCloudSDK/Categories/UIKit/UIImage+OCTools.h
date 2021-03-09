@@ -16,6 +16,9 @@
  *
  */
 
+#import <TargetConditionals.h>
+
+#ifndef TARGET_OS_OSX
 #import <UIKit/UIKit.h>
 
 @interface UIImage (OCTools)
@@ -26,5 +29,5 @@
 
 - (UIImage *)scaledImageFittingInSize:(CGSize)maximumSize; //!< Like -scaledImageFittingInSize:scale:, but using the scale of the main screen
 
-
 @end
+#endif

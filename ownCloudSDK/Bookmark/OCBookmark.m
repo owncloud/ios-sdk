@@ -85,10 +85,10 @@
 			[observerBookmark considerAuthenticationDataFlush];
 		}];
 
-		#if TARGET_OS_IOS
+		#if TARGET_OS_IPHONEOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:UIApplicationWillResignActiveNotification object:nil];
-		#endif /* TARGET_OS_IOS */
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:NSExtensionHostWillResignActiveNotification object:nil];
+		#endif /* TARGET_OS_IPHONEIOS */
 	}
 	
 	return(self);
@@ -100,8 +100,8 @@
 
 	#if TARGET_OS_IOS
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
-	#endif /* TARGET_OS_IOS */
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
+	#endif /* TARGET_OS_IOS */
 }
 
 - (NSData *)bookmarkData
