@@ -1778,6 +1778,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						OCChecksum *expectedChecksum = OCTypedCast(options[@"checksumExpected"], OCChecksum);
 						NSError *expectedChecksumMismatchError = OCTypedCast(options[@"checksumMismatchError"], NSError);
 
+						#warning Also check if sizes match, to distinguish from different file with same name error
+
 						if (expectedChecksum != nil)
 						{
 							if ([uploadedItem.checksums containsObject:expectedChecksum])

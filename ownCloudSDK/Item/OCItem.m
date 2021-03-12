@@ -141,7 +141,7 @@
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
-		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
+		_localRelativePath = [decoder decodeObjectOfClass:NSString.class forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
 		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
 		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"downloadTriggerIdentifier"];
