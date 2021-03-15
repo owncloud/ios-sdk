@@ -21,6 +21,7 @@
 #endif
 
 #import <sys/utsname.h>
+#import <os/log.h>
 
 #import "OCLogger.h"
 #import "OCLogWriter.h"
@@ -71,6 +72,12 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		// Ensure log level is being observed
 		[OCLogger logLevel];
 
+		[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
+			NSString *msg = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
+			os_log(OS_LOG_DEFAULT, "[MN] %@", msg);
+		}]];
+
+		/*
 		if ((stdErrLogger = [[OCLogFileSource alloc] initWithFILE:stderr name:@"OS" logger:sharedLogger]) != nil)
 		{
 			__weak OCLogFileSource *weakStdErrLogger = stdErrLogger;
@@ -78,6 +85,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			[sharedLogger addSource:stdErrLogger];
 
 			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
+				NSString *msg = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
+				os_log(OS_LOG_DEFAULT, "[MN]: %@", msg);
 				[weakStdErrLogger writeDataToOriginalFile:messageData];
 			}]];
 		}
@@ -86,10 +95,14 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 			[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
 				fwrite(messageData.bytes, messageData.length, 1, stderr);
 				fflush(stderr);
+				NSString *msg = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
+				os_log(OS_LOG_DEFAULT, "[MN]: %@", msg);
+
 			}]];
 		}
 
 		[sharedLogger addWriter:[OCLogFileWriter new]];
+		 */
 
 		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogRequestsAndResponses localizedName:OCLocalizedString(@"Log HTTP requests and responses", nil)]];
 
@@ -944,6 +957,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				}
 			}
 
+#if 0
 			logIntro = [NSString stringWithFormat:@"Host: %@ %@ (%@)%@; SDK: %@; OS: %@ %@; Device: %@%@; Localizations: [%@]; Class Setttings: %@",
 				[mainBundle bundleIdentifier], // Bundle ID
 				[mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"], // Version
@@ -953,13 +967,17 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 #if TARGET_OS_IOS
 				UIDevice.currentDevice.systemName, UIDevice.currentDevice.systemVersion, // OS name + version
 				UIDevice.currentDevice.model, // Device model
+#else
+				// TODO: Fix this
+				@"MacBook Air", @"M1",
 #endif
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
 				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings
 			];
+#endif
 
-			cachedLogIntro = logIntro;
+			cachedLogIntro = /*logIntro*/ @"Hello Mac";
 		}
 		else
 		{

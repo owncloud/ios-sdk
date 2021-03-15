@@ -18,9 +18,8 @@
 
 #import <TargetConditionals.h>
 
-#ifndef TARGET_OS_OSX
+#if TARGET_OS_IPHONEOS
 #import <UIKit/UIKit.h>
-
 @interface UIImage (OCTools)
 
 + (CGSize)sizeThatFits:(CGSize)sourceSize into:(CGSize)maximumSize;
