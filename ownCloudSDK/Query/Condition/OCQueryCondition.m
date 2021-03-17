@@ -86,6 +86,13 @@
 	return (self);
 }
 
+- (instancetype)limitedToMaxResultCount:(NSUInteger)maxResultCounts
+{
+	self.maxResultCount = @(maxResultCounts);
+
+	return (self);
+}
+
 - (instancetype)initWithOperator:(OCQueryConditionOperator)operator property:(OCItemPropertyName)property value:(id)value
 {
 	if ((self = [super init]) != nil)
@@ -115,6 +122,8 @@
 
 		_sortBy = [decoder decodeObjectOfClass:[NSString class] forKey:@"sortBy"];
 		_sortAscending = [decoder decodeBoolForKey:@"sortAscending"];
+
+		_maxResultCount = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"maxResultCount"];
 	}
 
 	return (self);
@@ -129,6 +138,8 @@
 
 	[coder encodeObject:_sortBy forKey:@"sortBy"];
 	[coder encodeBool:_sortAscending forKey:@"sortAscending"];
+
+	[coder encodeObject:_maxResultCount forKey:@"maxResultCount"];
 }
 
 #pragma mark - Description

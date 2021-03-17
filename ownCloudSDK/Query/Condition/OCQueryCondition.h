@@ -48,6 +48,8 @@ typedef NS_ENUM(NSUInteger, OCQueryConditionOperator)
 @property(strong,nullable) OCItemPropertyName sortBy; //!< If non-nil, sorting hint for the database by which property the data should be pre-sorted. Only supported for properties that have their own column in the database.
 @property(assign) BOOL sortAscending; //!< If .sortBy is non-nil, whether the sort order should be ascending (YES) or descending (NO).
 
+@property(strong,nullable) NSNumber *maxResultCount; //!< If non-nil, the maximum number of results to fetch from a database
+
 + (instancetype)where:(OCItemPropertyName)property isGreaterThan:(id)value;
 + (instancetype)where:(OCItemPropertyName)property isLessThan:(id)value;
 + (instancetype)where:(OCItemPropertyName)property isEqualTo:(id)value;
@@ -61,6 +63,7 @@ typedef NS_ENUM(NSUInteger, OCQueryConditionOperator)
 + (instancetype)negating:(BOOL)negating condition:(OCQueryCondition *)condition;
 
 - (instancetype)sortedBy:(OCItemPropertyName)property ascending:(BOOL)ascending;
+- (instancetype)limitedToMaxResultCount:(NSUInteger)maxResultCounts;
 
 @end
 

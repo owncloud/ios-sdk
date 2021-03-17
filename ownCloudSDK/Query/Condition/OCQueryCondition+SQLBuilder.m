@@ -133,6 +133,11 @@
 		}
 	}
 
+	if (self.maxResultCount != nil)
+	{
+		query = [query stringByAppendingFormat:@" LIMIT %@", self.maxResultCount];
+	}
+
 	*outParameters = parameters;
 
 	return (query);
