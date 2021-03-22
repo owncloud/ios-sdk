@@ -74,7 +74,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 
 		[sharedLogger addWriter:[[OCLogWriter alloc] initWithWriteHandler:^(NSData * _Nonnull messageData) {
 			NSString *msg = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
-			os_log(OS_LOG_DEFAULT, "[MN] %@", msg);
+			os_log(OS_LOG_DEFAULT, "[MN-SDK] %@", msg);
 		}]];
 
 		/*

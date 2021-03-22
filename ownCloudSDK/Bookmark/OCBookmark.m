@@ -89,6 +89,8 @@
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:NSExtensionHostWillResignActiveNotification object:nil];
 		#endif /* TARGET_OS_IPHONEIOS */
+
+		_authenticationDataStorage = OCBookmarkAuthenticationDataStorageMemory;
 	}
 	
 	return(self);
@@ -272,11 +274,14 @@
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
+		_authenticationData = [decoder decodeObjectOfClass:NSData.class forKey:@"authenticationData"];
+
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
 
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
+		_authenticationDataStorage = OCBookmarkAuthenticationDataStorageMemory;
 	}
 	
 	return (self);
@@ -296,6 +301,8 @@
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
+
+	[coder encodeObject:_authenticationData forKey:@"authenticationData"];
 
 	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
