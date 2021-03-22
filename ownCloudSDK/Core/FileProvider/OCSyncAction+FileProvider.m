@@ -28,7 +28,7 @@
 
 - (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext * _Nonnull)syncContext
 {
-	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER && !TARGET_OS_MAC
 	if (OCVault.hostHasFileProvider && self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 	{
 		/*
@@ -42,9 +42,7 @@
 		NSURL *localURL, *placeholderURL;
 
 		if (((localURL = [self.core localURLForItem:item]) != nil)
-#ifndef TARGET_OS_MAC
             && ((placeholderURL = [NSFileProviderManager placeholderURLForURL:localURL]) != nil)
-#endif
             )
 		{
 			if ([[NSFileManager defaultManager] fileExistsAtPath:placeholderURL.path])
