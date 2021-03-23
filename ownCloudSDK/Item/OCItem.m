@@ -762,8 +762,8 @@ OCFileETag OCFileETagPlaceholder = @"_placeholder_";
 OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
 OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
 
-OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
-OCItemPropertyName OCItemPropertyNameLastUsed = @"lastUsed";
+OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameLastUsed = @"lastUsed"; //!< Supported by OCQueryCondition SQLBuilder
 OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";
 OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 

@@ -129,6 +129,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCVault.h>
 #import <ownCloudSDK/OCDatabase.h>
+#import <ownCloudSDK/OCDatabase+Versions.h>
 #import <ownCloudSDK/OCDatabaseConsistentOperation.h>
 #import <ownCloudSDK/OCSQLiteDB.h>
 #import <ownCloudSDK/OCSQLiteQuery.h>
@@ -238,3 +239,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
 #import <ownCloudSDK/OCRateLimiter.h>
 #import <ownCloudSDK/OCDeallocAction.h>
+#import <ownCloudSDK/OCCancelAction.h>
+

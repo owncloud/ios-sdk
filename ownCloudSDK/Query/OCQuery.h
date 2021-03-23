@@ -24,6 +24,7 @@
 #import "OCQueryChangeSet.h"
 #import "OCCoreItemList.h"
 #import "OCQueryCondition.h"
+#import "OCCancelAction.h"
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCQueryState)
@@ -122,6 +123,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query
+@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query
 
 #pragma mark - Sorting
 @property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results

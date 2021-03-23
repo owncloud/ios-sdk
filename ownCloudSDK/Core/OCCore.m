@@ -53,6 +53,8 @@
 #import "OCCore+MessageResponseHandler.h"
 #import "OCCore+MessageAutoresolver.h"
 #import "OCHostSimulatorManager.h"
+#import "OCProcessManager.h"
+#import "OCBookmark+DBMigration.h"
 
 @interface OCCore ()
 {
@@ -104,6 +106,8 @@
 @synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
 @synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
 @synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
+
+@dynamic busyStatusHandler;
 
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
@@ -412,32 +416,46 @@
 		if (self->_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
-			dispatch_group_t startGroup = nil;
 
 			[self recomputeConnectionStatus];
 
 			[self _updateState:OCCoreStateStarting];
 
-			startGroup = dispatch_group_create();
+			if (self.bookmark.needsHostUpdate)
+			{
+				// Do not start for bookmarks that are using a newer database version
+				startError = OCError(OCErrorHostUpdateRequired);
+			}
 
 			// Open vault (incl. database)
-			dispatch_group_enter(startGroup);
+			if (startError == nil)
+			{
+				// Configure vault / database
+				self.vault.database.sqlDB.allowMigrations = !OCProcessManager.isProcessExtension;
 
-			[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
-				startError = error;
-				dispatch_group_leave(startGroup);
-			}];
+				OCSyncExec(openVault, {
+					[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
+						startError = error;
 
-			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+						if ([startError.domain isEqual:OCSQLiteDBErrorDomain] && (startError.code == OCSQLiteDBErrorMigrationsNotAllowed))
+						{
+							startError = OCError(OCErrorDatabaseMigrationRequired);
+						}
+
+						OCSyncExecDone(openVault);
+					}];
+				});
+			}
 
 			// Get latest sync anchor
-			dispatch_group_enter(startGroup);
-
-			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
-				dispatch_group_leave(startGroup);
-			}];
-
-			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+			if (startError == nil)
+			{
+				OCSyncExec(retrieveSyncAnchor, {
+					[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
+						OCSyncExecDone(retrieveSyncAnchor);
+					}];
+				});
+			}
 
 			// Proceed with connecting - or stop
 			if (startError == nil)
@@ -838,6 +856,8 @@
 	if (query != nil)
 	{
 		[self queueBlock:^{
+			[query.stopAction cancel];
+
 			query.state = OCQueryStateStopped;
 			[self->_queries removeObject:query];
 		}];
@@ -1215,6 +1235,17 @@
 	}
 
 	_rejectedIssueSignalProvider.state = (rejectedListIsEmpty ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
+}
+
+#pragma mark - Busy handling
+- (OCCoreBusyStatusHandler)busyStatusHandler
+{
+	return (self.database.sqlDB.busyStatusHandler);
+}
+
+- (void)setBusyStatusHandler:(OCCoreBusyStatusHandler)busyStatusHandler
+{
+	self.database.sqlDB.busyStatusHandler = busyStatusHandler;
 }
 
 #pragma mark - ## Commands

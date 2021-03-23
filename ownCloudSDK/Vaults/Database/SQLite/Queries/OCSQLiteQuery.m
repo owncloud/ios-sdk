@@ -18,6 +18,13 @@
 
 #import "OCSQLiteQuery.h"
 #import "OCSQLiteQueryCondition.h"
+#import "OCSQLiteStatement.h"
+
+@interface OCSQLiteQuery ()
+{
+	__weak OCSQLiteStatement *_statement;
+}
+@end
 
 @implementation OCSQLiteQuery
 
@@ -280,6 +287,30 @@
 	}
 
 	return ((whereString!=nil) ? whereString : @"");
+}
+
+#pragma mark - Statement tracking
+- (OCSQLiteStatement *)statement
+{
+	return (_statement);
+}
+
+- (void)setStatement:(OCSQLiteStatement *)statement
+{
+	_statement = statement;
+}
+
+#pragma mark - Cancelation
+- (BOOL)cancel
+{
+	if (!_cancelled)
+	{
+		_cancelled = YES;
+
+		return ([_statement cancel]);
+	}
+
+	return (NO);
 }
 
 @end

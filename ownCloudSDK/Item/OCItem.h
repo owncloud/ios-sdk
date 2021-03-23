@@ -204,7 +204,6 @@ extern OCItemDownloadTriggerID OCItemDownloadTriggerIDUser; //!< the download wa
 extern OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline; //!< the download was triggered by the available offline policy
 
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
-extern OCItemPropertyName OCItemPropertyNameLastModified;
 
 // Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
@@ -215,6 +214,7 @@ extern OCItemPropertyName OCItemPropertyNameSize; //!< Supported by OCQueryCondi
 extern OCItemPropertyName OCItemPropertyNameCloudStatus; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameHasLocalAttributes; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLastModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder

@@ -94,8 +94,9 @@
 
 + (instancetype)queryWithCondition:(OCQueryCondition *)condition inputFilter:(nullable id<OCQueryFilter>)inputFilter
 {
+	OCCancelAction *cancelAction = [OCCancelAction new];
 	OCQueryCustomSource customSource = ^(OCCore *core, OCQuery *query, OCQueryCustomResultHandler resultHandler) {
-		[core.vault.database retrieveCacheItemsForQueryCondition:condition completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+		[core.vault.database retrieveCacheItemsForQueryCondition:condition cancelAction:cancelAction completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			resultHandler(error, items);
 		}];
 	};
@@ -110,6 +111,7 @@
 
 	if ((query = [self queryWithCustomSource:customSource inputFilter:inputFilter]) != nil)
 	{
+		query.stopAction = cancelAction;
 		query.sortComparator = condition.itemComparator;
 	}
 

@@ -328,6 +328,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorAuthorizationNotMatchingRequiredUserID:
 					unlocalizedString = @"The logged in user is not matching the required user ID.";
 				break;
+
+				case OCErrorDatabaseMigrationRequired:
+					unlocalizedString = @"Database upgrade required. Please open the app to perform the upgrade.";
+				break;
+
+				case OCErrorHostUpdateRequired:
+					unlocalizedString = @"Bookmark created with a newer app version. Please update the app.";
+				break;
 			}
 		}
 	}

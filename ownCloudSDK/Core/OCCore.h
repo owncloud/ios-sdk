@@ -115,6 +115,8 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
+
 typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
 
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
@@ -242,6 +244,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;
+
+@property(copy,nullable,nonatomic) OCCoreBusyStatusHandler busyStatusHandler;
 
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals

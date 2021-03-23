@@ -26,6 +26,8 @@
 #import "OCQueryCondition.h"
 #import "OCCoreDirectoryUpdateJob.h"
 #import "OCItemPolicy.h"
+#import "OCCancelAction.h"
+#import "OCDatabase+Versions.h"
 
 @class OCDatabase;
 @class OCItem;
@@ -116,7 +118,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
-- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition cancelAction:(OCCancelAction *)cancelAction completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 - (void)iterateCacheItemsWithIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through all cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
 - (void)iterateCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition excludeRemoved:(BOOL)excludeRemoved withIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through matching cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.

@@ -45,7 +45,9 @@ typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 {
 	OCSQLiteDBErrorAlreadyOpenedInInstance, //!< Instance has already opened file
 	OCSQLiteDBErrorDatabaseNotOpened,	//!< SQLite database not opened
-	OCSQLiteDBErrorInsufficientParameters	//!< Insufficient parameters
+	OCSQLiteDBErrorInsufficientParameters,	//!< Insufficient parameters
+	OCSQLiteDBErrorQueryCancelled,		//!< The query has been cancelled
+	OCSQLiteDBErrorMigrationsNotAllowed	//!< Migrations are not allowed
 };
 
 typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
@@ -57,6 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError * _Nullable error);
 typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet);
 typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable error, NSNumber * _Nullable rowID);
+
+typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!< Progress status handler for long-lasting operations (like DB migrations), called with nil when done
 
 @interface OCSQLiteDB : NSObject <OCLogTagging>
 {
@@ -98,6 +102,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 @property(nullable,strong) NSString *runLoopThreadName; //!< Name of the OCRunLoopThread that's used to back the database. Only set it if you want to share one across several databases.
 
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
+
+@property(assign) BOOL allowMigrations;
+@property(copy,nullable) OCSQLiteDBBusyStatusHandler busyStatusHandler;
 
 #if OCSQLITE_RAWLOG_ENABLED
 @property(assign) BOOL logStatements;

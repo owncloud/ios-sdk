@@ -30,6 +30,9 @@
 "Proceed" = "Proceed";
 "OK" = "OK";
 
+/* Database upgrades */
+"Upgrading database…" = "Upgrading database…";
+
 /* Connection setup */
 "Insecure HTTP URL" = "Insecure HTTP URL";
 "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.";
@@ -319,6 +322,12 @@
 "The logged in user is not matching the required user ID." = "The logged in user is not matching the required user ID.";
 "You logged in as user %@, but must log in as user %@. Please retry." = "You logged in as user %@, but must log in as user %@. Please retry.";
 "Login as user %@ required. Please retry." = "Login as user %@ required. Please retry.";
+
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "Database upgrade required. Please open the app to perform the upgrade.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "Bookmark created with a newer app version. Please update the app.";
 
 /* Diagnostic */
 "Files" = "Files";

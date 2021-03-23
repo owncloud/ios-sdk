@@ -52,6 +52,7 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Data")			content:[NSString stringWithFormat:@"%lu bytes", (unsigned long)self.authenticationData.length]],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Validation Date")	content:self.authenticationValidationDate.description],
 
+		[OCDiagnosticNode withLabel:OCLocalized(@"Database Version")		content:@(self.databaseVersion).stringValue],
 		[OCDiagnosticNode withLabel:OCLocalized(@"UserInfo")			content:self.userInfo.description],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Login Data") 	action:^(OCDiagnosticContext * _Nullable context) {
@@ -79,6 +80,11 @@
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Authentication Data") 	action:^(OCDiagnosticContext * _Nullable context) {
 			self.authenticationData = nil;
+		}],
+
+		[OCDiagnosticNode withLabel:OCLocalized(@"Remove Database Version") 	action:^(OCDiagnosticContext * _Nullable context) {
+			self.databaseVersion = OCDatabaseVersionUnknown;
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self];
 		}]
 	]);
 }

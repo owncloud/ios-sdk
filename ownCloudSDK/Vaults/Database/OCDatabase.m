@@ -135,11 +135,23 @@
 					if (error == nil)
 					{
 						[self.sqlDB applyTableSchemasWithCompletionHandler:^(OCSQLiteDB *db, NSError *error) {
-							[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
-
-							if (completionHandler!=nil)
+							if (error == nil)
 							{
-								completionHandler(self, error);
+								[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
+
+								if (completionHandler!=nil)
+								{
+									completionHandler(self, error);
+								}
+							}
+							else
+							{
+								[self.sqlDB closeWithCompletionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable closeError) {
+									if (completionHandler!=nil)
+									{
+										completionHandler(self, error);
+									}
+								}];
 							}
 
 							openQueueCompletionHandler();
@@ -284,6 +296,7 @@
 			@"cloudStatus" 		: @(item.cloudStatus),
 			@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
 			@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
+			@"lastModifiedDate"	: OCSQLiteNullProtect(item.lastModified),
 			@"fileID"		: OCSQLiteNullProtect(item.fileID),
 			@"localID"		: OCSQLiteNullProtect(item.localID),
 			@"itemData"		: [item serializedData]
@@ -352,6 +365,7 @@
 				@"cloudStatus" 		: @(item.cloudStatus),
 				@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
 				@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
+				@"lastModifiedDate" 	: OCSQLiteNullProtect(item.lastModified),
 				@"fileID"		: OCSQLiteNullProtect(item.fileID),
 				@"localID"		: OCSQLiteNullProtect(item.localID),
 				@"itemData"		: [item serializedData]
@@ -539,9 +553,9 @@
 
 }
 
-- (void)_retrieveCacheItemsForSQLQuery:(NSString *)sqlQuery parameters:(nullable NSArray<id> *)parameters completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)_retrieveCacheItemsForSQLQuery:(NSString *)sqlQuery parameters:(nullable NSArray<id> *)parameters cancelAction:(OCCancelAction *)cancelAction completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:sqlQuery withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	OCSQLiteQuery *query = [OCSQLiteQuery query:sqlQuery withParameters:parameters resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		if (error != nil)
 		{
 			completionHandler(self, error, nil, nil);
@@ -550,9 +564,28 @@
 		{
 			[self _completeRetrievalWithResultSet:resultSet completionHandler:completionHandler];
 		}
-	}]];
-}
+	}];
 
+	if (cancelAction != nil)
+	{
+		__weak OCSQLiteQuery *weakQuery = query;
+
+		if (cancelAction.cancelled)
+		{
+			completionHandler(self, OCSQLiteDBError(OCSQLiteDBErrorQueryCancelled), nil, @[]);
+		}
+		else
+		{
+			cancelAction.handler = ^BOOL{
+				return ([weakQuery cancel]);
+			};
+		}
+	}
+
+	[self.sqlDB executeQuery:query];
+
+	cancelAction.handler = nil;
+}
 
 - (void)retrieveCacheItemForLocalID:(OCLocalID)localID completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler
 {
@@ -632,7 +665,7 @@
 		[parameters addObject:path];
 	}
 
-	[self _retrieveCacheItemsForSQLQuery:sqlStatement parameters:parameters completionHandler:completionHandler];
+	[self _retrieveCacheItemsForSQLQuery:sqlStatement parameters:parameters cancelAction:nil completionHandler:completionHandler];
 }
 
 - (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
@@ -657,7 +690,7 @@
 		parameters = @[path, path];
 	}
 
-	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters completionHandler:completionHandler];
+	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters cancelAction:nil completionHandler:completionHandler];
 }
 
 - (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
@@ -687,7 +720,7 @@
 		sqlQueryString = [sqlQueryString stringByAppendingFormat:@" AND type == %ld", (long)OCItemTypeCollection];
 	}
 
-	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:@[synchAnchor] completionHandler:completionHandler];
+	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:@[synchAnchor] cancelAction:nil completionHandler:completionHandler];
 }
 
 + (NSDictionary<OCItemPropertyName, NSString *> *)columnNameByPropertyName
@@ -714,6 +747,7 @@
 			OCItemPropertyNameCloudStatus 		: @"cloudStatus",
 			OCItemPropertyNameHasLocalAttributes 	: @"hasLocalAttributes",
 			OCItemPropertyNameLastUsed 		: @"lastUsedDate",
+			OCItemPropertyNameLastModified		: @"lastModifiedDate",
 
 			OCItemPropertyNameDownloadTrigger	: @"downloadTrigger",
 
@@ -725,7 +759,7 @@
 	return (columnNameByPropertyName);
 }
 
-- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)retrieveCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition cancelAction:(OCCancelAction *)cancelAction completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSString *sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE removed=0 AND "];
 	NSString *sqlWhereString = nil;
@@ -736,7 +770,7 @@
 	{
 		sqlQueryString = [sqlQueryString stringByAppendingString:sqlWhereString];
 
-		[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters completionHandler:completionHandler];
+		[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters cancelAction:cancelAction completionHandler:completionHandler];
 	}
 	else
 	{
