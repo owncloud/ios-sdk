@@ -142,9 +142,10 @@
 		{
 #if TARGET_OS_MAC
 			// Actually probably don't need to do anything here since local storage is managed by macOS
-            NSFileProviderDomain *domain = [[NSFileProviderDomain alloc] initWithIdentifier:[_uuid UUIDString] displayName:@"ownCloud"];
+            NSFileProviderDomain *domain = [[NSFileProviderDomain alloc] initWithIdentifier:[_uuid UUIDString] displayName:_bookmark.name];
             NSFileProviderManager *manager = [NSFileProviderManager managerForDomain:domain];
-			//_filesRootURL = ???
+			NSError *error;
+			_filesRootURL = [manager temporaryDirectoryURLWithError:&error];
 #else
             _filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
 #endif
