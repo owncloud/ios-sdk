@@ -592,9 +592,16 @@
 					}];
 				};
 
-				if (self->_runningActivities == 0)
+				if (self->_runningActivities <= 0)
 				{
-					OCTLogDebug(stopTags, @"No running activities left. Proceeding.");
+					if (self->_runningActivities < 0)
+					{
+						OCTLogWarning(stopTags, @"BUG: negative runningActivities count (%ld)! Look for endActivity errors in the log! runningActivitiesStrings=%@", (long)self->_runningActivities, self->_runningActivitiesStrings);
+					}
+					else
+					{
+						OCTLogDebug(stopTags, @"No running activities left. Proceeding.");
+					}
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
 						dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;

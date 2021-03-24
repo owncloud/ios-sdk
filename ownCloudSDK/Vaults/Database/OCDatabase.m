@@ -573,6 +573,7 @@
 		if (cancelAction.cancelled)
 		{
 			completionHandler(self, OCSQLiteDBError(OCSQLiteDBErrorQueryCancelled), nil, @[]);
+			return;
 		}
 		else
 		{
