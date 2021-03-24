@@ -182,7 +182,7 @@
 		DC359693223FA7CC00C4D6E6 /* OCQueryCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC359691223FA7CC00C4D6E6 /* OCQueryCondition.m */; };
 		DC35969622403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = DC35969422403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h */; };
 		DC35969722403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC35969522403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m */; };
-		DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3596982240EC0A00C4D6E6 /* OCQueryCondition+Item.h */; };
+		DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3596982240EC0A00C4D6E6 /* OCQueryCondition+Item.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC35969B2240EC0A00C4D6E6 /* OCQueryCondition+Item.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3596992240EC0A00C4D6E6 /* OCQueryCondition+Item.m */; };
 		DC381FC722C80BA400284699 /* OCCore+NameConflicts.h in Headers */ = {isa = PBXBuildFile; fileRef = DC381FC522C80BA400284699 /* OCCore+NameConflicts.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC381FC822C80BA400284699 /* OCCore+NameConflicts.m in Sources */ = {isa = PBXBuildFile; fileRef = DC381FC622C80BA400284699 /* OCCore+NameConflicts.m */; };
