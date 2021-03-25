@@ -436,7 +436,7 @@
 		}
 	}
 
-	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	if ([OCConnection shouldConsiderMaintenanceModeIndicationFromResponse:response])
 	{
 		[self reportResponseIndicatingMaintenanceMode];
 

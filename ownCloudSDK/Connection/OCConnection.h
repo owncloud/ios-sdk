@@ -187,6 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Server Status
 - (nullable NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError * _Nullable error, OCHTTPRequest * _Nullable request, NSDictionary<NSString *,id> * _Nullable statusInfo))completionHandler;
 + (OCConnectionStatusValidationResult)validateStatus:(nullable NSDictionary<NSString*, id> *)serverStatus;
++ (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response;
 
 #pragma mark - Metadata actions
 - (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path

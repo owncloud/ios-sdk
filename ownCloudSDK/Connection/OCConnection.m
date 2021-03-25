@@ -1255,7 +1255,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 						return;
 					}
-					else if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+					else if ([OCConnection shouldConsiderMaintenanceModeIndicationFromResponse:response])
 					{
 						// Maintenance mode
 						error = OCError(OCErrorServerInMaintenanceMode);
@@ -1553,6 +1553,62 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	}
 
 	return (result);
+}
+
++ (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response
+{
+	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	{
+		NSError *davError;
+
+		if ((davError = [response bodyParsedAsDAVError]) != nil)
+		{
+			/*
+				Unfortunately, Sabre\DAV\Exception\ServiceUnavailable is returned not only for maintenance mode:
+
+				Maintenance mode:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>System in maintenance mode.</s:message>
+					</d:error>
+
+				Temporary storage error:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>Storage is temporarily not available</s:message>
+					</d:error>
+
+				And with "System in maintenance mode." possibly changing in the future, the /safe/ approach to
+				determine maintenance mode is to assume it unless the message is on the allow list.
+			*/
+			static dispatch_once_t onceToken;
+			static NSDictionary<OCDAVExceptionName, NSArray<NSString *> *> *allowedMessagesByException;
+
+			dispatch_once(&onceToken, ^{
+				allowedMessagesByException = @{
+					@"Sabre\\DAV\\Exception\\ServiceUnavailable" : @[
+						@"Storage is temporarily not available"
+					]
+				};
+			});
+
+			if (davError.davExceptionName != nil)
+			{
+				if ([allowedMessagesByException[davError.davExceptionMessage] isEqual:davError.davExceptionMessage])
+				{
+					// Message is on the allow list, so no maintenance mode
+					return (NO);
+				}
+			}
+		}
+
+		// Default to YES
+		return (YES);
+	}
+
+	return (NO);
 }
 
 #pragma mark - Metadata actions
