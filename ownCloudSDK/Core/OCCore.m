@@ -760,6 +760,12 @@
 		// Update query state to "started"
 		if (query.state == OCQueryStateStopped)
 		{
+			if (query.stopAction.cancelled)
+			{
+				// Replaced cancelled stop actions
+				query.stopAction = [OCCancelAction new];
+			}
+
 			query.state = OCQueryStateStarted;
 		}
 
