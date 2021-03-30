@@ -70,6 +70,7 @@
 	if ((self = [self init]) != nil)
 	{
 		self.databaseURL = databaseURL;
+		self.thumbnailDatabaseURL = [[self.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"];
 
 		self.removedItemRetentionLength = 100;
 
@@ -126,7 +127,6 @@
 
 			if (error == nil)
 			{
-				self.thumbnailDatabaseURL = [[self.sqlDB.databaseURL URLByDeletingPathExtension] URLByAppendingPathExtension:@"tdb"];
 				NSString *thumbnailsDBPath = self.thumbnailDatabaseURL.path;
 
 				self->_openCount++;

@@ -22,6 +22,7 @@
 #import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCMacros.h"
 #import "OCBookmarkManager.h"
+#import "OCCoreManager.h"
 
 @implementation OCBookmark (Diagnostics)
 
@@ -85,6 +86,18 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Remove Database Version") 	action:^(OCDiagnosticContext * _Nullable context) {
 			self.databaseVersion = OCDatabaseVersionUnknown;
 			[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self];
+		}],
+
+		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Database") action:^(OCDiagnosticContext * _Nullable context) {
+			[OCCoreManager.sharedCoreManager scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
+				OCVault *vault = [[OCVault alloc] initWithBookmark:bookmark];
+				OCDatabase *database = vault.database;
+
+				[NSFileManager.defaultManager removeItemAtURL:database.databaseURL error:NULL];
+				[NSFileManager.defaultManager removeItemAtURL:database.thumbnailDatabaseURL error:NULL];
+
+				completionHandler();
+			} forBookmark:self];
 		}]
 	]);
 }

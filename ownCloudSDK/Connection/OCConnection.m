@@ -1596,7 +1596,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 			if (davError.davExceptionName != nil)
 			{
-				if ([allowedMessagesByException[davError.davExceptionMessage] isEqual:davError.davExceptionMessage])
+				if ([allowedMessagesByException[davError.davExceptionName] containsObject:davError.davExceptionMessage])
 				{
 					// Message is on the allow list, so no maintenance mode
 					return (NO);
