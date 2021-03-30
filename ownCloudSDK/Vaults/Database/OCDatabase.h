@@ -46,6 +46,7 @@ typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSEr
 typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
 typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db, NSError *error, NSNumber *count);
+typedef void(^OCDatabaseRetrieveSyncRecordIDsCompletionHandler)(OCDatabase *db, NSError *error, NSSet<OCSyncRecordID> *syncRecordIDs);
 typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
 typedef void(^OCDatabaseDirectoryUpdateJobCompletionHandler)(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob);
@@ -150,6 +151,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler;
+
+- (void)retrieveSyncRecordIDsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;

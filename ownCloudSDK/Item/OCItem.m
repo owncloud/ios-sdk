@@ -769,6 +769,7 @@ OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 
 OCItemPropertyName OCItemPropertyNameCloudStatus = @"cloudStatus";
 OCItemPropertyName OCItemPropertyNameHasLocalAttributes = @"hasLocalAttributes";
+OCItemPropertyName OCItemPropertyNameSyncActivity = @"syncActivity";
 
 OCItemPropertyName OCItemPropertyNameDownloadTrigger = @"downloadTriggerIdentifier";
 

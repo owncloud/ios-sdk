@@ -187,6 +187,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSyncAnchor _latestSyncAnchor;
 
+	OCRateLimiter *_syncResetRateLimiter;
+
 	NSMutableDictionary <OCPath, OCCoreItemListTask *> *_itemListTasksByPath;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;

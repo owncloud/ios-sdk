@@ -295,6 +295,7 @@
 			@"favorite" 		: @(item.isFavorite.boolValue),
 			@"cloudStatus" 		: @(item.cloudStatus),
 			@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
+			@"syncActivity"		: @(item.syncActivity),
 			@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 			@"lastModifiedDate"	: OCSQLiteNullProtect(item.lastModified),
 			@"fileID"		: OCSQLiteNullProtect(item.fileID),
@@ -364,6 +365,7 @@
 				@"favorite" 		: @(item.isFavorite.boolValue),
 				@"cloudStatus" 		: @(item.cloudStatus),
 				@"hasLocalAttributes" 	: @(item.hasLocalAttributes),
+				@"syncActivity"		: @(item.syncActivity),
 				@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 				@"lastModifiedDate" 	: OCSQLiteNullProtect(item.lastModified),
 				@"fileID"		: OCSQLiteNullProtect(item.fileID),
@@ -747,6 +749,7 @@
 			OCItemPropertyNameIsFavorite 		: @"favorite",
 			OCItemPropertyNameCloudStatus 		: @"cloudStatus",
 			OCItemPropertyNameHasLocalAttributes 	: @"hasLocalAttributes",
+			OCItemPropertyNameSyncActivity		: @"syncActivity",
 			OCItemPropertyNameLastUsed 		: @"lastUsedDate",
 			OCItemPropertyNameLastModified		: @"lastModifiedDate",
 
@@ -1503,6 +1506,32 @@
 	}
 
 	return(syncRecord);
+}
+
+- (void)retrieveSyncRecordIDsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID" ] fromTable:OCDatabaseTableNameSyncJournal where:nil orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		__block OCSyncRecord *syncRecord = nil;
+		NSError *iterationError = error;
+		NSMutableSet<OCSyncRecordID> *syncRecordIDs = [NSMutableSet new];
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				OCSyncRecordID syncRecordID;
+
+				if ((syncRecordID = OCTypedCast(rowDictionary[@"recordID"], NSNumber)) != nil)
+				{
+					[syncRecordIDs addObject:syncRecordID];
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncRecordIDs);
+		}
+	}]];
 }
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler

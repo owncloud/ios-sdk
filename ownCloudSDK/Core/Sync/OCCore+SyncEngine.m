@@ -72,6 +72,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	_remoteSyncEngineTriggerAcknowledgements = [NSMutableDictionary new];
 	_remoteSyncEngineTimedOutSyncRecordIDs = [NSMutableSet new];
 
+	_syncResetRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:2.0];
+
 	[self renewActiveProcessCoreRegistration];
 
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
@@ -878,6 +880,20 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 					}];
 				}
 			}
+		}
+
+		if (activeLaneIDs.count == 0)
+		{
+			__weak OCCore *weakSelf = self;
+
+			OCLog(@"No more active sync lanes…");
+
+			[self->_syncResetRateLimiter runRateLimitedBlock:^{
+				if ((weakSelf.state == OCCoreStateReady) || (weakSelf.state == OCCoreStateRunning))
+				{
+					[weakSelf scrubItemSyncStatus];
+				}
+			}];
 		}
 
 		return (nil);
@@ -1781,6 +1797,71 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 			[self endActivity:@"Broadcast activity updates"];
 		});
 	}
+}
+
+#pragma mark - Sync Status Scrubbing
+- (void)scrubItemSyncStatus
+{
+	/*
+		Finds items in the database with invalid sync status and clears it.
+	*/
+
+	[self beginActivity:@"Scrub item sync status"];
+
+	[self queueBlock:^{
+		[self performProtectedSyncBlock:^NSError *{
+			__block NSSet<OCSyncRecordID> *syncRecordIDs = nil;
+			__block NSError *error = nil;
+			__block NSMutableArray<OCItem *> *updateItems = [NSMutableArray new];
+
+			[self.database retrieveSyncRecordIDsWithCompletionHandler:^(OCDatabase *db, NSError *dbError, NSSet<OCSyncRecordID> *recordIDs) {
+				syncRecordIDs = recordIDs;
+				error = dbError;
+			}];
+
+			if (error == nil)
+			{
+				[self.database retrieveCacheItemsForQueryCondition:[OCQueryCondition where:OCItemPropertyNameSyncActivity isNotEqualTo:@(0)] cancelAction:nil completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+					error = dbError;
+
+					if (dbError == nil)
+					{
+						for (OCItem *item in items)
+						{
+							// Ignore removed items
+							if (!item.removed)
+							{
+								// Check if item has any sync record ID of an actually existing sync record
+								if (![syncRecordIDs intersectsSet:[NSSet setWithArray:item.activeSyncRecordIDs]])
+								{
+									// No valid sync record IDs
+									OCLogWarning(@"Resetting sync information for %@ (live sync records: %@)", item, syncRecordIDs);
+
+									item.activeSyncRecordIDs = nil;
+									item.syncActivityCounts = nil;
+									item.syncActivity = OCItemSyncActivityNone;
+
+									[updateItems addObject:item];
+								}
+							}
+						}
+					}
+				}];
+
+				if ((error == nil) && (updateItems.count > 0))
+				{
+					OCLogDebug(@"Updated items: %@", updateItems);
+
+					[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+				}
+			}
+
+			return (error);
+		} completionHandler:^(NSError * _Nullable error) {
+			[self endActivity:@"Scrub item sync status"];
+			OCLogDebug(@"Finished item sync status scrub with error=%@", error);
+		}];
+	}];
 }
 
 #pragma mark - Sync debugging
