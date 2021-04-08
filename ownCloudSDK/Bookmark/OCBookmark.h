@@ -22,6 +22,7 @@
 #import "OCDatabase+Versions.h"
 
 typedef NSUUID* OCBookmarkUUID;
+typedef NSString* OCBookmarkUUIDString;
 
 typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 {

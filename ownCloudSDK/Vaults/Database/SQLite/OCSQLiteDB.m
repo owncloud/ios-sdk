@@ -468,7 +468,9 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 							}
 						}
 
-						if ((migration.applicableSchemas.count > 0) && !db.allowMigrations)
+						if ((migration.applicableSchemas.count > 0) && 		// Schemas need to be applied
+						    (migration.versionsByTableName.count > 0) &&	// The database has been initialized before (otherwise that table is empty)
+						    !db.allowMigrations)				// DB migrations are not allowed
 						{
 							// Schema migrations not allowed
 							completionHandler(db, OCSQLiteDBError(OCSQLiteDBErrorMigrationsNotAllowed));

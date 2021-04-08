@@ -1511,7 +1511,6 @@
 - (void)retrieveSyncRecordIDsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID" ] fromTable:OCDatabaseTableNameSyncJournal where:nil orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
-		__block OCSyncRecord *syncRecord = nil;
 		NSError *iterationError = error;
 		NSMutableSet<OCSyncRecordID> *syncRecordIDs = [NSMutableSet new];
 
