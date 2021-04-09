@@ -128,6 +128,15 @@
 					error = transformationError;
 					importFileOperationSuccessful = NO;
 				}
+
+				// Remove transformation block from options dictionary
+				NSMutableDictionary<OCCoreOption,id> *mutableOptions;
+
+				if ((mutableOptions = [options mutableCopy]) != nil)
+				{
+					mutableOptions[OCCoreOptionImportTransformation] = nil;
+					options = mutableOptions;
+				}
 			}
 		}
 
