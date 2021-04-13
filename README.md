@@ -1,10 +1,12 @@
-#  ownCloud iOS SDK  `WORK IN PROGRESS`
+#  ownCloud iOS SDK
 
 ## Introduction
 
-This project aims to create a new, modern ownCloud iOS SDK.
+A new, modern ownCloud iOS SDK.
 
 ## Architecture
+(this section is not entirely up-to-date)
+
 ![New architecture](doc/new-architecture.png)
 
 The iOS SDK comes as a framework that is easy to integrate and encapsulates all needed code and resources.
@@ -52,14 +54,6 @@ For background transfers, where the app could be terminated while a background `
 - `OCCore` also has a chance to store additonal information it needs to process the outcome of a request: by storing that data in the `userInfo` field of the `OCEventTarget`. As it receives the result of the request as an `OCEvent`, it also gets passed back the  `userInfo`.
 
 Note: since `OCEventTarget` handles the resolution and actual delivery of the event to the target, support for different mechanisms (f.ex. direct delivery to a block) can be added relatively easy through subclassing.
-
-## To Do
-- nullability annotations
-- OCDatabase details
-- OCEvent properties
-- Evaluate chances to consolidate existing OCItem properties, add missing ones
-- complete list of ToDos ;-)
-- implementation :-D
 
 ## License
 

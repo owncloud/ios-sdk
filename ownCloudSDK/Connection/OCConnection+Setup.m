@@ -18,6 +18,7 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "NSURL+OCURLNormalization.h"
 #import "OCMacros.h"
 
 @implementation OCConnection (Setup)
@@ -131,7 +132,7 @@
 					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 						if (decision == OCIssueDecisionApprove)
 						{
-							certificate.userAccepted = YES;
+							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 
 							self->_bookmark.certificate = certificate;
 							self->_bookmark.certificateModificationDate = [NSDate date];
@@ -188,7 +189,7 @@
 					}
 				}
 			}
-			else if (request.httpResponse.status.isRedirection)
+			else if (request.httpResponse.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY)
 			{
 				NSURL *redirectionURL;
 				
@@ -225,27 +226,26 @@
 			}
 			else
 			{
-				NSString *serverVersion;
-				NSNumber *maintenanceMode;
+				NSString *serverVersion = nil;
+				NSString *product = nil;
 
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
 				{
-					error = [self supportsServerVersion:serverVersion longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict]];
+					product = jsonDict[@"productname"];
+
+					error = [self supportsServerVersion:serverVersion product:product longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict] allowHiddenVersion:YES];
 				}
 
-				if ((jsonDict!=nil) && ((maintenanceMode = jsonDict[@"maintenance"]) != nil))
+				if ((jsonDict!=nil) && ([OCConnection validateStatus:jsonDict] == OCConnectionStatusValidationResultMaintenance))
 				{
-					if (maintenanceMode.boolValue)
-					{
-						error = OCError(OCErrorServerInMaintenanceMode);
-					}
+					error = OCError(OCErrorServerInMaintenanceMode);
 				}
 
 				if ((error == nil) && (redirectionURL != nil))
 				{
 					NSURL *suggestedURL = nil;
 					
-					if ((suggestedURL = [[self class] extractBaseURLFromRedirectionTargetURL:redirectionURL originalURL:statusURL originalBaseURL:url]) != nil)
+					if ((suggestedURL = [[self class] extractBaseURLFromRedirectionTargetURL:redirectionURL originalURL:statusURL originalBaseURL:url fallbackToRedirectionTargetURL:YES]) != nil)
 					{
 						if (outSuggestedURL != NULL)
 						{
@@ -280,82 +280,123 @@
 	
 	BOOL completed = NO;
 	NSURL *urlForCreationOfRedirectionIssueIfSuccessful = nil;
-	NSURL *urlForTryingRootURL = nil;
-	NSURL *lastURLTried = nil;
+	NSCountedSet<NSString *> *triedRootURLStrings = [NSCountedSet new];
+
+	// Plain-text HTTP check
+	if ([url.scheme.lowercaseString isEqualToString:@"http"])
+	{
+		OCIssue *issue = nil;
+
+		switch (OCConnection.setupHTTPPolicy)
+		{
+			case OCConnectionSetupHTTPPolicyAllow:
+				// Pass
+			break;
+
+			case OCConnectionSetupHTTPPolicyAuto:
+			case OCConnectionSetupHTTPPolicyWarn:
+				// Warn user about HTTP usage
+				if (self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] == nil)
+				{
+					issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.") level:OCIssueLevelWarning issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+						switch (decision)
+						{
+							case OCIssueDecisionApprove:
+								self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = [NSDate new];
+							break;
+
+							default:
+								self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+							break;
+						}
+					}];
+				}
+			break;
+
+			case OCConnectionSetupHTTPPolicyForbidden:
+				// HTTP forbidden
+				self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+
+				issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL forbidden") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.") level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+					self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
+				}];
+			break;
+		}
+
+		if (issue != nil)
+		{
+			completionHandler(issue, nil, nil, nil);
+			return;
+		}
+	}
 
 	// Query [url]/status.php
 	while (!completed)
 	{
 		NSURL *newBookmarkURL = nil;
 		OCHTTPRequest *statusRequest = nil;
+		NSString *absoluteURLString = url.absoluteString;
+		NSURL *baseURL = nil;
 
-		if ((lastURLTried!=nil) && ([lastURLTried isEqual:url]))
+		if ((absoluteURLString==nil) ||
+		   ((absoluteURLString != nil) && ([triedRootURLStrings countForObject:absoluteURLString] >= 1))) // Limit requests per URL to 1
 		{
-			// No new URLs to try. Detection failed.
+			// No new URL to try. Detection failed.
 			AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
 			break;
 		}
 
-		lastURLTried = url;
+		[triedRootURLStrings addObject:absoluteURLString];
 
 		if ((error = MakeStatusRequest(url, &statusRequest, &newBookmarkURL)) != nil)
 		{
+			baseURL = url;
+
 			if ([error isOCErrorWithCode:OCErrorServerDetectionFailed])
 			{
 				if (statusRequest.httpResponse.status.code != 0)
 				{
 					// HTTP request was answered
-					if (![[url lastPathComponent] isEqual:@"owncloud"])
+					if (statusRequest.httpResponse.status.code == OCHTTPStatusCodeMOVED_PERMANENTLY)
 					{
-						if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
-						{
-							AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
-						}
-					
-						urlForCreationOfRedirectionIssueIfSuccessful = url;
-						urlForTryingRootURL = url;
+					 	if (urlForCreationOfRedirectionIssueIfSuccessful != nil)
+					 	{
+					 		// Record previous redirect as issue
+							if (![_bookmark.url isEqual:url])
+							{
+								if (![_bookmark.url hasSameSchemeHostAndPortAs:url])
+								{
+									// Redirect to different host or scheme
+							 		AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+								}
+								else
+								{
+									// Redirect on same host, using same scheme
+									if (_bookmark.originURL == nil)
+									{
+										_bookmark.originURL = self->_bookmark.url;
+									}
 
-						url = [url URLByAppendingPathComponent:@"owncloud"];
-						continue;
+									_bookmark.url = url;
+								}
+							}
+					 	}
+
+						if (statusRequest.httpResponse.redirectURL != nil)
+						{
+							// Save data needed to record this redirection as issue in case the redirect succeeds
+							urlForCreationOfRedirectionIssueIfSuccessful = url;
+
+							url = [OCConnection extractBaseURLFromRedirectionTargetURL:statusRequest.httpResponse.redirectURL originalURL:statusRequest.effectiveURL originalBaseURL:baseURL fallbackToRedirectionTargetURL:YES];
+
+							continue;
+						}
 					}
 					else
 					{
-						// Check server root directory for a redirect
-						if (urlForTryingRootURL != nil)
-						{
-							OCHTTPRequest *rootURLRequest = nil;
-							NSURL *rootURL = urlForTryingRootURL;
-
-							if ((error = MakeRequest(rootURL, &rootURLRequest)) != nil)
-							{
-								// Network Error
-								AddIssue([OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
-								completed = YES;
-							}
-							else
-							{
-								// Check response for redirect
-								if (rootURLRequest.httpResponse.status.isRedirection)
-								{
-									if (rootURLRequest.httpResponse.redirectURL != nil)
-									{
-										urlForCreationOfRedirectionIssueIfSuccessful = urlForTryingRootURL;
-										url = rootURLRequest.httpResponse.redirectURL;
-										urlForTryingRootURL = nil;
-
-										continue;
-									}
-								}
-							}
-
-							urlForTryingRootURL = nil;
-						}
-						else
-						{
-							// This is just not an ownCloud server
-							AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
-							completed = YES;
-						}
+						// This is just not an ownCloud server
+						AddIssue([OCIssue issueForError:OCError(OCErrorServerDetectionFailed) level:OCIssueLevelError issueHandler:nil]);
+						completed = YES;
 					}
 				}
 				else
@@ -386,7 +427,21 @@
 				{
 					if (![_bookmark.url isEqual:url])
 					{
-						AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+						if (![_bookmark.url hasSameSchemeHostAndPortAs:url])
+						{
+							// Redirect to different host or scheme
+							AddRedirectionIssue(urlForCreationOfRedirectionIssueIfSuccessful, url);
+						}
+						else
+						{
+							// Redirect on same host, using same scheme
+							if (_bookmark.originURL == nil)
+							{
+								_bookmark.originURL = self->_bookmark.url;
+							}
+
+							_bookmark.url = url;
+						}
 					}
 
 					urlForCreationOfRedirectionIssueIfSuccessful = nil;
@@ -404,7 +459,9 @@
 			AddIssue([OCIssue issueForError:OCError(OCErrorServerTooManyRedirects) level:OCIssueLevelError issueHandler:nil]);
 			completed = YES;
 		}
-		
+
+		requestCount++;
+
 		urlForCreationOfRedirectionIssueIfSuccessful = nil;
 	};
 	

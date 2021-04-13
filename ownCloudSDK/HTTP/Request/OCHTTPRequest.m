@@ -20,6 +20,8 @@
 #import "NSURL+OCURLQueryParameterExtensions.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCMacros.h"
+#import "OCConnection.h"
 
 @implementation OCHTTPRequest
 
@@ -34,9 +36,14 @@
 
 		_identifier = NSUUID.UUID.UUIDString;
 
+		_maximumRedirectionDepth = 5;
+
 		self.method = OCHTTPMethodGET;
 	
-		self.headerFields = [NSMutableDictionary new];
+		self.headerFields = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+			// Insert request.identifier as X-Request-ID for tracing and to be able to reidentify the task later
+			_identifier, OCHTTPHeaderFieldNameXRequestID,
+		nil];
 		self.parameters = [NSMutableDictionary new];
 
 		NSProgress *progress = [NSProgress indeterminateProgress];
@@ -87,6 +94,60 @@
 	}
 }
 
+- (void)setValueArray:(NSArray *)valueArray apply:(NSString *(^)(id value))applyBlock forParameter:(NSString *)parameter
+{
+	NSUInteger index = 0;
+
+	if (parameter == nil) { return; }
+
+	if ((valueArray != nil) && (valueArray.count > 0))
+	{
+		for (id value in valueArray)
+		{
+			NSString *valueString = nil;
+
+			if (applyBlock != nil)
+			{
+				valueString = applyBlock(value);
+			}
+
+			if (valueString != nil)
+			{
+				valueString = OCTypedCast(valueString, NSString);
+			}
+
+			if (valueString != nil)
+			{
+				if ((index==0) && (valueArray.count == 1))
+				{
+					[self setValue:valueString forParameter:parameter];
+				}
+				else
+				{
+					[self setValue:valueString forParameter:[NSString stringWithFormat:@"%@[%ld]", parameter, index]];
+				}
+
+				index++;
+			}
+		}
+	}
+	else
+	{
+		NSString *parameterArrayPrefix = [parameter stringByAppendingString:@"["];
+		NSMutableArray *removeKeys = [NSMutableArray new];
+
+		for (NSString *parameterName in _parameters)
+		{
+			if (([parameterName hasPrefix:parameterArrayPrefix]) || [parameterName isEqual:parameter])
+			{
+				[removeKeys addObject:parameterName];
+			}
+		}
+
+		[_parameters removeObjectsForKeys:removeKeys];
+	}
+}
+
 - (void)addParameters:(NSDictionary<NSString*,NSString*> *)parameters
 {
 	if (parameters != nil)
@@ -124,15 +185,37 @@
 	}
 }
 
+- (NSError *)error
+{
+	return (_httpResponse.error);
+}
+
+- (OCHTTPRequestRedirectPolicy)redirectPolicy
+{
+	if (_redirectPolicy == OCHTTPRequestRedirectPolicyDefault)
+	{
+		if (OCTypedCast([OCConnection classSettingForOCClassSettingsKey:OCConnectionTransparentTemporaryRedirect], NSNumber).boolValue)
+		{
+			return (OCHTTPRequestRedirectPolicyAllowSameHost);
+		}
+		else
+		{
+			return (OCHTTPRequestRedirectPolicyValidateConnection);
+		}
+	}
+
+	return (_redirectPolicy);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
 	// Handle parameters and set effective URL
 	if (_parameters.count > 0)
 	{
-		if ([_method isEqual:OCHTTPMethodPOST])
+		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
-			// POST Method: Generate body from parameters
+			// POST and PUT methods: generate body from parameters
 			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
 			NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 			
@@ -141,12 +224,14 @@
 			}];
 			
 			urlComponents.queryItems = queryItems;
-			
-			self.bodyData = [[urlComponents query] dataUsingEncoding:NSUTF8StringEncoding];
 
-			if (_headerFields[@"Content-Type"] == nil)
+			// NSURLComponents.percentEncodedQuery will NOT escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization
+			// (source: http://www.openradar.me/24076063)
+			self.bodyData = [[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding];
+
+			if (_headerFields[OCHTTPHeaderFieldNameContentType] == nil)
 			{
-				[self setValue:@"application/x-www-form-urlencoded" forHeaderField:@"Content-Type"];
+				[self setValue:@"application/x-www-form-urlencoded" forHeaderField:OCHTTPHeaderFieldNameContentType];
 			}
 		}
 		else
@@ -188,6 +273,9 @@
 		{
 			urlRequest.HTTPBody = self.bodyData;
 		}
+
+		// Apply settings
+		urlRequest.allowsCellularAccess = !self.avoidCellular;
 	}
 
 	return (urlRequest);
@@ -196,6 +284,7 @@
 - (void)scrubForRescheduling
 {
 	_httpResponse = nil;
+	_effectiveURL = nil;
 
 	if (_downloadRequest)
 	{
@@ -219,6 +308,23 @@
 	}
 }
 
+- (OCHTTPRequestID)recreateRequestID
+{
+	OCHTTPRequestID newID = NSUUID.UUID.UUIDString; // Generate new UUID
+
+	// Update .identifier
+	_identifier = newID;
+
+	// Update value in X-Request-ID header
+	if ([self valueForHeaderField:OCHTTPHeaderFieldNameXRequestID] != nil)
+	{
+		[self setValue:newID forHeaderField:OCHTTPHeaderFieldNameXRequestID];
+	}
+
+	// Return new ID
+	return (newID);
+}
+
 #pragma mark - Cancel support
 - (void)cancel
 {
@@ -232,78 +338,154 @@
 }
 
 #pragma mark - Description
-+ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
 {
-	NSString *contentType = headers[@"Content-Type"];
-	BOOL readableContent = [contentType hasPrefix:@"text/"] || [contentType containsString:@"xml"] || [contentType containsString:@"json"] || [contentType isEqualToString:@"application/x-www-form-urlencoded"];
+	NSString *contentType = [[headers[OCHTTPHeaderFieldNameContentType] componentsSeparatedByString:@"; "] firstObject];
+	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
+			       [contentType isEqualToString:@"application/xml"] ||
+			       [contentType isEqualToString:@"application/json"] ||
+			       [contentType isEqualToString:@"application/x-www-form-urlencoded"];
+
+	NSString*(^FormatReadableData)(NSData *data) = ^(NSData *data) {
+		NSString *readable = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+		if (prefixed && (readable != nil))
+		{
+			readable = [@"[body] " stringByAppendingString:[readable stringByReplacingOccurrencesOfString:[[NSString alloc] initWithFormat:@"\n"] withString:[[NSString alloc] initWithFormat:@"\n[body] "]]];
+		}
+
+		return (readable);
+	};
 
 	if (url != nil)
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:[NSData dataWithContentsOfURL:url] encoding:NSUTF8StringEncoding]);
+			return (FormatReadableData([NSData dataWithContentsOfURL:url]));
 		}
 
-		return ([NSString stringWithFormat:@"[Contents from %@]", url.path]);
+		return ([NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path]);
 	}
 
 	if (data != nil)
 	{
 		if (readableContent)
 		{
-			return ([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+			return (FormatReadableData(data));
 		}
 
-		return ([NSString stringWithFormat:@"[%lu bytes of %@ data]", (unsigned long)data.length, contentType]);
+		return ([NSString stringWithFormat:@"%@[%lu bytes of %@ data]", (prefixed ? @"[body] " : @""), (unsigned long)data.length, contentType]);
 	}
 
 	return (nil);
 }
 
-+ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix
 {
 	NSMutableString *formattedHeaders = [NSMutableString new];
 
 	[headers enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull headerField, NSString * _Nonnull value, BOOL * _Nonnull stop) {
-		if ([headerField isEqualToString:@"Authorization"])
+		if ([headerField isEqualToString:OCHTTPHeaderFieldNameAuthorization])
 		{
-			value = @"[redacted]";
+			NSArray<NSString *> *authorizationComponents = [value componentsSeparatedByString:@" "];
+
+			if (authorizationComponents.count > 1)
+			{
+				value = [authorizationComponents[0] stringByAppendingString:@" [redacted]"];
+			}
+			else
+			{
+				value = @"[redacted]";
+			}
 		}
-		[formattedHeaders appendFormat:@"%@: %@\n", headerField, value];
+
+		if (linePrefix != nil)
+		{
+			[formattedHeaders appendFormat:@"%@%@: %@\n", linePrefix, headerField, value];
+		}
+		else
+		{
+			[formattedHeaders appendFormat:@"%@: %@\n", headerField, value];
+		}
 	}];
 
 	return (formattedHeaders);
 }
 
-- (NSString *)requestDescription
+- (NSString *)requestDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *requestDescription = [NSMutableString new];
+	NSString *infoPrefix = (prefixed ? @"[info] " : @"");
+	NSString *headPrefix = (prefixed ? @"[header] " : @"");
 
-	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 
-	[requestDescription appendFormat:@"%@ %@ HTTP/1.1\nHost: %@\n", self.method, self.url.path, self.url.hostAndPort];
+	[requestDescription appendFormat:@"%@%@ %@ HTTP/1.1\n%@Host: %@\n", headPrefix, self.method, self.url.path, headPrefix, self.url.hostAndPort];
+	if (_autoResume && (_autoResumeInfo != nil))
+	{
+		[requestDescription appendFormat:@"%@[Auto-Resume: %lu | Info: %@]\n", infoPrefix, (unsigned long)_autoResume, _autoResumeInfo.allKeys];
+	}
+	if (_avoidCellular)
+	{
+		[requestDescription appendFormat:@"%@[Avoid Cellular Transfer]\n", infoPrefix];
+	}
+	if (_redirectPolicy != OCHTTPRequestRedirectPolicyDefault)
+	{
+		NSString *redirectionPolicy = nil;
+
+		switch (_redirectPolicy)
+		{
+			case OCHTTPRequestRedirectPolicyDefault:
+				redirectionPolicy = @"default";
+			break;
+
+			case OCHTTPRequestRedirectPolicyHandleLocally:
+				redirectionPolicy = @"handle locally";
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowAnyHost:
+				redirectionPolicy = @"any host";
+			break;
+
+			case OCHTTPRequestRedirectPolicyAllowSameHost:
+				redirectionPolicy = @"same host";
+			break;
+
+			case OCHTTPRequestRedirectPolicyValidateConnection:
+				redirectionPolicy = @"validate connection";
+			break;
+		}
+
+		[requestDescription appendFormat:@"%@[Redirect Policy: %@]\n", infoPrefix, redirectionPolicy];
+	}
 	if (_bodyData != nil)
 	{
-		[requestDescription appendFormat:@"Content-Length: %lu\n", (unsigned long)_bodyData.length];
+		[requestDescription appendFormat:@"%@Content-Length: %lu\n", headPrefix, (unsigned long)_bodyData.length];
 	}
 	if (_bodyURL != nil)
 	{
 		NSNumber *fileSize = nil;
-		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL]) {
-			[requestDescription appendFormat:@"Content-Length: %lu\n", fileSize.unsignedIntegerValue];
+		if ([_bodyURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			[requestDescription appendFormat:@"%@Content-Length: %lu\n", headPrefix, fileSize.unsignedIntegerValue];
 		}
 	}
 	if (_headerFields.count > 0)
 	{
-		[requestDescription appendString:[OCHTTPRequest formattedHeaders:self.headerFields]];
+		[requestDescription appendString:[OCHTTPRequest formattedHeaders:self.headerFields withLinePrefix:(prefixed ? headPrefix : nil)]];
 	}
 
 	if (bodyDescription != nil)
 	{
-		[requestDescription appendFormat:@"\n%@\n", bodyDescription];
+		[requestDescription appendFormat:@"%@\n%@\n", headPrefix, bodyDescription];
 	}
 
 	return (requestDescription);
+}
+
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, method: %@, url: %@, effectiveURL: %@%@%@>", NSStringFromClass(self.class), self, self.identifier, self.method, self.url, self.effectiveURL, ((self.bodyData != nil) ? [NSString stringWithFormat:@", bodyData=%lu bytes", self.bodyData.length] : @""), ((self.bodyURL != nil) ? [NSString stringWithFormat:@", bodyURL=%@", self.bodyURL.absoluteString] : @"")]);
 }
 
 #pragma mark - Secure Coding
@@ -325,16 +507,25 @@
 		self.url 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 		self.effectiveURL 	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"effectiveURL"];
 		self.method		= [decoder decodeObjectOfClass:[NSString class] forKey:@"method"];
-		self.headerFields 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"headerFields"];
-		self.parameters 	= [decoder decodeObjectOfClass:[NSMutableDictionary class] forKey:@"parameters"];
+		self.headerFields 	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSString.class, nil] forKey:@"headerFields"];
+		self.parameters 	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSString.class, nil] forKey:@"parameters"];
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
+		self.redirectPolicy	= [decoder decodeIntegerForKey:@"redirectPolicy"];
+		self.maximumRedirectionDepth = [decoder decodeIntegerForKey:@"maximumRedirectionDepth"];
+		self.redirectionHistory = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSURL.class, nil] forKey:@"redirectionHistory"];
+
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
-		self.requiredSignals    = [decoder decodeObjectOfClass:[NSSet class] forKey:@"requiredSignals"];
+
+		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
+		self.requiredCellularSwitch = [decoder decodeObjectOfClass:[NSString class] forKey:@"requiredCellularSwitch"];
+
+		self.autoResume 	= [decoder decodeBoolForKey:@"autoResume"];
+		self.autoResumeInfo	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"autoResumeInfo"];
 
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
-		self.userInfo	 	= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		self.userInfo	 	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
@@ -342,6 +533,8 @@
 		self.downloadRequest	= [decoder decodeBoolForKey:@"downloadRequest"];
 		self.downloadedFileURL	= [decoder decodeObjectOfClass:[NSURL class] forKey:@"downloadedFileURL"];
 		self.downloadedFileIsTemporary = [decoder decodeBoolForKey:@"downloadedFileIsTemporary"];
+
+		self.avoidCellular	= [decoder decodeBoolForKey:@"avoidCellular"];
 
 		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
 		self.cancelled		= [decoder decodeBoolForKey:@"cancelled"];
@@ -370,9 +563,17 @@
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 
+	[coder encodeInteger:_redirectPolicy 		forKey:@"redirectPolicy"];
+	[coder encodeInteger:_maximumRedirectionDepth 	forKey:@"maximumRedirectionDepth"];
+	[coder encodeObject:_redirectionHistory 	forKey:@"redirectionHistory"];
+
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
-	[coder encodeObject:_requiredSignals 	forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredSignals 		forKey:@"requiredSignals"];
+	[coder encodeObject:_requiredCellularSwitch 	forKey:@"requiredCellularSwitch"];
+
+	[coder encodeBool:_autoResume 		forKey:@"autoResume"];
+	[coder encodeObject:_autoResumeInfo	forKey:@"autoResumeInfo"];
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];
@@ -384,6 +585,8 @@
 	[coder encodeObject:_downloadedFileURL 	forKey:@"downloadedFileURL"];
 	[coder encodeBool:_downloadedFileIsTemporary forKey:@"downloadedFileIsTemporary"];
 
+	[coder encodeBool:_avoidCellular 	forKey:@"avoidCellular"];
+
 	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 	[coder encodeBool:_cancelled 		forKey:@"cancelled"];
 
@@ -394,6 +597,7 @@
 
 OCHTTPMethod OCHTTPMethodGET = @"GET";
 OCHTTPMethod OCHTTPMethodPOST = @"POST";
+OCHTTPMethod OCHTTPMethodPATCH = @"PATCH";
 OCHTTPMethod OCHTTPMethodHEAD = @"HEAD";
 OCHTTPMethod OCHTTPMethodPUT = @"PUT";
 OCHTTPMethod OCHTTPMethodDELETE = @"DELETE";
@@ -403,7 +607,26 @@ OCHTTPMethod OCHTTPMethodMOVE = @"MOVE";
 OCHTTPMethod OCHTTPMethodCOPY = @"COPY";
 OCHTTPMethod OCHTTPMethodPROPFIND = @"PROPFIND";
 OCHTTPMethod OCHTTPMethodPROPPATCH = @"PROPPATCH";
+OCHTTPMethod OCHTTPMethodREPORT = @"REPORT";
 OCHTTPMethod OCHTTPMethodLOCK = @"LOCK";
 OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation = @"Location";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization = @"Authorization";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID = @"X-Request-ID";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination = @"Destination";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite = @"Overwrite";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch = @"If-Match";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch = @"If-None-Match";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent = @"User-Agent";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime = @"X-OC-MTime";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum = @"OC-Checksum";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator = @"OC-Connection-Validator";
+
 OCProgressPathElementIdentifier OCHTTPRequestGlobalPath = @"_httpRequest";
+
+OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData = @"_systemResumeData";
+

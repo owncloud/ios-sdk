@@ -23,32 +23,12 @@
 
 @interface OCIssue ()
 {
+	BOOL _decisionMade;
 	BOOL _ignoreChildEvents;
 }
 @end
 
 @implementation OCIssue
-
-@synthesize type = _type;
-@synthesize level = _level;
-
-@synthesize localizedTitle = _localizedTitle;
-@synthesize localizedDescription = _localizedDescription;
-
-@synthesize certificate = _certificate;
-@synthesize certificateValidationResult = _certificateValidationResult;
-@synthesize certificateURL = _certificateURL;
-
-@synthesize originalURL = _originalURL;
-@synthesize suggestedURL = _suggestedURL;
-
-@synthesize decision = _decision;
-@synthesize issueHandler = _issueHandler;
-
-@synthesize selectedChoice = _selectedChoice;
-@synthesize choices = _choices;
-
-@synthesize issues = _issues;
 
 #pragma mark - Init
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler
@@ -76,17 +56,22 @@
 	return ([[self alloc] initWithError:error level:level issueHandler:issueHandler]);
 }
 
++ (instancetype)issueWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler
+{
+	return ([[self alloc] initWithLocalizedTitle:localizedTitle localizedDescription:localizedDescription level:level issueHandler:issueHandler]);
+}
+
 - (instancetype)initWithCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(OCIssueHandler)issueHandler
 {
 	if ((self = [super init]) != nil)
 	{
 		_type = OCIssueTypeCertificate;
 		_level = level;
-	
+
 		_certificate = certificate;
 		_certificateValidationResult = validationResult;
 		_certificateURL = url;
-		
+
 		_issueHandler = [issueHandler copy];
 
 		_localizedTitle = OCLocalizedString(@"Certificate", @"");
@@ -114,7 +99,7 @@
 			break;
 		}
 	}
-	
+
 	return(self);
 }
 
@@ -133,7 +118,7 @@
 		_localizedTitle = OCLocalizedString(@"Redirection", @"");
 		_localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The connection is redirected from %@ to %@.", @""), originalURL.hostAndPort, suggestedURL.hostAndPort];
 	}
-	
+
 	return(self);
 }
 
@@ -143,7 +128,7 @@
 	{
 		_type = OCIssueTypeError;
 		_level = level;
-		
+
 		_error = error;
 
 		_issueHandler = [issueHandler copy];
@@ -155,7 +140,7 @@
 			_localizedDescription = _error.description;
 		}
 	}
-	
+
 	return(self);
 }
 
@@ -175,30 +160,47 @@
 	return(self);
 }
 
+- (instancetype)initWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = OCIssueTypeGeneric;
+
+		_localizedTitle = localizedTitle;
+		_localizedDescription = localizedDescription;
+
+		_level = level;
+
+		_issueHandler = [issueHandler copy];
+	}
+
+	return(self);
+}
+
 - (instancetype)initWithIssues:(NSArray <OCIssue *> *)issues completionHandler:(OCIssueHandler)completionHandler
 {
 	if ((self = [super init]) != nil)
 	{
 		OCIssueLevel highestLevel = OCIssueLevelInformal;
-	
+
 		_type = OCIssueTypeGroup;
 
 		_issues = issues;
 		_issueHandler = [completionHandler copy];
-		
+
 		for (OCIssue *issue in issues)
 		{
 			issue.parentIssue = self;
-			
+
 			if (issue.level > highestLevel)
 			{
 				highestLevel = issue.level;
 			}
 		}
-		
+
 		_level = highestLevel;
 	}
-	
+
 	return(self);
 }
 
@@ -228,10 +230,10 @@
 			{
 				_issues = [NSMutableArray arrayWithArray:_issues];
 			}
-			
+
 			addIssue.parentIssue = self;
 			[(NSMutableArray *)_issues addObject:addIssue];
-			
+
 			if (addIssue.level > _level)
 			{
 				_level = addIssue.level;
@@ -307,11 +309,11 @@
 				decisionCounts[issue.decision]++;
 			}
 		}
-		
+
 		if (decisionCounts[OCIssueDecisionNone] == 0)
 		{
 			OCIssueDecision summaryDecision = OCIssueDecisionNone;
-		
+
 			if (decisionCounts[OCIssueDecisionApprove] == _issues.count)
 			{
 				summaryDecision = OCIssueDecisionApprove;
@@ -343,7 +345,7 @@
 			[self didChangeValueForKey:@"decision"];
 		}
 	}
-	
+
 	if (madeDecision)
 	{
 		if (_type == OCIssueTypeGroup)
@@ -391,7 +393,7 @@
 		break;
 
 		case OCIssueTypeMultipleChoice:
-			[descriptionString appendFormat:@"Multiple Choice [%@]", _choices];
+			[descriptionString appendFormat:@"Multiple Choice [%@: %@] : [%@]", _localizedTitle, _localizedDescription, _choices];
 		break;
 
 		case OCIssueTypeURLRedirection:
@@ -399,24 +401,28 @@
 		break;
 
 		case OCIssueTypeCertificate:
-			[descriptionString appendFormat:@"Certificate [%@]", _certificate.hostName];
+			[descriptionString appendFormat:@"Certificate [%@ | %@]", _certificate.hostName, _certificate.sha256Fingerprint.asFingerPrintString];
+		break;
+
+		case OCIssueTypeGeneric:
+			[descriptionString appendFormat:@"Generic [%@: %@]", _localizedTitle, _localizedDescription];
 		break;
 
 		case OCIssueTypeError:
 			[descriptionString appendFormat:@"Error [%@]", _error];
 		break;
 	}
-	
+
 	switch (_level)
 	{
 		case OCIssueLevelInformal:
 			[descriptionString appendString:@" (Informal)"];
 		break;
-		
+
 		case OCIssueLevelWarning:
 			[descriptionString appendString:@" (Warning)"];
 		break;
-		
+
 		case OCIssueLevelError:
 			[descriptionString appendString:@" (Error)"];
 		break;
@@ -425,6 +431,65 @@
 	[descriptionString appendString:@">"];
 
 	return (descriptionString);
+}
+
+#pragma mark - Handling
+- (void)appendIssueHandler:(OCIssueHandler)issueHandler
+{
+	if (_issueHandler == nil)
+	{
+		_issueHandler = [issueHandler copy];
+	}
+	else
+	{
+		OCIssueHandler existingHandler = [_issueHandler copy];
+		OCIssueHandler additionalHandler = [issueHandler copy];
+
+		_issueHandler = [^(OCIssue *issue, OCIssueDecision decision) {
+			existingHandler(issue, decision);
+			additionalHandler(issue, decision);
+		} copy];
+	}
+}
+
+#pragma mark - Signature
+- (OCIssueSignature)signature
+{
+	NSMutableString *signatureString = [NSMutableString stringWithFormat:@"%lu:%lu:%@:%@:", (unsigned long)_level, (unsigned long)_type, _localizedTitle, _localizedDescription];
+
+	switch (_type)
+	{
+		case OCIssueTypeGroup:
+			for (OCIssue *issue in _issues)
+			{
+				[signatureString appendFormat:@"%@:", issue.signature];
+			}
+		break;
+
+		case OCIssueTypeMultipleChoice:
+			for (OCIssueChoice *choice in _choices)
+			{
+				[signatureString appendFormat:@"%@[%@]:", choice.label, choice.identifier];
+			}
+		break;
+
+		case OCIssueTypeURLRedirection:
+			[signatureString appendFormat:@"%@ -> %@", _originalURL, _suggestedURL];
+		break;
+
+		case OCIssueTypeCertificate:
+			[signatureString appendFormat:@"%@:%@", _certificate.hostName, [_certificate.sha256Fingerprint asHexStringWithSeparator:@""]];
+		break;
+
+		case OCIssueTypeGeneric:
+		break;
+
+		case OCIssueTypeError:
+			[signatureString appendFormat:@"%@:%ld", _error.domain, (long)_error.code];
+		break;
+	}
+
+	return (signatureString);
 }
 
 #pragma mark - Filtering

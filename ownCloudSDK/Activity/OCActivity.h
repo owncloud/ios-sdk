@@ -19,7 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCIssue.h"
 
-typedef NSString* OCActivityIdentifier;
+typedef NSString* OCActivityIdentifier NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSUInteger, OCActivityState)
 {

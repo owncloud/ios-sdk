@@ -27,12 +27,11 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	OCEventTypeNone,
 
 	// Creation
-	OCEventTypeCreateFolder,
-	OCEventTypeCreateEmptyFile,
-	OCEventTypeCreateShare,
+	OCEventTypeCreateFolder = 1,
+	// reserved (previously the never used OCEventTypeCreateEmptyFile)
 
 	// Modification
-	OCEventTypeMove,
+	OCEventTypeMove = 3,
 	OCEventTypeCopy,
 	OCEventTypeDelete,
 
@@ -43,10 +42,23 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	// Metadata
 	OCEventTypeRetrieveThumbnail,
 	OCEventTypeRetrieveItemList,
+	OCEventTypeRetrieveShares,
 	OCEventTypeUpdate,
 
+	// Sharing
+	OCEventTypeCreateShare,
+	OCEventTypeUpdateShare,
+	OCEventTypeDeleteShare,
+	OCEventTypeDecideOnShare,
+
 	// Issues
-	OCEventTypeIssueResponse
+	OCEventTypeIssueResponse,
+
+	// Report
+	OCEventTypeFilterFiles,
+
+	// Wakeup
+	OCEventTypeWakeupSyncRecord
 };
 
 @class OCEvent;
@@ -62,10 +74,12 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
+typedef NSString* OCEventUUID;
 
 @interface OCEvent : NSObject <NSSecureCoding>
 {
 	OCEventType _eventType;
+	OCEventUUID _uuid;
 
 	NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *_userInfo;
 	NSDictionary<OCEventUserInfoKey,id> *_ephermalUserInfo;
@@ -74,14 +88,16 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 	NSUInteger _depth;
 
 	NSString *_mimeType;
-	NSData *_data;
 	NSError *_error;
 	id<NSObject,NSSecureCoding>  _result;
 
 	OCDatabaseID _databaseID;
 }
 
+@property(nonatomic,class,readonly,strong) NSSet<Class> *safeClasses;
+
 @property(assign) OCEventType eventType;	//!< The type of event this object describes.
+@property(nullable,strong,readonly) OCEventUUID uuid; //!< Unique UUID used to prevent OCEvent duplicates
 
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
@@ -90,7 +106,6 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 @property(assign) NSUInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
 
 @property(nullable,strong) NSString *mimeType;
-@property(nullable,strong) NSData *data;
 @property(nullable,strong) OCFile *file;
 
 @property(nullable,strong) NSError *error;
@@ -104,7 +119,7 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 + (nullable id <OCEventHandler>)eventHandlerWithIdentifier:(OCEventHandlerIdentifier)eventHandlerIdentifier; //!< Retrieves the event handler stored for a particular identifier.
 
 #pragma mark - Creating events
-+ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType attributes:(nullable NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
++ (instancetype)eventForEventTarget:(OCEventTarget *)eventTarget type:(OCEventType)eventType uuid:(nullable OCEventUUID)uuid attributes:(nullable NSDictionary *)attributes; //!< Creates an event using the userInfo and ephermalUserInfo from the supplied eventTarget as well as the passed in type and attributes.
 
 + (instancetype)eventWithType:(OCEventType)eventType userInfo:(nullable NSDictionary<OCEventUserInfoKey,id<NSSecureCoding>> *)userInfo ephermalUserInfo:(nullable NSDictionary<OCEventUserInfoKey,id> *)ephermalUserInfo result:(nullable id)result; //!< Creates an event using of the specified type using the provided userInfo and ephermalUserInfo
 
@@ -116,6 +131,7 @@ typedef void(^OCEventHandlerBlock)(OCEvent *event, id sender);
 
 extern OCEventUserInfoKey OCEventUserInfoKeyItem;
 extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
+extern OCEventUserInfoKey OCEventUserInfoKeySelector;
 
 NS_ASSUME_NONNULL_END
 

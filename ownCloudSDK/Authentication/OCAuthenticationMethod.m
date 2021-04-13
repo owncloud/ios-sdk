@@ -21,7 +21,11 @@
 #import "OCAuthenticationMethod.h"
 #import "OCBookmark.h"
 #import "OCHTTPRequest.h"
+#import "OCHTTPResponse+DAVError.h"
 #import "NSError+OCError.h"
+#import "OCIPNotificationCenter.h"
+#import "OCBookmark+IPNotificationNames.h"
+#import "OCLogger.h"
 
 @implementation OCAuthenticationMethod
 
@@ -30,7 +34,7 @@
 {
 	static dispatch_once_t onceToken;
 	static NSMutableSet <Class> *registeredAuthenticationMethodClasses;
-	
+
 	dispatch_once(&onceToken, ^{
 		registeredAuthenticationMethodClasses = [NSMutableSet new];
 	});
@@ -62,7 +66,7 @@
 + (Class)registeredAuthenticationMethodForIdentifier:(OCAuthenticationMethodIdentifier)identifier
 {
 	NSArray <Class> *classes = [self registeredAuthenticationMethodClasses];
-	
+
 	for (Class authenticationMethodClass in classes)
 	{
 		if ([[authenticationMethodClass identifier] isEqual:identifier])
@@ -70,7 +74,7 @@
 			return (authenticationMethodClass);
 		}
 	}
-	
+
 	return (Nil);
 }
 
@@ -82,12 +86,12 @@
 
 + (OCAuthenticationMethodIdentifier)identifier
 {
-	return (nil);
+	return ((id _Nonnull) nil); // Needs to be overridden by all subclasses. If one does not, let it crash.
 }
 
 + (NSString *)name
 {
-	return(nil);
+	return((id _Nonnull) nil); // Needs to be overridden by all subclasses. If one does not, let it crash.
 }
 
 - (NSString *)name
@@ -120,14 +124,20 @@
 	{
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:UIApplicationWillResignActiveNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_hostStatusChanged:) name:NSExtensionHostWillResignActiveNotification object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_bookmarkChanged:)   name:OCBookmarkAuthenticationDataChangedNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_authenticationDataChangedLocally:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
+
+		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCAuthenticationMethod *authMethod, OCIPCNotificationName  _Nonnull notificationName) {
+			[authMethod _authenticationDataChangedRemotely:YES];
+		}];
 	}
-	
+
 	return(self);
 }
 
 - (void)dealloc
 {
+	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName];
+
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
@@ -139,21 +149,29 @@
 	    [notification.name isEqual:NSExtensionHostWillResignActiveNotification])
 	{
 		// Flush cached authentication secret when device is locked or the user switches to another app
+		OCLogDebug(@"Received %@ notification: flush auth secret", notification.name);
 		[self flushCachedAuthenticationSecret];
 	}
 }
 
-- (void)_bookmarkChanged:(NSNotification *)notification
+- (void)_authenticationDataChangedLocally:(NSNotification *)notification
+{
+	[self _authenticationDataChangedRemotely:NO];
+}
+
+- (void)_authenticationDataChangedRemotely:(BOOL)remotely
 {
 	// Flush cached authentication secret so it is re-read from the bookmark. Right now we flush all cached
 	// secrets for every change of every bookmark. This could be optimized in the future, but given how rare
 	// such an event occurs and that performance impact should be almost imperceptible, it's probably not worth
 	// to put any time and effort into this.
+	OCLogDebug(@"Received %@ notification to flush auth secret", (remotely ? @"remote" : @"local"));
+
 	[self flushCachedAuthenticationSecret];
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
 	return(nil);
 }
@@ -187,7 +205,20 @@
 
 - (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
 {
+	NSError *error = nil;
+	NSDictionary<NSString *, NSString *> *authHeaders;
+
+	if ((authHeaders = [self authorizationHeadersForConnection:connection error:&error]) != nil)
+	{
+		[request addHeaderFields:authHeaders];
+	}
+
 	return (request);
+}
+
+- (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
+{
+	return (nil);
 }
 
 #pragma mark - Generate bookmark authentication data
@@ -204,24 +235,23 @@
 - (id)cachedAuthenticationSecretForConnection:(OCConnection *)connection
 {
 	id cachedAuthenticationSecret = nil;
-	
+
 	@synchronized(self)
 	{
 		if (_cachedAuthenticationSecret == nil)
 		{
 			cachedAuthenticationSecret = [self loadCachedAuthenticationSecretForConnection:connection];
-			
+
+			_cachedAuthenticationSecret = cachedAuthenticationSecret;
+
 			if ([self respondsToSelector:@selector(cacheSecrets)])
 			{
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if (((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
+					if (!((id<OCAuthenticationMethodUIAppExtension>)self).cacheSecrets)
 					{
 						@synchronized(self)
 						{
-							if (self->_cachedAuthenticationSecret == nil)
-							{
-								self->_cachedAuthenticationSecret = cachedAuthenticationSecret;
-							}
+							self->_cachedAuthenticationSecret = nil;
 						}
 					}
 				});
@@ -232,7 +262,7 @@
 			cachedAuthenticationSecret = _cachedAuthenticationSecret;
 		}
 	}
-	
+
 	return (cachedAuthenticationSecret);
 }
 
@@ -246,6 +276,9 @@
 	@synchronized(self)
 	{
 		_cachedAuthenticationSecret = nil;
+		[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+		_authenticationDataKnownInvalidDate = nil;
+		[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 	}
 }
 
@@ -263,11 +296,60 @@
 	{
 		if (error == nil)
 		{
-			error = OCError(OCErrorAuthorizationFailed);
+			NSError *davError;
+
+			if ((davError = [response bodyParsedAsDAVError]) != nil)
+			{
+				error = OCErrorFromError(OCErrorAuthorizationFailed, davError);
+			}
+			else
+			{
+				error = OCError(OCErrorAuthorizationFailed);
+			}
+
+			OCErrorAddDateFromResponse(error, response);
 		}
 	}
 
 	return (error);
+}
+
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierAuthentication);
+}
+
++ (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	return (@{
+		OCAuthenticationMethodBrowserSessionClass	  	: @"operating-system",
+		OCAuthenticationMethodBrowserSessionPrefersEphermal	: @(NO)
+	});
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Authentication
+		OCAuthenticationMethodBrowserSessionClass : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				@"operating-system" : @"Use ASWebAuthenticationSession for browser sessions.",
+				@"UIWebView" : @"Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag."
+			},
+			OCClassSettingsMetadataKeyCategory	: @"Authentication"
+		},
+
+		OCAuthenticationMethodBrowserSessionPrefersEphermal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
+			OCClassSettingsMetadataKeyCategory	: @"Authentication"
+		}
+	});
 }
 
 #pragma mark - Log tagging
@@ -287,5 +369,11 @@ OCAuthenticationMethodKey OCAuthenticationMethodUsernameKey = @"username";
 OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey = @"passphrase";
 OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"presentingViewController";
 OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
+OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey = @"requiredUsername";
 
 NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";
+NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey = @"alternativeServerURLOriginURL";
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication = @"authentication";
+OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass = @"browser-session-class";
+OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal = @"browser-session-prefers-ephermal";

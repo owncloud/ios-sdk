@@ -21,16 +21,8 @@
 
 @interface NSProgress (OCEvent)
 
-- (OCEventType)eventType;
-- (void)setEventType:(OCEventType)eventType;
-
-- (OCFileID)fileID;
-- (void)setFileID:(OCFileID)fileID;
-
-- (OCLocalID)localID;
-- (void)setLocalID:(OCLocalID)localID;
-//
-//- (OCJobID)jobID;
-//- (void)setJobID:(OCJobID)jobID;
+@property(assign,nonatomic) OCEventType eventType;
+@property(assign,nonatomic) OCFileID fileID;
+@property(assign,nonatomic) OCLocalID localID;
 
 @end

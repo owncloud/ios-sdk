@@ -18,6 +18,7 @@
 
 #import "OCProgress.h"
 #import "OCProgressManager.h"
+#import "OCEvent.h"
 
 @interface OCProgress ()
 {
@@ -203,6 +204,11 @@
 	}
 }
 
+- (BOOL)cancelled
+{
+	return (_cancelled || _progress.isCancelled);
+}
+
 + (BOOL)supportsSecureCoding
 {
 	return(YES);
@@ -222,8 +228,8 @@
 	if ((self = [self init]) != nil)
 	{
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
-		_path = [decoder decodeObjectOfClass:[NSArray class] forKey:@"path"];
-		_userInfo = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"userInfo"];
+		_path = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSString.class, nil] forKey:@"path"];
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 		_cancelled = [decoder decodeBoolForKey:@"cancelled"];
 		_cancellable = [decoder decodeBoolForKey:@"cancellable"];
 	}

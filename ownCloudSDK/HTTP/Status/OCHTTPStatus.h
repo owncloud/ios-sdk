@@ -30,6 +30,8 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	// Redirection (3xx)
 	OCHTTPStatusCodeMOVED_PERMANENTLY = 301,
 	OCHTTPStatusCodeMOVED_TEMPORARILY = 302,
+	OCHTTPStatusCodeTEMPORARY_REDIRECT = 307,
+	OCHTTPStatusCodePERMANENT_REDIRECT = 308,
 
 	// Client Error (4xx)
 	OCHTTPStatusCodeBAD_REQUEST = 400,
@@ -39,12 +41,15 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeMETHOD_NOT_ALLOWED = 405,
 	OCHTTPStatusCodeCONFLICT = 409,
 	OCHTTPStatusCodePRECONDITION_FAILED = 412,
+	OCHTTPStatusCodePAYLOAD_TOO_LARGE = 413,
+	OCHTTPStatusCodeLOCKED = 423,
 
 	// Server Error (5xx)
 	OCHTTPStatusCodeINTERNAL_SERVER_ERROR = 500,
 	OCHTTPStatusCodeNOT_IMPLEMENTED = 501,
 	OCHTTPStatusCodeBAD_GATEWAY = 502,
-	OCHTTPStatusCodeSERVICE_UNAVAILABLE = 503
+	OCHTTPStatusCodeSERVICE_UNAVAILABLE = 503,
+	OCHTTPStatusCodeINSUFFICIENT_STORAGE = 507
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -60,11 +65,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL isRedirection;
 @property(readonly,nonatomic) BOOL isError;
 
+@property(readonly,nonatomic,strong) NSString *name;
+
 + (instancetype)HTTPStatusWithCode:(OCHTTPStatusCode)code;
 - (instancetype)initWithCode:(OCHTTPStatusCode)code;
 
 - (NSError *)error;
 - (NSError *)errorWithURL:(NSURL *)url;
+- (NSError *)errorWithDescription:(NSString *)description;
 - (NSError *)errorWithResponse:(NSHTTPURLResponse *)response;
 
 @end

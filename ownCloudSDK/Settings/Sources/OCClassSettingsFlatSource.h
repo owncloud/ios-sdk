@@ -28,8 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)parseFlatSettingsDictionary; //!< Forces parsing of flat settings dictionary
 
-- (nullable NSDictionary <NSString *, id> *)flatSettingsDictionary; //!< Returns dictionary with keys in the form of [settingsIdentifier].[settingsKey] for *all* settings
-
-NS_ASSUME_NONNULL_END
+- (nullable NSDictionary <OCClassSettingsFlatIdentifier, id> *)flatSettingsDictionary; //!< Returns dictionary with keys in the form of [settingsIdentifier].[settingsKey] for *all* settings
 
 @end
+
+NS_ASSUME_NONNULL_END

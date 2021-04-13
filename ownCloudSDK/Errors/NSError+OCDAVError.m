@@ -23,6 +23,9 @@
 static NSErrorUserInfoKey OCDAVErrorExceptionNameKey = @"OCDavErrorExceptionName";
 static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionMessage";
 
+static NSErrorUserInfoKey OCDAVErrorHeaderNameKey = @"OCDavErrorHeaderName";
+static NSErrorUserInfoKey OCDAVErrorHeaderMessageKey = @"OCDavErrorHeaderMessage";
+
 @implementation NSError (OCDAVError)
 
 #pragma mark - OCXMLObjectCreation
@@ -35,18 +38,47 @@ static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionM
 {
 	NSError *davError = nil;
 	NSString *sabreException;
+	NSString *sabreHeader;
+	NSString *sabreMessage;
+
+	sabreMessage = errorNode.keyValues[@"s:message"];
 
 	if ((sabreException = errorNode.keyValues[@"s:exception"]) != nil)
 	{
 		OCDAVError errorCode = OCDAVErrorUnknown;
-		NSString *sabreMessage;
-
-		sabreMessage = errorNode.keyValues[@"s:message"];
 
 		// Turn known exceptions into OCDAVError codes
 		if ([sabreException isEqual:@"Sabre\\DAV\\Exception\\ServiceUnavailable"])
 		{
 			errorCode = OCDAVErrorServiceUnavailable;
+		}
+
+		if ([sabreException isEqual:@"Sabre\\DAV\\Exception\\NotFound"])
+		{
+			errorCode = OCDAVErrorNotFound;
+		}
+
+		davError = [NSError 	errorWithDomain:OCDAVErrorDomain
+				 	code:errorCode
+				 	userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
+						sabreException, OCDAVErrorExceptionNameKey,
+						sabreMessage,   OCDAVErrorExceptionMessageKey,
+				 	nil]
+			   ];
+	}
+
+	if ((sabreHeader = errorNode.keyValues[@"s:header"]) != nil)
+	{
+		OCDAVError errorCode = OCDAVErrorUnknown;
+
+		// Turn known exceptions into OCDAVError codes
+		if ([sabreHeader isEqual:@"If-Match"])
+		{
+			if ([sabreMessage hasSuffix:@"the resource did not exist"])
+			{
+				// "An If-Match header was specified and the resource did not exist" when trying to download a file with If-Match header that doesn't exist
+				errorCode = OCDAVErrorItemDoesNotExist;
+			}
 		}
 
 		davError = [NSError 	errorWithDomain:OCDAVErrorDomain
@@ -94,8 +126,27 @@ static NSErrorUserInfoKey OCDAVErrorExceptionMessageKey = @"OCDavErrorExceptionM
 				unlocalizedString = @"Server down for maintenance.";
 			break;
 
+			case OCDAVErrorNotFound:
+				unlocalizedString = @"Resource not found.";
+			break;
+
 			case OCDAVErrorUnknown:
-				value = [NSString stringWithFormat:@"%@ (%@)", [error davExceptionMessage], error.davExceptionName];
+				if ((error.davExceptionMessage != nil) && (error.davExceptionName != nil))
+				{
+					value = [NSString stringWithFormat:@"%@ (%@)", error.davExceptionMessage, error.davExceptionName];
+				}
+				else if (error.davExceptionMessage != nil)
+				{
+					value = error.davExceptionMessage;
+				}
+				else if (error.davExceptionName != nil)
+				{
+					value = [NSString stringWithFormat:@"(%@)", error.davExceptionName];
+				}
+			break;
+
+			case OCDAVErrorItemDoesNotExist:
+				unlocalizedString = @"Item not found.";
 			break;
 		}
 	}

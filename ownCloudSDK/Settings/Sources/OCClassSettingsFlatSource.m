@@ -20,6 +20,11 @@
 
 @implementation OCClassSettingsFlatSource
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (@"flat");
+}
+
 - (instancetype)init
 {
 	if ((self = [super init]) != nil)
@@ -58,7 +63,7 @@
 	}
 }
 
-- (nullable NSDictionary<NSString *, id> *)flatSettingsDictionary
+- (nullable NSDictionary<OCClassSettingsFlatIdentifier, id> *)flatSettingsDictionary
 {
 	return(@{});
 }

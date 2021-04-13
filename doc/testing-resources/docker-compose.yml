@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  owncloud:
+    image: owncloud/server:latest
+    restart: always
+    ports:
+      - 36080:8080
+      - 36180:80
+      - 36443:443

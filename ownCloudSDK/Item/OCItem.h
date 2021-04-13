@@ -15,15 +15,17 @@
  * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
  *
  */
-
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
-#import "OCShare.h"
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
+#import "OCClaim.h"
+#import "OCTUSHeader.h"
 
 @class OCFile;
 @class OCCore;
+@class OCShare;
+@class OCChecksum;
 
 typedef NS_ENUM(NSInteger, OCItemType)
 {
@@ -31,13 +33,7 @@ typedef NS_ENUM(NSInteger, OCItemType)
 	OCItemTypeCollection	//!< This item is a collection (usually a directory)
 };
 
-typedef NS_ENUM(NSInteger, OCItemStatus)
-{
-	OCItemStatusAtRest,	//!< This item exists / is at rest
-	OCItemStatusTransient	//!< This item is transient (i.e. the item is a placeholder while its actual content is still uploading to the server)
-};
-
-typedef NS_ENUM(NSInteger, OCItemSyncActivity)
+typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 {
 	OCItemSyncActivityNone,
 	OCItemSyncActivityDeleting 	= (1<<0),	//!< This item is being deleted, or scheduled to be deleted
@@ -45,6 +41,7 @@ typedef NS_ENUM(NSInteger, OCItemSyncActivity)
 	OCItemSyncActivityDownloading 	= (1<<2),	//!< This item is being downloaded, or scheduled to be downloaded
 	OCItemSyncActivityCreating	= (1<<3),	//!< This item is being created, or scheduled to be created (both files and folders)
 	OCItemSyncActivityUpdating	= (1<<4),	//!< This item is being updated, or scheduled to be updated (both files and folders)
+	OCItemSyncActivityDeletingLocal	= (1<<5)	//!< This item is being deleted locally, or scheduled to be deleted locally
 };
 
 typedef NS_OPTIONS(NSInteger, OCItemPermissions)
@@ -77,6 +74,8 @@ typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
 };
 
+#import "OCShare.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCItem : NSObject <NSSecureCoding, NSCopying>
@@ -95,18 +94,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
 
-@property(assign) OCItemStatus status; //!< the status of the item (exists/at rest, is transient)
-
 @property(readonly,nonatomic) OCItemCloudStatus cloudStatus; //!< the cloud status of the item (computed using the item's metadata)
 
 @property(assign) BOOL removed; //!< whether the item has been removed (defaults to NO) (stored by database, ephermal otherwise)
-@property(nullable,strong) NSProgress *progress; //!< If status is transient, a progress describing the status (ephermal)
 
 @property(assign) OCItemPermissions permissions; //!< ownCloud permissions for the item
 
 @property(nullable,strong) NSString *localRelativePath; //!< Path of the local copy of the item, relative to the filesRootURL of the vault that stores it
 @property(assign) BOOL locallyModified; //!< YES if the file at .localRelativePath was created or modified locally. NO if the file at .localRelativePath was downloaded from the server and not modified since.
 @property(nullable,strong) OCItemVersionIdentifier *localCopyVersionIdentifier; //!< (Remote) version identifier of the local copy. nil if this version only exists locally.
+@property(nullable,strong) OCItemDownloadTriggerID downloadTriggerIdentifier; //!< The DownloadTriggerID describing what triggered the download of this item.
+@property(nullable,strong) OCClaim *fileClaim; //!< Claim representing the claim(s) on the local file represented by this item.
 
 @property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
@@ -119,30 +117,54 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCLocalID parentLocalID; //!< Unique local identifier of the parent folder (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
 @property(nullable,strong) OCLocalID localID; //!< Unique local identifier of the item (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
 
+@property(nullable,strong) NSArray<OCChecksum *> *checksums; //!< (Optional) checksums of the item. Typically only requested for uploaded files.
+
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
 @property(nullable,readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
 
+@property(readonly,nonatomic) BOOL isRoot; //!< YES if this item is representing the root folder
+
+@property(readonly,nonatomic) BOOL hasLocalAttributes; //!< Returns YES if the item has any local attributes
 @property(nullable,strong,nonatomic) NSDictionary<OCLocalAttribute, id> *localAttributes; //!< Dictionary of local-only attributes (not synced to server)
 @property(assign,nonatomic) NSTimeInterval localAttributesLastModified; //!< Time of last modification of localAttributes
 
 @property(nullable,strong,nonatomic) NSArray <OCSyncRecordID> *activeSyncRecordIDs; //!< Array of IDs of sync records operating on this item
+@property(nullable,strong,nonatomic) NSCountedSet <NSNumber *> *syncActivityCounts; //!< Counts of OCItemSyncActivity. Starts only when a OCItemSyncActivity has already been set in syncActivity
 @property(assign) OCItemSyncActivity syncActivity; //!< mask of running sync activity for the item
 
 @property(assign) NSInteger size; //!< Size in bytes of the item
 @property(nullable,strong) NSDate *creationDate; //!< Date of creation
 @property(nullable,strong) NSDate *lastModified; //!< Date of last modification
 
+@property(nullable,strong) NSDate *lastUsed; //!< Date of last use: updated on local import, local update, download - and via lastModified if that date is more recent.
+
 @property(nullable,strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
+
+@property(strong,nullable) OCUser *owner; //!< The owner of the item
+@property(assign) OCShareTypesMask shareTypesMask; //!< Mask indicating the type of shares (to third parties) for this item. OCShareTypesMaskNone if none.
+@property(readonly,nonatomic) BOOL isShareable; //!< YES if this item can be shared (convenience accessor to check if .permissions has OCItemPermissionShareable set)
+@property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)
+
+@property(strong,nullable) NSURL *privateLink; //!< Private link for the item. This property is used as a cache. Please use -[OCCore retrievePrivateLinkForItem:..] to request the private link for an item.
+
+@property(assign,nonatomic) OCTUSInfo tusInfo; //!< For folders only: compressed Tus info; undefined for files
+@property(readonly,nonatomic) OCTUSSupport tusSupport; //!< For folders only: Tus support level; undefined for files
+@property(readonly,nonatomic) UInt64 tusMaximumSize; //!< For folders only: Tus maximum chunk size; undefined for files
+// @property(strong,nullable) OCTUSHeader *tusHeader; //!< For folders only: detailed Tus support info (optional); nil for files
 
 @property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
 @property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
 
-@property(nullable,strong) NSArray <OCShare *> *shares; //!< Array of existing shares of the item
-
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
+@property(nullable,strong) OCDatabaseTimestamp databaseTimestamp; //!< OCDatabase-specific: ((NSUInteger)NSDate.timeIntervalSinceReferenceDate) value this item was added or last updated in the database (most useful when reading items from the database). Not preserved (ephermal!), read-only.
+
+@property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
+@property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
+
+@property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
@@ -153,6 +175,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Sync record tools
 - (void)addSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
 - (void)removeSyncRecordID:(OCSyncRecordID)syncRecordID activity:(OCItemSyncActivity)activity;
+- (NSUInteger)countOfSyncRecordsWithSyncActivity:(OCItemSyncActivity)activity;
 
 - (void)prepareToReplace:(OCItem *)item;
 - (void)copyFilesystemMetadataFrom:(OCItem *)item;
@@ -163,7 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setValue:(nullable id)value forLocalAttribute:(OCLocalAttribute)localAttribute;
 
 #pragma mark - File tools
-- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if item reference a local file.
+- (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if the item doesn't reference a local file. To test local availability of a file, use -[OCCore localCopyOfItem:] instead of this method.
 
 #pragma mark - Serialization tools
 + (nullable instancetype)itemFromSerializedData:(NSData *)serializedData;
@@ -177,8 +200,30 @@ extern OCFileETag OCFileETagPlaceholder; //!< ETag placeholder value for items t
 extern OCLocalAttribute OCLocalAttributeFavoriteRank; //!< attribute for storing the favorite rank
 extern OCLocalAttribute OCLocalAttributeTagData; //!< attribute for storing tag data
 
-extern OCItemPropertyName OCItemPropertyNameLastModified;
-extern OCItemPropertyName OCItemPropertyNameIsFavorite;
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDUser; //!< the download was triggered by the user
+extern OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline; //!< the download was triggered by the available offline policy
+
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
+
+// Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameSize; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameCloudStatus; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameHasLocalAttributes; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameSyncActivity; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLastModified; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocalID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameFileID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameDownloadTrigger; //!< Supported by OCQueryCondition SQLBuilder
+
+extern OCItemPropertyName OCItemPropertyNameRemoved; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)
+extern OCItemPropertyName OCItemPropertyNameDatabaseTimestamp; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)
 
 NS_ASSUME_NONNULL_END

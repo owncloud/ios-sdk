@@ -20,21 +20,68 @@
 #import "OCWaitCondition.h"
 #import <objc/runtime.h>
 
+@interface OCSyncAction ()
+{
+	OCItem *_localItemCached;
+}
+@end
+
 @implementation OCSyncAction
+
+#pragma mark - Class properties
++ (OCSyncActionIdentifier)identifier
+{
+	return (@"invalid-sync-action-identifier");
+}
+
+- (OCSyncActionIdentifier)identifier
+{
+	if (_identifier == nil)
+	{
+		return ([self.class identifier]);
+	}
+
+	return (_identifier);
+}
 
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item
 {
 	if ((self = [self init]) != nil)
 	{
+		_identifier = [self.class identifier];
+
+		if (_identifier == nil)
+		{
+			OCLogError(@"BUG: sync action %@ has a nil +identifier", self.class);
+		}
+
 		_localItem = item;
 		_archivedServerItem = ((item.remoteItem != nil) ? item.remoteItem : item);
 
 		_localizedDescription = NSStringFromClass([self class]);
 		_actionEventType = OCEventTypeNone;
+		_categories = @[ OCSyncActionCategoryAll, OCSyncActionCategoryActions ];
 	}
 
 	return (self);
+}
+
+#pragma mark - Local ID
+- (OCItem *)latestVersionOfLocalItem
+{
+	if (_localItemCached == nil)
+	{
+		OCSyncExec(cacheItemRetrieval, {
+			[self.core.vault.database retrieveCacheItemForLocalID:self.localItem.localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+				self->_localItemCached = item;
+
+				OCSyncExecDone(cacheItemRetrieval);
+			}];
+		});
+	}
+
+	return ((_localItemCached != nil) ? _localItemCached : _localItem);
 }
 
 #pragma mark - Implementation
@@ -113,7 +160,7 @@
 					[waitCondition handleEvent:event withOptions:options sender:self];
 				}
 			}
-			else
+			else if (event.eventType != OCEventTypeWakeupSyncRecord)
 			{
 				// Pass to result handler
 				OCCoreSyncInstruction instruction;
@@ -153,6 +200,53 @@
 - (BOOL)recoverFromWaitCondition:(OCWaitCondition *)waitCondition failedWithError:(NSError *)error context:(OCSyncContext *)syncContext
 {
 	return (NO);
+}
+
+#pragma mark - Issue generation
++ (NSArray<OCMessageTemplate *> *)issueTemplates
+{
+	NSMutableArray<OCMessageTemplate *> *templates = [NSMutableArray new];
+	OCSyncActionIdentifier actionIdentifier;
+
+	// Standard templates
+	if ((actionIdentifier = self.identifier) != nil)
+	{
+		// Standard cancellation template used by _addIssueForCancellationAndDeschedulingToContext:
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.dataLoss"] categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss]
+		] options:nil]];
+
+		[templates addObject:[OCMessageTemplate templateWithIdentifier:[actionIdentifier stringByAppendingString:@"._cancel.nonDestructive"] categoryName:nil choices:@[
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil]];
+	}
+
+	// Action-specific templates
+	NSArray<OCMessageTemplate *> *actionIssueTemplates;
+
+	if ((actionIssueTemplates = self.actionIssueTemplates) != nil)
+	{
+		[templates addObjectsFromArray:actionIssueTemplates];
+	}
+
+	return (templates);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (nil);
+}
+
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact
+{
+	OCSyncIssue *issue;
+	OCSyncRecord *syncRecord = syncContext.syncRecord;
+
+	issue = [OCSyncIssue issueFromTemplate:[self.identifier stringByAppendingString:((impact == OCSyncIssueChoiceImpactDataLoss) ? @"._cancel.dataLoss" : @"._cancel.nonDestructive")] forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
+
+	[syncContext addSyncIssue:issue];
+
+	return (issue);
 }
 
 #pragma mark - Issue handling
@@ -216,6 +310,45 @@
 	}
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)laneTags
+{
+	if (_laneTags == nil)
+	{
+		_laneTags = [self generateLaneTags];
+	}
+
+	return (_laneTags);
+}
+
+- (NSSet <OCSyncLaneTag> *)generateLaneTags
+{
+	return ([NSSet new]);
+}
+
+- (NSMutableSet <OCSyncLaneTag> *)generateLaneTagsFromItems:(NSArray<OCItem *> *)items
+{
+	NSMutableSet<OCSyncLaneTag> *laneTags = [NSMutableSet new];
+
+	for (OCItem *item in items)
+	{
+		if ([item isKindOfClass:[OCItem class]])
+		{
+			if (item.localID != nil)
+			{
+				[laneTags addObject:item.localID];
+			}
+
+			if (item.path != nil)
+			{
+				[laneTags addObject:item.path];
+			}
+		}
+	}
+
+	return (laneTags);
+}
+
 #pragma mark - NSSecureCoding
 + (BOOL)supportsSecureCoding
 {
@@ -231,7 +364,11 @@
 	[coder encodeObject:[self _archivedServerItemData] forKey:@"archivedServerItemData"];
 	[coder encodeObject:_parameters forKey:@"parameters"];
 
+	[coder encodeObject:_laneTags forKey:@"laneTags"];
+
 	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
+	[coder encodeInteger:_actionEventType forKey:@"actionEventType"];
+	[coder encodeObject:_categories forKey:@"categories"];
 
 	[self encodeActionData:coder];
 }
@@ -243,11 +380,15 @@
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 
 		_localItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"localItem"];
-		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
 
-		_parameters = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"parameters"];
+		_archivedServerItemData = [decoder decodeObjectOfClass:[NSData class] forKey:@"archivedServerItemData"];
+		_parameters = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"parameters"];
+
+		_laneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"laneTags"];
 
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
+		_actionEventType = [decoder decodeIntegerForKey:@"actionEventType"];
+		_categories = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"categories"];
 
 		[self decodeActionData:decoder];
 	}
@@ -277,7 +418,9 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, self.localizedDescription]);
+	NSString *internals = self.internalsDescription;
+
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@%@, description: %@>", NSStringFromClass(self.class), self, _identifier, ((internals != nil) ? [NSString stringWithFormat:@", %@", internals] : @""), self.localizedDescription]);
 }
 
 - (NSString *)privacyMaskedDescription
@@ -285,4 +428,13 @@
 	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, OCLogPrivate(self.localizedDescription)]);
 }
 
+- (NSString *)internalsDescription
+{
+	return (nil);
+}
+
 @end
+
+OCSyncActionCategory OCSyncActionCategoryAll = @"all";
+OCSyncActionCategory OCSyncActionCategoryActions = @"actions";
+OCSyncActionCategory OCSyncActionCategoryTransfer = @"transfer";

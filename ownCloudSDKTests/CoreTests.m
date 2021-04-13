@@ -1014,4 +1014,772 @@
 	[self waitForExpectationsWithTimeout:20 handler:nil];
 }
 
+- (void)testItemTracking
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response from server"];
+	XCTestExpectation *initialTrackingResponseFromCacheExpectation = [self expectationWithDescription:@"Initial tracking response from cache"];
+	__block id itemTracker = nil;
+	__block id itemTrackerFromCache = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCPath trackPath = @"/Documents/Example.odt";
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseFromServerExpectation fulfill];
+
+				itemTrackerFromCache = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable cachedItem, BOOL isInitial) {
+					OCLog(@"Tracked from cache: isInitial=%d error=%@ item=%@", isInitial, error, cachedItem);
+
+					XCTAssert([cachedItem.localID isEqual:serverItem.localID]);
+					XCTAssert([cachedItem.itemVersionIdentifier isEqual:serverItem.itemVersionIdentifier]);
+
+					if (isInitial)
+					{
+						[initialTrackingResponseFromCacheExpectation fulfill];
+					}
+					else
+					{
+						XCTFail(@"Unexpected non-initial tracking handler invocation (cache)");
+					}
+				}];
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testItemTrackingNonExistant
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseForNonExistantItemExpectation = [self expectationWithDescription:@"Initial tracking response for non-existant item"];
+	__block id itemTrackerNonExistantItem = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		});
+
+		itemTrackerNonExistantItem = [core trackItemAtPath:@"/does.not.exist" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseForNonExistantItemExpectation fulfill];
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+
+			if (serverItem == nil)
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testItemTrackingDeepNonExistant
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseForNonExistantItemExpectation = [self expectationWithDescription:@"Initial tracking response for non-existant item"];
+	__block id itemTrackerNonExistantItem = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		});
+
+		itemTrackerNonExistantItem = [core trackItemAtPath:@"/does.not.exist/either/" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseForNonExistantItemExpectation fulfill];
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+
+			if (serverItem == nil)
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testItemTrackingUnnormalizedPathError
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseForNonExistantItemExpectation = [self expectationWithDescription:@"Initial tracking response for non-existant item"];
+	__block id itemTrackerNonExistantItem = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		});
+
+		itemTrackerNonExistantItem = [core trackItemAtPath:@"//Photos" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseForNonExistantItemExpectation fulfill];
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+
+			if ((serverItem == nil) && isInitial && [error isOCErrorWithCode:OCErrorUnnormalizedPath])
+			{
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				});
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testItemTrackingPathWithFormattingError
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	__block XCTestExpectation *itemReturnedFromServerExpectation = [self expectationWithDescription:@"Item returned from server"];
+	__block XCTestExpectation *itemReturnedFromCacheExpectation = [self expectationWithDescription:@"Item returned from cache"];
+	__block id itemTrackerInitial = nil;
+	__block id itemTrackerSecondary = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		});
+
+		itemTrackerInitial = [core trackItemAtPath:@"/Documents" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked(1): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				[initialTrackingResponseExpectation fulfill];
+			}
+			else
+			{
+				XCTFail(@"Unexpected non-initial tracking handler invocation (server)");
+			}
+
+			if (serverItem != nil)
+			{
+				if (itemReturnedFromServerExpectation != nil)
+				{
+					[itemReturnedFromServerExpectation fulfill];
+					itemReturnedFromServerExpectation = nil;
+
+					itemTrackerSecondary = [core trackItemAtPath:@"/Documents" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+						OCLog(@"Tracked(2): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+						if (serverItem != nil)
+						{
+							if (itemReturnedFromCacheExpectation != nil)
+							{
+								[itemReturnedFromCacheExpectation fulfill];
+								itemReturnedFromCacheExpectation = nil;
+
+								dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+									[core stopWithCompletionHandler:^(id sender, NSError *error) {
+										XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+										[coreStoppedExpectation fulfill];
+									}];
+								});
+							}
+
+							XCTAssert(serverItem.type == OCItemTypeCollection);
+							XCTAssert([serverItem.path isEqual:@"/Documents/"]);
+						}
+					}];
+				}
+
+				XCTAssert(serverItem.type == OCItemTypeCollection);
+				XCTAssert([serverItem.path isEqual:@"/Documents/"]);
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+
+- (void)testFavoriteRefresh
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *initialTrackingResponseFromServerExpectation = [self expectationWithDescription:@"Initial tracking response"];
+	__block XCTestExpectation *trackingResponseFromFavoriteUpdateFirstExpectation = [self expectationWithDescription:@"Favorite update 1 tracking response"];
+	__block XCTestExpectation *trackingResponseFromFavoriteUpdateSecondExpectation = [self expectationWithDescription:@"Favorite update 2 tracking response"];
+	__block id itemTracker = nil;
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		OCPath trackPath = @"/Documents/Example.odt";
+
+		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
+
+		XCTAssert((error==nil), @"Started with error: %@", error);
+		[coreStartedExpectation fulfill];
+
+		OCLog(@"Vault location: %@", core.vault.rootURL);
+
+		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
+
+			if (isInitial)
+			{
+				XCTAssert(!serverItem.isFavorite.boolValue); // Item needs to start as non-favorite for this test to work
+
+				[initialTrackingResponseFromServerExpectation fulfill];
+
+				serverItem.isFavorite = @(YES);
+
+				[core.connection updateItem:serverItem properties:@[ OCItemPropertyNameIsFavorite ] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+					[core refreshFavoritesWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems) {
+						OCLog(@"Favorited items (after favoring): %@", favoritedItems);
+					}];
+				} userInfo:nil ephermalUserInfo:nil]];
+			}
+			else
+			{
+				if (serverItem.isFavorite.boolValue && (trackingResponseFromFavoriteUpdateFirstExpectation!=nil))
+				{
+					[trackingResponseFromFavoriteUpdateFirstExpectation fulfill];
+					trackingResponseFromFavoriteUpdateFirstExpectation = nil;
+
+					serverItem.isFavorite = @(NO);
+
+					[core.connection updateItem:serverItem properties:@[ OCItemPropertyNameIsFavorite ] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						[core refreshFavoritesWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable favoritedItems) {
+							OCLog(@"Favorited items (after de-favoring): %@", favoritedItems);
+						}];
+					} userInfo:nil ephermalUserInfo:nil]];
+				}
+				else if (trackingResponseFromFavoriteUpdateFirstExpectation == nil)
+				{
+					[trackingResponseFromFavoriteUpdateSecondExpectation fulfill];
+					trackingResponseFromFavoriteUpdateSecondExpectation = nil;
+
+					[core stopWithCompletionHandler:^(id sender, NSError *error) {
+						XCTAssert((error==nil), @"Stopped with error: %@", error);
+
+						[coreStoppedExpectation fulfill];
+					}];
+				}
+			}
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testFetchChanges
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *fetchCompletionExpectation = [self expectationWithDescription:@"Fetch completed"];
+	XCTestExpectation *fetchCompletionStoppingExpectation = [self expectationWithDescription:@"Fetch completed stopping"];
+	XCTestExpectation *fetchCompletionSecondaryExpectation = [self expectationWithDescription:@"Fetch completed secondary"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			OCLogDebug(@"Initial(I) fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+				OCLogDebug(@"Second fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+				XCTAssert(error==nil);
+				XCTAssert(!didFindChanges);
+
+				[core stopWithCompletionHandler:^(id sender, NSError *error) {
+					[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+						OCLogDebug(@"Stopped fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+						XCTAssert(error!=nil);
+						XCTAssert([error isOCErrorWithCode:OCErrorInternal]);
+						XCTAssert(!didFindChanges);
+
+						[fetchCompletionExpectation fulfill];
+					}];
+
+					[coreStoppedExpectation fulfill];
+				}];
+
+				[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+					OCLogDebug(@"Stopping fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+					XCTAssert(error!=nil);
+					XCTAssert([error isOCErrorWithCode:OCErrorCancelled] || [error isOCErrorWithCode:OCErrorInternal]);
+					XCTAssert(!didFindChanges);
+
+					[fetchCompletionStoppingExpectation fulfill];
+				}];
+			}];
+		}];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			OCLogDebug(@"Initial(II) fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			[fetchCompletionSecondaryExpectation fulfill];
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testDuplicateNameSuggestions
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	XCTestExpectation *fetchCompletionExpectation = [self expectationWithDescription:@"Fetch completed"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		[core fetchUpdatesWithCompletionHandler:^(NSError * _Nullable error, BOOL didFindChanges) {
+			dispatch_group_t suggestionWaitGroups = dispatch_group_create();
+
+			[fetchCompletionExpectation fulfill];
+
+			OCLogDebug(@"Initial fetch changes: error=%@, didFindChanges=%d", error, didFindChanges);
+
+			XCTAssert(error==nil);
+			XCTAssert(didFindChanges);
+
+			// Test suggestions
+
+			// - style: copy
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: bracketed
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual (1).pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: copy + filter first suggestion
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return ![suggestedName isEqual:@"ownCloud Manual copy.pdf"];
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy 2.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 2);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: unused
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Unused.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Unused.pdf"]);
+				XCTAssert(rejectedAndTakenNames.count == 0);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 2"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory 0
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos 0" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos 0"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 1"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory 1
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos 1" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos 1"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos 2"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// - style: directory (1) - usage of different style
+			dispatch_group_enter(suggestionWaitGroups);
+			[core suggestUnusedNameBasedOn:@"Photos (1)" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+				return (![suggestedName isEqual:@"Photos (1)"]);
+			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				XCTAssert([suggestedName isEqual:@"Photos (2)"]);
+				XCTAssert(rejectedAndTakenNames.count == 1);
+
+				dispatch_group_leave(suggestionWaitGroups);
+			}];
+
+			// Stop when returned
+			dispatch_group_notify(suggestionWaitGroups, dispatch_get_main_queue(), ^{
+				[core stopWithCompletionHandler:^(id sender, NSError *error) {
+					[coreStoppedExpectation fulfill];
+				}];
+			});
+		}];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testDirectURL
+{
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	OCCore *core;
+	XCTestExpectation *coreStartedExpectation = [self expectationWithDescription:@"Core started"];
+	XCTestExpectation *coreStoppedExpectation = [self expectationWithDescription:@"Core stopped"];
+	__block XCTestExpectation *queryCompletionExpectation = [self expectationWithDescription:@"Query completed"];
+
+	// Create core
+	core = [[OCCore alloc] initWithBookmark:bookmark];
+	core.automaticItemListUpdatesEnabled = NO;
+
+	// Start core
+	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
+		[coreStartedExpectation fulfill];
+
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if ((query.state == OCQueryStateIdle) && (queryCompletionExpectation != nil))
+			{
+				OCItem *fileItem = nil;
+				OCItem *folderItem = nil;
+
+				[queryCompletionExpectation fulfill];
+				queryCompletionExpectation = nil;
+
+				for (OCItem *item in query.queryResults)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						fileItem = item;
+					}
+					else
+					{
+						folderItem = item;
+					}
+				}
+
+				if (folderItem != nil)
+				{
+					[core provideDirectURLForItem:folderItem allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+						OCLogDebug(@"provideDirectURL (D): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+						XCTAssert([error isOCErrorWithCode:OCErrorFeatureNotSupportedForItem]);
+						XCTAssert(url == nil);
+						XCTAssert(httpAuthHeaders == nil);
+					}];
+				}
+
+				if (fileItem != nil)
+				{
+					[core provideDirectURLForItem:fileItem allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+						OCLogDebug(@"provideDirectURL (F1): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+						XCTAssert(error == nil);
+						XCTAssert(url != nil);
+						XCTAssert(!url.isFileURL);
+						XCTAssert(httpAuthHeaders != nil);
+						XCTAssert(httpAuthHeaders.count > 0);
+					}];
+
+					[core downloadItem:fileItem options:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, OCFile * _Nullable file) {
+						[core provideDirectURLForItem:item allowFileURL:NO completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+							OCLogDebug(@"provideDirectURL (F2): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+							XCTAssert(error == nil);
+							XCTAssert(url != nil);
+							XCTAssert(!url.isFileURL);
+							XCTAssert(httpAuthHeaders != nil);
+							XCTAssert(httpAuthHeaders.count > 0);
+						}];
+
+						[core provideDirectURLForItem:item allowFileURL:YES completionHandler:^(NSError * _Nullable error, NSURL * _Nullable url, NSDictionary<NSString *,NSString *> * _Nullable httpAuthHeaders) {
+							OCLogDebug(@"provideDirectURL (F3): error=%@, url=%@, httpAuthHeaders=%@", error, url, httpAuthHeaders);
+
+							XCTAssert(error == nil);
+							XCTAssert(url != nil);
+							XCTAssert(url.isFileURL);
+							XCTAssert(httpAuthHeaders == nil);
+						}];
+
+						// Stop when returned
+						[core stopWithCompletionHandler:^(id sender, NSError *error) {
+							[coreStoppedExpectation fulfill];
+						}];
+					}];
+				}
+			}
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+
+	// Erase vault
+	[core.vault eraseSyncWithCompletionHandler:^(id sender, NSError *error) {
+		XCTAssert((error==nil), @"Erased with error: %@", error);
+	}];
+}
+
+- (void)testBookmarkItemResolution
+{
+	XCTestExpectation *expectCoreToFindItem = [self expectationWithDescription:@"Core finds item"];
+	XCTestExpectation *expectLocalIDToResolve = [self expectationWithDescription:@"Local ID resolves to core"];
+	XCTestExpectation *expectCoreToReturn = [self expectationWithDescription:@"Core returned"];
+	OCBookmark *bookmark = [OCTestTarget userBookmark];
+	__block OCLocalID testLocalID = nil;
+	__block OCItem *testItem = nil;
+
+	[OCBookmarkManager.sharedBookmarkManager addBookmark:bookmark];
+
+	[OCCoreManager.sharedCoreManager requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
+		OCQuery *query = [OCQuery queryForPath:@"/"];
+
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {
+				if (changeset.queryResult.count > 0)
+				{
+					testItem = changeset.queryResult.firstObject;
+					testLocalID = testItem.localID;
+
+					[expectCoreToFindItem fulfill];
+
+					OCLog(@"Using item for testing retrieval: %@", testItem);
+
+					[OCCoreManager.sharedCoreManager returnCoreForBookmark:bookmark completionHandler:^{
+
+						[OCCoreManager.sharedCoreManager requestCoreForBookmarkWithItemWithLocalID:testLocalID setup:nil completionHandler:^(NSError * _Nullable error, OCCore * _Nullable core, OCItem * _Nullable item) {
+							OCLog(@"Found core %@ and item %@ (error %@)", core, item, error);
+
+							if ((core != nil) && ([item.localID isEqual:testLocalID]))
+							{
+								[expectLocalIDToResolve fulfill];
+
+								[OCCoreManager.sharedCoreManager returnCoreForBookmark:core.bookmark completionHandler:^{
+									[expectCoreToReturn fulfill];
+								}];
+							}
+						}];
+
+					}];
+				}
+			}];
+		};
+
+		[core startQuery:query];
+	}];
+
+	[self waitForExpectationsWithTimeout:30 handler:nil];
+
+	[OCBookmarkManager.sharedBookmarkManager removeBookmark:bookmark];
+}
+
 @end

@@ -32,9 +32,14 @@
 
 	<key>OCAppGroupIdentifier</key>
 	<string>group.com.owncloud.ios-client</string>
+
+	<key>OCAppComponentIdentifier</key>
+	<string>[app|fileProviderExtension|shareExtension]</string>
 */
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 
 @interface OCAppIdentity : NSObject
 {
@@ -42,11 +47,19 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_keychainAccessGroupIdentifier;
 	NSString *_appGroupIdentifier;
 	NSURL *_appGroupContainerURL;
+	NSURL *_appGroupLogsContainerURL;
+
 	NSString *_appName;
-	
+	NSString *_appDisplayName;
+	NSString *_appVersion;
+	NSString *_appBuildNumber;
+
 	OCKeychain *_keychain;
 	NSUserDefaults *_userDefaults;
 }
+
+#pragma mark - Device/Environment/Build Capabilities
+@property(readonly,nonatomic,class) BOOL supportsFileProvider;
 
 #pragma mark - App Identifiers
 @property(strong,nonatomic,nullable) NSString *appIdentifierPrefix;
@@ -56,9 +69,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nonatomic,nullable) NSString *appGroupIdentifier;
 
 @property(strong,nonatomic,nullable) NSString *appName;
+@property(strong,nonatomic,nullable) NSString *appDisplayName;
+@property(strong,nonatomic,nullable) NSString *appVersion;
+@property(strong,nonatomic,nullable) NSString *appBuildNumber;
+
+@property(strong,nonatomic,readonly,nullable) NSString *sdkCommit;
+@property(strong,nonatomic,readonly,nullable) NSString *sdkVersionString;
+
+#pragma mark - App Component
+@property(strong,nonatomic,readonly,nullable) OCAppComponentIdentifier componentIdentifier;
 
 #pragma mark - App Paths
 @property(strong,nonatomic,nullable) NSURL *appGroupContainerURL;
+@property(strong,nonatomic,nullable) NSURL *appGroupLogsContainerURL;
 
 #pragma mark - App Resources
 @property(strong,nonatomic,nullable) OCKeychain *keychain;
@@ -68,5 +91,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(class, readonly, strong, nonatomic) OCAppIdentity *sharedAppIdentity;
 
 @end
+
+extern OCAppComponentIdentifier OCAppComponentIdentifierApp;
+extern OCAppComponentIdentifier OCAppComponentIdentifierFileProviderExtension;
+extern OCAppComponentIdentifier OCAppComponentIdentifierShareExtension;
 
 NS_ASSUME_NONNULL_END

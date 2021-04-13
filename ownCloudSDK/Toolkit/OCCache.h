@@ -49,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeObjectForKey:(K)key;
 
+#pragma mark - Cache Cleaning
+- (void)clearCache; //!< Removes all contents from the cache
+
 @end
 
 NS_ASSUME_NONNULL_END

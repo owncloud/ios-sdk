@@ -18,7 +18,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import <ownCloudSDK/NSString+OCVersionCompare.h>
 
 #import "OCTestTarget.h"
 
@@ -32,13 +31,15 @@
 @implementation ConnectionTests
 
 - (void)setUp {
-    [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+	[super setUp];
+
+	OCConnection.setupHTTPPolicy = OCConnectionSetupHTTPPolicyAllow;
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
+	OCConnection.setupHTTPPolicy = OCConnectionSetupHTTPPolicyAuto;
+
+	[super tearDown];
 }
 
 - (void)testBasicRequest
@@ -153,13 +154,13 @@
 		XCTAssert((issue.issues[1].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
 		XCTAssert((issue.issues[1].level == OCIssueLevelInformal), @"Issue level is informal");
 		XCTAssert([issue.issues[1].originalURL isEqual:url], @"Redirect originalURL is correct");
-		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org:443/"]], @"Redirect suggestedURL is correct");
+		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
 
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
 		[issue approve];
 		
-		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org:443/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
+		XCTAssert (([bookmark.url isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]]) && [bookmark.originURL isEqual:url] && (bookmark.originURL!=nil), @"Bookmark has expected values");
 	}];
 }
 
@@ -228,32 +229,35 @@
 	// https://t.co/JTo2XnbS5G => http://bit.ly/2GTa2wD => https://goo.gl/dh6yW5 => https://demo.owncloud.org/
 
 	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
-		XCTAssert(issue.issues.count==6, @"6 issues");
+		XCTAssert(issue.issues.count==7, @"7 issues");
 		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==0), @"0 errors");
 
 		XCTAssert((issue.issues[0].type == OCIssueTypeCertificate), @"Issue is certificate issue");
 		XCTAssert((issue.issues[0].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[1].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[1].level == OCIssueLevelWarning), @"Issue level is warning");
-		XCTAssert([issue.issues[1].originalURL isEqual:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"]], @"Redirect originalURL is correct");
-		XCTAssert([issue.issues[1].suggestedURL isEqual:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"]], @"Redirect suggestedURL is correct");
+		XCTAssert((issue.issues[1].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[1].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[2].type == OCIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[2].level == OCIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[2].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[2].level == OCIssueLevelWarning), @"Issue level is warning");
+		XCTAssert([issue.issues[2].originalURL isEqual:[NSURL URLWithString:@"https://t.co/JTo2XnbS5G"]], @"Redirect originalURL is correct");
+		XCTAssert([issue.issues[2].suggestedURL isEqual:[NSURL URLWithString:@"https://bit.ly/2GTa2wD"]], @"Redirect suggestedURL is correct");
 
-		XCTAssert((issue.issues[3].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[3].level == OCIssueLevelWarning), @"Issue level is warning");
-		XCTAssert([issue.issues[3].originalURL isEqual:[NSURL URLWithString:@"http://bit.ly/2GTa2wD"]], @"Redirect originalURL is correct");
-		XCTAssert([issue.issues[3].suggestedURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect suggestedURL is correct");
+		XCTAssert((issue.issues[3].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[3].level == OCIssueLevelInformal), @"Issue level is informal");
 
-		XCTAssert((issue.issues[4].type == OCIssueTypeCertificate), @"Issue is certificate issue");
-		XCTAssert((issue.issues[4].level == OCIssueLevelInformal), @"Issue level is informal");
+		XCTAssert((issue.issues[4].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[4].level == OCIssueLevelWarning), @"Issue level is warning");
+		XCTAssert([issue.issues[4].originalURL isEqual:[NSURL URLWithString:@"https://bit.ly/2GTa2wD"]], @"Redirect originalURL is correct");
+		XCTAssert([issue.issues[4].suggestedURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect suggestedURL is correct");
 
-		XCTAssert((issue.issues[5].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
-		XCTAssert((issue.issues[5].level == OCIssueLevelWarning), @"Issue level is warning");
-		XCTAssert([issue.issues[5].originalURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect originalURL is correct");
-		XCTAssert([issue.issues[5].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
+		XCTAssert((issue.issues[5].type == OCIssueTypeCertificate), @"Issue is certificate issue");
+		XCTAssert((issue.issues[5].level == OCIssueLevelInformal), @"Issue level is informal");
+
+		XCTAssert((issue.issues[6].type == OCIssueTypeURLRedirection), @"Issue is URL redirection issue");
+		XCTAssert((issue.issues[6].level == OCIssueLevelWarning), @"Issue level is warning");
+		XCTAssert([issue.issues[6].originalURL isEqual:[NSURL URLWithString:@"https://goo.gl/dh6yW5"]], @"Redirect originalURL is correct");
+		XCTAssert([issue.issues[6].suggestedURL isEqual:[NSURL URLWithString:@"https://demo.owncloud.org/"]], @"Redirect suggestedURL is correct");
 
 		XCTAssert (([bookmark.url isEqual:url]) && (bookmark.originURL==nil), @"Bookmark has expected values");
 
@@ -265,9 +269,9 @@
 
 - (void)testSetupPreparationCertificateAndFailedDetectionIssue
 {
-	// demo.owncloud.org is hosted on betty.owncloud.com
+	// demo.owncloud.org is hosted on carmen.owncloud.systems
 
-	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://betty.owncloud.com/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[self _runPreparationTestsForURL:[NSURL URLWithString:@"https://carmen.owncloud.systems/"] completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
 		XCTAssert(issue.issues.count==2, @"2 issues");
 		XCTAssert(([issue issuesWithLevelGreaterThanOrEqualTo:OCIssueLevelError].count==1), @"1 error");
 
@@ -705,12 +709,65 @@
 		[expectConnect fulfill];
 	}];
 
-	[self waitForExpectationsWithTimeout:60 handler:nil];
+	[self waitForExpectationsWithTimeout:120 handler:nil];
 
 	[downloadProgress removeObserver:self forKeyPath:@"progress.fractionCompleted" context:nil];
 
 	OCLog(@"Done: %@", connection);
 }
+
+- (void)testVanishedFileDownload
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	XCTestExpectation *expectItemNotFound = [self expectationWithDescription:@"Received favorite response"];
+	XCTestExpectation *expectRootList = [self expectationWithDescription:@"Received root list"];
+
+	[self _testConnectWithUserEnteredURLString:@"https://admin:admin@demo.owncloud.org" useAuthMethod:nil preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
+		OCLog(@"User: %@", connection.loggedInUser.userName);
+
+		XCTAssert((error==nil), @"No error");
+		XCTAssert((issue==nil), @"No issue");
+		XCTAssert((connection!=nil), @"Connection!");
+
+		if (error == nil)
+		{
+			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				OCLog(@"Items at root: %@", items);
+
+				XCTAssert((error==nil), @"No error");
+				XCTAssert((items.count>0), @"Items were found at root");
+
+				[expectRootList fulfill];
+
+				for (OCItem *item in items)
+				{
+					if (item.type == OCItemTypeFile)
+					{
+						item.path = [[item.path stringByDeletingLastPathComponent] stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
+
+						[connection downloadItem:item to:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							if ([event.error isOCErrorWithCode:OCErrorItemNotFound])
+							{
+								[expectItemNotFound fulfill];
+							}
+						} userInfo:nil ephermalUserInfo:nil]];
+
+						break;
+					}
+				}
+			}];
+		}
+		else
+		{
+			[expectRootList fulfill];
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
@@ -742,7 +799,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/Photos" depth:1 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtPath:@"/Photos" depth:1 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 				XCTAssert(event.result!=nil);
@@ -886,6 +943,8 @@
 
 							[expectFavorite fulfill];
 						} userInfo:nil ephermalUserInfo:nil]];
+
+						break;
 					}
 				}
 			}];
@@ -938,6 +997,76 @@
 	[self waitForExpectationsWithTimeout:120 handler:nil];
 }
 
+- (void)testCapabilitiesDecoding
+{
+	NSURL *capabilitiesURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"capabilities" withExtension:@"json"];
+	NSDictionary<NSString *, id> *jsonDict = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfURL:capabilitiesURL] options:0 error:NULL];
+	OCCapabilities *capabilities = [[OCCapabilities alloc] initWithRawJSON:jsonDict];
+
+	XCTAssert(capabilities.majorVersion.integerValue == 10);
+	XCTAssert(capabilities.minorVersion.integerValue == 1);
+	XCTAssert(capabilities.microVersion != nil);
+
+	XCTAssert(capabilities.pollInterval.integerValue == 60);
+	XCTAssert([capabilities.webDAVRoot isEqual:@"remote.php/webdav"]);
+
+	XCTAssert((capabilities.installed!=nil) && capabilities.installed.boolValue);
+	XCTAssert((capabilities.maintenance!=nil) && !capabilities.maintenance.boolValue);
+	XCTAssert((capabilities.needsDBUpgrade!=nil) && !capabilities.needsDBUpgrade.boolValue);
+	XCTAssert([capabilities.version isEqual:@"10.1.0.4"]);
+	XCTAssert([capabilities.versionString isEqual:@"10.1.0"]);
+	XCTAssert([capabilities.edition isEqual:@"Community"]);
+	XCTAssert([capabilities.productName isEqual:@"ownCloud"]);
+	XCTAssert([capabilities.hostName isEqual:@"owncloud"]);
+
+	XCTAssert([capabilities.supportedChecksumTypes isEqualToArray:@[ OCChecksumAlgorithmIdentifierSHA1 ]]);
+	XCTAssert([capabilities.preferredUploadChecksumType isEqual:OCChecksumAlgorithmIdentifierSHA1]);
+
+	XCTAssert([capabilities.davChunkingVersion isEqual:@"1.0"]);
+	XCTAssert([capabilities.davReports isEqualToArray:@[ @"search-files" ]]);
+
+	XCTAssert((capabilities.supportsPrivateLinks!=nil) && capabilities.supportsPrivateLinks.boolValue);
+	XCTAssert((capabilities.supportsBigFileChunking!=nil) && capabilities.supportsBigFileChunking.boolValue);
+	XCTAssert([capabilities.blacklistedFiles isEqualToArray:@[ @".htaccess" ]]);
+	XCTAssert((capabilities.supportsUndelete!=nil) && capabilities.supportsUndelete.boolValue);
+	XCTAssert((capabilities.supportsVersioning!=nil) && capabilities.supportsVersioning.boolValue);
+
+	XCTAssert((capabilities.sharingAPIEnabled!=nil) && capabilities.sharingAPIEnabled.boolValue);
+	XCTAssert((capabilities.sharingResharing!=nil) && capabilities.sharingResharing.boolValue);
+	XCTAssert((capabilities.sharingGroupSharing!=nil) && capabilities.sharingGroupSharing.boolValue);
+	XCTAssert((capabilities.sharingAutoAcceptShare!=nil) && capabilities.sharingAutoAcceptShare.boolValue);
+	XCTAssert((capabilities.sharingWithGroupMembersOnly!=nil) && capabilities.sharingWithGroupMembersOnly.boolValue);
+	XCTAssert((capabilities.sharingWithMembershipGroupsOnly!=nil) && capabilities.sharingWithMembershipGroupsOnly.boolValue);
+	XCTAssert((capabilities.sharingAllowed!=nil) && capabilities.sharingAllowed.boolValue);
+	XCTAssert(capabilities.sharingDefaultPermissions == 31);
+	XCTAssert((capabilities.sharingSearchMinLength!=nil) && (capabilities.sharingSearchMinLength.integerValue==2));
+
+	XCTAssert((capabilities.publicSharingEnabled!=nil) && capabilities.publicSharingEnabled.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforced!=nil) && !capabilities.publicSharingPasswordEnforced.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForReadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadWrite!=nil) && !capabilities.publicSharingPasswordEnforcedForReadWrite.boolValue);
+	XCTAssert((capabilities.publicSharingPasswordEnforcedForUploadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForUploadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingExpireDateEnabled!=nil) && !capabilities.publicSharingExpireDateEnabled.boolValue);
+	XCTAssert((capabilities.publicSharingSendMail!=nil) && !capabilities.publicSharingSendMail.boolValue);
+	XCTAssert((capabilities.publicSharingSocialShare!=nil) && capabilities.publicSharingSocialShare.boolValue);
+	XCTAssert((capabilities.publicSharingUpload!=nil) && capabilities.publicSharingUpload.boolValue);
+	XCTAssert((capabilities.publicSharingMultiple!=nil) && capabilities.publicSharingMultiple.boolValue);
+	XCTAssert((capabilities.publicSharingSupportsUploadOnly!=nil) && capabilities.publicSharingSupportsUploadOnly.boolValue);
+	XCTAssert((capabilities.publicSharingDefaultLinkName!=nil) && [capabilities.publicSharingDefaultLinkName isEqual:@"Public link"]);
+
+	XCTAssert((capabilities.userSharingSendMail!=nil) && !capabilities.userSharingSendMail.boolValue);
+
+	XCTAssert((capabilities.userEnumerationEnabled!=nil) && capabilities.userEnumerationEnabled.boolValue);
+	XCTAssert((capabilities.userEnumerationGroupMembersOnly!=nil) && !capabilities.userEnumerationGroupMembersOnly.boolValue);
+
+	XCTAssert((capabilities.federatedSharingIncoming!=nil) && capabilities.federatedSharingIncoming.boolValue);
+	XCTAssert((capabilities.federatedSharingOutgoing!=nil) && capabilities.federatedSharingOutgoing.boolValue);
+
+	NSArray *endpoints = @[ @"list", @"get", @"delete" ];
+	XCTAssert([capabilities.notificationEndpoints isEqualToArray:endpoints]);
+}
+
+
 - (void)_testPropFindZeroStresstest
 {
 	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
@@ -963,7 +1092,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCItem *rootFolder = ((NSArray <OCItem *> *)event.result).firstObject;
 
 				for (NSUInteger i=0; i < scheduleCount; i++)
@@ -1001,7 +1130,7 @@
 								XCTAssert(items.firstObject.eTag != nil);
 							}];
 
-							[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 								OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 								XCTAssert(event.result!=nil);
@@ -1015,7 +1144,7 @@
 						} userInfo:nil ephermalUserInfo:nil]];
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[connection retrieveItemListAtPath:@"/" depth:0 notBefore:nil options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+					[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 						OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 						XCTAssert(event.result!=nil);

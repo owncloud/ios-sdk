@@ -17,19 +17,26 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCKeychain : NSObject
+@interface OCKeychain : NSObject <OCLogTagging>
 {
 	NSString *_accessGroupIdentifier;
 }
 
 - (instancetype)initWithAccessGroupIdentifier:(NSString *)accessGroupIdentifier;
 
+#pragma mark - Data interface
 - (nullable NSData *)readDataFromKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)writeData:(nullable NSData *)data toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 - (nullable NSError *)removeKeychainItemForAccount:(NSString *)account path:(NSString *)path;
+- (nullable NSError *)wipe;
+
+#pragma mark - Object interface
+- (nullable id)readObjectFromKeychainItemForAccount:(NSString *)account path:(NSString *)path allowedClasses:(NSSet<Class> *)allowedClasses rootClass:(Class)rootClass error:(NSError * _Nullable * _Nullable)outError;
+- (nullable NSError *)writeObject:(nullable id)object toKeychainItemForAccount:(NSString *)account path:(NSString *)path;
 
 @end
 

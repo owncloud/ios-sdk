@@ -18,11 +18,16 @@
 
 #import "OCCore.h"
 #import "OCCoreItemListTask.h"
+#import "OCShareQuery.h"
 
 @interface OCCore (Internal)
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged;
+
 #pragma mark - Queue
 - (void)queueBlock:(dispatch_block_t)block;
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining;
 - (void)queueConnectivityBlock:(dispatch_block_t)block;
 
 #pragma mark - Busy count
@@ -33,15 +38,24 @@
 - (OCDatabase *)database;
 
 #pragma mark - Sync Engine
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender;
+- (void)queueSyncEvent:(OCEvent *)event sender:(id)sender;
+
+#pragma mark - Event target tools
+- (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo;
 
 #pragma mark - Attempt Connect
-- (void)attemptConnect:(BOOL)doAttempt;
 - (void)_attemptConnect;
 
 #pragma mark - Inter-Process change notification/handling
 - (void)postIPCChangeNotification;
 - (void)_checkForChangesByOtherProcessesAndUpdateQueries;
 - (void)_replayChangesSinceSyncAnchor:(OCSyncAnchor)fromSyncAnchor;
+
+#pragma mark - Share queries
+- (void)startShareQuery:(OCShareQuery *)shareQuery;
+- (void)reloadShareQuery:(OCShareQuery *)shareQuery;
+- (void)stopShareQuery:(OCShareQuery *)shareQuery;
+
+- (void)_pollNextShareQuery;
 
 @end

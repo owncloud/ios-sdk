@@ -22,6 +22,9 @@
 #import "OCCore+SyncEngine.h"
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCMacros.h"
+#import "NSError+OCError.h"
+#import "NSError+OCNetworkFailure.h"
+#import "OCCore+ItemList.h"
 
 @implementation OCCore (ConnectionStatus)
 
@@ -154,6 +157,12 @@
 				break;
 			}
 
+			// Connecting state
+			if ((computedSignal & OCCoreConnectionStatusSignalConnecting) != 0)
+			{
+				computedConnectionStatus = OCCoreConnectionStatusConnecting;
+			}
+
 			// Connection state
 			if ((computedSignal & OCCoreConnectionStatusSignalConnected) == 0)
 			{
@@ -177,6 +186,10 @@
 				shortStatusDescription = OCLocalized(@"Server down for maintenance");
 			break;
 
+			case OCCoreConnectionStatusConnecting:
+				shortStatusDescription = OCLocalized(@"Connecting");
+			break;
+
 			case OCCoreConnectionStatusOnline:
 				shortStatusDescription = OCLocalized(@"Online");
 			break;
@@ -194,16 +207,40 @@
 }
 
 #pragma mark - Connnection status updates
+- (NSString *)_descriptionForConnectionStatus:(OCCoreConnectionStatus)status
+{
+	switch (status)
+	{
+		case OCCoreConnectionStatusOffline:
+			return (@"offline");
+		break;
+
+		case OCCoreConnectionStatusUnavailable:
+			return (@"unavailable");
+		break;
+
+		case OCCoreConnectionStatusConnecting:
+			return (@"connecting");
+		break;
+
+		case OCCoreConnectionStatusOnline:
+			return (@"online");
+		break;
+	}
+
+	return (@"unknown");
+}
+
 - (void)updateConnectionStatus:(OCCoreConnectionStatus)newStatus withSignal:(OCCoreConnectionStatusSignal)newSignal
 {
 	OCCoreConnectionStatus oldStatus = _connectionStatus;
 	OCCoreConnectionStatusSignal oldSignal = _connectionStatusSignals;
-	BOOL reattemptConnect = NO, reloadQueries = NO, updateOnlineConnectionSignal = NO;
+	BOOL reattemptConnect = NO, reloadQueries = NO, updateOnlineConnectionSignal = NO, updateUnavailableConnectionSignal = NO;
 
 	// Property changes
 	if (newStatus != _connectionStatus)
 	{
-		OCLogDebug(@"************ Connection Status will change from %d to %d ************", oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status will change from %@ to %@ ************", [self _descriptionForConnectionStatus:oldStatus], [self _descriptionForConnectionStatus:newStatus]);
 
 		// Announce change
 		[self willChangeValueForKey:@"connectionStatus"];
@@ -211,7 +248,7 @@
 
 	if (newSignal != _connectionStatusSignals)
 	{
-		OCLogDebug(@"************ Connection Status Signal will change from %d to %d ************", oldSignal, newSignal);
+		OCLogDebug(@"************ Connection Status Signal will change from %lu to %lu ************", oldSignal, newSignal);
 
 		// Announce change
 		[self willChangeValueForKey:@"connectionStatusSignals"];
@@ -223,7 +260,7 @@
 		_connectionStatusSignals = newSignal;
 		[self didChangeValueForKey:@"connectionStatusSignals"];
 
-		OCLogDebug(@"************ Connection Status Signal changed from %d to %d ************", oldSignal, newSignal);
+		OCLogDebug(@"************ Connection Status Signal changed from %lu to %lu ************", oldSignal, newSignal);
 	}
 
 	if (newStatus != _connectionStatus)
@@ -232,13 +269,13 @@
 		_connectionStatus = newStatus;
 		[self didChangeValueForKey:@"connectionStatus"];
 
-		OCLogDebug(@"************ Connection Status changed from %d to %d ************", oldStatus, newStatus);
+		OCLogDebug(@"************ Connection Status changed from %@ to %@ ************", [self _descriptionForConnectionStatus:oldStatus], [self _descriptionForConnectionStatus:newStatus]);
 	}
 
 	// Determine internal updates
 	// - In case server has become reachable and is not (or no longer) in maintenance mode => reattempt connect
 	if ((newSignal != oldSignal) && (newStatus == OCCoreConnectionStatusOffline) && ((newSignal & OCCoreConnectionStatusSignalReachable) != 0) &&
-	    (self.state == OCCoreStateStarting) && (self.connection.state != OCConnectionStateConnecting))
+	    (self.state == OCCoreStateReady) && (self.connection.state != OCConnectionStateConnecting))
 	{
 		reattemptConnect = YES;
 	}
@@ -249,16 +286,29 @@
 		reloadQueries = YES;
 	}
 
+	// - Update connection signals on "unavailable" status changes
+	if (((newStatus != OCCoreConnectionStatusUnavailable) != (oldStatus != OCCoreConnectionStatusUnavailable)) || !_connectionStatusInitialUpdate)
+	{
+		updateUnavailableConnectionSignal = YES;
+	}
+
 	// - Update connection signals on "online" status changes
-	if ((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline))
+	if (((newStatus == OCCoreConnectionStatusOnline) != (oldStatus == OCCoreConnectionStatusOnline)) || !_connectionStatusInitialUpdate)
 	{
 		updateOnlineConnectionSignal = YES;
 	}
+
+	_connectionStatusInitialUpdate = YES;
 
 	// Internal updates
 	if (reattemptConnect || reloadQueries || updateOnlineConnectionSignal)
 	{
 		[self queueBlock:^{
+			if (updateUnavailableConnectionSignal)
+			{
+				[self->_connection setSignal:OCConnectionSignalIDNetworkAvailable on:(self->_connectionStatus != OCCoreConnectionStatusUnavailable)];
+			}
+
 			if (updateOnlineConnectionSignal)
 			{
 				[self->_connection setSignal:OCConnectionSignalIDCoreOnline on:(self->_connectionStatus == OCCoreConnectionStatusOnline)];
@@ -266,7 +316,7 @@
 
 			if (reattemptConnect)
 			{
-				if ((self->_state == OCCoreStateStarting) && (self->_connection.state != OCConnectionStateConnecting))
+				if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
 				{
 					[self _attemptConnect];
 				}
@@ -287,6 +337,12 @@
 							}
 
 							[self setNeedsToProcessSyncRecords];
+
+							[self _pollNextShareQuery];
+
+							[self startCheckingForUpdates];
+
+							[self scheduleNextItemListTask];
 						}
 					}];
 				}];
@@ -298,26 +354,89 @@
 #pragma mark - OCConnection tracking
 - (void)connectionChangedState:(OCConnection *)connection
 {
+	BOOL hasUnsolvedIssues = NO;
+
+	@synchronized(_unsolvedIssueSignatures)
+	{
+		hasUnsolvedIssues = (_unsolvedIssueSignatures.count > 0);
+	}
+
 	// Update connectionStatusSignalProvider representing connection state
-	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected) ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
+	_connectionStatusSignalProvider.state = (connection.state == OCConnectionStateConnected)  ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse;
+	_connectingStatusSignalProvider.state = (((connection.state == OCConnectionStateConnecting) && // bind this signal provider to the connection's OCConnectionStateConnecting state
+	 					  (connection.authenticationMethod.authenticationDataKnownInvalidDate == nil)) || // avoid retries if authentication data is known to be invalid (triggered by state changes) as well as user-visible state changes due to retries
+	 					  hasUnsolvedIssues) ? // avoid retries if there are unsolved issues that need fixing first
+	 					 	OCCoreConnectionStatusSignalStateTrue :
+	 					 	OCCoreConnectionStatusSignalStateFalse;
+}
+
+- (void)connectionCertificateUserApproved:(OCConnection *)connection
+{
+	// User approved a certificate that was blocking connecting
+	[self queueBlock:^{
+		if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
+		{
+			[self _attemptConnect];
+		}
+	}];
+}
+
+- (void)connection:(OCConnection *)connection handleError:(NSError *)error
+{
+	if ([error isOCError])
+	{
+		switch (error.code)
+		{
+			case OCErrorServerConnectionValidationFailed:
+				// See comment for "Connection Validator" for background
+				[_serverStatusSignalProvider reportConnectionRefusedError:error];
+			break;
+
+			case OCErrorServerInMaintenanceMode:
+				[self reportResponseIndicatingMaintenanceMode];
+			break;
+		}
+	}
 }
 
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction
 {
 	if (error != nil)
 	{
-		if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCannotConnectToHost))
+		// Connection dropped errors
+		if (error.isNetworkFailureError)
 		{
-			[_serverStatusSignalProvider reportConnectionRefusedError];
+			[_serverStatusSignalProvider reportConnectionRefusedError:error];
 
 			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{
 				return (OCHTTPRequestInstructionReschedule);
 			}
 		}
+
+		// Request dropped error
+		if ([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession])
+		{
+			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
+			{
+				return (OCHTTPRequestInstructionReschedule);
+			}
+		}
+
+		// Certificate was rejected
+		if (([error isOCErrorWithCode:OCErrorRequestServerCertificateRejected]) && (error.embeddedIssue != nil))
+		{
+			[self sendError:nil issue:error.embeddedIssue];
+		}
+
+		// Authorization failed
+		if ([error isOCErrorWithCode:OCErrorAuthorizationFailed])
+		{
+			[self sendError:error issue:nil];
+		}
 	}
 
-	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	if ([OCConnection shouldConsiderMaintenanceModeIndicationFromResponse:response])
 	{
 		[self reportResponseIndicatingMaintenanceMode];
 
@@ -326,6 +445,7 @@
 			return (OCHTTPRequestInstructionReschedule);
 		}
 	}
+
 
 	return (defaultInstruction);
 }

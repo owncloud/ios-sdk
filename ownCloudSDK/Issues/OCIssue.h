@@ -38,6 +38,7 @@ typedef NS_ENUM(NSUInteger, OCIssueType)
 
 	OCIssueTypeURLRedirection,
 	OCIssueTypeCertificate,
+	OCIssueTypeGeneric,
 
 	OCIssueTypeError
 };
@@ -51,32 +52,9 @@ typedef NS_ENUM(NSUInteger, OCIssueDecision)
 
 typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
+typedef NSString* OCIssueSignature; //!< Signature that - for identical issues - will be identical
+
 @interface OCIssue : NSObject
-{
-	OCIssueType _type;
-	OCIssueLevel _level;
-
-	NSString *_localizedTitle;
-	NSString *_localizedDescription;
-
-	OCCertificate *_certificate;
-	OCCertificateValidationResult _certificateValidationResult;
-	NSURL *_certificateURL;
-	
-	NSURL *_originalURL;
-	NSURL *_suggestedURL;
-	
-	NSError *_error;
-	
-	BOOL _decisionMade;
-	OCIssueDecision _decision;
-	OCIssueHandler _issueHandler;
-	
-	NSArray <OCIssue *> *_issues;
-
-	OCIssueChoice *_selectedChoice;
-	NSArray <OCIssueChoice *> *_choices;
-}
 
 @property(weak) OCIssue *parentIssue;
 
@@ -84,6 +62,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 @property(assign) OCIssueLevel level;
 
 @property(readonly,nonatomic) BOOL resolvable;
+
+@property(nullable,strong) NSUUID *uuid; //!< Equal to OCSyncIssueUUID if generated from an OCSyncIssue
 
 @property(nullable,strong) NSString *localizedTitle;
 @property(nullable,strong) NSString *localizedDescription;
@@ -105,6 +85,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 @property(nullable,strong,readonly) NSArray <OCIssue *> *issues;
 
+@property(nullable,strong,readonly) OCIssueSignature signature;
+
 + (instancetype)issueForCertificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult url:(NSURL *)url level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForRedirectionFromURL:(NSURL *)originalURL toSuggestedURL:(NSURL *)suggestedURL issueHandler:(nullable OCIssueHandler)issueHandler;
@@ -112,6 +94,8 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 + (instancetype)issueForError:(NSError *)error level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForMultipleChoicesWithLocalizedTitle:(NSString *)localizedTitle localizedDescription:(NSString *)localizedDescription choices:(NSArray <OCIssueChoice *> *)choices completionHandler:(nullable OCIssueHandler)issueHandler;
+
++ (instancetype)issueWithLocalizedTitle:(NSString *)title localizedDescription:(NSString *)localizedDescription level:(OCIssueLevel)level issueHandler:(nullable OCIssueHandler)issueHandler;
 
 + (instancetype)issueForIssues:(NSArray <OCIssue *> *)issues completionHandler:(nullable OCIssueHandler)completionHandler;
 
@@ -128,6 +112,9 @@ typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 
 #pragma mark - Filtering
 - (nullable NSArray <OCIssue *> *)issuesWithLevelGreaterThanOrEqualTo:(OCIssueLevel)level;
+
+#pragma mark - Handling
+- (void)appendIssueHandler:(OCIssueHandler)issueHandler;
 
 @end
 

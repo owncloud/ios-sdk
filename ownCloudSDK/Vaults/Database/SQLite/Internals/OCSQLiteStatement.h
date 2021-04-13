@@ -20,8 +20,11 @@
 #import <sqlite3.h>
 
 @class OCSQLiteDB;
+@class OCSQLiteStatement;
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef BOOL(^OCSQLiteStatementCanceller)(OCSQLiteStatement *statement);
 
 @interface OCSQLiteStatement : NSObject
 {
@@ -30,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray <NSString *> *_parameterNamesByIndex;
 
 	NSString *_query;
+
+	BOOL _isClaimed;
+	NSUInteger _claimedCounter;
 }
 
 @property(readonly,nonatomic) sqlite3_stmt *sqlStatement;
@@ -37,6 +43,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,weak) OCSQLiteDB *database;
 
 @property(strong) NSString *query;
+
+@property(readonly) NSTimeInterval lastUsed;
+@property(assign) BOOL isClaimed;
+
+@property(copy,nullable) OCSQLiteStatementCanceller canceller;
 
 - (instancetype)initWithSQLStatement:(sqlite3_stmt *)sqlStatement database:(OCSQLiteDB *)database;
 + (nullable instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError;
@@ -47,8 +58,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)bindParametersFromDictionary:(NSDictionary *)parameterDictionary;
 - (void)bindParameters:(NSArray <id<NSObject>> *)values;
 
+#pragma mark - Claims
+- (void)claim;
+- (void)dropClaim;
+
 #pragma mark - Resetting
 - (void)reset;
+
+#pragma mark - Cancellation
+- (BOOL)cancel;
 
 #pragma mark - Release
 - (void)releaseSQLObjects;

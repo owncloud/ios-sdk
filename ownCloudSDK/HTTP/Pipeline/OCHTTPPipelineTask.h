@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCHTTPPipeline.h"
+#import "OCHTTPPipelineTaskMetrics.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -47,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCHTTPPipelineTaskState state;		//!< The processing state of the pipeline task
 
-@property(strong) OCHTTPRequestID requestID;			//!< The request's unique requestID
+@property(strong,nonatomic) OCHTTPRequestID requestID;			//!< The request's unique requestID
 
 @property(nullable,strong,nonatomic) OCHTTPRequest *request;		//!< The request. Lazily deserializes .requestData as needed.
 @property(nullable,strong,nonatomic,readonly) NSData *requestData;	//!< The serialized request. Lazily serializes .request as needed.
@@ -55,6 +56,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong,nonatomic) OCHTTPResponse *response;	//!< The response. Lazily deserializes .responseData as needed.
 @property(nullable,strong,nonatomic,readonly) NSData *responseData;	//!< The serialized response. Lazily serializes .response as needed.
+
+@property(nullable,strong) OCHTTPPipelineTaskMetrics *metrics; 	//!< (optional) metrics for the task (typically not serialized)
 
 @property(assign) BOOL finished; 				//!< The task has been finished
 
@@ -65,5 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (OCHTTPResponse *)responseFromURLSessionTask:(nullable NSURLSessionTask *)urlSessionTask; //! Creates a blank .response from .request if .response is currently nil. Optionally fills/replaces the .response's httpURLResponse (and thereby status + headerFields) from the urlSessionTask.
 
 @end
+
+extern NSString *OCHTTPPipelineTaskAnyBundleID; //!< Value for OCHTTPPipelineTask.bundleID indicating this task isn't tied to a specific app or extension bundle and can be delivered to attached partition handlers on other processes, too.
 
 NS_ASSUME_NONNULL_END

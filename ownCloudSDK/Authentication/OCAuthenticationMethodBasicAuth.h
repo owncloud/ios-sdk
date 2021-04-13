@@ -18,10 +18,14 @@
 
 #import "OCAuthenticationMethod.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCAuthenticationMethodBasicAuth : OCAuthenticationMethod
 
-+ (NSData *)authenticationDataForUsername:(NSString *)userName passphrase:(NSString *)passPhrase authenticationHeaderValue:(NSString **)outAuthenticationHeaderValue error:(NSError **)outError; //!< Generates authentication data for basic auth without reaching out to the server. Useful for building tests. Should not be used for anything other than implementing tests.
++ (nullable NSData *)authenticationDataForUsername:(NSString *)userName passphrase:(NSString *)passPhrase authenticationHeaderValue:(NSString * _Nullable * _Nullable)outAuthenticationHeaderValue error:(NSError * _Nullable * _Nullable)outError; //!< Generates authentication data for basic auth without reaching out to the server. Useful for building tests. Should not be used for anything other than implementing tests.
 
 @end
 
 extern OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierBasicAuth;
+
+NS_ASSUME_NONNULL_END

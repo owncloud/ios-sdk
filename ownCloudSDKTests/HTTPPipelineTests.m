@@ -60,7 +60,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 }
 
 #pragma mark - Requirements
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals forTask:(OCHTTPPipelineTask *)task failWithError:(NSError *__autoreleasing  _Nullable *)outError
 {
 	if (self.meetsSignalRequirements != nil)
 	{
@@ -91,7 +91,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	return (error);
 }
 
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)inInstruction error:(nullable NSError *)error
 {
 	if (self.instructionForFinishedTask != nil)
 	{
@@ -222,7 +222,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestCompletedExpectation fulfill];
 
@@ -285,7 +285,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert(error==nil);
 
 				OCLogDebug(@"<1> request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"<1> %@", [response responseDescription]);
+				OCLogDebug(@"<1> %@", [response responseDescriptionPrefixed:NO]);
 
 				[requestOneCompletedExpectation fulfill];
 
@@ -313,7 +313,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 							request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 								OCLogDebug(@"<2> request=%@, response=%@, error=%@", request, response, error);
-								OCLogDebug(@"<2> %@", [response responseDescription]);
+								OCLogDebug(@"<2> %@", [response responseDescriptionPrefixed:NO]);
 
 								[requestTwoCompletedExpectation fulfill];
 							};
@@ -386,7 +386,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert(error==nil);
 
 				OCLogDebug(@"<1> request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"<1> %@", [response responseDescription]);
+				OCLogDebug(@"<1> %@", [response responseDescriptionPrefixed:NO]);
 
 				[requestOneCompletedExpectation fulfill];
 
@@ -414,7 +414,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 							request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 								OCLogDebug(@"<2> request=%@, response=%@, error=%@", request, response, error);
-								OCLogDebug(@"<2> %@", [response responseDescription]);
+								OCLogDebug(@"<2> %@", [response responseDescriptionPrefixed:NO]);
 
 								[requestTwoCompletedExpectation fulfill];
 
@@ -486,7 +486,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert([error isOCErrorWithCode:OCErrorRequestCancelled]);
 
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestOneCompletedExpectation fulfill];
 
@@ -562,7 +562,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert([error isOCErrorWithCode:OCErrorRequestCancelled]);
 
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestOneCompletedExpectation fulfill];
 
@@ -645,6 +645,9 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		requestID1 = request1.identifier;
 		requestID2 = request2.identifier;
 
+		[request1 addHeaderFields:@{ @"X-Request-Partition" : @"1" }];
+		[request2 addHeaderFields:@{ @"X-Request-Partition" : @"2" }];
+
 		XCTAssert(requestID1 != nil);
 		XCTAssert(requestID2 != nil);
 		XCTAssert(![requestID1 isEqual:requestID2]);
@@ -655,7 +658,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 			XCTAssert([response.requestID isEqual:requestID1]);
 
 			OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-			OCLogDebug(@"%@", [response responseDescription]);
+			OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 			[requestOneCompletedExpectation fulfill];
 
@@ -663,8 +666,15 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 			certificate1 = response.certificate;
 
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-				XCTAssert([pipeline tasksPendingDeliveryForPartitionID:partition1.partitionID]==0);
-				XCTAssert([pipeline tasksPendingDeliveryForPartitionID:partition2.partitionID]==1);
+				NSUInteger partition1PendingDeliveryCount = [pipeline tasksPendingDeliveryForPartitionID:partition1.partitionID];
+				NSUInteger partition2PendingDeliveryCount = [pipeline tasksPendingDeliveryForPartitionID:partition2.partitionID];
+
+				OCLogDebug(@"Pending(B) 1: %ld, 2: %ld", partition1PendingDeliveryCount, partition2PendingDeliveryCount)
+
+				[pipeline.backend dumpDBTable];
+
+				XCTAssert(partition1PendingDeliveryCount==0);
+				XCTAssert(partition2PendingDeliveryCount==1);
 
 				[pipeline attachPartitionHandler:partition2 completionHandler:^(id sender, NSError *error) {
 					request2.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
@@ -708,8 +718,15 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		[pipeline enqueueRequest:request2 forPartitionID:partition2.partitionID isFinal:YES];
 
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-			XCTAssert([pipeline tasksPendingDeliveryForPartitionID:partition1.partitionID]==1);
-			XCTAssert([pipeline tasksPendingDeliveryForPartitionID:partition2.partitionID]==1);
+			NSUInteger partition1PendingDeliveryCount = [pipeline tasksPendingDeliveryForPartitionID:partition1.partitionID];
+			NSUInteger partition2PendingDeliveryCount = [pipeline tasksPendingDeliveryForPartitionID:partition2.partitionID];
+
+			OCLogDebug(@"Pending(A) 1: %ld, 2: %ld", partition1PendingDeliveryCount, partition2PendingDeliveryCount)
+
+			[pipeline.backend dumpDBTable];
+
+			XCTAssert(partition1PendingDeliveryCount==1);
+			XCTAssert(partition2PendingDeliveryCount==1);
 
 			[pipeline attachPartitionHandler:partition1 completionHandler:^(id sender, NSError *error) {
 				[attachCompletedExpectation fulfill];
@@ -803,7 +820,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert(response.certificate != nil);
 
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				request1Done = YES;
 
@@ -817,7 +834,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert(response.certificate != nil);
 
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				request2Done = YES;
 
@@ -841,7 +858,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 				XCTAssert(response.certificate == nil);
 
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				request3Done = YES;
 
@@ -1164,7 +1181,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				XCTAssert([response.redirectURL.absoluteString isEqual:@"https://goo.gl/dh6yW5"]);
 
@@ -1429,7 +1446,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:240 handler:nil];
 
 	XCTAssert(cancelledRequests!=0);
 }
@@ -1746,7 +1763,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				XCTAssert(!firstInstructionForStatus);
 				XCTAssert(secondInstructionForStatus);
@@ -1829,7 +1846,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				XCTAssert(firstSetCookieString!=nil);
 				XCTAssert([response.headerFields[@"Set-Cookie"] isEqual:firstSetCookieString]);
@@ -1895,7 +1912,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestCompletedExpectation fulfill];
 
@@ -1968,7 +1985,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestCompletedExpectation fulfill];
 
@@ -2039,7 +2056,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 			request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				[requestCompletedExpectation fulfill];
 
@@ -2212,7 +2229,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		}];
 	}];
 
-	[self waitForExpectationsWithTimeout:120 handler:nil];
+	[self waitForExpectationsWithTimeout:240 handler:nil];
 }
 
 // - creates a fake task in the backend with status "running" (=> when actually it has never been scheduled and the NSURLSession can't know about it)
@@ -2237,7 +2254,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	{
 		fakeRequest.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-			OCLogDebug(@"%@", [response responseDescription]);
+			OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 			XCTAssert(error!=nil);
 			XCTAssert([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession]);
@@ -2319,7 +2336,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			requestSimulated.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				XCTAssert([error isOCErrorWithCode:OCErrorResponseUnknownFormat]);
 
@@ -2331,7 +2348,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 		{
 			requestPassthrough.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-				OCLogDebug(@"%@", [response responseDescription]);
+				OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 				XCTAssert(error==nil);
 
@@ -2395,7 +2412,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 				request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 					OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-					OCLogDebug(@"%@", [response responseDescription]);
+					OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 					[requestCompletedExpectation fulfill];
 
@@ -2477,7 +2494,7 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 
 					request.ephermalResultHandler = ^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 						OCLogDebug(@"request=%@, response=%@, error=%@", request, response, error);
-						OCLogDebug(@"%@", [response responseDescription]);
+						OCLogDebug(@"%@", [response responseDescriptionPrefixed:NO]);
 
 						XCTAssert([error isOCErrorWithCode:OCErrorRequestCancelled]);
 

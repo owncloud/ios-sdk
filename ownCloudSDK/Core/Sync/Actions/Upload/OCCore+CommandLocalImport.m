@@ -19,8 +19,9 @@
 #import "OCCore.h"
 #import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
+#import "OCCore+NameConflicts.h"
 
-#import <MobileCoreServices/MobileCoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 @implementation OCCore (CommandLocalImport)
 
@@ -40,6 +41,29 @@
 	if (newFileName == nil)
 	{
 		newFileName = inputFileURL.lastPathComponent;
+	}
+
+	// Alternative name pick
+	NSNumber *nameStyleNumber = nil;
+
+	if ((nameStyleNumber = options[OCCoreOptionAutomaticConflictResolutionNameStyle]) != nil)
+	{
+		if (nameStyleNumber.integerValue != OCCoreDuplicateNameStyleNone)
+		{
+			__block NSString *outSuggestedName = nil;
+
+			OCSyncExec(checkForExistingItems, {
+				[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+					outSuggestedName = suggestedName;
+					OCSyncExecDone(checkForExistingItems);
+				}];
+			});
+
+			if (outSuggestedName != nil)
+			{
+				newFileName = outSuggestedName;
+			}
+		}
 	}
 
 	// Create placeholder item and fill fields required by -[NSFileProviderExtension importDocumentAtURL:toParentItemIdentifier:completionHandler:] completion handler
@@ -104,6 +128,15 @@
 					error = transformationError;
 					importFileOperationSuccessful = NO;
 				}
+
+				// Remove transformation block from options dictionary
+				NSMutableDictionary<OCCoreOption,id> *mutableOptions;
+
+				if ((mutableOptions = [options mutableCopy]) != nil)
+				{
+					mutableOptions[OCCoreOptionImportTransformation] = nil;
+					options = mutableOptions;
+				}
 			}
 		}
 
@@ -115,7 +148,7 @@
 		}
 		else
 		{
-			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: ", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
+			OCLogError(@"Local creation for item %@ from %@ to %@ failed in move phase with error: %@", OCLogPrivate(placeholderItem), OCLogPrivate(inputFileURL), OCLogPrivate(placeholderOutputURL), OCLogPrivate(error));
 			criticalError = error;
 		}
 
@@ -145,19 +178,25 @@
 
 		return (nil);
 	}
-	else
+
+	// Override last modified date (if provided as option)
+	NSDate *lastModifiedOverrideDate;
+
+	if ((lastModifiedOverrideDate = OCTypedCast(options[OCCoreOptionLastModifiedDate], NSDate)) != nil)
 	{
-		// Invoke placeholder completion handler
-		if (placeholderCompletionHandler != nil)
-		{
-			placeholderCompletionHandler(nil, placeholderItem);
-		}
+		placeholderItem.lastModified = lastModifiedOverrideDate;
 	}
 
 	// Enqueue sync record
 	NSProgress *progress;
 
-	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO] cancellable:YES resultHandler:resultHandler];
+	progress = [self _enqueueSyncRecordWithAction:[[OCSyncActionUpload alloc] initWithUploadItem:placeholderItem parentItem:parentItem filename:newFileName importFileURL:placeholderOutputURL isTemporaryCopy:NO options:options] cancellable:YES preflightResultHandler:^(NSError * _Nullable error) {
+		// Invoke placeholder completion handler - AFTER it was added to the database as part of preflight
+		if (placeholderCompletionHandler != nil)
+		{
+			placeholderCompletionHandler(error, placeholderItem);
+		}
+	} resultHandler:resultHandler];
 
 	return (progress);
 }

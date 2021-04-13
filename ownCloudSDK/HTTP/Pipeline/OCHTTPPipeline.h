@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCHTTPPipelineBackend.h"
 #import "OCHTTPTypes.h"
+#import "OCHTTPCookieStorage.h"
 #import "OCProgress.h"
 #import "OCCertificate.h"
 #import "OCClassSettings.h"
@@ -36,38 +37,34 @@ typedef NS_ENUM(NSInteger, OCHTTPPipelineState)
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol OCHTTPPipelinePolicyHandler <NSObject>
+
+#pragma mark - Certificate validation
+- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+
+@end
+
 @protocol OCHTTPPipelinePartitionHandler <NSObject>
 
 @property(strong,readonly) OCHTTPPipelinePartitionID partitionID; //!< The ID of the partition
 
 #pragma mark - Requirements
-- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals failWithError:(NSError **)outError;
+- (BOOL)pipeline:(OCHTTPPipeline *)pipeline meetsSignalRequirements:(NSSet<OCConnectionSignalID> *)requiredSignals forTask:(nullable OCHTTPPipelineTask *)task failWithError:(NSError **)outError;
 
 #pragma mark - Scheduling
 - (OCHTTPRequest *)pipeline:(OCHTTPPipeline *)pipeline prepareRequestForScheduling:(OCHTTPRequest *)request;
 
 - (nullable NSError *)pipeline:(OCHTTPPipeline *)pipeline postProcessFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error;
-- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task error:(nullable NSError *)error;
 
-#pragma mark - Security policy (improved, allowing for scheduling requests without attached pipelineHandler)
-/*
-// OCHTTPPolicy should allow these things
-// - access request before scheduling (to add credentials)
-// - access request after certificate is known (to validate, apply custom policies)
-// - handle response and provide an instruction (to re-queue requests with failed validation or network errors)
-// - be fully serializable (for persistance in pipeline backend)
-
-- (NSArray<OCHTTPPolicy *> *)policiesForPipeline:(OCHTTPPipeline *)pipeline; //!< Array of policies that need to be fulfilled to let a request be sent. Called automatically at every attach. Call -[OCPipeline policiesChangedForPartition:] while attached to ask OCHTTPPipeline to call this.
-
-- (void)pipeline:(OCHTTPPipeline *)pipeline handlePolicy:(OCHTTPPolicy *)policy error:(NSError *)error; //!< Called whenever there is an error validating a security policy. Provides enough info to create an issue and the proceed handler allows reacting to it (f.ex. via error userinfo provide OCCertificate *certificate, BOOL userAcceptanceRequired, OCConnectionCertificateProceedHandler proceedHandler).
-*/
-
-#pragma mark - Certificate validation
-- (void)pipeline:(OCHTTPPipeline *)pipeline handleValidationOfRequest:(OCHTTPRequest *)request certificate:(OCCertificate *)certificate validationResult:(OCCertificateValidationResult)validationResult validationError:(NSError *)validationError proceedHandler:(OCConnectionCertificateProceedHandler)proceedHandler;
+@optional
+- (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)inInstruction error:(nullable NSError *)error;
 
 #pragma mark - Mocking
 @optional
 - (BOOL)pipeline:(OCHTTPPipeline *)pipeline partitionID:(OCHTTPPipelinePartitionID)partitionID simulateRequestHandling:(OCHTTPRequest *)request completionHandler:(void(^)(OCHTTPResponse *response))completionHandler; //!< Return YES if the pipeline should handle the request. NO if the pipelineHandler will take care of it and return the response via the completionHandler.
+
+#pragma mark - Cookie storage
+@property(strong,nullable,nonatomic,readonly) OCHTTPCookieStorage *partitionCookieStorage; //!< If provided, used to store and retrieve cookies for the partition
 
 #pragma mark - Pipeline events
 - (void)pipelineWillStop:(OCHTTPPipeline *)pipeline; //!< Called when the pipeline is about to be stopped
@@ -82,9 +79,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSURLSession *_urlSession;
 	BOOL _urlSessionInvalidated;
 	BOOL _alwaysUseDownloadTasks;
-
-	// Settings
-	BOOL _insertXRequestID;
 
 	// Scheduling
 	NSMapTable<OCHTTPPipelinePartitionID, id<OCHTTPPipelinePartitionHandler>> *_partitionHandlersByID;
@@ -104,17 +98,23 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<OCLogTagName> *_cachedLogTags;
 }
 
+@property(nullable,strong,readonly,class) NSString *userAgent; //!< Custom User-Agent to use (if any)
+
 @property(strong,readonly) OCHTTPPipelineID identifier;
 @property(strong,readonly) NSString *bundleIdentifier;
 
 @property(readonly) OCHTTPPipelineState state;
 
+@property(readonly,nonatomic) BOOL backgroundSessionBacked; //!< YES if this pipeline is backed by a background NSURLSession
+
 @property(strong,readonly) OCHTTPPipelineBackend *backend;
 
-@property(assign) BOOL generateSystemActivityWhileRequestAreRunning;
 @property(assign) NSUInteger maximumConcurrentRequests; //!< The maximum number of concurrently running requests. A value of 0 means no limit.
 
 @property(strong,nullable,readonly) NSString *urlSessionIdentifier;
+
+#pragma mark - User Agent
++ (nullable NSString *)stringForTemplate:(NSString *)userAgentTemplate variables:(nullable NSDictionary<NSString *, NSString *> *)variables;
 
 #pragma mark - Lifecycle
 - (instancetype)initWithIdentifier:(OCHTTPPipelineID)identifier backend:(nullable OCHTTPPipelineBackend *)backend configuration:(NSURLSessionConfiguration *)sessionConfiguration;
@@ -155,11 +155,15 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Progress
 - (nullable NSProgress *)progressForRequestID:(OCHTTPRequestID)requestID;
 
+#pragma mark - Metrics
+- (nullable NSNumber *)estimatedTimeForRequest:(OCHTTPRequest *)request withExpectedResponseLength:(NSUInteger)expectedResponseLength confidence:(double * _Nullable)outConfidence;//!< If a sufficient amount of metrics could be collected, returns the estimated number of seconds it'll take the request to be sent and a response of expectedResponseLength be received.
+
 #pragma mark - Internal job queue
 - (void)queueBlock:(dispatch_block_t)block withBusy:(BOOL)withBusy; //!< Add a block for execution on the internal job queue.
 
 @end
 
-extern OCClassSettingsKey OCHTTPPipelineInsertXRequestTracingID; //!< Controls whether a X-Request-ID should be included into the header of every request. Defaults to YES. [NSNumber]
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP;
+extern OCClassSettingsKey OCHTTPPipelineSettingUserAgent;
 
 NS_ASSUME_NONNULL_END

@@ -23,7 +23,7 @@
 #import "OCSyncAction.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCQuery+Internal.h"
 #import "OCSyncContext.h"
 #import "OCCore+FileProvider.h"
@@ -33,10 +33,18 @@
 #import "OCIssue+SyncIssue.h"
 #import "OCWaitCondition.h"
 #import "OCProcessManager.h"
+#import "OCSyncLane.h"
 #import "OCSyncRecordActivity.h"
+#import "OCEventRecord.h"
+#import "OCEventQueue.h"
+#import "OCSQLiteTransaction.h"
+#import "OCBackgroundManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
+
+OCKeyValueStoreKey OCKeyValueStoreKeyOCCoreSyncEventsQueue = @"syncEventsQueue";
+static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcessCores";
 
 @implementation OCCore (SyncEngine)
 
@@ -44,6 +52,11 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 - (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerForProcessSession:(OCProcessSession *)processSession
 {
 	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
+}
+
+- (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:(OCProcessSession *)processSession
+{
+	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@;ack", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
 }
 
 - (OCIPCNotificationName)notificationNameForSyncRecordsUpdate
@@ -56,7 +69,19 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	OCIPCNotificationName processRecordsNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
 	OCIPCNotificationName updateRecordsNotificationName = [self notificationNameForSyncRecordsUpdate];
 
+	_remoteSyncEngineTriggerAcknowledgements = [NSMutableDictionary new];
+	_remoteSyncEngineTimedOutSyncRecordIDs = [NSMutableSet new];
+
+	_syncResetRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:2.0];
+
+	[self renewActiveProcessCoreRegistration];
+
 	[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:processRecordsNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore * _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core scheduleInCoreQueue:^{
+			// Post on core queue to ensure an answer is only posted if the core is actually functional
+			[notificationCenter postNotificationForName:[core notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:OCProcessManager.sharedProcessManager.processSession] ignoreSelf:YES];
+		}];
+
 		[core setNeedsToProcessSyncRecords];
 	}];
 
@@ -74,6 +99,23 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:processRecordsNotificationName];
 	[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:updateRecordsNotificationName];
+
+	[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyActiveProcessCores usingModifier:^NSMutableSet<OCIPCNotificationName> * _Nullable(NSMutableSet<OCIPCNotificationName> *  _Nullable activeProcessCoreIDs, BOOL * _Nonnull outDidModify) {
+
+		// Remove this bookmark/process combination as active core
+		[activeProcessCoreIDs removeObject:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession]];
+
+		*outDidModify = YES;
+
+		return (activeProcessCoreIDs);
+	}];
+
+	for (NSString *remoteSyncEngineTriggerAckNotificationName in _remoteSyncEngineTriggerAcknowledgements)
+	{
+		[OCIPNotificationCenter.sharedNotificationCenter removeObserver:self forName:remoteSyncEngineTriggerAckNotificationName];
+	}
+
+	[_remoteSyncEngineTriggerAcknowledgements removeAllObjects];
 }
 
 #pragma mark - Sync Anchor
@@ -111,7 +153,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	return (syncAnchor);
 }
 
-- (OCItem *)retrieveLatestVersionOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
+- (OCItem *)retrieveLatestVersionAtPathOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
 {
 	__block OCItem *latestItem = nil;
 
@@ -124,11 +166,35 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				*outError = error;
 			}
 
-			latestItem = items[0];
+			latestItem = items.firstObject;
 
 			OCSyncExecDone(databaseRetrieval);
 
 			[self endActivity:@"Retrieve latest version of item"];
+		}];
+	});
+
+	return (latestItem);
+}
+
+- (OCItem *)retrieveLatestVersionForLocalIDOfItem:(OCItem *)item withError:(NSError * __autoreleasing *)outError
+{
+	__block OCItem *latestItem = nil;
+
+	OCSyncExec(databaseRetrieval, {
+		[self beginActivity:@"Retrieve latest version of item by localID"];
+
+		[self.database retrieveCacheItemForLocalID:item.localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			if (outError != NULL)
+			{
+				*outError = error;
+			}
+
+			latestItem = item;
+
+			OCSyncExecDone(databaseRetrieval);
+
+			[self endActivity:@"Retrieve latest version of item by localID"];
 		}];
 	});
 
@@ -186,13 +252,29 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	}];
 }
 
-- (NSProgress *)synchronizeWithServer
+#pragma mark - Sync Lanes
+- (OCSyncLane *)laneForTags:(NSSet <OCSyncLaneTag> *)tags readOnly:(BOOL)readOnly
 {
-	return(nil); // Stub implementation
+	BOOL updatedLanes = NO;
+	OCSyncLane *lane;
+
+	lane = [self.database laneForTags:tags updatedLanes:&updatedLanes readOnly:readOnly];
+
+	if (updatedLanes)
+	{
+		[self setNeedsToProcessSyncRecords];
+	}
+
+	return (lane);
 }
 
 #pragma mark - Sync Record Scheduling
 - (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable resultHandler:(OCCoreActionResultHandler)resultHandler
+{
+	return ([self _enqueueSyncRecordWithAction:action cancellable:cancellable preflightResultHandler:nil resultHandler:resultHandler]);
+}
+
+- (NSProgress *)_enqueueSyncRecordWithAction:(OCSyncAction *)action cancellable:(BOOL)cancellable preflightResultHandler:(nullable OCCoreCompletionHandler)preflightResultHandler resultHandler:(OCCoreActionResultHandler)resultHandler
 {
 	NSProgress *progress = nil;
 	OCSyncRecord *syncRecord;
@@ -203,9 +285,21 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		if (syncRecord.progress == nil)
 		{
+			__weak OCCore *weakSelf = self;
+			__weak OCProgress *weakSyncProgress;
+			OCProgress *syncProgress;
+
 			progress = [NSProgress indeterminateProgress];
 
-			syncRecord.progress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+			syncProgress = [[OCProgress alloc] initWithPath:@[] progress:progress];
+			weakSyncProgress = syncProgress;
+
+			progress.cancellationHandler = ^{
+				[weakSyncProgress cancel];
+				[weakSelf setNeedsToProcessSyncRecords];
+			};
+
+			syncRecord.progress = syncProgress;
 		}
 		else
 		{
@@ -215,13 +309,19 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		syncRecord.progress.cancellable = cancellable;
 		progress.cancellable = cancellable;
 
-		[self submitSyncRecord:syncRecord];
+		if (resultHandler == nil)
+		{
+			// Without resultHandler, the syncRecord can be processed on any process
+			// syncRecord.isProcessIndependent = YES; // commented out for now to limit the number of changes in 11.4.5
+		}
+
+		[self submitSyncRecord:syncRecord withPreflightResultHandler:preflightResultHandler];
 	}
 
 	return(progress);
 }
 
-- (void)submitSyncRecord:(OCSyncRecord *)record
+- (void)submitSyncRecord:(OCSyncRecord *)record withPreflightResultHandler:(OCCoreCompletionHandler)preflightResultHandler
 {
 	OCLogDebug(@"record %@ submitted", record);
 
@@ -277,21 +377,57 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 			}
 		}
 
-		return (blockError);
-	} completionHandler:^(NSError *error) {
-		OCLogDebug(@"record %@ completed preflight with error=%@", record, error);
-
-		if (error != nil)
+		// Assign to lane
+		if (blockError == nil)
 		{
-			// Error during pre-flight
+			OCSyncLane *lane;
+
+			if ((lane = [self laneForTags:record.laneTags readOnly:NO]) != nil)
+			{
+				record.laneID = lane.identifier;
+
+				[self updateSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil)
+					{
+						OCLogError(@"Error %@ updating sync record %@ after assigning lane", error, record);
+						blockError = error;
+					}
+				}];
+			}
+
+			if (blockError == nil)
+			{
+				OCLogDebug(@"record %@ added to lane %@", record, lane);
+			}
+		}
+
+		// Handle errors during pre-flight
+		if (blockError != nil)
+		{
+			OCLogDebug(@"record %@ completed preflight with error=%@", record, blockError);
+
 			if (record.recordID != nil)
 			{
 				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
 				[self removeSyncRecords:@[ record ] completionHandler:nil];
 			}
+		}
 
+		return (blockError);
+	} completionHandler:^(NSError *error) {
+
+		if (error != nil)
+		{
 			// Call result handler
 			[record completeWithError:error core:self item:record.action.localItem parameter:record];
+		}
+
+		if (preflightResultHandler != nil)
+		{
+			// Call preflight handler on a different thread to avoid dead-locks
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+				preflightResultHandler(error);
+			});
 		}
 
 		[self setNeedsToProcessSyncRecords];
@@ -337,7 +473,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	}];
 }
 
-- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
+- (NSError *)_descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(nullable id)parameter
 {
 	__block NSError *error = nil;
 	OCSyncAction *syncAction;
@@ -345,10 +481,6 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	if (syncRecord==nil) { return(OCError(OCErrorInsufficientParameters)); }
 
 	OCLogDebug(@"descheduling record %@ (parameter=%@, error=%@)", syncRecord, parameter, completionError);
-
-	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
-		error = removeError;
-	}];
 
 	if ((syncAction = syncRecord.action) != nil)
 	{
@@ -367,6 +499,9 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
+				// Sync record is about to be removed, so no need to try updating it
+				syncContext.updateStoredSyncRecordAfterItemUpdates = NO;
+
 				// Perform any descheduler-triggered updates
 				[self performSyncContextActions:syncContext];
 
@@ -375,6 +510,18 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		}
 	}
 
+	[self removeSyncRecords:@[syncRecord] completionHandler:^(OCDatabase *db, NSError *removeError) {
+		if (removeError != nil)
+		{
+			OCLogError(@"Error removing sync record %@ from database: %@", syncRecord, removeError);
+
+			if (error == nil)
+			{
+				error = removeError;
+			}
+		}
+	}];
+
 	[syncRecord completeWithError:completionError core:self item:syncRecord.action.localItem parameter:parameter];
 
 	[self setNeedsToProcessSyncRecords];
@@ -382,7 +529,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	return (error);
 }
 
-- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(NSError *)completionError parameter:(id)parameter
+- (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(nullable NSError *)completionError parameter:(nullable id)parameter
 {
 	if (syncRecord==nil) { return; }
 
@@ -416,24 +563,36 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self queueBlock:^{
 		BOOL needsToProcessSyncRecords = NO;
 
-		if (self.connectionStatus == OCCoreConnectionStatusOnline)
+//		if (OCBackgroundManager.sharedBackgroundManager.isBackgrounded && (OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining < 3.0))
+//		{
+//			OCLogDebug(@"processSyncRecordsIfNeeded skipped because backgroundTimeRemaining=%f", OCBackgroundManager.sharedBackgroundManager.backgroundTimeRemaining);
+//			__weak OCCore *weakSelf = self;
+//
+//			[OCBackgroundManager.sharedBackgroundManager scheduleBlock:^{
+//				[weakSelf processSyncRecordsIfNeeded];
+//			} inBackground:NO];
+//		}
+//		else
 		{
-			@synchronized(self)
+			if (self.connectionStatus == OCCoreConnectionStatusOnline)
 			{
-				needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
-				self->_needsToProcessSyncRecords = NO;
+				@synchronized(self)
+				{
+					needsToProcessSyncRecords = self->_needsToProcessSyncRecords;
+					self->_needsToProcessSyncRecords = NO;
+				}
+
+				OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
+
+				if (needsToProcessSyncRecords)
+				{
+					[self processSyncRecords];
+				}
 			}
-
-			OCLogDebug(@"processSyncRecordsIfNeeded (needed=%d)", needsToProcessSyncRecords);
-
-			if (needsToProcessSyncRecords)
+			else
 			{
-				[self processSyncRecords];
+				OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%lu", self.connectionStatus);
 			}
-		}
-		else
-		{
-			OCLogDebug(@"processSyncRecordsIfNeeded skipped because connectionStatus=%d", self.connectionStatus);
 		}
 
 		[self endActivity:@"process sync records if needed"];
@@ -445,96 +604,299 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 {
 	[self beginActivity:@"process sync records"];
 
+	// Renew active process core registration
+	[self renewActiveProcessCoreRegistration];
+
+	// Transfer incoming OCEvents from KVS to the OCCore database
+	OCWaitInitAndStartTask(transferIncomingEvents);
+
+	[self.database.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError * _Nullable(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction) {
+		// Read incoming OCEvents from KVS and add them to the database if they don't already exist there
+		// Note how we do just read the value here instead of entering a full lock of the KVS. Since the removal of events also
+		// occurs only inside Sync Engine global lock protection, we're not in danger of re-adding an event that's just been removed.
+		// On the other end, even if an event is added right after reading it, the addition of the event will trigger a new run of
+		// processSyncRecords, at which time the event will be transfered over to the database
+		OCEventQueue *eventQueue = [self.vault.keyValueStore readObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+
+		for (OCEventRecord *eventRecord in eventQueue.records)
+		{
+			// Avoid double-transfer
+			if (![self.database queueContainsEvent:eventRecord.event])
+			{
+				// Add to database
+				OCTLogDebug(@[@"EventRecord"], @"Queuing in the database: %@", eventRecord.event);
+
+				[self.database queueEvent:eventRecord.event
+					  forSyncRecordID:eventRecord.syncRecordID
+					   processSession:eventRecord.processSession
+					completionHandler:^(OCDatabase *db, NSError *error) {
+					if (error != nil)
+					{
+						OCTLogError(@[@"EventRecord"], @"Error queuing event %@: %@", eventRecord.event, error);
+					}
+				}];
+			}
+			else
+			{
+				OCTLogWarning(@[@"EventRecord"], @"Skipping duplicate event - not inserting into the database: %@", eventRecord.event);
+			}
+		}
+
+		return (nil);
+	} type:OCSQLiteTransactionTypeExclusive completionHandler:^(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction, NSError * _Nullable error) {
+		OCWaitDidFinishTask(transferIncomingEvents);
+	}]];
+
+	OCWaitForCompletion(transferIncomingEvents);
+
+	// Process sync records
 	OCWaitInitAndStartTask(processSyncRecords);
 
 	[self dumpSyncJournalWithTags:@[@"BeforeProc"]];
 
 	[self performProtectedSyncBlock:^NSError *{
-		__block NSError *error = nil;
-		__block BOOL stopProcessing = NO;
-		__block OCSyncRecordID lastSyncRecordID = nil;
+		__block NSArray <OCSyncLane *> *lanes = nil;
+		NSMutableSet<OCSyncLaneID> *activeLaneIDs = [NSMutableSet new];
+		NSUInteger activeLanes = 0;
+		NSDictionary<OCSyncActionCategory, NSNumber *> *actionBudgetsByCategory = [self classSettingForOCClassSettingsKey:OCCoreActionConcurrencyBudgets];
+		NSMutableDictionary<OCSyncActionCategory, NSNumber *> *runningActionsByCategory = [NSMutableDictionary new];
+		void (^UpdateRunningActionCategories)(NSArray <OCSyncActionCategory> *categories, NSInteger change) = ^(NSArray <OCSyncActionCategory> *categories, NSInteger change) {
+			for (OCSyncActionCategory category in categories)
+			{
+				runningActionsByCategory[category] = @(runningActionsByCategory[category].integerValue + change);
+			}
+		};
+		BOOL (^ShouldRunInActionCategories)(NSArray <OCSyncActionCategory> *categories) = ^(NSArray <OCSyncActionCategory> *categories){
+			for (OCSyncActionCategory category in categories)
+			{
+				NSUInteger totalBudget = actionBudgetsByCategory[category].integerValue;
 
-		OCLogDebug(@"processing sync records");
-
-		while (!stopProcessing)
-		{
-			// Fetch next sync record
-			[self.database retrieveSyncRecordAfterID:lastSyncRecordID completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncRecord *syncRecord) {
-				OCCoreSyncInstruction nextInstruction;
-
-				if (syncRecord == nil)
+				if ((totalBudget > 0) && (runningActionsByCategory[category].integerValue >= totalBudget))
 				{
-					// There's no next sync record => we're done
-					stopProcessing = YES;
-					return;
+					OCLogDebug(@"Budget limit of %lu reached for action category: %@", totalBudget, category);
+					return (NO);
 				}
+			}
 
-				if (dbError != nil)
-				{
-					error = dbError;
-					stopProcessing = YES;
-					return;
-				}
-
-				// Process sync record
-				nextInstruction = [self processSyncRecord:syncRecord error:&error];
-
-				OCLogDebug(@"Processing of sync record finished with nextInstruction=%d", nextInstruction);
-
-				[self dumpSyncJournalWithTags:@[@"PostProc"]];
-
-				// Perform sync record result instruction
-				switch (nextInstruction)
-				{
-					case OCCoreSyncInstructionNone:
-						// Invalid instruction here
-						OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
-
-						stopProcessing = YES;
-
-						return;
-					break;
-
-					case OCCoreSyncInstructionStop:
-						// Stop processing
-						stopProcessing = YES;
-						return;
-					break;
-
-					case OCCoreSyncInstructionRepeatLast:
-						// Repeat processing of record
-						return;
-					break;
-
-					case OCCoreSyncInstructionDeleteLast:
-						// Delete record
-						[self removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
-							if (dbError != nil)
-							{
-								error = dbError;
-								stopProcessing = YES;
-							}
-						}];
-
-						// Process next
-						lastSyncRecordID = syncRecord.recordID;
-					break;
-
-					case OCCoreSyncInstructionProcessNext:
-						// Process next
-						lastSyncRecordID = syncRecord.recordID;
-					break;
-				}
-
-				// Log error
-				if (error != nil)
-				{
-					OCLogError(@"Error processing sync records: %@", error);
-				}
-			}];
+			return (YES);
 		};
 
-		return (error);
+		[self.database retrieveSyncLanesWithCompletionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncLane *> *syncLanes) {
+			if (error != nil)
+			{
+				OCLogError(@"Error retrieving sync lanes: %@", error);
+			}
+			else
+			{
+				lanes = syncLanes;
+			}
+		}];
+
+		for (OCSyncLane *lane in lanes)
+		{
+			[activeLaneIDs addObject:lane.identifier];
+		}
+
+		for (OCSyncLane *lane in lanes)
+		{
+			__block BOOL stopProcessing = NO;
+			__block OCSyncRecordID lastSyncRecordID = nil;
+			__block NSUInteger recordsOnLane = 0;
+			__block NSError *error = nil;
+
+			OCLogDebug(@"processing sync records on lane %@", lane);
+
+			if (lane.afterLanes.count > 0)
+			{
+				// Check if all preceding lanes this lane depends on have finished
+				if ([activeLaneIDs intersectsSet:lane.afterLanes])
+				{
+					// Preceding lanes still active => skip
+					if ([OCLogger logsForLevel:OCLogLevelDebug])
+					{
+						NSMutableSet *blockingLaneIDs = [NSMutableSet setWithSet:activeLaneIDs];
+						[blockingLaneIDs intersectSet:lane.afterLanes];
+
+						OCLogDebug(@"skipping lane %@ because lanes it is waiting for are still active: %@", lane, blockingLaneIDs);
+					}
+
+					continue;
+				}
+			}
+
+			while (!stopProcessing)
+			{
+				// Fetch next sync record
+				[self.database retrieveSyncRecordAfterID:lastSyncRecordID onLaneID:lane.identifier completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncRecord *syncRecord) {
+					OCCoreSyncInstruction nextInstruction;
+
+					if (syncRecord == nil)
+					{
+						// There's no next sync record => we're done
+						stopProcessing = YES;
+						return;
+					}
+
+					if (dbError != nil)
+					{
+						error = dbError;
+						stopProcessing = YES;
+						return;
+					}
+
+					recordsOnLane++;
+
+					// Check available action category budget
+					NSArray <OCSyncActionCategory> *actionCategories = syncRecord.action.categories;
+
+					if (syncRecord.state == OCSyncRecordStateReady)
+					{
+						if (!ShouldRunInActionCategories(actionCategories))
+						{
+							OCLogDebug(@"Skipping processing sync record %@ due to lack of available budget in %@", syncRecord.recordID, actionCategories);
+							stopProcessing = YES;
+							return;
+						}
+					}
+
+					// Update budget usage
+					UpdateRunningActionCategories(actionCategories, 1);
+
+					// Process sync record
+					nextInstruction = [self processSyncRecord:syncRecord error:&error];
+
+					OCLogDebug(@"Processing of sync record finished with nextInstruction=%lu", nextInstruction);
+
+					[self dumpSyncJournalWithTags:@[@"PostProc"]];
+
+					// Perform sync record result instruction
+					switch (nextInstruction)
+					{
+						case OCCoreSyncInstructionNone:
+							// Invalid instruction here
+							OCLogError(@"Invalid instruction \"none\" after processing syncRecord=%@", syncRecord);
+
+							stopProcessing = YES;
+							return;
+						break;
+
+						case OCCoreSyncInstructionStop:
+							// Stop processing
+							stopProcessing = YES;
+							return;
+						break;
+
+						case OCCoreSyncInstructionStopAndSideline:
+							// Stop processing
+							stopProcessing = YES;
+
+							// Update budget usage to allow execution of actions on other lanes in the meantime
+							UpdateRunningActionCategories(actionCategories, -1);
+
+							return;
+						break;
+
+						case OCCoreSyncInstructionRepeatLast:
+							// Repeat processing of record
+							return;
+						break;
+
+						case OCCoreSyncInstructionDeleteLast:
+							// Delete record
+							[self removeSyncRecords:@[ syncRecord ] completionHandler:^(OCDatabase *db, NSError *dbError) {
+								if (dbError != nil)
+								{
+									error = dbError;
+									stopProcessing = YES;
+								}
+							}];
+
+							if (error == nil)
+							{
+								recordsOnLane--;
+							}
+
+							// Update budget usage
+							UpdateRunningActionCategories(actionCategories, -1);
+
+							// Process next
+							lastSyncRecordID = syncRecord.recordID;
+						break;
+
+						case OCCoreSyncInstructionProcessNext:
+							// Process next
+							lastSyncRecordID = syncRecord.recordID;
+						break;
+					}
+
+					// Log error
+					if (error != nil)
+					{
+						OCLogError(@"Error processing sync records: %@", error);
+					}
+				}];
+			};
+
+			OCLogDebug(@"done processing sync records on lane %@", lane);
+
+			if ((recordsOnLane > 0) || (error != nil))
+			{
+				activeLanes++;
+
+				if ((activeLanes > self.maximumSyncLanes) && (self.maximumSyncLanes != 0))
+				{
+					// Enforce active lane limit
+					break;
+				}
+			}
+
+			if (error != nil)
+			{
+				// Make sure not to proceed to removing seemingly empty lane on errors
+				continue;
+			}
+
+			if (recordsOnLane == 0)
+			{
+				__block BOOL laneIsEmpty = NO;
+
+				// Double-verify there are no records left on lane
+				[self.database numberOfSyncRecordsOnSyncLaneID:lane.identifier completionHandler:^(OCDatabase *db, NSError *error, NSNumber *count) {
+					laneIsEmpty = ((count.integerValue == 0) && (error == nil));
+				}];
+
+				// Remove lane if empty
+				if (laneIsEmpty)
+				{
+					OCLogDebug(@"Removing empty lane %@", lane);
+
+					[activeLaneIDs removeObject:lane.identifier];
+
+					[self.database removeSyncLane:lane completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil)
+						{
+							OCLogError(@"Error removing lane %@: %@", lane, error);
+						}
+					}];
+				}
+			}
+		}
+
+		if (activeLaneIDs.count == 0)
+		{
+			__weak OCCore *weakSelf = self;
+
+			OCLog(@"No more active sync lanes…");
+
+			[self->_syncResetRateLimiter runRateLimitedBlock:^{
+				if ((weakSelf.state == OCCoreStateReady) || (weakSelf.state == OCCoreStateRunning))
+				{
+					[weakSelf scrubItemSyncStatus];
+				}
+			}];
+		}
+
+		return (nil);
 	} completionHandler:^(NSError *error) {
 //		// Ensure outstanding events are delivered
 //		if ((self->_eventsBySyncRecordID.count > 0) && !self->_needsToProcessSyncRecords)
@@ -552,7 +914,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self dumpSyncJournalWithTags:@[@"AfterProc"]];
 }
 
-- (BOOL)processWaitRecordsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
+- (BOOL)processWaitConditionsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
 {
 	__block BOOL canContinue = YES;
 	__block NSError *error = nil;
@@ -603,6 +965,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 							// + continue evaluating the wait conditions (because any may have failed)
 
 							canContinue = NO;
+							updateSyncRecordInDB = YES;
 						break;
 
 						case OCWaitConditionStateProceed:
@@ -645,7 +1008,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 						break;
 					}
 
-					OCLogDebug(@"evaluated wait condition %@ with state=%d, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
+					OCLogDebug(@"evaluated wait condition %@ with state=%lu, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
 				}];
 
 				if (updateSyncRecordInDB)
@@ -672,23 +1035,48 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	syncRecord.action.core = self;
 
 	// Check originating process session
-	if (syncRecord.originProcessSession != nil)
+	// (ensures that completionHandlers and progress objects provided in/by that process can be called - and that sync issues are delivered first on the originating process)
+	if ((syncRecord.originProcessSession != nil) && !syncRecord.isProcessIndependent)
 	{
-		OCProcessSession *processSession = syncRecord.originProcessSession;
-		BOOL doProcess = YES;
+		// Check that the record has not been exempt from origin process session checks
+	 	if ((syncRecord.recordID != nil) && ![_remoteSyncEngineTimedOutSyncRecordIDs containsObject:syncRecord.recordID])
+	 	{
+			OCProcessSession *processSession = syncRecord.originProcessSession;
+			BOOL doProcess = YES;
 
-		// Only perform processSession validity check if bundleIDs differ
-		if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
-		{
-			// Don't process sync records originating from other processes that are running
-			doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
-		}
+			// Only perform processSession validity check if bundleIDs differ
+			if (![OCProcessManager.sharedProcessManager isSessionWithCurrentProcessBundleIdentifier:processSession])
+			{
+				// Don't process sync records originating from other processes that are running
+				doProcess = ![OCProcessManager.sharedProcessManager isAnyInstanceOfSessionProcessRunning:processSession];
+			}
 
-		if (!doProcess)
-		{
-			// Stop processing and notify other process to start processing the sync record queue
-			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession] ignoreSelf:YES];
-			return (OCCoreSyncInstructionStop);
+			// Check that the other process also has an active core for this bookmark
+			if (!doProcess)
+			{
+				NSMutableSet<OCIPCNotificationName> *activeProcessCores = [self.vault.keyValueStore readObjectForKey:OCKeyValueStoreKeyActiveProcessCores];
+				OCIPCNotificationName triggerNotificationName = nil;
+
+				if ((triggerNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession]) != nil)
+				{
+					if (![activeProcessCores containsObject:triggerNotificationName])
+					{
+						// No matching bookmark/process core registered => remote process may run, but will likely not care about our notification
+						// => process this record locally
+						doProcess = YES;
+					}
+				}
+			}
+
+			if (!doProcess)
+			{
+				// Stop processing and notify other process to start processing the sync record queue
+				OCLogDebug(@"skip processing sync record %@: originated in %@, for which a valid processSession exists: triggering remote sync engine", OCLogPrivate(syncRecord), syncRecord.originProcessSession.bundleIdentifier);
+
+				[self triggerRemoteSyncEngineForSyncRecord:syncRecord processSession:processSession];
+
+				return (OCCoreSyncInstructionStop);
+			}
 		}
 	}
 
@@ -707,8 +1095,23 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		while ((event = [self.database nextEventForSyncRecordID:syncRecordID afterEventID:nil]) != nil)
 		{
+			// Remove from KVS (if exists), now that we can be sure the OCEvent is in the database
+			[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue usingModifier:^id _Nullable(OCEventQueue * _Nullable eventQueue, BOOL * _Nonnull outDidModify) {
+ 				BOOL didRemove;
+
+ 				didRemove = [eventQueue removeEventRecordForEventUUID:event.uuid];
+
+				OCTLogDebug(@[@"EventRecord"], @"Removing from KVS (didRemove=%d): %@", didRemove, event);
+
+				*outDidModify = didRemove;
+
+				return (eventQueue);
+			}];
+
 			// Process event
 			OCSyncContext *syncContext;
+
+			OCTLogDebug(@[@"EventRecord"], @"Handling event %@", event);
 
 			if ((syncContext = [OCSyncContext eventHandlingContextWith:syncRecord event:event]) != nil)
 			{
@@ -728,7 +1131,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 				{
 					if (eventInstruction != OCCoreSyncInstructionNone)
 					{
-						OCLogDebug(@"event instruction %d overwritten with %d by later event=%@", eventInstruction, instruction, event);
+						OCLogDebug(@"event instruction %lu overwritten with %lu by later event=%@", eventInstruction, instruction, event);
 					}
 
 					eventInstruction = instruction;
@@ -748,11 +1151,11 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)
 	{
-		OCSyncAction *syncAction;
-
 		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
 
-		if ((syncAction = syncRecord.action) != nil)
+		_nextSchedulingDate = nil;
+
+		if (syncRecord.action != nil)
 		{
 			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
 
@@ -777,12 +1180,14 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	}
 
 	// Process sync record's wait conditions
-	if (![self processWaitRecordsOfSyncRecord:syncRecord error:outError])
+	if (![self processWaitConditionsOfSyncRecord:syncRecord error:outError])
 	{
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
 
+		[self _scheduleNextWaitConditionRunForRecord:syncRecord];
+
 		// Stop processing
-		return (OCCoreSyncInstructionStop);
+		return (OCCoreSyncInstructionStopAndSideline);
 	}
 
 	// Process sync record
@@ -822,7 +1227,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 					[self setNeedsToProcessSyncRecords];
 				}
 
-				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%d, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
+				OCLogDebug(@"record %@ scheduled with scheduleInstruction=%lu, error=%@", OCLogPrivate(syncRecord), scheduleInstruction, OCLogPrivate(scheduleError));
 			}
 			else
 			{
@@ -855,7 +1260,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 		case OCSyncRecordStateCompleted:
 			// Sync record has completed => continue with next syncRecord
-			OCLogWarning(@"record %@ has completed and will be removed: %@", syncRecord);
+			OCLogWarning(@"record %@ has completed and will be removed", syncRecord);
 
 			doNext = OCCoreSyncInstructionDeleteLast;
 		break;
@@ -899,6 +1304,108 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	return (error);
 }
 
+#pragma mark - Sync engine: remote status check
+- (void)renewActiveProcessCoreRegistration
+{
+	[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyActiveProcessCores usingModifier:^NSMutableSet<OCIPCNotificationName> * _Nullable(NSMutableSet<OCIPCNotificationName> *  _Nullable activeProcessCoreIDs, BOOL * _Nonnull outDidModify) {
+		OCIPCNotificationName triggerNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:OCProcessManager.sharedProcessManager.processSession];
+
+		if (activeProcessCoreIDs == nil)
+		{
+			activeProcessCoreIDs = [NSMutableSet new];
+		}
+
+		// Check in this bookmark/process combination as active core
+		if (![activeProcessCoreIDs containsObject:triggerNotificationName])
+		{
+			[activeProcessCoreIDs addObject:triggerNotificationName];
+			*outDidModify = YES;
+		}
+
+		return (activeProcessCoreIDs);
+	}];
+}
+
+- (void)triggerRemoteSyncEngineForSyncRecord:(OCSyncRecord *)syncRecord processSession:(OCProcessSession *)processSession
+{
+	// Listen for acknowledgement response from remote sync engine
+	OCIPCNotificationName ackNotificationName = nil;
+	OCIPCNotificationName triggerNotificationName = [self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession];
+
+	if ((ackNotificationName = [self notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:processSession]) != nil)
+	{
+		__weak OCCore *weakSelf = self;
+
+		// Install ack listener if needed
+		if (_remoteSyncEngineTriggerAcknowledgements[ackNotificationName] == nil)
+		{
+			_remoteSyncEngineTriggerAcknowledgements[ackNotificationName] = NSNull.null;
+
+			[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:ackNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *core, OCIPCNotificationName  _Nonnull notificationName) {
+				OCWTLogDebug(nil, @"Received acknowledgement from remote sync engine: %@", notificationName);
+				core->_remoteSyncEngineTriggerAcknowledgements[notificationName] = [NSDate new];
+			}];
+		}
+
+		// Start timeout for acknowledgement
+		NSDate *triggerDate = [NSDate new];
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(7 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			[weakSelf checkRemoteSyncEngineTriggerAckForSyncRecordID:syncRecord.recordID processSession:processSession triggerDate:triggerDate];
+		});
+	}
+
+	// Trigger remote sync engine
+	[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:triggerNotificationName ignoreSelf:YES];
+}
+
+- (void)checkRemoteSyncEngineTriggerAckForSyncRecordID:(OCSyncRecordID)syncRecordID processSession:(OCProcessSession *)processSession triggerDate:(NSDate *)triggerDate
+{
+	[self beginActivity:@"check remote sync engine acknowledgement"];
+
+	[self queueBlock:^{
+		OCIPCNotificationName ackNotificationName = nil;
+
+		if ((ackNotificationName = [self notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:processSession]) != nil)
+		{
+			NSDate *ackDate = nil;
+			BOOL didTimeout = YES;
+
+			// Check for acknowledgement newer than the triggerDate
+			if ((ackDate = OCTypedCast(self->_remoteSyncEngineTriggerAcknowledgements[ackNotificationName], NSDate)) != nil)
+			{
+				didTimeout = ([ackDate timeIntervalSinceDate:triggerDate] <= 0);
+			}
+
+			if (didTimeout)
+			{
+				OCLogDebug(@"Timeout waiting for acknowledgement from remote sync engine: %@ - exempting sync record %@ and removing remote process from activeProcessCores", ackNotificationName, syncRecordID);
+
+				// Add recordID to timed out set, so it becomes exempt from originProcessSession checks
+				if (syncRecordID != nil)
+				{
+					[self->_remoteSyncEngineTimedOutSyncRecordIDs addObject:syncRecordID];
+				}
+
+				// Remove entry for bookmark/process combination from active process cores
+				[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyActiveProcessCores usingModifier:^NSMutableSet<OCIPCNotificationName> * _Nullable(NSMutableSet<OCIPCNotificationName> *  _Nullable activeProcessCoreIDs, BOOL * _Nonnull outDidModify) {
+
+					[activeProcessCoreIDs removeObject:[self notificationNameForProcessSyncRecordsTriggerForProcessSession:processSession]];
+					*outDidModify = YES;
+
+					return (activeProcessCoreIDs);
+				}];
+
+				// Make sure sync engine will enter processing
+				[self setNeedsToProcessSyncRecords];
+			}
+		}
+
+		[self endActivity:@"check remote sync engine acknowledgement"];
+	}];
+}
+
+
 #pragma mark - Sync context handling
 - (void)performSyncContextActions:(OCSyncContext *)syncContext
 {
@@ -921,32 +1428,153 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 		};
 	}
 
+	[self _scheduleNextWaitConditionRunForRecord:syncContext.syncRecord];
+
 	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 }
 
-#pragma mark - Sync event handling
-- (void)_handleSyncEvent:(OCEvent *)event sender:(id)sender
+- (void)_scheduleNextWaitConditionRunForRecord:(OCSyncRecord *)syncRecord
 {
+	if (syncRecord.waitConditions.count > 0)
+	{
+		// Find next retry date (if any) of existing and new wait conditions for this sync record
+		for (OCWaitCondition *waitCondition in syncRecord.waitConditions)
+		{
+			NSDate *nextRetryDate;
+
+			if ((nextRetryDate = waitCondition.nextRetryDate) != nil)
+			{
+				NSTimeInterval retryInterval = nextRetryDate.timeIntervalSinceNow;
+
+				// NSLog(@"Retry:next(se)=%@;interval=%f;nextScheduled=%@", nextRetryDate,retryInterval,_nextSchedulingDate);
+
+				if (retryInterval > 0)
+				{
+					if ((_nextSchedulingDate == nil) || (_nextSchedulingDate.timeIntervalSinceNow < 0) || ((_nextSchedulingDate != nil) && (_nextSchedulingDate.timeIntervalSinceReferenceDate > nextRetryDate.timeIntervalSinceReferenceDate)))
+					{
+						__weak OCCore *weakSelf = self;
+
+						_nextSchedulingDate = nextRetryDate;
+
+						dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(retryInterval * NSEC_PER_SEC)), _queue, ^{
+							OCCore *strongCore = weakSelf;
+
+							// NSLog(@"Retry:doing(se)=%@, %@", nextRetryDate, strongCore);
+
+							if (strongCore != nil)
+							{
+								strongCore->_nextSchedulingDate = nil;
+								[strongCore setNeedsToProcessSyncRecords];
+							}
+						});
+					}
+				}
+			}
+		}
+	}
+}
+
+#pragma mark - Sync event queueing
+- (void)queueSyncEvent:(OCEvent *)event sender:(id)sender
+{
+	// Sync Events arriving here typically arrive through OCHTTPPipeline -> OCConnection -> OCCore.handleEvent() - and
+	// OCHTTPPipeline drops the request after this method returns. Therefore it's essential to ensure the OCEvent can't
+	// be lost and it is stored safely before this method returns.
+
+	/*
+		Methodology:
+		1) HTTP Pipeline -> OCConnection -> OCCore Event Handling
+		-> save event to KVS
+			- makes sure the event is persisted on disk before returning
+			- use request.identifier as event.uuid, so that, if the process is terminated after saving to KVS, but before removal from OCHTTP, it can be recognized as duplicate
+			- simple, fast storage operation - decoupled from the load and tasks carried by OCDatabase' SQLite db (avoiding dead-locks)
+
+		2) KVS -> OCCore Event Queue DB
+		- needs to be stored in OCCore DB before processing to maintain a consistent view of the entire database (changes caused by a processed event could be dropped otherwise, f.ex. if a process termination occurs mid-transaction)
+		- goal: avoid dropping events and processing events multiple time even when process is terminated mid-transaction
+		- strategy:
+			- each OCEvent has a unique UUID
+
+			- transfer HTTP Pipeline -> KVS
+				- re-use HTTP RequestID as event UUID
+				- in KVS context
+					- check that an event with the same UUID doesn't already exist in the queue and is not among the UUIDs of the last 100 events removed from the queue (so an event doesn't get added multiple times if the process was terminated after the event was added to KVS, but before removal from the HTTP Pipeline)
+				- remove from HTTP Pipeline DB after KVS call returns
+
+			- transfer KVS -> DB:
+				- db transaction begin
+					- KVS context
+						- read events, check if event with same UUID already exists in db, add to db otherwise
+						- leave events in KVS unchanged (so they aren't lost if the transaction is rolled back due to a process termination)
+				- db transaction commits
+
+			- removal from KVS:
+				- in sync event processing
+					- event is retrieved from database
+						- we now have the certainty that the event arrived in the db
+					- in KVS context: remove event from KVS
+						- if the process is terminated here, the event will still be in the db, unprocessed
+						- if KVS operation completes, the event is still in the database, but removed from KVS so there can't be a duplicate
+					- process event
+						- only reaches this point after event is guaranteed in database and guaranteed to no longer be in KVS
+						- by existing in the DB up to this point, it ensured that no event could be transfered twice from KVS
+
+		3) Integration into existing structures
+			- OCCore receives event for queueing:
+				- save to KVS
+				- call setNeedsToProcessSyncRecords
+
+			- in OCCore.processSyncRecords:
+				- before entering db transaction protected context: transfer KVS -> DB
+				- in db transaction protected context: iterate events, removal from KVS before processing event
+	 */
+
 	OCSyncRecordID recordID;
 
 	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
 		[self beginActivity:@"Queuing sync event"];
 
-		[self.database queueEvent:event forSyncRecordID:recordID completionHandler:^(OCDatabase *db, NSError *error) {
-			[self setNeedsToProcessSyncRecords];
+		// Store in KVS
+		OCTLogDebug(@[@"EventRecord"], @"Queuing in KVS: %@", event);
+		[self.vault.keyValueStore updateObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue usingModifier:^id _Nullable(OCEventQueue * _Nullable eventQueue, BOOL * _Nonnull outDidModify) {
+			OCEventRecord *eventRecord;
 
-			[self endActivity:@"Queuing sync event"];
+			if (eventQueue == nil) { eventQueue = [OCEventQueue new]; }
+
+			if ((eventRecord = [[OCEventRecord alloc] initWithEvent:event syncRecordID:recordID]) != nil)
+			{
+				// Checks for duplicate entries (in case process was terminated after the OCEvent was saved in KVS, but before the HTTP request was removed from the pipeline db)
+				if ([eventQueue addEventRecord:eventRecord])
+				{
+					*outDidModify = YES;
+					OCTLogDebug(@[@"EventRecord"], @"Added to KVS: %@", event);
+				}
+				else
+				{
+					OCTLogDebug(@[@"EventRecord"], @"Not adding to KVS (duplicate event): %@", event);
+				}
+			}
+			else
+			{
+				OCTLogError(@[@"EventRecord"], @"Allocation of OCEventRecord failed");
+			}
+
+			return (eventQueue);
 		}];
+
+		[self setNeedsToProcessSyncRecords];
+
+		[self endActivity:@"Queuing sync event"];
 	}
 	else
 	{
-		OCLogError(@"Can't handle event %@ from sender %@ due to missing recordID", event, sender);
+		OCTLogError(@[@"EventRecord"], @"Can't handle event %@ from sender %@ due to missing recordID", event, sender);
 	}
 }
 
 #pragma mark - Sync issue handling
-- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(OCCoreSyncIssueResolutionResultHandler)completionHandler
+- (void)resolveSyncIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice userInfo:(NSDictionary<OCEventUserInfoKey, id> *)userInfo completionHandler:(nullable OCCoreSyncIssueResolutionResultHandler)completionHandler
 {
 	if (userInfo == nil)
 	{
@@ -961,29 +1589,43 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self handleEvent:[OCEvent eventWithType:OCEventTypeIssueResponse userInfo:userInfo ephermalUserInfo:nil result:choice] sender:self];
 }
 
-#pragma mark - Sync issues utilities
-- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact
+#pragma mark - Sync Record wakeup
+- (void)wakeupSyncRecord:(OCSyncRecordID)syncRecordID waitCondition:(nullable OCWaitCondition *)waitCondition userInfo:(nullable NSDictionary<OCEventUserInfoKey, id> *)userInfo result:(nullable id)result
 {
-	OCSyncIssue *issue;
-	OCSyncRecord *syncRecord = syncContext.syncRecord;
+	if (userInfo == nil)
+	{
+		if (waitCondition.uuid != nil)
+		{
+			userInfo = @{
+				OCEventUserInfoKeySyncRecordID      : syncRecordID,
+				OCEventUserInfoKeyWaitConditionUUID : waitCondition.uuid
+			};
+		}
+		else
+		{
+			userInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecordID };
+		}
+	}
+	else
+	{
+		userInfo = [[NSMutableDictionary alloc] initWithDictionary:userInfo];
+		((NSMutableDictionary *)userInfo)[OCEventUserInfoKeySyncRecordID] = syncRecordID;
 
-	issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-		[OCSyncIssueChoice cancelChoiceWithImpact:impact]
-	]];
+		if (waitCondition.uuid != nil)
+		{
+			((NSMutableDictionary *)userInfo)[OCEventUserInfoKeyWaitConditionUUID] = waitCondition.uuid;
+		}
+	}
 
-	[syncContext addSyncIssue:issue];
-
-	return (issue);
+	[self handleEvent:[OCEvent eventWithType:OCEventTypeWakeupSyncRecord userInfo:userInfo ephermalUserInfo:nil result:result] sender:self];
 }
 
+#pragma mark - Sync issues utilities
 - (NSError *)handleSyncRecord:(OCSyncRecord *)syncRecord error:(NSError *)error
 {
 	if (error != nil)
 	{
-		if ([self.delegate respondsToSelector:@selector(core:handleError:issue:)])
-		{
-			[self.delegate core:self handleError:error issue:nil];
-		}
+		[self sendError:error issue:nil];
 	}
 
 	return (error);
@@ -1007,7 +1649,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 }
 
 #pragma mark - Sync action utilities
-- (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(NSDictionary *)userInfo ephermal:(NSDictionary *)ephermalUserInfo
+- (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(nullable NSDictionary *)userInfo ephermal:(nullable NSDictionary *)ephermalUserInfo
 {
 	NSDictionary *syncRecordUserInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecord.recordID };
 
@@ -1029,7 +1671,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 }
 
 #pragma mark - Sync record persistence
-- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler
 {
 	[self.database addSyncRecords:syncRecords completionHandler:completionHandler];
 
@@ -1041,15 +1683,15 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
-- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
 		NSProgress *progress;
 
-		if ((progress = syncRecord.progress.progress) != nil)
+		if (((progress = syncRecord.progress.progress) != nil) || (syncRecord.waitConditions.count > 0))
 		{
-	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+	 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 		}
 	}
 
@@ -1058,7 +1700,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
 }
 
-- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
 {
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
@@ -1096,7 +1738,7 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 						progress.cancellable = NO;
 					}
 
-			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withRecordState:syncRecord.state] withProgress:progress]];
+			 		[self.activityManager update:[[[OCActivityUpdate updatingActivityFor:syncRecord] withSyncRecord:syncRecord] withProgress:progress]];
 				}
 				else
 				{
@@ -1157,10 +1799,75 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 	}
 }
 
+#pragma mark - Sync Status Scrubbing
+- (void)scrubItemSyncStatus
+{
+	/*
+		Finds items in the database with invalid sync status and clears it.
+	*/
+
+	[self beginActivity:@"Scrub item sync status"];
+
+	[self queueBlock:^{
+		[self performProtectedSyncBlock:^NSError *{
+			__block NSSet<OCSyncRecordID> *syncRecordIDs = nil;
+			__block NSError *error = nil;
+			__block NSMutableArray<OCItem *> *updateItems = [NSMutableArray new];
+
+			[self.database retrieveSyncRecordIDsWithCompletionHandler:^(OCDatabase *db, NSError *dbError, NSSet<OCSyncRecordID> *recordIDs) {
+				syncRecordIDs = recordIDs;
+				error = dbError;
+			}];
+
+			if (error == nil)
+			{
+				[self.database retrieveCacheItemsForQueryCondition:[OCQueryCondition where:OCItemPropertyNameSyncActivity isNotEqualTo:@(0)] cancelAction:nil completionHandler:^(OCDatabase *db, NSError *dbError, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+					error = dbError;
+
+					if (dbError == nil)
+					{
+						for (OCItem *item in items)
+						{
+							// Ignore removed items
+							if (!item.removed)
+							{
+								// Check if item has any sync record ID of an actually existing sync record
+								if (![syncRecordIDs intersectsSet:[NSSet setWithArray:item.activeSyncRecordIDs]])
+								{
+									// No valid sync record IDs
+									OCLogWarning(@"Resetting sync information for %@ (live sync records: %@)", item, syncRecordIDs);
+
+									item.activeSyncRecordIDs = nil;
+									item.syncActivityCounts = nil;
+									item.syncActivity = OCItemSyncActivityNone;
+
+									[updateItems addObject:item];
+								}
+							}
+						}
+					}
+				}];
+
+				if ((error == nil) && (updateItems.count > 0))
+				{
+					OCLogDebug(@"Updated items: %@", updateItems);
+
+					[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+				}
+			}
+
+			return (error);
+		} completionHandler:^(NSError * _Nullable error) {
+			[self endActivity:@"Scrub item sync status"];
+			OCLogDebug(@"Finished item sync status scrub with error=%@", error);
+		}];
+	}];
+}
+
 #pragma mark - Sync debugging
 - (void)dumpSyncJournalWithTags:(NSArray <OCLogTagName> *)tags
 {
-	if (OCLogger.logLevel <= OCLogLevelDebug)
+	if ([OCLogger logsForLevel:OCLogLevelDebug])
 	{
 		OCSyncExec(journalDump, {
 			[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
@@ -1169,7 +1876,8 @@ OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.ownclou
 
 				for (OCSyncRecord *record in syncRecords)
 				{
-					OCTLogDebug(tags, @"%@ | %@ | %@", 	[[record.recordID stringValue] rightPaddedMinLength:5],
+					OCTLogDebug(tags, @"%@ | %@ | %@ | %@", [[record.recordID stringValue] rightPaddedMinLength:5],
+										[[record.laneID stringValue] leftPaddedMinLength:5],
 										[record.actionIdentifier leftPaddedMinLength:20],
 										[[record.inProgressSince description] leftPaddedMinLength:20]);
 				}

@@ -24,30 +24,32 @@
 @class OCSyncIssue;
 @class OCWaitCondition;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCSyncContext : NSObject
 
 // Shared properties (Scheduler + Result Handler)
 @property(strong) OCSyncRecord *syncRecord; //!< The sync record to schedule / handle the result for.
-@property(strong,nonatomic) NSError *error; //!< Store any errors that occur here.
+@property(nullable,strong,nonatomic) NSError *error; //!< Store any errors that occur here.
 
 // Preflight properties
-@property(strong) NSArray <OCSyncRecord *> *existingRecords; //!< Other existing records that have the same path and action as the sycnRecord
-@property(strong) NSArray <OCSyncRecord *> *removeRecords; //!< After pre-flight, records from .existingRecords that are contained in this array will be removed/descheduled.
+@property(nullable,strong) NSArray <OCSyncRecord *> *existingRecords; //!< Other existing records that have the same path and action as the sycnRecord
+@property(nullable,strong) NSArray <OCSyncRecord *> *removeRecords; //!< After pre-flight, records from .existingRecords that are contained in this array will be removed/descheduled.
 
 // Result Handler properties
-@property(strong) OCEvent *event; //!< Event to handle [Result Handler]
-@property(strong) OCSyncIssue *issue; //!< Sync issue that should be relayed to the user [Result Handler]
+@property(nullable,strong) OCEvent *event; //!< Event to handle [Result Handler]
+@property(nullable,strong) OCSyncIssue *issue; //!< Sync issue that should be relayed to the user [Result Handler]
 
 // Item changes properties
-@property(strong) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
-@property(strong) NSArray <OCItem *> *addedItems; 	//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
-@property(strong) NSArray <OCItem *> *removedItems;  	//!< Removed items (f.ex. after deleting an item), used to update database and queries
-@property(strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries
+@property(nullable,strong) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
+@property(nullable,strong) NSArray <OCItem *> *addedItems; 	//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
+@property(nullable,strong) NSArray <OCItem *> *removedItems;  	//!< Removed items (f.ex. after deleting an item), used to update database and queries
+@property(nullable,strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries
 
 @property(assign) BOOL updateStoredSyncRecordAfterItemUpdates; //!< After processing newItems, removedItems, updatedItems (but not refreshPaths), send .syncRecord to the database for updating (NO by default)
 
 // Wait condition collection
-@property(strong) NSMutableArray <OCWaitCondition *> *queuedWaitConditions;
+@property(nullable,strong) NSMutableArray <OCWaitCondition *> *queuedWaitConditions;
 
 #pragma mark - Convenienve initializers
 + (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord;
@@ -65,3 +67,5 @@
 - (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter; //!< Convenience method, calling the same method on .syncRecord, but also setting updateStoredSyncRecordAfterItemUpdates to YES.
 
 @end
+
+NS_ASSUME_NONNULL_END

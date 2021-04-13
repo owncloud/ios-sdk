@@ -18,8 +18,16 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSURL (OCURLNormalization)
 
-+ (NSURL *)URLWithUsername:(NSString **)outUserName password:(NSString **)outPassword afterNormalizingURLString:(NSString *)urlString protocolWasPrepended:(BOOL *)outProtocolWasPrepended;
++ (nullable NSURL *)URLWithUsername:(NSString * _Nullable * _Nullable )outUserName password:(NSString * _Nullable * _Nullable )outPassword afterNormalizingURLString:(NSString *)urlString protocolWasPrepended:(BOOL * _Nullable)outProtocolWasPrepended;
+
+@property(strong,nullable,readonly,nonatomic) NSNumber *effectivePort;
+
+- (BOOL)hasSameSchemeHostAndPortAs:(NSURL *)otherURL;
 
 @end
+
+NS_ASSUME_NONNULL_END

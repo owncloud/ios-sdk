@@ -35,6 +35,20 @@
 			{
 				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
 			}
+			else
+			{
+				NSString *bookmarkUsername = _bookmark.userName;
+
+				if (bookmarkUsername != nil)
+				{
+					endpointPath = [endpointPath stringByAppendingPathComponent:bookmarkUsername];
+				}
+				else
+				{
+					OCLogError(@"Could not generate path for endpoint %@ because the username is missing", endpoint);
+					endpointPath = nil;
+				}
+			}
 		}
 		else
 		{
@@ -47,13 +61,38 @@
 	return (nil);
 }
 
-- (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <NSString *,id> *)options
+- (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <OCConnectionEndpointURLOption,id> *)options
 {
 	NSString *endpointPath;
 	
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
-		return ([self URLForEndpointPath:endpointPath]);
+		NSURL *url = [self URLForEndpointPath:endpointPath];
+
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWellKnown])
+		{
+			NSString *subPath;
+
+			if ((subPath = options[OCConnectionEndpointURLOptionWellKnownSubPath]) != nil)
+			{
+				url = [url URLByAppendingPathComponent:subPath isDirectory:NO];
+			}
+		}
+
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		{
+			// Ensure WebDAV endpoint path is slash-terminated
+			if (![url.absoluteString hasSuffix:@"/"])
+			{
+				url = [NSURL URLWithString:[url.absoluteString stringByAppendingString:@"/"]];
+			}
+		}
+
+		return (url);
+	}
+	else
+	{
+		OCLogError(@"Path for endpoint %@ with options %@ could not be generated", endpoint, options);
 	}
 
 	return (nil);
@@ -63,23 +102,39 @@
 {
 	if (endpointPath != nil)
 	{
-		return ([[_bookmark.url URLByAppendingPathComponent:endpointPath] absoluteURL]);
+		NSURL *bookmarkURL = _bookmark.url;
+
+		if ([endpointPath hasPrefix:@"/"]) // Absolute path
+		{
+			// Remove leading "/"
+			endpointPath = [endpointPath substringFromIndex:1];
+
+			// Strip subpaths from bookmarkURL
+			while ((![[bookmarkURL path] isEqual:@"/"]) && (![[bookmarkURL path] isEqual:@""]))
+			{
+				bookmarkURL = [bookmarkURL URLByDeletingLastPathComponent];
+			};
+		}
+
+		return ([[bookmarkURL URLByAppendingPathComponent:endpointPath] absoluteURL]);
 	}
 	
 	return (_bookmark.url);
 }
 
 #pragma mark - Base URL Extract
-- (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL
+- (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL
 {
-	return ([[self class] extractBaseURLFromRedirectionTargetURL:inRedirectionTargetURL originalURL:inOriginalURL originalBaseURL:[_bookmark.url absoluteURL]]);
+	return ([[self class] extractBaseURLFromRedirectionTargetURL:inRedirectionTargetURL originalURL:inOriginalURL originalBaseURL:[_bookmark.url absoluteURL] fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL]);
 }
 
-+ (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL
++ (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL
 {
 	NSURL *originalBaseURL = [inOriginalBaseURL absoluteURL];
 	NSURL *originalURL = [inOriginalURL absoluteURL];
 	NSURL *redirectionTargetURL = [inRedirectionTargetURL absoluteURL];
+
+	// Find root from redirects based on https://github.com/owncloud/administration/blob/master/redirectServer/Readme.md
 
 	if ((originalBaseURL!=nil) && (originalURL!=nil))
 	{
@@ -95,13 +150,26 @@
 					
 					if (endpointPathRange.location != NSNotFound)
 					{
+						// redirectURL replicates the path originally targeted URL
 						return ([NSURL URLWithString:[redirectionTargetURL.absoluteString substringToIndex:endpointPathRange.location]]);
 					}
 				}
 			}
 		}
 	}
-	
+
+	// Strip common suffixes from redirectionTargetURL
+	if (fallbackToRedirectionTargetURL)
+	{
+		if ([redirectionTargetURL.lastPathComponent isEqual:@"status.php"])
+		{
+			redirectionTargetURL = redirectionTargetURL.URLByDeletingLastPathComponent;
+		}
+
+		// Fallback to redirectionTargetURL
+		return (redirectionTargetURL);
+	}
+
 	return(nil);
 }
 

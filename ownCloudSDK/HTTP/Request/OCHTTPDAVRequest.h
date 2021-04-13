@@ -21,6 +21,7 @@
 #import "OCHTTPDAVMultistatusResponse.h"
 #import "OCTypes.h"
 #import "OCItem.h"
+#import "OCUser.h"
 
 @interface OCHTTPDAVRequest : OCHTTPRequest <NSXMLParserDelegate>
 {
@@ -39,10 +40,11 @@
 
 + (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth;
 + (instancetype)proppatchRequestWithURL:(NSURL *)url content:(NSArray <OCXMLNode *> *)contentNodes;
++ (instancetype)reportRequestWithURL:(NSURL *)url rootElementName:(NSString *)rootElementName content:(NSArray <OCXMLNode *> *)contentNodes;
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors;
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID withErrors:(NSArray <NSError *> **)errors;
 - (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
 
 @end

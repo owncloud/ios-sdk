@@ -29,9 +29,19 @@
 	return ([[self alloc] initWithRequest:request HTTPError:error]);
 }
 
-- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+- (instancetype)init
 {
 	if ((self = [super init]) != nil)
+	{
+		_date = [NSDate new];
+	}
+
+	return (self);
+}
+
+- (instancetype)initWithRequest:(OCHTTPRequest *)request HTTPError:(nullable NSError *)error
+{
+	if ((self = [self init]) != nil)
 	{
 		_requestID = request.identifier;
 		_httpError = error;
@@ -89,12 +99,29 @@
 {
 	NSString *locationURLString;
 
-	if ((locationURLString = self.headerFields[@"Location"]) != nil)
+	if ((locationURLString = self.headerFields[OCHTTPHeaderFieldNameLocation]) != nil)
 	{
-		return ([NSURL URLWithString:locationURLString]);
+		return ([[NSURL URLWithString:locationURLString relativeToURL:self.httpURLResponse.URL] absoluteURL]);
 	}
 
 	return (nil);
+}
+
+- (nullable NSString *)contentType
+{
+	NSString *contentType;
+
+	if ((contentType = self.headerFields[OCHTTPHeaderFieldNameContentType]) != nil)
+	{
+		contentType = [contentType componentsSeparatedByString:@";"].firstObject;
+
+		if (contentType.length == 0)
+		{
+			contentType = nil;
+		}
+	}
+
+	return (contentType);
 }
 
 #pragma mark - Convenience body conversions
@@ -162,21 +189,22 @@
 	return (nil);
 }
 
-- (NSString *)responseDescription
+- (NSString *)responseDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *responseDescription = [NSMutableString new];
+	NSString *headPrefix = (prefixed ? @"[header] " : @"");
 
-	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields];
+	NSString *bodyDescription = [OCHTTPRequest bodyDescriptionForURL:_bodyURL data:_bodyData headers:_headerFields prefixed:prefixed];
 
-	[responseDescription appendFormat:@"%ld %@\n", (long)_status.code, [NSHTTPURLResponse localizedStringForStatusCode:_status.code].uppercaseString];
+	[responseDescription appendFormat:@"%@%ld %@\n", headPrefix, (long)_status.code, [NSHTTPURLResponse localizedStringForStatusCode:_status.code].uppercaseString];
 	if (_headerFields.count > 0)
 	{
-		[responseDescription appendString:[OCHTTPRequest formattedHeaders:_headerFields]];
+		[responseDescription appendString:[OCHTTPRequest formattedHeaders:_headerFields withLinePrefix:(prefixed ? headPrefix : nil)]];
 	}
 
 	if (bodyDescription != nil)
 	{
-		[responseDescription appendFormat:@"\n%@\n", bodyDescription];
+		[responseDescription appendFormat:@"%@\n%@\n", headPrefix, bodyDescription];
 	}
 
 	return (responseDescription);
@@ -194,12 +222,14 @@
 	{
 		_requestID			= [decoder decodeObjectOfClass:[NSString class] forKey:@"requestID"];
 
+		_date				= [decoder decodeObjectOfClass:[NSString class] forKey:@"date"];
+
 		_certificate 			= [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"certificate"];
 		_certificateValidationResult 	= [decoder decodeIntegerForKey:@"certificateValidationResult"];
 		_certificateValidationError	= [decoder decodeObjectOfClass:[NSError class] forKey:@"certificateValidationError"];
 
 		_status				= [decoder decodeObjectOfClass:[OCHTTPStatus class] forKey:@"status"];
-		_headerFields			= [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"headerFields"];
+		_headerFields			= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSDictionary.class, NSString.class, nil] forKey:@"headerFields"];
 
 		_httpURLResponse 		= [decoder decodeObjectOfClass:[NSHTTPURLResponse class] forKey:@"httpURLResponse"];
 
@@ -218,6 +248,8 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_requestID 				forKey:@"requestID"];
+
+	[coder encodeObject:_date 				forKey:@"date"];
 
 	[coder encodeObject:_certificate 			forKey:@"certificate"];
 	[coder encodeInteger:_certificateValidationResult 	forKey:@"certificateValidationResult"];

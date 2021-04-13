@@ -16,22 +16,31 @@
  *
  */
 
+#import "OCLogger.h"
 #import "OCClassSettingsFlatSourcePropertyList.h"
 
 @interface OCClassSettingsFlatSourcePropertyList ()
 {
 	NSDictionary<NSString *, id> *_flatSettingsDictionary;
+	OCClassSettingsSourceIdentifier _sourceIdentifier;
 }
 
 @end
 
 @implementation OCClassSettingsFlatSourcePropertyList
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (_sourceIdentifier);
+}
+
 - (instancetype)initWithURL:(NSURL *)propertyListURL
 {
 	if ((self = [super init]) != nil)
 	{
 		NSError *error = nil;
+
+		_sourceIdentifier = [@"plist:" stringByAppendingString:propertyListURL.lastPathComponent];
 
 		if ((_flatSettingsDictionary = [NSPropertyListSerialization propertyListWithData:[NSData dataWithContentsOfURL:propertyListURL] options:0 format:NULL error:&error]) == nil)
 		{
@@ -53,7 +62,7 @@
 	return (self);
 }
 
-- (NSDictionary<NSString *,id> *)flatSettingsDictionary
+- (NSDictionary<OCClassSettingsFlatIdentifier,id> *)flatSettingsDictionary
 {
 	return (_flatSettingsDictionary);
 }

@@ -6,6 +6,10 @@
   Copyright © 2018 ownCloud GmbH. All rights reserved.
 */
 
+/* OCCertificateViewController buttons */
+"Show ±" = "Show ±";
+"Hide ±" = "Hide ±";
+
 /* OCCertificateViewController section titles */
 "Subject" = "Subject";
 "Issuer" = "Issuer";
@@ -19,6 +23,8 @@
 "User-rejected." = "User-rejected.";
 "Certificate has issues." = "Certificate has issues.";
 "User-accepted." = "User-accepted.";
+"Auto-accepted." = "Auto-accepted.";
+"Reason" = "Reason";
 "No issues found." = "No issues found.";
 
 /* X.509 certificate fields */

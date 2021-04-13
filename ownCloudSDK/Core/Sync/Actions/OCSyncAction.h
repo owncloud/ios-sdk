@@ -27,6 +27,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#define OCSyncActionWrapNullableItem(item) ((item != nil) ? item : ((OCItem*)NSNull.null))
+
+#define OCSYNCACTION_REGISTER_ISSUETEMPLATES + (void)load { \
+	[OCMessageTemplate registerTemplates:self.issueTemplates]; \
+}\
+
 @class OCSyncContext;
 
 typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
@@ -34,6 +40,7 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 	OCCoreSyncInstructionNone,		//!< No instruction (can be used to continue execution - or stop and perform an instruction)
 
 	OCCoreSyncInstructionStop,		//!< Stop processing
+	OCCoreSyncInstructionStopAndSideline,	//!< Stop processing & free up budget to allow processing of other actions
 	OCCoreSyncInstructionRepeatLast,	//!< Repeat last processing
 	OCCoreSyncInstructionDeleteLast,	//!< Delete last processed and process next
 	OCCoreSyncInstructionProcessNext	//!< Process next
@@ -45,22 +52,30 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 	NSData *_archivedServerItemData;
 }
 
+#pragma mark - Class properties
+@property(strong,readonly,nonatomic,class) OCSyncActionIdentifier identifier; //!< Identifier of the action
+
 #pragma mark - Core properties
 @property(weak,nullable) OCCore *core; //!< The core using this sync action.
-@property(strong) OCSyncActionIdentifier identifier;
+@property(strong,nonatomic) OCSyncActionIdentifier identifier; //!< Identifier of the action (persisted)
+@property(strong) NSArray<OCSyncActionCategory> *categories; //!< Categories this action belongs to.
 
 #pragma mark - Persisted properties
-@property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on
-@property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed.
+@property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on (persisted)
+@property(readonly,nonatomic,nullable) OCItem *latestVersionOfLocalItem; //!< The latest version of the item, retrieved from the database
+@property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed. (persisted)
 
 @property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *parameters; //!< Parameters specific to the respective sync action (persisted)
 
 #pragma mark - Ephermal properties
 @property(strong,nullable) NSDictionary<OCSyncActionParameter, id> *ephermalParameters; //!< Parameters specific to the respective sync action (ephermal)
 
+#pragma mark - Sync lane properties
+@property(strong,nonatomic,nullable) NSSet<OCSyncLaneTag> *laneTags; //!< Set of lane tags defining the scope of the action (persisted)
+
 #pragma mark - User-facing
-@property(strong,nullable,nonatomic) NSString *localizedDescription; //!< Localized description of the sync action
-@property(assign,nonatomic) OCEventType actionEventType; //!< Event type best describing this sync action
+@property(strong,nullable,nonatomic) NSString *localizedDescription; //!< Localized description of the sync action (persisted)
+@property(assign,nonatomic) OCEventType actionEventType; //!< Event type best describing this sync action (persisted)
 
 #pragma mark - Init
 - (instancetype)initWithItem:(OCItem *)item;
@@ -94,9 +109,22 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 #pragma mark - Issue handling
 - (nullable NSError *)resolveIssue:(OCSyncIssue *)issue withChoice:(OCSyncIssueChoice *)choice context:(OCSyncContext *)syncContext; //!< Handle user choice to resolve an issue. Return nil if the issue has been resolved, an error if it hasn't. The sync record is descheduled if an error is returned.
 
+#pragma mark - Issue generation
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCMessageTemplate *> *issueTemplates; //!< Issue templates (including auto-generated ones)
+@property(strong,nullable,nonatomic,readonly,class) NSArray<OCMessageTemplate *> *actionIssueTemplates; //!< Issue templates (specific to an sync action class)
+
+- (OCSyncIssue *)_addIssueForCancellationAndDeschedulingToContext:(OCSyncContext *)syncContext title:(NSString *)title description:(NSString *)description impact:(OCSyncIssueChoiceImpact)impact;
+
 #pragma mark - Restore progress
 - (nullable OCItem *)itemToRestoreProgressRegistrationFor;
 - (void)restoreProgressRegistrationForSyncRecord:(OCSyncRecord *)syncRecord; //!< Restores progress registrations
+
+#pragma mark - Lane tags
+- (NSMutableSet <OCSyncLaneTag> *)generateLaneTagsFromItems:(NSArray<OCItem *> *)items; //!< Helper method to create lane tags from an array of items. Allow passing NSNull objects to simplify syntax using OCSyncActionWrapNullableItem.
+- (NSSet <OCSyncLaneTag> *)generateLaneTags; //!< Called by the -laneTags if no _laneTags is nil.
+
+#pragma mark - Debug description
+- (nullable NSString *)internalsDescription; 	//!< OCSyncAction provides a standard .description - this allows to extend it
 
 #pragma mark - Coding / Decoding
 - (void)encodeActionData:(NSCoder *)coder;	//!< Called by -encodeWithCoder: to avoid repeated boilerplate code in subclasses. No-op in OCSyncAction, so direct subclasses don't need to call super.
@@ -104,13 +132,17 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 
 @end
 
+extern OCSyncActionCategory OCSyncActionCategoryAll;		//!< Category for all (actions and transfers alike)
+extern OCSyncActionCategory OCSyncActionCategoryActions;	//!< Category for item actions (like delete, move, ..) - default
+extern OCSyncActionCategory OCSyncActionCategoryTransfer;	//!< Catagory for file transfers (like upload/download)
+
 NS_ASSUME_NONNULL_END
 
 #import "OCSyncContext.h"
 #import "OCCore+SyncEngine.h"
 #import "NSError+OCError.h"
 #import "OCMacros.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
 #import "OCFile.h"

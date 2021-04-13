@@ -31,12 +31,18 @@
 	if ((self = [super init]) != nil)
 	{
 		_statement = statement;
+		[_statement claim]; // Indicate this statement is in use
+
 		_sqlStatement = _statement.sqlStatement;
 	}
 
 	return(self);
 }
 
+- (void)dealloc
+{
+	[_statement dropClaim]; // Indicate this statement is no longer in use
+}
 
 #pragma mark - Iterating
 - (BOOL)nextRow:(NSError **)outError
@@ -98,7 +104,7 @@
 	return (lineNumber);
 }
 
-- (nullable NSDictionary<NSString *,id<NSObject>> *)nextRowDictionaryWithError:(NSError **)outError
+- (nullable OCSQLiteRowDictionary)nextRowDictionaryWithError:(NSError **)outError
 {
 	NSDictionary<NSString *,id<NSObject>> *nextRowDictionary = nil;
 
@@ -217,7 +223,7 @@
 		return ([columnNames objectAtIndex:columnIdx]);
 	}
 
-	OCLogError(@"Column index out of bounds: index %ld not in 0..%ld range", columnIdx, columnNames.count);
+	OCLogError(@"Column index out of bounds: index %d not in 0..%ld range", columnIdx, columnNames.count);
 
 	return (nil);
 }

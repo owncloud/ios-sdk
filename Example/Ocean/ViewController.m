@@ -36,7 +36,7 @@
 	{
 		if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
 		{
-			[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierOAuth2 options:@{ OCAuthenticationMethodPresentingViewControllerKey : self } completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
+			[connection generateAuthenticationDataWithMethod:OCAuthenticationMethodIdentifierOpenIDConnect options:@{ OCAuthenticationMethodPresentingViewControllerKey : self } completionHandler:^(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData) {
 				[self appendLog:[NSString stringWithFormat:@"## generateAuthenticationDataWithMethod response:\nError: %@\nMethod: %@\nData: %@", error, authenticationMethodIdentifier, authenticationData]];
 
 				[self appendLog:[NSString stringWithFormat:@"## User: %@", [[OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:authenticationMethodIdentifier] userNameFromAuthenticationData:authenticationData]]];
@@ -47,23 +47,8 @@
 					self->bookmark.authenticationData = authenticationData;
 
 					// Request resource
-					OCHTTPRequest *request = nil;
-					request = [OCHTTPRequest requestWithURL:[self->connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
-					[request setValue:@"json" forParameter:@"format"];
-		
-					[self->connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-						[self appendLog:[NSString stringWithFormat:@"## Endpoint capabilities response:\nResult of request: %@ (error: %@):\n\nResponse: %@\n\nBody: %@", request, error, request.httpResponse, request.httpResponse.bodyAsString]];
-						
-						if (request.httpResponse.status.isSuccess)
-						{
-							NSError *error = nil;
-							NSDictionary *capabilitiesDict;
-							
-							capabilitiesDict = [request.httpResponse bodyConvertedDictionaryFromJSONWithError:&error];
-							
-							[self appendLog:[NSString stringWithFormat:@"Capabilities: %@", capabilitiesDict]];
-							[self appendLog:[NSString stringWithFormat:@"Version: %@", [capabilitiesDict valueForKeyPath:@"ocs.data.version.string"]]];
-						}
+					[self->connection retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
+						[self appendLog:[NSString stringWithFormat:@"Capabilities: %@", capabilities.rawJSON]];
 					}];
 				}
 			}];
@@ -82,15 +67,15 @@
 		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
-				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate]] animated:YES completion:nil];
+				[self presentViewController:[[UINavigationController alloc] initWithRootViewController:[[OCCertificateViewController alloc] initWithCertificate:certificate compareCertificate:nil]] animated:YES completion:nil];
 
-				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
+				[OCCertificateDetailsViewNode certificateDetailsViewNodesForCertificate:certificate differencesFrom:nil withValidationCompletionHandler:^(NSArray<OCCertificateDetailsViewNode *> *detailsViewNodes) {
 
 					[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 						NSError *parseError;
 						NSMutableAttributedString *attributedString;
 
-						attributedString = [[NSMutableAttributedString alloc] initWithAttributedString:[OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes]];
+						attributedString = [[NSMutableAttributedString alloc] initWithAttributedString:[OCCertificateDetailsViewNode attributedStringWithCertificateDetails:detailsViewNodes colors:nil]];
 
 						[attributedString appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"\n\n------\nCertificate metadata:\n%@\nError: %@", [certificate metaDataWithError:&parseError], parseError]]];
 

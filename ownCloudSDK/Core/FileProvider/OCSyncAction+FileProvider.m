@@ -18,12 +18,16 @@
 
 #import "OCSyncAction+FileProvider.h"
 #import "OCHTTPPipelineTask.h"
+#import "NSURLSessionTaskMetrics+OCCompactSummary.h"
+#import "OCVault+Internal.h"
+#import "OCFeatureAvailability.h"
 
 @implementation OCSyncAction (FileProviderProgressReporting)
 
 - (void)setupProgressSupportForItem:(OCItem *)item options:(NSDictionary **)options syncContext:(OCSyncContext * _Nonnull)syncContext
 {
-	if (self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+	if (OCVault.hostHasFileProvider && self.core.postFileProviderNotifications && (item.fileID != nil) && (self.core.vault.fileProviderDomain!=nil))
 	{
 		/*
 		 Check if a placeholder/file already exists here before registering this URL session for the item. Otherwise, the SDK may find itself on
@@ -47,6 +51,8 @@
 				OCHTTPRequestObserver observer = [^(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event) {
 					if ((event == OCHTTPRequestObserverEventTaskResume) && (task.urlSessionTask != nil))
 					{
+						OCLogDebug(@"record %@ is registering URLTask for %@", syncContext.syncRecord, item);
+
 						[[NSFileProviderManager managerForDomain:fileProviderDomain] registerURLSessionTask:task.urlSessionTask forItemWithIdentifier:item.localID completionHandler:^(NSError * _Nullable error) {
 							OCLogDebug(@"record %@ returned from registering URLTask %@ for %@ with error=%@", syncContext.syncRecord, task.urlSessionTask, item, error);
 
@@ -56,6 +62,7 @@
 							}
 
 							// File provider detail: the task may not be started until after this completionHandler was called
+							task.urlSessionTask.resumeTaskDate = [NSDate new];
 							[task.urlSessionTask resume];
 						}];
 
@@ -80,6 +87,7 @@
 			}
 		}
 	}
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 }
 
 @end

@@ -28,16 +28,22 @@ typedef NS_ENUM(NSInteger, OCDAVError)
 	OCDAVErrorNone = -1,
 
 	OCDAVErrorUnknown,
-	OCDAVErrorServiceUnavailable	//!< ownCloud server is in maintenance mode
+
+	// Exceptions
+	OCDAVErrorNotFound,
+	OCDAVErrorServiceUnavailable,	//!< ownCloud server is in maintenance mode
+
+	// Headers
+	OCDAVErrorItemDoesNotExist
 };
 
 @interface NSError (OCDAVError) <OCXMLObjectCreation>
 
 #pragma mark - Convenience accessors
-- (BOOL)isDAVException; //!< Returns YES if the error represents a DAV exception
-- (OCDAVError)davError; //!< Returns the OCDAVError code. Returns OCDAVErrorNone if this error doesn't represent a OCDAVError
-- (nullable OCDAVExceptionName)davExceptionName;
-- (nullable NSString *)davExceptionMessage;
+@property(readonly,nonatomic) BOOL isDAVException; //!< Returns YES if the error represents a DAV exception
+@property(readonly,nonatomic) OCDAVError davError; //!< Returns the OCDAVError code. Returns OCDAVErrorNone if this error doesn't represent a OCDAVError
+@property(readonly,strong,nullable,nonatomic) OCDAVExceptionName davExceptionName;
+@property(readonly,strong,nullable,nonatomic) NSString *davExceptionMessage;
 
 @end
 

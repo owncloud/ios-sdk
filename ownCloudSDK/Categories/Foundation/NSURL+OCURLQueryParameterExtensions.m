@@ -75,7 +75,10 @@
 	
 			// Add items
 			[parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL *stop) {
-				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
+				if (![value isKindOfClass:[NSNull class]])
+				{
+					[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
+				}
 			}];
 		
 			return(queryItems);

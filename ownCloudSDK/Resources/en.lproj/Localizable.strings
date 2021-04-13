@@ -11,6 +11,12 @@
 "itemProperty.isFavorite" = "Favorite";
 "itemProperty.localAttributes" = "Local attributes";
 
+/* Item policy */
+"Available Offline" = "Available Offline";
+
+/* Cellular Switches */
+"Allow cellular access" = "Allow cellular access";
+
 /* Connection Progress */
 "Connecting…" = "Connecting…";
 "Authenticating…" = "Authenticating…";
@@ -24,11 +30,27 @@
 "Proceed" = "Proceed";
 "OK" = "OK";
 
+/* Database upgrades */
+"Upgrading database…" = "Upgrading database…";
+
+/* Connection setup */
+"Insecure HTTP URL" = "Insecure HTTP URL";
+"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.";
+
+"Insecure HTTP URL forbidden" = "Insecure HTTP URL forbidden";
+"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.";
+
 /* Connection status */
 "Offline" = "Offline";
 "Offline (no WiFi connection)" = "Offline (no WiFi connection)";
 "Server down for maintenance" = "Server down for maintenance";
+"Network unavailable" = "Network unavailable";
 "Online" = "Online";
+"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
+"Server returns status %ld" = "Server returns status %ld";
+
+/* Copies */
+"copy" = "copy";
 
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
@@ -38,7 +60,7 @@
 "%@ couldn't be deleted" = "%@ couldn't be deleted";
 "Please check if you have sufficient permissions to delete %@." = "Please check if you have sufficient permissions to delete %@.";
 
-/* Copy / Move */
+/* Move/Rename/Copy */
 "Operation forbidden" = "Operation forbidden";
 "%@ can't be copied to %@." = "%@ can't be copied to %@.";
 "%@ can't be moved to %@." = "%@ can't be moved to %@.";
@@ -62,13 +84,27 @@
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";
 
-/* Download */
-"Downloading %@…" = "Downloading %@…";
-
-/* Move/Rename/Copy */
 "Renaming %@ to %@…" = "Renaming %@ to %@…";
 "Moving %@ to %@…" = "Moving %@ to %@…";
 "Copying %@ to %@…" = "Copying %@ to %@…";
+
+/* Upload */
+"Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
+"Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
+"Uploads to this folder are not allowed." = "Uploads to this folder are not allowed.";
+"Replace" = "Replace";
+"Keep both" = "Keep both";
+
+/* Download */
+"Downloading %@…" = "Downloading %@…";
+"\"%@\" has been modified locally" = "\"%@\" has been modified locally";
+"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.";
+"Invalid checksum" = "Invalid checksum";
+"The downloaded file's checksum does not match the checksum provided by the server." = "The downloaded file's checksum does not match the checksum provided by the server.";
+"File modified locally" = "File modified locally";
+"\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
+"Couldn't download %@" = "Couldn't download %@";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";
@@ -79,6 +115,14 @@
 /* Retrieving file list */
 "Retrieving file list for %@…" = "Retrieving file list for %@…";
 
+/* Status */
+"Pending" = "Pending";
+"Running" = "Running";
+"Failed" = "Failed";
+"Waiting for user" = "Waiting for user";
+"Waiting for metadata refresh" = "Waiting for metadata refresh";
+"Waiting to retry (%ld of %ld)" = "Waiting to retry (%ld of %ld)";
+
 /* Update */
 "\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
 "Update failed with status code %d" = "Update failed with status code %d";
@@ -87,6 +131,10 @@
 /* Logging */
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
+"Log HTTP requests and responses" = "Log HTTP requests and responses";
+
+/* Certificate checks */
+"Certificate changed" = "Certificate changed";
 
 /* Errors */
 "Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
@@ -95,6 +143,8 @@
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";
+// OCDAVErrorNotFound
+"Resource not found." = "Resource not found.";
 
 /* OC Errors */
 "%@ (error %ld, %@)" = "%@ (error %ld, %@)";
@@ -213,3 +263,96 @@
 
 // OCErrorRunningOperation
 "A running operation prevents execution." = "A running operation prevents execution.";
+
+// OCErrorShareUnauthorized:
+"Not authorized to access shares." = "Not authorized to access shares.";
+
+// OCErrorShareUnavailable
+"Shares are unavailable." = "Shares are unavailable.";
+
+// OCErrorShareItemNotADirectory:
+"Item is not a directory." = "Item is not a directory.";
+
+// OCErrorShareItemNotFound
+"Item not found." = "Item not found.";
+
+// OCErrorShareNotFound
+"Share not found." = "Share not found.";
+
+// OCErrorShareUnknownType
+"Unknown share type." = "Unknown share type.";
+
+// OCErrorSharePublicUploadDisabled
+"Public upload was disabled by the administrator." = "Public upload was disabled by the administrator.";
+
+// OCErrorNotAvailableOffline
+"Not available offline." = "Not available offline.";
+
+// OCErrorAuthorizationRetry
+"Authorization needs to be retried." = "Authorization needs to be retried.";
+
+// OCErrorItemPolicyRedundant
+"Another item policy of the same kind already includes the item, making the addition of this item policy redundant." = "Another item policy of the same kind already includes the item, making the addition of this item policy redundant.";
+
+// OCErrorItemPolicyMakesRedundant
+"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy.";
+
+// OCErrorUnnormalizedPath
+"The provided path is not normalized." = "The provided path is not normalized.";
+
+// OCErrorPrivateLinkInvalidFormat
+"Private link format invalid." = "Private link format invalid.";
+
+// OCErrorPrivateLinkResolutionFailed
+"Resolution of private link failed." = "Resolution of private link failed.";
+
+// OCErrorAuthorizationMethodNotAllowed
+"Authentication method not allowed. Re-authentication needed." = "Authentication method not allowed. Re-authentication needed.";
+
+// OCErrorAuthorizationMethodUnknown
+"Authentication method unknown." = "Authentication method unknown.";
+
+// OCErrorServerConnectionValidationFailed
+"Connection validation failed." = "Connection validation failed.";
+
+// OCErrorAuthorizationClientRegistrationFailed
+"Client registration failed." = "Client registration failed.";
+
+// OCErrorAuthorizationNotMatchingRequiredUserID
+"The logged in user is not matching the required user ID." = "The logged in user is not matching the required user ID.";
+"You logged in as user %@, but must log in as user %@. Please retry." = "You logged in as user %@, but must log in as user %@. Please retry.";
+"Login as user %@ required. Please retry." = "Login as user %@ required. Please retry.";
+
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "Database upgrade required. Please open the app to perform the upgrade.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "Bookmark created with a newer app version. Please update the app.";
+
+/* Diagnostic */
+"Files" = "Files";
+"Folders" = "Folders";
+"Total Items" = "Total Items";
+"Removed Items" = "Removed Items";
+"Scheduled folder scans" = "Scheduled folder scans";
+"Sync Record ID"  = "Sync Record ID";
+"State" = "State";
+"In progress since" = "In progress since";
+"Origin Process" = "Origin Process";
+"Origin Process Valid" = "Origin Process Valid";
+"Timestamp" = "Timestamp";
+"Lane ID" = "Lane ID";
+"Local ID" = "Local ID";
+"Action ID" = "Action ID";
+"Process Sync Records" = "Process Sync Records";
+"Reschedule" = "Reschedule";
+"Deschedule (remove)" = "Deschedule (remove)";
+"Action" = "Action";
+"Wait Conditions" = "Wait Conditions";
+"Events" = "Events";
+"Class" = "Class";
+"Identifier" = "Identifier";
+"Localized Description" = "Localized Description";
+"Database size" = "Database size";
+"Thumbnail database size" = "Thumbnail database size";
+"Vacuum" = "Vacuum";

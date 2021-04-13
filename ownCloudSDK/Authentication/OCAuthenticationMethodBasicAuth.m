@@ -47,6 +47,11 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Data Tools
 + (NSDictionary *)_decodedAuthenticationData:(NSData *)authenticationData
 {
+	if (authenticationData == nil)
+	{
+		return (nil);
+	}
+
 	return ([NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]);
 }
 
@@ -118,9 +123,9 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <NSURL *> *)detectionURLsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
 {
-	return ([self detectionURLsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
+	return ([self detectionRequestsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
@@ -129,16 +134,18 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
-- (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request forConnection:(OCConnection *)connection
+- (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
 {
-	NSString *authenticationHeaderValue;
+	NSString *authorizationHeaderValue;
 
-	if ((authenticationHeaderValue = [self cachedAuthenticationSecretForConnection:connection]) != nil)
+	if ((authorizationHeaderValue = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
-		[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
+		return (@{
+			OCHTTPHeaderFieldNameAuthorization : authorizationHeaderValue
+		});
 	}
 
-	return(request);
+	return (nil);
 }
 
 #pragma mark - Authentication Secret Caching
@@ -147,6 +154,20 @@ OCAuthenticationMethodAutoRegister
 	NSDictionary *authDataDict = [OCAuthenticationMethodBasicAuth _decodedAuthenticationData:connection.bookmark.authenticationData];
 
 	return (authDataDict[OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey]);
+}
+
+#pragma mark - Handle responses before they are delivered to the request senders
+- (NSError *)handleRequest:(OCHTTPRequest *)request response:(OCHTTPResponse *)response forConnection:(OCConnection *)connection withError:(NSError *)error
+{
+	if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
+	{
+		// If a request returns with an UNAUTHORIZED status code, treat it as an authentication data known invalid date
+		[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+		self->_authenticationDataKnownInvalidDate = [NSDate new];
+		[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+	}
+
+	return ([super handleRequest:request response:response forConnection:connection withError:error]);
 }
 
 #pragma mark - Generate bookmark authentication data
@@ -171,11 +192,12 @@ OCAuthenticationMethodAutoRegister
 			request = [OCHTTPRequest requestWithURL:[connection URLForEndpoint:OCConnectionEndpointIDCapabilities options:nil]];
 			[request setValue:@"json" forParameter:@"format"];
 
-			[request setValue:authenticationHeaderValue forHeaderField:@"Authorization"];
+			[request setValue:authenticationHeaderValue forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 
 			[connection sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
+					OCErrorAddDateFromResponse(error, response);
 					completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 				}
 				else
@@ -204,13 +226,9 @@ OCAuthenticationMethodAutoRegister
 						{
 							NSURL *alternativeBaseURL;
 
-							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url]) != nil)
+							if ((alternativeBaseURL = [connection extractBaseURLFromRedirectionTargetURL:responseRedirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 							{
 								error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
-							}
-							else
-							{
-								error = OCErrorWithInfo(OCErrorAuthorizationFailed, @{ OCAuthorizationMethodAlternativeServerURLKey : responseRedirectURL });
 							}
 						}
 					}
@@ -221,6 +239,8 @@ OCAuthenticationMethodAutoRegister
 						{
 							error = OCError(OCErrorAuthorizationFailed);
 						}
+
+						OCErrorAddDateFromResponse(error, response);
 
 						completionHandler(error, OCAuthenticationMethodIdentifierBasicAuth, nil);
 					}

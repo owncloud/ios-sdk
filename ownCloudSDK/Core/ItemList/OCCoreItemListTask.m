@@ -20,13 +20,14 @@
 #import "OCCore.h"
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCLogger.h"
 #import "NSError+OCDAVError.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+ItemList.h"
 #import "OCMacros.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCCoreDirectoryUpdateJob.h"
 
 @interface OCCoreItemListTask ()
 {
@@ -49,12 +50,13 @@
 	return(self);
 }
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path
+- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob
 {
 	if ((self = [self init]) != nil)
 	{
 		self.core = core;
 		self.path = path;
+		self.updateJob = updateJob;
 	}
 
 	return (self);
@@ -137,8 +139,6 @@
 	// Request item list from server
 	if (_core != nil)
 	{
-		[_core beginActivity:@"update retrieved set"];
-
 		_retrievedSet.state = OCCoreItemListStateStarted;
 
 		void (^RetrieveItems)(OCItem *parentDirectoryItem) = ^(OCItem *parentDirectoryItem){
@@ -146,8 +146,25 @@
 				[self->_core queueRequestJob:^(dispatch_block_t completionHandler) {
 					NSProgress *retrievalProgress;
 
-					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-						[self->_core queueBlock:^{ // Update inside the core's serial queue to make sure we never change the data while the core is also working on it
+					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:[NSDictionary dictionaryWithObjectsAndKeys:
+						// For background scan jobs, wait with scheduling until there is connectivity
+						((self.updateJob.isForQuery) ? self.core.connection.propFindSignals : self.core.connection.actionSignals), 	OCConnectionOptionRequiredSignalsKey,
+
+						// Schedule in a particular group
+						((self.groupID != nil) ? self.groupID : nil), 									OCConnectionOptionGroupIDKey,
+					nil] completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+						if (self.core.state != OCCoreStateRunning)
+						{
+							// Skip processing the response if the core is not starting or running
+							self.retrievedSet.state = OCCoreItemListStateNew;
+							completionHandler(); // we're done for now, make sure the queue doesn't get stuck
+							return;
+						}
+
+						[self->_core beginActivity:@"update retrieved set"];
+
+						[self->_core queueBlock:^{
+							// Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];
 
 							if ((latestSyncAnchor != nil) && (![latestSyncAnchor isEqualToNumber:self.syncAnchorAtStart]))
@@ -211,11 +228,19 @@
 											rootItem.parentFileID = parentDirectoryItem.fileID;
 										}
 
-										if (parentDirectoryItem.parentLocalID == nil)
+										if (rootItem.parentLocalID == nil)
 										{
 											rootItem.parentLocalID = parentDirectoryItem.localID;
 										}
 									}
+									else
+									{
+										OCLogWarning(@"Missing root item for %@", self.path);
+									}
+								}
+								else
+								{
+									OCLogWarning(@"No path!!");
 								}
 
 								self.changeHandler(self->_core, self);
@@ -312,6 +337,23 @@
 	}
 
 	[_core endActivity:@"update unstarted sets"];
+}
+
+- (void)updateIfNew
+{
+	if (_cachedSet.state == OCCoreItemListStateNew)
+	{
+		// Retrieve items from cache
+		_cachedSet.state = OCCoreItemListStateStarted;
+		[self _updateCacheSet];
+	}
+
+	if (_retrievedSet.state == OCCoreItemListStateNew)
+	{
+		// Request item list from server
+		_retrievedSet.state = OCCoreItemListStateStarted;
+		[self _updateRetrievedSet];
+	}
 }
 
 #pragma mark - Activity source

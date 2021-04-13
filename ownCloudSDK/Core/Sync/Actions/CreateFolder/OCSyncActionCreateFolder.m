@@ -20,14 +20,19 @@
 
 @implementation OCSyncActionCreateFolder
 
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierCreateFolder);
+}
+
 #pragma mark - Initializer
-- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName
+- (instancetype)initWithParentItem:(OCItem *)parentItem folderName:(NSString *)folderName placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler
 {
 	if ((self = [super initWithItem:parentItem]) != nil)
 	{
 		OCItem *placeholderItem;
-
-		self.identifier = OCSyncActionIdentifierCreateFolder;
 
 		self.folderName = folderName;
 
@@ -35,14 +40,20 @@
 		{
 			placeholderItem.parentFileID = parentItem.fileID;
 			placeholderItem.parentLocalID = parentItem.localID;
-			placeholderItem.path = [parentItem.path stringByAppendingPathComponent:folderName];
+			placeholderItem.path = [parentItem.path pathForSubdirectoryWithName:folderName];
 			placeholderItem.lastModified = [NSDate date];
+			placeholderItem.permissions = OCItemPermissionCreateFile|OCItemPermissionCreateFolder|OCItemPermissionDelete|OCItemPermissionRename|OCItemPermissionMove;
 
 			self.placeholderItem = placeholderItem;
 		}
 
 		self.actionEventType = OCEventTypeCreateFolder;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
+
+		if (placeholderCompletionHandler != nil)
+		{
+			self.ephermalParameters = [[NSDictionary alloc] initWithObjectsAndKeys: [placeholderCompletionHandler copy], OCCoreOptionPlaceholderCompletionHandler, nil];
+		}
 	}
 
 	return (self);
@@ -53,9 +64,17 @@
 {
 	if (self.placeholderItem != nil)
 	{
+		OCCorePlaceholderCompletionHandler placeholderCompletionHandler = nil;
+
 		[_placeholderItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityCreating];
 
 		syncContext.addedItems = @[ _placeholderItem ];
+
+		if ((placeholderCompletionHandler = self.ephermalParameters[OCCoreOptionPlaceholderCompletionHandler]) != nil)
+		{
+			placeholderCompletionHandler(nil, _placeholderItem);
+			self.ephermalParameters = nil;
+		}
 
 		syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update syncRecord, so the updated placeHolderItem (now with databaseID) will be stored in the database and can later be used to remove the placeHolderItem again.
 	}
@@ -131,13 +150,21 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 
 	[syncContext completeWithError:event.error core:self.core item:newItem parameter:nil];
 
 	return (resultInstruction);
+}
+
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.placeholderItem)
+	]]);
 }
 
 #pragma mark - NSCoding

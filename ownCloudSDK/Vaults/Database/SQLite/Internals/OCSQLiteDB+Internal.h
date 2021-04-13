@@ -7,7 +7,7 @@
 //
 
 /*
- * Copyright (C) 2018, ownCloud GmbH.
+ * Copyright (C) 2019, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)startTrackingStatement:(OCSQLiteStatement *)statement;
 - (void)stopTrackingStatement:(OCSQLiteStatement *)statement;
 - (void)releaseAllLiveStatementResources;
+
+- (void)logMemoryStatistics;
 
 @end
 

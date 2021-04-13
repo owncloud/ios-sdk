@@ -19,14 +19,31 @@
 #import "OCSyncActionUpdate.h"
 #import "OCMacros.h"
 
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUpdateCancel = @"update.cancel";
+
 @implementation OCSyncActionUpdate
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierUpdate);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUpdateCancel categoryName:nil choices:@[
+			// Drop sync record (also restores previous metadata)
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil]
+	]);
+}
 
 - (instancetype)initWithItem:(OCItem *)item updateProperties:(NSArray <OCItemPropertyName> *)properties
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierUpdate;
-
 		self.updateProperties = properties;
 
 		self.actionEventType = OCEventTypeUpdate;
@@ -47,7 +64,7 @@
 		[self.localItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
 		// Special handling for local attributes
-		if ((latestItemVersion = [self.core retrieveLatestVersionOfItem:self.localItem withError:&error]) != nil)
+		if ((latestItemVersion = [self.core retrieveLatestVersionForLocalIDOfItem:self.localItem withError:&error]) != nil)
 		{
 			// Archive latest version
 			self.archivedItemVersion = latestItemVersion;
@@ -136,17 +153,13 @@
 			if (!updateStatus.isSuccess)
 			{
 				// Property couldn't be updated successfully
-				[syncContext addSyncIssue:[OCSyncIssue issueForSyncRecord:syncContext.syncRecord
-										    level:OCIssueLevelError
-										    title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
-									      description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %d",nil), updateStatus.code]
-										 metaData:nil
-										  choices:@[
-												// Drop sync record (also restores previous metadata)
-										  		[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
-											   ]
-							  ]
-				];
+				[syncContext addSyncIssue:[OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierUpdateCancel
+									   forSyncRecord:syncContext.syncRecord
+										   level:OCIssueLevelError
+										   title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" metadata for %@ couldn't be updated",nil), [OCItem localizedNameForProperty:propertyName], self.localItem.name]
+									     description:[NSString stringWithFormat:OCLocalizedString(@"Update failed with status code %lu",nil), (unsigned long)updateStatus.code]
+										metaData:nil]
+				 ];
 
 				// Prevent removal of sync record, so it's still around for descheduling
 				allChangesSuccessful = NO;
@@ -169,22 +182,33 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 
 	return (resultInstruction);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	return ([self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem),
+		OCSyncActionWrapNullableItem(self.archivedItemVersion)
+	]]);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
-	_updateProperties = [decoder decodeObjectOfClass:[NSDictionary class] forKey:@"updateProperties"];
+	_updateProperties = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSString.class, nil] forKey:@"updateProperties"];
+	_archivedItemVersion = [decoder decodeObjectOfClass:[OCItem class] forKey:@"archivedItemVersion"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
 {
 	[coder encodeObject:_updateProperties forKey:@"updateProperties"];
+	[coder encodeObject:_archivedItemVersion forKey:@"archivedItemVersion"];
 }
 
 @end

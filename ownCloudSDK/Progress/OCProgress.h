@@ -50,7 +50,7 @@ typedef NSString* OCProgressID;
 
 @property(strong) OCProgressPath path; //!< The progress path of the object that can be used for resolution.
 @property(nullable,strong) NSProgress *progress; //!< The resolved progress object
-@property(assign) BOOL cancelled; //!< Cancelled
+@property(assign,nonatomic) BOOL cancelled; //!< Cancelled
 @property(assign) BOOL cancellable; //!< Whether cancellation is possible
 
 @property(copy) void(^cancellationHandler)(void); //!< Block of code to be executed when -cancel is called. (ephermal)

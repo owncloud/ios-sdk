@@ -25,13 +25,15 @@
 #import "OCCore+ItemList.h"
 #import "OCQuery+Internal.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+ItemPolicies.h"
+#import "NSString+OCPath.h"
 
 @implementation OCCore (ItemUpdates)
 
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
 		       removedItems:(nullable NSArray<OCItem *> *)removedItems
 		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-		       refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		       refreshPaths:(nullable NSArray<OCPath> *)refreshPaths
 		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
@@ -61,37 +63,6 @@
 		}];
 
 		return;
-	}
-
-	// Remove outdated versions of updated items
-	if (updatedItems.count > 0)
-	{
-		for (OCItem *updateItem in updatedItems)
-		{
-			if ((!updateItem.locallyModified) && // don't delete local modified versions
-			    (updateItem.localRelativePath != nil) && // is there a local copy to delete?
-			    (updateItem.localCopyVersionIdentifier != nil) && // is there anything to compare against?
-			    (![updateItem.itemVersionIdentifier isEqual:updateItem.localCopyVersionIdentifier])) // different versions?
-			{
-				// delete local copy
-				NSURL *deleteFileURL;
-
-				if ((deleteFileURL = [self localURLForItem:updateItem]) != nil)
-				{
-					NSError *deleteError = nil;
-
-					OCLogDebug(@"Deleting outdated local copy of %@ (%@ vs %@)", updateItem, updateItem.itemVersionIdentifier, updateItem.localCopyVersionIdentifier);
-
-					updateItem.localRelativePath = nil;
-					updateItem.localCopyVersionIdentifier = nil;
-
-					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
-					{
-						OCLogError(@"Error removing %@: %@", deleteFileURL, deleteError);
-					}
-				}
-			}
-		}
 	}
 
 	// Update metaData table and queries
@@ -258,10 +229,14 @@
 				@synchronized(query)
 				{
 					// Queries targeting directories
-					if (query.queryPath != nil)
+					OCPath queryPath;
+
+					if ((queryPath = query.queryPath) != nil)
 					{
-						// Only update queries that have already gone through their complete, initial content update
-						if (query.state == OCQueryStateIdle)
+						// Only update queries that ..
+						if ((query.state == OCQueryStateIdle) || // .. have already gone through their complete, initial content update.
+						    ((query.state == OCQueryStateWaitingForServerReply) && (self.connectionStatus != OCCoreConnectionStatusOnline)) || // .. have not yet been able to factor in server replies because the connection isn't online.
+						    ((query.state == OCQueryStateContentsFromCache) && (self.connectionStatus != OCCoreConnectionStatusOnline))) // .. have not yet been able to go through their complete, initial content update because the connection isn't online.
 						{
 							__block NSMutableArray <OCItem *> *updatedFullQueryResults = nil;
 							__block OCCoreItemList *updatedFullQueryResultsItemList = nil;
@@ -287,14 +262,14 @@
 								}
 							};
 
-							if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[query.queryPath].count > 0))
+							if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[queryPath].count > 0))
 							{
 								// Items were added in the target path of this query
 								GetUpdatedFullResultsReady();
 
-								for (OCItem *item in addedItemList.itemsByParentPaths[query.queryPath])
+								for (OCItem *item in addedItemList.itemsByParentPaths[queryPath])
 								{
-									if (!query.includeRootItem && [item.path isEqual:query.queryPath])
+									if (!query.includeRootItem && [item.path isEqual:queryPath])
 									{
 										// Respect query.includeRootItem for special case "/" and don't include root items if not wanted
 										continue;
@@ -306,18 +281,22 @@
 
 							if (removedItemList != nil)
 							{
-								if (removedItemList.itemsByParentPaths[query.queryPath].count > 0)
+								if (removedItemList.itemsByParentPaths[queryPath].count > 0)
 								{
 									// Items were removed in the target path of this query
 									GetUpdatedFullResultsReady();
 
-									for (OCItem *item in removedItemList.itemsByParentPaths[query.queryPath])
+									for (OCItem *item in removedItemList.itemsByParentPaths[queryPath])
 									{
 										if (item.path != nil)
 										{
 											OCItem *removeItem;
 
-											if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
+											if ((removeItem = updatedFullQueryResultsItemList.itemsByLocalID[item.localID]) != nil)
+											{
+												[updatedFullQueryResults removeObjectIdenticalTo:removeItem];
+											}
+											else if ((removeItem = updatedFullQueryResultsItemList.itemsByFileID[item.fileID]) != nil)
 											{
 												[updatedFullQueryResults removeObjectIdenticalTo:removeItem];
 											}
@@ -325,18 +304,36 @@
 									}
 								}
 
-								if (removedItemList.itemsByPath[query.queryPath] != nil)
+								if (removedItemList.itemsByPath[queryPath] != nil)
 								{
-									if (addedItemList.itemsByPath[query.queryPath] != nil)
+									if (addedItemList.itemsByPath[queryPath] != nil)
 									{
 										// Handle replacement scenario
-										query.rootItem = addedItemList.itemsByPath[query.queryPath];
+										query.rootItem = addedItemList.itemsByPath[queryPath];
 									}
 									else
 									{
 										// The target of this query was removed
 										updatedFullQueryResults = [NSMutableArray new];
 										query.state = OCQueryStateTargetRemoved;
+									}
+								}
+
+								// Check if a parent folder of the queryPath has been removed
+								if (query.state != OCQueryStateTargetRemoved)
+								{
+									for (OCItem *removedItem in removedItemList.items)
+									{
+										OCPath removedItemPath = removedItem.path;
+
+										if (removedItemPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:removedItemPath])
+										{
+											// A parent folder of this query has been removed
+											updatedFullQueryResults = [NSMutableArray new];
+											query.state = OCQueryStateTargetRemoved;
+
+											break;
+										}
 									}
 								}
 							}
@@ -376,16 +373,25 @@
 												if ((replaceAtIndex = [updatedFullQueryResults indexOfObjectIdenticalTo:reMoveItem]) != NSNotFound)
 												{
 													[updatedFullQueryResults removeObjectAtIndex:replaceAtIndex];
-													[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
+													if (!item.removed)
+													{
+														[updatedFullQueryResults insertObject:item atIndex:replaceAtIndex];
+													}
 												}
 												else
 												{
-													[updatedFullQueryResults addObject:item];
+													if (!item.removed)
+													{
+														[updatedFullQueryResults addObject:item];
+													}
 												}
 											}
 											else
 											{
-												[updatedFullQueryResults addObject:item];
+												if (!item.removed)
+												{
+													[updatedFullQueryResults addObject:item];
+												}
 											}
 										}
 									}
@@ -430,18 +436,17 @@
 							OCPath queryItemPath = query.queryItem.path;
 							OCLocalID queryItemLocalID = query.queryItem.localID;
 							OCItem *resultItem = nil;
+							OCItem *setNewItem = nil;
 
 							if (addedItemList!=nil)
 							{
 								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 							}
 
@@ -449,22 +454,29 @@
 							{
 								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
-									query.state = OCQueryStateIdle;
-									query.fullQueryResults = [NSMutableArray arrayWithObject:resultItem];
+									setNewItem = resultItem;
 								}
 							}
 
-							if (removedItemList!=nil)
+							if (setNewItem != nil)
 							{
-								if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
+								query.state = OCQueryStateIdle;
+								query.queryItem = setNewItem;
+								query.fullQueryResults = [NSMutableArray arrayWithObject:setNewItem];
+							}
+							else
+							{
+								if (removedItemList!=nil)
 								{
-									query.state = OCQueryStateTargetRemoved;
-									query.fullQueryResults = [NSMutableArray new];
+									if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
+									{
+										query.state = OCQueryStateTargetRemoved;
+										query.fullQueryResults = [NSMutableArray new];
+									}
 								}
 							}
 						}
@@ -485,6 +497,12 @@
 
 							[query setNeedsRecomputation];
 						}
+					}
+
+					// Custom queries
+					if (query.isCustom && ((addedItemList!=nil) || (updatedItemList!=nil) || (removedItemList!=nil)))
+					{
+						[query updateWithAddedItems:addedItemList updatedItems:updatedItemList removedItems:removedItemList];
 					}
 
 					// Apply postprocessing on queries
@@ -514,7 +532,7 @@
 
 				if (addedUpdatedRemovedItems.count > 0)
 				{
-					[self signalChangesForItems:addedUpdatedRemovedItems];
+					[self signalChangesToFileProviderForItems:addedUpdatedRemovedItems];
 				}
 			}
 		}];
@@ -523,20 +541,36 @@
 	// - Fetch updated directory contents as needed
 	if (refreshPaths.count > 0)
 	{
-		// Ensure the sync anchor was updated following these updates before triggering a refresh
-		[self queueBlock:^{
-			for (OCPath path in refreshPaths)
-			{
-				OCPath refreshPath = path;
+		for (OCPath path in refreshPaths)
+		{
+			// Ensure the sync anchor was updated following these updates before triggering a refresh
+			[self scheduleUpdateScanForPath:[path normalizedDirectoryPath] waitForNextQueueCycle:YES];
+		}
+	}
 
-				if (![refreshPath hasSuffix:@"/"])
-				{
-					refreshPath = [refreshPath stringByAppendingString:@"/"];
-				}
+	// Trigger item policies
+	NSArray <OCItem *> *newChangedAndDeletedItems = nil;
 
-				[self scheduleItemListTaskForPath:refreshPath forQuery:NO];
-			}
-		}];
+	#define AddArrayToNewAndChanged(itemArray) \
+		if (itemArray.count > 0) \
+		{ \
+			if (newChangedAndDeletedItems == nil) \
+			{ \
+				newChangedAndDeletedItems = itemArray; \
+			} \
+			else \
+			{ \
+				newChangedAndDeletedItems = [newChangedAndDeletedItems arrayByAddingObjectsFromArray:itemArray]; \
+			} \
+		} \
+
+	AddArrayToNewAndChanged(addedItems);
+	AddArrayToNewAndChanged(updatedItems);
+//	AddArrayToNewAndChanged(removedItems);
+
+	if (newChangedAndDeletedItems.count > 0)
+	{
+		[self runPolicyProcessorsOnNewUpdatedAndDeletedItems:newChangedAndDeletedItems forTrigger:OCItemPolicyProcessorTriggerItemsChanged];
 	}
 
 	// Initiate an IPC change notification

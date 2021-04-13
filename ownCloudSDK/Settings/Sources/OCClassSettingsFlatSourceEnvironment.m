@@ -33,6 +33,11 @@
 
 @implementation OCClassSettingsFlatSourceEnvironment
 
+- (OCClassSettingsSourceIdentifier)settingsSourceIdentifier
+{
+	return (OCClassSettingsSourceIdentifierEnvironment);
+}
+
 - (instancetype)initWithPrefix:(NSString *)prefix
 {
 	if ((self = [super init]) != nil)
@@ -45,7 +50,7 @@
 	return(self);
 }
 
-- (NSDictionary<NSString *,id> *)flatSettingsDictionary
+- (NSDictionary<OCClassSettingsFlatIdentifier,id> *)flatSettingsDictionary
 {
 	if ((_prefix != nil) && (_flatSettingsDictionary == nil))
 	{
@@ -141,7 +146,7 @@
 						}
 						else
 						{
-							OCLogWarning(@"Environment variable %@=%@ could not be parsed.", varName, valueString)
+							NSLog(@"Environment variable %@=%@ could not be parsed.", varName, valueString);
 						}
 					}
 				}];
@@ -153,3 +158,5 @@
 }
 
 @end
+
+OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierEnvironment = @"env";

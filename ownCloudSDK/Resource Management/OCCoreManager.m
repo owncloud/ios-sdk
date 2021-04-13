@@ -22,7 +22,17 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCLogger.h"
 #import "OCCore+FileProvider.h"
+#import "OCCore+Internal.h"
 #import "OCMacros.h"
+#import "OCCoreProxy.h"
+
+@interface OCCoreManager ()
+{
+	BOOL _useCoreProxies;
+	NSMapTable <OCCore *, OCCoreProxy *> *_coreProxiesByCore;
+}
+@end
+
 
 @implementation OCCoreManager
 
@@ -36,7 +46,7 @@
 
 	dispatch_once(&onceToken, ^{
 		sharedManager = [OCCoreManager new];
-		sharedManager.postFileProviderNotifications = OCCore.hostHasFileProvider;
+		sharedManager.postFileProviderNotifications = OCVault.hostHasFileProvider;
 	});
 
 	return (sharedManager);
@@ -51,24 +61,72 @@
 
 		_queuedOfflineOperationsByUUID = [NSMutableDictionary new];
 
-		_adminQueue = dispatch_queue_create("OCCoreManager admin queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
+		_adminQueueByUUID = [NSMutableDictionary new];
+
+		_activeCoresRunIdentifiers = [NSMutableArray new];
+
+		// _useCoreProxies = YES; // Uncomment to use core proxies and enable zombie core detection 
+		_coreProxiesByCore = [NSMapTable weakToStrongObjectsMapTable];
 	}
 
 	return(self);
 }
 
+#pragma mark - Admin queues
+- (dispatch_queue_t)_adminQueueForBookmark:(OCBookmark *)bookmark
+{
+	dispatch_queue_t adminQueue = nil;
+
+	if (bookmark.uuid != nil)
+	{
+		@synchronized (_adminQueueByUUID)
+		{
+			if ((adminQueue = _adminQueueByUUID[bookmark.uuid]) == nil)
+			{
+				if ((adminQueue = dispatch_queue_create("OCCoreManager admin queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL)) != nil)
+				{
+					_adminQueueByUUID[bookmark.uuid] = adminQueue;
+				}
+			}
+		}
+	}
+
+	return (adminQueue);
+}
+
 #pragma mark - Requesting and returning cores
 - (void)requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
-	dispatch_async(_adminQueue, ^{
+	OCLogDebug(@"queuing core request for bookmark %@", bookmark);
+
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _requestCoreForBookmark:bookmark setup:setupHandler completionHandler:completionHandler];
 	});
 }
 
+- (OCCore *)protectedCoreForCore:(OCCore *)core
+{
+	if (_useCoreProxies)
+	{
+		@synchronized(self)
+		{
+			OCCoreProxy *coreProxy;
+
+			if ((coreProxy = [_coreProxiesByCore objectForKey:core]) == nil)
+			{
+				coreProxy = [[OCCoreProxy alloc] initWithCore:core];
+				[_coreProxiesByCore setObject:coreProxy forKey:core];
+			}
+
+			return ((OCCore *)coreProxy);
+		}
+	}
+
+	return (core);
+}
+
 - (void)_requestCoreForBookmark:(OCBookmark *)bookmark setup:(nullable void(^)(OCCore *core, NSError *))setupHandler completionHandler:(void (^)(OCCore *core, NSError *error))completionHandler
 {
-	OCCore *returnCore = nil;
-
 	OCLogDebug(@"core requested for bookmark %@", bookmark);
 
 	NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
@@ -85,29 +143,59 @@
 		// Create and start core
 		if ((core = [[OCCore alloc] initWithBookmark:bookmark]) != nil)
 		{
-			returnCore = core;
+			core.isManaged = YES;
 
 			core.postFileProviderNotifications = self.postFileProviderNotifications;
 
+			[self willChangeValueForKey:@"activeCoresRunIdentifiers"];
 			@synchronized(self)
 			{
 				_coresByUUID[bookmark.uuid] = core;
+
+				[_activeCoresRunIdentifiers addObject:core.runIdentifier];
+				_activeCoresRunIdentifiersReadOnly = nil;
 			}
+			[self didChangeValueForKey:@"activeCoresRunIdentifiers"];
 
 			if (setupHandler != nil)
 			{
-				setupHandler(core, nil);
+				setupHandler([self protectedCoreForCore:core], nil);
 			}
 
 			OCLog(@"starting core for bookmark %@", bookmark);
 
 			OCSyncExec(waitForCoreStart, {
-				[core startWithCompletionHandler:^(id sender, NSError *error) {
+				[core startWithCompletionHandler:^(OCCore *sender, NSError *error) {
 					OCLog(@"core=%@ started for bookmark=%@ with error=%@", sender, bookmark, error);
 
 					if (completionHandler != nil)
 					{
-						completionHandler((OCCore *)sender, error);
+						if (error != nil)
+						{
+							[self willChangeValueForKey:@"activeCoresRunIdentifiers"];
+							@synchronized(self)
+							{
+								self->_requestCountByUUID[bookmark.uuid] = @(self->_requestCountByUUID[bookmark.uuid].integerValue - 1);
+								self->_coresByUUID[bookmark.uuid] = nil;
+
+								[self->_activeCoresRunIdentifiers removeObject:core.runIdentifier];
+								self->_activeCoresRunIdentifiersReadOnly = nil;
+
+								[core unregisterEventHandler];
+
+								if (self->_useCoreProxies)
+								{
+									[self->_coreProxiesByCore objectForKey:core].core = nil;
+								}
+							}
+							[self didChangeValueForKey:@"activeCoresRunIdentifiers"];
+
+							completionHandler(nil, error);
+						}
+						else
+						{
+							completionHandler([self protectedCoreForCore:sender], error);
+						}
 					}
 
 					OCSyncExecDone(waitForCoreStart);
@@ -135,9 +223,14 @@
 
 		if (core != nil)
 		{
+			if (setupHandler != nil)
+			{
+				setupHandler([self protectedCoreForCore:core], nil);
+			}
+
 			if (completionHandler != nil)
 			{
-				completionHandler(core, nil);
+				completionHandler([self protectedCoreForCore:core], nil);
 			}
 		}
 		else
@@ -147,10 +240,11 @@
 	}
 }
 
-
 - (void)returnCoreForBookmark:(OCBookmark *)bookmark completionHandler:(dispatch_block_t)completionHandler
 {
-	dispatch_async(_adminQueue, ^{
+	OCLogDebug(@"queuing core return for bookmark %@", bookmark);
+
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _returnCoreForBookmark:bookmark completionHandler:completionHandler];
 	});
 }
@@ -187,12 +281,19 @@
 			@synchronized(self)
 			{
 				[_coresByUUID removeObjectForKey:bookmark.uuid];
+				[_activeCoresRunIdentifiers removeObject:core.runIdentifier];
+				_activeCoresRunIdentifiersReadOnly = nil;
 			}
 
 			// Stop core
 			OCSyncExec(waitForCoreStop, {
 				[core stopWithCompletionHandler:^(id sender, NSError *error) {
 					[core unregisterEventHandler];
+
+					if (self->_useCoreProxies)
+					{
+						[self->_coreProxiesByCore objectForKey:core].core = nil;
+					}
 
 					OCLog(@"core stopped for bookmark %@", bookmark);
 
@@ -227,60 +328,9 @@
 #pragma mark - Background session recovery
 - (void)handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(dispatch_block_t)completionHandler
 {
-	[OCHTTPPipelineManager.sharedPipelineManager handleEventsForBackgroundURLSession:identifier completionHandler:completionHandler];
+	OCLogDebug(@"Handle events for background URL session: %@", identifier);
 
-//	OCLogDebug(@"Handle events for background URL session: %@", identifier);
-//
-//	@synchronized(self)
-//	{
-//		if ((identifier != nil) && (completionHandler != nil))
-//		{
-//			NSUUID *sessionBookmarkUUID;
-//
-//			if ((sessionBookmarkUUID = [OCConnectionQueue uuidForBackgroundSessionIdentifier:identifier]) != nil)
-//			{
-//				OCBookmark *bookmark;
-//
-//				if ((bookmark = [[OCBookmarkManager sharedBookmarkManager] bookmarkForUUID:sessionBookmarkUUID]) != nil)
-//				{
-//					// Save completion handler
-//					[OCConnectionQueue setCompletionHandler:^{
-//						// Return core
-//						OCLogDebug(@"Done handling pending events for background URL session %@, bookmark %@", identifier, bookmark);
-//
-//						[[OCCoreManager sharedCoreManager] returnCoreForBookmark:bookmark completionHandler:^{
-//							OCLogDebug(@"Calling completionHandler for pending events for background URL session %@, bookmark %@", identifier, bookmark);
-//							completionHandler();
-//						}];
-//					} forBackgroundSessionWithIdentifier:identifier];
-//
-//					// Request core, so it can pick up and handle this
-//					[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark completionHandler:^(OCCore *core, NSError *error) {
-//						if (core != nil)
-//						{
-//							// Resume pending background sessions
-//							OCLogDebug(@"Resuming pending background URL session %@ for bookmark %@", identifier, bookmark);
-//							[core.connection resumeBackgroundSessions];
-//						}
-//					}];
-//				}
-//				else
-//				{
-//					// No bookmark
-//					OCLogError(@"Bookmark %@ not found (from URL session ID %@)", sessionBookmarkUUID, identifier);
-//					completionHandler();
-//				}
-//			}
-//			else
-//			{
-//				OCLogError(@"Can't extract bookmark UUID from URL session ID: %@", identifier);
-//			}
-//		}
-//		else
-//		{
-//			OCLogError(@"Invalid parameters for handling background URL session events: (identifier=%@, completionHandler=%@)", identifier, completionHandler);
-//		}
-//	}
+	[OCHTTPPipelineManager.sharedPipelineManager handleEventsForBackgroundURLSession:identifier completionHandler:completionHandler];
 }
 
 #pragma mark - Scheduling offline operations on cores
@@ -301,7 +351,7 @@
 		[queuedOfflineOperations addObject:offlineOperation];
 	}
 
-	dispatch_async(_adminQueue, ^{
+	dispatch_async([self _adminQueueForBookmark:bookmark], ^{
 		[self _runNextOfflineOperationForBookmark:bookmark];
 	});
 }
@@ -382,6 +432,20 @@
 		}
 
 	}
+}
+
+#pragma mark - Active run identifiers
+- (NSArray<OCCoreRunIdentifier> *)activeRunIdentifiers
+{
+	@synchronized(self)
+	{
+		if (_activeCoresRunIdentifiersReadOnly == nil)
+		{
+			_activeCoresRunIdentifiersReadOnly = [_activeCoresRunIdentifiers copy];
+		}
+	}
+
+	return (_activeCoresRunIdentifiersReadOnly);
 }
 
 #pragma mark - Log tagging

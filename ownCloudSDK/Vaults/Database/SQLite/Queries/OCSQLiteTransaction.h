@@ -49,6 +49,6 @@ typedef NS_ENUM(NSUInteger, OCSQLiteTransactionType) //!< See https://www.sqlite
 
 @end
 
-NS_ASSUME_NONNULL_END
-
 extern NSErrorUserInfoKey OCSQLiteTransactionFailedRequestKey;
+
+NS_ASSUME_NONNULL_END

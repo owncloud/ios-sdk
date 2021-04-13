@@ -23,13 +23,15 @@
 
 - (void)setUp {
 	[super setUp];
-	// Put setup code here. This method is called before the invocation of each test method in the class.
+
+	OCConnection.setupHTTPPolicy = OCConnectionSetupHTTPPolicyAllow;
 
 	hostSimulator = [[OCHostSimulator alloc] init];
 }
 
 - (void)tearDown {
-	// Put teardown code here. This method is called after the invocation of each test method in the class.
+	OCConnection.setupHTTPPolicy = OCConnectionSetupHTTPPolicyAuto;
+
 	[super tearDown];
 }
 
@@ -64,17 +66,18 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
-- (void)testSimulatorMissingCertificate
-{
-	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
-		XCTAssert(issue.issues.count==1, @"1 issue found");
-
-		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
-		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
-
-		XCTAssert((issue.issues[0].error.code == OCErrorCertificateMissing), @"Error is that certificate is missing");
-	}];
-}
+// Test deactivated because the corresponding error is no longer emitted
+//- (void)testSimulatorMissingCertificate
+//{
+//	[self _runPreparationTestsForURL:OCTestTarget.secureTargetURL completionHandler:^(NSURL *url, OCBookmark *bookmark, OCIssue *issue, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+//		XCTAssert(issue.issues.count==1, @"1 issue found");
+//
+//		XCTAssert((issue.issues[0].type == OCIssueTypeError), @"Issue is error issue");
+//		XCTAssert((issue.issues[0].level == OCIssueLevelError), @"Issue level is error");
+//
+//		XCTAssert((issue.issues[0].error.code == OCErrorCertificateMissing), @"Error is that certificate is missing");
+//	}];
+//}
 
 - (void)testSimulatorSimulatedNotFoundResponses
 {
@@ -103,6 +106,14 @@
 							@"Www-Authenticate" : @"Bearer realm=\"\", Basic realm=\"\""
 						}
 						contentType:@"application/xml"
+						body:@""],
+
+		@"/index.php/apps/oauth2/api/v1/token" :
+			[OCHostSimulatorResponse responseWithURL:nil
+						statusCode:OCHTTPStatusCodeUNAUTHORIZED
+						headers:@{
+						}
+						contentType:@"application/json"
 						body:@""]
 
 	};

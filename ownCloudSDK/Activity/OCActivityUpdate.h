@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger,OCActivityUpdateType)
 + (instancetype)updatingActivityFor:(id<OCActivitySource>)source;
 
 - (instancetype)withStatusMessage:(NSString *)statusMessage;
-- (instancetype)withProgress:(NSProgress *)progress;
+- (instancetype)withProgress:(nullable NSProgress *)progress;
 - (instancetype)withState:(OCActivityState)state;
 
 @end

@@ -26,9 +26,10 @@
 #import "OCIPNotificationCenter.h"
 #import "OCMacros.h"
 
-@interface OCProcessPing : NSObject
+@interface OCProcessPing : NSObject <OCLogTagging>
 {
 	BOOL _responded;
+	BOOL _listening;
 	OCProcessSession *_session;
 	OCIPCNotificationName _pongNotificationName;
 	NSTimeInterval _timeout;
@@ -57,13 +58,24 @@
 {
 	static OCProcessManager *sharedProcessManager;
 	static dispatch_once_t onceToken;
+	__block BOOL notifyFinishedLaunching = NO;
 
 	dispatch_once(&onceToken, ^{
 		sharedProcessManager = [OCProcessManager new];
-		[sharedProcessManager processDidFinishLaunching];
+		notifyFinishedLaunching = YES;
 	});
 
+	if (notifyFinishedLaunching)
+	{
+		[sharedProcessManager processDidFinishLaunching];
+	}
+
 	return (sharedProcessManager);
+}
+
++ (BOOL)isProcessExtension
+{
+	return ([NSBundle.mainBundle.bundlePath hasSuffix:@".appex"]);
 }
 
 - (instancetype)init
@@ -74,12 +86,18 @@
 
 		_processStateDirectoryURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@".processManager" isDirectory:YES];
 
+		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
+
 		// Set up ping-pong
+		__weak OCProcessManager *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:[OCProcessManager pingNotificationNameForSession:_processSession] withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessManager *processManager, OCIPCNotificationName  _Nonnull notificationName) {
+			OCWLogDebug(@"Received ping (%@) via %@", processManager.processSession.bundleIdentifier, notificationName);
+
 			// Refresh state file
 			[processManager writeStateFileForSession:processManager.processSession];
 
 			// Respond with a pong to pings directed at this process
+			OCWLogDebug(@"Sending pong (%@)", processManager.processSession.bundleIdentifier);
 			[notificationCenter postNotificationForName:[OCProcessManager pongNotificationNameForSession:processManager.processSession] ignoreSelf:YES];
 		}];
 
@@ -92,6 +110,17 @@
 
 		// Set up process notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(processWillTerminate) name:UIApplicationWillTerminateNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillResignActiveNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostWillEnterForegroundNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChange:) name:NSExtensionHostDidBecomeActiveNotification object:nil];
 
 		// Scan for invalid sessions
 		[self scanSessions];
@@ -110,6 +139,17 @@
 
 	// Remove process notifications
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillResignActiveNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidEnterBackgroundNotification object:nil];
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSExtensionHostDidBecomeActiveNotification object:nil];
 }
 
 #pragma mark - IPC
@@ -262,6 +302,49 @@
 - (void)processWillTerminate
 {
 	[self removeStateFileForSession:_processSession];
+}
+
+- (void)handleStateChange:(NSNotification *)notification
+{
+	if ([notification.name isEqual:NSExtensionHostDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did become active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host did enter background");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will resign active");
+	}
+
+	if ([notification.name isEqual:NSExtensionHostWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"Extension Host will enter foreground");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidBecomeActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did become active");
+	}
+
+	if ([notification.name isEqual:UIApplicationDidEnterBackgroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App did enter background");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillResignActiveNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will resign active");
+	}
+
+	if ([notification.name isEqual:UIApplicationWillEnterForegroundNotification])
+	{
+		OCTLogDebug(@[@"State"], @"App will enter foreground");
+	}
 }
 
 #pragma mark - Session validity
@@ -423,7 +506,11 @@
 		_completionHandler = [completionHandler copy];
 		_timeout = timeout;
 
+		_listening = YES;
+
+		__weak OCProcessPing *weakSelf = self;
 		[[OCIPNotificationCenter sharedNotificationCenter] addObserver:self forName:_pongNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCProcessPing *observer, OCIPCNotificationName  _Nonnull notificationName) {
+			OCWLogDebug(@"Received pong from %@", observer->_session.bundleIdentifier);
 			[observer receivedPong];
 		}];
 	}
@@ -431,18 +518,35 @@
 	return (self);
 }
 
+- (void)stopListeningForPong
+{
+	@synchronized(self)
+	{
+		if (_listening)
+		{
+			[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:_pongNotificationName];
+			_listening = NO;
+		}
+	}
+}
+
 - (void)dealloc
 {
-	[[OCIPNotificationCenter sharedNotificationCenter] removeObserver:self forName:_pongNotificationName];
+	[self stopListeningForPong];
 }
 
 - (void)sendPing
 {
+	OCLogDebug(@"Sending ping to %@", _session.bundleIdentifier);
+	[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:[OCProcessManager pingNotificationNameForSession:_session] ignoreSelf:YES];
+
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_timeout * (NSTimeInterval)NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		@synchronized(self)
 		{
 			if (!self->_responded)
 			{
+				OCLogDebug(@"Timeout waiting for pong from %@", self->_session.bundleIdentifier);
+
 				if (self->_completionHandler != nil)
 				{
 					self->_completionHandler(NO, nil);
@@ -457,6 +561,9 @@
 {
 	@synchronized(self)
 	{
+		OCLogDebug(@"Received pong from %@", _session.bundleIdentifier);
+		[self stopListeningForPong];
+
 		_responded = YES;
 
 		if (_completionHandler != nil)
@@ -470,6 +577,17 @@
 			_completionHandler = nil;
 		}
 	}
+}
+
+#pragma mark - Log tagging
+- (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
+}
+
++ (nonnull NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"PROCMAN", @"Ping"]);
 }
 
 @end

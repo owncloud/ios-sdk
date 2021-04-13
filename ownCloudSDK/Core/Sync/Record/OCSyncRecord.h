@@ -64,6 +64,13 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,nullable) OCSyncRecordID recordID; //!< OCDatabase-specific ID referencing the sync record in the database (ephermal)
 @property(strong,readonly) OCProcessSession *originProcessSession; //!< The process session that this sync record originated in
 
+#pragma mark - Revision
+@property(strong,nullable) OCSyncRecordRevision revision; //!< Revision of the sync record
+
+#pragma mark - Lane integration
+@property(strong,nullable) OCSyncLaneID laneID; //!< The ID of the sync lane this record is scheduled on.
+@property(readonly,strong,nullable,nonatomic) NSSet<OCSyncLaneTag> *laneTags; //!< The lane tags of the record that are used to schedule it on the right sync lane.
+
 #pragma mark - Action Definition
 @property(readonly) OCSyncActionIdentifier actionIdentifier; //!< The action
 @property(strong) OCSyncAction *action; //!< The sync action
@@ -78,6 +85,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(strong,nullable) NSArray <OCWaitCondition *> *waitConditions; //!< If state==OCSyncRecordStateProcessing, the conditions that need to be fulfilled before proceeding.
 
 #pragma mark - Result, cancel and progress handling
+@property(assign) BOOL isProcessIndependent; //!< Indicates that this action can be run on any process, not only .originProcessSession
 @property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
 @property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
 
@@ -108,6 +116,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal; //!< Locally triggered deletion
 extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote; //!< Remotely triggered deletion
+extern OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocalCopy; //!< Deletion of local copy
 extern OCSyncActionIdentifier OCSyncActionIdentifierMove;
 extern OCSyncActionIdentifier OCSyncActionIdentifierCopy;
 extern OCSyncActionIdentifier OCSyncActionIdentifierCreateFolder;

@@ -19,15 +19,31 @@
 #import "OCConnection.h"
 #import "NSError+OCError.h"
 
+typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for two identical requests
+
+@interface OCHTTPRequest (AuthDetectionID)
+- (OCHTTPRequestAuthDetectionID)authDetectionID;
+@end
+
+@implementation OCHTTPRequest (AuthDetectionID)
+
+- (OCHTTPRequestAuthDetectionID)authDetectionID
+{
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@", self.method, self.url.absoluteString, self.headerFields, self.parameters]);
+}
+
+@end
+
 @implementation OCConnection (Authentication)
 
 #pragma mark - Authentication
 - (void)requestSupportedAuthenticationMethodsWithOptions:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods))completionHandler
 {
 	NSArray <Class> *authenticationMethodClasses = [OCAuthenticationMethod registeredAuthenticationMethodClasses];
-	NSMutableSet <NSURL *> *detectionURLs = [NSMutableSet set];
-	NSMutableDictionary <NSString *, NSArray <NSURL *> *> *detectionURLsByMethod = [NSMutableDictionary dictionary];
-	NSMutableDictionary <NSURL *, OCHTTPRequest *> *detectionRequestsByDetectionURL = [NSMutableDictionary dictionary];
+	NSMutableArray <OCHTTPRequest *> *detectionRequests = [NSMutableArray new];
+	NSMutableSet <OCHTTPRequestAuthDetectionID> *detectionRequestAuthDetectionIDs = [NSMutableSet new];
+	NSMutableDictionary <NSString *, NSArray <OCHTTPRequestAuthDetectionID> *> *detectionIDsByMethod = [NSMutableDictionary dictionary];
+	NSMutableDictionary <OCHTTPRequestAuthDetectionID, OCHTTPRequest *> *detectionRequestsByDetectionID = [NSMutableDictionary dictionary];
 	
 	if (completionHandler==nil) { return; }
 	
@@ -61,13 +77,29 @@
 		
 		if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
 		{
-			NSArray <NSURL *> *authMethodDetectionURLs;
+			NSArray <OCHTTPRequest *> *authMethodDetectionRequests;
 			
-			if ((authMethodDetectionURLs = [authenticationMethodClass detectionURLsForConnection:self]) != nil)
+			if ((authMethodDetectionRequests = [authenticationMethodClass detectionRequestsForConnection:self]) != nil)
 			{
-				[detectionURLs addObjectsFromArray:authMethodDetectionURLs];
-				
-				detectionURLsByMethod[authMethodIdentifier] = authMethodDetectionURLs;
+				NSMutableArray<OCHTTPRequestAuthDetectionID> *detectionIDs = [NSMutableArray new];
+
+				for (OCHTTPRequest *request in authMethodDetectionRequests)
+				{
+					OCHTTPRequestAuthDetectionID detectionID;
+
+					if ((detectionID = request.authDetectionID) != nil)
+					{
+						if (![detectionRequestAuthDetectionIDs containsObject:detectionID])
+						{
+							[detectionRequests addObject:request];
+							[detectionRequestAuthDetectionIDs addObject:detectionID];
+						}
+
+						[detectionIDs addObject:detectionID];
+					}
+				}
+
+				detectionIDsByMethod[authMethodIdentifier] = detectionIDs;
 			}
 		}
 	}
@@ -75,9 +107,9 @@
 	// Pre-load detection URLs
 	dispatch_group_t preloadCompletionGroup = dispatch_group_create();
 	
-	for (NSURL *detectionURL in detectionURLs)
+	for (OCHTTPRequest *request in detectionRequests)
 	{
-		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:detectionURL];
+		request.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
 		
 		dispatch_group_enter(preloadCompletionGroup);
 		
@@ -85,10 +117,17 @@
 			dispatch_group_leave(preloadCompletionGroup);
 		};
 		
-		detectionRequestsByDetectionURL[detectionURL] = request;
+		detectionRequestsByDetectionID[request.authDetectionID] = request;
 
 		// Attach to pipelines
 		[self attachToPipelines];
+
+		request.forceCertificateDecisionDelegation = NO;
+
+		// Force-allow any certificate for detection requests
+		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest * _Nonnull request, OCCertificate * _Nonnull certificate, OCCertificateValidationResult validationResult, NSError * _Nonnull certificateValidationError, OCConnectionCertificateProceedHandler  _Nonnull proceedHandler) {
+			proceedHandler(YES, nil);
+		};
 
 		[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID];
 	}
@@ -109,13 +148,13 @@
 				NSMutableDictionary <NSURL *, OCHTTPRequest *> *resultsByURL = [NSMutableDictionary dictionary];
 				
 				// Compile pre-load results
-				for (NSURL *detectionURL in detectionURLsByMethod[authMethodIdentifier])
+				for (OCHTTPRequestAuthDetectionID detectionID in detectionIDsByMethod[authMethodIdentifier])
 				{
 					OCHTTPRequest *request;
 					
-					if ((request = [detectionRequestsByDetectionURL objectForKey:detectionURL]) != nil)
+					if ((request = [detectionRequestsByDetectionID objectForKey:detectionID]) != nil)
 					{
-						resultsByURL[detectionURL] = request;
+						resultsByURL[request.url] = request;
 					}
 				}
 				
@@ -136,14 +175,14 @@
 		dispatch_group_notify(detectionCompletionGroup, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			__block NSError *error = nil;
 			
-			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionURL.count > 0))
+			if ((supportedAuthMethodIdentifiers.count == 0) && (detectionRequestsByDetectionID.count > 0))
 			{
-				[detectionRequestsByDetectionURL enumerateKeysAndObjectsUsingBlock:^(NSURL *url, OCHTTPRequest *request, BOOL * _Nonnull stop) {
+				[detectionRequestsByDetectionID enumerateKeysAndObjectsUsingBlock:^(OCHTTPRequestAuthDetectionID detectionID, OCHTTPRequest *request, BOOL * _Nonnull stop) {
 					if (request.httpResponse.redirectURL != nil)
 					{
 						NSURL *alternativeBaseURL;
 				
-						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url]) != nil)
+						if ((alternativeBaseURL = [self extractBaseURLFromRedirectionTargetURL:request.httpResponse.redirectURL originalURL:request.url fallbackToRedirectionTargetURL:YES]) != nil)
 						{
 							error = OCErrorWithInfo(OCErrorAuthorizationRedirect, @{ OCAuthorizationMethodAlternativeServerURLKey : alternativeBaseURL });
 						}
@@ -231,7 +270,7 @@
 			
 			if ((authenticationMethod = self.authenticationMethod) != nil)
 			{
-				canSend = [self.authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
+				canSend = [authenticationMethod canSendAuthenticatedRequestsForConnection:self withAvailabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
 					// Share result with all pending Authentication Availability Handlers
 					@synchronized(pendingAuthenticationAvailabilityHandlers)
 					{
@@ -239,11 +278,11 @@
 						{
 							handler(error, authenticationIsAvailable);
 						}
-						
+
 						[pendingAuthenticationAvailabilityHandlers removeAllObjects];
 					};
-					
-					//
+
+					// Notify connection delegate in case of error
 					if ((error != nil) && (weakSelf!=nil) && (delegate!=nil) && [delegate respondsToSelector:@selector(connection:handleError:)])
 					{
 						[delegate connection:weakSelf handleError:error];
@@ -280,7 +319,7 @@
 
 - (OCAuthenticationMethod *)authenticationMethod
 {
-	if ((_authenticationMethod == nil) || ([[[_authenticationMethod class] identifier] isEqual:_bookmark.authenticationMethodIdentifier]))
+	if ((_authenticationMethod == nil) || (![[[_authenticationMethod class] identifier] isEqual:_bookmark.authenticationMethodIdentifier]))
 	{
 		self.authenticationMethod = [self _authenticationMethodWithIdentifier:_bookmark.authenticationMethodIdentifier];
 	}

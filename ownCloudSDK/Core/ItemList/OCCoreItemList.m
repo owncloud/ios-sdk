@@ -17,7 +17,7 @@
  */
 
 #import "OCCoreItemList.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 
 @implementation OCCoreItemList
 

@@ -21,9 +21,11 @@
 #import "OCItem.h"
 #import "OCCoreItemList.h"
 #import "OCActivity.h"
+#import "OCHTTPTypes.h"
 
 @class OCCore;
 @class OCCoreItemListTask;
+@class OCCoreDirectoryUpdateJob;
 
 typedef NS_ENUM(NSUInteger, OCCoreTaskMergeStatus)
 {
@@ -38,6 +40,10 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 @property(weak) OCCore *core;
 @property(strong) OCPath path;
 
+@property(strong) OCCoreDirectoryUpdateJob *updateJob;
+
+@property(strong) OCHTTPRequestGroupID groupID;
+
 @property(strong) OCCoreItemList *cachedSet;
 @property(strong) OCCoreItemList *retrievedSet;
 
@@ -49,7 +55,7 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 @property(strong) OCCoreItemListTask *nextItemListTask;
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path;
+- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob;
 
 - (void)update;
 
@@ -57,5 +63,7 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 - (void)forceUpdateRetrievedSet;
 
 - (void)_updateCacheSet;
+
+- (void)updateIfNew;
 
 @end

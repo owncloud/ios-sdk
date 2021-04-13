@@ -28,7 +28,7 @@ typedef void(^OCIPNotificationHandler)(OCIPNotificationCenter *notificationCente
 @interface OCIPNotificationCenter : NSObject
 {
 	CFNotificationCenterRef _darwinNotificationCenter;
-	NSMutableDictionary <OCIPCNotificationName, NSMutableDictionary<NSValue *, OCIPNotificationHandler> *> *_handlersByObserverByNotificationName;
+	NSMutableDictionary <OCIPCNotificationName, NSMapTable<id, OCIPNotificationHandler> *> *_handlersByObserverByNotificationName;
 
 	NSMutableDictionary <OCIPCNotificationName, NSNumber *> *_ignoreCountsByNotificationName;
 }

@@ -25,14 +25,25 @@
 #pragma mark - User info
 - (NSProgress *)retrieveLoggedInUserWithCompletionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
+	return ([self retrieveLoggedInUserWithRequestCustomization:nil completionHandler:completionHandler]);
+}
+
+- (NSProgress *)retrieveLoggedInUserWithRequestCustomization:(void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
+{
 	OCHTTPRequest *request;
+	NSProgress *progress = nil;
 
 	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDUser options:nil]];
 	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 
 	[request setValue:@"json" forParameter:@"format"];
 
-	[self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+	if (requestCustomizer != nil)
+	{
+		requestCustomizer(request);
+	}
+
+	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)
 		{
 			completionHandler(error, nil);
@@ -53,12 +64,13 @@
 
 			if (userInfoDict != nil)
 			{
-				OCUser *user = [OCUser new];
-
 				#define IgnoreNull(obj) ([obj isKindOfClass:[NSNull class]] ? nil : obj)
 
-				user.userName = IgnoreNull(userInfoDict[@"id"]);
-				user.displayName = IgnoreNull(userInfoDict[@"display-name"]);
+				OCUser *user;
+
+				user = [OCUser userWithUserName:IgnoreNull(userInfoDict[@"id"])
+						    displayName:IgnoreNull(userInfoDict[@"display-name"])
+						       isRemote:NO];
 				user.emailAddress = IgnoreNull(userInfoDict[@"email"]);
 
 				completionHandler(nil, user);
@@ -70,7 +82,7 @@
 		}
 	}];
 
-	return (nil);
+	return (progress);
 }
 
 @end

@@ -18,11 +18,18 @@
 
 #import "OCSQLiteQuery.h"
 #import "OCSQLiteQueryCondition.h"
+#import "OCSQLiteStatement.h"
+
+@interface OCSQLiteQuery ()
+{
+	__weak OCSQLiteStatement *_statement;
+}
+@end
 
 @implementation OCSQLiteQuery
 
 #pragma mark - Queries
-+ (instancetype)query:(NSString *)sqlQuery withParameters:(NSArray <id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler
++ (instancetype)query:(OCSQLiteQueryString)sqlQuery withParameters:(NSArray <id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler
 {
 	OCSQLiteQuery *query = [self new];
 
@@ -33,7 +40,7 @@
 	return (query);
 }
 
-+ (instancetype)query:(NSString *)sqlQuery withNamedParameters:(NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler
++ (instancetype)query:(OCSQLiteQueryString)sqlQuery withNamedParameters:(NSDictionary <NSString *, id<NSObject>> *)parameters resultHandler:(OCSQLiteDBResultHandler)resultHandler
 {
 	OCSQLiteQuery *query = [self new];
 
@@ -44,7 +51,7 @@
 	return (query);
 }
 
-+ (instancetype)query:(NSString *)sqlQuery resultHandler:(OCSQLiteDBResultHandler)resultHandler;
++ (instancetype)query:(OCSQLiteQueryString)sqlQuery resultHandler:(OCSQLiteDBResultHandler)resultHandler;
 {
 	OCSQLiteQuery *query = [self new];
 
@@ -59,7 +66,7 @@
 {
 	OCSQLiteQuery *query = nil;
 	NSMutableArray *parameters=nil;
-	NSString *sqlQuery = nil;
+	OCSQLiteQueryString sqlQuery = nil;
 	NSString *whereString = nil;
 
 	// Build WHERE-string
@@ -97,7 +104,7 @@
 	{
 		NSMutableArray <NSString *> *columnNames;
 		NSMutableArray *values;
-		NSString *sqlQuery = nil;
+		OCSQLiteQueryString sqlQuery = nil;
 		__block NSUInteger i=0;
 		NSMutableString *placeholdersString;
 
@@ -146,7 +153,7 @@
 	if (rowValuesCount > 0)
 	{
 		NSMutableArray *parameters;
-		NSString *sqlQuery = nil;
+		OCSQLiteQueryString sqlQuery = nil;
 		__block NSUInteger i=0;
 		NSMutableString *setString;
 		NSString *whereString;
@@ -196,7 +203,7 @@
 {
 	OCSQLiteQuery *query = nil;
 	NSMutableArray *parameters = nil;
-	NSString *sqlQuery = nil;
+	OCSQLiteQueryString sqlQuery = nil;
 
 	sqlQuery = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self _buildWhereStringForMatchPairs:matchValues parameters:&parameters]];
 
@@ -280,6 +287,30 @@
 	}
 
 	return ((whereString!=nil) ? whereString : @"");
+}
+
+#pragma mark - Statement tracking
+- (OCSQLiteStatement *)statement
+{
+	return (_statement);
+}
+
+- (void)setStatement:(OCSQLiteStatement *)statement
+{
+	_statement = statement;
+}
+
+#pragma mark - Cancelation
+- (BOOL)cancel
+{
+	if (!_cancelled)
+	{
+		_cancelled = YES;
+
+		return ([_statement cancel]);
+	}
+
+	return (NO);
 }
 
 @end

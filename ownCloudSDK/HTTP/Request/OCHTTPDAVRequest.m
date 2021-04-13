@@ -30,12 +30,15 @@
 	
 	request.method = OCHTTPMethodPROPFIND;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
-		[OCXMLNode elementWithName:@"D:propfind" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:@[
-			[OCXMLNode elementWithName:@"D:prop"],
+		[OCXMLNode elementWithName:@"D:propfind" attributes:@[
+			[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"],
+			[OCXMLNode namespaceWithName:@"oc" stringValue:@"http://owncloud.org/ns"]
+		] children:@[
+			[OCXMLNode elementWithName:@"D:prop"]
 		]]
 	];
-	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
-	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:@"Depth"];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
+	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:OCHTTPHeaderFieldNameDepth];
 
 	return (request);
 }
@@ -46,9 +49,28 @@
 
 	request.method = OCHTTPMethodPROPPATCH;
 	request.xmlRequest = [OCXMLNode documentWithRootElement:
-		[OCXMLNode elementWithName:@"D:propertyupdate" attributes:@[[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"]] children:contentNodes]
+		[OCXMLNode elementWithName:@"D:propertyupdate" attributes:@[
+			[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"],
+			[OCXMLNode namespaceWithName:@"oc" stringValue:@"http://owncloud.org/ns"]
+		] children:contentNodes]
 	];
-	[request setValue:@"application/xml" forHeaderField:@"Content-Type"];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
+
+	return (request);
+}
+
++ (instancetype)reportRequestWithURL:(NSURL *)url rootElementName:(NSString *)rootElementName content:(NSArray <OCXMLNode *> *)contentNodes
+{
+	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
+
+	request.method = OCHTTPMethodREPORT;
+	request.xmlRequest = [OCXMLNode documentWithRootElement:
+		[OCXMLNode elementWithName:rootElementName attributes:@[
+			[OCXMLNode namespaceWithName:@"D" stringValue:@"DAV:"],
+			[OCXMLNode namespaceWithName:@"oc" stringValue:@"http://owncloud.org/ns"]
+		] children:contentNodes]
+	];
+	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
 
 	return (request);
 }
@@ -68,7 +90,7 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath withErrors:(NSArray <NSError *> **)errors
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
 	NSData *responseData = self.httpResponse.bodyData;
@@ -89,7 +111,8 @@
 				if (basePath != nil)
 				{
 					parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-						basePath, @"basePath",
+						basePath, 	@"basePath",
+						usersByUserID, 	@"usersByUserID",
 					nil];
 				}
 

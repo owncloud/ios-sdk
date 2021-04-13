@@ -16,8 +16,11 @@
  *
  */
 
+#import <pthread/pthread.h>
+
 #import "OCCore.h"
 #import "OCQuery+Internal.h"
+#import "OCShareQuery.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
@@ -27,14 +30,13 @@
 #import "OCCore+Internal.h"
 #import "OCCore+SyncEngine.h"
 #import "OCSyncRecord.h"
-#import "NSString+OCParentPath.h"
+#import "NSString+OCPath.h"
 #import "OCCore+FileProvider.h"
 #import "OCCore+ItemList.h"
 #import "OCCoreManager.h"
 #import "OCChecksumAlgorithmSHA1.h"
 #import "OCIPNotificationCenter.h"
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
-#import "OCCoreNetworkPathMonitorSignalProvider.h"
+#import "OCCoreNetworkMonitorSignalProvider.h"
 #import "OCCoreServerStatusSignalProvider.h"
 #import "OCCore+ConnectionStatus.h"
 #import "OCCore+Thumbnails.h"
@@ -42,12 +44,29 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCProgressManager.h"
 #import "OCProxyProgress.h"
+#import "OCRateLimiter.h"
+#import "OCSyncActionDownload.h"
+#import "OCSyncActionUpload.h"
+#import "OCBookmark+IPNotificationNames.h"
+#import "OCDeallocAction.h"
+#import "OCCore+ItemPolicies.h"
+#import "OCCore+MessageResponseHandler.h"
+#import "OCCore+MessageAutoresolver.h"
+#import "OCHostSimulatorManager.h"
+#import "OCProcessManager.h"
+#import "OCBookmark+DBMigration.h"
 
 @interface OCCore ()
 {
 	NSInteger _runningActivities;
 	NSMutableArray <NSString *> *_runningActivitiesStrings;
 	dispatch_block_t _runningActivitiesCompleteBlock;
+
+	NSUInteger _pendingIPCChangeNotifications;
+	OCRateLimiter *_ipChangeNotificationRateLimiter;
+
+	OCIPCNotificationName _ipNotificationName;
+	OCIPNotificationCenter *_ipNotificationCenter;
 }
 
 @end
@@ -82,10 +101,26 @@
 
 @synthesize automaticItemListUpdatesEnabled = _automaticItemListUpdatesEnabled;
 
+@synthesize maximumSyncLanes = _maximumSyncLanes;
+
+@synthesize rootQuotaBytesRemaining = _rootQuotaBytesRemaining;
+@synthesize rootQuotaBytesUsed = _rootQuotaBytesUsed;
+@synthesize rootQuotaBytesTotal = _rootQuotaBytesTotal;
+
+@dynamic busyStatusHandler;
+
 #pragma mark - Class settings
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (@"core");
+}
+
++ (NSArray<OCClassSettingsKey> *)publicClassSettingsIdentifiers
+{
+	return (@[
+		OCCoreThumbnailAvailableForMIMETypePrefixes,
+		OCCoreCookieSupportEnabled
+	]);
 }
 
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
@@ -93,7 +128,73 @@
 	return (@{
 		OCCoreThumbnailAvailableForMIMETypePrefixes : @[
 			@"*"
-		]
+		],
+		OCCoreAddAcceptLanguageHeader : @(YES),
+		OCCoreActionConcurrencyBudgets : @{
+			// Concurrency "budgets" available for sync actions by action category
+			OCSyncActionCategoryAll	: @(0), // No limit on the total number of concurrent sync actions
+
+				OCSyncActionCategoryActions  : @(10),	// Limit concurrent execution of actions to 10
+
+				OCSyncActionCategoryTransfer : @(6),	// Limit total number of concurrent transfers to 6
+
+					OCSyncActionCategoryUpload   : @(3),	// Limit number of concurrent upload transfers to 3
+						OCSyncActionCategoryUploadWifiOnly   	  : @(2), // Limit number of concurrent uploads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryUploadWifiAndCellular : @(3), // Limit number of concurrent uploads by WiFi and Cellular transfers to 3
+
+					OCSyncActionCategoryDownload : @(3),	// Limit number of concurrent download transfers to 3
+						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
+						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
+		},
+		OCCoreCookieSupportEnabled : @(YES)
+	});
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	return (@{
+		// Connection
+		OCCoreThumbnailAvailableForMIMETypePrefixes : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `[\"*\"]` turns on thumbnail loading for all items.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideReachabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the reachability signal, so the host is always considered reachable (`true`) or unreachable (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreOverrideAvailabilitySignal : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`).",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreCookieSupportEnabled : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Enable or disable per-process, in-memory cookie storage.",
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+		},
+
+		OCCoreActionConcurrencyBudgets : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeDictionary,
+			OCClassSettingsMetadataKeyDescription 	: @"Concurrency budgets available for sync actions by action category.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection"
+		},
+
+		// Privacy
+		OCCoreAddAcceptLanguageHeader : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Add an `Accept-Language` HTTP header using the preferred languages set on the device.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Privacy"
+		},
 	});
 }
 
@@ -110,32 +211,41 @@
 	{
 		__weak OCCore *weakSelf = self;
 
+		int pthreadKeyError;
+
+		if ((pthreadKeyError = pthread_key_create(&_queueKey, NULL)) != 0)
+		{
+			OCLogError(@"Error creating pthread key: %d", pthreadKeyError);
+		}
+
+		_runIdentifier = [NSUUID new];
+
 		_bookmark = bookmark;
 
 		_automaticItemListUpdatesEnabled = YES;
 
-		// Quick note: according to https://github.com/owncloud/documentation/issues/2964 the algorithm should actually be determined by the capabilities
-		// specified by the server. This is currently not done because SHA1 is the only supported algorithm of interest (ADLER32 is much weaker) at the time
-		// of writing and requesting the capabilities upon every connect to the server would increase load on the server and increase the time it takes to
-		// connect. By the time the server adds an even more secure hash in the future, server information endpoints have hopefully also been consolidated.
-		// Alternatively, preferred checksum algorithms could be requested upon first connect and be cached for f.ex. 24-48 hours.
+		_maximumSyncLanes = 0;
+
 		_preferredChecksumAlgorithm = OCChecksumAlgorithmIdentifierSHA1;
 
 		_eventHandlerIdentifier = [@"OCCore-" stringByAppendingString:_bookmark.uuid.UUIDString];
 		_pendingThumbnailRequests = [NSMutableDictionary new];
 
-		_fileProviderSignalCountByContainerItemIdentifiers = [NSMutableDictionary new];
-		_fileProviderSignalCountByContainerItemIdentifiersLock = @"_fileProviderSignalCountByContainerItemIdentifiersLock";
-
 		_ipNotificationCenter = OCIPNotificationCenter.sharedNotificationCenter;
+		_ipChangeNotificationRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.1];
+
+		_unsolvedIssueSignatures = [NSMutableSet new];
+		_rejectedIssueSignatures = [NSMutableSet new];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
+		_shareQueries = [NSMutableArray new];
 
 		_itemListTasksByPath = [NSMutableDictionary new];
-		_queuedItemListTaskPaths = [NSMutableArray new];
+		_queuedItemListTaskUpdateJobs = [NSMutableArray new];
 		_scheduledItemListTasks = [NSMutableArray new];
+		_scheduledDirectoryUpdateJobIDs = [NSMutableSet new];
 		_itemListTasksRequestQueue = [OCAsyncSequentialQueue new];
 		_itemListTasksRequestQueue.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
 			OCCore *strongSelf;
@@ -148,10 +258,20 @@
 			}
 		};
 
+		_fetchUpdatesCompletionHandlers = [NSMutableArray new];
+
 		_progressByLocalID = [NSMutableDictionary new];
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
+
+		_itemPolicies = [NSMutableArray new];
+		_itemPolicyProcessors = [NSMutableArray new];
+
+		_availableOfflineFolderPaths = [NSMutableSet new];
+		_availableOfflineIDs = [NSMutableSet new];
+
+		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
 
 		_thumbnailCache = [OCCache new];
 
@@ -160,26 +280,83 @@
 
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
+		_warnedCertificates = [NSMutableArray new];
+
 		_connection = [[OCConnection alloc] initWithBookmark:bookmark];
+		if (OCTypedCast([self classSettingForOCClassSettingsKey:OCCoreCookieSupportEnabled], NSNumber).boolValue == YES)
+		{
+			// Adding cookie storage enabled cookie support
+			_connection.cookieStorage = [OCHTTPCookieStorage new];
+			/*_connection.cookieStorage.cookieFilter = ^BOOL(NSHTTPCookie * _Nonnull cookie) {
+				if ((cookie.expiresDate == nil) && (![cookie.name isEqual:@"oc_sessionPassphrase"]))
+				{
+					return (NO);
+				}
+
+				return (YES);
+			};*/
+
+			OCTLogDebug(@[@"Cookies"], @"Cookie support enabled with storage %@", _connection.cookieStorage);
+		}
+		_connection.hostSimulator = [OCHostSimulatorManager.sharedManager hostSimulatorForLocation:OCExtensionLocationIdentifierAllCores for:self];
 		_connection.preferredChecksumAlgorithm = _preferredChecksumAlgorithm;
 		_connection.actionSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil];
+		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDCoreOnline, OCConnectionSignalIDAuthenticationAvailable, nil]; // not ready for this, yet ("update retrieved set" can never finish when offline)
+		// _connection.propFindSignals = [NSSet setWithObjects: OCConnectionSignalIDNetworkAvailable, OCConnectionSignalIDAuthenticationAvailable, nil]; // will make sharing queries "hang", resulting in core not being able to stop
+		_connection.authSignals = [NSSet setWithObjects: OCConnectionSignalIDNetworkAvailable, nil]; // avoid an endless loop where requests are rescheduled due to an expired token, the auth method can't fetch a new token due to an unreachable network, and then the original request is rescheduled, resulting in an endless loop of reschedules and failures due to an unreachable network
 		_connection.delegate = self;
+
+		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
+		{
+			NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+
+			if (preferredLocalizations.count > 0)
+			{
+				NSString *acceptLanguage;
+
+				if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
+				{
+					_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
+				}
+			}
+		}
 
 		_connectionStatusSignalProviders = [NSMutableArray new];
 
-		if (@available(iOS 12, *))
+		NSNumber *override = nil;
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideAvailabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreNetworkPathMonitorSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			// OCCore depends on OCCoreServerStatusSignalProvider interfaces, so we force-override this signal if told to
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateForceTrue : OCCoreConnectionStatusSignalStateForceFalse);
+
+			[self addSignalProvider:[[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalAvailable initialState:signalState stateProvider:nil]];
 		}
-		else
+		if ((override = [self classSettingForOCClassSettingsKey:OCCoreOverrideReachabilitySignal]) != nil)
 		{
-			_reachabilityStatusSignalProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:self.bookmark.url.host];
+			OCCoreConnectionStatusSignalState signalState = (override.boolValue ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
+
+			_reachabilityStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:signalState stateProvider:nil];
 		}
+
+		if (_reachabilityStatusSignalProvider == nil)
+		{
+			_reachabilityStatusSignalProvider = [OCCoreNetworkMonitorSignalProvider new];
+		}
+
+		_rejectedIssueSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
+		_pauseConnectionSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalReachable initialState:OCCoreConnectionStatusSignalStateTrue stateProvider:nil];
+
 		_serverStatusSignalProvider = [OCCoreServerStatusSignalProvider new];
-		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectingStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnecting initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
+		_connectionStatusSignalProvider = [[OCCoreConnectionStatusSignalProvider alloc] initWithSignal:OCCoreConnectionStatusSignalConnected  initialState:OCCoreConnectionStatusSignalStateFalse stateProvider:nil];
 
 		[self addSignalProvider:_reachabilityStatusSignalProvider];
+		[self addSignalProvider:_rejectedIssueSignalProvider];
+		[self addSignalProvider:_pauseConnectionSignalProvider];
+
 		[self addSignalProvider:_serverStatusSignalProvider];
+		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
 		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
@@ -192,9 +369,14 @@
 
 - (void)dealloc
 {
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *deallocTags = (runIDTag != nil) ? @[@"DEALLOC", runIDTag] : @[@"DEALLOC"];
+
 	[self stopIPCObserveration];
 
 	[self removeSignalProviders];
+
+	OCTLogDebug(deallocTags, @"core deallocated");
 }
 
 - (void)unregisterEventHandler
@@ -214,43 +396,66 @@
 	}
 }
 
+#pragma mark - Managed
+- (void)setIsManaged:(BOOL)isManaged
+{
+	_isManaged = isManaged;
+}
+
 #pragma mark - Start / Stop
 - (void)startWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"START"], @"queuing start request in work queue");
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *startTags = (runIDTag != nil) ? @[@"START", runIDTag] : @[@"START"];
+
+	OCTLogDebug(startTags, @"queuing start request in work queue");
 
 	[self queueBlock:^{
-		OCTLogDebug(@[@"START"], @"performing start request");
+		OCTLogDebug(startTags, @"performing start request");
 
 		if (self->_state == OCCoreStateStopped)
 		{
 			__block NSError *startError = nil;
-			dispatch_group_t startGroup = nil;
 
 			[self recomputeConnectionStatus];
 
 			[self _updateState:OCCoreStateStarting];
 
-			startGroup = dispatch_group_create();
+			if (self.bookmark.needsHostUpdate)
+			{
+				// Do not start for bookmarks that are using a newer database version
+				startError = OCError(OCErrorHostUpdateRequired);
+			}
 
 			// Open vault (incl. database)
-			dispatch_group_enter(startGroup);
+			if (startError == nil)
+			{
+				// Configure vault / database
+				self.vault.database.sqlDB.allowMigrations = !OCProcessManager.isProcessExtension;
 
-			[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
-				startError = error;
-				dispatch_group_leave(startGroup);
-			}];
+				OCSyncExec(openVault, {
+					[self.vault openWithCompletionHandler:^(id sender, NSError *error) {
+						startError = error;
 
-			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+						if ([startError.domain isEqual:OCSQLiteDBErrorDomain] && (startError.code == OCSQLiteDBErrorMigrationsNotAllowed))
+						{
+							startError = OCError(OCErrorDatabaseMigrationRequired);
+						}
+
+						OCSyncExecDone(openVault);
+					}];
+				});
+			}
 
 			// Get latest sync anchor
-			dispatch_group_enter(startGroup);
-
-			[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
-				dispatch_group_leave(startGroup);
-			}];
-
-			dispatch_group_wait(startGroup, DISPATCH_TIME_FOREVER);
+			if (startError == nil)
+			{
+				OCSyncExec(retrieveSyncAnchor, {
+					[self retrieveLatestSyncAnchorWithCompletionHandler:^(NSError *error, OCSyncAnchor latestSyncAnchor) {
+						OCSyncExecDone(retrieveSyncAnchor);
+					}];
+				});
+			}
 
 			// Proceed with connecting - or stop
 			if (startError == nil)
@@ -258,11 +463,25 @@
 				// Setup sync engine
 				[self setupSyncEngine];
 
+				// Setup item policies
+				[self setupItemPolicies];
+
+				// Core is ready
+				[self _updateState:OCCoreStateReady];
+
+				// Attempt connecting
 				self->_attemptConnect = YES;
 				[self _attemptConnect];
+
+				// Register as message autoResolver
+				[self.messageQueue addAutoResolver:self];
+
+				// Register as message response handler
+				[self.messageQueue addResponseHandler:self];
 			}
 			else
 			{
+				OCLogError(@"STOPPED CORE due to startError=%@", startError);
 				self->_attemptConnect = NO;
 				[self _updateState:OCCoreStateStopped];
 			}
@@ -284,38 +503,62 @@
 
 - (void)stopWithCompletionHandler:(nullable OCCompletionHandler)completionHandler
 {
-	OCTLogDebug(@[@"STOP"], @"queuing stop request in connectivity queue");
+	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
+	NSArray<OCLogTagName> *stopTags = (runIDTag != nil) ? @[@"STOP", runIDTag] : @[@"STOP"];
+
+	OCTLogDebug(stopTags, @"queuing stop request in connectivity queue");
 
 	[self queueConnectivityBlock:^{
-		OCTLogDebug(@[@"STOP"], @"queuing stop request in work queue");
+		OCTLogDebug(stopTags, @"queuing stop request in work queue");
 
 		[self queueBlock:^{
 			__block NSError *stopError = nil;
 
-			OCTLogDebug(@[@"STOP"], @"performing stop request");
+			OCTLogDebug(stopTags, @"performing stop request");
 
-			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateStarting))
+			if ((self->_state == OCCoreStateRunning) || (self->_state == OCCoreStateReady) || (self->_state == OCCoreStateStarting))
 			{
 				__weak OCCore *weakSelf = self;
 
 				[self _updateState:OCCoreStateStopping];
 
 				// Cancel non-critical requests
-				OCTLogDebug(@[@"STOP"], @"cancelling non-critical requests");
+				OCTLogDebug(stopTags, @"cancelling non-critical requests");
 				[self.connection cancelNonCriticalRequests];
 
 				// Wait for running operations to finish
 				self->_runningActivitiesCompleteBlock = ^{
+					// Shut down fetch updates
+					{
+						OCCore *strongSelf = weakSelf;
+
+						@synchronized(strongSelf->_fetchUpdatesCompletionHandlers)
+						{
+							NSMutableArray <OCCoreItemListFetchUpdatesCompletionHandler> *fetchUpdatesCompletionHandlers = strongSelf->_fetchUpdatesCompletionHandlers;
+							strongSelf->_fetchUpdatesCompletionHandlers = [NSMutableArray new];
+
+							for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in fetchUpdatesCompletionHandlers)
+							{
+								completionHandler(OCError(OCErrorCancelled), NO);
+							}
+
+							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
+						}
+					}
+
+					// Tear down item policies
+					[weakSelf teardownItemPolicies];
+
 					// Shut down Sync Engine
-					OCWTLogDebug(@[@"STOP"], @"shutting down sync engine");
+					OCWTLogDebug(stopTags, @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];
 
 					// Shut down progress
-					OCWTLogDebug(@[@"STOP"], @"shutting down progress observation");
+					OCWTLogDebug(stopTags, @"shutting down progress observation");
 					[weakSelf _shutdownProgressObservation];
 
 					// Close connection
-					OCWTLogDebug(@[@"STOP"], @"connection: disconnecting");
+					OCWTLogDebug(stopTags, @"connection: disconnecting");
 					OCCore *strongSelf;
 					if ((strongSelf = weakSelf) != nil)
 					{
@@ -323,18 +566,18 @@
 					}
 
 					[weakSelf.connection disconnectWithCompletionHandler:^{
-						OCWTLogDebug(@[@"STOP"], @"connection: disconnected");
+						OCWTLogDebug(stopTags, @"connection: disconnected");
 
 						[weakSelf queueBlock:^{
 							// Close vault (incl. database)
-							OCWTLogDebug(@[@"STOP"], @"vault: closing");
+							OCWTLogDebug(stopTags, @"vault: closing");
 
 							OCSyncExec(waitForVaultClosing, {
 								[weakSelf.vault closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
-									OCWTLogDebug(@[@"STOP"], @"vault: closed");
+									OCWTLogDebug(stopTags, @"vault: closed");
 									stopError = error;
 
-									OCWTLogDebug(@[@"STOP"], @"STOPPED");
+									OCWTLogDebug(stopTags, @"STOPPED");
 									[weakSelf _updateState:OCCoreStateStopped];
 
 									OCSyncExecDone(waitForVaultClosing);
@@ -349,9 +592,16 @@
 					}];
 				};
 
-				if (self->_runningActivities == 0)
+				if (self->_runningActivities <= 0)
 				{
-					OCTLogDebug(@[@"STOP"], @"No running activities left. Proceeding.");
+					if (self->_runningActivities < 0)
+					{
+						OCTLogWarning(stopTags, @"BUG: negative runningActivities count (%ld)! Look for endActivity errors in the log! runningActivitiesStrings=%@", (long)self->_runningActivities, self->_runningActivitiesStrings);
+					}
+					else
+					{
+						OCTLogDebug(stopTags, @"No running activities left. Proceeding.");
+					}
 					if (self->_runningActivitiesCompleteBlock != nil)
 					{
 						dispatch_block_t runningActivitiesCompleteBlock = self->_runningActivitiesCompleteBlock;
@@ -362,12 +612,12 @@
 				}
 				else
 				{
-					OCTLogDebug(@[@"STOP"], @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
+					OCTLogDebug(stopTags, @"Waiting for running activities to complete: %@", self->_runningActivitiesStrings);
 				}
 			}
 			else if (self->_state != OCCoreStateStopping)
 			{
-				OCTLogError(@[@"STOP"], @"core already in the process of stopping");
+				OCTLogError(stopTags, @"core already in the process of stopping");
 				if (completionHandler != nil)
 				{
 					completionHandler(self, OCError(OCErrorRunningOperation));
@@ -375,7 +625,7 @@
 			}
 			else if (completionHandler != nil)
 			{
-				OCTLogWarning(@[@"STOP"], @"core already stopped");
+				OCTLogWarning(stopTags, @"core already stopped");
 				completionHandler(self, stopError);
 			}
 		}];
@@ -383,19 +633,26 @@
 }
 
 #pragma mark - Attempt Connect
-- (void)attemptConnect:(BOOL)doAttempt
-{
-	[self queueBlock:^{
-		self->_attemptConnect = doAttempt;
-
-		[self _attemptConnect];
-	}];
-}
-
 - (void)_attemptConnect
 {
+	if (self.connection.authenticationMethod.authenticationDataKnownInvalidDate != nil)
+	{
+		__weak OCCore *weakCore = self;
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), self->_queue, ^{
+			[weakCore __attemptConnect];
+		});
+	}
+	else
+	{
+		[self __attemptConnect];
+	}
+}
+
+- (void)__attemptConnect
+{
 	[self queueConnectivityBlock:^{
-		if ((self->_state == OCCoreStateStarting) && self->_attemptConnect)
+		if ((self->_state == OCCoreStateReady) && self->_attemptConnect)
 		{
 			// Open connection
 			dispatch_suspend(self->_connectivityQueue);
@@ -403,25 +660,40 @@
 			[self beginActivity:@"Connection connect"];
 
 			[self.connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+				if (error == nil)
+				{
+					OCChecksumAlgorithmIdentifier preferredUploadChecksumType;
+
+					// Use preferred upload checksum type if information is provided as part of capabilities and algorith is available locally
+					if ((preferredUploadChecksumType = self.connection.capabilities.preferredUploadChecksumType) != nil)
+					{
+						if (([OCChecksumAlgorithm algorithmForIdentifier:preferredUploadChecksumType] != nil) && (![self->_preferredChecksumAlgorithm isEqual:preferredUploadChecksumType]))
+						{
+							self->_preferredChecksumAlgorithm = preferredUploadChecksumType;
+						}
+					}
+				}
+
 				[self queueBlock:^{
 					// Change state
 					if (error == nil)
 					{
 						[self _updateState:OCCoreStateRunning];
 
+						[self setNeedsToProcessSyncRecords];
+
 						if (self.automaticItemListUpdatesEnabled)
 						{
 							[self startCheckingForUpdates];
 						}
+
+						[self recoverPendingUpdateJobs];
 					}
 
 					// Relay error and issues to delegate
 					if ((error != nil) || (issue != nil))
 					{
-						if ((self->_delegate!=nil) && [self->_delegate respondsToSelector:@selector(core:handleError:issue:)])
-						{
-							[self->_delegate core:self handleError:error issue:issue];
-						}
+						[self sendError:error issue:issue];
 					}
 
 					dispatch_resume(self->_connectivityQueue);
@@ -444,14 +716,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath forQuery:YES];
+			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forQuery:YES];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil];
 			}
 		}
 	}];
@@ -480,43 +752,134 @@
 	}];
 }
 
-- (void)startQuery:(OCQuery *)query
+- (void)_startCustomQuery:(OCQuery *)query
 {
-	if (query == nil) { return; }
+	[self beginActivity:@"Retrieving full query results from custom query"];
 
-	// Add query to list of queries
 	[self queueBlock:^{
-		[self->_queries addObject:query];
-	}];
+		// Update query state to "started"
+		if (query.state == OCQueryStateStopped)
+		{
+			if (query.stopAction.cancelled)
+			{
+				// Replaced cancelled stop actions
+				query.stopAction = [OCCancelAction new];
+			}
 
-	if (query.querySinceSyncAnchor == nil)
+			query.state = OCQueryStateStarted;
+		}
+
+		// Retrieve initial items from query
+		[query provideFullQueryResultsForCore:self resultHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable initialItems) {
+			[self queueBlock:^{
+				if ((error == nil) && (initialItems != nil))
+				{
+					[query setFullQueryResults:[[NSMutableArray alloc] initWithArray:initialItems]];
+					query.state = OCQueryStateContentsFromCache;
+
+					[query setNeedsRecomputation];
+				}
+				else
+				{
+					OCLogError(@"Error=%@, initialItems=%@ asking query=%@ to provide full query results.", error, initialItems, query);
+				}
+
+				query.state = OCQueryStateIdle;
+
+				[self endActivity:@"Retrieving full query results from custom query"];
+			}];
+		}];
+	}];
+}
+
+- (void)startQuery:(OCCoreQuery *)coreQuery
+{
+	if (coreQuery == nil) { return; }
+
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		// Add query to list of queries
+		[self queueBlock:^{
+			[self->_queries addObject:query];
+		}];
+
+		if (!query.isCustom)
+		{
+			if (query.querySinceSyncAnchor == nil)
+			{
+				[self _startItemListTaskForQuery:query];
+			}
+			else
+			{
+				[self _startSyncAnchorDatabaseRequestForQuery:query];
+			}
+		}
+		else
+		{
+			[self _startCustomQuery:query];
+		}
 	}
-	else
+
+	if (shareQuery != nil)
 	{
-		[self _startSyncAnchorDatabaseRequestForQuery:query];
+		[self startShareQuery:shareQuery];
 	}
 }
 
-- (void)reloadQuery:(OCQuery *)query
+- (void)reloadQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	if (query.querySinceSyncAnchor == nil)
+	if (self.state != OCCoreStateRunning) { return; }
+
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
 	{
-		[self _startItemListTaskForQuery:query];
+		if (!query.isCustom)
+		{
+			if (query.querySinceSyncAnchor == nil)
+			{
+				[self _startItemListTaskForQuery:query];
+			}
+		}
+		else
+		{
+			[self _startCustomQuery:query];
+		}
+	}
+
+	if (shareQuery != nil)
+	{
+		[self reloadShareQuery:shareQuery];
 	}
 }
 
-- (void)stopQuery:(OCQuery *)query
+- (void)stopQuery:(OCCoreQuery *)coreQuery
 {
-	if (query == nil) { return; }
+	if (coreQuery == nil) { return; }
 
-	[self queueBlock:^{
-		[self->_queries removeObject:query];
-		query.state = OCQueryStateStopped;
-	}];
+	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
+	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	if (query != nil)
+	{
+		[self queueBlock:^{
+			[query.stopAction cancel];
+
+			query.state = OCQueryStateStopped;
+			[self->_queries removeObject:query];
+		}];
+	}
+
+	if (shareQuery != nil)
+	{
+		[self stopShareQuery:shareQuery];
+	}
 }
 
 #pragma mark - Tools
@@ -530,6 +893,12 @@
 	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
+}
+
+#pragma mark - Message queue
+- (OCMessageQueue *)messageQueue
+{
+	return (OCMessageQueue.globalQueue);
 }
 
 #pragma mark - Memory configuration
@@ -550,65 +919,104 @@
 }
 
 #pragma mark - Inter-Process change notification/handling
-- (NSString *)ipcNotificationName
-{
-	if (_ipNotificationName == nil)
-	{
-		_ipNotificationName = [[NSString alloc] initWithFormat:@"com.owncloud.occore.update.%@", self.bookmark.uuid.UUIDString];
-	}
-
-	return (_ipNotificationName);
-}
-
 - (void)startIPCObservation
 {
-	[_ipNotificationCenter addObserver:self forName:self.ipcNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.coreUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
 		[core handleIPCChangeNotification];
 	}];
+
+	[_ipNotificationCenter addObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCCore *  _Nonnull core, OCIPCNotificationName  _Nonnull notificationName) {
+		[core handleAuthDataChangedNotification:nil];
+	}];
+
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAuthDataChangedNotification:) name:OCBookmarkAuthenticationDataChangedNotification object:nil];
 }
 
 - (void)stopIPCObserveration
 {
-	[_ipNotificationCenter removeObserver:self forName:self.ipcNotificationName];
-}
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCBookmarkAuthenticationDataChangedNotification object:self.bookmark];
 
-- (void)_postIPCChangeNotification
-{
-	[_ipNotificationCenter postNotificationForName:self.ipcNotificationName ignoreSelf:YES];
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.bookmarkAuthUpdateNotificationName];
+	[_ipNotificationCenter removeObserver:self forName:self.bookmark.coreUpdateNotificationName];
 }
 
 - (void)postIPCChangeNotification
 {
 	// Wait for database transaction to settle and current task on the queue to finish before posting the notification
-	@synchronized(OCIPNotificationCenter.class)
+	@synchronized(_ipChangeNotificationRateLimiter)
 	{
 		_pendingIPCChangeNotifications++;
+
+		if (_pendingIPCChangeNotifications == 1)
+		{
+			[self beginActivity:@"Post IPC change notification"];
+		}
 	}
 
-	[self beginActivity:@"Post IPC change notification"];
-	[self queueBlock:^{
-		// Transaction is not yet closed, so post IPC change notification only after changes have settled
-		[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
-			@synchronized(OCIPNotificationCenter.class)
-			{
-				if (self->_pendingIPCChangeNotifications != 0)
+	// Rate-limit IP change notifications
+	[_ipChangeNotificationRateLimiter runRateLimitedBlock:^{
+		[self queueBlock:^{
+			// Transaction is not yet closed, so post IPC change notification only after changes have settled
+			[self.database.sqlDB executeOperation:^NSError *(OCSQLiteDB *db) {
+				// Post IPC change notification
+				@synchronized(self->_ipChangeNotificationRateLimiter)
 				{
-					self->_pendingIPCChangeNotifications = 0;
-					[self _postIPCChangeNotification];
+					if (self->_pendingIPCChangeNotifications != 0)
+					{
+						self->_pendingIPCChangeNotifications = 0;
+						[self->_ipNotificationCenter postNotificationForName:self.bookmark.coreUpdateNotificationName ignoreSelf:YES];
+
+						[self endActivity:@"Post IPC change notification"];
+					}
 				}
-			}
-			[self endActivity:@"Post IPC change notification"];
-			return(nil);
-		} completionHandler:nil];
+				return(nil);
+			} completionHandler:nil];
+		}];
 	}];
 }
 
 - (void)handleIPCChangeNotification
 {
+	if (self.state == OCCoreStateStopped)
+	{
+		OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (1)");
+		return;
+	}
+
 	OCLogDebug(@"Received IPC change notification");
 
 	[self queueBlock:^{
+		if (self.state == OCCoreStateStopped)
+		{
+			OCLogWarning(@"IPC change notification received by stopped core - possibly caused by strong references to the core (2)");
+			return;
+		}
+
 		[self _checkForChangesByOtherProcessesAndUpdateQueries];
+	}];
+}
+
+- (void)handleAuthDataChangedNotification:(NSNotification *)notification
+{
+	OCBookmark *notificationBookmark = OCTypedCast(notification.object, OCBookmark);
+
+	if (!((notification == nil) || ((notificationBookmark != nil) && [notificationBookmark.uuid isEqual:_bookmark.uuid])))
+	{
+		return;
+	}
+
+	[self queueBlock:^{
+		if (self->_state == OCCoreStateRunning)
+		{
+			// Trigger a small request to check auth availability
+			[self startCheckingForUpdates];
+		}
+
+		if ((self->_state == OCCoreStateReady) && (self->_connection.state != OCConnectionStateConnecting))
+		{
+			// Re-attempt connection
+			[self _attemptConnect];
+		}
 	}];
 }
 
@@ -716,21 +1124,144 @@
 	}];
 }
 
+#pragma mark - Error handling
+- (BOOL)sendError:(NSError *)error issue:(OCIssue *)issue
+{
+	if ((error != nil) || (issue != nil))
+	{
+		id<OCCoreDelegate> delegate;
+
+		if ([error isOCErrorWithCode:OCErrorAuthorizationMethodNotAllowed])
+		{
+			// Stop all connectivity via signal provider if an authentication method is not allowed
+			[_pauseConnectionSignalProvider setState:OCCoreConnectionStatusSignalStateFalse];
+		}
+
+		if (((delegate = self.delegate) != nil) && [self.delegate respondsToSelector:@selector(core:handleError:issue:)])
+		{
+			if (issue != nil)
+			{
+				OCIssueSignature issueSignature = nil;
+
+				switch (issue.type)
+				{
+					case OCIssueTypeCertificate:
+					case OCIssueTypeURLRedirection:
+						if ((issueSignature = issue.signature) != nil)
+						{
+							@synchronized(_unsolvedIssueSignatures)
+							{
+								// Do not re-send unsolved issues
+								if ([_unsolvedIssueSignatures containsObject:issueSignature])
+								{
+									OCLogDebug(@"Blocked duplicate issue %@ (signature: %@)", issue, issueSignature);
+									return (NO);
+								}
+
+								// New unsolved issue -> add and add handler to issue
+								[_unsolvedIssueSignatures addObject:issueSignature];
+
+								__weak OCCore *weakCore = self;
+
+								[issue appendIssueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+									OCCore *strongCore;
+									NSMutableSet<OCIssueSignature> *unsolvedIssueSignatures;
+									NSMutableSet<OCIssueSignature> *rejectedIssueSignatures;
+
+									if (((strongCore = weakCore) != nil) &&
+									    ((unsolvedIssueSignatures = strongCore->_unsolvedIssueSignatures) != nil) &&
+									    ((rejectedIssueSignatures = strongCore->_rejectedIssueSignatures) != nil))
+									{
+										BOOL unsolvedListIsEmpty = NO;
+
+										if (decision == OCIssueDecisionApprove)
+										{
+											OCLogDebug(@"Issue %@ approved, removing from list of unsolved issue (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures removeObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if (decision == OCIssueDecisionReject)
+										{
+											OCLogDebug(@"Issue %@ rejected, removing from list of unsolved issue, adding to list of rejected issues (signature: %@)", issue, issueSignature);
+
+											@synchronized(unsolvedIssueSignatures)
+											{
+												[unsolvedIssueSignatures removeObject:issueSignature];
+												[rejectedIssueSignatures addObject:issueSignature];
+
+												unsolvedListIsEmpty = (unsolvedIssueSignatures.count == 0);
+											}
+										}
+
+										if ((strongCore.state != OCCoreStateStopping) && (strongCore.state != OCCoreStateStopped))
+										{
+											[strongCore _updateRejectedIssueSignalProvider];
+
+											if (unsolvedListIsEmpty)
+											{
+												[strongCore connectionChangedState:strongCore.connection];
+											}
+										}
+									}
+								}];
+							}
+						}
+					break;
+
+					default:
+					break;
+				}
+			}
+
+			if ([error.domain isEqual:OCHTTPStatusErrorDomain])
+			{
+				if (error.code >= 400)
+				{
+					[_serverStatusSignalProvider reportConnectionRefusedError:error];
+					return (YES);
+				}
+			}
+
+			[delegate core:self handleError:error issue:issue];
+
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+- (void)_updateRejectedIssueSignalProvider
+{
+	BOOL rejectedListIsEmpty;
+
+	@synchronized(_unsolvedIssueSignatures)
+	{
+		rejectedListIsEmpty = (_rejectedIssueSignatures.count == 0);
+	}
+
+	_rejectedIssueSignalProvider.state = (rejectedListIsEmpty ? OCCoreConnectionStatusSignalStateTrue : OCCoreConnectionStatusSignalStateFalse);
+}
+
+#pragma mark - Busy handling
+- (OCCoreBusyStatusHandler)busyStatusHandler
+{
+	return (self.database.sqlDB.busyStatusHandler);
+}
+
+- (void)setBusyStatusHandler:(OCCoreBusyStatusHandler)busyStatusHandler
+{
+	self.database.sqlDB.busyStatusHandler = busyStatusHandler;
+}
+
 #pragma mark - ## Commands
-- (nullable NSProgress *)shareItem:(OCItem *)item options:(nullable OCShareOptions)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (nullable NSProgress *)requestAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
-
-- (nullable NSProgress *)terminateAvailableOfflineCapabilityForItem:(OCItem *)item completionHandler:(nullable OCCoreCompletionHandler)completionHandler
-{
-	return(nil); // Stub implementation
-}
 
 #pragma mark - Progress tracking
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item
@@ -845,6 +1376,12 @@
 			{
 				[self queueBlock:^{
 					[self unregisterProgress:progress forLocalID:progress.localID];
+
+					if (progress.isCancelled)
+					{
+						self->_nextSchedulingDate = nil;
+						[self setNeedsToProcessSyncRecords];
+					}
 				}];
 			}
 		}
@@ -893,6 +1430,209 @@
 	}
 
 	return (resultProgressObjects);
+}
+
+
+#pragma mark - Item lookup and information
+- (OCCoreItemTracking)trackItemAtPath:(OCPath)inPath trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+{
+	NSObject *trackingObject = [NSObject new];
+	__weak NSObject *weakTrackingObject = trackingObject;
+	__weak OCCore *weakSelf = self;
+
+	// Detect unnormalized path
+	if ([inPath isUnnormalizedPath])
+	{
+		trackingHandler(OCError(OCErrorUnnormalizedPath), nil, YES);
+		return (nil);
+	}
+
+	[self queueBlock:^{
+		OCPath path = inPath;
+		NSError *error = nil;
+		OCItem *item = nil;
+		OCQuery *query = nil;
+		NSObject *trackingObject = weakTrackingObject;
+		__block BOOL isFirstInvocation = YES;
+		OCCore *core = weakSelf;
+
+		if (trackingObject == nil)
+		{
+			return;
+		}
+
+		if (core == nil)
+		{
+			trackingHandler(OCError(OCErrorInternal), nil, YES);
+			return;
+		}
+
+		if ((item = [core cachedItemAtPath:path error:&error]) == nil)
+		{
+			// No item for this path found in cache
+			if (path.itemTypeByPath == OCItemTypeFile)
+			{
+				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
+				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
+				{
+					path = path.normalizedDirectoryPath;
+				}
+			}
+		}
+
+		if (item != nil)
+		{
+			// Item in cache
+
+			// Check if path type matches item type
+			if (path.itemTypeByPath != item.type)
+			{
+				// Path type doesn't match path normalization -> fix the path
+				path = [path normalizedPathForItemType:item.type];
+			}
+
+			// Start custom query to track changes (won't touch network, but will provide updates)
+			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path] inputFilter:nil];
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					if ((query.state == OCQueryStateContentsFromCache) || (query.state == OCQueryStateIdle))
+					{
+						trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+				}
+			};
+		}
+		else
+		{
+			// Item not in cache - create full-fledged query
+			__block BOOL lastSentItemWasNil = YES;
+
+			query = [OCQuery queryForPath:path];
+			query.includeRootItem = YES;
+
+			NSString *pathAsDirectory = path.normalizedDirectoryPath;
+
+			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+				if (weakTrackingObject != nil)
+				{
+					OCItem *item = nil;
+
+					for (OCItem *queryItem in query.queryResults)
+					{
+						if ([queryItem.path isEqual:path] || [queryItem.path isEqual:pathAsDirectory])
+						{
+							item = queryItem;
+							break;
+						}
+					}
+
+					if ((item == nil) &&
+					    lastSentItemWasNil &&
+					    !isFirstInvocation)
+					{
+						// Avoid multiple invocations of tracking handler if the item is still nil
+						return;
+					}
+
+					lastSentItemWasNil = (item == nil);
+
+					if (item != nil)
+					{
+						trackingHandler(nil, item, isFirstInvocation);
+						isFirstInvocation = NO;
+					}
+					else
+					{
+						if (query.state == OCQueryStateTargetRemoved)
+						{
+							trackingHandler(nil, nil, isFirstInvocation);
+							isFirstInvocation = NO;
+						}
+					}
+				}
+			};
+		}
+
+		if (query != nil)
+		{
+			__weak OCCore *weakCore = core;
+			__weak OCQuery *weakQuery = query;
+
+			[core startQuery:query];
+
+			// Stop query as soon as trackingObject is deallocated
+			[OCDeallocAction addAction:^{
+				OCCore *core = weakCore;
+				OCQuery *query = weakQuery;
+
+				if ((core != nil) && (query != nil))
+				{
+					[core stopQuery:query];
+				}
+			} forDeallocationOfObject:trackingObject];
+		}
+	}];
+
+	return (trackingObject);
+}
+
+- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	__block OCItem *cachedItem = nil;
+
+	if (path != nil)
+	{
+		OCSyncExec(retrieveCachedItem, {
+			[self.vault.database retrieveCacheItemsAtPath:path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				cachedItem = items.firstObject;
+
+				if (outError != NULL)
+				{
+					*outError = error;
+				}
+
+				OCSyncExecDone(retrieveCachedItem);
+			}];
+		});
+	}
+	else
+	{
+		if (outError != NULL)
+		{
+			*outError = OCError(OCErrorInsufficientParameters);
+		}
+	}
+
+	return (cachedItem);
+}
+
+- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	NSString *path = [parentPath stringByAppendingPathComponent:name];
+
+	if (isDirectory)
+	{
+		path = [path normalizedDirectoryPath];
+	}
+
+	return ([self cachedItemAtPath:path error:outError]);
+}
+
+- (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	return ([self cachedItemInParentPath:parentItem.path withName:name isDirectory:isDirectory error:outError]);
+}
+
+- (NSURL *)localCopyOfItem:(OCItem *)item
+{
+	if (item.localRelativePath != nil)
+	{
+		return ([self localURLForItem:item]);
+	}
+
+	return (nil);
 }
 
 #pragma mark - Item location & directory lifecycle
@@ -1033,6 +1773,8 @@
 					toItem.locallyModified = fromItem.locallyModified;
 					toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 					toItem.localRelativePath = [_vault relativePathForItem:toItem];
+					toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+					toItem.fileClaim = fromItem.fileClaim;
 				}
 			}
 			else if (adjustLocalMetadata)
@@ -1041,6 +1783,8 @@
 				toItem.locallyModified = fromItem.locallyModified;
 				toItem.localCopyVersionIdentifier = fromItem.localCopyVersionIdentifier;
 				toItem.localRelativePath = fromItem.localRelativePath;
+				toItem.downloadTriggerIdentifier = fromItem.downloadTriggerIdentifier;
+				toItem.fileClaim = fromItem.fileClaim;
 			}
 		}
 	}
@@ -1052,35 +1796,160 @@
 	return (error);
 }
 
+#pragma mark - Event target tools
+- (OCEventTarget *)_eventTargetWithCoreSelector:(SEL)selector userInfo:(NSDictionary *)userInfo ephermalUserInfo:(NSDictionary *)ephermalUserInfo
+{
+	NSMutableDictionary *targetUserInfo = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+		NSStringFromSelector(selector), OCEventUserInfoKeySelector,
+	nil];
+
+	if (userInfo != nil)
+	{
+		[targetUserInfo addEntriesFromDictionary:userInfo];
+	}
+
+	return ([OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:targetUserInfo ephermalUserInfo:ephermalUserInfo]);
+}
+
 #pragma mark - OCEventHandler methods
 - (void)handleEvent:(OCEvent *)event sender:(id)sender
 {
-	[self beginActivity:@"Handling event"];
+	dispatch_block_t queueBlock = nil, completionHandler = nil;
+	NSString *eventActivityString = [[NSString alloc] initWithFormat:@"Handling event %@", event];
 
-	[self queueBlock:^{
+	[self beginActivity:eventActivityString];
+
+	completionHandler = ^{
+		[self endActivity:eventActivityString];
+	};
+
+	NSString *selectorName;
+
+	if ((selectorName = OCTypedCast(event.userInfo[OCEventUserInfoKeySelector], NSString)) != nil)
+	{
+		// Selector specified -> route event directly to selector
+		SEL eventHandlingSelector;
+
+		if ((eventHandlingSelector = NSSelectorFromString(selectorName)) != NULL)
+		{
+			// Below is identical to [self performSelector:eventHandlingSelector withObject:event withObject:sender], but in an ARC-friendly manner.
+			void (*impFunction)(id, SEL, OCEvent *, id) = (void *)[((NSObject *)self) methodForSelector:eventHandlingSelector];
+
+			queueBlock = ^{
+				if (impFunction != NULL)
+				{
+					impFunction(self, eventHandlingSelector, event, sender);
+				}
+			};
+		}
+	}
+	else
+	{
+		// Handle by event type
 		switch (event.eventType)
 		{
-			case OCEventTypeRetrieveThumbnail:
-				[self _handleRetrieveThumbnailEvent:event sender:sender];
+			case OCEventTypeRetrieveThumbnail: {
+				queueBlock = ^{
+					[self _handleRetrieveThumbnailEvent:event sender:sender];
+				};
+			}
 			break;
 
-			case OCEventTypeRetrieveItemList:
-				[self _handleRetrieveItemListEvent:event sender:sender];
+			case OCEventTypeRetrieveItemList: {
+				queueBlock = ^{
+					[self _handleRetrieveItemListEvent:event sender:sender];
+				};
+			}
 			break;
 
 			default:
-				[self _handleSyncEvent:event sender:sender];
+				// Critical event - queue synchronously
+				[self queueSyncEvent:event sender:sender];
+				completionHandler();
 			break;
 		}
+	}
 
-		[self endActivity:@"Handling event"];
+	if (queueBlock != nil)
+	{
+		[self queueBlock:^{
+			queueBlock();
+			completionHandler();
+		}];
+	}
+}
+
+#pragma mark - Item usage
+- (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	// Do not register item usage updates if the last usage was less than 5 seconds ago
+	if (item.lastUsed.timeIntervalSinceNow > -5)
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+		return;
+	}
+
+	[self beginActivity:@"Registering item usage"];
+
+	[self queueBlock:^{
+		OCItem *updatedItem = item;
+
+		if (updatedItem.databaseID != nil)
+		{
+			OCItem *latestItem;
+
+			if ((latestItem = [self retrieveLatestVersionForLocalIDOfItem:updatedItem withError:NULL]) != nil)
+			{
+				updatedItem = latestItem;
+			}
+		}
+
+		if (updatedItem.lastUsed.timeIntervalSinceNow < -5)
+		{
+			updatedItem.lastUsed = [NSDate new];
+
+			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+		}
+
+		[self endActivity:@"Registering item usage"];
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
 	}];
+}
+
+#pragma mark - Indicating activity requiring the core
+- (void)performInRunningCore:(void(^)(dispatch_block_t completionHandler))activityBlock withDescription:(NSString *)description
+{
+	if ((activityBlock != nil) && (description != nil))
+	{
+		[self beginActivity:description];
+
+		activityBlock(^{
+			[self endActivity:description];
+		});
+	}
+	else
+	{
+		OCLogError(@"Paramter(s) missing from %s call", __PRETTY_FUNCTION__);
+	}
+}
+
+#pragma mark - Schedule work in the core's queue
+- (void)scheduleInCoreQueue:(dispatch_block_t)block
+{
+	[self queueBlock:block];
 }
 
 #pragma mark - Busy count
 - (void)beginActivity:(NSString *)description
 {
-	OCLogDebug(@"Beginning activity '%@' ..", description);
+	OCLogVerbose(@"Beginning activity '%@' ..", description);
 	
 	@synchronized(OCCore.class)
 	{
@@ -1100,7 +1969,7 @@
 
 - (void)endActivity:(NSString *)description
 {
-	OCLogDebug(@"Ended activity '%@' ..", description);
+	OCLogVerbose(@"Ended activity '%@' ..", description);
 	[self queueBlock:^{
 		BOOL allActivitiesEnded = NO;
 
@@ -1141,10 +2010,31 @@
 #pragma mark - Queues
 - (void)queueBlock:(dispatch_block_t)block
 {
-	if (block != nil)
+	[self queueBlock:block allowInlining:NO];
+}
+
+- (void)queueBlock:(dispatch_block_t)block allowInlining:(BOOL)allowInlining
+{
+	if (block == nil) { return; }
+
+	if (allowInlining)
 	{
-		dispatch_async(_queue, block);
+		if (pthread_getspecific(_queueKey) == (__bridge void *)self)
+		{
+			block();
+			return;
+		}
 	}
+
+	block = [block copy];
+
+	dispatch_async(_queue, ^{
+		pthread_setspecific(self->_queueKey, (__bridge void *)self);
+
+		block();
+
+		pthread_setspecific(self->_queueKey, NULL);
+	});
 }
 
 - (void)queueConnectivityBlock:(dispatch_block_t)block
@@ -1168,9 +2058,15 @@
 			{
 				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
 				OCProgress *sourceProgress = nil;
+				__weak OCCore *weakCore = self;
 
 				resolvedProgress = [NSProgress indeterminateProgress];
 				resolvedProgress.cancellable = progress.cancellable;
+
+				resolvedProgress.cancellationHandler = ^{
+					[progress cancel];
+					[weakCore setNeedsToProcessSyncRecords];
+				};
 
 				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
 				{
@@ -1238,16 +2134,33 @@
 
 @end
 
+OCClassSettingsKey OCCoreAddAcceptLanguageHeader = @"add-accept-language-header";
 OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes = @"thumbnail-available-for-mime-type-prefixes";
+OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-signal";
+OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
+OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
+OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
 
 OCConnectionSignalID OCConnectionSignalIDCoreOnline = @"coreOnline";
+OCConnectionSignalID OCConnectionSignalIDNetworkAvailable = @"networkAvailable";
 
 OCCoreOption OCCoreOptionImportByCopying = @"importByCopying";
 OCCoreOption OCCoreOptionImportTransformation = @"importTransformation";
 OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmediatelyIfOfflineOrUnavailable";
+OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
+OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
+OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
+OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
+OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
+OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
+OCCoreOption OCCoreOptionConvertExistingLocalDownloads = @"convertExistingLocalDownloads";
+OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
+OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
+
+OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

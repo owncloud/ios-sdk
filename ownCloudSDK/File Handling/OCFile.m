@@ -20,13 +20,6 @@
 
 @implementation OCFile
 
-@synthesize fileID = _fileID;
-@synthesize eTag = _eTag;
-
-@synthesize item = _item;
-@synthesize checksum = _checksum;
-@synthesize url = _url;
-
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
@@ -43,6 +36,8 @@
 		_item = [decoder decodeObjectOfClass:[OCItem class] forKey:@"item"];
 		_checksum = [decoder decodeObjectOfClass:[OCChecksum class] forKey:@"checksum"];
 		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
+
+		_claim = [decoder decodeObjectOfClass:[OCClaim class] forKey:@"claim"];
 	}
 
 	return (self);
@@ -56,6 +51,8 @@
 	[coder encodeObject:_item forKey:@"item"];
 	[coder encodeObject:_checksum forKey:@"checksum"];
 	[coder encodeObject:_url forKey:@"url"];
+
+	[coder encodeObject:_claim forKey:@"claim"];
 }
 
 @end

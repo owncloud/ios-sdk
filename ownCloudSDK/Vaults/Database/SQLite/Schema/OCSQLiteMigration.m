@@ -18,6 +18,7 @@
 
 #import "OCSQLiteMigration.h"
 #import "OCSQLiteTableSchema.h"
+#import "OCLogger.h"
 
 @implementation OCSQLiteMigration
 
@@ -37,6 +38,7 @@
 {
 	if (_appliedSchemas >= _applicableSchemas.count)
 	{
+		// Schemas are up-to-date
 		if (completionHandler != nil)
 		{
 			completionHandler(db, nil);
@@ -44,6 +46,7 @@
 	}
 	else
 	{
+		// One or more schemas need to be updated
 		OCSQLiteTableSchema *applySchema = _applicableSchemas[_appliedSchemas];
 
 		void (^schemaCompletionHandler)(NSError *error, BOOL isCreation) = ^(NSError *error, BOOL isCreation){
@@ -95,14 +98,22 @@
 		if (_versionsByTableName[applySchema.tableName] != nil)
 		{
 			// Migrate to new version
+			OCLog(@"Migrating '%@' to version %lu", applySchema.tableName, (unsigned long)applySchema.version);
+
 			if (applySchema.upgradeMigrator != nil)
 			{
 				// Run upgrade migration
-				applySchema.upgradeMigrator(db, applySchema, ^(NSError *error) { schemaCompletionHandler(error, NO); });
+				applySchema.migrationProgress = self.progress;
+				applySchema.upgradeMigrator(db, applySchema, ^(NSError *error) {
+					OCLog(@"Migrated '%@' to version %lu with error=%@", applySchema.tableName, (unsigned long)applySchema.version, error);
+					schemaCompletionHandler(error, NO);
+				});
 			}
 			else
 			{
 				// No migrator to execute
+				OCLog(@"Migrated '%@' to version %lu (none needed)", applySchema.tableName, (unsigned long)applySchema.version);
+
 				_appliedSchemas++;
 				[self applySchemasToDatabase:db completionHandler:completionHandler];
 			}
@@ -110,6 +121,8 @@
 		else
 		{
 			// Create
+			OCLog(@"Creating new table '%@' (version %lu)", applySchema.tableName, (unsigned long)applySchema.version);
+
 			[db executeOperation:^NSError *(OCSQLiteDB *db) {
 				__block NSError *returnError = nil;
 
@@ -121,12 +134,22 @@
 					if (returnError!=nil) { *stop = YES; }
 				}];
 
+				OCLog(@"Created new table '%@' (version %lu)", applySchema.tableName, (unsigned long)applySchema.version);
+
 				return (returnError);
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				schemaCompletionHandler(error, YES);
 			}];
 		}
 	}
+}
+
++ (nonnull NSArray<OCLogTagName> *)logTags {
+	return (@[ @"SQL", @"Migration" ]);
+}
+
+- (nonnull NSArray<OCLogTagName> *)logTags {
+	return (@[ @"SQL", @"Migration" ]);
 }
 
 @end

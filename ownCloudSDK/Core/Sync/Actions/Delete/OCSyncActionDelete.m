@@ -18,15 +18,43 @@
 
 #import "OCSyncActionDelete.h"
 
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteWithForce = @"delete.withForce";
+static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDeleteCancel = @"delete.cancel";
+
 @implementation OCSyncActionDelete
+
+OCSYNCACTION_REGISTER_ISSUETEMPLATES
+
++ (OCSyncActionIdentifier)identifier
+{
+	return(OCSyncActionIdentifierDeleteLocal);
+}
+
++ (NSArray<OCMessageTemplate *> *)actionIssueTemplates
+{
+	return (@[
+		// Cancel
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteCancel categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
+		] options:nil],
+
+		// Cancel or Force Delete
+		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDeleteWithForce categoryName:nil choices:@[
+			// Drop sync record
+			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
+
+			// Reschedule sync record with match requirement turned off
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"forceDelete" label:OCLocalizedString(@"Delete",@"") metaData:nil]
+		] options:nil]
+	]);
+}
 
 #pragma mark - Initializer
 - (instancetype)initWithItem:(OCItem *)item requireMatch:(BOOL)requireMatch
 {
 	if ((self = [super initWithItem:item]) != nil)
 	{
-		self.identifier = OCSyncActionIdentifierDeleteLocal;
-
 		self.requireMatch = requireMatch;
 
 		self.actionEventType = OCEventTypeDelete;
@@ -43,9 +71,37 @@
 
 	if ((itemToDelete = self.localItem) != nil)
 	{
+		// Item itself
 		[itemToDelete addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 
 		syncContext.removedItems = @[ itemToDelete ];
+
+		// Contained (associated) items
+		if (itemToDelete.type == OCItemTypeCollection)
+		{
+			NSMutableArray <OCItem *> *removedItems = [syncContext.removedItems mutableCopy];
+			NSMutableArray <OCLocalID> *removedLocalIDs = [NSMutableArray new];
+
+			[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:itemToDelete.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				for (OCItem *item in items)
+				{
+					[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
+					OCLogDebug(@"Preflight: delete contained %@", OCLogPrivate(item.path));
+
+					[removedItems addObject:item];
+					[removedLocalIDs addObject:item.localID];
+				}
+			}];
+
+			if (removedItems.count > 0)
+			{
+				syncContext.removedItems = removedItems;
+
+				self.associatedItemLocalIDs = removedLocalIDs;
+				self.associatedItemLaneTags = [self generateLaneTagsFromItems:removedItems];
+			}
+		}
 	}
 }
 
@@ -55,11 +111,44 @@
 
 	if ((itemToRestore = self.localItem) != nil)
 	{
+		// Item itself
 		[itemToRestore removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
-
-		itemToRestore.removed = NO;
+		if ([itemToRestore countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
+		{
+			itemToRestore.removed = NO;
+		}
 
 		syncContext.updatedItems = @[ itemToRestore ];
+
+		// Contained (associated) items
+		if (self.associatedItemLocalIDs.count > 0)
+		{
+			NSMutableArray <OCItem *> *updatedItems;
+
+			if ((updatedItems = [syncContext.updatedItems mutableCopy]) != nil)
+			{
+				for (OCLocalID associatedItemLocalID in self.associatedItemLocalIDs)
+				{
+					[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+						if (item != nil)
+						{
+							OCLogDebug(@"Deschedule: restore delete contained %@", OCLogPrivate(item.path));
+
+							[item removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
+							if ([item countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
+							{
+								item.removed = NO;
+							}
+
+							[updatedItems addObject:item];
+						}
+					}];
+				}
+
+				syncContext.updatedItems = updatedItems;
+			}
+		}
 	}
 }
 
@@ -118,14 +207,59 @@
 {
 	OCEvent *event = syncContext.event;
 	OCSyncRecord *syncRecord = syncContext.syncRecord;
+	OCSyncRecordID syncRecordID = syncContext.syncRecord.recordID;
 	OCCoreSyncInstruction resultInstruction = OCCoreSyncInstructionNone;
 
 	[syncContext completeWithError:event.error core:self.core item:self.localItem parameter:event.result];
 
 	if ((event.error == nil) && (event.result != nil))
 	{
-		[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+		// Item itself
+		[self.localItem removeSyncRecordID:syncRecordID activity:OCItemSyncActivityDeleting];
 		syncContext.removedItems = @[ self.localItem ];
+
+		// Contained (associated) items
+		if (_associatedItemLocalIDs != nil)
+		{
+			NSMutableArray <OCLocalID> *remainingLocalIDs = [_associatedItemLocalIDs mutableCopy];
+
+			NSMutableArray <OCItem *> *removedItems = [syncContext.removedItems mutableCopy];
+			NSMutableArray <OCItem *> *updatedItems = [NSMutableArray new];
+
+			// Items that are still contained in the deleted item itself
+			if (self.localItem.type == OCItemTypeCollection)
+			{
+				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:self.localItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+					for (OCItem *item in items)
+					{
+						OCLogDebug(@"Success: remove delete contained %@", OCLogPrivate(item.path));
+						[item removeSyncRecordID:syncRecordID activity:OCItemSyncActivityDeleting];
+						[removedItems addObject:item];
+					}
+				}];
+			}
+
+			// Items no longer contained in the deleted item itself
+			for (OCLocalID associatedItemLocalID in remainingLocalIDs)
+			{
+				[self.core.vault.database retrieveCacheItemForLocalID:associatedItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+					if (item != nil)
+					{
+						OCLogDebug(@"Success: restore delete contained %@", OCLogPrivate(item.path));
+						[item removeSyncRecordID:syncRecordID activity:OCItemSyncActivityDeleting];
+
+						[updatedItems addObject:item];
+					}
+				}];
+			}
+
+			syncContext.removedItems = removedItems;
+
+			if (updatedItems.count > 0)
+			{
+				syncContext.updatedItems = updatedItems;
+			}
+		}
 
 		// Remove file locally
 		[self.core deleteDirectoryForItem:self.localItem];
@@ -147,13 +281,7 @@
 				NSString *title = [NSString stringWithFormat:OCLocalizedString(@"%@ changed on the server. Really delete it?",nil), self.localItem.name];
 				NSString *description = [NSString stringWithFormat:OCLocalizedString(@"%@ has changed on the server since you requested its deletion.",nil), self.localItem.name];
 
-				issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-						// Drop sync record
-						[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-
-						// Reschedule sync record with match requirement turned off
-						[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"forceDelete" label:OCLocalizedString(@"Delete",@"") metaData:nil]
-					]];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteWithForce forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 			}
 			break;
 
@@ -199,10 +327,7 @@
 
 		if ((issue==nil) && (title!=nil))
 		{
-			issue = [OCSyncIssue issueForSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil choices:@[
-					// Drop sync record
-					[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive],
-				]];
+			issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDeleteCancel forSyncRecord:syncRecord level:OCIssueLevelError title:title description:description metaData:nil];
 		}
 
 		if (issue != nil)
@@ -214,7 +339,7 @@
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self.core _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 
 		// Reschedule for all other errors
@@ -229,15 +354,34 @@
 	return (resultInstruction);
 }
 
+#pragma mark - Lane tags
+- (NSSet<OCSyncLaneTag> *)generateLaneTags
+{
+	NSSet<OCSyncLaneTag> *laneTags = [self generateLaneTagsFromItems:@[
+		OCSyncActionWrapNullableItem(self.localItem)
+	]];
+
+	if (self.associatedItemLaneTags != nil)
+	{
+		laneTags = [laneTags setByAddingObjectsFromSet:self.associatedItemLaneTags];
+	}
+
+	return (laneTags);
+}
+
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
 	_requireMatch = [decoder decodeBoolForKey:@"requireMatch"];
+	_associatedItemLocalIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"associatedItemLocalIDs"];
+	_associatedItemLaneTags = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSSet class], [NSString class], nil] forKey:@"associatedItemLaneTags"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
 {
 	[coder encodeBool:_requireMatch forKey:@"requireMatch"];
+	[coder encodeObject:_associatedItemLocalIDs forKey:@"associatedItemLocalIDs"];
+	[coder encodeObject:_associatedItemLaneTags forKey:@"associatedItemLaneTags"];
 }
 
 @end

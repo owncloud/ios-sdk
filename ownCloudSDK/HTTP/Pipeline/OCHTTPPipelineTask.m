@@ -98,30 +98,31 @@
 		}
 	}
 
+	// Fill response date from metrics.responseStartDate
+	if ((response != nil) && (_metrics != nil) && (_metrics.responseStartDate != nil))
+	{
+		response.date = _metrics.responseStartDate;
+	}
+
 	return ((OCHTTPResponse * _Nonnull)response); // Working around a Static Analyzer bug that assumes [[OCHTTPResponse alloc] init] could return nil and triggers a false positive
 }
 
 #pragma mark - Serialized properties
 #define RETURN_LAZY_DESERIALIZE(valueVar,dataVar) \
-	if (valueVar != nil) \
-	{ \
-		return (valueVar); \
-	} \
-	else \
+	if (valueVar == nil) \
 	{ \
 		if (dataVar != nil) \
 		{ \
 			valueVar = [NSKeyedUnarchiver unarchiveObjectWithData:dataVar]; \
 		} \
 	} \
+	\
+	dataVar = nil; \
+	\
 	return (valueVar)
 
 #define RETURN_LAZY_SERIALIZE(valueVar,dataVar) \
-	if (dataVar != nil) \
-	{ \
-		return (dataVar); \
-	} \
-	else \
+	if (dataVar == nil) \
 	{ \
 		if (valueVar != nil) \
 		{ \
@@ -134,10 +135,17 @@
 		valueVar = value; \
 		dataVar = nil
 
-#define SET_DATA(data,dataVar,valueVar) \
-		valueVar = nil; \
-		dataVar = data
+- (void)setRequestID:(OCHTTPRequestID)requestID
+{
+	_requestID = requestID;
 
+	// A change of .requestID indicates a change to the request as well, so
+	// drop the requestData to force re-creation
+	if (self.request != nil)
+	{
+		_requestData = nil;
+	}
+}
 
 // request & requestData
 - (OCHTTPRequest *)request
@@ -155,11 +163,6 @@
 	RETURN_LAZY_SERIALIZE(_request, _requestData);
 }
 
-//- (void)setRequestData:(NSData *)requestData
-//{
-//	SET_DATA(requestData, _requestData, _request);
-//}
-
 // response & responseData
 - (OCHTTPResponse *)response
 {
@@ -176,9 +179,11 @@
 	RETURN_LAZY_SERIALIZE(_response, _responseData);
 }
 
-//- (void)setResponseData:(NSData *)responseData
-//{
-//	SET_DATA(responseData, _responseData, _response);
-//}
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, taskID: %@, pipelineID: %@, bundleID: %@, urlSessionID: %@, urlSessionTaskID: %@, urlSessionTask: %@, partitionID: %@, groupID: %@, state: %lu, requestID: %@, request: %@, response: %@, metrics: %@, finished: %d>", NSStringFromClass(self.class), self, _taskID, _pipelineID, _bundleID, _urlSessionID, _urlSessionTaskID, _urlSessionTask, _partitionID, _groupID, (unsigned long)_state, _requestID, [_request requestDescriptionPrefixed:NO], [_response responseDescriptionPrefixed:NO], _metrics, _finished]);
+}
 
 @end
+
+NSString *OCHTTPPipelineTaskAnyBundleID = @"*";

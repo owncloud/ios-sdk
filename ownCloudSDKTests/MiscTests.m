@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
-#import "OCCoreReachabilityConnectionStatusSignalProvider.h"
 
 @interface MiscTests : XCTestCase
 
@@ -260,11 +259,17 @@
 	user.emailAddress = @"em@il.address";
 	user.avatarData = [NSData data];
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:user];
+	#pragma clang diagnostic pop
 
 	XCTAssert(userData!=nil);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	OCUser *deserializedUser = [NSKeyedUnarchiver unarchiveObjectWithData:userData];
+	#pragma clang diagnostic pop
 
 	XCTAssert([deserializedUser.displayName isEqual:user.displayName]);
 	XCTAssert([deserializedUser.userName isEqual:user.userName]);
@@ -380,13 +385,13 @@
 
 	// Test sending with listener but ignored
 	[notificationCenter addObserver:self forName:@"hello-others" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		XCTAssert(1==0); // Assert since this should never be called
+		XCTFail(@"Own message received despite ignore"); // Fail since this should never be called
 	}];
 	[notificationCenter postNotificationForName:@"hello-others" ignoreSelf:YES];
 
 	// Test adding listener, then removing all, then send a test message that should not be received
 	[notificationCenter addObserver:self forName:@"hello-noone" withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
-		XCTAssert(1==0); // Assert since this should never be called
+		XCTFail(@"Own message received despite ignore"); // Fail since this should never be called
 	}];
 	[notificationCenter removeAllObserversForName:@"hello-noone"];
 	[notificationCenter postNotificationForName:@"hello-noone" ignoreSelf:NO];
@@ -465,50 +470,352 @@
 	XCTAssert(executedJobCount==executedCompletionHandlerCount);
 }
 
-#pragma mark - Legacy Reachability
-- (void)testReachabilityInvalidHost
+#pragma mark - Rate limiter
+- (void)testRateLimiter
 {
-	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
+	XCTestExpectation *expectFirstInvocation = [self expectationWithDescription:@"Expect first invocation"];
+	XCTestExpectation *expectSecondInvocation = [self expectationWithDescription:@"Expect second invocation"];
+	XCTestExpectation *expectThirdInvocation = [self expectationWithDescription:@"Expect third invocation"];
 
-	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"non-existant.topleveldomain"];
+	OCRateLimiter *rateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:0.5];
 
-	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
+	[rateLimiter runRateLimitedBlock:^{
+		OCLogDebug(@"This invocation should run first");
+		[expectFirstInvocation fulfill];
+	}];
 
-	[reachabilityStatusProvider providerWillBeAdded];
-	[reachabilityStatusProvider providerWasAdded];
+	[rateLimiter runRateLimitedBlock:^{
+		XCTFail(@"This invocation should not run");
+	}];
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
-
-		[timeoutExpectation fulfill];
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		[rateLimiter runRateLimitedBlock:^{
+			OCLogDebug(@"This invocation should run");
+			[expectSecondInvocation fulfill];
+		}];
 	});
 
-	[self waitForExpectationsWithTimeout:2 handler:nil];
-
-	[reachabilityStatusProvider providerWillBeRemoved];
-	[reachabilityStatusProvider providerWasRemoved];
-}
-
-- (void)testReachabilityValidHost
-{
-	XCTestExpectation *timeoutExpectation = [self expectationWithDescription:@"Timeout"];
-
-	OCCoreReachabilityConnectionStatusSignalProvider *reachabilityStatusProvider = [[OCCoreReachabilityConnectionStatusSignalProvider alloc] initWithHostname:@"www.owncloud.com"];
-
-	XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateFalse);
-
-	[reachabilityStatusProvider providerWillBeAdded];
-	[reachabilityStatusProvider providerWasAdded];
-
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		XCTAssert(reachabilityStatusProvider.state == OCCoreConnectionStatusSignalStateTrue);
-
-		[timeoutExpectation fulfill];
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.6 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		[rateLimiter runRateLimitedBlock:^{
+			XCTFail(@"This invocation should not run");
+		}];
 	});
 
-	[self waitForExpectationsWithTimeout:2 handler:nil];
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.62 * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		[rateLimiter runRateLimitedBlock:^{
+			OCLogDebug(@"This invocation should run");
+			[expectThirdInvocation fulfill];
+		}];
+	});
 
-	[reachabilityStatusProvider providerWillBeRemoved];
-	[reachabilityStatusProvider providerWasRemoved];
+	[self waitForExpectationsWithTimeout:4 handler:nil];
 }
+
+- (void)_testIPCFlooding
+{
+	OCIPNotificationCenter *otherNotificationCenter = [OCIPNotificationCenter new];
+	OCIPNotificationCenter *ipNotificationCenter = [OCIPNotificationCenter sharedNotificationCenter];
+	OCIPCNotificationName testNotificationName = @"testNotification";
+	XCTestExpectation *expectNoNotifications = [self expectationWithDescription:@"Received unexpected notification"];
+	XCTestExpectation *expectNotifications = [self expectationWithDescription:@"Received expected notification"];
+	XCTestExpectation *expectSendingNotifications = [self expectationWithDescription:@"Sending notification"];
+	NSUInteger notificationCount = 1000;
+	__block NSUInteger receivedNotifications = 0;
+
+	[expectNoNotifications setInverted:YES];
+
+	expectNotifications.expectedFulfillmentCount = notificationCount;
+	expectSendingNotifications.expectedFulfillmentCount = notificationCount;
+
+	[ipNotificationCenter addObserver:self forName:testNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		OCLog(@"Received unexpected notification");
+		[expectNoNotifications fulfill];
+	}];
+
+	[otherNotificationCenter addObserver:self forName:testNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, id  _Nonnull observer, OCIPCNotificationName  _Nonnull notificationName) {
+		OCLog(@"Received expected notification");
+		[expectNotifications fulfill];
+
+		receivedNotifications++;
+	}];
+
+	for (NSUInteger i=0; i<notificationCount; i++)
+	{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			OCLog(@"Sending notification %ld", i);
+			[ipNotificationCenter postNotificationForName:testNotificationName ignoreSelf:YES];
+			[expectSendingNotifications fulfill];
+		});
+	}
+
+	[self waitForExpectationsWithTimeout:5 handler:nil];
+
+	OCLog(@"%@ received %ld notifications, %@ awaits: %@", otherNotificationCenter, receivedNotifications, ipNotificationCenter, [ipNotificationCenter valueForKey:@"_ignoreCountsByNotificationName"]);
+}
+
+#pragma mark - NSString+NameConflicts
+- (void)testNameConflictDetectionWithExtension
+{
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2a.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base 2a.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2a).ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base (2a).ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2).ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleBracketed);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base 2.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy 2.ext" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:NO] isEqual:@"Base.ext"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+}
+
+- (void)testNameConflictDetectionWithoutExtension
+{
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2a" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base 2a"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2a)" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base (2a)"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNone);
+		XCTAssert(duplicateCount == nil);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base (2)" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleBracketed);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleNumbered);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base copy 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(1)]);
+	}
+
+	{
+		OCCoreDuplicateNameStyle nameStyle = OCCoreDuplicateNameStyleNone;
+		NSNumber *duplicateCount = nil;
+
+		XCTAssert([[@"Base Copy 2" itemBaseNameWithStyle:&nameStyle duplicateCount:&duplicateCount allowAmbiguous:YES] isEqual:@"Base"]);
+		XCTAssert(nameStyle == OCCoreDuplicateNameStyleCopy);
+		XCTAssert([duplicateCount isEqual:@(2)]);
+	}
+}
+
+- (void)testDuplicateNameComposition
+{
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(1)] isEqual:@"Base copy"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(2)] isEqual:@"Base copy 2"]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(1)] isEqual:[@"Base " stringByAppendingString:OCLocalized(@"copy")]]);
+	NSString *expectedName = [NSString stringWithFormat:@"Base %@ 2", OCLocalized(@"copy")];
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(2)] isEqual:expectedName]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleBracketed duplicateCount:@(1)] isEqual:@"Base (1)"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleBracketed duplicateCount:@(2)] isEqual:@"Base (2)"]);
+
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleNumbered duplicateCount:@(1)] isEqual:@"Base 1"]);
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleNumbered duplicateCount:@(2)] isEqual:@"Base 2"]);
+}
+
+- (void)testPathNormalization
+{
+	XCTAssert([@"//path/" isUnnormalizedPath]);
+	XCTAssert([@"/path//" isUnnormalizedPath]);
+
+	XCTAssert([@"/path/../documents/" isUnnormalizedPath]);
+	XCTAssert([@"/path/../documents" isUnnormalizedPath]);
+	XCTAssert([@"./path/" isUnnormalizedPath]);
+	XCTAssert([@"../path/" isUnnormalizedPath]);
+	XCTAssert([@"/path/.." isUnnormalizedPath]);
+	XCTAssert([@"/path/." isUnnormalizedPath]);
+
+	XCTAssert([@"//path/two//" isUnnormalizedPath]);
+	XCTAssert([@"//path/two/" isUnnormalizedPath]);
+	XCTAssert([@"//path/two" isUnnormalizedPath]);
+	XCTAssert([@"/path/two//" isUnnormalizedPath]);
+
+	XCTAssert(![@"/path/" isUnnormalizedPath]);
+	XCTAssert(![@"/path" isUnnormalizedPath]);
+	XCTAssert(![@"/path/two" isUnnormalizedPath]);
+	XCTAssert(![@"/path/two/" isUnnormalizedPath]);
+
+}
+
+#pragma mark - NSDictionary+OCExpand
+- (void)testDictionaryExpansion
+{
+	NSDictionary *dictToExpand = @{
+		@"test$[0].index" 		 : @(0),
+		@"test$[0].name"  		 : @"hello",
+		@"test$[0].attributes.highlight" : @(true),
+		@"test$[0].nicknames[0]" 	 : @"hi",
+		@"test$[0].nicknames[2]" 	 : @"howdy",
+		@"test$[0].nicknames.[1]" 	 : @"hey",
+
+		@"test$[1].index" 		 : @(1),
+		@"test$[1].name"  		 : @"maxwell",
+		@"test$[1].attributes.highlight" : @(false),
+		@"test$[1].nicknames.[0]" 	 : @"max",
+		@"test$[1].nicknames[1]" 	 : @"maxy",
+
+		@"unrelated.settings.with.dots"	 : @"oc"
+	};
+
+	NSDictionary *expectedDict = @{
+		@"test" : @[
+				@{
+					@"attributes" : @{
+							@"highlight" : @(1),
+					},
+					@"index" : @(0),
+					@"name" : @"hello",
+					@"nicknames" : @[
+							@"hi",
+							@"hey",
+							@"howdy"
+					]
+				},
+				@{
+					@"attributes" : @{
+							@"highlight" : @(0)
+					},
+					@"index" : @(1),
+					@"name" : @"maxwell",
+					@"nicknames" : @[
+							@"max",
+							@"maxy"
+					]
+				}
+		],
+
+		@"unrelated.settings.with.dots" : @"oc"
+	};
+
+	NSDictionary *expandedDict = [dictToExpand expandedDictionary];
+
+	XCTAssert([expandedDict isEqual:expectedDict], @"Expansion didn't yield expected result: expanded: %@, expected: %@", expandedDict, expectedDict);
+
+}
+
 @end

@@ -26,4 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierEnvironment;
+
 NS_ASSUME_NONNULL_END

@@ -22,6 +22,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 {
 	OCErrorInternal, 		//!< Internal error
 	OCErrorInsufficientParameters, 	//!< Insufficient parameters
+	OCErrorUnknown,			//!< Unknown error
 
 	OCErrorAuthorizationFailed, 		//!< Authorization failed
 	OCErrorAuthorizationRedirect, 		//!< Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL. The userInfo of the error contains the alternative server URL as value for the key OCAuthorizationMethodAlternativeServerURLKey
@@ -75,7 +76,40 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorRunningOperation, //!< A running operation prevents execution
 
-	OCErrorInvalidProcess //!< Invalid process.
+	OCErrorInvalidProcess, //!< Invalid process.
+
+	OCErrorShareUnauthorized, //!< Not authorized to access shares
+	OCErrorShareUnavailable,  //!< Shares are unavailable.
+	OCErrorShareItemNotADirectory, //!< Item is not a directory.
+	OCErrorShareItemNotFound,  //!< Item not found.
+	OCErrorShareNotFound,  	   //!< Share not found.
+	OCErrorShareUnknownType,   //!< Unknown share type.
+	OCErrorSharePublicUploadDisabled, //!< Public upload was disabled by the administrator.
+
+	OCErrorInsufficientStorage, //!< Insufficient storage
+
+	OCErrorNotAvailableOffline, //!< API not available offline.
+
+	OCErrorAuthorizationRetry, //!< Authorization failed. Retry the request.
+
+	OCErrorItemPolicyRedundant, //!< Another item policy of the same kind already includes the item, making the addition of this item policy redundant. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
+	OCErrorItemPolicyMakesRedundant, //!< Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy. Item policy(s) are passed as error.userInfo[OCErrorItemPoliciesKey].
+
+	OCErrorUnnormalizedPath, //!< The provided path is not normalized.
+
+	OCErrorPrivateLinkInvalidFormat, //!< Private link format invalid.
+	OCErrorPrivateLinkResolutionFailed, //!< Resolution of private link failed
+
+	OCErrorAuthorizationMethodNotAllowed, //!< Authentication method not allowed. Re-authentication needed.
+	OCErrorAuthorizationMethodUnknown, //!< Authentication method unknown.
+
+	OCErrorServerConnectionValidationFailed, //!< Validation of connection failed.
+
+	OCErrorAuthorizationClientRegistrationFailed, //!< Client registration failed
+	OCErrorAuthorizationNotMatchingRequiredUserID, //!< The logged in user is not matching the required user ID.
+
+	OCErrorDatabaseMigrationRequired, //!< Database upgrade required. Please open the app to perform the upgrade.
+	OCErrorHostUpdateRequired //!< Bookmark created with a newer app version. Please update the app.
 };
 
 @class OCIssue;
@@ -98,18 +132,33 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSError *)errorByEmbeddingIssue:(OCIssue *)issue;
 - (nullable OCIssue *)embeddedIssue;
 
+#pragma mark - Error dating
+- (NSError *)withErrorDate:(nullable NSDate *)errorDate;
+- (nullable NSDate *)errorDate;
+
 @end
 
-#define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
+#define OCError(errorCode) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorDateKey : [NSDate new] }] //!< Macro that creates an OCError from an OCErrorCode, but also adds method name, source file and line number)
 
-#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo }] //!< Like the OCError macro, but allows for an error specific info value
+#define OCErrorWithDescription(errorCode,description) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, [NSDate new], OCErrorDateKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
 
-#define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+#define OCErrorWithDescriptionAndUserInfo(errorCode,description,userInfoKey,userInfoValue) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, userInfoValue, userInfoKey, description, NSLocalizedDescriptionKey, nil]] //!< Macro that creates an OCError from an OCErrorCode and optional description, but also adds method name, source file and line number)
+
+#define OCErrorWithInfo(errorCode,errorInfo) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], OCErrorInfoKey : errorInfo, OCErrorDateKey : [NSDate new] }] //!< Like the OCError macro, but allows for an error specific info value
+
+#define OCErrorFromError(errorCode,underlyingError) [NSError errorWithOCError:errorCode userInfo:@{ NSDebugDescriptionErrorKey : [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSUnderlyingErrorKey : underlyingError, OCErrorDateKey : ((underlyingError.errorDate != nil) ? underlyingError.errorDate : [NSDate new]) }] //!< Like the OCError macro, but allows to specifiy an underlying error, too
+
+#define OCErrorWithDescriptionFromError(errorCode,description,underlyingError) [NSError errorWithOCError:errorCode userInfo:[[NSDictionary alloc] initWithObjectsAndKeys: [NSString stringWithFormat:@"%s [%@:%d]", __PRETTY_FUNCTION__, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__], NSDebugDescriptionErrorKey, [NSDate new], OCErrorDateKey, underlyingError, NSUnderlyingErrorKey, description, NSLocalizedDescriptionKey, nil]] //!< Like the OCErrorWithDescription macro, but allows to specifiy an underlying error, too
+
+#define OCErrorAddDateFromResponse(error,response) if (response.date != nil) \
+	{ \
+		error = [error withErrorDate:response.date]; \
+	}
 
 extern NSErrorDomain OCErrorDomain;
 
-extern NSString *OCErrorInfoKey;
-extern NSString *OCErrorIssueKey;
+extern NSErrorUserInfoKey OCErrorInfoKey;
+extern NSErrorUserInfoKey OCErrorDateKey;
 
 NS_ASSUME_NONNULL_END
 

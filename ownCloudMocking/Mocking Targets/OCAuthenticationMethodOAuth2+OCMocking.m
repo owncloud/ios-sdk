@@ -23,21 +23,21 @@
 + (void)load
 {
 	[self addMockLocation:OCMockLocationAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandler
-	      forClassSelector:@selector(startAuthenticationSession:forURL:scheme:completionHandler:)
-	      with:@selector(ocm_oa2_startAuthenticationSession:forURL:scheme:completionHandler:)];
+	      forClassSelector:@selector(startAuthenticationSession:forURL:scheme:options:completionHandler:)
+	      with:@selector(ocm_oa2_startAuthenticationSession:forURL:scheme:options:completionHandler:)];
 }
 
-+ (BOOL)ocm_oa2_startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
++ (BOOL)ocm_oa2_startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
 {
 	OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock mockBlock;
 
 	if ((mockBlock = [[OCMockManager sharedMockManager] mockingBlockForLocation:OCMockLocationAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandler]) != nil)
 	{
-		return (mockBlock(authenticationSession, authorizationRequestURL, scheme, oauth2CompletionHandler));
+		return (mockBlock(authenticationSession, authorizationRequestURL, scheme, options, oauth2CompletionHandler));
 	}
 	else
 	{
-		return ([self ocm_oa2_startAuthenticationSession:authenticationSession forURL:authorizationRequestURL scheme:scheme completionHandler:oauth2CompletionHandler]);
+		return ([self ocm_oa2_startAuthenticationSession:authenticationSession forURL:authorizationRequestURL scheme:scheme options:options completionHandler:oauth2CompletionHandler]);
 	}
 }
 

@@ -19,7 +19,6 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 #import <ownCloudMocking/ownCloudMocking.h>
-#import "OCAuthenticationMethod+OCTools.h"
 
 #import "OCTestTarget.h"
 
@@ -41,6 +40,7 @@
 	[super tearDown];
 }
 
+#pragma mark - Infrastructure
 - (void)testAuthenticatioMethodAutoRegistration
 {
 	NSArray <Class> *authenticationMethodClasses;
@@ -61,6 +61,7 @@
 	}
 }
 
+#pragma mark - Basic auth
 - (void)_performBasicAuthenticationTestWithURL:(NSURL *)url user:(NSString *)user password:(NSString *)password allowUpgrades:(BOOL)allowUpgrades expectsSuccess:(BOOL)expectsSuccess
 {
 	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
@@ -152,6 +153,7 @@
 	[self _performBasicAuthenticationTestWithURL:OCTestTarget.secureTargetURL user:@"nosuchuser" password:@"nosuchpass" allowUpgrades:YES expectsSuccess:NO];
 }
 
+#pragma mark - OAuth2
 - (void)testOAuth2TokenGeneration
 {
 	XCTestExpectation *expectAuthControllerInvocation = [self expectationWithDescription:@"Auth controller invocation"];
@@ -178,6 +180,13 @@
 			BOOL fixAuthentication = YES;
 
 			OCLogDebug(@"headerFields[Authorization]=%@", request.headerFields[@"Authorization"]);
+
+			if ([request.url.absoluteString hasSuffix:@"ocs/v2.php/cloud/user"])
+			{
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeOK headers:@{} contentType:@"application/json; charset=utf-8" body:@"{\"ocs\":{\"meta\":{\"status\":\"ok\",\"statuscode\":200,\"message\":\"OK\",\"totalitems\":\"\",\"itemsperpage\":\"\"},\"data\":{\"id\":\"demo\",\"display-name\":\"demo\",\"email\":null}}}"]);
+
+				return (YES);
+			}
 
 			if ([request.url.absoluteString hasSuffix:@"index.php/apps/oauth2/api/v1/token"])
 			{
@@ -223,7 +232,7 @@
 			{
 				if ([request.headerFields[@"Authorization"] containsString:@"Bearer "])
 				{
-					[request setValue:basicAuthString forHeaderField:@"Authorization"];
+					[request setValue:basicAuthString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 				}
 			}
 
@@ -232,7 +241,7 @@
 
 		OCMockAuthenticationMethodOAuth2StartAuthenticationSessionForURLSchemeCompletionHandlerBlock mockBlock;
 
-		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
+		mockBlock = ^(id *authenticationSession, NSURL *authorizationRequestURL, NSString *scheme, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions options, void(^completionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error)) {
 
 			NSLog(@"authenticationSession=%@, authorizationRequestURL=%@, scheme=%@", *authenticationSession, authorizationRequestURL, scheme);
 
@@ -321,7 +330,7 @@
 		hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
 			BOOL fixAuthentication = YES;
 
-			OCLogDebug(@"headerFields[Authorization]=%@", request.headerFields[@"Authorization"]);
+			OCLogDebug(@"headerFields[Authorization]=%@, path=%@", request.headerFields[@"Authorization"], request.url.absoluteString);
 
 			if ([request.url.absoluteString hasSuffix:@"index.php/apps/oauth2/api/v1/token"])
 			{
@@ -371,7 +380,7 @@
 				return (YES);
 			}
 
-			if ([request.url.absoluteString hasSuffix:@"remote.php/dav/files"])
+			if ([request.url.absoluteString hasSuffix:@"remote.php/dav/files/"])
 			{
 				if ([request.headerFields[@"Authorization"] isEqualToString:@"Bearer refreshedAccessToken"])
 				{
@@ -400,7 +409,7 @@
 			{
 				if ([request.headerFields[@"Authorization"] containsString:@"Bearer "])
 				{
-					[request setValue:basicAuthString forHeaderField:@"Authorization"];
+					[request setValue:basicAuthString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 				}
 			}
 
@@ -432,6 +441,34 @@
 	OCLogDebug(@"hostSimulator=%@", hostSimulator);
 }
 
+#pragma mark - OpenID Connect
+- (void)testOpenIDConnect
+{
+	// Ensure OIDC test target is available
+	OCBookmark *bookmark = OCTestTarget.oidcBookmark;
+	if (bookmark == nil) { return; }
+
+	XCTestExpectation *detectionExpectation = [self expectationWithDescription:@"OIDC detected"];
+	OCConnection *connection;
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:bookmark]) != nil)
+	{
+		connection.delegate = self;
+
+		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods) {
+			OCLog(@"preferredAuthenticationMethods: %@ supportedMethods: %@", preferredAuthenticationMethods, supportedMethods);
+
+			if ([preferredAuthenticationMethods.firstObject isEqual:OCAuthenticationMethodIdentifierOpenIDConnect])
+			{
+				[detectionExpectation fulfill];
+			}
+		}];
+	}
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+#pragma mark - Detection
 - (void)testAuthenticationMethodDetection
 {
 	XCTestExpectation *receivedReplyExpectation = [self expectationWithDescription:@"Received reply"];
@@ -562,6 +599,83 @@
 	[self waitForExpectationsWithTimeout:60 handler:nil];
 }
 
+- (void)testRedirectionBaseExtraction
+{
+	NSURL *baseURL;
+
+	// https://origin.server/status.php -> https://target.server/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/ -> https://target.server/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/ -> https://target.server/owncloud/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
+
+	// https://origin.server/status.php -> https://target.server/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/ -> https://target.server/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/"] originalURL:[NSURL URLWithString:@"https://origin.server/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/"]);
+
+	// https://origin.server/status.php -> https://target.server/owncloud/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
+
+	// https://origin.server/status.php -> https://target.server/owncloud/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
+
+	// https://origin.server/status.php -> https://origin.server/owncloud/status.php
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/status.php"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+
+	// https://origin.server/dav/files/ -> https://origin.server/owncloud/dav/files/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/dav/files/"] originalURL:[NSURL URLWithString:@"https://origin.server/dav/files/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+
+	// https://origin.server/dav/files/ -> https://target.server/owncloud/dav/files/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://target.server/owncloud/dav/files/"] originalURL:[NSURL URLWithString:@"https://origin.server/dav/files/"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://target.server/owncloud/"]);
+
+	// https://origin.server/status.php -> https://origin.server/owncloud/
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:NO];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert(baseURL == nil);
+
+	baseURL = [OCConnection extractBaseURLFromRedirectionTargetURL:[NSURL URLWithString:@"https://origin.server/owncloud/"] originalURL:[NSURL URLWithString:@"https://origin.server/status.php"] originalBaseURL:[NSURL URLWithString:@"https://origin.server/"] fallbackToRedirectionTargetURL:YES];
+
+	NSLog(@"baseURL=%@", baseURL);
+	XCTAssert([baseURL.absoluteString isEqual:@"https://origin.server/owncloud/"]);
+}
+
+#pragma mark - Sorting and filtering
 - (void)testAuthenticationMethodSorting
 {
 	NSArray <OCAuthenticationMethodIdentifier> *authMethods = @[ OCAuthenticationMethodIdentifierBasicAuth, @"other-method", OCAuthenticationMethodIdentifierOAuth2 ];

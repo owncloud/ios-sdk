@@ -23,13 +23,16 @@
 #import "OCSQLiteResultSet.h"
 #import "OCRunLoopThread.h"
 #import "OCLogTag.h"
+#import "OCBackgroundTask.h"
+
+// #define OCSQLITE_RAWLOG_ENABLED 1
 
 @class OCSQLiteDB;
 @class OCSQLiteTransaction;
 @class OCSQLiteQuery;
 @class OCSQLiteTableSchema;
 
-typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
+typedef NS_ENUM(int, OCSQLiteOpenFlags)
 {
 	OCSQLiteOpenFlagsReadOnly = SQLITE_OPEN_READONLY,
 	OCSQLiteOpenFlagsReadWrite = SQLITE_OPEN_READWRITE,
@@ -40,8 +43,16 @@ typedef NS_ENUM(NSUInteger, OCSQLiteOpenFlags)
 
 typedef NS_ENUM(NSUInteger, OCSQLiteDBError)
 {
-	OCSQLiteDBErrorAlreadyOpenedInInstance //!< Instance has already opened file
+	OCSQLiteDBErrorAlreadyOpenedInInstance, //!< Instance has already opened file
+	OCSQLiteDBErrorDatabaseNotOpened,	//!< SQLite database not opened
+	OCSQLiteDBErrorInsufficientParameters,	//!< Insufficient parameters
+	OCSQLiteDBErrorQueryCancelled,		//!< The query has been cancelled
+	OCSQLiteDBErrorMigrationsNotAllowed	//!< Migrations are not allowed
 };
+
+typedef NSString* OCSQLiteJournalMode NS_TYPED_ENUM;
+
+typedef NSString* OCSQLiteQueryString;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -49,13 +60,21 @@ typedef void(^OCSQLiteDBCompletionHandler)(OCSQLiteDB *db, NSError * _Nullable e
 typedef void(^OCSQLiteDBResultHandler)(OCSQLiteDB *db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet);
 typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable error, NSNumber * _Nullable rowID);
 
+typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!< Progress status handler for long-lasting operations (like DB migrations), called with nil when done
+
 @interface OCSQLiteDB : NSObject <OCLogTagging>
 {
 	NSURL *_databaseURL;
 	OCRunLoopThread *_sqliteThread;
 
+	OCBackgroundTask *_backgroundTask;
+	NSInteger _processingCount;
+
 	NSTimeInterval _maxBusyRetryTimeInterval;
 	NSTimeInterval _firstBusyRetryTime;
+
+	BOOL _cacheStatements;
+	NSMutableArray<OCSQLiteStatement *> *_cachedStatements;
 
 	NSInteger _transactionNestingLevel;
 	NSUInteger _savepointCounter;
@@ -68,9 +87,13 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 @property(class,nonatomic) BOOL allowConcurrentFileAccess; //!< Makes every OCSQLiteDB use a different OCRunLoopThread, so concurrent file access can occur. NO by default. Use this only for implementing concurrency tests.
 
+@property(strong) OCSQLiteJournalMode journalMode; //!< SQLite journaling mode to use (defaults to "delete").
+
 @property(nullable,strong) NSURL *databaseURL;	//!< URL of the SQLite database file. If nil, an in-memory database is used.
 
 @property(assign,nonatomic) NSTimeInterval maxBusyRetryTimeInterval; //!< Amount of time SQLite retries accessing a database before it returns a SQLITE_BUSY error
+
+@property(assign,nonatomic) BOOL cacheStatements; //!< If YES, caches and reuses statements
 
 @property(nullable,readonly,nonatomic) sqlite3 *sqlite3DB;
 
@@ -79,6 +102,13 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 @property(nullable,strong) NSString *runLoopThreadName; //!< Name of the OCRunLoopThread that's used to back the database. Only set it if you want to share one across several databases.
 
 @property(readonly,nonatomic) BOOL isOnSQLiteThread;
+
+@property(assign) BOOL allowMigrations;
+@property(copy,nullable) OCSQLiteDBBusyStatusHandler busyStatusHandler;
+
+#if OCSQLITE_RAWLOG_ENABLED
+@property(assign) BOOL logStatements;
+#endif /* OCSQLITE_RAWLOG_ENABLED */
 
 #pragma mark - Init
 - (instancetype)initWithURL:(nullable NSURL *)sqliteDatabaseFileURL;
@@ -97,6 +127,16 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 - (void)executeOperation:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Executes a block in the internal context, so all calls to -executeQuery: and -executeTransaction: inside this block will be executed synchronously. Will always be scheduled and not be executed immediately, even if called from the internal context.
 - (nullable NSError *)executeOperationSync:(NSError * _Nullable(^)(OCSQLiteDB *db))operationBlock; //!< Executes a block in the internal context synchronously. WARNING: This call may block or deadlock. Use with caution!
 
+#pragma mark - Debug tools
+- (void)executeQueryString:(NSString *)queryString; //!< Runs a query and logs the result. Meant to simplify debugging.
+
+#pragma mark - WAL checkpointing
+- (void)checkpoint;
+
+#pragma mark - Background task interface
+- (void)enterProcessing;
+- (void)leaveProcessing;
+
 #pragma mark - Error handling
 - (nullable NSError *)lastError;
 
@@ -105,6 +145,7 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 
 #pragma mark - Miscellaneous
 - (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.
+- (void)flushCache; //!< Tells SQLite to flush its in-memory cache to disk.
 + (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a soft heap memory limit for SQLite
 
 @end
@@ -112,6 +153,9 @@ typedef void(^OCSQLiteDBInsertionHandler)(OCSQLiteDB *db, NSError * _Nullable er
 extern NSErrorDomain OCSQLiteErrorDomain; //!< Native SQLite errors
 
 extern NSErrorDomain OCSQLiteDBErrorDomain; //!< OCSQLiteDB errors
+
+extern OCSQLiteJournalMode OCSQLiteJournalModeDelete; 	//!< Delete Journal Mode (SQLite default)
+extern OCSQLiteJournalMode OCSQLiteJournalModeWAL; 	//!< Write-Ahead-Log Journal Mode
 
 NS_ASSUME_NONNULL_END
 

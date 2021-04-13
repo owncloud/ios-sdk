@@ -24,10 +24,29 @@
 #pragma mark - Command
 - (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler
 {
+	return ([self createFolder:folderName inside:parentItem options:options placeholderCompletionHandler:options[OCCoreOptionPlaceholderCompletionHandler] resultHandler:resultHandler]);
+}
+
+- (nullable NSProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCCoreOption,id> *)options placeholderCompletionHandler:(nullable OCCorePlaceholderCompletionHandler)placeholderCompletionHandler resultHandler:(nullable OCCoreActionResultHandler)resultHandler
+{
+	OCCorePlaceholderCompletionHandler intermediatePlaceholderCompletionHandler = nil;
+	__block OCItem *placeholderItem = nil;
+	__block NSError *placeholderError = nil;
+
 	if (folderName == nil) { return(nil); }
 	if (parentItem == nil) { return(nil); }
 
-	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCreateFolder alloc] initWithParentItem:parentItem folderName:folderName] cancellable:NO resultHandler:resultHandler]);
+	if (placeholderCompletionHandler != nil)
+	{
+		intermediatePlaceholderCompletionHandler = ^(NSError *error, OCItem *item) {
+			placeholderItem = item;
+			placeholderError = error;
+		};
+	}
+
+	return ([self _enqueueSyncRecordWithAction:[[OCSyncActionCreateFolder alloc] initWithParentItem:parentItem folderName:folderName placeholderCompletionHandler:intermediatePlaceholderCompletionHandler] cancellable:NO preflightResultHandler:((placeholderCompletionHandler != nil) ? ^(NSError * _Nullable error) {
+		placeholderCompletionHandler(placeholderError, placeholderItem);
+	} : nil) resultHandler:resultHandler]);
 }
 
 @end

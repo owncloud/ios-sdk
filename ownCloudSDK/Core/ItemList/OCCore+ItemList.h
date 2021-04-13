@@ -23,16 +23,27 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forQuery:(BOOL)forQuery;
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 - (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob;
 
 #pragma mark - Check for updates
 - (void)startCheckingForUpdates; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items.
+- (void)fetchUpdatesWithCompletionHandler:(nullable OCCoreItemListFetchUpdatesCompletionHandler)completionHandler; //!< Checks the root directory for a changed ETag and recursively traverses the entire tree for all updated and new items. Calls a completionHandler when done.
 
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
 
+#pragma mark - Update Scans
+- (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle;
+- (void)recoverPendingUpdateJobs;
+
 @end
+
+@interface OCCore (ItemListInternal)
+- (void)scheduleNextItemListTask;
+@end
+
+extern OCActivityIdentifier OCActivityIdentifierPendingServerScanJobsSummary; //!< The activity reporting the progress of background checks for updates
 
 NS_ASSUME_NONNULL_END

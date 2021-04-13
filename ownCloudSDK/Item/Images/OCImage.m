@@ -71,11 +71,10 @@
 - (UIImage *)image
 {
 	UIImage *returnImage = nil;
-	NSData *data;
 
 	[_processingLock lock]; // Lock
 
-	if ((data = self.data) != nil)
+	if (self.data != nil)
 	{
 		@synchronized(self)
 		{

@@ -32,6 +32,13 @@
 	return (self);
 }
 
+- (instancetype)withLocalizedDescription:(NSString *)localizedDescription
+{
+	self.localizedDescription = localizedDescription;
+
+	return (self);
+}
+
 #pragma mark - Evaluation
 - (void)evaluateWithOptions:(nullable OCWaitConditionOptions)options completionHandler:(OCWaitConditionEvaluationResultHandler)completionHandler
 {
@@ -53,13 +60,15 @@
 - (void)encodeWithCoder:(nonnull NSCoder *)coder
 {
 	[coder encodeObject:_uuid forKey:@"uuid"];
+	[coder encodeObject:_localizedDescription forKey:@"localizedDescription"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)decoder
 {
 	if ((self = [super init]) != nil)
 	{
-		_uuid = [decoder decodeObjectOfClass:[NSUUID class] forKey:@"uuid"];
+		_uuid = [decoder decodeObjectOfClass:NSUUID.class forKey:@"uuid"];
+		_localizedDescription = [decoder decodeObjectOfClass:NSString.class forKey:@"localizedDescription"];
 	}
 
 	return (self);
