@@ -436,6 +436,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					if ((existingFileTemporaryURL = [vaultItemURL URLByAppendingPathExtension:[NSString stringWithFormat:@".%@.octmp", NSUUID.UUID.UUIDString]]) != nil)
 					{
 						[[NSFileManager defaultManager] moveItemAtURL:vaultItemURL toURL:existingFileTemporaryURL error:&error];
+
+						OCFileOpLog(@"mv", error, @"Move existing file %@ out of the way to %@", vaultItemURL.path, existingFileTemporaryURL.path);
 					}
 				}
 			}
@@ -443,7 +445,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			if (error == nil)
 			{
 				// Move download to item path
-				if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
+				BOOL success = [[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error];
+
+				OCFileOpLog(@"mv", error, @"Move downloaded file %@ to item path %@", event.file.url.path, vaultItemURL.path);
+
+				if (success)
 				{
 					// Switch to "remoteItem" or latestVersionOfItem if eTag of downloaded file doesn't match
 					if (![item.eTag isEqual:event.file.eTag])
@@ -497,11 +503,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					{
 						// Moving downloaded file successful => remove existing file
 						[[NSFileManager defaultManager] removeItemAtURL:existingFileTemporaryURL error:&error];
+						OCFileOpLog(@"rm", error, @"Deleted temporary file at %@", existingFileTemporaryURL.path)
 					}
 					else
 					{
 						// Moving downloaded file failed => put existing file back in place
 						[[NSFileManager defaultManager] moveItemAtURL:existingFileTemporaryURL toURL:vaultItemURL error:&error];
+						OCFileOpLog(@"mv", error, @"Moved temporary file from %@ to %@", existingFileTemporaryURL.path, vaultItemURL.path);
 					}
 				}
 			}
@@ -703,6 +711,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 								syncContext.updatedItems = @[ latestItem ];
 							}
+
+							OCFileOpLog(@"rm", deleteError, @"Deleted outdated local copy at %@", deleteFileURL.path);
 
 							OCLogDebug(@"deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
 						}

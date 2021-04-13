@@ -127,9 +127,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			// Remove temporary copy (main file should remain intact)
 			if ((_importFileURL!=nil) && _importFileIsTemporaryAlongsideCopy)
 			{
-				NSError *error;
+				NSError *error = nil;
 
 				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+
+				OCFileOpLog(@"rm", error, @"Deleted descheduled import at %@", _importFileURL.path);
 			}
 		}
 	}
@@ -159,7 +161,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				NSError *error = nil;
 
 				// Make a copy of the file before upload (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
-				if ([[NSFileManager defaultManager] copyItemAtURL:uploadURL toURL:_uploadCopyFileURL error:&error])
+				BOOL success = [[NSFileManager defaultManager] copyItemAtURL:uploadURL toURL:_uploadCopyFileURL error:&error];
+
+				OCFileOpLog(@"cp", error, @"Cloning file to import %@ as %@", uploadURL.path, _uploadCopyFileURL.path);
+
+				if (success)
 				{
 					// Cloning succeeded - upload from the clone
 					uploadURL = _uploadCopyFileURL;
@@ -330,9 +336,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			// Remove temporary copy
 			if (_importFileIsTemporaryAlongsideCopy)
 			{
-				NSError *error;
+				NSError *error = nil;
 
 				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+
+				OCFileOpLog(@"rm", error, @"Deleted temporary copy at %@", _importFileURL.path);
 			}
 		}
 		else
@@ -451,6 +459,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
  				{
  					OCLogError(@"Renaming local copy of file from %@ to %@ during `keepBoth` issue resolution returned an error=%@", previousLocalURL, newLocalURL, error);
 				}
+
+				OCFileOpLog(@"mv", error, @"Renamed local copy of file from %@ to %@ during `keepBoth` issue resolution", previousLocalURL.path, newLocalURL.path);
 
 				syncContext.updatedItems = @[ self.localItem ];
 			}

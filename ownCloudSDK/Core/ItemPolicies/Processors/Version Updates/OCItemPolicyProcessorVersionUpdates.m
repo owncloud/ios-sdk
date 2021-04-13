@@ -86,6 +86,8 @@
 						}
 					}
 
+					OCFileOpLog(@"rm", deleteError, @"Deleted outdated, unclaimed local copy at %@", deleteFileURL.path);
+
 					[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ matchingItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 				}
 			}

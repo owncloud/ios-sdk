@@ -91,6 +91,7 @@
 						didRemove = YES;
 					}
 				}
+				OCFileOpLog(@"rm", deleteError, @"Deleted local copy at %@", deleteFileURL.path);
 
 				if (didRemove)
 				{

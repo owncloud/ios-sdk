@@ -297,7 +297,12 @@
 
 				[[NSFileManager defaultManager] removeItemAtURL:_downloadedFileURL error:&error];
 
-				OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+				OCFileOpLog(@"rm", error, @"Removed downloaded file %@ at %@", OCLogPrivate(self.effectiveURL.absoluteString), _downloadedFileURL.path);
+
+				if (error != nil)
+				{
+					OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+				}
 			}
 		}
 	}

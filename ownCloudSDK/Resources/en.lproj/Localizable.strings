@@ -132,6 +132,7 @@
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
 "Log HTTP requests and responses" = "Log HTTP requests and responses";
+"Log internal file operations" = "Log internal file operations";
 
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";

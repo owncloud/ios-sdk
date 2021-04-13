@@ -89,6 +89,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		[sharedLogger addWriter:[OCLogFileWriter new]];
 
 		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogRequestsAndResponses localizedName:OCLocalizedString(@"Log HTTP requests and responses", nil)]];
+		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogFileOperations localizedName:OCLocalizedString(@"Log internal file operations", nil)]];
 
 		NSSet<NSString *> *(^ConvertTagArrayToTagSet)(NSArray *tags) = ^NSSet<NSString *> *(NSArray<NSString *> *tags) {
 			if ((tags==nil) || ([tags isKindOfClass:[NSArray class]] && (tags.count == 0)))

@@ -1723,6 +1723,8 @@
 			{
 				OCLogError(@"Item parent directory deletion at %@ failed with error %@", OCLogPrivate(parentURL), error);
 			}
+
+			OCFileOpLog(@"rm", error, @"Deleted item folder at %@", parentURL.path);
 		}
 	}
 	else
@@ -1744,7 +1746,11 @@
 		// Move parent directory as needed
 		if (![fromItemParentURL isEqual:toItemParentURL])
 		{
-			if (![[NSFileManager defaultManager] moveItemAtURL:fromItemParentURL toURL:toItemParentURL error:&error])
+			BOOL success = [[NSFileManager defaultManager] moveItemAtURL:fromItemParentURL toURL:toItemParentURL error:&error];
+
+			OCFileOpLog(@"mv", error, @"Rename item directory from %@ to %@", fromItemParentURL.path, toItemParentURL.path);
+
+			if (!success)
 			{
 				OCLogError(@"Item parent directory %@ could not be renamed to %@, error=%@", OCLogPrivate(fromItemParentURL), OCLogPrivate(toItemParentURL), error);
 				return (error);
@@ -1763,7 +1769,11 @@
 				NSURL *fromLocalFileURL = [toItemParentURL URLByAppendingPathComponent:fromName];
 				NSURL *toLocalFileURL = [toItemParentURL URLByAppendingPathComponent:toName];
 
-				if (![[NSFileManager defaultManager] moveItemAtURL:fromLocalFileURL toURL:toLocalFileURL error:&error])
+				BOOL success = [[NSFileManager defaultManager] moveItemAtURL:fromLocalFileURL toURL:toLocalFileURL error:&error];
+
+				OCFileOpLog(@"mv", error, @"Rename item file from %@ to %@", fromLocalFileURL.path, toLocalFileURL.path);
+
+				if (!success)
 				{
 					OCLogError(@"Item file %@ could not be moved to %@, error=%@", OCLogPrivate(fromLocalFileURL), OCLogPrivate(toLocalFileURL), error);
 					return (error);

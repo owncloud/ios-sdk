@@ -55,8 +55,12 @@
 	{
 		if (_lastSegment.isValid)
 		{
-			[NSFileManager.defaultManager removeItemAtURL:_lastSegment.url error:NULL];
+			NSError *error = nil;
+
+			[NSFileManager.defaultManager removeItemAtURL:_lastSegment.url error:&error];
 			_lastSegment = nil;
+
+			OCFileOpLog(@"rm", error, @"Removed last segment at %@", _lastSegment.url.path);
 		}
 
 		if (_fileURL != nil)
@@ -228,6 +232,8 @@
 		{
 			OCLogError(@"Error destroying OCTUSJob segmentFolder at %@: %@", _segmentFolderURL, error);
 		}
+
+		OCFileOpLog(@"rm", error, @"Removed OCTUSJob segmentFolder at %@", _segmentFolderURL);
 
 		_segmentFolderURL = nil;
 	}

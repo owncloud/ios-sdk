@@ -1476,7 +1476,12 @@
 		// Remove temporarily downloaded files
 		if (task.response.bodyURLIsTemporary && (task.response.bodyURL!=nil))
 		{
-			[[NSFileManager defaultManager] removeItemAtURL:task.response.bodyURL error:nil];
+			NSError *error =nil;
+
+			[[NSFileManager defaultManager] removeItemAtURL:task.response.bodyURL error:&error];
+
+			OCFileOpLog(@"rm", error, @"Removed temporary body file at %@", task.response.bodyURL.path);
+
 			task.response.bodyURL = nil;
 		}
 
@@ -1717,6 +1722,8 @@
 					if ([[NSFileManager defaultManager] fileExistsAtPath:temporaryPartitionRootURL.path])
 					{
 						[[NSFileManager defaultManager] removeItemAtURL:temporaryPartitionRootURL error:&removeError];
+
+						OCFileOpLog(@"rm", removeError, @"Removed root partition folder at %@", temporaryPartitionRootURL.path);
 					}
 
 					if (completionHandler!=nil)
@@ -2310,6 +2317,8 @@
 			}
 
 			[[NSFileManager defaultManager] moveItemAtURL:location toURL:response.bodyURL error:&error];
+
+			OCFileOpLog(@"mv", error, @"Moved downloaded file %@ from %@ to %@", OCLogPrivate(request.effectiveURL), location.path, response.bodyURL.path);
 		}
 
 		// Update task with results

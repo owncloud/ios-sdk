@@ -109,6 +109,8 @@
 							{
 								OCTLogError(@[@"Compact"], @"Error moving back %@ to %@: %@", moveBackURL, self.filesRootURL, moveError);
 							}
+
+							OCFileOpLog(@"mv", moveError, @"Moved back %@ to %@", moveBackURL.path, self.filesRootURL.path);
 						}
 					}
 				}
@@ -123,6 +125,8 @@
 					{
 						OCTLogError(@[@"Compact"], @"Error deleting temporary compacting URL %@: %@", compactTargetURL, removeError);
 					}
+
+					OCFileOpLog(@"rm", removeError, @"Deleted temporary compacting folder %@", compactTargetURL.path);
 				}
 
 				OCTLogDebug(@[@"Compact"], @"Closing database");
@@ -185,8 +189,12 @@
 						{
 							NSURL *copyURL = [compactTargetURL URLByAppendingPathComponent:removeFolderURL.lastPathComponent];
 
+							OCFileOpLog(@"cp", nil, @"Cloning item folder %@ as %@", removeFolderURL.path, copyURL.path);
+
 							if ([fileManager copyItemAtURL:removeFolderURL toURL:copyURL error:&error])
 							{
+								OCFileOpLog(@"rm", nil, @"Removing item folder %@", removeFolderURL.path);
+
 								if ([fileManager removeItemAtURL:removeFolderURL error:&error])
 								{
 									// Update item in database

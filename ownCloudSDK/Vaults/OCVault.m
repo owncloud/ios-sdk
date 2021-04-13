@@ -302,6 +302,8 @@
 						error = OCError(OCErrorInternal);
 					}
 				}
+
+				OCFileOpLog(@"rm", error, @"Removed vault at %@", self.rootURL.path);
 			}
 
 			if ([fileManager fileExistsAtPath:self.filesRootURL.path])
@@ -313,6 +315,8 @@
 						error = OCError(OCErrorInternal);
 					}
 				}
+
+				OCFileOpLog(@"rm", error, @"Removed files root at %@", self.filesRootURL.path);
 			}
 
 			if (completionHandler != nil)
