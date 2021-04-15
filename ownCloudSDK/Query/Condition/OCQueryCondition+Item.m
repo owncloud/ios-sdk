@@ -105,7 +105,7 @@
 				{
 					if (operatorValue != nil)
 					{
-						isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+						isFulfilled = [(NSString *)propertyValue hasSuffix:(NSString *)operatorValue];
 					}
 					else
 					{
