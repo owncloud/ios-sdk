@@ -244,6 +244,11 @@
 	return ((_path != nil) && [_path isEqualToString:@"/"]);
 }
 
+- (NSString *)ownerUserName
+{
+	return (_owner.userName);
+}
+
 #pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
@@ -762,8 +767,8 @@ OCFileETag OCFileETagPlaceholder = @"_placeholder_";
 OCLocalAttribute OCLocalAttributeFavoriteRank = @"_favorite-rank";
 OCLocalAttribute OCLocalAttributeTagData = @"_tag-data";
 
-OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNameLastUsed = @"lastUsed"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameLastModified = @"lastModified";
+OCItemPropertyName OCItemPropertyNameLastUsed = @"lastUsed";
 OCItemPropertyName OCItemPropertyNameIsFavorite = @"isFavorite";
 OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 
@@ -776,13 +781,14 @@ OCItemPropertyName OCItemPropertyNameDownloadTrigger = @"downloadTriggerIdentifi
 OCItemDownloadTriggerID OCItemDownloadTriggerIDUser = @"user";
 OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOffline";
 
-OCItemPropertyName OCItemPropertyNameType = @"type"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNamePath = @"path"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNameName = @"name"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameType = @"type";
+OCItemPropertyName OCItemPropertyNamePath = @"path";
+OCItemPropertyName OCItemPropertyNameName = @"name";
+OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";
 OCItemPropertyName OCItemPropertyNameSize = @"size";
 OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
-OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified";
+OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath";
 
 OCItemPropertyName OCItemPropertyNameLocalID = @"localID";
 OCItemPropertyName OCItemPropertyNameFileID = @"fileID";

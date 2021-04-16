@@ -678,11 +678,12 @@
 	];
 
 	// Version 11: internal development only
+	// Version 12: internal development only
 
-	// Version 12
+	// Version 13
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameMetaData
-		version:12
+		version:13
 		creationQueries:@[
 			/*
 				mdID : INTEGER	  		- unique ID used to uniquely identify and efficiently update a row
@@ -704,11 +705,12 @@
 				lastUsedDate : REAL 		- NSDate.timeIntervalSince1970 value of OCItem.lastUsed
 				lastModifiedDate : REAL		- NSDate.timeIntervalSince1970 value of OCItem.lastModified
 				syncActivity : INTEGER 		- OCSyncActivity mask indicating which sync activity the item has (0 for none) (OCItem.syncActivity)
+				ownerUserName : TEXT		- User name of the owner of this item (OCItem.user.userName)
 				fileID : TEXT			- OCFileID identifying the item
 				localID : TEXT			- OCLocalID identifying the item
 				itemData : BLOB	  		- data of the serialized OCItem
 			*/
-			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
+			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, ownerUserName TEXT, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
 
 			// Create indexes over path and parentPath
 			@"CREATE INDEX idx_metaData_path ON metaData (path)",
@@ -723,13 +725,13 @@
 			@"CREATE TEMPORARY TRIGGER temp_delete_associated_thumbnails AFTER DELETE ON metaData BEGIN DELETE FROM thumb.thumbnails WHERE fileID = OLD.fileID; END" // relatedTo:OCDatabaseTableNameThumbnails
 		]
 		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
-			// Migrate to version 12
+			// Migrate to version 13
 			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
 				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
 
 				// Create new table (with new downloadTrigger column)
 				[db executeQuery:[OCSQLiteQuery query:
-				@"CREATE TABLE metaData_new (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)" resultHandler:resultHandler]];
+				@"CREATE TABLE metaData_new (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL, mimeType TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, ownerUserName TEXT, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)" resultHandler:resultHandler]];
 				if (transactionError != nil) { return(transactionError); }
 
 				// Migrate data to new table
@@ -776,6 +778,7 @@
 								[db executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:rowDictionary[@"mdID"]
 												inTable:@"metaData_new"
 												withRowValues:@{
+													@"ownerUserName"    : OCSQLiteNullProtect(item.ownerUserName),
 													@"lastModifiedDate" : OCSQLiteNullProtect(item.lastModified),
 													@"syncActivity"	    : @(item.syncActivity)
 												}

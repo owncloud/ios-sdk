@@ -300,6 +300,7 @@
 			@"lastModifiedDate"	: OCSQLiteNullProtect(item.lastModified),
 			@"fileID"		: OCSQLiteNullProtect(item.fileID),
 			@"localID"		: OCSQLiteNullProtect(item.localID),
+			@"ownerUserName"	: OCSQLiteNullProtect(item.ownerUserName),
 			@"itemData"		: [item serializedData]
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			item.databaseID = rowID;
@@ -370,6 +371,7 @@
 				@"lastModifiedDate" 	: OCSQLiteNullProtect(item.lastModified),
 				@"fileID"		: OCSQLiteNullProtect(item.fileID),
 				@"localID"		: OCSQLiteNullProtect(item.localID),
+				@"ownerUserName"	: OCSQLiteNullProtect(item.ownerUserName),
 				@"itemData"		: [item serializedData]
 			} completionHandler:nil];
 
@@ -752,6 +754,7 @@
 			OCItemPropertyNameSyncActivity		: @"syncActivity",
 			OCItemPropertyNameLastUsed 		: @"lastUsedDate",
 			OCItemPropertyNameLastModified		: @"lastModifiedDate",
+			OCItemPropertyNameOwnerUserName		: @"ownerUserName",
 
 			OCItemPropertyNameDownloadTrigger	: @"downloadTrigger",
 
