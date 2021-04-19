@@ -710,6 +710,10 @@
     "key" : "enabled-components",
     "possibleValues" : [
       {
+        "description" : "Log internal file operations",
+        "value" : "option.log-file-operations"
+      },
+      {
         "description" : "Log HTTP requests and responses",
         "value" : "option.log-requests-and-responses"
       },

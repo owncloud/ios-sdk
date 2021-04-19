@@ -54,7 +54,10 @@
 					if (!matchingItem.removed && // Item is not representing a removed item
 					    (matchingItem.syncActivity == OCItemSyncActivityNone)) // Item has no sync activity (=> not already being downloaded)
 					{
-						[self.core downloadItem:matchingItem options:nil resultHandler:nil];
+						OCLogDebug(@"Downloading new version of claimed local copy of %@ (%@ vs %@)", matchingItem, matchingItem.itemVersionIdentifier, matchingItem.localCopyVersionIdentifier);
+						[self.core downloadItem:matchingItem options:nil resultHandler:^(NSError * _Nullable error, OCCore * _Nonnull core, OCItem * _Nullable item, OCFile * _Nullable file) {
+							OCLogDebug(@"Download finished for %@", matchingItem);
+						}];
 					}
 				}
 			}
@@ -93,6 +96,16 @@
 			}
 		}
 	}
+}
+
++ (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"ItemPolicy", @"VersionUpdates"]);
+}
+
+- (NSArray<OCLogTagName> *)logTags
+{
+	return (@[@"ItemPolicy", @"VersionUpdates"]);
 }
 
 @end
