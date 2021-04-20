@@ -29,7 +29,7 @@ typedef NS_ENUM(NSUInteger, OCCoreClaimPurpose)
 
 @interface OCCore (Claims)
 
-- (void)addClaim:(OCClaim *)claim onItem:(OCItem *)item completionHandler:(nullable OCCoreClaimCompletionHandler)completionHandler;
+- (void)addClaim:(OCClaim *)claim onItem:(OCItem *)item refreshItem:(BOOL)refreshItem completionHandler:(nullable OCCoreClaimCompletionHandler)completionHandler;
 
 - (void)removeClaim:(OCClaim *)claim onItem:(OCItem *)item refreshItem:(BOOL)refreshItem completionHandler:(nullable OCCoreClaimCompletionHandler)completionHandler;
 

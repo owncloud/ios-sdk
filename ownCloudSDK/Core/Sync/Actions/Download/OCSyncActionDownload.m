@@ -141,7 +141,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 			if (addClaim != nil)
 			{
-				[self.core addClaim:addClaim onItem:item completionHandler:nil];
+				[self.core addClaim:addClaim onItem:item refreshItem:NO completionHandler:nil];
 			}
 
 			[syncContext completeWithError:nil core:self.core item:item parameter:file];
