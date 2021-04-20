@@ -40,6 +40,7 @@ extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyKey; //!< Return-onl
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyIdentifier; //!< Return-only key, with the OCClassSettingsIdentifier of the setting as value.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier; //!< Return-only key, with the OCClassSettingsFlatIdentifier of the setting as value.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName; //!< Return-only key, with the name of the Class associated with the settings.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyLabel; //!< A label for the setting. If none is provided, the flat identifier is used.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription; //!< A description of the setting. If none is provided, a description should be made available in the settings-doc directory following the "[OCClassSettingsIdentifier].[OCClassSettingsKey].md" nomenclature
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory; //!< The name of the category the setting should be listed under.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag; //!< The name of the catagory as "tag" (without spaces and lowercase)
