@@ -102,6 +102,30 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		OCLogDebug(@"Preflight on item=%@\narchivedServerItem=%@\n- item.itemVersionIdentifier=%@\n- item.localCopyVersionIdentifier=%@\n- archivedServerItem.itemVersionIdentifier=%@", item, self.archivedServerItem, item.itemVersionIdentifier, item.localCopyVersionIdentifier, self.archivedServerItem.itemVersionIdentifier);
 
+		// Check if local copy actually exists
+		if (item.localRelativePath != nil)
+		{
+			NSURL *localURL;
+			BOOL exists = NO;
+
+			if ((localURL = [self.core localURLForItem:item]) != nil)
+			{
+				exists = [NSFileManager.defaultManager fileExistsAtPath:localURL.path];
+			}
+
+			if (!exists)
+			{
+				// File has vanished
+				item.localRelativePath = nil;
+				item.localCopyVersionIdentifier = nil;
+
+				self.localItem = item;
+
+				syncContext.updatedItems = @[ item ];
+				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
+			}
+		}
+
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier] &&  // Local item version is identical to latest known version on the server
 		    ( (item.localCopyVersionIdentifier == nil) || // Either the local copy has no item version (typical for uploading files) …
@@ -256,13 +280,18 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				}
 				else
 				{
-					if ([item.localCopyVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier] && // Local copy and latest known version are identical
-					    ([self.core localCopyOfItem:item] != nil)) // Local copy actually exists
-					{
-						// Exact same file already downloaded -> prevent scheduling of download
-						[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+					NSURL *localURL = nil;
 
-						return (OCCoreSyncInstructionStop);
+					if ([item.localCopyVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier] && // Local copy and latest known version are identical
+					    ((localURL = [self.core localCopyOfItem:item]) != nil)) // Local copy actually exists
+					{
+						if ([NSFileManager.defaultManager fileExistsAtPath:localURL.path]) // Check that file actually exists and hasn't been removed
+						{
+							// Exact same file already downloaded -> prevent scheduling of download
+							[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+
+							return (OCCoreSyncInstructionStop);
+						}
 					}
 				}
 			}

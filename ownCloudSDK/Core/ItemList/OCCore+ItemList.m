@@ -492,8 +492,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 									=> changedItems += cacheItem
 
 								- cacheItem has NO local changes or active sync status
-									=> prepare retrievedItem to replace cacheItem
 									- fileID matches ?
+										=> prepare retrievedItem to replace cacheItem
 										=> changedItems += cacheItem
 									- fileID doesn't match
 										=> removedItems += cacheItem
@@ -541,31 +541,49 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					}
 					else
 					{
-						// Attach databaseID of cached items to the retrieved items
-						[retrievedItem prepareToReplace:cacheItem];
-
-						retrievedItem.localRelativePath = cacheItem.localRelativePath;
-						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
-						retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
-
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
-						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
-
-						    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
-						    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
-						    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
+						if ([cacheItem.fileID isEqual:retrievedItem.fileID])
 						{
-							// Update item in the cache if the server has a different version
-							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
+							// Same item (identical fileID) at same or different path
+
+							// Attach databaseID of cached items to the retrieved items
+							[retrievedItem prepareToReplace:cacheItem];
+
+							retrievedItem.localRelativePath = cacheItem.localRelativePath;
+							retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
+							retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
+
+							if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
+							    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
+
+							    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
+							    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
+							    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
 							{
+								// Update item in the cache if the server has a different version
 								[changedCacheItems addObject:retrievedItem];
 							}
-							else
-							{
-								[deletedCacheItems addObject:cacheItem];
-								retrievedItem.databaseID = nil;
-								[newItems addObject:retrievedItem];
-							}
+						}
+						else
+						{
+							// Different item (different fileID) at same path
+
+							// It is important that the localID is NOT shared in that case, to deal with these edge cases:
+							// - the original file still exists but has just been moved elsewhere
+							// - the original file has really beeen deleted and replaced, in which case there would be a complication if
+							//    a) the original file was downloaded
+							//    b) the original file was then moved to "deleted"
+							//    c) the new file uses the same localID and therefore the same item folder
+							//    d) the new file is downloaded
+							//    e) the original file entry is vacuumed and its folder (same as for new file because of same localID) is deleted
+							//
+							//    Result: new file's item still points to the local copy it downloaded, but which has been removed by vacuuming of the OLD file -> viewing and other actions requiring the local copy fail unexpectedly
+
+							// Remove cacheItem (with different fileID)
+							[deletedCacheItems addObject:cacheItem];
+
+							// Add retrievedItem (with different fileID + different localID)
+							retrievedItem.databaseID = nil;
+							[newItems addObject:retrievedItem];
 						}
 
 						// Return server version
