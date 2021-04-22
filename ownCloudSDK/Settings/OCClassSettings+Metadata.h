@@ -44,6 +44,8 @@ extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyLabel; //!< A label 
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription; //!< A description of the setting. If none is provided, a description should be made available in the settings-doc directory following the "[OCClassSettingsIdentifier].[OCClassSettingsKey].md" nomenclature
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory; //!< The name of the category the setting should be listed under.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag; //!< The name of the catagory as "tag" (without spaces and lowercase)
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategory; //!< The name of the sub-category the setting should be listed under.
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategoryTag; //!< The name of the sub-catagory as "tag" (without spaces and lowercase)
 /// Possible values. Either of:
 ///
 /// - a dictionary, where the keys represent possible values, and the value is the description (f.ex. { @"allow-all" : @"Allows all.", … })

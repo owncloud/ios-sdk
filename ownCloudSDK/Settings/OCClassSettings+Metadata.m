@@ -207,11 +207,16 @@
 	{
 		if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
 
-		NSString *category;
+		NSString *category, *subCategory;
 
 		if ((category = mutableMetadata[OCClassSettingsMetadataKeyCategory]) != nil)
 		{
 			mutableMetadata[OCClassSettingsMetadataKeyCategoryTag] = [[category lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
+		}
+
+		if ((subCategory = mutableMetadata[OCClassSettingsMetadataKeySubCategory]) != nil)
+		{
+			mutableMetadata[OCClassSettingsMetadataKeySubCategoryTag] = [[subCategory lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
 		}
 	}
 
@@ -315,6 +320,8 @@ OCClassSettingsMetadataKey OCClassSettingsMetadataKeyLabel = @"label";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription = @"description";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory = @"category";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag = @"categoryTag";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategory = @"subCategory";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategoryTag = @"subCategoryTag";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possibleValues";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"autoExpansion";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue = @"value";
