@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,readonly,strong) OCProcessSession *processSession; //!< Session of this process
 @property(nonatomic,readonly,strong) NSArray <OCProcessSession *> *sessions;
 
+@property(nonatomic,readonly,strong) dispatch_queue_t timeoutQueue;
+
 @property(class,nonatomic,readonly,strong) OCProcessManager *sharedProcessManager;
 
 + (BOOL)isProcessExtension; //!< Returns YES if this process is an extension.

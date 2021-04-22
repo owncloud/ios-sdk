@@ -86,6 +86,8 @@
 
 		_processStateDirectoryURL = [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:@".processManager" isDirectory:YES];
 
+		_timeoutQueue = dispatch_queue_create_with_target("Process Manager Timeout Queue", DISPATCH_QUEUE_CONCURRENT_WITH_AUTORELEASE_POOL, DISPATCH_TARGET_QUEUE_DEFAULT);
+
 		[NSFileManager.defaultManager createDirectoryAtURL:_processStateDirectoryURL withIntermediateDirectories:YES attributes:nil error:NULL];
 
 		// Set up ping-pong
@@ -540,7 +542,7 @@
 	OCLogDebug(@"Sending ping to %@", _session.bundleIdentifier);
 	[[OCIPNotificationCenter sharedNotificationCenter] postNotificationForName:[OCProcessManager pingNotificationNameForSession:_session] ignoreSelf:YES];
 
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_timeout * (NSTimeInterval)NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_timeout * (NSTimeInterval)NSEC_PER_SEC)), OCProcessManager.sharedProcessManager.timeoutQueue, ^{
 		@synchronized(self)
 		{
 			if (!self->_responded)
