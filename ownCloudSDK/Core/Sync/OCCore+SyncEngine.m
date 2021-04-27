@@ -339,6 +339,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		record.progress.path = @[OCCoreGlobalRootPath, self.bookmark.uuid.UUIDString, OCCoreSyncRecordPath, [record.recordID stringValue]];
 
 		// Pre-flight
+		BOOL recordRemovedSelf = NO;
+
 		if (blockError == nil)
 		{
 			OCSyncAction *syncAction;
@@ -367,6 +369,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 						return (syncContext.error);
 					}];
 
+					if ([syncContext.removeRecords containsObject:record])
+					{
+						recordRemovedSelf = YES;
+					}
+
 					OCLogDebug(@"record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 				}
 			}
@@ -380,24 +387,31 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		// Assign to lane
 		if (blockError == nil)
 		{
-			OCSyncLane *lane;
-
-			if ((lane = [self laneForTags:record.laneTags readOnly:NO]) != nil)
+			if (recordRemovedSelf)
 			{
-				record.laneID = lane.identifier;
-
-				[self updateSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
-					if (error != nil)
-					{
-						OCLogError(@"Error %@ updating sync record %@ after assigning lane", error, record);
-						blockError = error;
-					}
-				}];
+				OCLogDebug(@"record %@ removed itself during preflight via the context's .removeRecords", record);
 			}
-
-			if (blockError == nil)
+			else
 			{
-				OCLogDebug(@"record %@ added to lane %@", record, lane);
+				OCSyncLane *lane;
+
+				if ((lane = [self laneForTags:record.laneTags readOnly:NO]) != nil)
+				{
+					record.laneID = lane.identifier;
+
+					[self updateSyncRecords:@[ record ] completionHandler:^(OCDatabase *db, NSError *error) {
+						if (error != nil)
+						{
+							OCLogError(@"Error %@ updating sync record %@ after assigning lane", error, record);
+							blockError = error;
+						}
+					}];
+				}
+
+				if (blockError == nil)
+				{
+					OCLogDebug(@"record %@ added to lane %@", record, lane);
+				}
 			}
 		}
 

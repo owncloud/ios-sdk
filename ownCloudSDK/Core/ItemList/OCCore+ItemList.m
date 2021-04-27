@@ -33,6 +33,7 @@
 #import "OCCore+ItemPolicies.h"
 #import "NSError+OCNetworkFailure.h"
 #import "OCScanJobActivity.h"
+#import "OCMeasurement.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -56,7 +57,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 }
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement
 {
 	BOOL putInQueue = YES;
 
@@ -65,6 +66,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		if (directoryUpdateJob == nil)
 		{
 			directoryUpdateJob = [OCCoreDirectoryUpdateJob withPath:path];
+			[directoryUpdateJob attachMeasurement:measurement];
 		}
 
 		@synchronized(_queuedItemListTaskUpdateJobs)
@@ -246,6 +248,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		{
 			task.groupID = groupID;
 
+			[task attachMeasurement:updateJob.extractedMeasurement];
+
 			@synchronized(_itemListTasksByPath)
 			{
 				_itemListTasksByPath[task.path] = task;
@@ -349,6 +353,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
 
+	OCMeasureEventBegin(task, @"core.task-update", taskUpdateEventRef, nil);
+
 	[self beginActivity:@"item list task"];
 
 	switch (task.cachedSet.state)
@@ -434,6 +440,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				earlyExit:
 				
 				[self endActivity:@"item list task"];
+				OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 				return;
 			}
 		}
@@ -853,6 +860,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 
 				// Perform updates
+				__block OCMeasurementEventReference coreQueueRef = 0;
+
 				[self performUpdatesForAddedItems:newItems
 						     removedItems:deletedCacheItems
 						     updatedItems:changedCacheItems
@@ -861,10 +870,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					       beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 							// Called AFTER the database has been updated, but before UPDATING queries
 							OCWaitDidFinishTask(cacheUpdateGroup);
+
+							OCMeasureEventBegin(task, @"itemlist.query-update", tmpCoreQueueRef, @"Perform query updates");
+							coreQueueRef = tmpCoreQueueRef;
+
 							completionHandler();
 					       }
 						afterQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
+							OCMeasureEventEnd(task, @"itemlist.query-update", coreQueueRef, @"Done with query updates");
+
+							OCMeasureEventBegin(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalize query updates");
 							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
+							OCMeasureEventEnd(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalized query updates");
+							OCMeasureLog(task);
 							completionHandler();
 						}
 					       queryPostProcessor:nil
@@ -893,6 +911,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				removeTask = NO; // Don't remove task just yet, we're still busy here
 
+				OCMeasureEvent(task, @"core.task-update", @"Sync anchor induced update");
+
 				[task _updateCacheSet];
 				[self handleUpdatedTask:task];
 			}
@@ -903,6 +923,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 
 			[self endActivity:@"item list task"];
+			OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 
 			return;
 		}
@@ -975,6 +996,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}
 
 	[self endActivity:@"item list task"];
+	OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 }
 
 - (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task taskPath:(NSString *)taskPath targetRemoved:(BOOL)targetRemoved
@@ -1552,7 +1574,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	if (schedule)
 	{
-		[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job];
+		[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job withMeasurement:nil];
 	}
 }
 

@@ -241,4 +241,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCRateLimiter.h>
 #import <ownCloudSDK/OCDeallocAction.h>
 #import <ownCloudSDK/OCCancelAction.h>
-
+#import <ownCloudSDK/OCMeasurement.h>
+#import <ownCloudSDK/OCMeasurementEvent.h>

@@ -54,10 +54,13 @@
 + (instancetype)queryForPath:(OCPath)queryPath
 {
 	OCQuery *query = [self new];
-	
+
 	query.queryPath = queryPath;
 	query.includeRootItem = NO;
-	
+
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query for path %@", queryPath]];
+	[query attachMeasurement:measurement];
+
 	return (query);
 }
 
@@ -68,6 +71,9 @@
 	query.queryItem = rootItem;
 	query.includeRootItem = YES;
 
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query with item %@", rootItem.path]];
+	[query attachMeasurement:measurement];
+
 	return (query);
 }
 
@@ -76,6 +82,9 @@
 	OCQuery *query = [self new];
 
 	query.querySinceSyncAnchor = syncAnchor;
+
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query since sync anchor %@", syncAnchor]];
+	[query attachMeasurement:measurement];
 
 	return (query);
 }
@@ -88,6 +97,9 @@
 
 	query.customSource = customSource;
 	query.inputFilter = inputFilter;
+
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query with custom source %@", customSource]];
+	[query attachMeasurement:measurement];
 
 	return (query);
 }
@@ -114,6 +126,9 @@
 		query.stopAction = cancelAction;
 		query.sortComparator = condition.itemComparator;
 	}
+
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query with query condition %@", condition]];
+	[query attachMeasurement:measurement];
 
 	return (query);
 }
@@ -345,8 +360,11 @@
 		_hasChangesAvailable = YES;
 	}
 
-	if (_hasChangesAvailable)
+	if (_hasChangesAvailable && (_state != OCQueryStateStopped))
 	{
+		OCMeasureEvent(self, @"query", ([NSString stringWithFormat:@"Has changes available, state=%lu", (unsigned long)_state]));
+		OCMeasureLog(self);
+
 		if ((_delegate != nil) && ([_delegate respondsToSelector:@selector(queryHasChangesAvailable:)]))
 		{
 			[_delegate queryHasChangesAvailable:self];

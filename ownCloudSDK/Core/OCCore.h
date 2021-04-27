@@ -36,6 +36,7 @@
 #import "OCSyncIssue.h"
 #import "OCMessageQueue.h"
 #import "OCScanJobActivity.h"
+#import "OCMeasurement.h"
 
 @class OCCore;
 @class OCItem;

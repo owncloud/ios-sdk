@@ -55,6 +55,7 @@
 #import "OCHostSimulatorManager.h"
 #import "OCProcessManager.h"
 #import "OCBookmark+DBMigration.h"
+#import "OCMeasurement.h"
 
 @interface OCCore ()
 {
@@ -708,7 +709,11 @@
 #pragma mark - Query
 - (void)_startItemListTaskForQuery:(OCQuery *)query
 {
+	OCMeasureEventBegin(query, @"core.queue", coreQueueRef, @"Enqueing query item task list start");
+
 	[self queueBlock:^{
+		OCMeasureEventEnd(query, @"core.queue", coreQueueRef, @"Performing query start");
+
 		// Update query state to "started"
 		query.state = OCQueryStateStarted;
 
@@ -716,14 +721,14 @@
 		if (query.queryPath != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil];
+			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil];
+				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 			}
 		}
 	}];
@@ -798,6 +803,8 @@
 
 	OCQuery *query = OCTypedCast(coreQuery, OCQuery);
 	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
+
+	OCMeasureEvent(coreQuery, @"query", @"Starting");
 
 	if (query != nil)
 	{
