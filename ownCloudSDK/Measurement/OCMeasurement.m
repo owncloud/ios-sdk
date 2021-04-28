@@ -48,10 +48,11 @@
 {
 	return (@{
 		OCClassSettingsKeyMeasurementsEnabled : @{
-			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
-			OCClassSettingsMetadataKeyDescription 	 : @"Turn measurements on or off",
-			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences)
+			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription	: @"Turn measurements on or off",
+			OCClassSettingsMetadataKeyCategory	: @"Logging",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagAllowUserPreferences),
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly
 		}
 	});
 }
