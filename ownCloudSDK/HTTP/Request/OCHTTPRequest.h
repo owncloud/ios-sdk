@@ -160,6 +160,7 @@ extern OCHTTPMethod OCHTTPMethodUNLOCK;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth;

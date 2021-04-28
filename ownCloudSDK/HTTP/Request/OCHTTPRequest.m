@@ -43,6 +43,7 @@
 		self.headerFields = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
 			// Insert request.identifier as X-Request-ID for tracing and to be able to reidentify the task later
 			_identifier, OCHTTPHeaderFieldNameXRequestID,
+			_identifier, OCHTTPHeaderFieldNameOriginalRequestID,
 		nil];
 		self.parameters = [NSMutableDictionary new];
 
@@ -619,6 +620,7 @@ OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation = @"Location";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization = @"Authorization";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID = @"X-Request-ID";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID = @"Original-Request-ID";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
