@@ -33,6 +33,11 @@
 	return [[NSUUID new].UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
 }
 
++ (OCFileID)generatePlaceholderFileID
+{
+	return ([OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString]);
+}
+
 #pragma mark - Init
 - (instancetype)init
 {
@@ -55,7 +60,7 @@
 	item.type = type;
 
 	item.eTag = OCFileETagPlaceholder;
-	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
+	item.fileID = [self generatePlaceholderFileID];
 
 	return (item);
 }
@@ -603,6 +608,14 @@
 	CloneMetadata(@"quotaBytesUsed");
 }
 
+- (void)clearLocalCopyProperties
+{
+	self.localRelativePath = nil;
+	self.localCopyVersionIdentifier = nil;
+	self.downloadTriggerIdentifier = nil;
+	self.fileClaim = nil;
+}
+
 #pragma mark - File tools
 - (OCFile *)fileWithCore:(OCCore *)core
 {
@@ -724,7 +737,7 @@
 
 	if ((_syncActivity != 0) || (_activeSyncRecordIDs.count > 0))
 	{
-		activityDescription = @"syncActivity:";
+		activityDescription = @", syncActivity:";
 		#define AppendActivity(activityFlag, name) \
 			if ((_syncActivity & activityFlag) != 0) \
 			{ \

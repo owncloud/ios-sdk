@@ -169,6 +169,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
++ (OCFileID)generatePlaceholderFileID; //!< Generates a new, unique placeholder OCFileID
+
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 
 + (nullable NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
@@ -181,6 +183,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)prepareToReplace:(OCItem *)item;
 - (void)copyFilesystemMetadataFrom:(OCItem *)item;
 - (void)copyMetadataFrom:(OCItem *)item except:(nullable NSSet <OCItemPropertyName> *)exceptProperties;
+
+- (void)clearLocalCopyProperties;
 
 #pragma mark - Local attribute access
 - (nullable id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;

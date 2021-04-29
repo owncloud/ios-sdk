@@ -201,10 +201,7 @@
 
 		if (error == nil)
 		{
-			cleanupItem.localRelativePath = nil;
-			cleanupItem.localCopyVersionIdentifier = nil;
-			cleanupItem.downloadTriggerIdentifier = nil;
-			cleanupItem.fileClaim = nil;
+			[cleanupItem clearLocalCopyProperties];
 
 			if (_trimmedItems == nil)
 			{

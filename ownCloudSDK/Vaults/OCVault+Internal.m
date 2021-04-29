@@ -200,9 +200,7 @@
 									// Update item in database
 									__block NSError *updateError = nil;
 
-									item.localRelativePath = nil;
-									item.downloadTriggerIdentifier = nil;
-									item.fileClaim = nil;
+									[item clearLocalCopyProperties];
 
 									[self.database updateCacheItems:@[item] syncAnchor:newAnchor completionHandler:^(OCDatabase *db, NSError *error) {
 										updateError = error;

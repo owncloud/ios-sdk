@@ -72,10 +72,7 @@
 
 					OCLogDebug(@"Deleting outdated, unclaimed local copy of %@ (%@ vs %@)", matchingItem, matchingItem.itemVersionIdentifier, matchingItem.localCopyVersionIdentifier);
 
-					matchingItem.localRelativePath = nil;
-					matchingItem.localCopyVersionIdentifier = nil;
-					matchingItem.downloadTriggerIdentifier = nil;
-					matchingItem.fileClaim = nil;
+					[matchingItem clearLocalCopyProperties];
 
 					if ([[NSFileManager defaultManager] removeItemAtURL:deleteFileURL error:&deleteError])
 					{

@@ -116,8 +116,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			if (!exists)
 			{
 				// File has vanished
-				item.localRelativePath = nil;
-				item.localCopyVersionIdentifier = nil;
+				[item clearLocalCopyProperties];
 
 				self.localItem = item;
 
@@ -734,9 +733,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 								}
 
 								latestItem.locallyModified = NO;
-								latestItem.localRelativePath = nil;
-								latestItem.localCopyVersionIdentifier = nil;
-								latestItem.downloadTriggerIdentifier = nil;
+
+								[latestItem clearLocalCopyProperties];
 
 								syncContext.updatedItems = @[ latestItem ];
 							}

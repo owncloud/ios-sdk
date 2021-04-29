@@ -95,10 +95,7 @@
 
 				if (didRemove)
 				{
-					item.localRelativePath = nil;
-					item.localCopyVersionIdentifier = nil;
-					item.downloadTriggerIdentifier = nil;
-					item.fileClaim = nil;
+					[item clearLocalCopyProperties];
 				}
 			}
 		}
