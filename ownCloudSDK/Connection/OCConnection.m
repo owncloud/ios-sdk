@@ -131,7 +131,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	});
 }
 
-+ (OCClassSettingsMetadataCollection)classSettingsMetadata
++ (NSMutableArray<OCClassSettingsMetadata> *)authenticationMethodIdentifierMetadata
 {
 	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
 	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
@@ -149,6 +149,13 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			nil]];
 		}
 	}
+
+	return (authMethodValues);
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [self authenticationMethodIdentifierMetadata];
 
 	return (@{
 		// Connection
@@ -330,7 +337,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 + (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
 {
-	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
+	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs] ||
+	    [key isEqual:OCConnectionAllowedAuthenticationMethodIDs])
 	{
 		return (YES);
 	}

@@ -259,6 +259,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray <OCAuthenticationMethodIdentifier> *)filteredAndSortedMethodIdentifiers:(NSArray <OCAuthenticationMethodIdentifier> *)methodIdentifiers; //!< Returns allowed entries from methodIdentifiers in order of preferrence
 
++ (NSMutableArray<OCClassSettingsMetadata> *)authenticationMethodIdentifierMetadata; //!< Possible authentication method identifiers formatted as class settings metadata
+
 @end
 
 #pragma mark - SHARING

@@ -102,6 +102,29 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		OCLogDebug(@"Preflight on item=%@\narchivedServerItem=%@\n- item.itemVersionIdentifier=%@\n- item.localCopyVersionIdentifier=%@\n- archivedServerItem.itemVersionIdentifier=%@", item, self.archivedServerItem, item.itemVersionIdentifier, item.localCopyVersionIdentifier, self.archivedServerItem.itemVersionIdentifier);
 
+		// Check if local copy actually exists
+		if (item.localRelativePath != nil)
+		{
+			NSURL *localURL;
+			BOOL exists = NO;
+
+			if ((localURL = [self.core localURLForItem:item]) != nil)
+			{
+				exists = [NSFileManager.defaultManager fileExistsAtPath:localURL.path];
+			}
+
+			if (!exists)
+			{
+				// File has vanished
+				[item clearLocalCopyProperties];
+
+				self.localItem = item;
+
+				syncContext.updatedItems = @[ item ];
+				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
+			}
+		}
+
 		if ((item.localRelativePath != nil) && // Copy of item is stored locally
 		    [item.itemVersionIdentifier isEqual:self.archivedServerItem.itemVersionIdentifier] &&  // Local item version is identical to latest known version on the server
 		    ( (item.localCopyVersionIdentifier == nil) || // Either the local copy has no item version (typical for uploading files) …
@@ -141,7 +164,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 			if (addClaim != nil)
 			{
-				[self.core addClaim:addClaim onItem:item completionHandler:nil];
+				[self.core addClaim:addClaim onItem:item refreshItem:NO completionHandler:nil];
 			}
 
 			[syncContext completeWithError:nil core:self.core item:item parameter:file];
@@ -256,13 +279,18 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				}
 				else
 				{
-					if ([item.localCopyVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier] && // Local copy and latest known version are identical
-					    ([self.core localCopyOfItem:item] != nil)) // Local copy actually exists
-					{
-						// Exact same file already downloaded -> prevent scheduling of download
-						[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+					NSURL *localURL = nil;
 
-						return (OCCoreSyncInstructionStop);
+					if ([item.localCopyVersionIdentifier isEqual:latestItemVersion.itemVersionIdentifier] && // Local copy and latest known version are identical
+					    ((localURL = [self.core localCopyOfItem:item]) != nil)) // Local copy actually exists
+					{
+						if ([NSFileManager.defaultManager fileExistsAtPath:localURL.path]) // Check that file actually exists and hasn't been removed
+						{
+							// Exact same file already downloaded -> prevent scheduling of download
+							[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:nil parameter:nil];
+
+							return (OCCoreSyncInstructionStop);
+						}
 					}
 				}
 			}
@@ -436,6 +464,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					if ((existingFileTemporaryURL = [vaultItemURL URLByAppendingPathExtension:[NSString stringWithFormat:@".%@.octmp", NSUUID.UUID.UUIDString]]) != nil)
 					{
 						[[NSFileManager defaultManager] moveItemAtURL:vaultItemURL toURL:existingFileTemporaryURL error:&error];
+
+						OCFileOpLog(@"mv", error, @"Move existing file %@ out of the way to %@", vaultItemURL.path, existingFileTemporaryURL.path);
 					}
 				}
 			}
@@ -443,7 +473,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			if (error == nil)
 			{
 				// Move download to item path
-				if ([[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error])
+				BOOL success = [[NSFileManager defaultManager] moveItemAtURL:event.file.url toURL:vaultItemURL error:&error];
+
+				OCFileOpLog(@"mv", error, @"Move downloaded file %@ to item path %@", event.file.url.path, vaultItemURL.path);
+
+				if (success)
 				{
 					// Switch to "remoteItem" or latestVersionOfItem if eTag of downloaded file doesn't match
 					if (![item.eTag isEqual:event.file.eTag])
@@ -497,11 +531,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					{
 						// Moving downloaded file successful => remove existing file
 						[[NSFileManager defaultManager] removeItemAtURL:existingFileTemporaryURL error:&error];
+						OCFileOpLog(@"rm", error, @"Deleted temporary file at %@", existingFileTemporaryURL.path)
 					}
 					else
 					{
 						// Moving downloaded file failed => put existing file back in place
 						[[NSFileManager defaultManager] moveItemAtURL:existingFileTemporaryURL toURL:vaultItemURL error:&error];
+						OCFileOpLog(@"mv", error, @"Moved temporary file from %@ to %@", existingFileTemporaryURL.path, vaultItemURL.path);
 					}
 				}
 			}
@@ -697,12 +733,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 								}
 
 								latestItem.locallyModified = NO;
-								latestItem.localRelativePath = nil;
-								latestItem.localCopyVersionIdentifier = nil;
-								latestItem.downloadTriggerIdentifier = nil;
+
+								[latestItem clearLocalCopyProperties];
 
 								syncContext.updatedItems = @[ latestItem ];
 							}
+
+							OCFileOpLog(@"rm", deleteError, @"Deleted outdated local copy at %@", deleteFileURL.path);
 
 							OCLogDebug(@"deleted %@ with error=%@ and rescheduling download", deleteFileURL, deleteError);
 						}

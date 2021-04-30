@@ -239,4 +239,7 @@ NS_ASSUME_NONNULL_END
 #define OCRLogWarning(tags,format,...)		_OC_RLOG(OCLogLevelWarning, tags, format, ##__VA_ARGS__)
 #define OCRLogError(tags,format,...)		_OC_RLOG(OCLogLevelError,   tags, format, ##__VA_ARGS__)
 
+// FileOp Logging
+#define OCFileOpLog(opName,error,format,...) if ([OCLogger logsForLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug)] && OCLogToggleEnabled(OCLogOptionLogFileOperations)) {  if (error != nil) { [[OCLogger sharedLogger] appendLogLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug) force:NO forceSyncWrite:NO functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:@[@"FileOp", opName] message:format @" (with error: %@)", ##__VA_ARGS__, error]; } else { [[OCLogger sharedLogger] appendLogLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug) force:NO forceSyncWrite:NO functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:@[@"FileOp", opName] message:format, ##__VA_ARGS__]; } }
+
 #define OCLogPrivate(obj) [OCLogger applyPrivacyMask:(obj)]

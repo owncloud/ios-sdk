@@ -91,10 +91,14 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Database") action:^(OCDiagnosticContext * _Nullable context) {
 			[OCCoreManager.sharedCoreManager scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 				OCVault *vault = [[OCVault alloc] initWithBookmark:bookmark];
+				NSError *error = nil;
 				OCDatabase *database = vault.database;
 
-				[NSFileManager.defaultManager removeItemAtURL:database.databaseURL error:NULL];
-				[NSFileManager.defaultManager removeItemAtURL:database.thumbnailDatabaseURL error:NULL];
+				[NSFileManager.defaultManager removeItemAtURL:database.databaseURL error:&error];
+				OCFileOpLog(@"rm", error, @"Removed database at %@", database.databaseURL.path);
+
+				[NSFileManager.defaultManager removeItemAtURL:database.thumbnailDatabaseURL error:&error];
+				OCFileOpLog(@"rm", error, @"Removed thumbnail database at %@", database.thumbnailDatabaseURL.path);
 
 				completionHandler();
 			} forBookmark:self];

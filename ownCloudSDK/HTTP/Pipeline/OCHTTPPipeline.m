@@ -1296,7 +1296,7 @@
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
 		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
-		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@%@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, ((task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] != nil) ? (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier] ? [NSString stringWithFormat:@" (original: %@)", task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID]] : @"") : @""), infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
 	}
 
 	// Attempt delivery
@@ -1476,7 +1476,12 @@
 		// Remove temporarily downloaded files
 		if (task.response.bodyURLIsTemporary && (task.response.bodyURL!=nil))
 		{
-			[[NSFileManager defaultManager] removeItemAtURL:task.response.bodyURL error:nil];
+			NSError *error =nil;
+
+			[[NSFileManager defaultManager] removeItemAtURL:task.response.bodyURL error:&error];
+
+			OCFileOpLog(@"rm", error, @"Removed temporary body file at %@", task.response.bodyURL.path);
+
 			task.response.bodyURL = nil;
 		}
 
@@ -1717,6 +1722,8 @@
 					if ([[NSFileManager defaultManager] fileExistsAtPath:temporaryPartitionRootURL.path])
 					{
 						[[NSFileManager defaultManager] removeItemAtURL:temporaryPartitionRootURL error:&removeError];
+
+						OCFileOpLog(@"rm", removeError, @"Removed root partition folder at %@", temporaryPartitionRootURL.path);
 					}
 
 					if (completionHandler!=nil)
@@ -2310,6 +2317,8 @@
 			}
 
 			[[NSFileManager defaultManager] moveItemAtURL:location toURL:response.bodyURL error:&error];
+
+			OCFileOpLog(@"mv", error, @"Moved downloaded file %@ from %@ to %@", OCLogPrivate(request.effectiveURL), location.path, response.bodyURL.path);
 		}
 
 		// Update task with results
