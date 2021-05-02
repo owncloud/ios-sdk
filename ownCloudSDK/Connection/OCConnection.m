@@ -916,9 +916,10 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
 	// original URL.
 	//
-	// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
-	// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
-	// response. If no valid response can be retrieved, the status test is assumed to have failed, otherwise succeeded.
+	// What the Connection Validator does, then, is to clear all cookies and then send an unauthenticated GET request to
+	// status.php and follow up to OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt
+	// to retrieve a valid JSON response. If no valid response can be retrieved, the status test is assumed to have failed,
+	// otherwise succeeded.
 	//
 	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
 	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
@@ -941,6 +942,10 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		{
 			_isValidatingConnection = YES;
 			doValidateConnection = YES;
+
+			// Remove all cookies when entering the connection validator, as per https://github.com/owncloud/client/pull/8558
+			OCTLog(@[ @"ConnectionValidator" ], @"Clearing cookies on entry to connection validation");
+			[self.cookieStorage removeCookiesWithFilter:nil];
 
 			if (triggeringURL != nil)
 			{
