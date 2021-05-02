@@ -43,6 +43,7 @@
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
 typedef NSString* OCConnectionEndpointURLOption NS_TYPED_ENUM;
+typedef NSString* OCConnectionValidatorFlag NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
@@ -408,6 +409,7 @@ extern OCClassSettingsKey OCConnectionAllowCellular; //!< Allows (TRUE) or disal
 extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for OCConnectionSetupHTTPPolicyWarn) or "forbidden" (for OCConnectionSetupHTTPPolicyForbidden). Controls if plain-text HTTP URLs should be allow for setup with warning - or not at all.
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 extern OCClassSettingsKey OCConnectionTransparentTemporaryRedirect; //!< Allows (TRUE) transparent handling of 307 redirects at the HTTP pipeline level.
+extern OCClassSettingsKey OCConnectionValidatorFlags; //!< Allows fine-tuning the behavior of the connection validator.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads
@@ -421,6 +423,8 @@ extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
 
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
+
+extern OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies; //!< Clear all cookies for the connection when entering connection validation.
 
 NS_ASSUME_NONNULL_END
 

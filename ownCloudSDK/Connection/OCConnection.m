@@ -101,7 +101,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		OCConnectionAllowCellular,
 		OCConnectionPlainHTTPPolicy,
 		OCConnectionAlwaysRequestPrivateLink,
-		OCConnectionTransparentTemporaryRedirect
+		OCConnectionTransparentTemporaryRedirect,
+		OCConnectionValidatorFlags
 	]);
 }
 
@@ -204,6 +205,17 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionValidatorFlags : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Allows fine-tuning the behavior of the connection validator by enabling/disabling aspects of it.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				OCConnectionValidatorFlagClearCookies : @"Clear all cookies for the connection when entering connection validation."
+			},
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
@@ -916,10 +928,10 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
 	// original URL.
 	//
-	// What the Connection Validator does, then, is to clear all cookies and then send an unauthenticated GET request to
-	// status.php and follow up to OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt
-	// to retrieve a valid JSON response. If no valid response can be retrieved, the status test is assumed to have failed,
-	// otherwise succeeded.
+	// What the Connection Validator does, then, is to clear all cookies (if OCConnectionValidatorFlagClearCookies flag is set)
+	// and then send an unauthenticated GET request to status.php and follow up to OCHTTPRequest.maximumRedirectionDepth (5 at
+	// the time of writing) redirects in an attempt to retrieve a valid JSON response. If no valid response can be retrieved,
+	// the status test is assumed to have failed, otherwise succeeded.
 	//
 	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
 	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
@@ -943,9 +955,12 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			_isValidatingConnection = YES;
 			doValidateConnection = YES;
 
-			// Remove all cookies when entering the connection validator, as per https://github.com/owncloud/client/pull/8558
-			OCTLog(@[ @"ConnectionValidator" ], @"Clearing cookies on entry to connection validation");
-			[self.cookieStorage removeCookiesWithFilter:nil];
+			if ([[self classSettingForOCClassSettingsKey:OCConnectionValidatorFlags] containsObject:OCConnectionValidatorFlagClearCookies])
+			{
+				// Remove all cookies when entering the connection validator, as per https://github.com/owncloud/client/pull/8558
+				OCTLog(@[ @"ConnectionValidator" ], @"Clearing cookies on entry to connection validation");
+				[self.cookieStorage removeCookiesWithFilter:nil];
+			}
 
 			if (triggeringURL != nil)
 			{
@@ -3072,6 +3087,7 @@ OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
+OCClassSettingsKey OCConnectionValidatorFlags = @"validator-flags";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
@@ -3085,3 +3101,5 @@ OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"tempora
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
+
+OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";
