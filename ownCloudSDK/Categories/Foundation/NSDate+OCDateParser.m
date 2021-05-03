@@ -54,6 +54,23 @@
 	return (dateFormatter);
 }
 
++ (NSDateFormatter *)_ocDateFormatterCompactLocalTimeZone
+{
+	static NSDateFormatter *dateFormatter;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		if ((dateFormatter = [NSDateFormatter new]) != nil)
+		{
+			[dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
+			[dateFormatter setTimeZone:NSTimeZone.systemTimeZone];
+			[dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+		}
+	});
+
+	return (dateFormatter);
+}
+
 + (instancetype)dateParsedFromString:(NSString *)dateString error:(NSError **)error
 {
 	return ([[self _ocDateFormatter] dateFromString:dateString]);
@@ -84,6 +101,11 @@
 	}
 
 	return (nil);
+}
+
+- (NSString *)compactLocalTimeZoneString
+{
+	return ([[[self class] _ocDateFormatterCompactLocalTimeZone] stringFromDate:self]);
 }
 
 @end

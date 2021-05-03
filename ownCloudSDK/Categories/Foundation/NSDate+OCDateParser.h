@@ -29,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)compactUTCString;
 - (nullable NSString *)compactUTCStringDateOnly;
 
+- (nullable NSString *)compactLocalTimeZoneString;
+
 @end
 
 NS_ASSUME_NONNULL_END

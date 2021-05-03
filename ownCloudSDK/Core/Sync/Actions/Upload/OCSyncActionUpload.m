@@ -440,7 +440,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			{
 				NSString *filename = [self.filename stringByDeletingPathExtension];
 				NSString *extension = [self.filename pathExtension];
-				NSString *dateString = [[NSDate new] compactUTCString];
+				NSString *dateString = [[NSDate new] compactLocalTimeZoneString];
 				NSURL *previousLocalURL = [self.core localURLForItem:self.localItem];
 
 				if (filename.length > 0)
