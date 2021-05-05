@@ -761,8 +761,6 @@
 		59AAD95321F76B5000D15F07 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
 		59AAD95C21F7717C00D15F07 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		59AAD95D21F7717D00D15F07 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD95E21F7721B00D15F07 /* de-DE */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "de-DE"; path = "de-DE.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD95F21F7721B00D15F07 /* de-DE */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "de-DE"; path = "de-DE.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		59AAD96021F7743100D15F07 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		59AAD96121F7743200D15F07 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		59AAD96221F774AA00D15F07 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -3501,7 +3499,6 @@
 				es,
 				cs,
 				de,
-				"de-DE",
 				"en-GB",
 				ko,
 				mk,
@@ -4056,7 +4053,6 @@
 				590CCF3D20C7FAC100BA75E4 /* es */,
 				59AAD95221F76B5000D15F07 /* cs */,
 				59AAD95C21F7717C00D15F07 /* de */,
-				59AAD95E21F7721B00D15F07 /* de-DE */,
 				59AAD96021F7743100D15F07 /* en-GB */,
 				59AAD96221F774AA00D15F07 /* ko */,
 				59AAD96421F774FE00D15F07 /* mk */,
@@ -4080,7 +4076,6 @@
 				590CCF3E20C7FAC100BA75E4 /* es */,
 				59AAD95321F76B5000D15F07 /* cs */,
 				59AAD95D21F7717D00D15F07 /* de */,
-				59AAD95F21F7721B00D15F07 /* de-DE */,
 				59AAD96121F7743200D15F07 /* en-GB */,
 				59AAD96321F774AA00D15F07 /* ko */,
 				59AAD96521F774FF00D15F07 /* mk */,
