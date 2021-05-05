@@ -132,28 +132,6 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	});
 }
 
-+ (NSMutableArray<OCClassSettingsMetadata> *)authenticationMethodIdentifierMetadata
-{
-	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
-	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
-
-	for (Class authMethodClass in authMethodClasses)
-	{
-		OCAuthenticationMethodIdentifier authMethodIdentifier;
-		NSString *authMethodName = [authMethodClass name];
-
-		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
-		{
-			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
-				authMethodName,		OCClassSettingsMetadataKeyDescription,
-			nil]];
-		}
-	}
-
-	return (authMethodValues);
-}
-
 + (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
 	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [self authenticationMethodIdentifierMetadata];

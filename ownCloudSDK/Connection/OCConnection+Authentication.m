@@ -375,4 +375,26 @@ typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for tw
 	return ([[self class] filteredAndSortedMethodIdentifiers:methodIdentifiers allowedMethodIdentifiers:[self classSettingForOCClassSettingsKey:OCConnectionAllowedAuthenticationMethodIDs] preferredMethodIdentifiers:[self classSettingForOCClassSettingsKey:OCConnectionPreferredAuthenticationMethodIDs]]);
 }
 
++ (NSMutableArray<OCClassSettingsMetadata> *)authenticationMethodIdentifierMetadata
+{
+	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
+
+	for (Class authMethodClass in authMethodClasses)
+	{
+		OCAuthenticationMethodIdentifier authMethodIdentifier;
+		NSString *authMethodName = [authMethodClass name];
+
+		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
+		{
+			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
+				authMethodName,		OCClassSettingsMetadataKeyDescription,
+			nil]];
+		}
+	}
+
+	return (authMethodValues);
+}
+
 @end

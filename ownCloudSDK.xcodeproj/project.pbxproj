@@ -288,6 +288,10 @@
 		DC6BFFEE231FB9F8005FA5CB /* OCEventRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */; };
 		DC6BFFF623206215005FA5CB /* OCEventQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFF423206215005FA5CB /* OCEventQueue.h */; };
 		DC6BFFF723206215005FA5CB /* OCEventQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFF523206215005FA5CB /* OCEventQueue.m */; };
+		DC6CC30726428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CC30526428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6CC30826428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CC30626428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m */; };
+		DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CC30D2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h */; };
+		DC6CC3102642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CC30E2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m */; };
 		DC6CF8212195D56C0013B9F9 /* OCCore+CommandUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CF8202195D56B0013B9F9 /* OCCore+CommandUpdate.m */; };
 		DC6CF8242195D7C90013B9F9 /* OCSyncActionUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CF8222195D7C90013B9F9 /* OCSyncActionUpdate.h */; };
 		DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */; };
@@ -1051,6 +1055,10 @@
 		DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventRecord.m; sourceTree = "<group>"; };
 		DC6BFFF423206215005FA5CB /* OCEventQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventQueue.h; sourceTree = "<group>"; };
 		DC6BFFF523206215005FA5CB /* OCEventQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventQueue.m; sourceTree = "<group>"; };
+		DC6CC30526428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionCustomScheme.h; sourceTree = "<group>"; };
+		DC6CC30626428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionCustomScheme.m; sourceTree = "<group>"; };
+		DC6CC30D2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionMIBrowser.h; sourceTree = "<group>"; };
+		DC6CC30E2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionMIBrowser.m; sourceTree = "<group>"; };
 		DC6CF8202195D56B0013B9F9 /* OCCore+CommandUpdate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandUpdate.m"; sourceTree = "<group>"; };
 		DC6CF8222195D7C90013B9F9 /* OCSyncActionUpdate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionUpdate.h; sourceTree = "<group>"; };
 		DC6CF8232195D7C90013B9F9 /* OCSyncActionUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncActionUpdate.m; sourceTree = "<group>"; };
@@ -2078,6 +2086,24 @@
 			path = Internal;
 			sourceTree = "<group>";
 		};
+		DC6CC30426428DA40040ECAC /* Custom Scheme */ = {
+			isa = PBXGroup;
+			children = (
+				DC6CC30626428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m */,
+				DC6CC30526428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h */,
+			);
+			path = "Custom Scheme";
+			sourceTree = "<group>";
+		};
+		DC6CC30C2642A0570040ECAC /* MIBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				DC6CC30E2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m */,
+				DC6CC30D2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h */,
+			);
+			path = MIBrowser;
+			sourceTree = "<group>";
+		};
 		DC6CF81F2195D5450013B9F9 /* Update */ = {
 			isa = PBXGroup;
 			children = (
@@ -2602,6 +2628,8 @@
 			children = (
 				DC8EB2FD23951AAB009148F9 /* OCAuthenticationBrowserSession.m */,
 				DC8EB2FC23951AAB009148F9 /* OCAuthenticationBrowserSession.h */,
+				DC6CC30426428DA40040ECAC /* Custom Scheme */,
+				DC6CC30C2642A0570040ECAC /* MIBrowser */,
 				DC8EB30123952049009148F9 /* UIWebView */,
 			);
 			path = "Browser Session";
@@ -3139,6 +3167,7 @@
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC2CD12B22E8E7FD0099C665 /* OCItemPolicyProcessorDownloadExpiration.h in Headers */,
 				DC6ABF732534683800689C7B /* OCExtension+HostSimulation.h in Headers */,
+				DC6CC30726428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DCEAA0B125CEB7290017F99B /* OCLock.h in Headers */,
@@ -3172,6 +3201,7 @@
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
+				DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */,
 				DCC599F422EEE65700499B29 /* OCCore+Claims.h in Headers */,
 				DC2CD12622E84AC30099C665 /* OCItemPolicyProcessorVacuum.h in Headers */,
 				DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */,
@@ -3889,6 +3919,7 @@
 				DCA35D7F24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
 				DC6DEEB624C59BE300E3772E /* OCHTTPPolicyManager.m in Sources */,
+				DC6CC3102642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
 				DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */,
@@ -3932,6 +3963,7 @@
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
 				DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */,
 				DC241E6F229549E200AEE068 /* OCAuthenticationMethodOpenIDConnect.m in Sources */,
+				DC6CC30826428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m in Sources */,
 				DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */,
 				DCC599F522EEE65700499B29 /* OCCore+Claims.m in Sources */,
 				DC19BFDF21CB99D1007C20D1 /* OCIssue+SyncIssue.m in Sources */,

@@ -336,6 +336,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorHostUpdateRequired:
 					unlocalizedString = @"Bookmark created with a newer app version. Please update the app.";
 				break;
+
+				case OCErrorAuthorizationCantOpenCustomSchemeURL:
+					unlocalizedString = @"Can't open authorization URL with custom scheme.";
+				break;
 			}
 		}
 	}
