@@ -30,6 +30,14 @@
 @end
 
 static OCAuthenticationBrowserSessionCustomScheme *sActiveSession;
+static OCAuthenticationBrowserSessionCustomSchemeBusyPresenter sBusyPresenter;
+
+@interface OCAuthenticationBrowserSessionCustomScheme ()
+{
+	dispatch_block_t _cancelBusyPresenter;
+	BOOL _isCompleted;
+}
+@end
 
 @implementation OCAuthenticationBrowserSessionCustomScheme
 
@@ -63,6 +71,16 @@ static OCAuthenticationBrowserSessionCustomScheme *sActiveSession;
 	return (sActiveSession);
 }
 
++ (void)setBusyPresenter:(OCAuthenticationBrowserSessionCustomSchemeBusyPresenter)busyPresenter
+{
+	sBusyPresenter = [busyPresenter copy];
+}
+
++ (OCAuthenticationBrowserSessionCustomSchemeBusyPresenter)busyPresenter
+{
+	return (sBusyPresenter);
+}
+
 + (BOOL)handleOpenURL:(NSURL *)url
 {
 	OCAuthenticationBrowserSessionCustomScheme *activeSession;
@@ -72,7 +90,6 @@ static OCAuthenticationBrowserSessionCustomScheme *sActiveSession;
 		if ([url.scheme isEqual:activeSession.scheme])
 		{
 			[activeSession completedWithCallbackURL:url error:nil];
-			self.activeSession = nil;
 
 			return (YES);
 		}
@@ -115,6 +132,16 @@ static OCAuthenticationBrowserSessionCustomScheme *sActiveSession;
 	{
 		if (sharedApplication != nil)
 		{
+			OCAuthenticationBrowserSessionCustomSchemeBusyPresenter busyPresenter = OCAuthenticationBrowserSessionCustomScheme.busyPresenter;
+
+			if (busyPresenter != nil)
+			{
+				__weak OCAuthenticationBrowserSessionCustomScheme *weakSelf = self;
+				_cancelBusyPresenter = [busyPresenter(self, ^{
+					[weakSelf completedWithCallbackURL:nil error:OCError(OCErrorAuthorizationCancelled)];
+				}) copy];
+			}
+
 			[sharedApplication openURL:customSchemeURL options:@{} completionHandler:^(BOOL success) {
 				if (!success)
 				{
@@ -141,6 +168,23 @@ static OCAuthenticationBrowserSessionCustomScheme *sActiveSession;
 	}
 
 	return (NO);
+}
+
+- (void)completedWithCallbackURL:(NSURL *)callbackURL error:(NSError *)error
+{
+	if (!_isCompleted)
+	{
+		_isCompleted = YES;
+
+		[super completedWithCallbackURL:callbackURL error:error];
+		self.class.activeSession = nil;
+
+		if (_cancelBusyPresenter != nil)
+		{
+			_cancelBusyPresenter();
+			_cancelBusyPresenter = nil;
+		}
+	}
 }
 
 @end

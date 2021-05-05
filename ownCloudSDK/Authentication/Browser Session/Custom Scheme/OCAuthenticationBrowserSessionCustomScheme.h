@@ -20,9 +20,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class OCAuthenticationBrowserSessionCustomScheme;
+
+typedef dispatch_block_t _Nullable (^OCAuthenticationBrowserSessionCustomSchemeBusyPresenter)(OCAuthenticationBrowserSessionCustomScheme *browserSession, dispatch_block_t userCancelledAction); //!< Show a busy status to the user, with the ability to cancel. When cancelled, userCancelledAction should be called. Returns a block to dismiss the busy status. That block is always called when the browser session completes, but also when userCancelledAction is called.
+
 @interface OCAuthenticationBrowserSessionCustomScheme : OCAuthenticationBrowserSession
 
 @property(class,nonatomic,strong,nullable) OCAuthenticationBrowserSessionCustomScheme *activeSession;
+@property(class,nonatomic,copy,nullable) OCAuthenticationBrowserSessionCustomSchemeBusyPresenter busyPresenter;
 
 + (BOOL)handleOpenURL:(NSURL *)url;
 
