@@ -1591,7 +1591,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			// Publish background scan activity
 			if (_scheduledDirectoryUpdateJobActivity == nil)
 			{
-				_scheduledDirectoryUpdateJobActivity = [OCScanJobActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:NSLocalizedString(@"Fetching updates…", @"") statusMessage:nil ranking:0];
+				_scheduledDirectoryUpdateJobActivity = [OCScanJobActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:OCLocalizedString(@"Fetching updates…", @"") statusMessage:nil ranking:0];
 				_scheduledDirectoryUpdateJobActivity.state = OCActivityStateRunning;
 				_scheduledDirectoryUpdateJobActivity.progress = [NSProgress new];
 				_scheduledDirectoryUpdateJobActivity.isCancellable = NO;
