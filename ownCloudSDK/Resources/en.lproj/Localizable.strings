@@ -136,6 +136,10 @@
 "Log HTTP requests and responses" = "Log HTTP requests and responses";
 "Log internal file operations" = "Log internal file operations";
 
+/* Custom Scheme Browser Sessions */
+"Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
+"Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
+
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
 
@@ -331,6 +335,9 @@
 
 // OCErrorHostUpdateRequired
 "Bookmark created with a newer app version. Please update the app." = "Bookmark created with a newer app version. Please update the app.";
+
+// OCErrorAuthorizationCantOpenCustomSchemeURL
+"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
 
 /* Diagnostic */
 "Files" = "Files";

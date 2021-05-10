@@ -338,7 +338,9 @@
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyPossibleValues : @{
 				@"operating-system" : @"Use ASWebAuthenticationSession for browser sessions.",
-				@"UIWebView" : @"Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag."
+				@"UIWebView" : @"Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag.",
+				@"CustomScheme" : @"Replace http and https with custom schemes to delegate browser sessions to a different app.",
+				@"MIBrowser" : @"Replace `http` with `mibrowser` and `https` with `mibrowsers` to delegate browser sessions to the MobileIron browser."
 			},
 			OCClassSettingsMetadataKeyCategory	: @"Authentication"
 		},
