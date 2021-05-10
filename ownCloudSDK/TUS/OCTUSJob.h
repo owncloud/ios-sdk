@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) NSURL *fileURL;
 @property(strong) NSURL *segmentFolderURL;
 
+@property(strong,nullable) OCTUSUploadTag uploadTag;
 @property(strong,nullable) NSNumber *uploadOffset;
 
 @property(assign) NSUInteger maxSegmentSize;
