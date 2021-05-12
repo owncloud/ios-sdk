@@ -30,6 +30,9 @@
 "Proceed" = "Proceed";
 "OK" = "OK";
 
+/* Database upgrades */
+"Upgrading database…" = "Upgrading database…";
+
 /* Connection setup */
 "Insecure HTTP URL" = "Insecure HTTP URL";
 "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.";
@@ -119,6 +122,8 @@
 "Waiting for user" = "Waiting for user";
 "Waiting for metadata refresh" = "Waiting for metadata refresh";
 "Waiting to retry (%ld of %ld)" = "Waiting to retry (%ld of %ld)";
+"Fetching updates…" = "Fetching updates…";
+"Retrieving items for %@" = "Retrieving items for %@";
 
 /* Update */
 "\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
@@ -129,6 +134,11 @@
 "Standard error output" = "Standard error output";
 "Log file" = "Log file";
 "Log HTTP requests and responses" = "Log HTTP requests and responses";
+"Log internal file operations" = "Log internal file operations";
+
+/* Custom Scheme Browser Sessions */
+"Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
+"Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
 
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
@@ -320,6 +330,15 @@
 "You logged in as user %@, but must log in as user %@. Please retry." = "You logged in as user %@, but must log in as user %@. Please retry.";
 "Login as user %@ required. Please retry." = "Login as user %@ required. Please retry.";
 
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "Database upgrade required. Please open the app to perform the upgrade.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "Bookmark created with a newer app version. Please update the app.";
+
+// OCErrorAuthorizationCantOpenCustomSchemeURL
+"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";
@@ -347,3 +366,22 @@
 "Database size" = "Database size";
 "Thumbnail database size" = "Thumbnail database size";
 "Vacuum" = "Vacuum";
+"UUID" = "UUID";
+"Name" = "Name";
+"URL" = "URL";
+"Origin URL" = "Origin URL";
+"Use Origin URL as URL" = "Use Origin URL as URL";
+"Certificate Date" = "Certificate Date";
+"Invalidate Certificate" = "Invalidate Certificate";
+"User Name" = "User Name";
+"Auth Method" = "Auth Method";
+"Auth Data" = "Auth Data";
+"Auth Validation Date" = "Auth Validation Date";
+"Database Version" = "Database Version";
+"UserInfo" = "UserInfo";
+"Invalidate Login Data" = "Invalidate Login Data";
+"Delete Authentication Data" = "Delete Authentication Data";
+"Remove Database Version" = "Remove Database Version";
+"Delete Database" = "Delete Database";
+"Removed database at %@" = "Removed database at %@";
+"Removed thumbnail database at %@" = "Removed thumbnail database at %@";

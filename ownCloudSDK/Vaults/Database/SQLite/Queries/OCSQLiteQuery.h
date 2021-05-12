@@ -51,6 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable instancetype)queryDeletingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues fromTable:(NSString *)tableName completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 + (nullable instancetype)queryDeletingRowWithID:(NSNumber *)rowID fromTable:(NSString *)tableName completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;
 
+#pragma mark - Cancellation
+@property(assign) BOOL cancelled;
+
+- (BOOL)cancel;
+
 @end
 
 NS_ASSUME_NONNULL_END

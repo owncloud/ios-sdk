@@ -141,7 +141,7 @@
 					if ((autoRemovalCondition = policy.policyAutoRemovalCondition) != nil)
 					{
 						OCSyncExec(retrieveCacheItems, {
-							[self.core.vault.database retrieveCacheItemsForQueryCondition:autoRemovalCondition completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+							[self.core.vault.database retrieveCacheItemsForQueryCondition:autoRemovalCondition cancelAction:nil completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 								if (items.count == 0)
 								{
 									removePolicy = YES;

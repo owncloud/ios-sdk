@@ -22,6 +22,7 @@
 #import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCMacros.h"
 #import "OCBookmarkManager.h"
+#import "OCCoreManager.h"
 
 @implementation OCBookmark (Diagnostics)
 
@@ -52,6 +53,7 @@
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Data")			content:[NSString stringWithFormat:@"%lu bytes", (unsigned long)self.authenticationData.length]],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Validation Date")	content:self.authenticationValidationDate.description],
 
+		[OCDiagnosticNode withLabel:OCLocalized(@"Database Version")		content:@(self.databaseVersion).stringValue],
 		[OCDiagnosticNode withLabel:OCLocalized(@"UserInfo")			content:self.userInfo.description],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Login Data") 	action:^(OCDiagnosticContext * _Nullable context) {
@@ -79,6 +81,27 @@
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Authentication Data") 	action:^(OCDiagnosticContext * _Nullable context) {
 			self.authenticationData = nil;
+		}],
+
+		[OCDiagnosticNode withLabel:OCLocalized(@"Remove Database Version") 	action:^(OCDiagnosticContext * _Nullable context) {
+			self.databaseVersion = OCDatabaseVersionUnknown;
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self];
+		}],
+
+		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Database") action:^(OCDiagnosticContext * _Nullable context) {
+			[OCCoreManager.sharedCoreManager scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
+				OCVault *vault = [[OCVault alloc] initWithBookmark:bookmark];
+				NSError *error = nil;
+				OCDatabase *database = vault.database;
+
+				[NSFileManager.defaultManager removeItemAtURL:database.databaseURL error:&error];
+				OCFileOpLog(@"rm", error, @"Removed database at %@", database.databaseURL.path);
+
+				[NSFileManager.defaultManager removeItemAtURL:database.thumbnailDatabaseURL error:&error];
+				OCFileOpLog(@"rm", error, @"Removed thumbnail database at %@", database.thumbnailDatabaseURL.path);
+
+				completionHandler();
+			} forBookmark:self];
 		}]
 	]);
 }

@@ -20,10 +20,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class OCMeasurement;
+
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob;
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 - (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob;

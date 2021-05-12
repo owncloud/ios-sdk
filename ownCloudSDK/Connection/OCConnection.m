@@ -101,7 +101,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		OCConnectionAllowCellular,
 		OCConnectionPlainHTTPPolicy,
 		OCConnectionAlwaysRequestPrivateLink,
-		OCConnectionTransparentTemporaryRedirect
+		OCConnectionTransparentTemporaryRedirect,
+		OCConnectionValidatorFlags
 	]);
 }
 
@@ -133,22 +134,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 + (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
-	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
-	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
-
-	for (Class authMethodClass in authMethodClasses)
-	{
-		OCAuthenticationMethodIdentifier authMethodIdentifier;
-		NSString *authMethodName = [authMethodClass name];
-
-		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
-		{
-			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
-				authMethodName,		OCClassSettingsMetadataKeyDescription,
-			nil]];
-		}
-	}
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [self authenticationMethodIdentifierMetadata];
 
 	return (@{
 		// Connection
@@ -197,6 +183,17 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionValidatorFlags : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Allows fine-tuning the behavior of the connection validator by enabling/disabling aspects of it.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				OCConnectionValidatorFlagClearCookies : @"Clear all cookies for the connection when entering connection validation."
+			},
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
@@ -330,7 +327,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 + (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
 {
-	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
+	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs] ||
+	    [key isEqual:OCConnectionAllowedAuthenticationMethodIDs])
 	{
 		return (YES);
 	}
@@ -908,9 +906,10 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
 	// original URL.
 	//
-	// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
-	// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
-	// response. If no valid response can be retrieved, the status test is assumed to have failed, otherwise succeeded.
+	// What the Connection Validator does, then, is to clear all cookies (if OCConnectionValidatorFlagClearCookies flag is set)
+	// and then send an unauthenticated GET request to status.php and follow up to OCHTTPRequest.maximumRedirectionDepth (5 at
+	// the time of writing) redirects in an attempt to retrieve a valid JSON response. If no valid response can be retrieved,
+	// the status test is assumed to have failed, otherwise succeeded.
 	//
 	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
 	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
@@ -933,6 +932,13 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		{
 			_isValidatingConnection = YES;
 			doValidateConnection = YES;
+
+			if ([[self classSettingForOCClassSettingsKey:OCConnectionValidatorFlags] containsObject:OCConnectionValidatorFlagClearCookies])
+			{
+				// Remove all cookies when entering the connection validator, as per https://github.com/owncloud/client/pull/8558
+				OCTLog(@[ @"ConnectionValidator" ], @"Clearing cookies on entry to connection validation");
+				[self.cookieStorage removeCookiesWithFilter:nil];
+			}
 
 			if (triggeringURL != nil)
 			{
@@ -1255,7 +1261,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 						return;
 					}
-					else if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+					else if ([OCConnection shouldConsiderMaintenanceModeIndicationFromResponse:response])
 					{
 						// Maintenance mode
 						error = OCError(OCErrorServerInMaintenanceMode);
@@ -1555,6 +1561,62 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	return (result);
 }
 
++ (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response
+{
+	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	{
+		NSError *davError;
+
+		if ((davError = [response bodyParsedAsDAVError]) != nil)
+		{
+			/*
+				Unfortunately, Sabre\DAV\Exception\ServiceUnavailable is returned not only for maintenance mode:
+
+				Maintenance mode:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>System in maintenance mode.</s:message>
+					</d:error>
+
+				Temporary storage error:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>Storage is temporarily not available</s:message>
+					</d:error>
+
+				And with "System in maintenance mode." possibly changing in the future, the /safe/ approach to
+				determine maintenance mode is to assume it unless the message is on the allow list.
+			*/
+			static dispatch_once_t onceToken;
+			static NSDictionary<OCDAVExceptionName, NSArray<NSString *> *> *allowedMessagesByException;
+
+			dispatch_once(&onceToken, ^{
+				allowedMessagesByException = @{
+					@"Sabre\\DAV\\Exception\\ServiceUnavailable" : @[
+						@"Storage is temporarily not available"
+					]
+				};
+			});
+
+			if (davError.davExceptionName != nil)
+			{
+				if ([allowedMessagesByException[davError.davExceptionName] containsObject:davError.davExceptionMessage])
+				{
+					// Message is on the allow list, so no maintenance mode
+					return (NO);
+				}
+			}
+		}
+
+		// Default to YES
+		return (YES);
+	}
+
+	return (NO);
+}
+
 #pragma mark - Metadata actions
 - (NSMutableArray <OCXMLNode *> *)_davItemAttributes
 {
@@ -1777,6 +1839,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						OCItem *uploadedItem = items.firstObject;
 						OCChecksum *expectedChecksum = OCTypedCast(options[@"checksumExpected"], OCChecksum);
 						NSError *expectedChecksumMismatchError = OCTypedCast(options[@"checksumMismatchError"], NSError);
+
+						#warning Also check if sizes match, to distinguish from different file with same name error #921
 
 						if (expectedChecksum != nil)
 						{
@@ -3001,6 +3065,7 @@ OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
+OCClassSettingsKey OCConnectionValidatorFlags = @"validator-flags";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
@@ -3014,3 +3079,5 @@ OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"tempora
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
+
+OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";

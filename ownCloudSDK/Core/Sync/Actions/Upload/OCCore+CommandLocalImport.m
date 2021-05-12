@@ -99,11 +99,13 @@
 		{
 			// Import by copy
 			importFileOperationSuccessful = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+			OCFileOpLog(@"cp", error, @"Importing by copy %@ as %@", inputFileURL.path, placeholderOutputURL.path);
 		}
 		else
 		{
 			// Import by moving
 			importFileOperationSuccessful = [[NSFileManager defaultManager] moveItemAtURL:inputFileURL toURL:placeholderOutputURL error:&error];
+			OCFileOpLog(@"mv", error, @"Importing by moving %@ as %@", inputFileURL.path, placeholderOutputURL.path);
 		}
 
 		if (importFileOperationSuccessful)
@@ -127,6 +129,15 @@
 					OCLogDebug(@"Transformation failed with error=%@ on item %@", transformationError, OCLogPrivate(placeholderItem));
 					error = transformationError;
 					importFileOperationSuccessful = NO;
+				}
+
+				// Remove transformation block from options dictionary
+				NSMutableDictionary<OCCoreOption,id> *mutableOptions;
+
+				if ((mutableOptions = [options mutableCopy]) != nil)
+				{
+					mutableOptions[OCCoreOptionImportTransformation] = nil;
+					options = mutableOptions;
 				}
 			}
 		}

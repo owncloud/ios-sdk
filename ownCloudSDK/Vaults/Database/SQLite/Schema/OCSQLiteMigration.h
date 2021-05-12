@@ -18,13 +18,14 @@
 
 #import <Foundation/Foundation.h>
 #import "OCSQLiteDB.h"
+#import "OCLogTag.h"
 
 @class OCSQLiteTableSchema;
 @class OCSQLiteDB;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCSQLiteMigration : NSObject
+@interface OCSQLiteMigration : NSObject <OCLogTagging>
 {
 	NSUInteger _appliedSchemas;
 }
@@ -33,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) NSMutableArray<OCSQLiteTableSchema *> *applicableSchemas;
 
+@property(nullable,strong) NSProgress *progress;
 @property(nullable,strong) NSError *error;
 
 - (void)applySchemasToDatabase:(OCSQLiteDB *)database completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;

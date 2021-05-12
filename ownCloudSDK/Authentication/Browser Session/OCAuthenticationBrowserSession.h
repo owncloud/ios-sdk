@@ -18,12 +18,13 @@
 
 #import <UIKit/UIKit.h>
 #import "OCAuthenticationMethod.h"
+#import "OCClassSettings.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCAuthenticationBrowserSessionCompletionHandler)(NSURL *_Nullable callbackURL, NSError *_Nullable error);
 
-@interface OCAuthenticationBrowserSession : NSObject
+@interface OCAuthenticationBrowserSession : NSObject <OCClassSettingsSupport>
 
 @property(strong,readonly) NSURL *url;
 @property(strong,readonly) NSString *scheme;
@@ -38,5 +39,7 @@ typedef void(^OCAuthenticationBrowserSessionCompletionHandler)(NSURL *_Nullable 
 - (void)completedWithCallbackURL:(nullable NSURL *)callbackURL error:(nullable NSError *)error;
 
 @end
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierBrowserSession;
 
 NS_ASSUME_NONNULL_END

@@ -128,6 +128,7 @@
 	}
 
 	[docDicts sortUsingDescriptors:@[
+		[NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeySubCategory ascending:YES],
 		[NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeyFlatIdentifier ascending:YES]
 	]];
 

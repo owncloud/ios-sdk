@@ -52,4 +52,17 @@
 	}
 }
 
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierBrowserSession);
+}
+
++ (nullable NSDictionary<OCClassSettingsKey, id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
+{
+	return (@{});
+}
+
 @end
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierBrowserSession = @"browser-session";

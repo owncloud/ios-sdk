@@ -24,6 +24,8 @@
 #import "OCSQLiteMigration.h"
 #import "OCSQLiteTableSchema.h"
 #import "OCMacros.h"
+#import "OCSQLiteQuery+Private.h"
+#import "NSProgress+OCExtensions.h"
 
 #import "OCExtension+License.h"
 
@@ -62,6 +64,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 	if ((self = [super init]) != nil)
 	{
 		_maxBusyRetryTimeInterval = 2.0;
+		_allowMigrations = YES;
 
 		_liveStatements = [NSHashTable weakObjectsHashTable];
 
@@ -253,6 +256,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			{
 				filename = ":memory:";
 				OCLogDebug(@"OCSQLiteDB using in-memory database");
+			}
+			else
+			{
+				OCLogDebug(@"Opening database at %s", filename);
 			}
 
 			if ((sqErr = sqlite3_open_v2(filename, &self->_db, flags, NULL)) == SQLITE_OK)
@@ -461,7 +468,34 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 							}
 						}
 
-						[migration applySchemasToDatabase:self completionHandler:completionHandler];
+						if ((migration.applicableSchemas.count > 0) && 		// Schemas need to be applied
+						    (migration.versionsByTableName.count > 0) &&	// The database has been initialized before (otherwise that table is empty)
+						    !db.allowMigrations)				// DB migrations are not allowed
+						{
+							// Schema migrations not allowed
+							completionHandler(db, OCSQLiteDBError(OCSQLiteDBErrorMigrationsNotAllowed));
+						}
+						else
+						{
+							// Apply schemas (if any)
+							if (db.busyStatusHandler != nil)
+							{
+								migration.progress = NSProgress.indeterminateProgress;
+								migration.progress.cancellable = NO;
+								migration.progress.localizedDescription = OCLocalized(@"Upgrading database…");
+
+								db.busyStatusHandler(migration.progress);
+							}
+
+							[migration applySchemasToDatabase:self completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+								if (db.busyStatusHandler != nil)
+								{
+									db.busyStatusHandler(nil);
+								}
+
+								completionHandler(db, error);
+							}];
+						}
 					}
 				}
 			}]];
@@ -556,8 +590,17 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	if (_db == NULL)
 	{
+		// Database is not open
 		error = OCSQLiteDBError(OCSQLiteDBErrorDatabaseNotOpened);
+	}
+	else if (query.cancelled)
+	{
+		// Query has already been cancelled
+		error = OCSQLiteDBError(OCSQLiteDBErrorQueryCancelled);
+	}
 
+	if (error != nil)
+	{
 		if (query.resultHandler != nil)
 		{
 			query.resultHandler(self, error, transaction, nil);
@@ -581,7 +624,40 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 		if (error == nil)
 		{
+			__weak OCSQLiteDB *weakDB = self;
+
+			statement.canceller = ^BOOL(OCSQLiteStatement * _Nonnull statement) {
+				OCSQLiteDB *db;
+
+				if ((db = weakDB) != nil)
+				{
+					sqlite3_interrupt(db->_db);
+					return (YES);
+				}
+
+				return (NO);
+			};
+
+			query.statement = statement;
+
+			if (query.cancelled)
+			{
+				// Query has already been cancelled
+				error = OCSQLiteDBError(OCSQLiteDBErrorQueryCancelled);
+
+				if (query.resultHandler != nil)
+				{
+					query.resultHandler(self, error, transaction, nil);
+				}
+
+				return (error);
+			}
+
 			int sqErr = sqlite3_step(statement.sqlStatement);
+
+			statement.canceller = nil;
+
+			query.statement = nil;
 
 			switch (sqErr)
 			{
@@ -591,6 +667,10 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 				case SQLITE_ROW:
 					hasRows = YES;
+				break;
+
+				case SQLITE_INTERRUPT:
+					error = OCSQLiteError(OCSQLiteDBErrorQueryCancelled);
 				break;
 
 				default:

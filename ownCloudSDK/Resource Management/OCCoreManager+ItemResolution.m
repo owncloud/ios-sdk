@@ -35,12 +35,15 @@
 					[core.vault.database retrieveCacheItemForLocalID:localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
 						if (item != nil)
 						{
-							// Return core and item
+							// Provide core and item
 							completionHandler(nil, core, item);
 						}
 						else
 						{
-							completionHandler(OCError(OCErrorItemNotFound), nil, nil);
+							// Return core and itemNotFound error
+							[self returnCoreForBookmark:bookmark completionHandler:^{
+								completionHandler(OCError(OCErrorItemNotFound), nil, nil);
+							}];
 						}
 					}];
 				}

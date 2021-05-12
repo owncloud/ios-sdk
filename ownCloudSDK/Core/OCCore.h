@@ -36,6 +36,7 @@
 #import "OCSyncIssue.h"
 #import "OCMessageQueue.h"
 #import "OCScanJobActivity.h"
+#import "OCMeasurement.h"
 
 @class OCCore;
 @class OCItem;
@@ -115,6 +116,8 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 
+typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
+
 typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
 
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
@@ -185,6 +188,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSyncAnchor _latestSyncAnchor;
 
+	OCRateLimiter *_syncResetRateLimiter;
+
 	NSMutableDictionary <OCPath, OCCoreItemListTask *> *_itemListTasksByPath;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
@@ -242,6 +247,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;
+
+@property(copy,nullable,nonatomic) OCCoreBusyStatusHandler busyStatusHandler;
 
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals

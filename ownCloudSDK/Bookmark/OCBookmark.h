@@ -19,8 +19,10 @@
 #import <Foundation/Foundation.h>
 #import "OCAuthenticationMethod.h"
 #import "OCCertificate.h"
+#import "OCDatabase+Versions.h"
 
 typedef NSUUID* OCBookmarkUUID;
+typedef NSString* OCBookmarkUUIDString;
 
 typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 {
@@ -50,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nonatomic,nullable) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.
 @property(assign,nonatomic) OCBookmarkAuthenticationDataStorage authenticationDataStorage; //! Determines where to store authenticationData. Keychain by default. Changing the storage copies the data from the old to the new storage.
 @property(strong,nullable) NSDate *authenticationValidationDate; //!< The date that the authenticationData was last known to be in valid state (typically changed when editing/creating bookmarks, used to f.ex. automatically handle sync issues predating that date).
+
+@property(assign) OCDatabaseVersion databaseVersion; //!< The version of the database after the last update. A 0 value indicates a pre-11.6 bookmark.
 
 @property(strong,nonatomic) NSMutableDictionary<OCBookmarkUserInfoKey, id<NSObject,NSSecureCoding>> *userInfo; //!< Dictionary for storing app-specific / custom properties alongside the bookmark
 

@@ -29,6 +29,8 @@
 #import "OCCore+SyncEngine.h"
 #import "OCFeatureAvailability.h"
 #import "OCHTTPPolicyManager.h"
+#import "OCBookmark+DBMigration.h"
+#import "OCDatabase+Schemas.h"
 
 @implementation OCVault
 
@@ -239,6 +241,14 @@
 	if ([[NSFileManager defaultManager] createDirectoryAtURL:self.rootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error])
 	{
 		[self.database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+			if (error == nil)
+			{
+				if (self.bookmark.databaseVersion < OCDatabaseVersionLatest)
+				{
+					self.bookmark.databaseVersion = OCDatabaseVersionLatest;
+					[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self.bookmark];
+				}
+			}
 			completionHandler(db, error);
 		}];
 	}
@@ -292,6 +302,8 @@
 						error = OCError(OCErrorInternal);
 					}
 				}
+
+				OCFileOpLog(@"rm", error, @"Removed vault at %@", self.rootURL.path);
 			}
 
 			if ([fileManager fileExistsAtPath:self.filesRootURL.path])
@@ -303,6 +315,8 @@
 						error = OCError(OCErrorInternal);
 					}
 				}
+
+				OCFileOpLog(@"rm", error, @"Removed files root at %@", self.filesRootURL.path);
 			}
 
 			if (completionHandler != nil)

@@ -32,79 +32,104 @@
 	switch (operator)
 	{
 		case OCQueryConditionOperatorPropertyGreaterThanValue:
-			if ([propertyValue respondsToSelector:@selector(compare:)])
+			if (propertyValue != nil)
 			{
-				isFulfilled = ([(NSNumber *)propertyValue compare:(NSNumber *)operatorValue] == NSOrderedDescending);
-			}
-			else
-			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				if ([propertyValue respondsToSelector:@selector(compare:)])
+				{
+					isFulfilled = ([(NSNumber *)propertyValue compare:(NSNumber *)operatorValue] == NSOrderedDescending);
+				}
+				else
+				{
+					OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				}
 			}
 		break;
 
 		case OCQueryConditionOperatorPropertyLessThanValue:
-			if ([propertyValue respondsToSelector:@selector(compare:)])
+			if (propertyValue != nil)
 			{
-				isFulfilled = ([(NSNumber *)propertyValue compare:(NSNumber *)operatorValue] == NSOrderedAscending);
-			}
-			else
-			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				if ([propertyValue respondsToSelector:@selector(compare:)])
+				{
+					isFulfilled = ([(NSNumber *)propertyValue compare:(NSNumber *)operatorValue] == NSOrderedAscending);
+				}
+				else
+				{
+					OCLogError(@"propertyValue=%@ (class %@) can't be compared because it doesn't respond to compare:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				}
 			}
 		break;
 
 		case OCQueryConditionOperatorPropertyEqualToValue:
-			isFulfilled = [propertyValue isEqual:operatorValue];
+			if (propertyValue != nil)
+			{
+				isFulfilled = [propertyValue isEqual:operatorValue];
+			}
 		break;
 
 		case OCQueryConditionOperatorPropertyNotEqualToValue:
-			isFulfilled = ![propertyValue isEqual:operatorValue];
-		break;
-
-		case OCQueryConditionOperatorPropertyHasPrefix:
-			if ([propertyValue respondsToSelector:@selector(hasPrefix:)])
+			if (propertyValue != nil)
 			{
-				if (operatorValue != nil)
-				{
-					isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
-				}
-				else
-				{
-					OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasPrefix: check not possible");
-				}
+				isFulfilled = ![propertyValue isEqual:operatorValue];
 			}
 			else
 			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for prefix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				isFulfilled = YES;
+			}
+		break;
+
+		case OCQueryConditionOperatorPropertyHasPrefix:
+			if (propertyValue != nil)
+			{
+				if ([propertyValue respondsToSelector:@selector(hasPrefix:)])
+				{
+					if (operatorValue != nil)
+					{
+						isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+					}
+					else
+					{
+						OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasPrefix: check not possible");
+					}
+				}
+				else
+				{
+					OCLogError(@"propertyValue=%@ (class %@) can't be checked for prefix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
+				}
 			}
 		break;
 
 		case OCQueryConditionOperatorPropertyHasSuffix:
-			if ([propertyValue respondsToSelector:@selector(hasSuffix:)])
+			if (propertyValue != nil)
 			{
-				if (operatorValue != nil)
+				if ([propertyValue respondsToSelector:@selector(hasSuffix:)])
 				{
-					isFulfilled = [(NSString *)propertyValue hasPrefix:(NSString *)operatorValue];
+					if (operatorValue != nil)
+					{
+						isFulfilled = [(NSString *)propertyValue hasSuffix:(NSString *)operatorValue];
+					}
+					else
+					{
+						OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasSuffix: check not possible");
+					}
 				}
 				else
 				{
-					OCLogError(@"operatorValue==nil for OCQueryConditionOperatorPropertyHasSuffix: check not possible");
+					OCLogError(@"propertyValue=%@ (class %@) can't be checked for suffix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 				}
-			}
-			else
-			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for suffix because it doesn't respond to hasPrefix:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"));
 			}
 		break;
 
 		case OCQueryConditionOperatorPropertyContains:
-			if ([propertyValue respondsToSelector:@selector(localizedStandardContainsString:)])
+			if (propertyValue != nil)
 			{
-				isFulfilled = [(NSString *)propertyValue localizedStandardContainsString:(NSString *)operatorValue];
-			}
-			else
-			{
-				OCLogError(@"propertyValue=%@ (class %@) can't be checked for containing %@ because it doesn't respond to localizedStandardContainsString:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"), operatorValue);
+				if ([propertyValue respondsToSelector:@selector(localizedStandardContainsString:)])
+				{
+					isFulfilled = [(NSString *)propertyValue localizedStandardContainsString:(NSString *)operatorValue];
+				}
+				else
+				{
+					OCLogError(@"propertyValue=%@ (class %@) can't be checked for containing %@ because it doesn't respond to localizedStandardContainsString:", propertyValue, ((propertyValue != nil) ? NSStringFromClass(propertyValue.class) : @"-"), operatorValue);
+				}
 			}
 		break;
 

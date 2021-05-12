@@ -287,6 +287,23 @@
 	}
 }
 
+- (BOOL)cancel
+{
+	@synchronized(self)
+	{
+		OCSQLiteStatementCanceller canceller;
+
+		if ((canceller = self.canceller) != nil)
+		{
+			self.canceller = nil;
+
+			return (canceller(self));
+		}
+	}
+
+	return (NO);
+}
+
 #pragma mark - Description
 - (NSString *)description
 {

@@ -80,6 +80,7 @@
 				OCLogger.sharedLogger.logIntro,				@"log-intro",
 			nil], OCBookmarkUserInfoKeyBookmarkCreation,
 		nil];
+		_databaseVersion = OCDatabaseVersionLatest;
 
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
 			[observerBookmark considerAuthenticationDataFlush];
@@ -226,6 +227,8 @@
 {
 	_uuid = sourceBookmark.uuid;
 
+	_databaseVersion = sourceBookmark.databaseVersion;
+
 	_name = sourceBookmark.name;
 	_url  = sourceBookmark.url;
 
@@ -272,6 +275,8 @@
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
+		_databaseVersion = [decoder decodeIntegerForKey:@"databaseVersion"];
+
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
 
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
@@ -297,6 +302,8 @@
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
 
+	[coder encodeInteger:_databaseVersion forKey:@"databaseVersion"];
+
 	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
 	if (_userInfo.count > 0)
@@ -312,9 +319,10 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
+			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
 			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
 			((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
 			((_certificate!=nil) ? [@", certificate: " stringByAppendingString:_certificate.description] : @""),

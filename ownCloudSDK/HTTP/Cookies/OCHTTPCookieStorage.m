@@ -228,44 +228,63 @@ typedef NSString* OCHTTPCookieName;
 
 - (NSArray<NSHTTPCookie *> *)retrieveCookiesForPipeline:(OCHTTPPipeline *)pipeline partitionID:(OCHTTPPipelinePartitionID)partitionID url:(NSURL *)url
 {
-	NSMutableArray<NSHTTPCookie *> *matchingCookies = nil;
+	__block NSMutableArray<NSHTTPCookie *> *matchingCookies = nil;
 
-	@synchronized(self)
-	{
-		NSMutableIndexSet *removeIndexes = nil;
-		NSUInteger index = 0;
+	[self removeCookiesWithFilter:^BOOL(NSHTTPCookie * _Nonnull cookie) {
+		BOOL expired = NO;
 
-		for (NSHTTPCookie *cookie in _cookies)
+		if ([cookie shouldApplyForURL:url expired:&expired])
 		{
-			BOOL expired = NO;
+			// Add to matchingCookies
+			if (matchingCookies == nil) { matchingCookies = [NSMutableArray new]; }
+			[matchingCookies addObject:cookie];
 
-			if ([cookie shouldApplyForURL:url expired:&expired])
-			{
-				// Add to matchingCookies
-				if (matchingCookies == nil) { matchingCookies = [NSMutableArray new]; }
-				[matchingCookies addObject:cookie];
-			}
-			else if (expired)
-			{
-				// Outdated => remove cookie
-				if (removeIndexes == nil) { removeIndexes = [NSMutableIndexSet new]; }
-				[removeIndexes addIndex:index];
-				_cookiesByName[cookie.name] = nil;
-			}
-
-			index++;
+			return (NO);
 		}
 
-		// Remove expired cookies
-		if (removeIndexes != nil)
-		{
-			[_cookies removeObjectsAtIndexes:removeIndexes];
-		}
-	}
+		return (expired);
+	}];
 
 	OCTLogVerbose(@[@"Retrieve"], @"Retrieved cookies for URL %@: %@", url, matchingCookies);
 
 	return (matchingCookies);
+}
+
+- (void)removeCookiesWithFilter:(nullable OCHTTPCookieStorageCookieFilter)cookieFilter
+{
+	@synchronized(self)
+	{
+		if (cookieFilter == nil)
+		{
+			// No filter -> remove all
+			[_cookiesByName removeAllObjects];
+			[_cookies removeAllObjects];
+		}
+		else
+		{
+			// Apply filter and remove only matches
+			NSMutableIndexSet *removeIndexes = nil;
+			NSUInteger index = 0;
+
+			for (NSHTTPCookie *cookie in _cookies)
+			{
+				if (cookieFilter(cookie))
+				{
+					if (removeIndexes == nil) { removeIndexes = [NSMutableIndexSet new]; }
+					[removeIndexes addIndex:index];
+					_cookiesByName[cookie.name] = nil;
+				}
+
+				index++;
+			}
+
+			// Remove matching cookies
+			if (removeIndexes != nil)
+			{
+				[_cookies removeObjectsAtIndexes:removeIndexes];
+			}
+		}
+	}
 }
 
 #pragma mark - Log tagging

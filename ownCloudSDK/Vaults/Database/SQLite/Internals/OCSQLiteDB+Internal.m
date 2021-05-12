@@ -45,24 +45,26 @@
 
 - (void)releaseAllLiveStatementResources
 {
-	@synchronized(_liveStatements)
-	{
-		if (_liveStatements.count > 0)
+	@autoreleasepool {
+		@synchronized(_liveStatements)
 		{
-			OCLogDebug(@"Releasing the resources of up to %lu live statements", (unsigned long)_liveStatements.count);
+			if (_liveStatements.count > 0)
+			{
+				OCLogDebug(@"Releasing the resources of up to %lu live statements", (unsigned long)_liveStatements.count);
+			}
+
+			for (OCSQLiteStatement *statement in _liveStatements)
+			{
+				[statement releaseSQLObjects];
+			}
+
+			[_liveStatements removeAllObjects];
 		}
 
-		for (OCSQLiteStatement *statement in _liveStatements)
+		@synchronized(OCSQLiteStatement.class)
 		{
-			[statement releaseSQLObjects];
+			[_cachedStatements removeAllObjects];
 		}
-
-		[_liveStatements removeAllObjects];
-	}
-
-	@synchronized(OCSQLiteStatement.class)
-	{
-		[_cachedStatements removeAllObjects];
 	}
 }
 

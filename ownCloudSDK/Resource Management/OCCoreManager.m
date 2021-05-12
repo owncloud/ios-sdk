@@ -170,7 +170,32 @@
 
 					if (completionHandler != nil)
 					{
-						completionHandler([self protectedCoreForCore:sender], error);
+						if (error != nil)
+						{
+							[self willChangeValueForKey:@"activeCoresRunIdentifiers"];
+							@synchronized(self)
+							{
+								self->_requestCountByUUID[bookmark.uuid] = @(self->_requestCountByUUID[bookmark.uuid].integerValue - 1);
+								self->_coresByUUID[bookmark.uuid] = nil;
+
+								[self->_activeCoresRunIdentifiers removeObject:core.runIdentifier];
+								self->_activeCoresRunIdentifiersReadOnly = nil;
+
+								[core unregisterEventHandler];
+
+								if (self->_useCoreProxies)
+								{
+									[self->_coreProxiesByCore objectForKey:core].core = nil;
+								}
+							}
+							[self didChangeValueForKey:@"activeCoresRunIdentifiers"];
+
+							completionHandler(nil, error);
+						}
+						else
+						{
+							completionHandler([self protectedCoreForCore:sender], error);
+						}
 					}
 
 					OCSyncExecDone(waitForCoreStart);

@@ -1,3 +1,34 @@
+## 11.6 version
+
+- Bookmarks
+	- ItemResolution: enumerates bookmarks to resolve Local IDs to items and a bookmark
+- Connection
+	- add connection validator flags support: "clear-cookies" to control clearing cookies when entering the connection validator, off by default
+	- correctly handle Service Unavailable errors when the true reason is the unavailability of external storage
+	- improved Maintenance Mode detection and handling
+	- HTTP: add "Original-Request-ID" header to allow tracing of retried requests
+- Authentication
+	- add OCAuthenticationBrowserSession that allows redirection of authentication settings to browsers with custom scheme
+	- provide simplified version for mibrowser scheme as OCAuthenticationBrowserSessionMIBrowser 
+- Database Update for improved search capabilities
+	- new ownerUserName, lastModifiedDate, syncActivity columns
+	- introduce migration with progress reporting and error when initiated from an extension
+	- add simplified database versioning that allows retrieval and comparison in the app
+- Core
+	- uploads: bugfixes in conflict resolution
+	- item scrubbing to fix forever spinning items
+	- allow limiting result counts for OCQuerys
+	- ItemResolution: enumerates bookmarks to resolve Local IDs to items and a running core
+	- extend OCQueryConditions with new fields
+- Class Settings
+	- simplify parameter names
+	- add subcategory and label metadata key
+	- allow expansion of flat parameters in complex structures (supported for MDM and Branding (app-side))
+- Measurements (new): allow benchmarking and logging of actions across different components, starting with OCQueries
+- CancelActions (new): new container that allows to encapsulate a cancel action, so it can be passed around and code be injected from different places
+- Logging: allow logging of file operations
+- bugfixes in Sync Engine, Process Manager, Item Policies, Claims, QueryConditions, Imports, Core Manager, Item Deserialization, Logging
+
 ## 11.5.2 version
 
 - Support for MDM setting hierarchies with flat keys

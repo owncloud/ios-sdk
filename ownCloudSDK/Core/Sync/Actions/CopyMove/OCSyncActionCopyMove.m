@@ -88,7 +88,7 @@
 			// Copy actual file if it exists locally
 			if (sourceItem.localRelativePath != nil)
 			{
-				NSError *error;
+				NSError *error = nil;
 				NSURL *sourceURL, *destinationURL;
 
 				if ((error = [self.core createDirectoryForItem:placeholderItem]) != nil)
@@ -105,7 +105,11 @@
 				if ((sourceURL != nil) && (destinationURL != nil))
 				{
 					// Copy file
-					if (![[NSFileManager defaultManager] copyItemAtURL:sourceURL toURL:destinationURL error:&error])
+					BOOL success = [[NSFileManager defaultManager] copyItemAtURL:sourceURL toURL:destinationURL error:&error];
+
+					OCFileOpLog(@"cp", error, @"Copied existing local file %@ to %@", sourceURL.path, destinationURL.path);
+
+					if (!success)
 					{
 						// Return error if it fails
 						syncContext.error = error;

@@ -76,7 +76,7 @@
 	}];
 }
 
-- (void)addClaim:(OCClaim *)claim onItem:(OCItem *)item completionHandler:(nullable OCCoreClaimCompletionHandler)completionHandler
+- (void)addClaim:(OCClaim *)claim onItem:(OCItem *)item refreshItem:(BOOL)refreshItem completionHandler:(nullable OCCoreClaimCompletionHandler)completionHandler
 {
 	OCLogDebug(@"Adding claim %@ on %@", claim, OCLogPrivate(item));
 

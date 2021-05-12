@@ -9,6 +9,7 @@
     "description" : "OAuth2 authorization endpoint.",
     "flatIdentifier" : "authentication-oauth2.oa2-authorization-endpoint",
     "key" : "oa2-authorization-endpoint",
+    "label" : "authentication-oauth2.oa2-authorization-endpoint",
     "status" : "advanced",
     "type" : "string"
   },
@@ -22,6 +23,7 @@
     "description" : "OAuth2 Client ID.",
     "flatIdentifier" : "authentication-oauth2.oa2-client-id",
     "key" : "oa2-client-id",
+    "label" : "authentication-oauth2.oa2-client-id",
     "status" : "advanced",
     "type" : "string"
   },
@@ -35,6 +37,7 @@
     "description" : "OAuth2 Client Secret.",
     "flatIdentifier" : "authentication-oauth2.oa2-client-secret",
     "key" : "oa2-client-secret",
+    "label" : "authentication-oauth2.oa2-client-secret",
     "status" : "advanced",
     "type" : "string"
   },
@@ -47,6 +50,7 @@
     "description" : "OAuth2 Expiration Override - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)",
     "flatIdentifier" : "authentication-oauth2.oa2-expiration-override-seconds",
     "key" : "oa2-expiration-override-seconds",
+    "label" : "authentication-oauth2.oa2-expiration-override-seconds",
     "status" : "debugOnly",
     "type" : "int"
   },
@@ -60,6 +64,7 @@
     "description" : "OAuth2 Redirect URI.",
     "flatIdentifier" : "authentication-oauth2.oa2-redirect-uri",
     "key" : "oa2-redirect-uri",
+    "label" : "authentication-oauth2.oa2-redirect-uri",
     "status" : "advanced",
     "type" : "string"
   },
@@ -73,6 +78,7 @@
     "description" : "OAuth2 token endpoint.",
     "flatIdentifier" : "authentication-oauth2.oa2-token-endpoint",
     "key" : "oa2-token-endpoint",
+    "label" : "authentication-oauth2.oa2-token-endpoint",
     "status" : "advanced",
     "type" : "string"
   },
@@ -86,6 +92,7 @@
     "description" : "OpenID Connect Redirect URI",
     "flatIdentifier" : "authentication-oauth2.oidc-redirect-uri",
     "key" : "oidc-redirect-uri",
+    "label" : "authentication-oauth2.oidc-redirect-uri",
     "status" : "supported",
     "type" : "string"
   },
@@ -99,6 +106,7 @@
     "description" : "Use OpenID Connect Dynamic Client Registration if the `.well-known\/openid-configuration` provides a `registration_endpoint`. If this option is enabled and a registration endpoint is available, `oa2-client-id` and `oa2-client-secret` will be ignored.",
     "flatIdentifier" : "authentication-oauth2.oidc-register-client",
     "key" : "oidc-register-client",
+    "label" : "authentication-oauth2.oidc-register-client",
     "status" : "supported",
     "type" : "bool"
   },
@@ -112,6 +120,7 @@
     "description" : "Client Name Template to use during OpenID Connect Dynamic Client Registration. In addition to the placeholders available for `http.user-agent`, `{{url.hostname}}` can also be used.",
     "flatIdentifier" : "authentication-oauth2.oidc-register-client-name-template",
     "key" : "oidc-register-client-name-template",
+    "label" : "authentication-oauth2.oidc-register-client-name-template",
     "status" : "supported",
     "type" : "string"
   },
@@ -125,6 +134,7 @@
     "description" : "OpenID Connect Scope",
     "flatIdentifier" : "authentication-oauth2.oidc-scope",
     "key" : "oidc-scope",
+    "label" : "authentication-oauth2.oidc-scope",
     "status" : "supported",
     "type" : "string"
   },
@@ -138,6 +148,7 @@
     "description" : "Alternative browser session class to use instead of `ASWebAuthenticationSession`. Please also see Compile Time Configuration if you want to use this.",
     "flatIdentifier" : "authentication.browser-session-class",
     "key" : "browser-session-class",
+    "label" : "authentication.browser-session-class",
     "possibleValues" : [
       {
         "description" : "Use UIWebView for browser sessions. Requires compilation with `OC_FEATURE_AVAILABLE_UIWEBVIEW_BROWSER_SESSION=1` preprocessor flag.",
@@ -161,6 +172,7 @@
     "description" : "Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https:\/\/developer.apple.com\/documentation\/authenticationservices\/aswebauthenticationsession\/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
     "flatIdentifier" : "authentication.browser-session-prefers-ephermal",
     "key" : "browser-session-prefers-ephermal",
+    "label" : "authentication.browser-session-prefers-ephermal",
     "status" : "supported",
     "type" : "bool"
   },
@@ -175,6 +187,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.allow-background-url-sessions",
     "key" : "allow-background-url-sessions",
+    "label" : "connection.allow-background-url-sessions",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -189,6 +202,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.allow-cellular",
     "key" : "allow-cellular",
+    "label" : "connection.allow-cellular",
     "status" : "recommended",
     "type" : "bool"
   },
@@ -202,6 +216,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.allowed-authentication-methods",
     "key" : "allowed-authentication-methods",
+    "label" : "connection.allowed-authentication-methods",
     "possibleValues" : [
       {
         "description" : "Basic Auth",
@@ -230,6 +245,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.always-request-private-link",
     "key" : "always-request-private-link",
+    "label" : "connection.always-request-private-link",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -240,10 +256,11 @@
     "classIdentifier" : "connection",
     "className" : "OCConnection",
     "defaultValue" : "bookmarkCertificate == serverCertificate",
-    "description" : "Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.",
+    "description" : "Rule that defines the criteria a certificate needs to meet for OCConnection to recognize it as valid for a bookmark.\n\nExamples of expressions:\n- `bookmarkCertificate == serverCertificate`: the whole certificate needs to be identical to the one stored in the bookmark during setup.\n- `bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData`:  the public key of the received certificate needs to be identical to the public key stored in the bookmark during setup.\n- `serverCertificate.passedValidationOrIsUserAccepted == true`: any certificate is accepted as long as it has passed validation by the OS or was accepted by the user.\n- `serverCertificate.commonName == \"demo.owncloud.org\"`: the common name of the certificate must be \"demo.owncloud.org\".\n- `serverCertificate.rootCertificate.commonName == \"DST Root CA X3\"`: the common name of the root certificate must be \"DST Root CA X3\".\n- `serverCertificate.parentCertificate.commonName == \"Let's Encrypt Authority X3\"`: the common name of the parent certificate must be \"Let's Encrypt Authority X3\".\n- `serverCertificate.publicKeyData.sha256Hash.asFingerPrintString == \"2A 00 98 90 BD … F7\"`: the SHA-256 fingerprint of the public key of the server certificate needs to match the provided value.\n",
     "flags" : 4,
     "flatIdentifier" : "connection.certificate-extended-validation-rule",
     "key" : "certificate-extended-validation-rule",
+    "label" : "connection.certificate-extended-validation-rule",
     "status" : "advanced",
     "type" : "string"
   },
@@ -258,6 +275,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-capabilities",
     "key" : "endpoint-capabilities",
+    "label" : "connection.endpoint-capabilities",
     "status" : "advanced",
     "type" : "string"
   },
@@ -272,6 +290,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-recipients",
     "key" : "endpoint-recipients",
+    "label" : "connection.endpoint-recipients",
     "status" : "advanced",
     "type" : "string"
   },
@@ -286,6 +305,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-remote-shares",
     "key" : "endpoint-remote-shares",
+    "label" : "connection.endpoint-remote-shares",
     "status" : "advanced",
     "type" : "string"
   },
@@ -300,6 +320,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-shares",
     "key" : "endpoint-shares",
+    "label" : "connection.endpoint-shares",
     "status" : "advanced",
     "type" : "string"
   },
@@ -314,6 +335,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-status",
     "key" : "endpoint-status",
+    "label" : "connection.endpoint-status",
     "status" : "advanced",
     "type" : "string"
   },
@@ -328,6 +350,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-thumbnail",
     "key" : "endpoint-thumbnail",
+    "label" : "connection.endpoint-thumbnail",
     "status" : "advanced",
     "type" : "string"
   },
@@ -342,6 +365,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-user",
     "key" : "endpoint-user",
+    "label" : "connection.endpoint-user",
     "status" : "advanced",
     "type" : "string"
   },
@@ -356,6 +380,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-webdav",
     "key" : "endpoint-webdav",
+    "label" : "connection.endpoint-webdav",
     "status" : "advanced",
     "type" : "string"
   },
@@ -370,6 +395,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.endpoint-webdav-meta",
     "key" : "endpoint-webdav-meta",
+    "label" : "connection.endpoint-webdav-meta",
     "status" : "advanced",
     "type" : "string"
   },
@@ -384,6 +410,7 @@
     "flags" : 2,
     "flatIdentifier" : "connection.force-background-url-sessions",
     "key" : "force-background-url-sessions",
+    "label" : "connection.force-background-url-sessions",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -398,6 +425,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.minimum-server-version",
     "key" : "minimum-server-version",
+    "label" : "connection.minimum-server-version",
     "status" : "debugOnly",
     "type" : "string"
   },
@@ -412,6 +440,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.plain-http-policy",
     "key" : "plain-http-policy",
+    "label" : "connection.plain-http-policy",
     "status" : "advanced",
     "type" : "string"
   },
@@ -430,6 +459,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.preferred-authentication-methods",
     "key" : "preferred-authentication-methods",
+    "label" : "connection.preferred-authentication-methods",
     "possibleValues" : [
       {
         "description" : "Basic Auth",
@@ -458,6 +488,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.renewed-certificate-acceptance-rule",
     "key" : "renewed-certificate-acceptance-rule",
+    "label" : "connection.renewed-certificate-acceptance-rule",
     "status" : "advanced",
     "type" : "string"
   },
@@ -472,6 +503,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.transparent-temporary-redirect",
     "key" : "transparent-temporary-redirect",
+    "label" : "connection.transparent-temporary-redirect",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -486,6 +518,7 @@
     "flags" : 4,
     "flatIdentifier" : "connection.well-known",
     "key" : "well-known",
+    "label" : "connection.well-known",
     "status" : "advanced",
     "type" : "string"
   },
@@ -509,6 +542,7 @@
     "description" : "Concurrency budgets available for sync actions by action category.",
     "flatIdentifier" : "core.action-concurrency-budgets",
     "key" : "action-concurrency-budgets",
+    "label" : "core.action-concurrency-budgets",
     "status" : "advanced",
     "type" : "dictionary"
   },
@@ -522,6 +556,7 @@
     "description" : "Add an `Accept-Language` HTTP header using the preferred languages set on the device.",
     "flatIdentifier" : "core.add-accept-language-header",
     "key" : "add-accept-language-header",
+    "label" : "core.add-accept-language-header",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -535,6 +570,7 @@
     "description" : "Enable or disable per-process, in-memory cookie storage.",
     "flatIdentifier" : "core.cookie-support-enabled",
     "key" : "cookie-support-enabled",
+    "label" : "core.cookie-support-enabled",
     "status" : "supported",
     "type" : "bool"
   },
@@ -547,6 +583,7 @@
     "description" : "Override the availability signal, so the host is considered to always be in maintenance mode (`true`) or never in maintenance mode (`false`).",
     "flatIdentifier" : "core.override-availability-signal",
     "key" : "override-availability-signal",
+    "label" : "core.override-availability-signal",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -559,6 +596,7 @@
     "description" : "Override the reachability signal, so the host is always considered reachable (`true`) or unreachable (`false`).",
     "flatIdentifier" : "core.override-reachability-signal",
     "key" : "override-reachability-signal",
+    "label" : "core.override-reachability-signal",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -574,6 +612,7 @@
     "description" : "Provide hints that thumbnails are available for items whose MIME-Type starts with any of the strings provided in this array. Providing an empty array turns off thumbnail loading. Providing `[\"*\"]` turns on thumbnail loading for all items.",
     "flatIdentifier" : "core.thumbnail-available-for-mime-type-prefixes",
     "key" : "thumbnail-available-for-mime-type-prefixes",
+    "label" : "core.thumbnail-available-for-mime-type-prefixes",
     "status" : "debugOnly",
     "type" : "stringArray"
   },
@@ -589,6 +628,7 @@
     "description" : "Active Host simulation extensions.",
     "flatIdentifier" : "host-simulator.active-simulations",
     "key" : "active-simulations",
+    "label" : "host-simulator.active-simulations",
     "possibleValues" : [
       {
         "description" : "Return status code 404 for every request for the first five seconds.",
@@ -624,6 +664,7 @@
     "description" : "A custom `User-Agent` to send with every HTTP request.\n\nThe following placeholders can be used to make it dynamic:\n- `{{app.build}}`: the build number of the app (f.ex. `123`)\n- `{{app.version}}`: the version of the app (f.ex. `1.2`)\n- `{{app.part}}`: the part of the app (more exactly: the name of the main bundle) from which the request was sent (f.ex. `App`, `ownCloud File Provider`)\n- `{{device.model}}`: the model of the device running the app (f.ex. `iPhone`, `iPad`)\n- `{{device.model-id}}`: the model identifier of the device running the app (f.ex. `iPhone8,1`)\n- `{{os.name}}` : the name of the operating system running on the device (f.ex. `iOS`, `iPadOS`)\n- `{{os.version}}`: the version of operating system running on the device (f.ex. `13.2.2`)\n",
     "flatIdentifier" : "http.user-agent",
     "key" : "user-agent",
+    "label" : "http.user-agent",
     "status" : "supported",
     "type" : "string"
   },
@@ -637,6 +678,7 @@
     "description" : "The number of seconds that a file hasn't been downloaded, modified or opened after which the local copy is removed.",
     "flatIdentifier" : "item-policy.local-copy-expiration",
     "key" : "local-copy-expiration",
+    "label" : "item-policy.local-copy-expiration",
     "status" : "advanced",
     "type" : "int"
   },
@@ -650,6 +692,7 @@
     "description" : "Controls whether local copies should automatically be removed after they haven't been downloaded, modified or opened for a period of time.",
     "flatIdentifier" : "item-policy.local-copy-expiration-enabled",
     "key" : "local-copy-expiration-enabled",
+    "label" : "item-policy.local-copy-expiration-enabled",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -663,6 +706,7 @@
     "description" : "Number of seconds since the removal of an item after which the metadata entry may be finally removed.",
     "flatIdentifier" : "item-policy.vacuum-sync-anchor-ttl",
     "key" : "vacuum-sync-anchor-ttl",
+    "label" : "item-policy.vacuum-sync-anchor-ttl",
     "status" : "debugOnly",
     "type" : "bool"
   },
@@ -677,6 +721,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.blank-filtered-messages",
     "key" : "blank-filtered-messages",
+    "label" : "log.blank-filtered-messages",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -691,6 +736,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.colored",
     "key" : "colored",
+    "label" : "log.colored",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -708,7 +754,12 @@
     "flags" : 4,
     "flatIdentifier" : "log.enabled-components",
     "key" : "enabled-components",
+    "label" : "log.enabled-components",
     "possibleValues" : [
+      {
+        "description" : "Log internal file operations",
+        "value" : "option.log-file-operations"
+      },
       {
         "description" : "Log HTTP requests and responses",
         "value" : "option.log-requests-and-responses"
@@ -736,6 +787,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.format",
     "key" : "format",
+    "label" : "log.format",
     "possibleValues" : [
       {
         "description" : "Detailed JSON (one line per message).",
@@ -764,6 +816,7 @@
     "flags" : 2,
     "flatIdentifier" : "log.level",
     "key" : "level",
+    "label" : "log.level",
     "possibleValues" : [
       {
         "description" : "verbose",
@@ -804,6 +857,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.maximum-message-size",
     "key" : "maximum-message-size",
+    "label" : "log.maximum-message-size",
     "status" : "advanced",
     "type" : "int"
   },
@@ -817,6 +871,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.omit-matching",
     "key" : "omit-matching",
+    "label" : "log.omit-matching",
     "status" : "advanced",
     "type" : "stringArray"
   },
@@ -830,6 +885,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.omit-tags",
     "key" : "omit-tags",
+    "label" : "log.omit-tags",
     "status" : "advanced",
     "type" : "stringArray"
   },
@@ -843,6 +899,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.only-matching",
     "key" : "only-matching",
+    "label" : "log.only-matching",
     "status" : "advanced",
     "type" : "stringArray"
   },
@@ -856,6 +913,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.only-tags",
     "key" : "only-tags",
+    "label" : "log.only-tags",
     "status" : "advanced",
     "type" : "stringArray"
   },
@@ -870,6 +928,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.privacy-mask",
     "key" : "privacy-mask",
+    "label" : "log.privacy-mask",
     "status" : "supported",
     "type" : "bool"
   },
@@ -884,6 +943,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.single-lined",
     "key" : "single-lined",
+    "label" : "log.single-lined",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -898,6 +958,7 @@
     "flags" : 4,
     "flatIdentifier" : "log.synchronous",
     "key" : "synchronous",
+    "label" : "log.synchronous",
     "status" : "advanced",
     "type" : "bool"
   },
@@ -910,6 +971,7 @@
     "description" : "List of settings (as flat identifiers) users are allowed to change. If this list is specified, only these settings can be changed by the user.",
     "flatIdentifier" : "user-settings.allow",
     "key" : "allow",
+    "label" : "user-settings.allow",
     "status" : "advanced",
     "type" : "stringArray"
   },
@@ -922,6 +984,7 @@
     "description" : "List of settings (as flat identifiers) users are not allowed to change. If this list is specified, all settings not on the list can be changed by the user.",
     "flatIdentifier" : "user-settings.disallow",
     "key" : "disallow",
+    "label" : "user-settings.disallow",
     "status" : "advanced",
     "type" : "stringArray"
   }

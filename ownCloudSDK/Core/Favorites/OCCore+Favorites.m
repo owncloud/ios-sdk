@@ -70,7 +70,7 @@
 			NSMutableArray<OCItem *> *updateItems = [NSMutableArray new];
 			OCCoreItemList *newFavoritedItemsList = nil;
 
-			[self.database retrieveCacheItemsForQueryCondition:[OCQueryCondition where:OCItemPropertyNameIsFavorite isEqualTo:@(YES)] completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			[self.database retrieveCacheItemsForQueryCondition:[OCQueryCondition where:OCItemPropertyNameIsFavorite isEqualTo:@(YES)] cancelAction:nil completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 				if (items.count > 0)
 				{
 					OCLogDebug(@"Existing favorites: %@", items);
