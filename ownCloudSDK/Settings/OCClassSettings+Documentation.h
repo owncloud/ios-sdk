@@ -26,6 +26,7 @@ typedef NSString* OCClassSettingsDocumentationOption NS_TYPED_ENUM;
 @interface OCClassSettings (Documentation)
 
 - (NSArray<Class<OCClassSettingsSupport>> *)implementingClasses;
+- (NSArray<Class<OCClassSettingsSupport>> *)snapshotClasses;
 
 - (NSArray<NSDictionary<OCClassSettingsMetadataKey, id> *> *)documentationDictionaryWithOptions:(nullable NSDictionary<OCClassSettingsDocumentationOption, id> *)options;
 

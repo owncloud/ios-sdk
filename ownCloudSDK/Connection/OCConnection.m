@@ -86,6 +86,9 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 @dynamic allHTTPPipelines;
 
 #pragma mark - Class settings
+
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (OCClassSettingsIdentifierConnection);

@@ -111,6 +111,8 @@
 @dynamic busyStatusHandler;
 
 #pragma mark - Class settings
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (@"core");

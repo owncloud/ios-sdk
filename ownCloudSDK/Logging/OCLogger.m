@@ -189,6 +189,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 }
 
 #pragma mark - Class settings
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (OCClassSettingsIdentifierLog);
@@ -965,7 +967,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.implementingClasses onlyPublic:YES]  // Class Settings
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.snapshotClasses onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;
