@@ -31,6 +31,7 @@
 
 #import "OCConnection.h"
 #import "OCClassSetting.h"
+#import "OCClassSettings+Documentation.h"
 #import "OCCore.h"
 
 static OCLogLevel sOCLogLevel;
@@ -964,7 +965,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.implementingClasses onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;
