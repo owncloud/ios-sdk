@@ -83,6 +83,12 @@
 		DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */; };
 		DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */ = {isa = PBXBuildFile; fileRef = DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC19BFF221CBE28B007C20D1 /* OCWaitCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */; };
+		DC1A7E0C266AC6FB00CAA695 /* letsencrypt-new-root.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E0A266AC6FB00CAA695 /* letsencrypt-new-root.cer */; };
+		DC1A7E0D266AC6FB00CAA695 /* letsencrypt-old-root.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E0B266AC6FB00CAA695 /* letsencrypt-old-root.cer */; };
+		DC1A7E12266ACA1500CAA695 /* letsencrypt-new.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E0E266ACA1500CAA695 /* letsencrypt-new.cer */; };
+		DC1A7E13266ACA1500CAA695 /* letsencrypt-old-parent.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E0F266ACA1500CAA695 /* letsencrypt-old-parent.cer */; };
+		DC1A7E14266ACA1500CAA695 /* letsencrypt-new-parent.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E10266ACA1500CAA695 /* letsencrypt-new-parent.cer */; };
+		DC1A7E15266ACA1500CAA695 /* letsencrypt-old.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E11266ACA1500CAA695 /* letsencrypt-old.cer */; };
 		DC1C7ABE253F3C65002F2B9F /* OCClassSettings+Validation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1C7ABC253F3C65002F2B9F /* OCClassSettings+Validation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1C7ABF253F3C65002F2B9F /* OCClassSettings+Validation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1C7ABD253F3C65002F2B9F /* OCClassSettings+Validation.m */; };
 		DC1C7AC2253F3CD9002F2B9F /* OCClassSettings+Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1C7AC0253F3CD9002F2B9F /* OCClassSettings+Metadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -857,6 +863,12 @@
 		DC19BFEC21CBACBC007C20D1 /* OCProcessManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProcessManager.m; sourceTree = "<group>"; };
 		DC19BFEF21CBE28B007C20D1 /* OCWaitCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCWaitCondition.h; sourceTree = "<group>"; };
 		DC19BFF021CBE28B007C20D1 /* OCWaitCondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitCondition.m; sourceTree = "<group>"; };
+		DC1A7E0A266AC6FB00CAA695 /* letsencrypt-new-root.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-new-root.cer"; sourceTree = "<group>"; };
+		DC1A7E0B266AC6FB00CAA695 /* letsencrypt-old-root.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-old-root.cer"; sourceTree = "<group>"; };
+		DC1A7E0E266ACA1500CAA695 /* letsencrypt-new.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-new.cer"; sourceTree = "<group>"; };
+		DC1A7E0F266ACA1500CAA695 /* letsencrypt-old-parent.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-old-parent.cer"; sourceTree = "<group>"; };
+		DC1A7E10266ACA1500CAA695 /* letsencrypt-new-parent.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-new-parent.cer"; sourceTree = "<group>"; };
+		DC1A7E11266ACA1500CAA695 /* letsencrypt-old.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-old.cer"; sourceTree = "<group>"; };
 		DC1C7ABC253F3C65002F2B9F /* OCClassSettings+Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCClassSettings+Validation.h"; sourceTree = "<group>"; };
 		DC1C7ABD253F3C65002F2B9F /* OCClassSettings+Validation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCClassSettings+Validation.m"; sourceTree = "<group>"; };
 		DC1C7AC0253F3CD9002F2B9F /* OCClassSettings+Metadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCClassSettings+Metadata.h"; sourceTree = "<group>"; };
@@ -2925,6 +2937,12 @@
 				DC2566052260D38200828AA5 /* demo-cert-old.cer */,
 				DC2565FD2260D24500828AA5 /* demo-cert-letsencrypt.cer */,
 				DC2565FE2260D24500828AA5 /* demo-cert-root.cer */,
+				DC1A7E0A266AC6FB00CAA695 /* letsencrypt-new-root.cer */,
+				DC1A7E10266ACA1500CAA695 /* letsencrypt-new-parent.cer */,
+				DC1A7E0E266ACA1500CAA695 /* letsencrypt-new.cer */,
+				DC1A7E0B266AC6FB00CAA695 /* letsencrypt-old-root.cer */,
+				DC1A7E0F266ACA1500CAA695 /* letsencrypt-old-parent.cer */,
+				DC1A7E11266ACA1500CAA695 /* letsencrypt-old.cer */,
 				DCC8F9BB202852A200EB6701 /* Info.plist */,
 				DCC6563C20C979FB00110A97 /* TestTools.m */,
 				DCC6563B20C979FB00110A97 /* TestTools.h */,
@@ -3620,14 +3638,20 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC1A7E13266ACA1500CAA695 /* letsencrypt-old-parent.cer in Resources */,
 				DC72E4372063DF7700189B9A /* customSettings.plist in Resources */,
 				DC2566072260D38200828AA5 /* demo-cert-old.cer in Resources */,
+				DC1A7E12266ACA1500CAA695 /* letsencrypt-new.cer in Resources */,
+				DC1A7E15266ACA1500CAA695 /* letsencrypt-old.cer in Resources */,
+				DC1A7E0D266AC6FB00CAA695 /* letsencrypt-old-root.cer in Resources */,
+				DC1A7E0C266AC6FB00CAA695 /* letsencrypt-new-root.cer in Resources */,
 				DCEB94DB21105FE0004EF8D7 /* rainbow.png in Resources */,
 				DC2566012260D24500828AA5 /* demo-cert-letsencrypt.cer in Resources */,
 				DC2566062260D38200828AA5 /* demo-cert-new.cer in Resources */,
 				DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */,
 				DCD6327B223BE0980090169E /* capabilities.json in Resources */,
 				DC2566022260D24500828AA5 /* demo-cert-root.cer in Resources */,
+				DC1A7E14266ACA1500CAA695 /* letsencrypt-new-parent.cer in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 				DC7185BB216E160500BDEA2A /* rainbow-crystalized.png in Resources */,
 			);
