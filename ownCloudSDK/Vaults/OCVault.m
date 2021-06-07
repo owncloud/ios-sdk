@@ -226,7 +226,7 @@
 {
 	if (_keyValueStore == nil)
 	{
-		_keyValueStore = [[OCKeyValueStore alloc] initWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString];
+		_keyValueStore = [OCKeyValueStore sharedWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString owner:nil];
 		[_keyValueStore registerClass:[OCEventQueue class] forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
 	}
 
