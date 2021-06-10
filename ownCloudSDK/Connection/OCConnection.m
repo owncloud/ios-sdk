@@ -804,8 +804,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	}
 
 	// Handle 302 and 307 status
+	// + certain "hidden" redirects (from background NSURLSessions, see below)
+	BOOL encounteredHiddenRedirect =(task.metrics.redirects.unsignedIntegerValue > 0) && // Request was redirected before finishing, according to metrics. This should only happen when a request is scheduled on a background NSURLSession, where the delegate is not always consulted if a redirect should be followed - and the system just follows it instead.
+					(task.request.redirectPolicy == OCHTTPRequestRedirectPolicyValidateConnection) && // redirect policy is to validate connection when encountering a redirect
+	 				(task.response.status.code != OCHTTPStatusCodeTEMPORARY_REDIRECT) && // Returned status does not indicate any desire to redirect
+	    				(task.response.status.code != OCHTTPStatusCodeMOVED_TEMPORARILY);
+
 	if ((task.response.status.code == OCHTTPStatusCodeTEMPORARY_REDIRECT) ||
-	    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY))
+	    (task.response.status.code == OCHTTPStatusCodeMOVED_TEMPORARILY) ||
+	    encounteredHiddenRedirect)
 	{
 		NSURL *redirectURL = task.response.redirectURL;
 		BOOL rescheduleWithRedirectURL = NO;
@@ -1772,7 +1779,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			[self attachToPipelines];
 
 			// Enqueue request
-			if ((options[@"alternativeEventType"] != nil) || [options[@"longLived"] boolValue])
+			if ((options[@"alternativeEventType"] != nil) || [options[OCConnectionOptionLongLived] boolValue])
 			{
 				if (OCConnection.backgroundURLSessionsAllowed)
 				{
@@ -3094,6 +3101,8 @@ OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals"
 OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
+
+OCConnectionOptionKey OCConnectionOptionLongLived = @"longLived";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 

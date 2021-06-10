@@ -95,6 +95,11 @@
 			_responseReceiveTimeInterval = @([endDate timeIntervalSinceDate:startDate]);
 		}
 	}
+
+	if (urlSessionTaskMetrics.redirectCount != 0)
+	{
+		_redirects = @(urlSessionTaskMetrics.redirectCount);
+	}
 }
 
 - (void)addTransferSizesFromURLSessionTask:(NSURLSessionTask *)urlSessionTask
@@ -158,6 +163,8 @@
 
 	[coder encodeObject:_totalRequestSizeBytes forKey:@"totalOut"];
 	[coder encodeObject:_totalResponseSizeBytes forKey:@"totalIn"];
+
+	[coder encodeObject:_redirects forKey:@"redirects"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)decoder
@@ -177,6 +184,8 @@
 
 		_totalRequestSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalOut"];
 		_totalResponseSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalIn"];
+
+		_redirects = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"redirects"];
 	}
 
 	return (self);

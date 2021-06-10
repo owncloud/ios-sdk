@@ -1286,13 +1286,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					{
 						options = @{
 							OCConnectionOptionIsNonCriticalKey : @(YES),
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+							OCConnectionOptionGroupIDKey : @"update-check-nb"
+							// OCConnectionOptionLongLived : @(OCConnection.backgroundURLSessionsAllowed) // commented out to always use local queue to catch redirects as they happen (-> and run Connection Validator)
 						};
 					}
 					else
 					{
 						options = @{
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+							OCConnectionOptionGroupIDKey : @"update-check"
+							// OCConnectionOptionLongLived : @(OCConnection.backgroundURLSessionsAllowed) // commented out to always use local queue to catch redirects as they happen (-> and run Connection Validator)
 						};
 					}
 

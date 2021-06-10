@@ -422,6 +422,8 @@ extern OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey; //!< O
 extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!< NSURL of the temporary folder to store file segments in when performing uploads via TUS
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
 
+extern OCConnectionOptionKey OCConnectionOptionLongLived; //!< If YES, performs requests for some methods on the long lived HTTP pipeline. Mainly for internal use.
+
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 
 extern OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies; //!< Clear all cookies for the connection when entering connection validation.

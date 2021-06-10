@@ -42,6 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSUInteger)lengthOfHeaderDictionary:(nullable NSDictionary<NSString *, NSString *> *)headerDict method:(nullable NSString *)method url:(nullable NSURL *)url;
 
+#pragma mark - Other metrics
+@property(nullable,strong) NSNumber *redirects; //!< Number of redirects followed
+
 #pragma mark - Computed properties
 @property(nullable, readonly, nonatomic) NSNumber *receivedBytesPerSecond; //!< Number of bytes received per second
 @property(nullable, readonly, nonatomic) NSNumber *sentBytesPerSecond; //!< Number of bytes sent per second
