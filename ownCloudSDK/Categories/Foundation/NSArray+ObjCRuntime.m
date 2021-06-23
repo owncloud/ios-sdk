@@ -27,7 +27,7 @@
 
 		if (class_getClassMethod(inspectClass, @selector(conformsToProtocol:)) != NULL)
 		{
-			return ([inspectClass conformsToProtocol:protocol]);
+			return (class_conformsToProtocol(inspectClass, protocol));
 		}
 
 		return (NO);
