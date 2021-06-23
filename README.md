@@ -58,4 +58,5 @@ Note: since `OCEventTarget` handles the resolution and actual delivery of the ev
 ## License
 
 This project is currently licensed under GPL v3.
+We do provide support as well as an option for a dual-licensing as part of our ownCloud Enterprise subscriptions. Please contact info@owncloud.com for more information.
 
