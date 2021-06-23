@@ -1,3 +1,14 @@
+## 11.6.1 version
+
+- Certificates
+	- LetsEncrypt root certificate handling: extend the default certificate renewal acceptance rule to accept a change from DST Root CA X3 / R3 to ISRG Root X1 / R3, provided that the certificate passes system validation
+- Class Settings
+	- dynamically determine which settings to include in the settings snapshot in the log intro
+- Key Value Store
+	- add new semantics for sharing a single Key Value Store instance, based on URL, identifier and owner
+- Vault
+	- switch to new shared KVS semantics to avoid rapid recreation of the KVS where OCVault is used only very briefly
+
 ## 11.6 version
 
 - Bookmarks
