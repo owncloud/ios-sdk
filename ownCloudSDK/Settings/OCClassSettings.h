@@ -72,7 +72,11 @@ typedef NS_OPTIONS(NSInteger, OCClassSettingsFlag)
 
 + (nullable NSError *)validateValue:(nullable id)value forSettingsKey:(OCClassSettingsKey)key; //!< Optional validation of values for a specific OCClassSettingsKey. Return nil if validation has passed - or if no validation was performed. Standard validation is performed before calling this method.
 
++ (BOOL)includeInLogSnapshot; //!< If implemented and returning YES, the values of this class are included in logged class settings snapshots
+
 @end
+
+#define INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(className) +(BOOL)includeInLogSnapshot { return (self == className.class); }
 
 typedef NSString* OCClassSettingsSourceIdentifier NS_TYPED_ENUM;
 

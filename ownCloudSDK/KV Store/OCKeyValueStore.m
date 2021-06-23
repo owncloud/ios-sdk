@@ -17,6 +17,7 @@
  */
 
 #import <UIKit/UIKit.h>
+#import <objc/runtime.h>
 
 #import "OCMacros.h"
 #import "OCKeyValueStore.h"
@@ -111,6 +112,53 @@ typedef NSMutableDictionary<OCKeyValueStoreKey, OCKeyValueRecord *> * OCKeyValue
 }
 
 #pragma mark - Init
++ (instancetype)sharedWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier owner:(nullable id)owner
+{
+	static NSMapTable<NSString *, OCKeyValueStore *> *kvsByIdentifier;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		kvsByIdentifier = [NSMapTable strongToWeakObjectsMapTable]; // used to prevent multiple instances if an instance still exists (i.e. retained in a block) while all owners are already deallocated
+	});
+
+	OCKeyValueStore *keyValueStore = nil;
+
+	@autoreleasepool {
+		@synchronized(kvsByIdentifier) {
+			// Create URLplusIdentifier from URL+identifier
+			NSString *URLplusIdentifier = [NSString stringWithFormat:@"%@:%@", url.absoluteString, identifier];
+
+			// Retrieve KVS using URLplusIdentifier
+			if ((keyValueStore = [kvsByIdentifier objectForKey:URLplusIdentifier]) == nil)
+			{
+				// Create KVS if none exists yet
+				keyValueStore = [[self alloc] initWithURL:url identifier:identifier];
+
+				// Store weak reference to KVS for URLplusIdentifier
+				[kvsByIdentifier setObject:keyValueStore forKey:URLplusIdentifier];
+			}
+
+			// Add strong reference to KVS to owner via associated object - so it stays around as long as the owner object
+			if (owner != nil)
+			{
+				objc_setAssociatedObject(owner, (__bridge void *)keyValueStore, keyValueStore, OBJC_ASSOCIATION_RETAIN);
+			}
+		}
+	}
+
+	// Return KVS
+	return (keyValueStore);
+}
+
+- (void)dropSharedFrom:(id)owner
+{
+	if (owner != nil)
+	{
+		// Drop strong reference to self from owner (if any)
+		objc_setAssociatedObject(owner, (__bridge void *)self, NULL, OBJC_ASSOCIATION_RETAIN);
+	}
+}
+
 - (instancetype)initWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier
 {
 	if ((self = [self init]) != nil)

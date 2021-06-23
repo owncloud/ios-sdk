@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSArray (OCObjCRuntime)
 
 + (NSArray<Class> *)classesImplementing:(Protocol *)protocol;
++ (NSArray<Class> *)classesMatching:(BOOL(^)(Class class))classMatcher;
 
 @end
 

@@ -380,7 +380,8 @@
 	for (Class inspectClass in classes)
 	{
 		// Check conformity
-		if ([inspectClass conformsToProtocol:@protocol(OCClassSettingsSupport)])
+		if ([inspectClass conformsToProtocol:@protocol(OCClassSettingsSupport)] &&
+		    [inspectClass respondsToSelector:@selector(classSettingsIdentifier)]) // Avoid proxy classes
 		{
 			OCClassSettingsIdentifier settingsIdentifier;
 

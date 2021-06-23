@@ -315,6 +315,8 @@
 }
 
 #pragma mark - Class settings
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCAuthenticationMethod)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (OCClassSettingsIdentifierAuthentication);

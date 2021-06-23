@@ -23,7 +23,20 @@
 
 + (NSArray<Class> *)classesImplementing:(Protocol *)protocol
 {
-	NSMutableArray<Class> *implementingClasses = [NSMutableArray new];
+	return ([self classesMatching:^BOOL(__unsafe_unretained Class inspectClass){
+
+		if (class_getClassMethod(inspectClass, @selector(conformsToProtocol:)) != NULL)
+		{
+			return ([inspectClass conformsToProtocol:protocol]);
+		}
+
+		return (NO);
+	}]);
+}
+
++ (NSArray<Class> *)classesMatching:(BOOL(^)(Class class))classMatcher
+{
+	NSMutableArray<Class> *matchingClasses = [NSMutableArray new];
 	int classCount;
 
 	if ((classCount = objc_getClassList(NULL, 0)) > 0)
@@ -38,12 +51,9 @@
 			{
 				Class inspectClass = classList[i];
 
-				if (class_getClassMethod(inspectClass, @selector(conformsToProtocol:)) != NULL)
+				if (classMatcher(inspectClass))
 				{
-					if ([inspectClass conformsToProtocol:protocol])
-					{
-						[implementingClasses addObject:inspectClass];
-					}
+					[matchingClasses addObject:inspectClass];
 				}
 			}
 
@@ -51,7 +61,7 @@
 		}
 	}
 
-	return (implementingClasses);
+	return (matchingClasses);
 }
 
 @end
