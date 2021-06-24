@@ -1436,8 +1436,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
-		// Check again in 10 seconds (TOOD: add configurable timing and option to enable/disable)
-		NSTimeInterval minimumTimeInterval = 10;
+		// Check again after configured time interval (with fall back to 10 seconds)
+		NSNumber *configuredInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval];
+		NSTimeInterval minimumTimeInterval = (configuredInterval.integerValue > 0) ? configuredInterval.doubleValue : 10;
 
 		if (self.state == OCCoreStateRunning)
 		{
