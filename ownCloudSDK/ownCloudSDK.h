@@ -140,6 +140,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCSQLiteTransaction.h>
 #import <ownCloudSDK/OCSQLiteResultSet.h>
 
+#import <ownCloudSDK/OCBookmark+Prepopulation.h>
+#import <ownCloudSDK/OCVault+Prepopulation.h>
+#import <ownCloudSDK/OCDAVRawResponse.h>
+
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>

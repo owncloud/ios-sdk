@@ -1197,6 +1197,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 - (void)startCheckingForUpdates
 {
 	[self queueBlock:^{
+		if (_directoryUpdateStartTime == 0)
+		{
+			OCTLog(@[@"UpdateScan"], @"Starting update scan");
+			_directoryUpdateStartTime = NSDate.timeIntervalSinceReferenceDate;
+		}
+
 		[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:nil];
 	}];
 }
@@ -1437,8 +1443,25 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
 		// Check again after configured time interval (with fall back to 10 seconds)
-		NSNumber *configuredInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval];
-		NSTimeInterval minimumTimeInterval = (configuredInterval.integerValue > 0) ? configuredInterval.doubleValue : 10;
+		NSTimeInterval minimumTimeInterval = 10.0;
+
+		// Ignore until https://github.com/owncloud/client/pull/8777/files is resolved:
+
+		// Server default is 60 seconds, but iOS default is 10 seconds
+		// also the capability is no longer in seconds, but milliseconds,
+		// so ignore anything less than 5 seconds
+
+//		if ((self.connection.capabilities.pollInterval != nil) && (self.connection.capabilities.pollInterval.integerValue > 4999))
+//		{
+//			minimumTimeInterval = self.connection.capabilities.pollInterval.doubleValue / 1000.0;
+//		}
+//
+//		NSNumber *configuredInterval;
+//
+//		if ((configuredInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval]) != nil)
+//		{
+//			minimumTimeInterval = configuredInterval.doubleValue / 1000.0;
+//		}
 
 		if (self.state == OCCoreStateRunning)
 		{
@@ -1475,6 +1498,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	else
 	{
 		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges];
+	}
+
+	if (_directoryUpdateStartTime != 0)
+	{
+		OCTLog(@[@"UpdateScan"], @"Finished update scan in %.1f sec", NSDate.timeIntervalSinceReferenceDate - _directoryUpdateStartTime);
+		_directoryUpdateStartTime = 0;
 	}
 
 	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)

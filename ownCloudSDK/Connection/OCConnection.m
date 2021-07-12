@@ -48,6 +48,7 @@
 #import "OCHTTPPolicyBookmark.h"
 #import "OCHTTPRequest.h"
 #import "NSURL+OCURLNormalization.h"
+#import "OCDAVRawResponse.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -1768,6 +1769,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
 			}
 
+			if (options[OCConnectionOptionResponseDestinationURL] != nil)
+			{
+				davRequest.downloadedFileURL = options[OCConnectionOptionResponseDestinationURL];
+			}
+
 			// Attach to pipelines
 			[self attachToPipelines];
 
@@ -1811,6 +1817,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCEvent *event;
 	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
 	OCEventType eventType = OCEventTypeRetrieveItemList;
+	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
 
 	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
 	{
@@ -1819,6 +1826,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
 	{
+		NSURL *endpointURL = request.userInfo[@"endpointURL"];
+
 		if (error != nil)
 		{
 			event.error = error;
@@ -1834,9 +1843,25 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			event.error = request.httpResponse.status.error;
 		}
 
-		if (event.error == nil)
+		if ((event.error == nil) && (responseDestinationURL != nil))
 		{
-			NSURL *endpointURL = request.userInfo[@"endpointURL"];
+			if ([NSFileManager.defaultManager fileExistsAtPath:responseDestinationURL.path])
+			{
+				OCDAVRawResponse *rawResponse = [OCDAVRawResponse new];
+
+				rawResponse.responseDataURL = responseDestinationURL;
+				rawResponse.basePath = endpointURL.path;
+
+				event.result = rawResponse;
+			}
+			else
+			{
+				event.error = OCError(OCErrorFileNotFound);
+			}
+		}
+
+		if ((event.error == nil) && (responseDestinationURL == nil))
+		{
 			NSArray <NSError *> *errors = nil;
 			NSArray <OCItem *> *items = nil;
 
@@ -3094,6 +3119,7 @@ OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals"
 OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
+OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 
