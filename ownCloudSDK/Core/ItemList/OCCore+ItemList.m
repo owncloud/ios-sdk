@@ -1282,17 +1282,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					// on a regular basis (otherwise might take an
 					// undefined amount of time for NSURLSession to
 					// deliver responses)
+
+					// Commented out for now - to avoid uncontrolled redirects of PROPFINDs in APM settings
 					if (notBefore != nil)
 					{
 						options = @{
 							OCConnectionOptionIsNonCriticalKey : @(YES),
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 					else
 					{
 						options = @{
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 
@@ -1436,8 +1438,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
-		// Check again in 10 seconds (TOOD: add configurable timing and option to enable/disable)
-		NSTimeInterval minimumTimeInterval = 10;
+		// Check again after configured time interval (with fall back to 10 seconds)
+		NSNumber *configuredInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval];
+		NSTimeInterval minimumTimeInterval = (configuredInterval.integerValue > 0) ? configuredInterval.doubleValue : 10;
 
 		if (self.state == OCCoreStateRunning)
 		{
