@@ -1282,17 +1282,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					// on a regular basis (otherwise might take an
 					// undefined amount of time for NSURLSession to
 					// deliver responses)
+
+					// Commented out for now - to avoid uncontrolled redirects of PROPFINDs in APM settings
 					if (notBefore != nil)
 					{
 						options = @{
 							OCConnectionOptionIsNonCriticalKey : @(YES),
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 					else
 					{
 						options = @{
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 
