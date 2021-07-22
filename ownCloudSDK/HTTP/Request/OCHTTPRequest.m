@@ -186,6 +186,36 @@
 	}
 }
 
+- (OCHTTPRequestStatusPolicy)policyForStatus:(OCHTTPStatusCode)statusCode
+{
+	OCHTTPRequestStatusPolicy policy = OCHTTPRequestStatusPolicyDefault;
+
+	if (_statusPolicies != nil)
+	{
+		OCHTTPRequestStatusPolicyNumber policyNumber;
+
+		if ((policyNumber = _statusPolicies[@(statusCode)]) != nil)
+		{
+			policy = policyNumber.unsignedIntegerValue;
+		}
+	}
+
+	return (policy);
+}
+
+- (void)setPolicy:(OCHTTPRequestStatusPolicy)policy forStatus:(OCHTTPStatusCode)statusCode
+{
+	if (_statusPolicies == nil)
+	{
+		_statusPolicies = @{ @(statusCode) : @(policy) };
+	}
+	else
+	{
+		_statusPolicies = [[NSMutableDictionary alloc] initWithDictionary:_statusPolicies];
+		[(NSMutableDictionary *)_statusPolicies setObject:@(policy) forKey:@(statusCode)];
+	}
+}
+
 - (NSError *)error
 {
 	return (_httpResponse.error);
@@ -522,6 +552,8 @@
 		self.maximumRedirectionDepth = [decoder decodeIntegerForKey:@"maximumRedirectionDepth"];
 		self.redirectionHistory = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSURL.class, nil] forKey:@"redirectionHistory"];
 
+		self.statusPolicies	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSDictionary.class, NSNumber.class, nil] forKey:@"statusPolicies"];
+
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
 
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
@@ -572,6 +604,8 @@
 	[coder encodeInteger:_redirectPolicy 		forKey:@"redirectPolicy"];
 	[coder encodeInteger:_maximumRedirectionDepth 	forKey:@"maximumRedirectionDepth"];
 	[coder encodeObject:_redirectionHistory 	forKey:@"redirectionHistory"];
+
+	[coder encodeObject:_statusPolicies	forKey:@"statusPolicies"];
 
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
