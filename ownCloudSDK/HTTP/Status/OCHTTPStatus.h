@@ -52,6 +52,8 @@ typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 	OCHTTPStatusCodeINSUFFICIENT_STORAGE = 507
 };
 
+typedef NSNumber* OCHTTPStatusCodeNumber;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCHTTPStatus : NSObject <NSCopying, NSSecureCoding>

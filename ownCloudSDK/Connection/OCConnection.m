@@ -790,6 +790,29 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (YES);
 }
 
+#pragma mark - Status policies
+- (OCHTTPRequestStatusPolicy)statusPolicyForTask:(OCHTTPPipelineTask *)task
+{
+	OCHTTPStatusCode statusCode = task.response.status.code;
+	OCHTTPRequestStatusPolicy policy = [task.request policyForStatus:statusCode];
+
+	if (policy == OCHTTPRequestStatusPolicyDefault)
+	{
+		switch (statusCode)
+		{
+			case OCHTTPStatusCodeBAD_GATEWAY:
+				policy = OCHTTPRequestStatusPolicyValidateConnection;
+			break;
+
+			default:
+				policy = OCHTTPRequestStatusPolicyHandleLocally;
+			break;
+		}
+	}
+
+	return (policy);
+}
+
 #pragma mark - Rescheduling support
 - (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)incomingInstruction error:(NSError *)error
 {
@@ -856,6 +879,30 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			task.request.url = redirectURL;
 
 			instruction = OCHTTPRequestInstructionReschedule;
+		}
+	}
+	else
+	{
+		// Apply policy for status
+		switch ([self statusPolicyForTask:task])
+		{
+			case OCHTTPRequestStatusPolicyDefault:
+			case OCHTTPRequestStatusPolicyHandleLocally:
+				// Just proceed as usual
+			break;
+
+			case OCHTTPRequestStatusPolicyValidateConnection:
+				considerSuccessfulRequest = NO;
+
+				if ([self shouldTriggerConnectionValidationDueToResponseToURL:taskRequestURL]) // Avoid infinite loops
+				{
+					// Reschedule request for when connection validation has finished
+					instruction = OCHTTPRequestInstructionReschedule;
+
+					// Trigger connection validation
+					[self validateConnectionWithReason:[NSString stringWithFormat:@"Status code %lu received for %@ - starting connection validator", (unsigned long)task.response.status.code, taskRequestURL] dueToResponseToURL:taskRequestURL];
+				}
+			break;
 		}
 	}
 
@@ -2489,6 +2536,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			[request setValue:[destinationURL absoluteString] forHeaderField:OCHTTPHeaderFieldNameDestination];
 			[request setValue:@"infinity" forHeaderField:OCHTTPHeaderFieldNameDepth];
 			[request setValue:@"F" forHeaderField:OCHTTPHeaderFieldNameOverwrite]; // "F" for False, "T" for True
+
+			[request setPolicy:OCHTTPRequestStatusPolicyHandleLocally forStatus:OCHTTPStatusCodeBAD_GATEWAY]; // BAD GATEWAY is an expected response code for move/copy
 
 			// Attach to pipelines
 			[self attachToPipelines];

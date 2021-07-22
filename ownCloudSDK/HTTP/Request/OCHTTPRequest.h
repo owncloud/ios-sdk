@@ -43,6 +43,16 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestRedirectPolicy)
 	OCHTTPRequestRedirectPolicyValidateConnection	//!< The HTTP layer should handle redirects as global exception, triggering a connection validation and - upon success - a retry of the original request
 };
 
+typedef NS_ENUM(NSUInteger, OCHTTPRequestStatusPolicy)
+{
+	OCHTTPRequestStatusPolicyDefault,		//!< The HTTP layer should handle this status using the default policy for this status (see [OCConnection statusPolicyForTask:])
+
+	OCHTTPRequestStatusPolicyHandleLocally,		//!< The HTTP layer should not handle this status and instead return the original response for local handling
+	OCHTTPRequestStatusPolicyValidateConnection	//!< The HTTP layer should handle this status as global exception, triggering a connection validation and - upon success - a retry of the original request
+};
+
+typedef NSNumber* OCHTTPRequestStatusPolicyNumber;
+
 typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
 
 typedef NSString* OCHTTPRequestResumeInfoKey;
@@ -70,6 +80,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(assign,nonatomic) OCHTTPRequestRedirectPolicy redirectPolicy; //!< Controls redirect handling for this request. Defaults to OCHTTPRequestRedirectPolicyDefault.
 @property(assign,nonatomic) NSUInteger maximumRedirectionDepth; //!< Maximum number of redirects to follow before failing. Defaults to 5.
 @property(strong,nonatomic) NSArray<NSURL *> *redirectionHistory; //!< URLs visited during redirection, starting with the original URL.
+
+@property(strong,nonatomic) NSDictionary<OCHTTPStatusCodeNumber,OCHTTPRequestStatusPolicyNumber> *statusPolicies; //!< Policies for internal handling of response status codes
 
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
@@ -129,6 +141,9 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (void)setValue:(NSString *)value forHeaderField:(OCHTTPHeaderFieldName)headerField;
 
 - (void)addHeaderFields:(NSDictionary<OCHTTPHeaderFieldName,NSString*> *)headerFields;
+
+- (OCHTTPRequestStatusPolicy)policyForStatus:(OCHTTPStatusCode)statusCode;
+- (void)setPolicy:(OCHTTPRequestStatusPolicy)policy forStatus:(OCHTTPStatusCode)statusCode;
 
 #pragma mark - Response
 @property(strong) OCHTTPResponse *httpResponse;
