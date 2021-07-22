@@ -149,7 +149,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(YES)
+		OCCoreCookieSupportEnabled : @(YES),
+		OCCoreScanForChangesInterval : @(10)
 	});
 }
 
@@ -189,6 +190,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			OCClassSettingsMetadataKeyDescription 	: @"Concurrency budgets available for sync actions by action category.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection"
+		},
+
+		OCCoreScanForChangesInterval : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeInteger,
+			OCClassSettingsMetadataKeyDescription 	: @"Minimum number of seconds until the next scan for changes, measured from the completion of the previous scan.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},
 
 		// Privacy
@@ -2159,6 +2167,7 @@ OCClassSettingsKey OCCoreOverrideReachabilitySignal = @"override-reachability-si
 OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-signal";
 OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
 OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
+OCClassSettingsKey OCCoreScanForChangesInterval = @"scan-for-changes-interval";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
