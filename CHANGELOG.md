@@ -1,3 +1,9 @@
+## 11.7 version
+
+- Scan for changes no longer uses the background URL session, so redirects can be fully managed by the SDK
+- New class setting to allow configuration of time interval between the end of one to the beginning of the next scan for changes
+- Fix crash in protocol conformance check
+
 ## 11.6.1 version
 
 - Certificates
