@@ -425,6 +425,7 @@ extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, for
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 
 extern OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies; //!< Clear all cookies for the connection when entering connection validation.
+extern OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers; //!< Trigger connection validation when receiving a responses with 502 status.
 
 NS_ASSUME_NONNULL_END
 
