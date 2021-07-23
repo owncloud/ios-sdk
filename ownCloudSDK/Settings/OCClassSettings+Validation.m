@@ -124,6 +124,11 @@
 		{
 			return ([NSURL URLWithString:value]);
 		}
+
+		if ([value isKindOfClass:NSURL.class])
+		{
+			return (value);
+		}
 	}
 
 	if ([type isEqual:OCClassSettingsMetadataTypeNumberArray])

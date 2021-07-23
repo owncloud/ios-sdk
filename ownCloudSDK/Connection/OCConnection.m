@@ -209,7 +209,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 			OCClassSettingsMetadataKeyPossibleValues : @{
-				OCConnectionValidatorFlagClearCookies : @"Clear all cookies for the connection when entering connection validation."
+				OCConnectionValidatorFlagClearCookies : @"Clear all cookies for the connection when entering connection validation.",
+				OCConnectionValidatorFlag502Triggers  : @"Connection validation is triggered when receiving a responses with 502 status."
 			},
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
@@ -801,8 +802,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		switch (statusCode)
 		{
 			case OCHTTPStatusCodeBAD_GATEWAY:
-				policy = OCHTTPRequestStatusPolicyValidateConnection;
-			break;
+				if ([[self classSettingForOCClassSettingsKey:OCConnectionValidatorFlags] containsObject:OCConnectionValidatorFlag502Triggers])
+				{
+					policy = OCHTTPRequestStatusPolicyValidateConnection;
+					break;
+				}
 
 			default:
 				policy = OCHTTPRequestStatusPolicyHandleLocally;
@@ -3147,3 +3151,4 @@ OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 
 OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";
+OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers = @"502-triggers";
