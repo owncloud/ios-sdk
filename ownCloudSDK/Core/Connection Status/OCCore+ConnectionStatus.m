@@ -328,7 +328,13 @@
 					[self queueBlock:^{ // See if we can proceed
 						if (self->_state == OCCoreStateRunning)
 						{
-							for (OCQuery *query in self->_queries)
+							NSArray *queries;
+							@synchronized(self->_queries)
+							{
+								queries = [self->_queries copy];
+							}
+
+							for (OCQuery *query in queries)
 							{
 								if (query.state == OCQueryStateContentsFromCache)
 								{

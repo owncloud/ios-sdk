@@ -223,7 +223,13 @@
 				}
 			};
 
-			for (OCQuery *query in self->_queries)
+			NSArray *queries;
+			@synchronized(self->_queries)
+			{
+				queries = [self->_queries copy];
+			}
+
+			for (OCQuery *query in queries)
 			{
 				// Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
 				@synchronized(query)
