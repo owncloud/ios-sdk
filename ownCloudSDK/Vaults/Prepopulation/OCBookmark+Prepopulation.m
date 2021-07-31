@@ -108,4 +108,81 @@
 	return (rootProgress);
 }
 
+- (NSProgress *)prepopulateWithStreamCompletionHandler:(void(^)(NSError *error))completionHandler
+{
+	NSProgress *rootProgress = NSProgress.indeterminateProgress;
+	OCVault *vault = [[OCVault alloc] initWithBookmark:self];
+
+	rootProgress.localizedDescription = OCLocalized(@"Opening vault…");
+
+	[vault openWithCompletionHandler:^(id sender, NSError *error) {
+		if (error != nil)
+		{
+			// Error opening vault
+			completionHandler(error);
+		}
+		else if (rootProgress.cancelled)
+		{
+			// Cancelled: close and return
+			[vault closeWithCompletionHandler:^(id sender, NSError *error) {
+				completionHandler(OCError(OCErrorCancelled));
+			}];
+		}
+		else
+		{
+			// Retrieve infinite PROPFIND
+			NSProgress *retrieveProgress;
+			NSTimeInterval startTime = NSDate.timeIntervalSinceReferenceDate;
+
+			OCTLog(@[@"Prepop"], @"Starting to retrieve and prepopulate database with items…");
+
+			rootProgress.localizedDescription = OCLocalized(@"Retrieving metadata…");
+
+			if ((retrieveProgress = [vault streamMetadataWithCompletionHandler:^(NSError * _Nullable retrieveError, NSInputStream * _Nullable inputStream, NSString * _Nullable basePath) {
+				if (rootProgress.cancelled || (retrieveError != nil))
+				{
+					// Cancelled or encountered error: close and return
+					[vault closeWithCompletionHandler:^(id sender, NSError *error) {
+						completionHandler((retrieveError != nil) ? retrieveError : OCError(OCErrorCancelled));
+					}];
+				}
+				else
+				{
+					// Populate database
+					NSProgress *populateProgress;
+
+					OCLogDebug (@"Error=%@, inputStream=%@, basePath=%@", retrieveError, inputStream, basePath);
+
+					rootProgress.localizedDescription = OCLocalized(@"Populating database…");
+
+					OCTLog(@[@"Prepop"], @"Retrieved item metadata in %.0f sec", NSDate.timeIntervalSinceReferenceDate - startTime);
+
+					if ((populateProgress = [vault prepopulateDatabaseWithInputStream:inputStream basePath:basePath progressHandler:^(NSUInteger folderCount, NSUInteger fileCount) {
+						rootProgress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"%lu files in %lu folders"), (unsigned long)fileCount, folderCount];
+					} completionHandler:^(NSError * _Nullable parseError) {
+						// Close and return
+						rootProgress.localizedDescription = OCLocalized(@"Closing vault…");
+
+						[vault closeWithCompletionHandler:^(id sender, NSError *error) {
+							NSTimeInterval completeTime = NSDate.timeIntervalSinceReferenceDate - startTime;
+
+							OCTLog(@[@"Prepop"], @"Completed prepolution in %.0f sec (retrieval + parsing)", completeTime);
+
+							completionHandler((parseError != nil) ? parseError : (rootProgress.cancelled ? OCError(OCErrorCancelled) : nil));
+						}];
+					}]) != nil)
+					{
+						[rootProgress addChild:populateProgress withPendingUnitCount:50];
+					}
+				}
+			}]) != nil)
+			{
+				[rootProgress addChild:retrieveProgress withPendingUnitCount:50];
+			}
+		}
+	}];
+
+	return (rootProgress);
+}
+
 @end

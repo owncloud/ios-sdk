@@ -34,6 +34,7 @@
 #import "OCCellularManager.h"
 #import "OCNetworkMonitor.h"
 #import "OCHTTPPolicyManager.h"
+#import "OCHTTPRequest+Stream.h"
 #import "NSURLSessionTask+Debug.h"
 
 @interface OCHTTPPipeline ()
@@ -1276,6 +1277,12 @@
 		}
 	}
 
+	// Close streaming response stream
+	if (task.request.shouldStreamResponse)
+	{
+		[task.request closeResponseStreamWithError:response.httpError forPipelineTask:task];
+	}
+
 	// Update task in backend
 	if ((task.response != nil) && (task.response != response))
 	{
@@ -2236,7 +2243,16 @@
 			{
 				if ((response = [task responseFromURLSessionTask:urlSessionDataTask]) != nil)
 				{
-					[response appendDataToResponseBody:data];
+					if (task.request.shouldStreamResponse)
+					{
+						// Stream response data
+						[task.request handleResponseStreamData:data forPipelineTask:task];
+					}
+					else
+					{
+						// Append received data
+						[response appendDataToResponseBody:data];
+					}
 				}
 			}
 		}

@@ -48,7 +48,53 @@
 	return (nil);
 }
 
-- (nullable NSProgress *)prepopulateDatabaseWithRawResponse:(OCDAVRawResponse *)davRawResponse progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler;
+- (nullable NSProgress *)prepopulateDatabaseWithRawResponse:(OCDAVRawResponse *)davRawResponse progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler
+{
+	return ([self _prepopulateDatabaseWithXMLParserProvider:^OCXMLParser *{
+		OCXMLParser *parser = nil;
+		NSMutableDictionary<NSString *,OCUser *> *usersByUserID = [NSMutableDictionary new];
+
+		// -- TEST CODE: cut off XML at half
+		// NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingToURL:davRawResponse.responseDataURL error:NULL];
+		//
+		// [fileHandle seekToEndOfFile];
+		// NSUInteger length = fileHandle.offsetInFile;
+		// [fileHandle truncateAtOffset:(length/2) error:NULL];
+		//
+		// fileHandle = nil;
+		// -- END TEST CODE
+
+		if ((parser = [[OCXMLParser alloc] initWithURL:davRawResponse.responseDataURL]) != nil)
+		{
+			parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+				davRawResponse.basePath, 	@"basePath",
+				usersByUserID, 			@"usersByUserID",
+			nil];
+		}
+
+		return (parser);
+	} progressHandler:progressHandler completionHandler:completionHandler]);
+}
+
+- (nullable NSProgress *)prepopulateDatabaseWithInputStream:(NSInputStream *)davInputStream basePath:(NSString *)basePath progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler
+{
+	return ([self _prepopulateDatabaseWithXMLParserProvider:^OCXMLParser * _Nullable {
+		OCXMLParser *parser = nil;
+		NSMutableDictionary<NSString *,OCUser *> *usersByUserID = [NSMutableDictionary new];
+
+		if ((parser = [[OCXMLParser alloc] initWithParser:[[NSXMLParser alloc] initWithStream:davInputStream]]) != nil)
+		{
+			parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+				basePath, 	@"basePath",
+				usersByUserID, 	@"usersByUserID",
+			nil];
+		}
+
+		return (parser);
+	} progressHandler:progressHandler completionHandler:completionHandler]);
+}
+
+- (nullable NSProgress *)_prepopulateDatabaseWithXMLParserProvider:(OCXMLParser * __nullable(^)(void))xmlParserProvider progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler
 {
 	NSProgress *parseProgress = [NSProgress indeterminateProgress];
 	OCDatabase *db = self.database;
@@ -60,7 +106,6 @@
 
 	[self.database.sqlDB queueBlock:^{
 		OCXMLParser *parser;
-		NSMutableDictionary<NSString *,OCUser *> *usersByUserID = [NSMutableDictionary new];
 		NSMutableArray<OCItem *> *queuedItems = [NSMutableArray new];
 		__block NSUInteger itemCount = 0, folderCount = 0, errorCount = 0;
 		__block NSError *completionError = nil;
@@ -87,23 +132,8 @@
 
 		OCLogDebug(@"Database path: %@", db.databaseURL.path);
 
-		// -- TEST CODE: cut off XML at half
-		// NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingToURL:davRawResponse.responseDataURL error:NULL];
-		//
-		// [fileHandle seekToEndOfFile];
-		// NSUInteger length = fileHandle.offsetInFile;
-		// [fileHandle truncateAtOffset:(length/2) error:NULL];
-		//
-		// fileHandle = nil;
-		// -- END TEST CODE
-
-		if ((parser = [[OCXMLParser alloc] initWithURL:davRawResponse.responseDataURL]) != nil)
+		if ((parser = xmlParserProvider()) != nil)
 		{
-			parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-				davRawResponse.basePath, 	@"basePath",
-				usersByUserID, 			@"usersByUserID",
-			nil];
-
 			NSMutableDictionary<OCPath, OCItem *> *openItemByPath = [NSMutableDictionary new];
 			NSMutableArray<OCPath> *openPaths = [NSMutableArray new];
 
@@ -242,6 +272,83 @@
 	}];
 
 	return (parseProgress);
+}
+
+- (nullable NSProgress *)streamMetadataWithCompletionHandler:(void(^)(NSError *_Nullable error, NSInputStream *_Nullable inputStream, NSString *_Nullable basePath))completionHandler
+{
+	OCConnection *connection;
+	NSProgress *propFindProgress = [NSProgress indeterminateProgress];
+	__block BOOL propFindCancelled = NO;
+	__block BOOL completionHandlerCalled = NO;
+	void(^resultHandler)(NSError *_Nullable error, NSInputStream *_Nullable inputStream, NSString *_Nullable basePath) = ^(NSError *_Nullable error, NSInputStream *_Nullable inputStream, NSString *_Nullable basePath) {
+		if (!completionHandlerCalled)
+		{
+			completionHandlerCalled = YES;
+			completionHandler(error,inputStream, basePath);
+		}
+	};
+
+	propFindProgress.cancellationHandler = ^{
+		propFindCancelled = YES;
+	};
+
+	if ((connection = [[OCConnection alloc] initWithBookmark:self.bookmark]) != nil)
+	{
+		[connection connectWithCompletionHandler:^(NSError * _Nullable error, OCIssue * _Nullable issue) {
+			if (error != nil)
+			{
+				resultHandler(error, nil, nil);
+				return;
+			}
+			else if (issue != nil)
+			{
+				resultHandler(issue.error, nil, nil);
+				return;
+			}
+
+			if (propFindCancelled)
+			{
+				[connection disconnectWithCompletionHandler:^{
+					resultHandler(OCError(OCErrorCancelled), nil, nil);
+				}];
+			}
+
+			NSProgress *retrieveItemsProgress;
+			OCHTTPRequestEphermalStreamHandler streamHandler;
+			__block BOOL initialStreamHandlerCallback = YES;
+
+			streamHandler = ^(OCHTTPRequest *request, OCHTTPResponse * _Nullable response, NSInputStream * _Nullable inputStream, NSError * _Nullable error) {
+				if (initialStreamHandlerCallback)
+				{
+					initialStreamHandlerCallback = NO;
+
+					resultHandler(error, inputStream, [((NSURL *)request.userInfo[@"endpointURL"]) path]);
+				}
+			};
+
+			retrieveItemsProgress = [connection retrieveItemListAtPath:@"/" depth:OCPropfindDepthInfinity options:@{
+				OCConnectionOptionResponseStreamHandler : [streamHandler copy]
+			} resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				[connection disconnectWithCompletionHandler:^{
+					if (propFindCancelled)
+					{
+						resultHandler(OCError(OCErrorCancelled), nil, nil);
+					}
+					else
+					{
+						resultHandler(event.error, nil, nil);
+					}
+				}];
+			} userInfo:nil ephermalUserInfo:nil]];
+
+			propFindProgress.cancellationHandler = ^{
+				[retrieveItemsProgress cancel];
+				propFindCancelled = YES;
+			};
+		}];
+	}
+
+	return (propFindProgress);
 }
 
 - (nullable NSProgress *)retrieveMetadataWithCompletionHandler:(void(^)(NSError *_Nullable error, OCDAVRawResponse *_Nullable davRawResponse))completionHandler

@@ -570,6 +570,8 @@
 		DCDD9B1D22298D050052A001 /* OCGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDD9B1B22298D050052A001 /* OCGroup.m */; };
 		DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDD9B2922312ED80052A001 /* OCRateLimiter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCDD9B2C22312ED80052A001 /* OCRateLimiter.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */; };
+		DCE17BC126B5A7E400B7C7DD /* OCHTTPRequest+Stream.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */; };
+		DCE17BC226B5A7E400B7C7DD /* OCHTTPRequest+Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */; };
 		DCE227CF22D60CF5000BE0A5 /* OCCore+AvailableOffline.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */; };
 		DCE227D322D60D49000BE0A5 /* OCItemPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE227D122D60D49000BE0A5 /* OCItemPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE227D422D60D49000BE0A5 /* OCItemPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE227D222D60D49000BE0A5 /* OCItemPolicy.m */; };
@@ -1367,6 +1369,8 @@
 		DCDD9B1B22298D050052A001 /* OCGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCGroup.m; sourceTree = "<group>"; };
 		DCDD9B2922312ED80052A001 /* OCRateLimiter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRateLimiter.h; sourceTree = "<group>"; };
 		DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCRateLimiter.m; sourceTree = "<group>"; };
+		DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPRequest+Stream.h"; sourceTree = "<group>"; };
+		DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPRequest+Stream.m"; sourceTree = "<group>"; };
 		DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+AvailableOffline.m"; sourceTree = "<group>"; };
 		DCE227D122D60D49000BE0A5 /* OCItemPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemPolicy.h; sourceTree = "<group>"; };
 		DCE227D222D60D49000BE0A5 /* OCItemPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemPolicy.m; sourceTree = "<group>"; };
@@ -2191,6 +2195,8 @@
 				DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */,
 				DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */,
 				DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */,
+				DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */,
+				DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */,
 			);
 			path = Request;
 			sourceTree = "<group>";
@@ -3223,6 +3229,7 @@
 				DCC8F9D9202854FB00EB6701 /* OCCore.h in Headers */,
 				DC2CD12B22E8E7FD0099C665 /* OCItemPolicyProcessorDownloadExpiration.h in Headers */,
 				DC6ABF732534683800689C7B /* OCExtension+HostSimulation.h in Headers */,
+				DCE17BC126B5A7E400B7C7DD /* OCHTTPRequest+Stream.h in Headers */,
 				DC6CC30726428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
@@ -3995,6 +4002,7 @@
 				DC19BFEA21CBACB0007C20D1 /* OCProcessSession.m in Sources */,
 				DC8556F7204F361100189B9A /* OCLogger.m in Sources */,
 				DC24F8E921E2B3EF00C9119C /* OCWaitConditionIssue.m in Sources */,
+				DCE17BC226B5A7E400B7C7DD /* OCHTTPRequest+Stream.m in Sources */,
 				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
 				DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */,
 				DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */,

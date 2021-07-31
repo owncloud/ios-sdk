@@ -25,7 +25,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSProgress *)prepopulateDatabaseWithRawResponse:(OCDAVRawResponse *)davRawResponse progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler;
 
+- (nullable NSProgress *)prepopulateDatabaseWithInputStream:(NSInputStream *)davInputStream basePath:(NSString *)basePath progressHandler:(nullable void(^)(NSUInteger folderCount, NSUInteger fileCount))progressHandler completionHandler:(void (^)(NSError *_Nullable error))completionHandler;
+
 - (nullable NSProgress *)retrieveMetadataWithCompletionHandler:(void(^)(NSError *_Nullable error, OCDAVRawResponse *_Nullable davRawResponse))completionHandler;
+- (nullable NSProgress *)streamMetadataWithCompletionHandler:(void(^)(NSError *_Nullable error, NSInputStream *_Nullable inputStream, NSString *_Nullable basePath))completionHandler;
 
 - (nullable NSError *)eraseDavRawResponses;
 

@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCBookmark (Prepopulation)
 
 - (NSProgress *)prepopulateWithCompletionHandler:(void(^)(NSError *error))completionHandler;
+- (NSProgress *)prepopulateWithStreamCompletionHandler:(void(^)(NSError *error))completionHandler;
 
 @end
 

@@ -1736,6 +1736,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	{
 		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
+			OCHTTPRequestEphermalStreamHandler ephermalStreamHandler = nil;
+
+			if ((ephermalStreamHandler = options[OCConnectionOptionResponseStreamHandler]) != nil)
+			{
+				// Remove block from options as it can't be serialized otherwise
+				options = [options mutableCopy];
+				[(NSMutableDictionary *)options removeObjectForKey:OCConnectionOptionResponseStreamHandler];
+			}
+
 			// davRequest.requiredSignals = self.actionSignals;
 			davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 			davRequest.userInfo = @{
@@ -1772,6 +1781,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			if (options[OCConnectionOptionResponseDestinationURL] != nil)
 			{
 				davRequest.downloadedFileURL = options[OCConnectionOptionResponseDestinationURL];
+			}
+
+			if (ephermalStreamHandler != nil)
+			{
+				davRequest.ephermalStreamHandler = ephermalStreamHandler;
+				davRequest.downloadRequest = NO;
 			}
 
 			// Attach to pipelines
@@ -3120,6 +3135,7 @@ OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-c
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
+OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 
