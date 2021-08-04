@@ -73,6 +73,7 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *blacklistedFiles;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsUndelete;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsVersioning;
+@property(readonly,nullable,nonatomic) OCCapabilityBool supportsInfinitePropfind;
 
 #pragma mark - Sharing
 @property(readonly,nullable,nonatomic) OCCapabilityBool sharingAPIEnabled;
