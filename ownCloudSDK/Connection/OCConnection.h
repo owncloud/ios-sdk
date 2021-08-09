@@ -421,6 +421,8 @@ extern OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey; //!< NSSet<OC
 extern OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey; //!< OCCellularSwitchIdentifier to require for the requests.
 extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!< NSURL of the temporary folder to store file segments in when performing uploads via TUS
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
+extern OCConnectionOptionKey OCConnectionOptionResponseDestinationURL; //!< NSURL of where to store a (raw) response
+extern OCConnectionOptionKey OCConnectionOptionResponseStreamHandler; //!< Response stream handler (OCHTTPRequestEphermalStreamHandler) to receive the response body stream
 
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 

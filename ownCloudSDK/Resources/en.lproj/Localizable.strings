@@ -49,6 +49,11 @@
 "Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
 "Server returns status %ld" = "Server returns status %ld";
 
+/* Account prepopulation */
+"Populating database…" = "Populating database…";
+"%lu files in %lu folders" = "%lu files in %lu folders";
+"Closing vault…" = "Closing vault…";
+
 /* Copies */
 "copy" = "copy";
 

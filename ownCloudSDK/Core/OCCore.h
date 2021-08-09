@@ -199,6 +199,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
 	BOOL _itemListTaskRunning;
+	NSTimeInterval _directoryUpdateStartTime;
 	NSMutableArray<OCCoreItemListFetchUpdatesCompletionHandler> *_fetchUpdatesCompletionHandlers;
 
 	NSMutableArray <OCItemPolicy *> *_itemPolicies;
