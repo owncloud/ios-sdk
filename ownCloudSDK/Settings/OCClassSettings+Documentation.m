@@ -105,7 +105,7 @@
 	{
 		NSSet<OCClassSettingsKey> *keys;
 
-		if ((keys = [self keysForClass:implementingClass]) != nil)
+		if ((keys = [self keysForClass:implementingClass options:OCClassSettingsKeySetOptionDefault]) != nil)
 		{
 			for (OCClassSettingsKey key in keys)
 			{
