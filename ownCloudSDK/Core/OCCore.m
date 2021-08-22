@@ -193,7 +193,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		OCCoreScanForChangesInterval : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeInteger,
-			OCClassSettingsMetadataKeyDescription 	: @"Minimum number of milliseconds until the next scan for changes, measured from the completion of the previous scan. If no value is provided, uses the pollinterval provided in the server's capabilities. If none is provided either, defaults to 10 seconds.",
+			OCClassSettingsMetadataKeyDescription 	: @"Minimum number of milliseconds until the next scan for changes, measured from the completion of the previous scan. If no value is provided, uses the poll interval provided in the server's capabilities (in milliseconds) if it is greater or equal 5 seconds. Defaults to 10 seconds otherwise.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},
