@@ -178,6 +178,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSDate *_nextSchedulingDate;
 
+	NSTimeInterval _effectivePollForChangesInterval;
+
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
 	BOOL _needsToBroadcastSyncRecordActivityUpdates;
