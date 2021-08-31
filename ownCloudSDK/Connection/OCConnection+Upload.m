@@ -196,7 +196,11 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	// Clone source file to segment folder
 	NSURL *clonedSourceURL = [segmentFolderURL URLByAppendingPathComponent:sourceURL.lastPathComponent isDirectory:NO];
 
-	if (![NSFileManager.defaultManager copyItemAtURL:sourceURL toURL:clonedSourceURL error:&error])
+	BOOL success = [NSFileManager.defaultManager copyItemAtURL:sourceURL toURL:clonedSourceURL error:&error];
+
+	OCFileOpLog(@"cp", error, @"Cloning source file %@ to segment folder as %@", sourceURL.path, clonedSourceURL.path);
+
+	if (!success)
 	{
 		OCLogError(@"Error cloning sourceURL %@ to segment folder at %@: %@", sourceURL, segmentFolderURL, error);
 		[eventTarget handleError:OCError(OCErrorInsufficientStorage) type:OCEventTypeUpload uuid:nil sender:self];

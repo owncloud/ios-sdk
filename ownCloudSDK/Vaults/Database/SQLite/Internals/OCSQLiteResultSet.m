@@ -104,7 +104,7 @@
 	return (lineNumber);
 }
 
-- (nullable NSDictionary<NSString *,id<NSObject>> *)nextRowDictionaryWithError:(NSError **)outError
+- (nullable OCSQLiteRowDictionary)nextRowDictionaryWithError:(NSError **)outError
 {
 	NSDictionary<NSString *,id<NSObject>> *nextRowDictionary = nil;
 

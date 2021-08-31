@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,readonly,nonnull,class) NSString *federatedLogin;
 @property(strong,readonly,nonnull,class) NSString *federatedPassword;
 
++ (OCBookmark *)bookmarkWithURL:(NSURL *)url username:(NSString *)username passphrase:(NSString *)passphrase;
+
 + (OCBookmark *)adminBookmark;
 + (OCBookmark *)userBookmark;
 + (OCBookmark *)demoBookmark;

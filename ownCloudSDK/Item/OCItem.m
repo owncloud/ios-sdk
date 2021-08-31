@@ -33,6 +33,11 @@
 	return [[NSUUID new].UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
 }
 
++ (OCFileID)generatePlaceholderFileID
+{
+	return ([OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString]);
+}
+
 #pragma mark - Init
 - (instancetype)init
 {
@@ -55,7 +60,7 @@
 	item.type = type;
 
 	item.eTag = OCFileETagPlaceholder;
-	item.fileID = [OCFileIDPlaceholderPrefix stringByAppendingString:NSUUID.UUID.UUIDString];
+	item.fileID = [self generatePlaceholderFileID];
 
 	return (item);
 }
@@ -141,7 +146,7 @@
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
-		_localRelativePath = [decoder decodeObjectOfClass:[NSURL class] forKey:@"localRelativePath"];
+		_localRelativePath = [decoder decodeObjectOfClass:NSString.class forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
 		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
 		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"downloadTriggerIdentifier"];
@@ -242,6 +247,11 @@
 - (BOOL)isRoot
 {
 	return ((_path != nil) && [_path isEqualToString:@"/"]);
+}
+
+- (NSString *)ownerUserName
+{
+	return (_owner.userName);
 }
 
 #pragma mark - Thumbnails
@@ -598,6 +608,14 @@
 	CloneMetadata(@"quotaBytesUsed");
 }
 
+- (void)clearLocalCopyProperties
+{
+	self.localRelativePath = nil;
+	self.localCopyVersionIdentifier = nil;
+	self.downloadTriggerIdentifier = nil;
+	self.fileClaim = nil;
+}
+
 #pragma mark - File tools
 - (OCFile *)fileWithCore:(OCCore *)core
 {
@@ -719,7 +737,7 @@
 
 	if ((_syncActivity != 0) || (_activeSyncRecordIDs.count > 0))
 	{
-		activityDescription = @"syncActivity:";
+		activityDescription = @", syncActivity:";
 		#define AppendActivity(activityFlag, name) \
 			if ((_syncActivity & activityFlag) != 0) \
 			{ \
@@ -745,7 +763,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), (_fileClaim ? [NSString stringWithFormat:@", fileClaim: %@", _fileClaim] : @""), [self syncActivityDescription]]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), [self syncActivityDescription]]);
 }
 
 #pragma mark - Copying
@@ -769,19 +787,21 @@ OCItemPropertyName OCItemPropertyNameLocalAttributes = @"localAttributes";
 
 OCItemPropertyName OCItemPropertyNameCloudStatus = @"cloudStatus";
 OCItemPropertyName OCItemPropertyNameHasLocalAttributes = @"hasLocalAttributes";
+OCItemPropertyName OCItemPropertyNameSyncActivity = @"syncActivity";
 
 OCItemPropertyName OCItemPropertyNameDownloadTrigger = @"downloadTriggerIdentifier";
 
 OCItemDownloadTriggerID OCItemDownloadTriggerIDUser = @"user";
 OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOffline";
 
-OCItemPropertyName OCItemPropertyNameType = @"type"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNamePath = @"path"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNameName = @"name"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameType = @"type";
+OCItemPropertyName OCItemPropertyNamePath = @"path";
+OCItemPropertyName OCItemPropertyNameName = @"name";
+OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";
 OCItemPropertyName OCItemPropertyNameSize = @"size";
 OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
-OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified"; //!< Supported by OCQueryCondition SQLBuilder
-OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath"; //!< Supported by OCQueryCondition SQLBuilder
+OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified";
+OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath";
 
 OCItemPropertyName OCItemPropertyNameLocalID = @"localID";
 OCItemPropertyName OCItemPropertyNameFileID = @"fileID";

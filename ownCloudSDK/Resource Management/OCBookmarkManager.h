@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Acessing bookmarks
 - (nullable OCBookmark *)bookmarkAtIndex:(NSUInteger)index;
 - (nullable OCBookmark *)bookmarkForUUID:(OCBookmarkUUID)uuid;
+- (nullable OCBookmark *)bookmarkForUUIDString:(OCBookmarkUUIDString)uuidString;
 
 @end
 

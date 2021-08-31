@@ -31,6 +31,7 @@
 
 #import "OCConnection.h"
 #import "OCClassSetting.h"
+#import "OCClassSettings+Documentation.h"
 #import "OCCore.h"
 
 static OCLogLevel sOCLogLevel;
@@ -89,6 +90,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 		[sharedLogger addWriter:[OCLogFileWriter new]];
 
 		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogRequestsAndResponses localizedName:OCLocalizedString(@"Log HTTP requests and responses", nil)]];
+		[sharedLogger addToggle:[[OCLogToggle alloc] initWithIdentifier:OCLogOptionLogFileOperations localizedName:OCLocalizedString(@"Log internal file operations", nil)]];
 
 		NSSet<NSString *> *(^ConvertTagArrayToTagSet)(NSArray *tags) = ^NSSet<NSString *> *(NSArray<NSString *> *tags) {
 			if ((tags==nil) || ([tags isKindOfClass:[NSArray class]] && (tags.count == 0)))
@@ -187,6 +189,8 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 }
 
 #pragma mark - Class settings
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (OCClassSettingsIdentifierLog);
@@ -963,7 +967,7 @@ static OCClassSettingsUserPreferencesMigrationIdentifier OCClassSettingsUserPref
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:@[ OCConnection.class, OCCore.class, OCLogger.class, OCHTTPPipeline.class, OCAuthenticationMethod.class ] onlyPublic:YES]  // Class Settings
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.snapshotClasses onlyPublic:YES]  // Class Settings
 			];
 
 			cachedLogIntro = logIntro;

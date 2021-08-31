@@ -16,6 +16,7 @@
  *
  */
 
+#import <objc/runtime.h>
 #import "OCClassSettings+Documentation.h"
 #import "NSArray+ObjCRuntime.h"
 #import "OCLogger.h"
@@ -25,6 +26,20 @@
 - (NSArray<Class<OCClassSettingsSupport>> *)implementingClasses
 {
 	return ([NSArray classesImplementing:@protocol(OCClassSettingsSupport)]);
+}
+
+- (NSArray<Class<OCClassSettingsSupport>> *)snapshotClasses
+{
+	return ([NSArray classesMatching:^BOOL(Class  _Nonnull __unsafe_unretained class) {
+		if ((class_getClassMethod(class, @selector(conformsToProtocol:)) != NULL) &&
+		    class_conformsToProtocol(class, @protocol(OCClassSettingsSupport)) &&
+		    [class respondsToSelector:@selector(includeInLogSnapshot)])
+		{
+			return [class includeInLogSnapshot];
+		}
+
+		return (NO);
+	}]);
 }
 
 - (id)_makeJSONSafe:(id)object
@@ -90,7 +105,7 @@
 	{
 		NSSet<OCClassSettingsKey> *keys;
 
-		if ((keys = [self keysForClass:implementingClass]) != nil)
+		if ((keys = [self keysForClass:implementingClass options:OCClassSettingsKeySetOptionDefault]) != nil)
 		{
 			for (OCClassSettingsKey key in keys)
 			{
@@ -128,6 +143,7 @@
 	}
 
 	[docDicts sortUsingDescriptors:@[
+		[NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeySubCategory ascending:YES],
 		[NSSortDescriptor sortDescriptorWithKey:OCClassSettingsMetadataKeyFlatIdentifier ascending:YES]
 	]];
 

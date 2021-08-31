@@ -221,7 +221,7 @@
 	return (isValid);
 }
 
-- (OCClaimLockType)lockType
+- (OCClaimLockType)typeOfLock
 {
 	OCClaimLockType lockType = _typeOfLock;
 
@@ -233,7 +233,7 @@
 		{
 			if (claim.isValid)
 			{
-				OCClaimLockType claimLockType = claim.lockType;
+				OCClaimLockType claimLockType = claim.typeOfLock;
 
 				if (claimLockType > lockType)
 				{
@@ -345,6 +345,28 @@
 	return (self);
 }
 
+- (nullable OCClaim *)claimWithFilter:(BOOL(^)(OCClaim *claim))claimFilter
+{
+	if (claimFilter(self))
+	{
+		return (self);
+	}
+	else
+	{
+		for (OCClaim *claim in _groupClaims)
+		{
+			OCClaim *matchingClaim = nil;
+
+			if ((matchingClaim = [claim claimWithFilter:claimFilter]) != nil)
+			{
+				return (matchingClaim);
+			}
+		}
+	}
+
+	return (nil);
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
@@ -444,7 +466,7 @@
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, valid: %d, lockType:%lu%@>", NSStringFromClass(self.class), self, _identifier, typeString, self.isValid, (unsigned long)self.lockType, typeDescription]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, valid: %d, typeOfLock:%lu%@>", NSStringFromClass(self.class), self, _identifier, typeString, self.isValid, (unsigned long)self.typeOfLock, typeDescription]);
 }
 
 @end

@@ -43,6 +43,16 @@ typedef NS_ENUM(NSUInteger, OCHTTPRequestRedirectPolicy)
 	OCHTTPRequestRedirectPolicyValidateConnection	//!< The HTTP layer should handle redirects as global exception, triggering a connection validation and - upon success - a retry of the original request
 };
 
+typedef NS_ENUM(NSUInteger, OCHTTPRequestStatusPolicy)
+{
+	OCHTTPRequestStatusPolicyDefault,		//!< The HTTP layer should handle this status using the default policy for this status (see [OCConnection statusPolicyForTask:])
+
+	OCHTTPRequestStatusPolicyHandleLocally,		//!< The HTTP layer should not handle this status and instead return the original response for local handling
+	OCHTTPRequestStatusPolicyValidateConnection	//!< The HTTP layer should handle this status as global exception, triggering a connection validation and - upon success - a retry of the original request
+};
+
+typedef NSNumber* OCHTTPRequestStatusPolicyNumber;
+
 typedef BOOL(^OCHTTPRequestObserver)(OCHTTPPipelineTask *task, OCHTTPRequest *request, OCHTTPRequestObserverEvent event);
 
 typedef NSString* OCHTTPRequestResumeInfoKey;
@@ -52,6 +62,9 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 {
 	NSData *_bodyData;
 	NSInputStream *_bodyURLInputStream;
+
+	NSInputStream *_streamingResponseBodyInputStream;
+	NSOutputStream *_streamingResponseBodyOutputStream;
 }
 
 @property(strong,readonly) OCHTTPRequestID identifier; //!< Unique ID (auto-generated) for every request
@@ -71,6 +84,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(assign,nonatomic) NSUInteger maximumRedirectionDepth; //!< Maximum number of redirects to follow before failing. Defaults to 5.
 @property(strong,nonatomic) NSArray<NSURL *> *redirectionHistory; //!< URLs visited during redirection, starting with the original URL.
 
+@property(strong,nonatomic) NSDictionary<OCHTTPStatusCodeNumber,OCHTTPRequestStatusPolicyNumber> *statusPolicies; //!< Policies for internal handling of response status codes
+
 @property(strong) NSDate *earliestBeginDate;		//!< The earliest this request should be sent.
 
 @property(strong) NSSet<OCConnectionSignalID> *requiredSignals; //!< Set of signals that need to be set before scheduling this request. This may change the order in which requests are sent - unless a groupID is set.
@@ -82,6 +97,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 @property(assign) OCHTTPRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCHTTPRequestEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
+@property(copy)	  OCHTTPRequestEphermalStreamHandler ephermalStreamHandler;	//!< The streamHandler to invoke if a response is received. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
 @property(assign) BOOL forceCertificateDecisionDelegation; //!< YES if certificateProceedHandler and the connection (delegate) should be consulted even if the certificate has no issues or was previously approved by the user. [not serialized]
 
@@ -130,6 +146,9 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 - (void)addHeaderFields:(NSDictionary<OCHTTPHeaderFieldName,NSString*> *)headerFields;
 
+- (OCHTTPRequestStatusPolicy)policyForStatus:(OCHTTPStatusCode)statusCode;
+- (void)setPolicy:(OCHTTPRequestStatusPolicy)policy forStatus:(OCHTTPStatusCode)statusCode;
+
 #pragma mark - Response
 @property(strong) OCHTTPResponse *httpResponse;
 
@@ -160,6 +179,7 @@ extern OCHTTPMethod OCHTTPMethodUNLOCK;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID;
+extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth;

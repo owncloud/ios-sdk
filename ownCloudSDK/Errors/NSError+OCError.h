@@ -106,7 +106,12 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorServerConnectionValidationFailed, //!< Validation of connection failed.
 
 	OCErrorAuthorizationClientRegistrationFailed, //!< Client registration failed
-	OCErrorAuthorizationNotMatchingRequiredUserID //!< The logged in user is not matching the required user ID.
+	OCErrorAuthorizationNotMatchingRequiredUserID, //!< The logged in user is not matching the required user ID.
+
+	OCErrorDatabaseMigrationRequired, //!< Database upgrade required. Please open the app to perform the upgrade.
+	OCErrorHostUpdateRequired, //!< Bookmark created with a newer app version. Please update the app.
+
+	OCErrorAuthorizationCantOpenCustomSchemeURL //!< Can't open authorization URL with custom scheme.
 };
 
 @class OCIssue;

@@ -144,6 +144,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCItemFavorite isFavorite; //!< @1 if this is a favorite, @0 or nil if it isn't
 
 @property(strong,nullable) OCUser *owner; //!< The owner of the item
+@property(strong,nullable,nonatomic,readonly) NSString *ownerUserName; //!< Shortcut for owner.userName
 @property(assign) OCShareTypesMask shareTypesMask; //!< Mask indicating the type of shares (to third parties) for this item. OCShareTypesMaskNone if none.
 @property(readonly,nonatomic) BOOL isShareable; //!< YES if this item can be shared (convenience accessor to check if .permissions has OCItemPermissionShareable set)
 @property(readonly,nonatomic) BOOL isSharedWithUser; //!< YES if this item has been shared with the user (convenience accessor to check if .permissions has OCItemPermissionShared set)
@@ -168,6 +169,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
++ (OCFileID)generatePlaceholderFileID; //!< Generates a new, unique placeholder OCFileID
+
 + (instancetype)placeholderItemOfType:(OCItemType)type;
 
 + (nullable NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName;
@@ -180,6 +183,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)prepareToReplace:(OCItem *)item;
 - (void)copyFilesystemMetadataFrom:(OCItem *)item;
 - (void)copyMetadataFrom:(OCItem *)item except:(nullable NSSet <OCItemPropertyName> *)exceptProperties;
+
+- (void)clearLocalCopyProperties;
 
 #pragma mark - Local attribute access
 - (nullable id)valueForLocalAttribute:(OCLocalAttribute)localAttribute;
@@ -204,7 +209,6 @@ extern OCItemDownloadTriggerID OCItemDownloadTriggerIDUser; //!< the download wa
 extern OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline; //!< the download was triggered by the available offline policy
 
 extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
-extern OCItemPropertyName OCItemPropertyNameLastModified;
 
 // Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
@@ -214,12 +218,15 @@ extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryC
 extern OCItemPropertyName OCItemPropertyNameSize; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameCloudStatus; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameHasLocalAttributes; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameSyncActivity; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLastUsed; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLastModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameIsFavorite; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocallyModified; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocalRelativePath; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocalID; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameFileID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameOwnerUserName; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameDownloadTrigger; //!< Supported by OCQueryCondition SQLBuilder
 
 extern OCItemPropertyName OCItemPropertyNameRemoved; //!< Supported by OCQueryCondition SQLBuilder (for internal use by policies)

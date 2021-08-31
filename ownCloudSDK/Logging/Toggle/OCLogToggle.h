@@ -32,5 +32,6 @@ typedef NSString* OCLogOption NS_TYPED_EXTENSIBLE_ENUM;
 @end
 
 extern OCLogOption OCLogOptionLogRequestsAndResponses;
+extern OCLogOption OCLogOptionLogFileOperations;
 
 NS_ASSUME_NONNULL_END

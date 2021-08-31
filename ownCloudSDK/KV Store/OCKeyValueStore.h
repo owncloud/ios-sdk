@@ -79,7 +79,10 @@ typedef void(^OCKeyValueStoreObserver)(OCKeyValueStore *store, id _Nullable owne
 + (void)registerClasses:(NSSet<Class> *)classes forKey:(OCKeyValueStoreKey)key;
 
 #pragma mark - Init
-- (instancetype)initWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier;
+- (instancetype)initWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier; //!< Creates a new, independent KVS instance.
+
++ (instancetype)sharedWithURL:(NSURL *)url identifier:(nullable OCKeyValueStoreIdentifier)identifier owner:(nullable id)owner; //!< Returns a shared instance for the URL + identifier combination and keeps it alive as long as at least one "owner" has not yet been deallocated.
+- (void)dropSharedFrom:(id)owner; //!< Drops the reference to the messaged KVS shared instance from owner
 
 #pragma mark - Class registration
 - (void)registerClasses:(NSSet<Class> *)classes forKey:(OCKeyValueStoreKey)key;

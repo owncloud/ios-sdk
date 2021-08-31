@@ -52,7 +52,7 @@
 	return (mergedDefaultSettings);
 }
 
-- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass
+- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass options:(OCClassSettingsKeySetOption)options
 {
 	NSMutableSet<OCClassSettingsKey> *keys = nil;
 	OCClassSettingsIdentifier settingsIdentifier;
@@ -107,6 +107,21 @@
 						if (keys == nil) { keys = [NSMutableSet new]; }
 						[keys addObjectsFromArray:metadataKeys];
 					}
+				}
+			}
+		}
+
+		// Apply options
+		// - Remove private keys
+		if ((options & OCClassSettingsKeySetOptionIncludingPrivateKeys) == 0)
+		{
+			NSArray<OCClassSettingsKey> *inspectKeys = keys.allObjects;
+
+			for (OCClassSettingsKey key in inspectKeys)
+			{
+				if (([self flagsForClass:settingsClass key:key] & OCClassSettingsFlagIsPrivate) != 0)
+				{
+					[keys removeObject:key];
 				}
 			}
 		}
@@ -181,6 +196,7 @@
 		if (mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier] = [NSString flatIdentifierFromIdentifier:settingsIdentifier key:key]; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyIdentifier] == nil) { mutableMetadata[OCClassSettingsMetadataKeyIdentifier] = settingsIdentifier; }
 		if (mutableMetadata[OCClassSettingsMetadataKeyClassName] == nil) { mutableMetadata[OCClassSettingsMetadataKeyClassName] = NSStringFromClass(settingsClass); }
+		if (mutableMetadata[OCClassSettingsMetadataKeyLabel] == nil) { mutableMetadata[OCClassSettingsMetadataKeyLabel] = mutableMetadata[OCClassSettingsMetadataKeyFlatIdentifier]; }
 	}
 
 	if ((metadata != nil) && (OCTypedCast(options[OCClassSettingsMetadataOptionExpandPossibleValues], NSNumber).boolValue))
@@ -206,11 +222,16 @@
 	{
 		if (mutableMetadata == nil) { mutableMetadata = [metadata mutableCopy]; }
 
-		NSString *category;
+		NSString *category, *subCategory;
 
 		if ((category = mutableMetadata[OCClassSettingsMetadataKeyCategory]) != nil)
 		{
 			mutableMetadata[OCClassSettingsMetadataKeyCategoryTag] = [[category lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
+		}
+
+		if ((subCategory = mutableMetadata[OCClassSettingsMetadataKeySubCategory]) != nil)
+		{
+			mutableMetadata[OCClassSettingsMetadataKeySubCategoryTag] = [[subCategory lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
 		}
 	}
 
@@ -310,9 +331,12 @@ OCClassSettingsMetadataKey OCClassSettingsMetadataKeyKey = @"key";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyIdentifier = @"classIdentifier";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyFlatIdentifier = @"flatIdentifier";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyClassName = @"className";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyLabel = @"label";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDescription = @"description";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategory = @"category";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag = @"categoryTag";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategory = @"subCategory";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategoryTag = @"subCategoryTag";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possibleValues";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"autoExpansion";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue = @"value";

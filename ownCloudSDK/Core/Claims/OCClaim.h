@@ -52,10 +52,13 @@ typedef NSString* OCClaimExplicitIdentifier;
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCClaim : NSObject <NSSecureCoding>
+{
+	OCClaimLockType _typeOfLock;
+}
 
 #pragma mark - Metadata
 @property(readonly,assign) OCClaimType type;	//!< The claim type
-@property(readonly,assign) OCClaimLockType typeOfLock; //!< The level of locking the claim was put in place for (called typeOfLock because lockType seems to conflict with some Obj-C internals)
+@property(readonly,assign,nonatomic) OCClaimLockType typeOfLock; //!< The level of locking the claim was put in place for (called typeOfLock because lockType seems to conflict with some Obj-C internals)
 @property(readonly,strong) OCClaimIdentifier identifier; //!< The UUID of the claim (auto-generated on init)
 @property(readonly,assign) NSTimeInterval creationTimestamp; //!< Timestamp of the creation of the claim
 
@@ -97,6 +100,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable OCClaim *)removingClaimsWithExplicitIdentifier:(OCClaimExplicitIdentifier)explicitIdentifier; //!< Removes all claims with the provided explicitIdentifier from the claim and returns a new claim - or nil if no claim is remaining
 
 - (nullable OCClaim *)cleanedUpClaim; //!< Returns an OCClaim with all invalid claims removed: a) from groups using OR operator b) nil if the claim itself is invalid
+
+- (nullable OCClaim *)claimWithFilter:(BOOL(^)(OCClaim *claim))claimFilter; //!< Returns the first matching claim. Is applied hierarchically.
 
 @end
 

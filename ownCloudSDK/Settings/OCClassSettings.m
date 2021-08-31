@@ -380,7 +380,8 @@
 	for (Class inspectClass in classes)
 	{
 		// Check conformity
-		if ([inspectClass conformsToProtocol:@protocol(OCClassSettingsSupport)])
+		if ([inspectClass conformsToProtocol:@protocol(OCClassSettingsSupport)] &&
+		    [inspectClass respondsToSelector:@selector(classSettingsIdentifier)]) // Avoid proxy classes
 		{
 			OCClassSettingsIdentifier settingsIdentifier;
 
@@ -393,30 +394,17 @@
 				// Determine relevant keys
 				if ([inspectClass respondsToSelector:@selector(publicClassSettingsIdentifiers)])
 				{
+					// Via -publicClassSettingsIdentifiers
 					[keys addObjectsFromArray:[inspectClass publicClassSettingsIdentifiers]];
 				}
 				else
 				{
-					if (classSettingDefaults != nil)
-					{
-						for (OCClassSettingsKey key in classSettingDefaults.allKeys)
-						{
-							if (([self flagsForClass:inspectClass key:key] & OCClassSettingsFlagIsPrivate) == 0)
-							{
-								[keys addObject:key];
-							}
-						}
-					}
+					// Through discovery and registration
+					NSSet<OCClassSettingsKey> *foundKeys;
 
-					if (_registeredDefaultValuesByKeyByIdentifier[settingsIdentifier] != nil)
+					if ((foundKeys = [self keysForClass:inspectClass options:OCClassSettingsKeySetOptionWithoutPrivateKeys]) != nil)
 					{
-						for (OCClassSettingsKey key in _registeredDefaultValuesByKeyByIdentifier[settingsIdentifier].allKeys)
-						{
-							if (([self flagsForClass:inspectClass key:key] & OCClassSettingsFlagIsPrivate) == 0)
-							{
-								[keys addObject:key];
-							}
-						}
+						[keys unionSet:foundKeys];
 					}
 				}
 

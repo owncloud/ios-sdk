@@ -24,7 +24,7 @@
 
 @implementation OCHTTPDAVRequest
 
-+ (instancetype)propfindRequestWithURL:(NSURL *)url depth:(NSUInteger)depth
++ (instancetype)propfindRequestWithURL:(NSURL *)url depth:(OCPropfindDepth)depth
 {
 	OCHTTPDAVRequest *request = [OCHTTPDAVRequest requestWithURL:url];
 	
@@ -38,7 +38,7 @@
 		]]
 	];
 	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
-	[request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)depth] forHeaderField:OCHTTPHeaderFieldNameDepth];
+	[request setValue:((depth == OCPropfindDepthInfinity) ? @"infinity" : [NSString stringWithFormat:@"%lu", (unsigned long)depth]) forHeaderField:OCHTTPHeaderFieldNameDepth];
 
 	return (request);
 }

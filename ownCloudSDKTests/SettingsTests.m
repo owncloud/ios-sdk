@@ -314,7 +314,7 @@
 
 	for (Class scanClass in scanClasses)
 	{
-		NSSet<OCClassSettingsKey> *keys = [OCClassSettings.sharedSettings keysForClass:scanClass];
+		NSSet<OCClassSettingsKey> *keys = [OCClassSettings.sharedSettings keysForClass:scanClass options:OCClassSettingsKeySetOptionDefault];
 
 		for (OCClassSettingsKey key in keys)
 		{

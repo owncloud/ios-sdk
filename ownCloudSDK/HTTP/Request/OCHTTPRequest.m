@@ -43,6 +43,7 @@
 		self.headerFields = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
 			// Insert request.identifier as X-Request-ID for tracing and to be able to reidentify the task later
 			_identifier, OCHTTPHeaderFieldNameXRequestID,
+			_identifier, OCHTTPHeaderFieldNameOriginalRequestID,
 		nil];
 		self.parameters = [NSMutableDictionary new];
 
@@ -185,6 +186,36 @@
 	}
 }
 
+- (OCHTTPRequestStatusPolicy)policyForStatus:(OCHTTPStatusCode)statusCode
+{
+	OCHTTPRequestStatusPolicy policy = OCHTTPRequestStatusPolicyDefault;
+
+	if (_statusPolicies != nil)
+	{
+		OCHTTPRequestStatusPolicyNumber policyNumber;
+
+		if ((policyNumber = _statusPolicies[@(statusCode)]) != nil)
+		{
+			policy = policyNumber.unsignedIntegerValue;
+		}
+	}
+
+	return (policy);
+}
+
+- (void)setPolicy:(OCHTTPRequestStatusPolicy)policy forStatus:(OCHTTPStatusCode)statusCode
+{
+	if (_statusPolicies == nil)
+	{
+		_statusPolicies = @{ @(statusCode) : @(policy) };
+	}
+	else
+	{
+		_statusPolicies = [[NSMutableDictionary alloc] initWithDictionary:_statusPolicies];
+		[(NSMutableDictionary *)_statusPolicies setObject:@(policy) forKey:@(statusCode)];
+	}
+}
+
 - (NSError *)error
 {
 	return (_httpResponse.error);
@@ -297,7 +328,12 @@
 
 				[[NSFileManager defaultManager] removeItemAtURL:_downloadedFileURL error:&error];
 
-				OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+				OCFileOpLog(@"rm", error, @"Removed downloaded file %@ at %@", OCLogPrivate(self.effectiveURL.absoluteString), _downloadedFileURL.path);
+
+				if (error != nil)
+				{
+					OCLogError(@"Error=%@ deleting downloaded file at %@ for request %@", error, _downloadedFileURL.path, self);
+				}
 			}
 		}
 	}
@@ -516,6 +552,8 @@
 		self.maximumRedirectionDepth = [decoder decodeIntegerForKey:@"maximumRedirectionDepth"];
 		self.redirectionHistory = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSURL.class, nil] forKey:@"redirectionHistory"];
 
+		self.statusPolicies	= [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSDictionary.class, NSNumber.class, nil] forKey:@"statusPolicies"];
+
 		self.earliestBeginDate 	= [decoder decodeObjectOfClass:[NSDate class] forKey:@"earliestBeginDate"];
 
 		self.requiredSignals    = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSSet.class, NSString.class, nil] forKey:@"requiredSignals"];
@@ -567,6 +605,8 @@
 	[coder encodeInteger:_maximumRedirectionDepth 	forKey:@"maximumRedirectionDepth"];
 	[coder encodeObject:_redirectionHistory 	forKey:@"redirectionHistory"];
 
+	[coder encodeObject:_statusPolicies	forKey:@"statusPolicies"];
+
 	[coder encodeObject:_earliestBeginDate 	forKey:@"earliestBeginDate"];
 
 	[coder encodeObject:_requiredSignals 		forKey:@"requiredSignals"];
@@ -614,6 +654,7 @@ OCHTTPMethod OCHTTPMethodUNLOCK = @"UNLOCK";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameLocation = @"Location";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameAuthorization = @"Authorization";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXRequestID = @"X-Request-ID";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID = @"Original-Request-ID";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";

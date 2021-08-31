@@ -33,6 +33,7 @@
 #import "OCCore+ItemPolicies.h"
 #import "NSError+OCNetworkFailure.h"
 #import "OCScanJobActivity.h"
+#import "OCMeasurement.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -56,7 +57,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 }
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob
+- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement
 {
 	BOOL putInQueue = YES;
 
@@ -65,6 +66,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		if (directoryUpdateJob == nil)
 		{
 			directoryUpdateJob = [OCCoreDirectoryUpdateJob withPath:path];
+			[directoryUpdateJob attachMeasurement:measurement];
 		}
 
 		@synchronized(_queuedItemListTaskUpdateJobs)
@@ -246,6 +248,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		{
 			task.groupID = groupID;
 
+			[task attachMeasurement:updateJob.extractedMeasurement];
+
 			@synchronized(_itemListTasksByPath)
 			{
 				_itemListTasksByPath[task.path] = task;
@@ -349,6 +353,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	OCLogDebug(@"Cached Set(%lu): %@", (unsigned long)task.cachedSet.state, OCLogPrivate(task.cachedSet.items));
 	OCLogDebug(@"Retrieved Set(%lu): %@", (unsigned long)task.retrievedSet.state, OCLogPrivate(task.retrievedSet.items));
 
+	OCMeasureEventBegin(task, @"core.task-update", taskUpdateEventRef, nil);
+
 	[self beginActivity:@"item list task"];
 
 	switch (task.cachedSet.state)
@@ -434,6 +440,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				earlyExit:
 				
 				[self endActivity:@"item list task"];
+				OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 				return;
 			}
 		}
@@ -492,8 +499,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 									=> changedItems += cacheItem
 
 								- cacheItem has NO local changes or active sync status
-									=> prepare retrievedItem to replace cacheItem
 									- fileID matches ?
+										=> prepare retrievedItem to replace cacheItem
 										=> changedItems += cacheItem
 									- fileID doesn't match
 										=> removedItems += cacheItem
@@ -541,31 +548,49 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					}
 					else
 					{
-						// Attach databaseID of cached items to the retrieved items
-						[retrievedItem prepareToReplace:cacheItem];
-
-						retrievedItem.localRelativePath = cacheItem.localRelativePath;
-						retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
-						retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
-
-						if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
-						    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
-
-						    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
-						    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
-						    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
+						if ([cacheItem.fileID isEqual:retrievedItem.fileID])
 						{
-							// Update item in the cache if the server has a different version
-							if ([cacheItem.fileID isEqual:retrievedItem.fileID])
+							// Same item (identical fileID) at same or different path
+
+							// Attach databaseID of cached items to the retrieved items
+							[retrievedItem prepareToReplace:cacheItem];
+
+							retrievedItem.localRelativePath = cacheItem.localRelativePath;
+							retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
+							retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
+
+							if (![retrievedItem.itemVersionIdentifier isEqual:cacheItem.itemVersionIdentifier] || 	// ETag or FileID mismatch
+							    ![retrievedItem.name isEqualToString:cacheItem.name] ||				// Name mismatch
+
+							    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
+							    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
+							    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
 							{
+								// Update item in the cache if the server has a different version
 								[changedCacheItems addObject:retrievedItem];
 							}
-							else
-							{
-								[deletedCacheItems addObject:cacheItem];
-								retrievedItem.databaseID = nil;
-								[newItems addObject:retrievedItem];
-							}
+						}
+						else
+						{
+							// Different item (different fileID) at same path
+
+							// It is important that the localID is NOT shared in that case, to deal with these edge cases:
+							// - the original file still exists but has just been moved elsewhere
+							// - the original file has really beeen deleted and replaced, in which case there would be a complication if
+							//    a) the original file was downloaded
+							//    b) the original file was then moved to "deleted"
+							//    c) the new file uses the same localID and therefore the same item folder
+							//    d) the new file is downloaded
+							//    e) the original file entry is vacuumed and its folder (same as for new file because of same localID) is deleted
+							//
+							//    Result: new file's item still points to the local copy it downloaded, but which has been removed by vacuuming of the OLD file -> viewing and other actions requiring the local copy fail unexpectedly
+
+							// Remove cacheItem (with different fileID)
+							[deletedCacheItems addObject:cacheItem];
+
+							// Add retrievedItem (with different fileID + different localID)
+							retrievedItem.databaseID = nil;
+							[newItems addObject:retrievedItem];
 						}
 
 						// Return server version
@@ -835,6 +860,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 
 				// Perform updates
+				__block OCMeasurementEventReference coreQueueRef = 0;
+
 				[self performUpdatesForAddedItems:newItems
 						     removedItems:deletedCacheItems
 						     updatedItems:changedCacheItems
@@ -843,10 +870,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					       beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 							// Called AFTER the database has been updated, but before UPDATING queries
 							OCWaitDidFinishTask(cacheUpdateGroup);
+
+							OCMeasureEventBegin(task, @"itemlist.query-update", tmpCoreQueueRef, @"Perform query updates");
+							coreQueueRef = tmpCoreQueueRef;
+
 							completionHandler();
 					       }
 						afterQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
+							OCMeasureEventEnd(task, @"itemlist.query-update", coreQueueRef, @"Done with query updates");
+
+							OCMeasureEventBegin(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalize query updates");
 							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
+							OCMeasureEventEnd(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalized query updates");
+							OCMeasureLog(task);
 							completionHandler();
 						}
 					       queryPostProcessor:nil
@@ -875,6 +911,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				removeTask = NO; // Don't remove task just yet, we're still busy here
 
+				OCMeasureEvent(task, @"core.task-update", @"Sync anchor induced update");
+
 				[task _updateCacheSet];
 				[self handleUpdatedTask:task];
 			}
@@ -885,6 +923,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 
 			[self endActivity:@"item list task"];
+			OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 
 			return;
 		}
@@ -957,6 +996,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}
 
 	[self endActivity:@"item list task"];
+	OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 }
 
 - (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task taskPath:(NSString *)taskPath targetRemoved:(BOOL)targetRemoved
@@ -1157,6 +1197,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 - (void)startCheckingForUpdates
 {
 	[self queueBlock:^{
+		if (self->_directoryUpdateStartTime == 0)
+		{
+			OCTLog(@[@"UpdateScan"], @"Starting update scan");
+			self->_directoryUpdateStartTime = NSDate.timeIntervalSinceReferenceDate;
+		}
+
 		[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:nil];
 	}];
 }
@@ -1242,17 +1288,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					// on a regular basis (otherwise might take an
 					// undefined amount of time for NSURLSession to
 					// deliver responses)
+
+					// Commented out for now - to avoid uncontrolled redirects of PROPFINDs in APM settings
 					if (notBefore != nil)
 					{
 						options = @{
 							OCConnectionOptionIsNonCriticalKey : @(YES),
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 					else
 					{
 						options = @{
-							@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
+						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
 						};
 					}
 
@@ -1396,22 +1444,93 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
-		// Check again in 10 seconds (TOOD: add configurable timing and option to enable/disable)
-		NSTimeInterval minimumTimeInterval = 10;
+		// Check again after configured time interval
+		NSTimeInterval pollInterval = self.effectivePollForChangesInterval;
 
 		if (self.state == OCCoreStateRunning)
 		{
 			@synchronized([OCCoreItemList class])
 			{
-				if ((_lastScheduledItemListUpdateDate==nil) || ([_lastScheduledItemListUpdateDate timeIntervalSinceNow]<-(minimumTimeInterval-1)))
+				if ((_lastScheduledItemListUpdateDate==nil) || (_lastScheduledItemListUpdateDate.timeIntervalSinceNow < -(pollInterval-1.0)))
 				{
 					_lastScheduledItemListUpdateDate = [NSDate date];
 
-					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval] inBackground:NO completionHandler:nil];
+					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:pollInterval] inBackground:NO completionHandler:nil];
 				}
 			}
 		}
 	}
+}
+
+- (NSTimeInterval)effectivePollForChangesInterval
+{
+	if (_effectivePollForChangesInterval == 0)
+	{
+		const NSTimeInterval defaultMinimumPollInterval = 10.0, minimumAllowedPollInterval = 5.0, warnPollIntervalThreshold = 60.0;
+		NSTimeInterval effectivePollInterval = defaultMinimumPollInterval;
+		NSString *effectivePollIntervalSource = @"default";
+		BOOL loggedPollIntervalWarning = NO;
+
+		// Capabilities
+		if (self.connection.capabilities.pollInterval != nil)
+		{
+			// Server default is 60 seconds, but iOS default is 10 seconds
+			// also the capability is no longer in seconds, but milliseconds,
+			// so ignore anything less than 5 seconds, warn for anything greater
+			// than 60 seconds
+
+			NSTimeInterval configuredTimeInterval = self.connection.capabilities.pollInterval.doubleValue / 1000.0;
+
+			if (configuredTimeInterval < minimumAllowedPollInterval)
+			{
+				if (self.connection.capabilities.pollInterval.integerValue != 60)
+				{
+					OCTLogError(@[@"PollForChanges"], @"Poll interval in capabilities (%@) not server legacy default (60 (sec)), and - as milliseconds - less than minimum allowed poll interval (%.02f sec). Ignoring value.", self.connection.capabilities.pollInterval, minimumAllowedPollInterval);
+					loggedPollIntervalWarning = YES;
+				}
+			}
+			else
+			{
+				effectivePollInterval = configuredTimeInterval;
+				effectivePollIntervalSource = @"capabilities";
+			}
+		}
+
+		// Class Settings
+		NSNumber *classSettingsInterval;
+
+		if ((classSettingsInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval]) != nil)
+		{
+			NSTimeInterval configuredTimeInterval = classSettingsInterval.doubleValue / 1000.0;
+
+			if (configuredTimeInterval < minimumAllowedPollInterval)
+			{
+				OCTLogError(@[@"PollForChanges"], @"MDM/Branding: poll interval %.03f less than minimum allowed poll interval (%.02f sec). Ignoring value.", configuredTimeInterval, minimumAllowedPollInterval);
+				loggedPollIntervalWarning = YES;
+			}
+			else
+			{
+				effectivePollInterval = configuredTimeInterval;
+				effectivePollIntervalSource = @"ClassSettings";
+			}
+		}
+
+		// Log warning when exceeding threshold
+		if (effectivePollInterval > warnPollIntervalThreshold)
+		{
+			OCTLogWarning(@[@"PollForChanges"], @"Poll interval (%@) of %.02f sec > %.02f sec", effectivePollIntervalSource, effectivePollInterval, warnPollIntervalThreshold);
+			loggedPollIntervalWarning = YES;
+		}
+
+		if (loggedPollIntervalWarning)
+		{
+			OCTLog(@[@"PollForChanges"], @"Using poll interval of %.02f sec (%@)", effectivePollInterval, effectivePollIntervalSource);
+		}
+
+		_effectivePollForChangesInterval = effectivePollInterval;
+	}
+
+	return (_effectivePollForChangesInterval);
 }
 
 #pragma mark - Update Scan finish
@@ -1434,6 +1553,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	else
 	{
 		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges];
+	}
+
+	if (_directoryUpdateStartTime != 0)
+	{
+		OCTLog(@[@"UpdateScan"], @"Finished update scan in %.1f sec", NSDate.timeIntervalSinceReferenceDate - _directoryUpdateStartTime);
+		_directoryUpdateStartTime = 0;
 	}
 
 	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)
@@ -1534,7 +1659,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	if (schedule)
 	{
-		[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job];
+		[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job withMeasurement:nil];
 	}
 }
 
@@ -1551,7 +1676,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			// Publish background scan activity
 			if (_scheduledDirectoryUpdateJobActivity == nil)
 			{
-				_scheduledDirectoryUpdateJobActivity = [OCScanJobActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:NSLocalizedString(@"Fetching updates…", @"") statusMessage:nil ranking:0];
+				_scheduledDirectoryUpdateJobActivity = [OCScanJobActivity withIdentifier:OCActivityIdentifierPendingServerScanJobsSummary description:OCLocalizedString(@"Fetching updates…", @"") statusMessage:nil ranking:0];
 				_scheduledDirectoryUpdateJobActivity.state = OCActivityStateRunning;
 				_scheduledDirectoryUpdateJobActivity.progress = [NSProgress new];
 				_scheduledDirectoryUpdateJobActivity.isCancellable = NO;

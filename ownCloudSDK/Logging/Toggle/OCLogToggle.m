@@ -33,3 +33,4 @@
 @end
 
 OCLogComponentIdentifier OCLogOptionLogRequestsAndResponses = @"option.log-requests-and-responses";
+OCLogComponentIdentifier OCLogOptionLogFileOperations = @"option.log-file-operations";

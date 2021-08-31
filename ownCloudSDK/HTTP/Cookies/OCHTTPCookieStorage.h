@@ -47,6 +47,8 @@ typedef BOOL(^OCHTTPCookieStorageCookieFilter)(NSHTTPCookie *cookie); //!< Cooki
 - (void)storeCookies:(NSArray<NSHTTPCookie *> *)cookies forPipeline:(nullable OCHTTPPipeline *)pipeline partitionID:(nullable OCHTTPPipelinePartitionID)partitionID;
 - (nullable NSArray<NSHTTPCookie *> *)retrieveCookiesForPipeline:(OCHTTPPipeline *)pipeline partitionID:(OCHTTPPipelinePartitionID)partitionID url:(NSURL *)url;
 
+- (void)removeCookiesWithFilter:(nullable OCHTTPCookieStorageCookieFilter)cookieFilter;
+
 @end
 
 NS_ASSUME_NONNULL_END

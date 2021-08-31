@@ -24,18 +24,19 @@
 #import "OCQueryChangeSet.h"
 #import "OCCoreItemList.h"
 #import "OCQueryCondition.h"
+#import "OCCancelAction.h"
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCQueryState)
 {
-	OCQueryStateStopped,			//!< Query is not running
+	OCQueryStateStopped,			//!< 0: Query is not running
 
-	OCQueryStateStarted,			//!< Query has (just) been started
-	OCQueryStateContentsFromCache,		//!< Query provides contents from the cache
-	OCQueryStateWaitingForServerReply,	//!< Query has sent a request to the server and awaits its reply
+	OCQueryStateStarted,			//!< 1: Query has (just) been started
+	OCQueryStateContentsFromCache,		//!< 2: Query provides contents from the cache
+	OCQueryStateWaitingForServerReply,	//!< 3: Query has sent a request to the server and awaits its reply
 
-	OCQueryStateTargetRemoved,		//!< The resource targeted by the query is unavailable or has been removed from the server. The query has been removed.
-	OCQueryStateIdle			//!< Query contents is up-to-date, no operations are ongoing
+	OCQueryStateTargetRemoved,		//!< 4: The resource targeted by the query is unavailable or has been removed from the server. The query has been removed.
+	OCQueryStateIdle			//!< 5: Query contents is up-to-date, no operations are ongoing
 };
 
 typedef NS_OPTIONS(NSUInteger, OCQueryChangeSetRequestFlag)
@@ -122,6 +123,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 #pragma mark - State
 @property(assign) OCQueryState state;		//!< Current state of the query
+@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query
 
 #pragma mark - Sorting
 @property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results

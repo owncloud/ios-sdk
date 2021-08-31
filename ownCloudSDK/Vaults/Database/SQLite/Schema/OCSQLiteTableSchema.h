@@ -34,6 +34,7 @@ typedef void(^OCSQLiteTableSchemaMigrator)(OCSQLiteDB *db, OCSQLiteTableSchema *
 
 @property(nullable,strong) NSArray<NSString *> *openStatements; //!< SQL queries to be run on every open of the database (f.ex. temporary triggers)
 
+@property(nullable,strong) NSProgress *migrationProgress; //!< Progress object that's injected during migration if progress should be reported
 @property(nullable,strong) OCSQLiteTableSchemaMigrator upgradeMigrator; //!< Migrator block used to migrate table from preceding version
 
 + (instancetype)schemaWithTableName:(NSString *)tableName version:(NSUInteger)version creationQueries:(NSArray<NSString *> *)creationQueries openStatements:(nullable NSArray<NSString *> *)openStatements upgradeMigrator:(nullable OCSQLiteTableSchemaMigrator)migrator;

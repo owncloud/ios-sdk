@@ -20,7 +20,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCItemPolicyProcessorVersionUpdates : OCItemPolicyProcessor
+@interface OCItemPolicyProcessorVersionUpdates : OCItemPolicyProcessor <OCLogTagging>
 
 - (instancetype)initWithCore:(OCCore *)core;
 

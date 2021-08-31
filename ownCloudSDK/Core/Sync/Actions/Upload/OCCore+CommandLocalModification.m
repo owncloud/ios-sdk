@@ -51,7 +51,11 @@
 		if (proceed)
 		{
 			// Copy input file to temporary copy location (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
-			if (![[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:temporaryFileURL error:&error])
+			BOOL success = [[NSFileManager defaultManager] copyItemAtURL:inputFileURL toURL:temporaryFileURL error:&error];
+
+			OCFileOpLog(@"cp", error, @"Importing modification by cloning %@ as %@", inputFileURL.path, temporaryFileURL.path);
+
+			if (!success)
 			{
 				OCLogError(@"Local modification for item %@ from %@ to %@ failed in temp-copy phase with error: %@", OCLogPrivate(item), OCLogPrivate(inputFileURL), OCLogPrivate(temporaryFileURL), OCLogPrivate(error));
 				criticalError = error;
@@ -67,19 +71,25 @@
 					// Remove existing file at item location
 					if ([[NSFileManager defaultManager] fileExistsAtPath:itemFileURL.path])
 					{
+						error = nil;
 						if (![[NSFileManager defaultManager] removeItemAtURL:itemFileURL error:&error])
 						{
 							OCLogError(@"Local modification for item %@ from %@ to %@ failed in delete old phase with error: %@", OCLogPrivate(item), OCLogPrivate(temporaryFileURL), OCLogPrivate(itemFileURL), OCLogPrivate(error));
 						}
+
+						OCFileOpLog(@"rm", error, @"Removed existing version of file at %@", itemFileURL.path);
 					}
 
 					// Copy file to placeholder item location (for the fileprovider and others working with the item), (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
+					error = nil;
 					if (![[NSFileManager defaultManager] copyItemAtURL:temporaryFileURL toURL:itemFileURL error:&error])
 					{
 						OCLogError(@"Local modification for item %@ from %@ to %@ failed in copy phase with error: %@", OCLogPrivate(item), OCLogPrivate(temporaryFileURL), OCLogPrivate(itemFileURL), OCLogPrivate(error));
 						criticalError = error;
 						proceed = NO;
 					}
+
+					OCFileOpLog(@"cp", error, @"Copied updated version of file from %@ to %@", temporaryFileURL.path, itemFileURL.path);
 				}
 			}
 

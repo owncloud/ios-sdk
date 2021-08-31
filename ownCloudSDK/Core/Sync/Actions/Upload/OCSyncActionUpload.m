@@ -127,10 +127,21 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			// Remove temporary copy (main file should remain intact)
 			if ((_importFileURL!=nil) && _importFileIsTemporaryAlongsideCopy)
 			{
-				NSError *error;
+				NSError *error = nil;
 
 				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+
+				OCFileOpLog(@"rm", error, @"Deleted descheduled import at %@", _importFileURL.path);
 			}
+
+			// Remove local copy
+			uploadItem.locallyModified = NO;
+			[uploadItem clearLocalCopyProperties];
+
+			[self.core deleteDirectoryForItem:uploadItem];
+
+			// Update item
+			syncContext.updatedItems = @[ uploadItem ];
 		}
 	}
 }
@@ -159,7 +170,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				NSError *error = nil;
 
 				// Make a copy of the file before upload (utilizing APFS cloning, this should be both almost instant as well as cost no actual disk space thanks to APFS copy-on-write)
-				if ([[NSFileManager defaultManager] copyItemAtURL:uploadURL toURL:_uploadCopyFileURL error:&error])
+				BOOL success = [[NSFileManager defaultManager] copyItemAtURL:uploadURL toURL:_uploadCopyFileURL error:&error];
+
+				OCFileOpLog(@"cp", error, @"Cloning file to import %@ as %@", uploadURL.path, _uploadCopyFileURL.path);
+
+				if (success)
 				{
 					// Cloning succeeded - upload from the clone
 					uploadURL = _uploadCopyFileURL;
@@ -330,9 +345,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			// Remove temporary copy
 			if (_importFileIsTemporaryAlongsideCopy)
 			{
-				NSError *error;
+				NSError *error = nil;
 
 				[[NSFileManager defaultManager] removeItemAtURL:_importFileURL error:&error];
+
+				OCFileOpLog(@"rm", error, @"Deleted temporary copy at %@", _importFileURL.path);
 			}
 		}
 		else
@@ -423,7 +440,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			{
 				NSString *filename = [self.filename stringByDeletingPathExtension];
 				NSString *extension = [self.filename pathExtension];
-				NSString *dateString = [[NSDate new] compactUTCString];
+				NSString *dateString = [[NSDate new] compactLocalTimeZoneString];
 				NSURL *previousLocalURL = [self.core localURLForItem:self.localItem];
 
 				if (filename.length > 0)
@@ -443,6 +460,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
  				self.localItem.path = [self.localItem.path.parentPath stringByAppendingPathComponent:self.filename];
  				self.localItem.localRelativePath = [self.core.vault relativePathForItem:self.localItem];
 
+				// Decouple from existing file ID and eTag to prevent collissions and duplicates
+ 				self.localItem.eTag = OCFileETagPlaceholder;
+ 				self.localItem.fileID = [OCItem generatePlaceholderFileID];
+
+				// No longer replacing another item
+ 				self.replaceItem = nil;
+
  				// Move underlying file
  				NSURL *newLocalURL = [self.core localURLForItem:self.localItem];
  				NSError *error = nil;
@@ -452,7 +476,18 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
  					OCLogError(@"Renaming local copy of file from %@ to %@ during `keepBoth` issue resolution returned an error=%@", previousLocalURL, newLocalURL, error);
 				}
 
+				OCFileOpLog(@"mv", error, @"Renamed local copy of file from %@ to %@ during `keepBoth` issue resolution", previousLocalURL.path, newLocalURL.path);
+
+				// Update item
 				syncContext.updatedItems = @[ self.localItem ];
+
+				// Initiate scan to get the item that took this item's place
+				OCPath parentPath;
+				if ((parentPath = self.localItem.path.parentPath) != nil)
+				{
+					syncContext.refreshPaths = @[ parentPath ];
+				}
+				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
 			}
 
 			// Reschedule
@@ -463,27 +498,14 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		if ([choice.identifier isEqual:@"replaceExisting"])
 		{
-			// Replace
+			// Replace existing (force replace)
+			NSMutableDictionary<OCCoreOption,id> *options = (_options != nil) ? [_options mutableCopy] : [NSMutableDictionary new];
+			options[OCConnectionOptionForceReplaceKey] = @(YES);
+			self.options = options;
 
-			// Find item to replace
-			OCItem *itemToReplace = nil;
+			syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
 
-			if (((itemToReplace = [self _preExistingItem]) != nil) && (self.parentItem != nil))
-			{
-				NSURL *fileURL = [self.core localURLForItem:self.localItem];
-
-				[self.core reportLocalModificationOfItem:itemToReplace parentItem:self.parentItem withContentsOfFileAtURL:fileURL isSecurityScoped:NO options:@{
-					OCCoreOptionImportByCopying : @(YES)
-				} placeholderCompletionHandler:nil resultHandler:nil];
-
-				// Deschedule existing action
-				[self.core descheduleSyncRecord:syncContext.syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
-			}
-			else
-			{
-				// Replacing not possible at the moment -> reschedule
-				[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
-			}
+			[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
 
 			resolutionError = nil;
 		}

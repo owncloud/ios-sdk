@@ -48,6 +48,7 @@
 #import "OCHTTPPolicyBookmark.h"
 #import "OCHTTPRequest.h"
 #import "NSURL+OCURLNormalization.h"
+#import "OCDAVRawResponse.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -86,6 +87,9 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 @dynamic allHTTPPipelines;
 
 #pragma mark - Class settings
+
+INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
+
 + (OCClassSettingsIdentifier)classSettingsIdentifier
 {
 	return (OCClassSettingsIdentifierConnection);
@@ -101,7 +105,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		OCConnectionAllowCellular,
 		OCConnectionPlainHTTPPolicy,
 		OCConnectionAlwaysRequestPrivateLink,
-		OCConnectionTransparentTemporaryRedirect
+		OCConnectionTransparentTemporaryRedirect,
+		OCConnectionValidatorFlags
 	]);
 }
 
@@ -121,7 +126,21 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
-		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
+		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true)) OR ((bookmarkCertificate.parentCertificate.sha256Fingerprint.asFingerPrintString == \"73 0C 1B DC D8 5F 57 CE 5D C0 BB A7 33 E5 F1 BA 5A 92 5B 2A 77 1D 64 0A 26 F7 A4 54 22 4D AD 3B\") AND (bookmarkCertificate.rootCertificate.sha256Fingerprint.asFingerPrintString == \"06 87 26 03 31 A7 24 03 D9 09 F1 05 E6 9B CF 0D 32 E1 BD 24 93 FF C6 D9 20 6D 11 BC D6 77 07 39\") AND (serverCertificate.parentCertificate.sha256Fingerprint.asFingerPrintString == \"67 AD D1 16 6B 02 0A E6 1B 8F 5F C9 68 13 C0 4C 2A A5 89 96 07 96 86 55 72 A3 C7 E7 37 61 3D FD\") AND (serverCertificate.rootCertificate.sha256Fingerprint.asFingerPrintString == \"96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6\") AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
+		/*
+			# Old Let's Encrypt parent and root certificates:
+			- R3:
+				73 0C 1B DC D8 5F 57 CE 5D C0 BB A7 33 E5 F1 BA 5A 92 5B 2A 77 1D 64 0A 26 F7 A4 54 22 4D AD 3B
+			- DST Root CA X3:
+				06 87 26 03 31 A7 24 03 D9 09 F1 05 E6 9B CF 0D 32 E1 BD 24 93 FF C6 D9 20 6D 11 BC D6 77 07 39
+
+			# New Let's Encrypt parent and root certificates:
+			- R3:
+				67 AD D1 16 6B 02 0A E6 1B 8F 5F C9 68 13 C0 4C 2A A5 89 96 07 96 86 55 72 A3 C7 E7 37 61 3D FD
+			- ISRG Root X1:
+				96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6
+		*/
+
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionForceBackgroundURLSessions		: @(NO),
@@ -134,22 +153,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 + (OCClassSettingsMetadataCollection)classSettingsMetadata
 {
-	NSArray<Class> *authMethodClasses = OCAuthenticationMethod.registeredAuthenticationMethodClasses;
-	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [NSMutableArray new];
-
-	for (Class authMethodClass in authMethodClasses)
-	{
-		OCAuthenticationMethodIdentifier authMethodIdentifier;
-		NSString *authMethodName = [authMethodClass name];
-
-		if ((authMethodIdentifier = [authMethodClass identifier]) != nil)
-		{
-			[authMethodValues addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-				authMethodIdentifier,	OCClassSettingsMetadataKeyValue,
-				authMethodName,		OCClassSettingsMetadataKeyDescription,
-			nil]];
-		}
-	}
+	NSMutableArray<OCClassSettingsMetadata> *authMethodValues = [self authenticationMethodIdentifierMetadata];
 
 	return (@{
 		// Connection
@@ -198,6 +202,18 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			OCClassSettingsMetadataKeyDescription 	: @"Controls whether private links are requested with regular PROPFINDs.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionValidatorFlags : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Allows fine-tuning the behavior of the connection validator by enabling/disabling aspects of it.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Connection",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				OCConnectionValidatorFlagClearCookies : @"Clear all cookies for the connection when entering connection validation.",
+				OCConnectionValidatorFlag502Triggers  : @"Connection validation is triggered when receiving a responses with 502 status."
+			},
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
@@ -331,7 +347,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 + (BOOL)classSettingsMetadataHasDynamicContentForKey:(OCClassSettingsKey)key
 {
-	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs])
+	if ([key isEqual:OCConnectionPreferredAuthenticationMethodIDs] ||
+	    [key isEqual:OCConnectionAllowedAuthenticationMethodIDs])
 	{
 		return (YES);
 	}
@@ -776,6 +793,32 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	return (YES);
 }
 
+#pragma mark - Status policies
+- (OCHTTPRequestStatusPolicy)statusPolicyForTask:(OCHTTPPipelineTask *)task
+{
+	OCHTTPStatusCode statusCode = task.response.status.code;
+	OCHTTPRequestStatusPolicy policy = [task.request policyForStatus:statusCode];
+
+	if (policy == OCHTTPRequestStatusPolicyDefault)
+	{
+		switch (statusCode)
+		{
+			case OCHTTPStatusCodeBAD_GATEWAY:
+				if ([[self classSettingForOCClassSettingsKey:OCConnectionValidatorFlags] containsObject:OCConnectionValidatorFlag502Triggers])
+				{
+					policy = OCHTTPRequestStatusPolicyValidateConnection;
+					break;
+				}
+
+			default:
+				policy = OCHTTPRequestStatusPolicyHandleLocally;
+			break;
+		}
+	}
+
+	return (policy);
+}
+
 #pragma mark - Rescheduling support
 - (OCHTTPRequestInstruction)pipeline:(OCHTTPPipeline *)pipeline instructionForFinishedTask:(OCHTTPPipelineTask *)task instruction:(OCHTTPRequestInstruction)incomingInstruction error:(NSError *)error
 {
@@ -844,6 +887,30 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			instruction = OCHTTPRequestInstructionReschedule;
 		}
 	}
+	else
+	{
+		// Apply policy for status
+		switch ([self statusPolicyForTask:task])
+		{
+			case OCHTTPRequestStatusPolicyDefault:
+			case OCHTTPRequestStatusPolicyHandleLocally:
+				// Just proceed as usual
+			break;
+
+			case OCHTTPRequestStatusPolicyValidateConnection:
+				considerSuccessfulRequest = NO;
+
+				if ([self shouldTriggerConnectionValidationDueToResponseToURL:taskRequestURL]) // Avoid infinite loops
+				{
+					// Reschedule request for when connection validation has finished
+					instruction = OCHTTPRequestInstructionReschedule;
+
+					// Trigger connection validation
+					[self validateConnectionWithReason:[NSString stringWithFormat:@"Status code %lu received for %@ - starting connection validator", (unsigned long)task.response.status.code, taskRequestURL] dueToResponseToURL:taskRequestURL];
+				}
+			break;
+		}
+	}
 
 	@synchronized(self)
 	{
@@ -909,9 +976,10 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	// with a status 302 redirection to a path on the same host, where the APM sets cookies and then redirects back to the
 	// original URL.
 	//
-	// What the Connection Validator does, then, is to send an unauthenticated GET request to status.php and follow up to
-	// OCHTTPRequest.maximumRedirectionDepth (5 at the time of writing) redirects in an attempt to retrieve a valid JSON
-	// response. If no valid response can be retrieved, the status test is assumed to have failed, otherwise succeeded.
+	// What the Connection Validator does, then, is to clear all cookies (if OCConnectionValidatorFlagClearCookies flag is set)
+	// and then send an unauthenticated GET request to status.php and follow up to OCHTTPRequest.maximumRedirectionDepth (5 at
+	// the time of writing) redirects in an attempt to retrieve a valid JSON response. If no valid response can be retrieved,
+	// the status test is assumed to have failed, otherwise succeeded.
 	//
 	// Following that, the Connection Validator sends an authenticated PROPFIND request to the WebDAV root endpoint, but
 	// will not follow any redirects for it. If successful, the PROPFIND test is assumed to have succeeded, otherwise
@@ -934,6 +1002,13 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 		{
 			_isValidatingConnection = YES;
 			doValidateConnection = YES;
+
+			if ([[self classSettingForOCClassSettingsKey:OCConnectionValidatorFlags] containsObject:OCConnectionValidatorFlagClearCookies])
+			{
+				// Remove all cookies when entering the connection validator, as per https://github.com/owncloud/client/pull/8558
+				OCTLog(@[ @"ConnectionValidator" ], @"Clearing cookies on entry to connection validation");
+				[self.cookieStorage removeCookiesWithFilter:nil];
+			}
 
 			if (triggeringURL != nil)
 			{
@@ -1256,7 +1331,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 						return;
 					}
-					else if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+					else if ([OCConnection shouldConsiderMaintenanceModeIndicationFromResponse:response])
 					{
 						// Maintenance mode
 						error = OCError(OCErrorServerInMaintenanceMode);
@@ -1560,6 +1635,62 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	return (result);
 }
 
++ (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response
+{
+	if (response.status.code == OCHTTPStatusCodeSERVICE_UNAVAILABLE)
+	{
+		NSError *davError;
+
+		if ((davError = [response bodyParsedAsDAVError]) != nil)
+		{
+			/*
+				Unfortunately, Sabre\DAV\Exception\ServiceUnavailable is returned not only for maintenance mode:
+
+				Maintenance mode:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>System in maintenance mode.</s:message>
+					</d:error>
+
+				Temporary storage error:
+					<?xml version="1.0" encoding="utf-8"?>
+					<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+					  <s:exception>Sabre\DAV\Exception\ServiceUnavailable</s:exception>
+					  <s:message>Storage is temporarily not available</s:message>
+					</d:error>
+
+				And with "System in maintenance mode." possibly changing in the future, the /safe/ approach to
+				determine maintenance mode is to assume it unless the message is on the allow list.
+			*/
+			static dispatch_once_t onceToken;
+			static NSDictionary<OCDAVExceptionName, NSArray<NSString *> *> *allowedMessagesByException;
+
+			dispatch_once(&onceToken, ^{
+				allowedMessagesByException = @{
+					@"Sabre\\DAV\\Exception\\ServiceUnavailable" : @[
+						@"Storage is temporarily not available"
+					]
+				};
+			});
+
+			if (davError.davExceptionName != nil)
+			{
+				if ([allowedMessagesByException[davError.davExceptionName] containsObject:davError.davExceptionMessage])
+				{
+					// Message is on the allow list, so no maintenance mode
+					return (NO);
+				}
+			}
+		}
+
+		// Default to YES
+		return (YES);
+	}
+
+	return (NO);
+}
+
 #pragma mark - Metadata actions
 - (NSMutableArray <OCXMLNode *> *)_davItemAttributes
 {
@@ -1661,6 +1792,15 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	{
 		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
+			OCHTTPRequestEphermalStreamHandler ephermalStreamHandler = nil;
+
+			if ((ephermalStreamHandler = options[OCConnectionOptionResponseStreamHandler]) != nil)
+			{
+				// Remove block from options as it can't be serialized otherwise
+				options = [options mutableCopy];
+				[(NSMutableDictionary *)options removeObjectForKey:OCConnectionOptionResponseStreamHandler];
+			}
+
 			// davRequest.requiredSignals = self.actionSignals;
 			davRequest.resultHandlerAction = @selector(_handleRetrieveItemListAtPathResult:error:);
 			davRequest.userInfo = @{
@@ -1692,6 +1832,17 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			if (options[OCConnectionOptionRequiredSignalsKey] != nil)
 			{
 				davRequest.requiredSignals = options[OCConnectionOptionRequiredSignalsKey];
+			}
+
+			if (options[OCConnectionOptionResponseDestinationURL] != nil)
+			{
+				davRequest.downloadedFileURL = options[OCConnectionOptionResponseDestinationURL];
+			}
+
+			if (ephermalStreamHandler != nil)
+			{
+				davRequest.ephermalStreamHandler = ephermalStreamHandler;
+				davRequest.downloadRequest = NO;
 			}
 
 			// Attach to pipelines
@@ -1737,6 +1888,7 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 	OCEvent *event;
 	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
 	OCEventType eventType = OCEventTypeRetrieveItemList;
+	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
 
 	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
 	{
@@ -1745,6 +1897,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
 	{
+		NSURL *endpointURL = request.userInfo[@"endpointURL"];
+
 		if (error != nil)
 		{
 			event.error = error;
@@ -1760,9 +1914,25 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			event.error = request.httpResponse.status.error;
 		}
 
-		if (event.error == nil)
+		if ((event.error == nil) && (responseDestinationURL != nil))
 		{
-			NSURL *endpointURL = request.userInfo[@"endpointURL"];
+			if ([NSFileManager.defaultManager fileExistsAtPath:responseDestinationURL.path])
+			{
+				OCDAVRawResponse *rawResponse = [OCDAVRawResponse new];
+
+				rawResponse.responseDataURL = responseDestinationURL;
+				rawResponse.basePath = endpointURL.path;
+
+				event.result = rawResponse;
+			}
+			else
+			{
+				event.error = OCError(OCErrorFileNotFound);
+			}
+		}
+
+		if ((event.error == nil) && (responseDestinationURL == nil))
+		{
 			NSArray <NSError *> *errors = nil;
 			NSArray <OCItem *> *items = nil;
 
@@ -1782,6 +1952,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 						OCItem *uploadedItem = items.firstObject;
 						OCChecksum *expectedChecksum = OCTypedCast(options[@"checksumExpected"], OCChecksum);
 						NSError *expectedChecksumMismatchError = OCTypedCast(options[@"checksumMismatchError"], NSError);
+
+						#warning Also check if sizes match, to distinguish from different file with same name error #921
 
 						if (expectedChecksum != nil)
 						{
@@ -2414,6 +2586,8 @@ static NSString *OCConnectionValidatorKey = @"connection-validator";
 			[request setValue:@"infinity" forHeaderField:OCHTTPHeaderFieldNameDepth];
 			[request setValue:@"F" forHeaderField:OCHTTPHeaderFieldNameOverwrite]; // "F" for False, "T" for True
 
+			[request setPolicy:OCHTTPRequestStatusPolicyHandleLocally forStatus:OCHTTPStatusCodeBAD_GATEWAY]; // BAD GATEWAY is an expected response code for move/copy
+
 			// Attach to pipelines
 			[self attachToPipelines];
 
@@ -3007,6 +3181,7 @@ OCClassSettingsKey OCConnectionAllowCellular = @"allow-cellular";
 OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
+OCClassSettingsKey OCConnectionValidatorFlags = @"validator-flags";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";
@@ -3018,5 +3193,10 @@ OCConnectionOptionKey OCConnectionOptionRequiredSignalsKey = @"required-signals"
 OCConnectionOptionKey OCConnectionOptionRequiredCellularSwitchKey = @"required-cellular-switch";
 OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"temporary-segment-folder-url";
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
+OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
+OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
+
+OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";
+OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers = @"502-triggers";

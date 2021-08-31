@@ -116,6 +116,13 @@
 	return(self);
 }
 
+- (instancetype)initWithURL:(NSURL *)url
+{
+	self = [self initWithParser:[[NSXMLParser alloc] initWithContentsOfURL:url]];
+
+	return(self);
+}
+
 - (void)dealloc
 {
 	_xmlParser.delegate = nil;
@@ -165,6 +172,11 @@
 	return ([_xmlParser parse]);
 }
 
+- (void)abort
+{
+	[_xmlParser abortParsing];
+}
+
 #pragma mark - Parser delegate
 - (void)parserDidEndDocument:(NSXMLParser *)parser
 {
@@ -176,7 +188,7 @@
 
 - (void)parser:(NSXMLParser *)parser parseErrorOccurred:(NSError *)parseError
 {
-	[_errors addObject:parseError];
+	[self emitError:parseError];
 }
 
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary<NSString *,NSString *> *)attributeDict
@@ -195,7 +207,7 @@
 	}
 	else if (error != nil)
 	{
-		[_errors addObject:error];
+		[self emitError:error];
 	}
 
 	elementNode.retainChildren = (_objectCreationRetainDepth > 0) || _forceRetain;
@@ -236,7 +248,7 @@
 					
 					if ((error = valueConverter(elementName, elementContents, namespaceURI, _elementAttributes.lastObject, &convertedValue)) != nil)
 					{
-						[_errors addObject:error];
+						[self emitError:error];
 					}
 					else
 					{
@@ -278,11 +290,11 @@
 		{
 			if ([parsedObject isKindOfClass:[NSError class]])
 			{
-				[_errors addObject:parsedObject];
+				[self emitError:parsedObject];
 			}
 			else
 			{
-				[_parsedObjects addObject:parsedObject];
+				[self emitParsedObject:parsedObject];
 			}
 		}
 
@@ -299,6 +311,30 @@
 	[_elementContents removeLastObject];
 	[_elementContentsEmptyIndexes removeIndex:_elementContentsLastIndex];
 	_elementContentsLastIndex--;
+}
+
+- (void)emitError:(NSError *)error
+{
+	if (_parsedObjectStreamConsumer != nil)
+	{
+		_parsedObjectStreamConsumer(self, error, nil);
+	}
+	else
+	{
+		[_errors addObject:error];
+	}
+}
+
+- (void)emitParsedObject:(id)parsedObject
+{
+	if (_parsedObjectStreamConsumer != nil)
+	{
+		_parsedObjectStreamConsumer(self, nil, parsedObject);
+	}
+	else
+	{
+		[_parsedObjects addObject:parsedObject];
+	}
 }
 
 @end

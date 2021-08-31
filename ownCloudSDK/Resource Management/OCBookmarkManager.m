@@ -239,6 +239,18 @@
 	return (nil);
 }
 
+- (OCBookmark *)bookmarkForUUIDString:(OCBookmarkUUIDString)uuidString
+{
+	OCBookmarkUUID uuid;
+
+	if ((uuid = [[NSUUID alloc] initWithUUIDString:uuidString]) != nil)
+	{
+		return ([self bookmarkForUUID:uuid]);
+	}
+
+	return (nil);
+}
+
 @end
 
 NSNotificationName OCBookmarkManagerListChanged = @"OCBookmarkManagerListChanged";

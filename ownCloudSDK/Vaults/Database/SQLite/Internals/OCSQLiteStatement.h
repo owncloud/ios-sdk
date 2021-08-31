@@ -20,8 +20,11 @@
 #import <sqlite3.h>
 
 @class OCSQLiteDB;
+@class OCSQLiteStatement;
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef BOOL(^OCSQLiteStatementCanceller)(OCSQLiteStatement *statement);
 
 @interface OCSQLiteStatement : NSObject
 {
@@ -44,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) NSTimeInterval lastUsed;
 @property(assign) BOOL isClaimed;
 
+@property(copy,nullable) OCSQLiteStatementCanceller canceller;
+
 - (instancetype)initWithSQLStatement:(sqlite3_stmt *)sqlStatement database:(OCSQLiteDB *)database;
 + (nullable instancetype)statementFromQuery:(NSString *)query database:(OCSQLiteDB *)database error:(NSError **)outError;
 
@@ -59,6 +64,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Resetting
 - (void)reset;
+
+#pragma mark - Cancellation
+- (BOOL)cancel;
 
 #pragma mark - Release
 - (void)releaseSQLObjects;

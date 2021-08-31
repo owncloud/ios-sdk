@@ -89,6 +89,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAuthenticationMethodOpenIDConnect.h>
 #import <ownCloudSDK/OCAuthenticationMethod+OCTools.h>
 
+#import <ownCloudSDK/OCAuthenticationBrowserSession.h>
+#import <ownCloudSDK/OCAuthenticationBrowserSessionCustomScheme.h>
+
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCCapabilities.h>
 
@@ -129,6 +132,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCVault.h>
 #import <ownCloudSDK/OCDatabase.h>
+#import <ownCloudSDK/OCDatabase+Versions.h>
 #import <ownCloudSDK/OCDatabaseConsistentOperation.h>
 #import <ownCloudSDK/OCSQLiteDB.h>
 #import <ownCloudSDK/OCSQLiteQuery.h>
@@ -136,9 +140,14 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCSQLiteTransaction.h>
 #import <ownCloudSDK/OCSQLiteResultSet.h>
 
+#import <ownCloudSDK/OCBookmark+Prepopulation.h>
+#import <ownCloudSDK/OCVault+Prepopulation.h>
+#import <ownCloudSDK/OCDAVRawResponse.h>
+
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>
+#import <ownCloudSDK/OCQueryCondition+Item.h>
 #import <ownCloudSDK/OCQueryChangeSet.h>
 
 #import <ownCloudSDK/OCItem.h>
@@ -238,3 +247,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAsyncSequentialQueue.h>
 #import <ownCloudSDK/OCRateLimiter.h>
 #import <ownCloudSDK/OCDeallocAction.h>
+#import <ownCloudSDK/OCCancelAction.h>
+#import <ownCloudSDK/OCMeasurement.h>
+#import <ownCloudSDK/OCMeasurementEvent.h>

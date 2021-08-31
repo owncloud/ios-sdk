@@ -91,13 +91,11 @@
 						didRemove = YES;
 					}
 				}
+				OCFileOpLog(@"rm", deleteError, @"Deleted local copy at %@", deleteFileURL.path);
 
 				if (didRemove)
 				{
-					item.localRelativePath = nil;
-					item.localCopyVersionIdentifier = nil;
-					item.downloadTriggerIdentifier = nil;
-					item.fileClaim = nil;
+					[item clearLocalCopyProperties];
 				}
 			}
 		}
