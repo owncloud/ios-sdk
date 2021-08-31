@@ -38,7 +38,7 @@ typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, BOOL u
 @property(strong,nullable) OCResourceVersion version;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
-@property(assign) CGSize maximumSizeInPoints;
+@property(assign) CGSize maxPointSize;
 @property(assign) CGFloat scale;
 
 @property(assign) BOOL waitForConnectivity;

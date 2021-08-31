@@ -7,8 +7,8 @@ The `OCResource` subsystem provides the infrastructure to
 
 ## Components
 
-### Cache
-Single instance per account for all resource types. Provides a single interface to all sources to retrieve and store resources. Could keep a memory cache for extra performance.
+### Store
+Single instance per account for all resource types. Provides a single interface to all sources to retrieve and store resources.
 
 ### Sources
 All logic that's needed to retrieve a resource - including placeholders, from cache or the server.

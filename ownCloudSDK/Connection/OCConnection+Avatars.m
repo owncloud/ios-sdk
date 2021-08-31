@@ -48,11 +48,11 @@
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)
 		{
-			completionHandler(error, NO, nil, nil);
+			completionHandler(error, NO, nil, nil, nil);
 		}
 		else
 		{
-			completionHandler(nil, (response.status.code == OCHTTPStatusCodeNOT_MODIFIED), response.headerFields[@"Content-Type"], response.bodyData);
+			completionHandler(nil, (response.status.code == OCHTTPStatusCodeNOT_MODIFIED), response.headerFields[@"ETag"], response.headerFields[@"Content-Type"], response.bodyData);
 		}
 	}];
 

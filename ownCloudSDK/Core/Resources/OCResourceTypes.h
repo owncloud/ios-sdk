@@ -30,11 +30,12 @@ typedef NSString* OCResourceType NS_TYPED_ENUM; //!< Type of resource, f.ex. thu
 typedef NSString* OCResourceIdentifier; //!< An identifier that identifies the resource, f.ex. the file ID or user name
 typedef NSString* OCResourceVersion; //!< A string that can be used to distinguish versions (throug equality comparison), f.ex. ETags or checksums
 typedef NSString* OCResourceStructureDescription; //!< A string describing the structure properties of the resource that can affect resource generation or return, such as f.ex. the MIME type (which can change after a rename, without causing ID or version to change)
+typedef NSString* OCResourceMetadata; //!< A resource-specific string with metadata on the resource's data 
 
 typedef NS_ENUM(NSUInteger, OCResourceStatus)
 {
 	OCResourceStatusUnsupported,	//!< Resource is not supported
-	OCResourceStatusPlaceholder, 	//!< Placeholder for the requested resource
+	OCResourceStatusPlaceholder, 	//!< Placeholder for the requested resource (cache, but do not persist)
 	OCResourceStatusFromCache,	//!< Resource from cache
 	OCResourceStatusLatest		//!< Resource is latest version
 };

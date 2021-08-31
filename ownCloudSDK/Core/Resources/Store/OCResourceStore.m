@@ -1,5 +1,5 @@
 //
-//  OCResourceCache.m
+//  OCResourceStore.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 27.02.21.
@@ -16,15 +16,25 @@
  *
  */
 
-#import "OCResourceCache.h"
+#import "OCResourceStore.h"
 #import "OCCache.h"
 
-@interface OCResourceCache ()
+@interface OCResourceStore ()
 {
 	OCCache *_cache;
 }
 @end
 
-@implementation OCResourceCache
+@implementation OCResourceStore
+
+- (void)retrieveResourceForRequest:(OCResourceRequest *)request completionHandler:(OCResourceRetrieveCompletionHandler)completionHandler
+{
+
+}
+
+- (void)storeResource:(OCResource *)resource completionHandler:(OCResourceStoreCompletionHandler)completionHandler
+{
+
+}
 
 @end

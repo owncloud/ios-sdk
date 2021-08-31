@@ -17,6 +17,8 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+
 #import "OCResourceTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -29,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
 @property(assign) OCResourceStatus status;
+
+@property(assign) CGSize maxPixelSize; //!< For image resources: maximum size of the resource in pixels, CGSizeZero otherwise
+
+@property(strong,nullable) OCResourceMetadata metaData;
+@property(strong,nullable) NSData *data;
 
 @end
 

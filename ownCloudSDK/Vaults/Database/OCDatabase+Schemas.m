@@ -41,6 +41,7 @@
 
 	[self addOrUpdateMetaDataSchema];
 	[self addOrUpdateThumbnailsSchema];
+	[self addOrUpdateResourceSchema];
 
 	[self addOrUpdateSyncLanesSchema];
 	[self addOrUpdateSyncJournalSchema];
@@ -1310,43 +1311,36 @@
 			}]];
 		}]
 	];
-//
-//	// Version 3
-//	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
-//		schemaWithTableName:OCDatabaseTableNameThumbnails
-//		version:3
-//		creationQueries:@[
-//			/*
-//				tnID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
-//				fileID : TEXT		- OCFileID of the item to which this thumbnail belongs
-//				eTag : TEXT		- OCFileETag of the item to which this thumbnail belongs
-//				specID : TEXT		- a string consisting of other attributes affecting thumbnail creation, like f.ex. the MIME Type (which can change after a rename)
-//				maxWidth : INTEGER	- maximum width of the item when retrieving the thumbnail from the server
-//				maxHeight : INTEGER	- maximum height of the item when retrieving the thumbnail from the server
-//				mimeType : TEXT		- MIME Type of imageData
-//				imageData : BLOB	- image data of the thumbnail
-//			*/
-//			@"CREATE TABLE thumb.thumbnails (tnID INTEGER PRIMARY KEY AUTOINCREMENT, fileID TEXT NOT NULL, eTag TEXT NOT NULL, specID TEXT NOT NULL, maxWidth INTEGER NOT NULL, maxHeight INTEGER NOT NULL, mimeType TEXT NOT NULL, imageData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameThumbnails
-//
-//			// Create index over fileID
-//			@"CREATE INDEX thumb.idx_thumbnails_fileID ON thumbnails (fileID)" // relatedTo:OCDatabaseTableNameThumbnails
-//		]
-//		openStatements:nil
-//		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
-//			// Migrate to version 2
-//			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
-//				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
-//
-//				// Add "specID" column
-//				[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE thumb.thumbnails ADD COLUMN specID TEXT" resultHandler:resultHandler]];
-//				if (transactionError != nil) { return(transactionError); }
-//
-//				return (transactionError);
-//			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-//				completionHandler(error);
-//			}]];
-//		}]
-//	];
+}
+
+- (void)addOrUpdateResourceSchema
+{
+	/*** Resources ***/
+
+	// Version 1
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameResources
+		version:1
+		creationQueries:@[
+			/*
+				rowID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
+				type : TEXT		- OCResourceType, type of resource, f.ex. thumbnail or avatar
+				identifier : TEXT	- OCResourceIdentifier, identifier that identifies the resource, f.ex. the file ID or user name
+				version : TEXT		- OCResourceVersion, string that can be used to distinguish versions (throug equality comparison), f.ex. ETags or checksums (optional)
+				structDesc : TEXT	- OCResourceStructureDescription, a string describing the structure properties of the resource that can affect resource generation or return, such as f.ex. the MIME type (which can change after a rename, without causing ID or version to change) (optional)
+				maxWidth : INTEGER	- maximum width of resource (optional)
+				maxHeight : INTEGER	- maximum height of the resource (optional)
+				metaData : TEXT		- resource type specific meta data describing resData (optional)
+				data : BLOB		- resource data of the thumbnail
+			*/
+			@"CREATE TABLE thumb.resources (rowID INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, identifier TEXT NOT NULL, version TEXT, structDesc TEXT, maxWidth INTEGER, maxHeight INTEGER, metaData TEXT, data BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameResources
+
+			// Create index over identifier
+			@"CREATE INDEX thumb.idx_resources_identifier ON resources (identifier)" // relatedTo:OCDatabaseTableNameResources
+		]
+		openStatements:nil
+		upgradeMigrator:nil
+	]];
 }
 
 - (void)addOrUpdateCountersSchema
@@ -1378,6 +1372,7 @@ OCDatabaseTableName OCDatabaseTableNameSyncLanes = @"syncLanes";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameUpdateJobs = @"updateJobs";
 OCDatabaseTableName OCDatabaseTableNameThumbnails = @"thumb.thumbnails"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails
+OCDatabaseTableName OCDatabaseTableNameResources = @"thumb.resources"; // Places that need to be changed as well if this is changed are annotated with relatedTo:OCDatabaseTableNameThumbnails or relatedTo:OCDatabaseTableNameResources
 OCDatabaseTableName OCDatabaseTableNameEvents = @"events";
 OCDatabaseTableName OCDatabaseTableNameCounters = @"counters";
 OCDatabaseTableName OCDatabaseTableNameItemPolicies = @"itemPolicies";

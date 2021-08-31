@@ -1,5 +1,5 @@
 //
-//  OCResourceCache.h
+//  OCResourceStore.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 27.02.21.
@@ -18,12 +18,22 @@
 
 #import <Foundation/Foundation.h>
 #import "OCDatabase.h"
+#import "OCResource.h"
+#import "OCResourceRequest.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceCache : NSObject
+@class OCResourceStore;
+
+typedef void(^OCResourceStoreCompletionHandler)(OCResourceStore *store, NSError *error);
+typedef void(^OCResourceRetrieveCompletionHandler)(OCResourceStore *store, NSError *error, OCResource *resource);
+
+@interface OCResourceStore : NSObject
 
 @property(weak,nullable) OCDatabase *database;
+
+- (void)retrieveResourceForRequest:(OCResourceRequest *)request completionHandler:(OCResourceRetrieveCompletionHandler)completionHandler;
+- (void)storeResource:(OCResource *)resource completionHandler:(OCResourceStoreCompletionHandler)completionHandler;
 
 @end
 
