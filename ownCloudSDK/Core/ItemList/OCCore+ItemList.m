@@ -1025,7 +1025,14 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}
 
 	// Update queries
-	for (OCQuery *query in self->_queries)
+	NSArray *queries;
+
+	@synchronized(self->_queries)
+	{
+		queries = [self->_queries copy];
+	}
+
+	for (OCQuery *query in queries)
 	{
 		NSMutableArray <OCItem *> *useQueryResults = nil;
 		OCItem *queryRootItem = nil;

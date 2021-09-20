@@ -819,7 +819,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	{
 		// Add query to list of queries
 		[self queueBlock:^{
-			[self->_queries addObject:query];
+			@synchronized(self->_queries)
+			{
+				[self->_queries addObject:query];
+			}
 		}];
 
 		if (!query.isCustom)
@@ -888,7 +891,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[query.stopAction cancel];
 
 			query.state = OCQueryStateStopped;
-			[self->_queries removeObject:query];
+			@synchronized(self->_queries)
+			{
+				[self->_queries removeObject:query];
+			}
 		}];
 	}
 
@@ -1100,7 +1106,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				newSyncAnchor:syncAnchor
 				beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 					// Find items that moved to a different path
-					for (OCQuery *query in self->_queries)
+					NSArray *queries;
+
+					@synchronized(self->_queries)
+					{
+						queries = [self->_queries copy];
+					}
+
+					for (OCQuery *query in queries)
 					{
 						OCCoreItemList *queryItemList;
 
