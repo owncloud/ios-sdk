@@ -1,3 +1,10 @@
+## 11.7.1 version
+
+- support for streaming, infinite PROPFIND to prepopulate accounts and speed up initial discovery
+- minimum interval between two scans for changes can now be configured via MDM and serverside via capabilities
+- fix crash happening during class settings discovery
+- add streaming support to OCXMLParser
+
 ## 11.7 version
 
 - Scan for changes no longer uses the background URL session, so redirects can be fully managed by the SDK
