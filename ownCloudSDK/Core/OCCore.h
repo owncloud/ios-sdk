@@ -178,6 +178,8 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSDate *_nextSchedulingDate;
 
+	NSTimeInterval _effectivePollForChangesInterval;
+
 	OCActivityManager *_activityManager;
 	NSMutableSet <OCSyncRecordID> *_publishedActivitySyncRecordIDs;
 	BOOL _needsToBroadcastSyncRecordActivityUpdates;
@@ -199,6 +201,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSUInteger _pendingScheduledDirectoryUpdateJobs;
 	OCAsyncSequentialQueue *_itemListTasksRequestQueue;
 	BOOL _itemListTaskRunning;
+	NSTimeInterval _directoryUpdateStartTime;
 	NSMutableArray<OCCoreItemListFetchUpdatesCompletionHandler> *_fetchUpdatesCompletionHandlers;
 
 	NSMutableArray <OCItemPolicy *> *_itemPolicies;

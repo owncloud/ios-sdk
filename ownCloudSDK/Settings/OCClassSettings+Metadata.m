@@ -52,7 +52,7 @@
 	return (mergedDefaultSettings);
 }
 
-- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass
+- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass options:(OCClassSettingsKeySetOption)options
 {
 	NSMutableSet<OCClassSettingsKey> *keys = nil;
 	OCClassSettingsIdentifier settingsIdentifier;
@@ -107,6 +107,21 @@
 						if (keys == nil) { keys = [NSMutableSet new]; }
 						[keys addObjectsFromArray:metadataKeys];
 					}
+				}
+			}
+		}
+
+		// Apply options
+		// - Remove private keys
+		if ((options & OCClassSettingsKeySetOptionIncludingPrivateKeys) == 0)
+		{
+			NSArray<OCClassSettingsKey> *inspectKeys = keys.allObjects;
+
+			for (OCClassSettingsKey key in inspectKeys)
+			{
+				if (([self flagsForClass:settingsClass key:key] & OCClassSettingsFlagIsPrivate) != 0)
+				{
+					[keys removeObject:key];
 				}
 			}
 		}

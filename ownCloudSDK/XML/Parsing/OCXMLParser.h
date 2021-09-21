@@ -30,6 +30,8 @@
 
 typedef NSError *(^OCXMLParserElementValueConverter)(NSString *elementName, NSString *value, NSString *namespaceURI, NSDictionary <NSString*,NSString*> *attributes, id *convertedValue);
 
+typedef void(^OCXMLParsedObjectStreamConsumer)(OCXMLParser *parser, NSError *error, id parsedObject);
+
 @interface OCXMLParser : NSObject <NSXMLParserDelegate>
 {
 	NSXMLParser *_xmlParser;
@@ -52,6 +54,7 @@ typedef NSError *(^OCXMLParserElementValueConverter)(NSString *elementName, NSSt
 
 @property(readonly,strong) NSMutableArray<NSError *> *errors;
 @property(readonly,strong) NSMutableArray *parsedObjects;
+@property(copy) OCXMLParsedObjectStreamConsumer parsedObjectStreamConsumer;
 
 @property(assign) BOOL forceRetain;
 @property(strong,nonatomic) NSMutableDictionary <NSString *, id> *options;
@@ -60,11 +63,13 @@ typedef NSError *(^OCXMLParserElementValueConverter)(NSString *elementName, NSSt
 #pragma mark - Init & Dealloc
 - (instancetype)initWithParser:(NSXMLParser *)xmlParser;
 - (instancetype)initWithData:(NSData *)xmlData;
+- (instancetype)initWithURL:(NSURL *)url;
 
 #pragma mark - Specify classes
 - (void)addObjectCreationClasses:(NSArray <Class> *)classes;
 
 #pragma mark - Parse
 - (BOOL)parse;
+- (void)abort; //!< must be called from the NSXMLParser delegate - that includes .parsedObjectStreamConsumer
 
 @end

@@ -85,7 +85,7 @@ typedef NSString* OCEventUUID;
 	NSDictionary<OCEventUserInfoKey,id> *_ephermalUserInfo;
 
 	OCPath _path;
-	NSUInteger _depth;
+	NSInteger _depth;
 
 	NSString *_mimeType;
 	NSError *_error;
@@ -102,8 +102,8 @@ typedef NSString* OCEventUUID;
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
-@property(nullable,strong) OCPath path;		//!< Used by OCEventTypeRetrieveItemList.
-@property(assign) NSUInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
+@property(nullable,strong) OCPath path;	//!< Used by OCEventTypeRetrieveItemList.
+@property(assign) NSInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
 
 @property(nullable,strong) NSString *mimeType;
 @property(nullable,strong) OCFile *file;

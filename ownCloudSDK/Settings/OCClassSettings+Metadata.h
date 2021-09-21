@@ -24,10 +24,18 @@ typedef NSString* OCClassSettingsAutoExpansion NS_TYPED_ENUM;
 
 typedef NSString* OCClassSettingsMetadataOption NS_TYPED_ENUM;
 
+typedef NS_OPTIONS(NSUInteger, OCClassSettingsKeySetOption)
+{
+	OCClassSettingsKeySetOptionIncludingPrivateKeys = (1 << 0),
+
+	OCClassSettingsKeySetOptionDefault = OCClassSettingsKeySetOptionIncludingPrivateKeys,
+	OCClassSettingsKeySetOptionWithoutPrivateKeys = 0
+};
+
 @interface OCClassSettings (Metadata)
 
 - (nullable NSDictionary<OCClassSettingsKey, id> *)defaultsForClass:(Class<OCClassSettingsSupport>)settingsClass;
-- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass;
+- (nullable NSSet<OCClassSettingsKey> *)keysForClass:(Class<OCClassSettingsSupport>)settingsClass options:(OCClassSettingsKeySetOption)options;
 
 - (nullable OCClassSettingsMetadata)metadataForClass:(Class<OCClassSettingsSupport>)settingsClass key:(OCClassSettingsKey)key options:(nullable NSDictionary<OCClassSettingsMetadataOption, id> *)options;
 

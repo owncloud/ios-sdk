@@ -55,6 +55,7 @@ typedef NSString* OCConnectionSignalID NS_TYPED_ENUM;
 @class OCHTTPResponse;
 
 typedef void(^OCHTTPRequestEphermalResultHandler)(OCHTTPRequest *request, OCHTTPResponse * _Nullable response, NSError * _Nullable error);
+typedef void(^OCHTTPRequestEphermalStreamHandler)(OCHTTPRequest *request, OCHTTPResponse * _Nullable response, NSInputStream * _Nullable inputStream, NSError * _Nullable error);
 typedef void(^OCConnectionCertificateProceedHandler)(BOOL proceed, NSError * _Nullable error);
 typedef void(^OCConnectionEphermalRequestCertificateProceedHandler)(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler);
 

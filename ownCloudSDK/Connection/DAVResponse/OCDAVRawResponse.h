@@ -1,8 +1,8 @@
 //
-//  OCAuthenticationBrowserSessionMIBrowser.m
+//  OCDAVRawResponse.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.05.21.
+//  Created by Felix Schwarz on 24.06.21.
 //  Copyright © 2021 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,15 @@
  *
  */
 
-#import "OCAuthenticationBrowserSessionMIBrowser.h"
+#import <Foundation/Foundation.h>
 
-@implementation OCAuthenticationBrowserSessionMIBrowser
+NS_ASSUME_NONNULL_BEGIN
 
-- (NSString *)plainCustomScheme
-{
-	return (@"mibrowser");
-}
+@interface OCDAVRawResponse : NSObject <NSSecureCoding>
 
-- (NSString *)secureCustomScheme
-{
-	return (@"mibrowsers");
-}
+@property(strong,nullable) NSURL *responseDataURL;
+@property(strong,nullable) NSString *basePath;
 
 @end
+
+NS_ASSUME_NONNULL_END

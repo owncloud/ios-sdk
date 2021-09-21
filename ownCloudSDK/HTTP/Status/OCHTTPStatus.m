@@ -109,7 +109,7 @@
 		break;
 
 		case OCHTTPStatusCodeMETHOD_NOT_ALLOWED:
-			return (@"METHOD NOT ALLOWD");
+			return (@"METHOD NOT ALLOWED");
 		break;
 
 		case OCHTTPStatusCodeCONFLICT:

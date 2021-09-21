@@ -148,6 +148,8 @@ typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!
 - (void)flushCache; //!< Tells SQLite to flush its in-memory cache to disk.
 + (int64_t)setMemoryLimit:(int64_t)memoryLimit; //!< Sets a soft heap memory limit for SQLite
 
+- (void)queueBlock:(dispatch_block_t)block; //!< Queues a block for execution on the SQLite thread
+
 @end
 
 extern NSErrorDomain OCSQLiteErrorDomain; //!< Native SQLite errors

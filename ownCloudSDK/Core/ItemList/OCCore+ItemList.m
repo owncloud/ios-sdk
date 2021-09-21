@@ -1204,6 +1204,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 - (void)startCheckingForUpdates
 {
 	[self queueBlock:^{
+		if (self->_directoryUpdateStartTime == 0)
+		{
+			OCTLog(@[@"UpdateScan"], @"Starting update scan");
+			self->_directoryUpdateStartTime = NSDate.timeIntervalSinceReferenceDate;
+		}
+
 		[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:nil];
 	}];
 }
@@ -1445,23 +1451,93 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
-		// Check again after configured time interval (with fall back to 10 seconds)
-		NSNumber *configuredInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval];
-		NSTimeInterval minimumTimeInterval = (configuredInterval.integerValue > 0) ? configuredInterval.doubleValue : 10;
+		// Check again after configured time interval
+		NSTimeInterval pollInterval = self.effectivePollForChangesInterval;
 
 		if (self.state == OCCoreStateRunning)
 		{
 			@synchronized([OCCoreItemList class])
 			{
-				if ((_lastScheduledItemListUpdateDate==nil) || ([_lastScheduledItemListUpdateDate timeIntervalSinceNow]<-(minimumTimeInterval-1)))
+				if ((_lastScheduledItemListUpdateDate==nil) || (_lastScheduledItemListUpdateDate.timeIntervalSinceNow < -(pollInterval-1.0)))
 				{
 					_lastScheduledItemListUpdateDate = [NSDate date];
 
-					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:minimumTimeInterval] inBackground:NO completionHandler:nil];
+					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:pollInterval] inBackground:NO completionHandler:nil];
 				}
 			}
 		}
 	}
+}
+
+- (NSTimeInterval)effectivePollForChangesInterval
+{
+	if (_effectivePollForChangesInterval == 0)
+	{
+		const NSTimeInterval defaultMinimumPollInterval = 10.0, minimumAllowedPollInterval = 5.0, warnPollIntervalThreshold = 60.0;
+		NSTimeInterval effectivePollInterval = defaultMinimumPollInterval;
+		NSString *effectivePollIntervalSource = @"default";
+		BOOL loggedPollIntervalWarning = NO;
+
+		// Capabilities
+		if (self.connection.capabilities.pollInterval != nil)
+		{
+			// Server default is 60 seconds, but iOS default is 10 seconds
+			// also the capability is no longer in seconds, but milliseconds,
+			// so ignore anything less than 5 seconds, warn for anything greater
+			// than 60 seconds
+
+			NSTimeInterval configuredTimeInterval = self.connection.capabilities.pollInterval.doubleValue / 1000.0;
+
+			if (configuredTimeInterval < minimumAllowedPollInterval)
+			{
+				if (self.connection.capabilities.pollInterval.integerValue != 60)
+				{
+					OCTLogError(@[@"PollForChanges"], @"Poll interval in capabilities (%@) not server legacy default (60 (sec)), and - as milliseconds - less than minimum allowed poll interval (%.02f sec). Ignoring value.", self.connection.capabilities.pollInterval, minimumAllowedPollInterval);
+					loggedPollIntervalWarning = YES;
+				}
+			}
+			else
+			{
+				effectivePollInterval = configuredTimeInterval;
+				effectivePollIntervalSource = @"capabilities";
+			}
+		}
+
+		// Class Settings
+		NSNumber *classSettingsInterval;
+
+		if ((classSettingsInterval = [self classSettingForOCClassSettingsKey:OCCoreScanForChangesInterval]) != nil)
+		{
+			NSTimeInterval configuredTimeInterval = classSettingsInterval.doubleValue / 1000.0;
+
+			if (configuredTimeInterval < minimumAllowedPollInterval)
+			{
+				OCTLogError(@[@"PollForChanges"], @"MDM/Branding: poll interval %.03f less than minimum allowed poll interval (%.02f sec). Ignoring value.", configuredTimeInterval, minimumAllowedPollInterval);
+				loggedPollIntervalWarning = YES;
+			}
+			else
+			{
+				effectivePollInterval = configuredTimeInterval;
+				effectivePollIntervalSource = @"ClassSettings";
+			}
+		}
+
+		// Log warning when exceeding threshold
+		if (effectivePollInterval > warnPollIntervalThreshold)
+		{
+			OCTLogWarning(@[@"PollForChanges"], @"Poll interval (%@) of %.02f sec > %.02f sec", effectivePollIntervalSource, effectivePollInterval, warnPollIntervalThreshold);
+			loggedPollIntervalWarning = YES;
+		}
+
+		if (loggedPollIntervalWarning)
+		{
+			OCTLog(@[@"PollForChanges"], @"Using poll interval of %.02f sec (%@)", effectivePollInterval, effectivePollIntervalSource);
+		}
+
+		_effectivePollForChangesInterval = effectivePollInterval;
+	}
+
+	return (_effectivePollForChangesInterval);
 }
 
 #pragma mark - Update Scan finish
@@ -1484,6 +1560,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	else
 	{
 		[self runProtectedPolicyProcessorsForTrigger:OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges];
+	}
+
+	if (_directoryUpdateStartTime != 0)
+	{
+		OCTLog(@[@"UpdateScan"], @"Finished update scan in %.1f sec", NSDate.timeIntervalSinceReferenceDate - _directoryUpdateStartTime);
+		_directoryUpdateStartTime = 0;
 	}
 
 	for (OCCoreItemListFetchUpdatesCompletionHandler completionHandler in completionHandlers)

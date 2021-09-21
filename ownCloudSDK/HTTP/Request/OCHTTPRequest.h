@@ -62,6 +62,9 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 {
 	NSData *_bodyData;
 	NSInputStream *_bodyURLInputStream;
+
+	NSInputStream *_streamingResponseBodyInputStream;
+	NSOutputStream *_streamingResponseBodyOutputStream;
 }
 
 @property(strong,readonly) OCHTTPRequestID identifier; //!< Unique ID (auto-generated) for every request
@@ -94,6 +97,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 @property(assign) OCHTTPRequestResultHandlerAction resultHandlerAction;	//!< The selector to invoke on OCConnection when the request has concluded.
 @property(copy)   OCHTTPRequestEphermalResultHandler ephermalResultHandler;	//!< The resultHandler to invoke if resultHandlerAction==NULL. Ephermal [not serialized].
+@property(copy)	  OCHTTPRequestEphermalStreamHandler ephermalStreamHandler;	//!< The streamHandler to invoke if a response is received. Ephermal [not serialized].
 @property(copy)   OCConnectionEphermalRequestCertificateProceedHandler ephermalRequestCertificateProceedHandler; //!< The certificateProceedHandler to invoke for certificates that need user approval. [not serialized]
 @property(assign) BOOL forceCertificateDecisionDelegation; //!< YES if certificateProceedHandler and the connection (delegate) should be consulted even if the certificate has no issues or was previously approved by the user. [not serialized]
 

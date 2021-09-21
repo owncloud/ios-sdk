@@ -48,6 +48,7 @@
 #import "OCTUSJob.h"
 #import "OCTUSHeader.h"
 #import "OCMessageChoice.h"
+#import "OCDAVRawResponse.h"
 #import "OCMessage.h"
 
 @implementation OCEvent
@@ -91,6 +92,7 @@
 				OCHTTPResponse.class,
 				OCHTTPStatus.class,
 				OCHTTPPolicy.class,
+				OCDAVRawResponse.class,
 				OCImage.class,
 				OCItem.class,
 				OCItemPolicy.class,

@@ -149,8 +149,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(YES),
-		OCCoreScanForChangesInterval : @(10)
+		OCCoreCookieSupportEnabled : @(YES)
 	});
 }
 
@@ -194,7 +193,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		OCCoreScanForChangesInterval : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeInteger,
-			OCClassSettingsMetadataKeyDescription 	: @"Minimum number of seconds until the next scan for changes, measured from the completion of the previous scan.",
+			OCClassSettingsMetadataKeyDescription 	: @"Minimum number of milliseconds until the next scan for changes, measured from the completion of the previous scan. If no value is provided, uses the poll interval provided in the server's capabilities (in milliseconds) if it is greater or equal 5 seconds. Defaults to 10 seconds otherwise.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},

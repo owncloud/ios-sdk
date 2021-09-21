@@ -1,8 +1,8 @@
 //
-//  OCAuthenticationBrowserSessionMIBrowser.m
+//  OCBookmark+Prepopulation.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.05.21.
+//  Created by Felix Schwarz on 30.06.21.
 //  Copyright © 2021 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,18 +16,16 @@
  *
  */
 
-#import "OCAuthenticationBrowserSessionMIBrowser.h"
+#import <Foundation/Foundation.h>
+#import "OCBookmark.h"
 
-@implementation OCAuthenticationBrowserSessionMIBrowser
+NS_ASSUME_NONNULL_BEGIN
 
-- (NSString *)plainCustomScheme
-{
-	return (@"mibrowser");
-}
+@interface OCBookmark (Prepopulation)
 
-- (NSString *)secureCustomScheme
-{
-	return (@"mibrowsers");
-}
+- (NSProgress *)prepopulateWithCompletionHandler:(void(^)(NSError *error))completionHandler;
+- (NSProgress *)prepopulateWithStreamCompletionHandler:(void(^)(NSError *error))completionHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END
