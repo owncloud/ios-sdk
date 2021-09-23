@@ -356,6 +356,8 @@
 		DC7650092403DF5000201812 /* NSError+OCNetworkFailure.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7650072403DF5000201812 /* NSError+OCNetworkFailure.m */; };
 		DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */ = {isa = PBXBuildFile; fileRef = DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */; };
 		DC76500D2404703A00201812 /* OCWaitConditionMetaDataRefresh.m in Sources */ = {isa = PBXBuildFile; fileRef = DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */; };
+		DC772E9126FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC772E8F26FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h */; };
+		DC772E9226FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC772E9026FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m */; };
 		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
 		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
 		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
@@ -1143,6 +1145,8 @@
 		DC7650072403DF5000201812 /* NSError+OCNetworkFailure.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCNetworkFailure.m"; sourceTree = "<group>"; };
 		DC76500A2404703A00201812 /* OCWaitConditionMetaDataRefresh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCWaitConditionMetaDataRefresh.h; sourceTree = "<group>"; };
 		DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionMetaDataRefresh.m; sourceTree = "<group>"; };
+		DC772E8F26FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionAWBrowser.h; sourceTree = "<group>"; };
+		DC772E9026FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionAWBrowser.m; sourceTree = "<group>"; };
 		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
@@ -2324,6 +2328,15 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		DC772E8E26FC908D002C0015 /* AWBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				DC772E9026FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m */,
+				DC772E8F26FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h */,
+			);
+			path = AWBrowser;
+			sourceTree = "<group>";
+		};
 		DC79E1A2205871B800189B9A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -2663,6 +2676,7 @@
 				DC8EB2FD23951AAB009148F9 /* OCAuthenticationBrowserSession.m */,
 				DC8EB2FC23951AAB009148F9 /* OCAuthenticationBrowserSession.h */,
 				DC6CC30426428DA40040ECAC /* Custom Scheme */,
+				DC772E8E26FC908D002C0015 /* AWBrowser */,
 				DC6CC30C2642A0570040ECAC /* MIBrowser */,
 				DC8EB30123952049009148F9 /* UIWebView */,
 			);
@@ -3367,6 +3381,7 @@
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
 				DC188997218B09CC00CFB3F9 /* OCLogFileSource.h in Headers */,
 				DCDD9B14222986D50052A001 /* OCShare+OCXMLObjectCreation.h in Headers */,
+				DC772E9126FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h in Headers */,
 				DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */,
 				DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */,
 				DC6ABF7925365CB100689C7B /* OCHostSimulator+BuiltIn.h in Headers */,
@@ -3802,6 +3817,7 @@
 				DCD038A12542CA4500F97534 /* NSString+OCClassSettings.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
 				DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */,
+				DC772E9226FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m in Sources */,
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC4B1172220830F20062BCDD /* OCHTTPPipelineBackend.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
