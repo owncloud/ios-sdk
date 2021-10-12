@@ -19,6 +19,7 @@
 #import "OCLockManager.h"
 #import "OCLockRequest.h"
 #import "OCAppIdentity.h"
+#import "NSError+OCError.h"
 
 #pragma mark - Database helper
 
@@ -145,14 +146,24 @@
 
 - (void)releaseLock:(OCLock *)lock
 {
+	BOOL needsUpdate = NO;
+
 	@synchronized(_locks)
 	{
-		[_releasedLockIdentifiers addObject:lock.identifier];
-		[_lockIdentifiers removeObject:lock.identifier];
-		[_locks removeObject:lock];
+		if ([_locks indexOfObjectIdenticalTo:lock] != NSNotFound)
+		{
+			[_releasedLockIdentifiers addObject:lock.identifier];
+			[_lockIdentifiers removeObject:lock.identifier];
+			[_locks removeObject:lock];
+
+			needsUpdate = YES;
+		}
 	}
 
-	[self setNeedsLockUpdate];
+	if (needsUpdate)
+	{
+		[self setNeedsLockUpdate];
+	}
 }
 
 - (void)setNeedsLockUpdate
@@ -270,6 +281,7 @@
 
 				if (lock == nil)
 				{
+					// Lock can be acquired
 					if (request.invalidated || ((request.lockNeededHandler != nil) && !request.lockNeededHandler(request)))
 					{
 						// Request processed, schedule for removal
@@ -297,6 +309,19 @@
 				}
 				else
 				{
+					// Lock can't be acquired at this time
+					if (request.returnAfterFirstAttempt)
+					{
+						// If request should return immediately, invalidate request, remove it and return error
+
+						// Invalidate request
+						[request invalidate];
+
+						// Schedule request for removal
+						if (processedRequests == nil) { processedRequests = [NSMutableArray new]; }
+						[processedRequests addObject:request];
+					}
+
 					if ((nextRelevantExpirationDate == nil) || ((nextRelevantExpirationDate != nil) && (lock.expirationDate.timeIntervalSinceReferenceDate < nextRelevantExpirationDate.timeIntervalSinceReferenceDate)))
 					{
 						nextRelevantExpirationDate = lock.expirationDate;
@@ -335,9 +360,19 @@
 		// Notify requesters
 		for (OCLockRequest *request in processedRequests)
 		{
-			if ((request.lock != nil) && (request.acquiredHandler != nil))
+			if (request.acquiredHandler != nil)
 			{
-				request.acquiredHandler(nil, request.lock);
+				if (request.lock != nil)
+				{
+					// Notify with lock
+					request.acquiredHandler(nil, request.lock);
+				}
+				else if (request.invalidated)
+				{
+					// Notify about invalidation
+					request.acquiredHandler(OCError(OCErrorLockInvalidated), nil);
+				}
+
 				request.acquiredHandler = nil;
 			}
 		}

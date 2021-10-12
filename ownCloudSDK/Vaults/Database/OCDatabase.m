@@ -218,6 +218,11 @@
 	}];
 }
 
+- (BOOL)isOpened
+{
+	return (_openCount > 0);
+}
+
 #pragma mark - Transactions
 - (void)performBatchUpdates:(NSError *(^)(OCDatabase *database))updates completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {

@@ -50,6 +50,7 @@
 #import "OCMessageChoice.h"
 #import "OCDAVRawResponse.h"
 #import "OCMessage.h"
+#import "OCCoreUpdateScheduleRecord.h"
 
 @implementation OCEvent
 
@@ -112,6 +113,7 @@
 				OCTUSJobSegment.class,
 				OCMessage.class,
 				OCMessageChoice.class,
+				OCCoreUpdateScheduleRecord.class,
 
 				// Foundation classes
 				NSArray.class,

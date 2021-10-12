@@ -34,6 +34,9 @@
 #import "NSError+OCNetworkFailure.h"
 #import "OCScanJobActivity.h"
 #import "OCMeasurement.h"
+#import "OCCoreUpdateScheduleRecord.h"
+#import "OCLockManager.h"
+#import "OCLockRequest.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -1206,11 +1209,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	[self queueBlock:^{
 		if (self->_directoryUpdateStartTime == 0)
 		{
-			OCTLog(@[@"UpdateScan"], @"Starting update scan");
+			OCTLog(@[@"ScanChanges"], @"Starting update scan");
 			self->_directoryUpdateStartTime = NSDate.timeIntervalSinceReferenceDate;
 		}
 
-		[self _checkForUpdatesNotBefore:nil inBackground:NO completionHandler:nil];
+		[self coordinatedScanForChanges];
 	}];
 }
 
@@ -1235,7 +1238,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				if (self->_scheduledDirectoryUpdateJobActivity == nil)
 				{
 					// If none is ongoing, start a new check for updates
-					[self _checkForUpdatesNotBefore:nil inBackground:OCBackgroundManager.sharedBackgroundManager.isBackgrounded completionHandler:completionHandler];
+					[self _checkForUpdatesNonCritical:NO inBackground:OCBackgroundManager.sharedBackgroundManager.isBackgrounded completionHandler:completionHandler];
 				}
 				else
 				{
@@ -1252,7 +1255,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}];
 }
 
-- (void)_checkForUpdatesNotBefore:(NSDate *)notBefore inBackground:(BOOL)inBackground completionHandler:(OCCoreItemListFetchUpdatesCompletionHandler)completionHandler
+- (void)_checkForUpdatesNonCritical:(BOOL)nonCritical inBackground:(BOOL)inBackground completionHandler:(OCCoreItemListFetchUpdatesCompletionHandler)completionHandler
 {
 	if (self.state != OCCoreStateRunning)
 	{
@@ -1278,50 +1281,22 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 		if (strongSelf != nil)
 		{
-			dispatch_block_t scheduleUpdateCheck = ^{
-				OCCore *strongSelf = weakSelf;
+			if (strongSelf.state == OCCoreStateRunning)
+			{
+				OCEventTarget *eventTarget;
 
-				if ((strongSelf != nil) && (strongSelf.state == OCCoreStateRunning))
+				eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+
+				NSDictionary<OCConnectionOptionKey,id> *options = nil;
+
+				if (nonCritical)
 				{
-					OCEventTarget *eventTarget;
-
-					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
-
-					NSDictionary<OCConnectionOptionKey,id> *options = nil;
-
-					// Send requests on the long-lived pipeline when
-					// background sessions are allowed, to wake them
-					// up and prompt them to deliver their responses
-					// on a regular basis (otherwise might take an
-					// undefined amount of time for NSURLSession to
-					// deliver responses)
-
-					// Commented out for now - to avoid uncontrolled redirects of PROPFINDs in APM settings
-					if (notBefore != nil)
-					{
-						options = @{
-							OCConnectionOptionIsNonCriticalKey : @(YES),
-						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
-						};
-					}
-					else
-					{
-						options = @{
-						//	@"longLived" : @(OCConnection.backgroundURLSessionsAllowed)
-						};
-					}
-
-					[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:options resultTarget:eventTarget];
+					options = @{
+						OCConnectionOptionIsNonCriticalKey : @(YES),
+					};
 				}
-			};
 
-			if ((notBefore != nil) && ([notBefore timeIntervalSinceNow] > 0))
-			{
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)([notBefore timeIntervalSinceNow] * NSEC_PER_SEC)), strongSelf->_queue, scheduleUpdateCheck);
-			}
-			else
-			{
-				scheduleUpdateCheck();
+				[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:options resultTarget:eventTarget];
 			}
 		}
 	} inBackground:inBackground];
@@ -1451,21 +1426,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Schedule next
 	if ((event.depth == 0) && ([event.path isEqual:@"/"]))
 	{
-		// Check again after configured time interval
-		NSTimeInterval pollInterval = self.effectivePollForChangesInterval;
-
-		if (self.state == OCCoreStateRunning)
-		{
-			@synchronized([OCCoreItemList class])
-			{
-				if ((_lastScheduledItemListUpdateDate==nil) || (_lastScheduledItemListUpdateDate.timeIntervalSinceNow < -(pollInterval-1.0)))
-				{
-					_lastScheduledItemListUpdateDate = [NSDate date];
-
-					[self _checkForUpdatesNotBefore:[NSDate dateWithTimeIntervalSinceNow:pollInterval] inBackground:NO completionHandler:nil];
-				}
-			}
-		}
+		[self coordinatedScanForChangesDidFinish];
 	}
 }
 
@@ -1492,7 +1453,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				if (self.connection.capabilities.pollInterval.integerValue != 60)
 				{
-					OCTLogError(@[@"PollForChanges"], @"Poll interval in capabilities (%@) not server legacy default (60 (sec)), and - as milliseconds - less than minimum allowed poll interval (%.02f sec). Ignoring value.", self.connection.capabilities.pollInterval, minimumAllowedPollInterval);
+					OCTLogError(@[@"ScanChanges"], @"Poll interval in capabilities (%@) not server legacy default (60 (sec)), and - as milliseconds - less than minimum allowed poll interval (%.02f sec). Ignoring value.", self.connection.capabilities.pollInterval, minimumAllowedPollInterval);
 					loggedPollIntervalWarning = YES;
 				}
 			}
@@ -1512,7 +1473,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 			if (configuredTimeInterval < minimumAllowedPollInterval)
 			{
-				OCTLogError(@[@"PollForChanges"], @"MDM/Branding: poll interval %.03f less than minimum allowed poll interval (%.02f sec). Ignoring value.", configuredTimeInterval, minimumAllowedPollInterval);
+				OCTLogError(@[@"ScanChanges"], @"MDM/Branding: poll interval %.03f less than minimum allowed poll interval (%.02f sec). Ignoring value.", configuredTimeInterval, minimumAllowedPollInterval);
 				loggedPollIntervalWarning = YES;
 			}
 			else
@@ -1525,13 +1486,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		// Log warning when exceeding threshold
 		if (effectivePollInterval > warnPollIntervalThreshold)
 		{
-			OCTLogWarning(@[@"PollForChanges"], @"Poll interval (%@) of %.02f sec > %.02f sec", effectivePollIntervalSource, effectivePollInterval, warnPollIntervalThreshold);
+			OCTLogWarning(@[@"ScanChanges"], @"Poll interval (%@) of %.02f sec > %.02f sec", effectivePollIntervalSource, effectivePollInterval, warnPollIntervalThreshold);
 			loggedPollIntervalWarning = YES;
 		}
 
 		if (loggedPollIntervalWarning)
 		{
-			OCTLog(@[@"PollForChanges"], @"Using poll interval of %.02f sec (%@)", effectivePollInterval, effectivePollIntervalSource);
+			OCTLog(@[@"ScanChanges"], @"Using poll interval of %.02f sec (%@)", effectivePollInterval, effectivePollIntervalSource);
 		}
 
 		_effectivePollForChangesInterval = effectivePollInterval;
@@ -1564,7 +1525,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 	if (_directoryUpdateStartTime != 0)
 	{
-		OCTLog(@[@"UpdateScan"], @"Finished update scan in %.1f sec", NSDate.timeIntervalSinceReferenceDate - _directoryUpdateStartTime);
+		OCTLog(@[@"ScanChanges"], @"Finished update scan in %.1f sec", NSDate.timeIntervalSinceReferenceDate - _directoryUpdateStartTime);
 		_directoryUpdateStartTime = 0;
 	}
 
@@ -1755,6 +1716,281 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	}
 }
 
+#pragma mark - Periodic scan coordination
+/*
+	CONCEPT : Strategy to avoid parallel scans from several processes
+
+	- expiring OCLock on the scan itself
+		- will be kept alive as long as the process performing the scan is still active
+		- will eventually expire if the performing process is killed, paused or terminated
+	- shared records
+		- record when the last scan was started ($beginScanTime) and ended ($endScanTime), to coordinate poll intervals
+		- record of when each component (per OCAppIdentity.componentIdentifier) last did, or would like to have performed, an update scan ($lastComponentAttemptTimestamp)
+			- to establish priorities
+			- as continuously updated vital sign for a component
+	- algorithm for "considerScan":
+		- check last time the last scan ended or, where not available, began
+			- otherwise schedule considerScan again in $secondsRemainigUntilPollInterval is up, update $lastComponentAttemptTimestamp
+			- if more than $pollInterval seconds ago, proceed \/
+		- priority: check the $lastComponentAttemptTimestamp of other components
+			- if a higher-ranking component (using OCAppIdentity.componentIdentifier: app, fileprovider, * (anything else)) saved a timestamp less than ($pollInterval * 2) seconds ago, update own $lastComponentAttemptTimestamp and reschedule considerScan in (($pollInterval * 2) + 2)
+			- otherwhise proceed \/
+		- attempt to acquire shared lock
+			- if it can't be acquired, schedule another considerScan in $pollInterval seconds, update $lastComponentAttemptTimestamp
+			- if it can be acquired, proceed \/
+		- update $lastComponentAttemptTimestamp
+		- update $beginScanTime
+		- perform scan
+		- update $endScanTime
+*/
+- (void)_retryCoordinatedScanForChangesIn:(NSTimeInterval)delay
+{
+	__weak OCCore *weakSelf = self;
+
+	if (self.state == OCCoreStateRunning)
+	{
+		@synchronized([OCCoreItemList class])
+		{
+			NSTimeInterval _nextRetryDate = NSDate.timeIntervalSinceReferenceDate;
+
+			if (_nextCoordinatedScanRetryTime < _nextRetryDate)
+			{
+				_nextRetryDate += delay;
+				_nextCoordinatedScanRetryTime = _nextRetryDate;
+			}
+			else
+			{
+				OCTLogDebug(@[@"ScanChanges"], @"Consolidating retries (skipping retry in %f sec, another is already scheduled in %f sec)", delay, (_nextCoordinatedScanRetryTime - _nextRetryDate));
+				return;
+			}
+		}
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			OCCore *core;
+
+			if (((core = weakSelf) != nil) &&
+			    (core.state == OCCoreStateRunning))
+			{
+				OCWTLogDebug(@[@"ScanChanges"], @"Retry of coordinated scan scheduled %f sec ago:", delay);
+				[core coordinatedScanForChanges];
+			}
+		});
+	}
+}
+
+- (void)coordinatedScanForChanges
+{
+	// Ensure execution on OCCore queue, where all OCKeyValueStore operations happen
+	[self queueBlock:^{
+		[self _coordinatedScanForChanges];
+	} allowInlining:YES];
+}
+
+- (void)_coordinatedScanForChanges
+{
+	__weak OCCore *weakSelf = self;
+
+	OCTLogDebug(@[@"ScanChanges"], @"Entering coordinated scan for changes…");
+
+	if (self.state == OCCoreStateRunning)
+	{
+		NSDate *nextScanDate;
+
+		if ((_scanForChangesLock != nil) && !_scanForChangesLock.isValid)
+		{
+			// Dispose lock if invalid
+			[_scanForChangesLock releaseLock];
+			_scanForChangesLock = nil;
+		}
+
+		// Determine next scan date
+		if ((nextScanDate = [self nextCoordinatedScanForChangesDateWithLock:_scanForChangesLock]) == nil)
+		{
+			// Attempt scan now
+			if (_scanForChangesLock.isValid)
+			{
+				// Scan now, but not in the background (=> would lead to force termination by iOS)
+				OCTLogDebug((@[@"ScanChanges", @"PerformScan"]), @"## Initiating scan, with valid lock %@", _scanForChangesLock);
+				[self _checkForUpdatesNonCritical:YES inBackground:NO completionHandler:nil];
+			}
+			else
+			{
+				// Dispose of invalid lock (if any)
+				[_scanForChangesLock releaseLock];
+				_scanForChangesLock = nil;
+			}
+
+			if (_scanForChangesLock == nil)
+			{
+				// Acquire lock first, then retry
+
+				if (_scanForChangesLockRequest == nil) // do not make second request if another one is already in progress - do nothing in that case
+				{
+					_scanForChangesLockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[OCLockResourceIdentifierCoreUpdateScan stringByAppendingFormat:@":%@",_bookmark.uuid.UUIDString] tryAcquireHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
+						OCCore *core;
+
+						if ((core = weakSelf) != nil)
+						{
+							[core queueBlock:^{
+								OCCore *core;
+
+								// Set _scanForChangesLockRequest to nil to allow scans after that
+								if ((core = weakSelf) != nil)
+								{
+									OCWTLogDebug(@[@"ScanChanges"], @"Release lock request %@", core->_scanForChangesLockRequest);
+									core->_scanForChangesLockRequest = nil;
+								}
+							} allowInlining:YES];
+
+							if ((error == nil) && (lock != nil))
+							{
+								// Lock could be acquired
+								if (core.state == OCCoreStateRunning)
+								{
+									// Try scan again, this time with lock
+									core->_scanForChangesLock = lock;
+
+									OCWTLogDebug(@[@"ScanChanges"], @"Acquired lock %@, retrying", core->_scanForChangesLock);
+
+									[core coordinatedScanForChanges];
+								}
+								else
+								{
+									// Release lock immediately
+									OCWTLogDebug(@[@"ScanChanges"], @"Core not running, release lock");
+									[lock releaseLock];
+								}
+							}
+							else if (core.state == OCCoreStateRunning)
+							{
+								// Lock could not be acquired, try again in $pollInterval
+								OCWTLogDebug(@[@"ScanChanges"], @"Retrying after poll interval of %f (error: %@)", core.effectivePollForChangesInterval, error);
+								[core _retryCoordinatedScanForChangesIn:core.effectivePollForChangesInterval];
+							}
+						}
+					}];
+
+					OCTLogDebug(@[@"ScanChanges"], @"Scan now - request lock %@", _scanForChangesLockRequest);
+
+					[OCLockManager.sharedLockManager requestLock:_scanForChangesLockRequest];
+				}
+				else
+				{
+					OCTLogDebug(@[@"ScanChanges"], @"Scan now - do nothing since a lock request is still pending");
+				}
+			}
+		}
+		else
+		{
+			// Retry at nextScanDate
+			NSTimeInterval remainingTime = [nextScanDate timeIntervalSinceNow];
+
+			if (remainingTime < 1.0)
+			{
+				remainingTime = 1.0;
+			}
+
+			OCTLogDebug(@[@"ScanChanges"], @"Retrying at %@ (in %f seconds)", nextScanDate, remainingTime);
+
+			[self _retryCoordinatedScanForChangesIn:remainingTime];
+		}
+	}
+	else
+	{
+		OCTLogDebug(@[@"ScanChanges"], @"Coordinated scan for changes skipped because state is %lu", (unsigned long)self.state);
+	}
+}
+
+- (void)coordinatedScanForChangesDidFinish
+{
+	OCKeyValueStore *keyValueStore = self.vault.keyValueStore;
+
+	OCTLogDebug(@[@"ScanChanges"], @"Coordinated scan for changes finished");
+
+	if (_scanForChangesLock.isValid) {
+		[keyValueStore updateObjectForKey:OCKeyValueStoreKeyCoreUpdateScheduleRecord usingModifier:^id _Nullable(OCCoreUpdateScheduleRecord *updateScheduleRecord, BOOL * _Nonnull outDidModify) {
+			[updateScheduleRecord endCheck];
+
+			*outDidModify = YES;
+
+			return (updateScheduleRecord);
+		}];
+	}
+
+	[_scanForChangesLock releaseLock];
+	_scanForChangesLock = nil;
+
+	[self coordinatedScanForChanges];
+}
+
+- (nullable NSDate *)nextCoordinatedScanForChangesDateWithLock:(OCLock *)scanLock
+{
+	OCKeyValueStore *keyValueStore = self.vault.keyValueStore;
+	__block NSDate *nextScanDate = nil; // Scan now
+
+	[keyValueStore updateObjectForKey:OCKeyValueStoreKeyCoreUpdateScheduleRecord usingModifier:^id _Nullable(OCCoreUpdateScheduleRecord *updateScheduleRecord, BOOL * _Nonnull outDidModify) {
+		// Check last time the last scan ended or, where not available, began
+		//	- otherwise schedule considerScan again in $secondsRemainigUntilPollInterval is up, update $lastComponentAttemptTimestamp
+		//	- if more than $pollInterval seconds ago, proceed \/
+		if (updateScheduleRecord != nil)
+		{
+			updateScheduleRecord.pollInterval = [self effectivePollForChangesInterval];
+			nextScanDate = [updateScheduleRecord nextDateByBeginAndEndDate];
+		}
+		else
+		{
+			updateScheduleRecord = [OCCoreUpdateScheduleRecord new];
+			updateScheduleRecord.pollInterval = [self effectivePollForChangesInterval];
+		}
+
+		// Priority: check the $lastComponentAttemptTimestamp of other components
+		// - if a higher-ranking component (using OCAppIdentity.componentIdentifier: app, fileprovider, * (anything else))
+		//   saved a timestamp less than ($pollInterval * 2) seconds ago, update own $lastComponentAttemptTimestamp and
+		//   reschedule considerScan in (($pollInterval * 2) + 2)
+		// - otherwhise proceed \/
+		if (nextScanDate == nil)
+		{
+			NSString *prioritizedComponent = nil;
+
+			if ((nextScanDate = [updateScheduleRecord nextDateByPrioritizedComponents:&prioritizedComponent]) != nil)
+			{
+				OCTLogDebug(@[@"ScanChanges"], @"Postponing coordinated scan because of higher priority of other component: %@", prioritizedComponent);
+			}
+		}
+
+		if ((nextScanDate == nil) && (scanLock != nil))
+		{
+			if (scanLock.isValid)
+			{
+				// Register start of scan if no nextScanDate has been returned yet
+				[updateScheduleRecord beginCheck];
+			}
+			else
+			{
+				// No valid lock, reschedule in pollInterval
+				nextScanDate = [NSDate dateWithTimeIntervalSinceNow:updateScheduleRecord.pollInterval];
+			}
+		}
+
+		// Update component timestamp
+		[updateScheduleRecord updateComponentTimestamp];
+		*outDidModify = YES;
+
+		return (updateScheduleRecord);
+	}];
+
+	return (nextScanDate);
+}
+
+- (void)shutdownCoordinatedScanForChanges
+{
+	[_scanForChangesLock releaseLock];
+	_scanForChangesLock = nil;
+}
+
 @end
 
 OCActivityIdentifier OCActivityIdentifierPendingServerScanJobsSummary = @"_pendingUpdateJobsSummary";
+
+OCKeyValueStoreKey OCKeyValueStoreKeyCoreUpdateScheduleRecord = @"lastPollForChangesDate";
+OCLockResourceIdentifier OCLockResourceIdentifierCoreUpdateScan = @"coreUpdateScan";

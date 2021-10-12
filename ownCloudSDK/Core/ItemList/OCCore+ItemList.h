@@ -17,6 +17,8 @@
  */
 
 #import "OCCore.h"
+#import "OCLockManager.h"
+#import "OCLockRequest.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -40,6 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle;
 - (void)recoverPendingUpdateJobs;
 
+- (void)coordinatedScanForChanges;
+- (void)shutdownCoordinatedScanForChanges;
+
 @end
 
 @interface OCCore (ItemListInternal)
@@ -47,5 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 extern OCActivityIdentifier OCActivityIdentifierPendingServerScanJobsSummary; //!< The activity reporting the progress of background checks for updates
+
+extern OCKeyValueStoreKey OCKeyValueStoreKeyCoreUpdateScheduleRecord;
+extern OCLockResourceIdentifier OCLockResourceIdentifierCoreUpdateScan;
 
 NS_ASSUME_NONNULL_END

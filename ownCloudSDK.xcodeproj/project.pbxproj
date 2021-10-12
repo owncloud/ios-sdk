@@ -584,6 +584,8 @@
 		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
+		DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */; };
+		DCE3D4E52701C40B0074C254 /* OCCoreUpdateScheduleRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE3D4E32701C40B0074C254 /* OCCoreUpdateScheduleRecord.m */; };
 		DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE451A32459AD3F0074363F /* OCTUSJob.h */; };
 		DCE451A62459AD3F0074363F /* OCTUSJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE451A42459AD3F0074363F /* OCTUSJob.m */; };
 		DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1385,6 +1387,8 @@
 		DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalImport.m"; sourceTree = "<group>"; };
 		DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDatabaseConsistentOperation.h; sourceTree = "<group>"; };
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
+		DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreUpdateScheduleRecord.h; sourceTree = "<group>"; };
+		DCE3D4E32701C40B0074C254 /* OCCoreUpdateScheduleRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreUpdateScheduleRecord.m; sourceTree = "<group>"; };
 		DCE451A32459AD3F0074363F /* OCTUSJob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCTUSJob.h; sourceTree = "<group>"; };
 		DCE451A42459AD3F0074363F /* OCTUSJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCTUSJob.m; sourceTree = "<group>"; };
 		DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTaskCache.h; sourceTree = "<group>"; };
@@ -2788,6 +2792,8 @@
 				DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */,
 				DCC3701224D4D134008B0DEB /* OCScanJobActivity.m */,
 				DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */,
+				DCE3D4E32701C40B0074C254 /* OCCoreUpdateScheduleRecord.m */,
+				DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */,
 			);
 			path = ItemList;
 			sourceTree = "<group>";
@@ -3422,6 +3428,7 @@
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
+				DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
 				DCD038A02542CA4500F97534 /* NSString+OCClassSettings.h in Headers */,
@@ -3878,6 +3885,7 @@
 				DCC8FA26202B259D00EB6701 /* OCSyncRecord.m in Sources */,
 				DC6ABF752536058A00689C7B /* OCHostSimulatorResponse.m in Sources */,
 				DCDD9B2C22312ED80052A001 /* OCRateLimiter.m in Sources */,
+				DCE3D4E52701C40B0074C254 /* OCCoreUpdateScheduleRecord.m in Sources */,
 				DC4E0A5920927048007EB05F /* OCItemVersionIdentifier.m in Sources */,
 				DCEEB2EA2046BC2600189B9A /* OCHTTPStatus.m in Sources */,
 				DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */,

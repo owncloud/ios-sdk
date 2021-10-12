@@ -340,6 +340,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorAuthorizationCantOpenCustomSchemeURL:
 					unlocalizedString = @"Can't open authorization URL with custom scheme.";
 				break;
+
+				case OCErrorLockInvalidated:
+					unlocalizedString = @"Lock invalidated.";
+				break;
 			}
 		}
 	}

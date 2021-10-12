@@ -344,6 +344,9 @@
 // OCErrorAuthorizationCantOpenCustomSchemeURL
 "Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
 
+// OCErrorLockInvalidated
+"Lock invalidated." = "Lock invalidated.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

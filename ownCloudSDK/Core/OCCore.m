@@ -559,6 +559,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					// Tear down item policies
 					[weakSelf teardownItemPolicies];
 
+					// Release scan for changes lock
+					OCWTLogDebug(stopTags, @"shutting down coordinated scan for changes");
+					[weakSelf shutdownCoordinatedScanForChanges];
+
 					// Shut down Sync Engine
 					OCWTLogDebug(stopTags, @"shutting down sync engine");
 					[weakSelf shutdownSyncEngine];

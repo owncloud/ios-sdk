@@ -35,9 +35,11 @@ typedef BOOL(^OCLockNeededHandler)(OCLockRequest *request);
 
 @property(strong,nullable) OCLock *lock;
 
+@property(assign) BOOL returnAfterFirstAttempt;
 @property(assign) BOOL invalidated;
 
-- (instancetype)initWithResourceIdentifier:(OCLockResourceIdentifier)resourceIdentifier acquiredHandler:(OCLockAcquiredHandler)acquiredHandler;
+- (instancetype)initWithResourceIdentifier:(OCLockResourceIdentifier)resourceIdentifier acquiredHandler:(OCLockAcquiredHandler)acquiredHandler; //!< Requests the lock, calls acquiredHandler when it could be acquired, otherwise may never call.
+- (instancetype)initWithResourceIdentifier:(OCLockResourceIdentifier)resourceIdentifier tryAcquireHandler:(OCLockAcquiredHandler)acquiredHandler; //!< Requests the lock, calls acquiredHandler after attempting to acquire the lock. Returns lock when locking is possible, otherwise returns error with code OCErrorLockInvalidated.
 
 - (void)invalidate;
 
