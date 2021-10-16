@@ -138,6 +138,10 @@
 		[self clearSourceCache];
 		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
 	}
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[OCLocaleFilterClassSettings.shared pullFromClassSettings];
+	});
 }
 
 - (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID
