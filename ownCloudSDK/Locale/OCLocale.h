@@ -32,9 +32,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)localizeString:(NSString *)string bundle:(nullable NSBundle *)bundle table:(nullable NSString *)table options:(nullable OCLocaleOptions)options;
 
 + (NSString *)localizeString:(NSString *)string;
++ (NSString *)localizeString:(NSString *)string options:(nullable OCLocaleOptions)options;
 + (NSString *)localizeString:(NSString *)string table:(NSString *)table;
 + (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class;
++ (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class options:(nullable OCLocaleOptions)options;
 + (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class table:(NSString *)table;
++ (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class table:(NSString *)table options:(nullable OCLocaleOptions)options;
 
 @end
 

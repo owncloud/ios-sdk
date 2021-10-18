@@ -111,7 +111,7 @@
 
 	if (_sourcesByVariableName != nil)
 	{
-		for (NSString *variableName in _valueByVariableName)
+		for (NSString *variableName in _sourcesByVariableName)
 		{
 			NSRange range;
 
@@ -134,8 +134,14 @@
 					}
 				}
 			} while(range.location != NSNotFound);
+		}
+	}
 
-			localizedString = [localizedString stringByReplacingOccurrencesOfString:variableName withString:_valueByVariableName[variableName]];
+	NSDictionary<NSString *, NSString *> *customValuesByVariables = nil;
+
+	if ((customValuesByVariables = options[OCLocaleOptionKeyVariables]) != nil) {
+		for (NSString *variableName in customValuesByVariables) {
+			localizedString = [localizedString stringByReplacingOccurrencesOfString:variableName withString:customValuesByVariables[variableName]];
 		}
 	}
 
@@ -143,3 +149,5 @@
 }
 
 @end
+
+OCLocaleOptionKey OCLocaleOptionKeyVariables = @"variables";

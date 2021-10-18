@@ -23,6 +23,7 @@
 
 #define OCLocalizedString(key,comment) [OCLocale localizeString:key bundleOfClass:[self class]]
 #define OCLocalized(key) [OCLocale localizeString:key bundleOfClass:[self class]]
+#define OCLocalizedFormat(key,variables) [OCLocale localizeString:key bundleOfClass:[self class] options:@{ OCLocaleOptionKeyVariables : variables }]
 
 // Macros to simplify usage of dispatch groups (and allow switching to more efficient mechanisms in the future)
 #define OCWaitInit(label) 	  	dispatch_group_t label = dispatch_group_create()

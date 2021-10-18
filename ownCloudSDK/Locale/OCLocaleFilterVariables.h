@@ -31,4 +31,6 @@ typedef NSString * _Nullable(^OCLocaleFilterVariableSource)(void);
 
 @end
 
+extern OCLocaleOptionKey OCLocaleOptionKeyVariables;
+
 NS_ASSUME_NONNULL_END

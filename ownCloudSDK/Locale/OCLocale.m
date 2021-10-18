@@ -70,6 +70,11 @@
 	return ([OCLocale.sharedLocale localizeString:string bundle:nil table:nil options:nil]);
 }
 
++ (NSString *)localizeString:(NSString *)string options:(nullable OCLocaleOptions)options
+{
+	return ([OCLocale.sharedLocale localizeString:string bundle:nil table:nil options:options]);
+}
+
 + (NSString *)localizeString:(NSString *)string table:(NSString *)table
 {
 	return ([OCLocale.sharedLocale localizeString:string bundle:nil table:table options:nil]);
@@ -80,9 +85,19 @@
 	return ([OCLocale.sharedLocale localizeString:string bundle:[NSBundle bundleForClass:class] table:nil options:nil]);
 }
 
++ (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class options:(nullable OCLocaleOptions)options;
+{
+	return ([OCLocale.sharedLocale localizeString:string bundle:[NSBundle bundleForClass:class] table:nil options:options]);
+}
+
 + (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class table:(NSString *)table
 {
 	return ([OCLocale.sharedLocale localizeString:string bundle:[NSBundle bundleForClass:class] table:table options:nil]);
+}
+
++ (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class table:(NSString *)table options:(nullable OCLocaleOptions)options
+{
+	return ([OCLocale.sharedLocale localizeString:string bundle:[NSBundle bundleForClass:class] table:table options:options]);
 }
 
 - (NSString *)localizeString:(NSString *)string bundle:(NSBundle *)bundle table:(NSString *)table options:(OCLocaleOptions)options
