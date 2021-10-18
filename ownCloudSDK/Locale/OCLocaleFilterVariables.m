@@ -141,7 +141,7 @@
 
 	if ((customValuesByVariables = options[OCLocaleOptionKeyVariables]) != nil) {
 		for (NSString *variableName in customValuesByVariables) {
-			localizedString = [localizedString stringByReplacingOccurrencesOfString:variableName withString:customValuesByVariables[variableName]];
+			localizedString = [localizedString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{{%@}}", variableName] withString:customValuesByVariables[variableName]];
 		}
 	}
 
