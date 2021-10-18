@@ -55,6 +55,7 @@ typedef NSNumber* OCCapabilityBool;
 #pragma mark - DAV
 @property(readonly,nullable,nonatomic) NSString *davChunkingVersion;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *davReports;
+@property(readonly,nullable,nonatomic) OCCapabilityBool davPropfindSupportsDepthInfinity;
 
 #pragma mark - TUS
 @property(readonly,nonatomic) BOOL tusSupported;
@@ -73,7 +74,6 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *blacklistedFiles;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsUndelete;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsVersioning;
-@property(readonly,nullable,nonatomic) OCCapabilityBool supportsInfinitePropfind;
 
 #pragma mark - Sharing
 @property(readonly,nullable,nonatomic) OCCapabilityBool sharingAPIEnabled;

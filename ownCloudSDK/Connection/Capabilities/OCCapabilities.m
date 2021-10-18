@@ -60,6 +60,7 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 #pragma mark - DAV
 @dynamic davChunkingVersion;
 @dynamic davReports;
+@dynamic davPropfindSupportsDepthInfinity;
 
 #pragma mark - TUS
 @dynamic tusSupported;
@@ -78,7 +79,6 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic blacklistedFiles;
 @dynamic supportsUndelete;
 @dynamic supportsVersioning;
-@dynamic supportsInfinitePropfind;
 
 #pragma mark - Sharing
 @dynamic sharingAPIEnabled;
@@ -245,6 +245,11 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"dav"][@"reports"], NSArray));
 }
 
+- (OCCapabilityBool)davPropfindSupportsDepthInfinity
+{
+	return (OCTypedCast(_capabilities[@"dav"][@"propfind"][@"depth_infinity"], NSNumber));
+}
+
 #pragma mark - TUS
 - (BOOL)tusSupported
 {
@@ -342,12 +347,6 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (OCCapabilityBool)supportsVersioning
 {
 	return (OCTypedCast(_capabilities[@"files"][@"versioning"], NSNumber));
-}
-
-- (OCCapabilityBool)supportsInfinitePropfind
-{
-	// Prepared for future server-side capability
-	return (nil);
 }
 
 #pragma mark - Sharing
