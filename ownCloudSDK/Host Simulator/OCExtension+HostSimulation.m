@@ -24,7 +24,7 @@
 + (instancetype)hostSimulationExtensionWithIdentifier:(OCHostSimulationIdentifier)identifier locations:(NSArray <OCExtensionLocationIdentifier> *)locationIdentifiers metadata:(nullable OCExtensionMetadata)metadata provider:(id<OCConnectionHostSimulator> _Nullable(^)(OCExtension *extension, OCExtensionContext *context, NSError * _Nullable * _Nullable error))provider
 
 {
-	OCExtension *extension =[[OCExtension alloc] initWithIdentifier:identifier type:OCExtensionTypeHostSimulator locations:locationIdentifiers features:nil objectProvider:provider customMatcher:nil];
+	OCExtension *extension = [[OCExtension alloc] initWithIdentifier:identifier type:OCExtensionTypeHostSimulator locations:locationIdentifiers features:nil objectProvider:provider customMatcher:nil];
 
 	extension.extensionMetadata = metadata;
 

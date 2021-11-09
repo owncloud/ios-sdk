@@ -151,6 +151,10 @@
     "label" : "authentication.browser-session-class",
     "possibleValues" : [
       {
+        "description" : "Replace `http` with `awb` and `https` with `awbs` to delegate browser sessions to the AirWatch browser.",
+        "value" : "AWBrowser"
+      },
+      {
         "description" : "Replace http and https with custom schemes to delegate browser sessions to a different app.",
         "value" : "CustomScheme"
       },
@@ -554,6 +558,10 @@
     "label" : "connection.validator-flags",
     "possibleValues" : [
       {
+        "description" : "Connection validation is triggered when receiving a responses with 502 status.",
+        "value" : "502-triggers"
+      },
+      {
         "description" : "Clear all cookies for the connection when entering connection validation.",
         "value" : "clear-cookies"
       }
@@ -660,8 +668,7 @@
     "categoryTag" : "connection",
     "classIdentifier" : "core",
     "className" : "OCCore",
-    "defaultValue" : 10,
-    "description" : "Minimum number of seconds until the next scan for changes, measured from the completion of the previous scan.",
+    "description" : "Minimum number of milliseconds until the next scan for changes, measured from the completion of the previous scan. If no value is provided, uses the poll interval provided in the server's capabilities (in milliseconds) if it is greater or equal 5 seconds. Defaults to 10 seconds otherwise.",
     "flatIdentifier" : "core.scan-for-changes-interval",
     "key" : "scan-for-changes-interval",
     "label" : "core.scan-for-changes-interval",
@@ -717,6 +724,10 @@
       {
         "description" : "Redirect any request without cookies to a cookie-setting endpoint, where cookies are set - and then redirect back.",
         "value" : "simple-apm"
+      },
+      {
+        "description" : "Responds to all .well-known\/webfinger requests with server-instance responses.",
+        "value" : "web-finger"
       }
     ],
     "status" : "debugOnly",
@@ -776,7 +787,23 @@
     "key" : "vacuum-sync-anchor-ttl",
     "label" : "item-policy.vacuum-sync-anchor-ttl",
     "status" : "debugOnly",
-    "type" : "bool"
+    "type" : "int"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Localization",
+    "categoryTag" : "localization",
+    "classIdentifier" : "locale",
+    "className" : "OCLocaleFilterClassSettings",
+    "defaultValue" : {
+
+    },
+    "description" : "Dictionary with localization overrides where the key is the English string whose localization should be overridden, and the value is a dictionary where the keys are the language codes (f.ex. \"en\", \"de\") and the values the translations to use.",
+    "flatIdentifier" : "locale.overrides",
+    "key" : "overrides",
+    "label" : "Localization Overrides",
+    "status" : "advanced",
+    "type" : "dictionary"
   },
   {
     "autoExpansion" : "none",
@@ -1044,6 +1071,42 @@
     "label" : "measurements.enabled",
     "status" : "debugOnly",
     "type" : "bool"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Connection",
+    "categoryTag" : "connection",
+    "classIdentifier" : "server-locator",
+    "className" : "OCServerLocator",
+    "description" : "Lookup table that maps users to server URLs",
+    "flatIdentifier" : "server-locator.lookup-table",
+    "key" : "lookup-table",
+    "label" : "server-locator.lookup-table",
+    "status" : "advanced",
+    "type" : "dictionary"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Connection",
+    "categoryTag" : "connection",
+    "classIdentifier" : "server-locator",
+    "className" : "OCServerLocator",
+    "description" : "Use Server Locator",
+    "flatIdentifier" : "server-locator.use",
+    "key" : "use",
+    "label" : "server-locator.use",
+    "possibleValues" : [
+      {
+        "description" : "Locate server via lookup table. Keys can match against the beginning (f.ex. \"begins:bob@\"), end (f.ex. \"ends:@owncloud.org\") or regular expression (f.ex. \"regexp:\")",
+        "value" : "lookup-table"
+      },
+      {
+        "description" : "Locate server via Webfinger service-instance relation (http:\/\/webfinger.owncloud\/rel\/server-instance) using the entered\/provided server URL",
+        "value" : "web-finger"
+      }
+    ],
+    "status" : "advanced",
+    "type" : "string"
   },
   {
     "autoExpansion" : "none",

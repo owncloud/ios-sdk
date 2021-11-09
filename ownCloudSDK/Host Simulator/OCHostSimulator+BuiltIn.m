@@ -20,6 +20,7 @@
 #import "OCHostSimulatorManager.h"
 #import "OCExtensionManager.h"
 #import "OCExtension+HostSimulation.h"
+#import "OCServerLocatorWebFinger.h"
 
 #import <objc/runtime.h>
 
@@ -28,6 +29,7 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierOnly404 = @"only-404
 static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @"five-seconds-of-404";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierSimpleAPM = @"simple-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"recovering-apm";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-finger";
 
 @implementation OCHostSimulator (BuiltIn)
 
@@ -66,6 +68,13 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"re
 		OCExtensionMetadataKeyDescription : @"Redirect any request without cookies to a bogus endpoint for 30 seconds, then to a cookie-setting endpoint, where cookies are set - and then redirect back."
 	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self cookieRedirectSimulatorWithRequestWithoutCookiesHandler:nil requestForCookiesHandler:nil requestWithCookiesHandler:nil bogusTimeout:30]);
+	}]];
+
+	// WebFinger
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierWebFinger locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self webFingerSimulator]);
 	}]];
 }
 
@@ -211,6 +220,48 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"re
 				requestWithCookiesHandlerBlock();
 				requestWithCookiesHandlerBlock = nil;
 			}
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
+}
+
+#pragma mark - Web Finger
++ (instancetype)webFingerSimulator
+{
+	OCHostSimulator *hostSimulator;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		if ([request.url.path isEqual:@"/.well-known/webfinger"])
+		{
+			OCHTTPStatusCode statusCode = OCHTTPStatusCodeOK;
+			NSString *resource = request.parameters[@"resource"];
+			NSDictionary<NSString *, id> *jsonResponseDict = @{
+				@"subject" : resource,
+				@"links" : @[
+					@{
+						@"rel" : OCServerLocatorWebFingerRelServerInstance,
+						@"href" : @"https://demo.owncloud.com/"
+					}
+				]
+			};
+
+			if ([request.parameters[@"resource"] isEqual:@"acct:fail"])
+			{
+				// Return empty dictionary and status code NOT FOUND
+				jsonResponseDict = @{};
+
+				statusCode = OCHTTPStatusCodeNOT_FOUND;
+			}
+
+			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:statusCode headers:nil contentType:@"application/jrd+json" bodyData:[NSJSONSerialization dataWithJSONObject:jsonResponseDict options:NSJSONWritingPrettyPrinted error:NULL]]);
+
+			return (YES);
 		}
 
 		return (NO);

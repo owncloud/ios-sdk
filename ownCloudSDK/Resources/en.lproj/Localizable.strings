@@ -347,6 +347,13 @@
 // OCErrorLockInvalidated
 "Lock invalidated." = "Lock invalidated.";
 
+// OCErrorWebFingerLacksServerInstanceRelation
+"Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
+
+// OCErrorUnknownUser
+"Unknown user" = "Unknown user";
+
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

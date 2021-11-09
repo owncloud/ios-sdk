@@ -380,6 +380,7 @@
 	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
 			       [contentType isEqualToString:@"application/xml"] ||
 			       [contentType isEqualToString:@"application/json"] ||
+			       [contentType isEqualToString:@"application/jrd+json"] ||
 			       [contentType isEqualToString:@"application/x-www-form-urlencoded"];
 
 	NSString*(^FormatReadableData)(NSData *data) = ^(NSData *data) {

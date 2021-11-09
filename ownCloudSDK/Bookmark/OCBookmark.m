@@ -267,6 +267,8 @@
 		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
 		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];
 
+		_serverLocationUserName = [decoder decodeObjectOfClass:NSString.class forKey:@"serverLocationUserName"];
+
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
 		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
@@ -293,6 +295,8 @@
 
 	[coder encodeObject:_name forKey:@"name"];
 	[coder encodeObject:_url forKey:@"url"];
+
+	[coder encodeObject:_serverLocationUserName forKey:@"serverLocationUserName"];
 
 	[coder encodeObject:_originURL forKey:@"originURL"];
 

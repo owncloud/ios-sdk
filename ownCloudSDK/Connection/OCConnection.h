@@ -42,6 +42,7 @@
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
+typedef NSString* OCConnectionSetupOptionKey NS_TYPED_ENUM;
 typedef NSString* OCConnectionEndpointURLOption NS_TYPED_ENUM;
 typedef NSString* OCConnectionValidatorFlag NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
@@ -242,7 +243,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(nullable NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+- (void)prepareForSetupWithOptions:(nullable NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
 
 @end
 
@@ -423,6 +424,8 @@ extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
 extern OCConnectionOptionKey OCConnectionOptionResponseDestinationURL; //!< NSURL of where to store a (raw) response
 extern OCConnectionOptionKey OCConnectionOptionResponseStreamHandler; //!< Response stream handler (OCHTTPRequestEphermalStreamHandler) to receive the response body stream
+
+extern OCConnectionSetupOptionKey OCConnectionSetupOptionUserName; //!< User name to feed to OCConnectionServerLocator to determine server.
 
 extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Signal indicating that authentication is required for this request
 
