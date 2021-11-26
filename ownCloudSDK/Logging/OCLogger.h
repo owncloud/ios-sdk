@@ -232,12 +232,12 @@ NS_ASSUME_NONNULL_END
 #define OCPFMLogError(toggleID, extraTags, format,...)	 _OC_PMLOG(self, OCLogLevelError,   YES, NO, toggleID, extraTags, format, ##__VA_ARGS__)
 
 // Raw logging (with manual tags)
-#define _OC_RLOG(level,tags,format,...)   	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:tags message:format, ##__VA_ARGS__]; }
-#define OCRLogVerbose(tags,format,...)		_OC_RLOG(OCLogLevelVerbose, tags, format, ##__VA_ARGS__)
-#define OCRLogDebug(tags,format,...)		_OC_RLOG(OCLogLevelDebug,   tags, format, ##__VA_ARGS__)
-#define OCRLog(tags,format,...)			_OC_RLOG(OCLogLevelInfo,    tags, format, ##__VA_ARGS__)
-#define OCRLogWarning(tags,format,...)		_OC_RLOG(OCLogLevelWarning, tags, format, ##__VA_ARGS__)
-#define OCRLogError(tags,format,...)		_OC_RLOG(OCLogLevelError,   tags, format, ##__VA_ARGS__)
+#define _OC_RLOG(level,aTags,format,...)   	if ([OCLogger logsForLevel:level])   {  [[OCLogger sharedLogger] appendLogLevel:level functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:aTags message:format, ##__VA_ARGS__]; }
+#define OCRLogVerbose(aTags,format,...)		_OC_RLOG(OCLogLevelVerbose, aTags, format, ##__VA_ARGS__)
+#define OCRLogDebug(aTags,format,...)		_OC_RLOG(OCLogLevelDebug,   aTags, format, ##__VA_ARGS__)
+#define OCRLog(aTags,format,...)		_OC_RLOG(OCLogLevelInfo,    aTags, format, ##__VA_ARGS__)
+#define OCRLogWarning(aTags,format,...)		_OC_RLOG(OCLogLevelWarning, aTags, format, ##__VA_ARGS__)
+#define OCRLogError(aTags,format,...)		_OC_RLOG(OCLogLevelError,   aTags, format, ##__VA_ARGS__)
 
 // FileOp Logging
 #define OCFileOpLog(opName,error,format,...) if ([OCLogger logsForLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug)] && OCLogToggleEnabled(OCLogOptionLogFileOperations)) {  if (error != nil) { [[OCLogger sharedLogger] appendLogLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug) force:NO forceSyncWrite:NO functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:@[@"FileOp", opName] message:format @" (with error: %@)", ##__VA_ARGS__, error]; } else { [[OCLogger sharedLogger] appendLogLevel:((error != nil) ? OCLogLevelError : OCLogLevelDebug) force:NO forceSyncWrite:NO functionName:@(__PRETTY_FUNCTION__) file:@(__FILE__) line:__LINE__ tags:@[@"FileOp", opName] message:format, ##__VA_ARGS__]; } }
