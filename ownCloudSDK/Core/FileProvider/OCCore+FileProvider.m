@@ -30,11 +30,21 @@
 {
 	[self queueBlock:^{
 		OCSyncExec(cacheItemRetrieval, {
-			[self.vault.database retrieveCacheItemForLocalID:localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
-				completionHandler(error, syncAnchor, item);
+			OCDatabase *database = self.vault.database;
 
+			if ((database != nil) && database.isOpened)
+			{
+				[self.vault.database retrieveCacheItemForLocalID:localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+					completionHandler(error, syncAnchor, item);
+
+					OCSyncExecDone(cacheItemRetrieval);
+				}];
+			}
+			else
+			{
+				completionHandler(nil, nil, nil);
 				OCSyncExecDone(cacheItemRetrieval);
-			}];
+			}
 		});
 	}];
 }

@@ -37,6 +37,8 @@
 #import "OCMessageQueue.h"
 #import "OCScanJobActivity.h"
 #import "OCMeasurement.h"
+#import "OCLock.h"
+#import "OCLockRequest.h"
 
 @class OCCore;
 @class OCItem;
@@ -203,6 +205,9 @@ typedef id<NSObject> OCCoreItemTracking;
 	BOOL _itemListTaskRunning;
 	NSTimeInterval _directoryUpdateStartTime;
 	NSMutableArray<OCCoreItemListFetchUpdatesCompletionHandler> *_fetchUpdatesCompletionHandlers;
+	OCLock *_scanForChangesLock;
+	OCLockRequest *_scanForChangesLockRequest;
+	NSTimeInterval _nextCoordinatedScanRetryTime;
 
 	NSMutableArray <OCItemPolicy *> *_itemPolicies;
 	NSMutableArray <OCItemPolicyProcessor *> *_itemPolicyProcessors;

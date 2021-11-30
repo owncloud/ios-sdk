@@ -138,6 +138,10 @@
 		[self clearSourceCache];
 		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:nil];
 	}
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[OCLocaleFilterClassSettings.shared pullFromClassSettings];
+	});
 }
 
 - (void)insertSource:(id <OCClassSettingsSource>)source before:(nullable OCClassSettingsSourceIdentifier)beforeSourceID after:(nullable OCClassSettingsSourceIdentifier)afterSourceID
@@ -455,6 +459,12 @@
 
 					// Add computed value
 					id computedValue = [inspectClass classSettingForOCClassSettingsKey:key];
+
+					if ((computedValue == nil) && (keySnapshot.count == 0))
+					{
+						// Avoid entries where computed == null would be the only entry
+						classSnapshot[key] = nil;
+					}
 
 					[keySnapshot addObject:@{ @"computed" : (computedValue != nil) ? computedValue : NSNull.null }];
 				}
