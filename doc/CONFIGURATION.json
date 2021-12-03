@@ -88,6 +88,20 @@
     "categoryTag" : "oidc",
     "classIdentifier" : "authentication-oauth2",
     "className" : "OCAuthenticationMethodOAuth2",
+    "defaultValue" : true,
+    "description" : "If client registration is enabled, but registration fails, controls if the error should be ignored and the default client ID and secret should be used instead.",
+    "flatIdentifier" : "authentication-oauth2.oidc-fallback-on-client-registration-failure",
+    "key" : "oidc-fallback-on-client-registration-failure",
+    "label" : "authentication-oauth2.oidc-fallback-on-client-registration-failure",
+    "status" : "supported",
+    "type" : "bool"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "OIDC",
+    "categoryTag" : "oidc",
+    "classIdentifier" : "authentication-oauth2",
+    "className" : "OCAuthenticationMethodOAuth2",
     "defaultValue" : "oc:\/\/ios.owncloud.com",
     "description" : "OpenID Connect Redirect URI",
     "flatIdentifier" : "authentication-oauth2.oidc-redirect-uri",
@@ -150,6 +164,10 @@
     "key" : "browser-session-class",
     "label" : "authentication.browser-session-class",
     "possibleValues" : [
+      {
+        "description" : "Replace `http` with `awb` and `https` with `awbs` to delegate browser sessions to the AirWatch browser.",
+        "value" : "AWBrowser"
+      },
       {
         "description" : "Replace http and https with custom schemes to delegate browser sessions to a different app.",
         "value" : "CustomScheme"
@@ -554,6 +572,10 @@
     "label" : "connection.validator-flags",
     "possibleValues" : [
       {
+        "description" : "Connection validation is triggered when receiving a responses with 502 status.",
+        "value" : "502-triggers"
+      },
+      {
         "description" : "Clear all cookies for the connection when entering connection validation.",
         "value" : "clear-cookies"
       }
@@ -660,8 +682,7 @@
     "categoryTag" : "connection",
     "classIdentifier" : "core",
     "className" : "OCCore",
-    "defaultValue" : 10,
-    "description" : "Minimum number of seconds until the next scan for changes, measured from the completion of the previous scan.",
+    "description" : "Minimum number of milliseconds until the next scan for changes, measured from the completion of the previous scan. If no value is provided, uses the poll interval provided in the server's capabilities (in milliseconds) if it is greater or equal 5 seconds. Defaults to 10 seconds otherwise.",
     "flatIdentifier" : "core.scan-for-changes-interval",
     "key" : "scan-for-changes-interval",
     "label" : "core.scan-for-changes-interval",
@@ -776,7 +797,23 @@
     "key" : "vacuum-sync-anchor-ttl",
     "label" : "item-policy.vacuum-sync-anchor-ttl",
     "status" : "debugOnly",
-    "type" : "bool"
+    "type" : "int"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Localization",
+    "categoryTag" : "localization",
+    "classIdentifier" : "locale",
+    "className" : "OCLocaleFilterClassSettings",
+    "defaultValue" : {
+
+    },
+    "description" : "Dictionary with localization overrides where the key is the English string whose localization should be overridden, and the value is a dictionary where the keys are the language codes (f.ex. \"en\", \"de\") and the values the translations to use.",
+    "flatIdentifier" : "locale.overrides",
+    "key" : "overrides",
+    "label" : "Localization Overrides",
+    "status" : "advanced",
+    "type" : "dictionary"
   },
   {
     "autoExpansion" : "none",
