@@ -1,3 +1,16 @@
+## 11.8 version
+- Infinite PROPFIND: add support for dav > propfind > depth_infinity capability
+- OCLocale: modular localization system replacing direct system localization calls, allowing overrides via MDM and Branding.plist, adding variable support
+- OCCore+FileProvider: add handling for edge case when the database is not available or not open, preventing a hang
+- OCCore+ItemList: implement coordinated scan for changes
+	- synchronizes scans for changes across processes
+	- prioritizes scans, giving the app highest and the fileprovider second highest priority
+	- consolidate related log messages under ScanChanges tag (including PollForChanges and UpdateScan)
+- OCLock: add support for trying to acquire a lock and immediately returning with the result, with a new OCErrorLockInvalidated error code in case the lock couldn't be acquired
+- OCSQLiteDB: disable statement caching in minimum memory configuration
+- Browser Session Class: add AWBrowser to simplify configuration for AirWatch browser
+- Class Settings: metadata type corrections; no longer output "computed: '<null>'" entries for class settings in the LogIntro if it is the only entry for that MDM parameter
+
 ## 11.7.1 version
 
 - support for streaming, infinite PROPFIND to prepopulate accounts and speed up initial discovery
