@@ -55,6 +55,7 @@ typedef NSNumber* OCCapabilityBool;
 #pragma mark - DAV
 @property(readonly,nullable,nonatomic) NSString *davChunkingVersion;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *davReports;
+@property(readonly,nullable,nonatomic) OCCapabilityBool davPropfindSupportsDepthInfinity;
 
 #pragma mark - TUS
 @property(readonly,nonatomic) BOOL tusSupported;

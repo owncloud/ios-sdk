@@ -60,6 +60,7 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 #pragma mark - DAV
 @dynamic davChunkingVersion;
 @dynamic davReports;
+@dynamic davPropfindSupportsDepthInfinity;
 
 #pragma mark - TUS
 @dynamic tusSupported;
@@ -243,6 +244,11 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (NSArray<NSString *> *)davReports
 {
 	return (OCTypedCast(_capabilities[@"dav"][@"reports"], NSArray));
+}
+
+- (OCCapabilityBool)davPropfindSupportsDepthInfinity
+{
+	return (OCTypedCast(_capabilities[@"dav"][@"propfind"][@"depth_infinity"], NSNumber));
 }
 
 #pragma mark - TUS

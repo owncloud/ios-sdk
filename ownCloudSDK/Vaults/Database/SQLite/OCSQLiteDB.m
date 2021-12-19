@@ -26,6 +26,7 @@
 #import "OCMacros.h"
 #import "OCSQLiteQuery+Private.h"
 #import "NSProgress+OCExtensions.h"
+#import "OCCoreManager.h"
 
 #import "OCExtension+License.h"
 
@@ -70,7 +71,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 		_journalMode = OCSQLiteJournalModeDelete; // (SQLite default)
 
-		self.cacheStatements = YES;
+		self.cacheStatements = (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum);
 
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];

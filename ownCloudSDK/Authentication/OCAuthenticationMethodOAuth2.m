@@ -626,7 +626,7 @@ OCAuthenticationMethodAutoRegister
 {
 	__weak OCAuthenticationMethodOAuth2 *weakSelf = self;
 
-	OCLockRequest *lockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[NSString stringWithFormat:@"authentication-data-update:%@", connection.bookmark.uuid] acquiredHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
+	OCLockRequest *lockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[NSString stringWithFormat:@"authentication-data-update:%@", connection.bookmark.uuid.UUIDString] acquiredHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
 		// Wait for exclusive lock on authentication data before performing the refresh
 		[weakSelf __refreshTokenForConnection:connection availabilityHandler:^(NSError *error, BOOL authenticationIsAvailable) {
 			// Invoke original availabilityHandler

@@ -111,7 +111,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorDatabaseMigrationRequired, //!< Database upgrade required. Please open the app to perform the upgrade.
 	OCErrorHostUpdateRequired, //!< Bookmark created with a newer app version. Please update the app.
 
-	OCErrorAuthorizationCantOpenCustomSchemeURL //!< Can't open authorization URL with custom scheme.
+	OCErrorAuthorizationCantOpenCustomSchemeURL, //!< Can't open authorization URL with custom scheme.
+
+	OCErrorLockInvalidated //!< Lock invalidated.
 };
 
 @class OCIssue;

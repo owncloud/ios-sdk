@@ -19,8 +19,11 @@
 #ifndef OCMacros_h
 #define OCMacros_h
 
-#define OCLocalizedString(key,comment) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], comment)
-#define OCLocalized(key) NSLocalizedStringFromTableInBundle(key, @"Localizable", [NSBundle bundleForClass:[self class]], nil)
+#import "OCLocale.h"
+
+#define OCLocalizedString(key,comment) [OCLocale localizeString:key bundleOfClass:[self class]]
+#define OCLocalized(key) [OCLocale localizeString:key bundleOfClass:[self class]]
+#define OCLocalizedFormat(key,variables) [OCLocale localizeString:key bundleOfClass:[self class] options:@{ OCLocaleOptionKeyVariables : variables }]
 
 // Macros to simplify usage of dispatch groups (and allow switching to more efficient mechanisms in the future)
 #define OCWaitInit(label) 	  	dispatch_group_t label = dispatch_group_create()

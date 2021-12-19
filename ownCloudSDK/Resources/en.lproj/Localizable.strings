@@ -46,7 +46,7 @@
 "Server down for maintenance" = "Server down for maintenance";
 "Network unavailable" = "Network unavailable";
 "Online" = "Online";
-"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh_token.";
+"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh token.";
 "Server returns status %ld" = "Server returns status %ld";
 
 /* Account prepopulation */
@@ -343,6 +343,9 @@
 
 // OCErrorAuthorizationCantOpenCustomSchemeURL
 "Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+
+// OCErrorLockInvalidated
+"Lock invalidated." = "Lock invalidated.";
 
 /* Diagnostic */
 "Files" = "Files";

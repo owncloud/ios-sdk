@@ -80,6 +80,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 	OCSQLiteDB *_sqlDB;
 }
 
+@property(readonly,nonatomic) BOOL isOpened;
+
 @property(strong) NSURL *databaseURL;
 @property(strong) NSURL *thumbnailDatabaseURL;
 

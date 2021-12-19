@@ -32,7 +32,7 @@
 		OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL : @(OCSyncAnchorTimeToLiveInSeconds)
 	} metadata:@{
 		OCClassSettingsKeyItemPolicyVacuumSyncAnchorTTL : @{
-			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeInteger,
 			OCClassSettingsMetadataKeyDescription 	 : @"Number of seconds since the removal of an item after which the metadata entry may be finally removed.",
 			OCClassSettingsMetadataKeyCategory    	 : @"Policies",
 			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusDebugOnly

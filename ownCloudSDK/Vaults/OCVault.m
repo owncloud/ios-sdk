@@ -26,6 +26,8 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCVault+Internal.h"
 #import "OCEventQueue.h"
+#import "OCCoreUpdateScheduleRecord.h"
+#import "OCCore+ItemList.h"
 #import "OCCore+SyncEngine.h"
 #import "OCFeatureAvailability.h"
 #import "OCHTTPPolicyManager.h"
@@ -227,7 +229,8 @@
 	if (_keyValueStore == nil)
 	{
 		_keyValueStore = [OCKeyValueStore sharedWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString owner:nil];
-		[_keyValueStore registerClass:[OCEventQueue class] forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+		[_keyValueStore registerClass:OCEventQueue.class forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+		[_keyValueStore registerClass:OCCoreUpdateScheduleRecord.class forKey:OCKeyValueStoreKeyCoreUpdateScheduleRecord];
 	}
 
 	return (_keyValueStore);

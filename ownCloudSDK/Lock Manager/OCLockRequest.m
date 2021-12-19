@@ -31,6 +31,18 @@
 	return (self);
 }
 
+- (instancetype)initWithResourceIdentifier:(OCLockResourceIdentifier)resourceIdentifier tryAcquireHandler:(OCLockAcquiredHandler)acquiredHandler
+{
+	if ((self = [super init]) != nil)
+	{
+		_resourceIdentifier = resourceIdentifier;
+		_returnAfterFirstAttempt = YES;
+		self.acquiredHandler = acquiredHandler;
+	}
+
+	return (self);
+}
+
 - (void)invalidate
 {
 	self.invalidated = YES;
