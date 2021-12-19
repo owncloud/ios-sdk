@@ -79,7 +79,6 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic blacklistedFiles;
 @dynamic supportsUndelete;
 @dynamic supportsVersioning;
-@dynamic supportsInfinitePropfind;
 
 #pragma mark - Sharing
 @dynamic sharingAPIEnabled;
@@ -348,12 +347,6 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (OCCapabilityBool)supportsVersioning
 {
 	return (OCTypedCast(_capabilities[@"files"][@"versioning"], NSNumber));
-}
-
-- (OCCapabilityBool)supportsInfinitePropfind
-{
-	// Prepared for future server-side capability
-	return (nil);
 }
 
 #pragma mark - Sharing
