@@ -56,7 +56,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile",
 		OCAuthenticationMethodOpenIDRegisterClient     : @(YES),
-		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}"
+		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}",
+		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES)
 	} metadata:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
 			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
@@ -76,6 +77,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @{
 			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription : @"Client Name Template to use during OpenID Connect Dynamic Client Registration. In addition to the placeholders available for `http.user-agent`, `{{url.hostname}}` can also be used.",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		},
+		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription : @"If client registration is enabled, but registration fails, controls if the error should be ignored and the default client ID and secret should be used instead.",
 			OCClassSettingsMetadataKeyCategory    : @"OIDC"
 		}
 	}];
@@ -192,7 +198,18 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 							OCTLogDebug(@[@"ClientRegistration"], @"Found OIDC dynamic client registration endpoint: %@", registrationEndpointURL);
 
 							// Perform dynamic client registration
-							[self registerClientWithRegistrationEndpointURL:registrationEndpointURL connection:connection completionHandler:completionHandler];
+							[self registerClientWithRegistrationEndpointURL:registrationEndpointURL connection:connection completionHandler:^(NSError *error) {
+								if (error != nil) // could be more specific, too, but then would also not ignore network errors / non-success response codes: if ([error isOCErrorWithCode:OCErrorAuthorizationClientRegistrationFailed])
+								{
+									if ([[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure] boolValue])
+									{
+										completionHandler(nil);
+										return;
+									}
+								}
+
+								completionHandler(error);
+							}];
 
 							return;
 						}
@@ -699,3 +716,4 @@ OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redir
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClient = @"oidc-register-client";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClientNameTemplate = @"oidc-register-client-name-template";
+OCClassSettingsKey OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure = @"oidc-fallback-on-client-registration-failure";
