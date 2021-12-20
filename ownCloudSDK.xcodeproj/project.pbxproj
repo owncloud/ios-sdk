@@ -234,6 +234,8 @@
 		DC446C8A206B8FBF00189B9A /* ISRunLoopThread.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */; };
 		DC45ABAE231018250065669D /* OCKeyValueRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC45ABAC231018250065669D /* OCKeyValueRecord.h */; };
 		DC45ABAF231018250065669D /* OCKeyValueRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC45ABAD231018250065669D /* OCKeyValueRecord.m */; };
+		DC47DF762770CEE300989D84 /* NSError+OCErrorTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47DF742770CEE300989D84 /* NSError+OCErrorTools.h */; };
+		DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47DF752770CEE300989D84 /* NSError+OCErrorTools.m */; };
 		DC4A2C5E20D4608100A47260 /* OCIssueChoice.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4A2C5C20D4608100A47260 /* OCIssueChoice.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC4A2C5F20D4608100A47260 /* OCIssueChoice.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4A2C5D20D4608100A47260 /* OCIssueChoice.m */; };
 		DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4AFAA4206A6E7100189B9A /* OCSQLiteResultSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1035,6 +1037,8 @@
 		DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = ISRunLoopThread.LICENSE; sourceTree = "<group>"; };
 		DC45ABAC231018250065669D /* OCKeyValueRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueRecord.h; sourceTree = "<group>"; };
 		DC45ABAD231018250065669D /* OCKeyValueRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueRecord.m; sourceTree = "<group>"; };
+		DC47DF742770CEE300989D84 /* NSError+OCErrorTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCErrorTools.h"; sourceTree = "<group>"; };
+		DC47DF752770CEE300989D84 /* NSError+OCErrorTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCErrorTools.m"; sourceTree = "<group>"; };
 		DC4A2C5C20D4608100A47260 /* OCIssueChoice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIssueChoice.h; sourceTree = "<group>"; };
 		DC4A2C5D20D4608100A47260 /* OCIssueChoice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIssueChoice.m; sourceTree = "<group>"; };
 		DC4AFAA4206A6E7100189B9A /* OCSQLiteResultSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteResultSet.h; sourceTree = "<group>"; };
@@ -2647,6 +2651,8 @@
 				DC39DC492041A2FB00189B9A /* NSError+OCError.h */,
 				DCB0A45821B7F76800FAC4E9 /* NSError+OCDAVError.m */,
 				DCB0A45721B7F76800FAC4E9 /* NSError+OCDAVError.h */,
+				DC47DF752770CEE300989D84 /* NSError+OCErrorTools.m */,
+				DC47DF742770CEE300989D84 /* NSError+OCErrorTools.h */,
 			);
 			path = Errors;
 			sourceTree = "<group>";
@@ -3393,6 +3399,7 @@
 				DCC83307242E1B4600153F8C /* OCCore+MessageAutoresolver.h in Headers */,
 				DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */,
 				DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */,
+				DC47DF762770CEE300989D84 /* NSError+OCErrorTools.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
 				DCC8F9EE2028558000EB6701 /* OCQuery.h in Headers */,
 				DC68057D212EB438006C3B1F /* OCExtensionMatch.h in Headers */,
@@ -3954,6 +3961,7 @@
 				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
+				DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */,
 				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
 				DC73F3C0254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,

@@ -360,7 +360,7 @@
 						XCTAssert([requestGrantType isEqual:@"refresh_token"]);
 						XCTAssert([requestRefreshToken isEqual:@"originalRefreshToken"]);
 
-						responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeOK headers:@{} contentType:@"application/json; charset=utf-8" body:@"{\"access_token\":\"refreshedAccessToken\",\"token_type\":\"Bearer\",\"expires_in\":125,\"refresh_token\":\"refreshedRefreshToken\",\"user_id\":\"joe\",\"message_url\":\"https:\\/\\/www.owncloud.org\\/apps\\/oauth2\\/authorization-successful\"}"]);
+						responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeOK headers:@{} contentType:@"application/json; charset=utf-8" body:@"{\"access_token\":\"refreshedAccessToken\",\"token_type\":\"Bearer\",\"expires_in\":10,\"refresh_token\":\"refreshedRefreshToken\",\"user_id\":\"joe\",\"message_url\":\"https:\\/\\/www.owncloud.org\\/apps\\/oauth2\\/authorization-successful\"}"]);
 					break;
 
 					case 1:
@@ -380,7 +380,7 @@
 				return (YES);
 			}
 
-			if ([request.url.absoluteString hasSuffix:@"remote.php/dav/files/"])
+			if ([request.url.absoluteString hasSuffix:@"ocs/v2.php/cloud/capabilities"])
 			{
 				if ([request.headerFields[@"Authorization"] isEqualToString:@"Bearer refreshedAccessToken"])
 				{
@@ -421,7 +421,7 @@
 			XCTAssert(expectFirstRequestWithRefreshedAccessToken==nil);
 
 			[connection disconnectWithCompletionHandler:^{
-				sleep (6);
+				sleep (12);
 
 				[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
 					OCLog(@"error=%@, issue=%@", error, issue);
