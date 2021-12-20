@@ -244,6 +244,8 @@
 
 	_lastUsername = sourceBookmark->_lastUsername;
 
+	_userDisplayName = sourceBookmark->_userDisplayName;
+
 	_userInfo = sourceBookmark.userInfo;
 }
 
@@ -279,6 +281,8 @@
 
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
 
+		_userDisplayName = [decoder decodeObjectOfClass:NSString.class forKey:@"userDisplayName"];
+
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
 		// _authenticationData is not stored in the bookmark
@@ -306,6 +310,8 @@
 
 	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
+	[coder encodeObject:_userDisplayName forKey:@"userDisplayName"];
+
 	if (_userInfo.count > 0)
 	{
 		[coder encodeObject:_userInfo forKey:@"userInfo"];
@@ -319,7 +325,7 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
 			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
@@ -330,6 +336,7 @@
 			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
 			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
 			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
+			((_userDisplayName!=nil) ? [@", userDisplayName: " stringByAppendingString:_userDisplayName] : @""),
 			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
 		]);
 }

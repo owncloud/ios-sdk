@@ -50,6 +50,7 @@
 #import "OCHTTPRequest.h"
 #import "NSURL+OCURLNormalization.h"
 #import "OCDAVRawResponse.h"
+#import "OCBookmarkManager.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -1448,6 +1449,18 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
 											self.loggedInUser = loggedInUser;
+
+											// Update bookmark.userDisplayName if it has changed
+											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName])
+											{
+												self.bookmark.userDisplayName = loggedInUser.displayName;
+
+												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
+												{
+													// Update bookmark - IF it is not a working copy
+													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
+												}
+											}
 
 											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
