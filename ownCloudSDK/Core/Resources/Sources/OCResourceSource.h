@@ -19,11 +19,14 @@
 #import <Foundation/Foundation.h>
 #import "OCResourceTypes.h"
 #import "OCResource.h"
+#import "OCResourceRequest.h"
 
 @class OCCore;
-@class OCResourceRequest;
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^OCResourceSourceResultHandler)(NSError * _Nullable error, OCResource * _Nullable resource);
+typedef BOOL(^OCResourceSourceShouldProvideCheck)(void);
 
 @interface OCResourceSource : NSObject
 
@@ -32,8 +35,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak,nullable) OCCore *core;
 
-- (OCResourceSourcePriority)priorityForRequest:(OCResourceRequest *)request; //!< Returns the priority with which the source can respond to a request
-- (void)provideResourceForRequest:(OCResourceRequest *)request completionHandler:(void(^)(NSError * _Nullable error, OCResource * _Nullable resource))completionHandler; //!< Returns the resource for a request
+#pragma mark - Routing
+- (BOOL)canHandleRequest:(OCResourceRequest *)request; //!< Returns if the source can handle the request
+
+#pragma mark - Main API
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
+
+#pragma mark - Request grouping
+- (OCResourceRequestGroupIdentifier)groupIdentifierForRequest:(OCResourceRequest *)request; //!< The group identifier returned here is used to group requests to reduce overhead and memory consumption when several identical requests are provided
+- (void)startProvidingResourceForRequest:(OCResourceRequest *)request shouldProvideCheck:(OCResourceSourceShouldProvideCheck)shouldProvideCheck resultHandler:(OCResourceSourceResultHandler)resultHandler; // Subclass this
 
 @end
 

@@ -28,12 +28,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, BOOL updatedResourceContent);
 
+typedef NSString* OCResourceRequestGroupIdentifier;
+
 @interface OCResourceRequest : NSObject
 
 @property(weak,nullable) OCCore *core;
 
 @property(strong,readonly) OCResourceType type;
 @property(strong) OCResourceIdentifier identifier;
+@property(strong) id reference;
 
 @property(strong,nullable) OCResourceVersion version;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
