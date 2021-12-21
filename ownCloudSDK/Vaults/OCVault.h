@@ -26,6 +26,7 @@
 #endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @class OCDatabase;
+@class OCResourceManager;
 @class OCItem;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -58,6 +59,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(strong) OCBookmark *bookmark;
 
 @property(nullable,readonly,nonatomic) OCDatabase *database; //!< The vault's database.
+@property(nullable,readonly,nonatomic) OCResourceManager *resourceManager; //!< The vault's resource manager.
 @property(nullable,readonly,nonatomic) OCKeyValueStore *keyValueStore; //!< Key-value store (lazily allocated), available independant of opening/closing the vault
 
 @property(nullable,readonly,nonatomic) NSURL *rootURL; //!< The vault's root directory

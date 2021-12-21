@@ -32,7 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak,nullable) OCCore *core;
 
-- (OCResourceSourcePriority)priorityForRequest:(OCResourceRequest *)request;
+- (OCResourceSourcePriority)priorityForRequest:(OCResourceRequest *)request; //!< Returns the priority with which the source can respond to a request
+- (void)provideResourceForRequest:(OCResourceRequest *)request completionHandler:(void(^)(NSError * _Nullable error, OCResource * _Nullable resource))completionHandler; //!< Returns the resource for a request
 
 @end
 

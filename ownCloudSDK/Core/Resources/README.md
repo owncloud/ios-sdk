@@ -7,8 +7,11 @@ The `OCResource` subsystem provides the infrastructure to
 
 ## Components
 
-### Store
-Single instance per account for all resource types. Provides a single interface to all sources to retrieve and store resources.
+### Manager
+Single instance per vault for all resource types. Glues sources, storage and requests together.
+
+### Storage
+Single instance per vault for all resource types. Provides a single interface to all sources to retrieve and store resources.
 
 ### Sources
 All logic that's needed to retrieve a resource - including placeholders, from cache or the server.

@@ -22,8 +22,10 @@ typedef NSString* OCResourceSourceIdentifier NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSUInteger, OCResourceSourcePriority)
 {
-	OCResourceSourcePriorityNormal = 50,
-	OCResourceSourcePriorityHigh = 100
+	OCResourceSourcePriorityNone = 0,	//!< Priority returned by a source that can't provide a resource
+	OCResourceSourcePriorityFallback = 25,	//!< Priority returned by a source providing generated content, i.e. placeholder thumbnails
+	OCResourceSourcePriorityNormal = 50,	//!< Priority returned by a source that can provide a resource, i.e. from a remote location
+	OCResourceSourcePriorityHigh = 100	//!< Priority returned by a source that can provide a higher-quality version of a resourcem i.e. a local thumbnail generator for PDFs or videos
 };
 
 typedef NSString* OCResourceType NS_TYPED_ENUM; //!< Type of resource, f.ex. thumbnail or avatar
@@ -37,5 +39,6 @@ typedef NS_ENUM(NSUInteger, OCResourceStatus)
 	OCResourceStatusUnsupported,	//!< Resource is not supported
 	OCResourceStatusPlaceholder, 	//!< Placeholder for the requested resource (cache, but do not persist)
 	OCResourceStatusFromCache,	//!< Resource from cache
-	OCResourceStatusLatest		//!< Resource is latest version
+	OCResourceStatusLatest,		//!< Resource is latest version
+	OCResourceStatusLocal		//!< Resource is local version
 };

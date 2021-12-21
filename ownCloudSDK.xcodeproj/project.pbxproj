@@ -239,8 +239,6 @@
 		DC41C7F025EA62E40074F23B /* OCResourceRequestAvatar.m in Sources */ = {isa = PBXBuildFile; fileRef = DC41C7EE25EA62E40074F23B /* OCResourceRequestAvatar.m */; };
 		DC41C7FD25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.h in Headers */ = {isa = PBXBuildFile; fileRef = DC41C7FB25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.h */; };
 		DC41C7FE25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.m in Sources */ = {isa = PBXBuildFile; fileRef = DC41C7FC25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.m */; };
-		DC41C80D25EA67430074F23B /* OCResourceStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC41C80B25EA67430074F23B /* OCResourceStore.h */; };
-		DC41C80E25EA67430074F23B /* OCResourceStore.m in Sources */ = {isa = PBXBuildFile; fileRef = DC41C80C25EA67430074F23B /* OCResourceStore.m */; };
 		DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */; };
 		DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */ = {isa = PBXBuildFile; fileRef = DC434D0C20D68C3000740056 /* NSString+OCPath.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */ = {isa = PBXBuildFile; fileRef = DC434D0D20D68C3000740056 /* NSString+OCPath.m */; };
@@ -622,6 +620,10 @@
 		DCE451A62459AD3F0074363F /* OCTUSJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE451A42459AD3F0074363F /* OCTUSJob.m */; };
 		DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */; };
+		DCE62EA92771EA0200E3193F /* OCResourceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE62EA72771EA0100E3193F /* OCResourceManager.h */; };
+		DCE62EAA2771EA0200E3193F /* OCResourceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE62EA82771EA0200E3193F /* OCResourceManager.m */; };
+		DCE62EAD2771ED5700E3193F /* OCResourceImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE62EAB2771ED5700E3193F /* OCResourceImage.h */; };
+		DCE62EAE2771ED5700E3193F /* OCResourceImage.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE62EAC2771ED5700E3193F /* OCResourceImage.m */; };
 		DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */; };
 		DCE784FC2232748100733F01 /* OCHTTPResponse+DAVError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */; };
 		DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */; };
@@ -1064,9 +1066,7 @@
 		DC41C7EE25EA62E40074F23B /* OCResourceRequestAvatar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceRequestAvatar.m; sourceTree = "<group>"; };
 		DC41C7FB25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceLocalFileThumbnails.h; sourceTree = "<group>"; };
 		DC41C7FC25EA63A00074F23B /* OCResourceSourceLocalFileThumbnails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceLocalFileThumbnails.m; sourceTree = "<group>"; };
-		DC41C80925EA653D0074F23B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		DC41C80B25EA67430074F23B /* OCResourceStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceStore.h; sourceTree = "<group>"; };
-		DC41C80C25EA67430074F23B /* OCResourceStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceStore.m; sourceTree = "<group>"; };
+		DC41C80925EA653D0074F23B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.markdown; };
 		DC434D0920D5AA9D00740056 /* OCCore+CommandCreateFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandCreateFolder.m"; sourceTree = "<group>"; };
 		DC434D0C20D68C3000740056 /* NSString+OCPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCPath.h"; sourceTree = "<group>"; };
 		DC434D0D20D68C3000740056 /* NSString+OCPath.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCPath.m"; sourceTree = "<group>"; };
@@ -1462,6 +1462,10 @@
 		DCE451A42459AD3F0074363F /* OCTUSJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCTUSJob.m; sourceTree = "<group>"; };
 		DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPipelineTaskCache.h; sourceTree = "<group>"; };
 		DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPPipelineTaskCache.m; sourceTree = "<group>"; };
+		DCE62EA72771EA0100E3193F /* OCResourceManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceManager.h; sourceTree = "<group>"; };
+		DCE62EA82771EA0200E3193F /* OCResourceManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceManager.m; sourceTree = "<group>"; };
+		DCE62EAB2771ED5700E3193F /* OCResourceImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceImage.h; sourceTree = "<group>"; };
+		DCE62EAC2771ED5700E3193F /* OCResourceImage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceImage.m; sourceTree = "<group>"; };
 		DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Recipients.m"; sourceTree = "<group>"; };
 		DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPResponse+DAVError.h"; sourceTree = "<group>"; };
 		DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPResponse+DAVError.m"; sourceTree = "<group>"; };
@@ -2082,6 +2086,8 @@
 			children = (
 				DCDBB5F625248B0300FAD707 /* OCResource.m */,
 				DCDBB5F525248B0300FAD707 /* OCResource.h */,
+				DCE62EAC2771ED5700E3193F /* OCResourceImage.m */,
+				DCE62EAB2771ED5700E3193F /* OCResourceImage.h */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -2117,15 +2123,6 @@
 				DC41C7ED25EA62E40074F23B /* OCResourceRequestAvatar.h */,
 			);
 			path = Avatars;
-			sourceTree = "<group>";
-		};
-		DC41C80A25EA672C0074F23B /* Store */ = {
-			isa = PBXGroup;
-			children = (
-				DC41C80C25EA67430074F23B /* OCResourceStore.m */,
-				DC41C80B25EA67430074F23B /* OCResourceStore.h */,
-			);
-			path = Store;
 			sourceTree = "<group>";
 		};
 		DC446C81206B8D9400189B9A /* External */ = {
@@ -3219,8 +3216,8 @@
 			children = (
 				DC41C80925EA653D0074F23B /* README.md */,
 				DC41C7A425EA61D70074F23B /* OCResourceTypes.h */,
+				DCE62EA62771E9E000E3193F /* Manager */,
 				DC41C79C25EA60BA0074F23B /* Sources */,
-				DC41C80A25EA672C0074F23B /* Store */,
 				DC41C79E25EA60D20074F23B /* Request */,
 				DC41C79D25EA60C30074F23B /* Resource */,
 				DC41C7D925EA62B20074F23B /* Avatars */,
@@ -3247,6 +3244,15 @@
 				DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */,
 			);
 			path = AvailableOffline;
+			sourceTree = "<group>";
+		};
+		DCE62EA62771E9E000E3193F /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				DCE62EA82771EA0200E3193F /* OCResourceManager.m */,
+				DCE62EA72771EA0100E3193F /* OCResourceManager.h */,
+			);
+			path = Manager;
 			sourceTree = "<group>";
 		};
 		DCEA7D942093553300F25223 /* Toolkit */ = {
@@ -3410,6 +3416,7 @@
 				DC8EB2FE23951AAB009148F9 /* OCAuthenticationBrowserSession.h in Headers */,
 				DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */,
 				DC0376EE271B1C8500151E8C /* OCLocaleFilterClassSettings.h in Headers */,
+				DCE62EA92771EA0200E3193F /* OCResourceManager.h in Headers */,
 				DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */,
 				DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */,
 				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
@@ -3442,7 +3449,6 @@
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DCEAA0B125CEB7290017F99B /* OCLock.h in Headers */,
-				DC41C80D25EA67430074F23B /* OCResourceStore.h in Headers */,
 				DC3521782251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.h in Headers */,
 				DC8EB30423952084009148F9 /* OCAuthenticationBrowserSessionUIWebView.h in Headers */,
 				DC708CE0214135D100FE43CA /* OCSyncActionDelete.h in Headers */,
@@ -3544,6 +3550,7 @@
 				DC381FC722C80BA400284699 /* OCCore+NameConflicts.h in Headers */,
 				DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */,
 				DC2F668D26035A33001BFDB6 /* OCSQLiteQuery+Private.h in Headers */,
+				DCE62EAD2771ED5700E3193F /* OCResourceImage.h in Headers */,
 				DC07C2992124510200B815A4 /* OCExtensionTypes.h in Headers */,
 				DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */,
 				DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */,
@@ -4101,6 +4108,7 @@
 				DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */,
+				DCE62EAA2771EA0200E3193F /* OCResourceManager.m in Sources */,
 				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
 				DC73F3C0254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
@@ -4234,6 +4242,7 @@
 				DC6DEEB624C59BE300E3772E /* OCHTTPPolicyManager.m in Sources */,
 				DC6CC3102642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
+				DCE62EAE2771ED5700E3193F /* OCResourceImage.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
 				DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */,
 				DC3FE4BB229BD424002E009C /* OCCoreDirectoryUpdateJob.m in Sources */,
@@ -4251,7 +4260,6 @@
 				DCD63277223BB1710090169E /* OCCapabilities.m in Sources */,
 				DC2F636C2239523A0063C2DA /* OCShareQuery.m in Sources */,
 				DC2C3F33230E8C5100D2282A /* OCKeyValueStore.m in Sources */,
-				DC41C80E25EA67430074F23B /* OCResourceStore.m in Sources */,
 				DC3C7FE221A6EDE00064D193 /* NSError+OCHTTPStatus.m in Sources */,
 				DC89136120910F0E00028999 /* OCConnection+Compatibility.m in Sources */,
 				DC4A2C5F20D4608100A47260 /* OCIssueChoice.m in Sources */,

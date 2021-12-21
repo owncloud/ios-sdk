@@ -17,7 +17,21 @@
  */
 
 #import "OCResourceSource.h"
+#import "NSError+OCError.h"
 
 @implementation OCResourceSource
+
+- (OCResourceSourcePriority)priorityForRequest:(OCResourceRequest *)request
+{
+	return (OCResourceSourcePriorityNone);
+}
+
+- (void)provideResourceForRequest:(OCResourceRequest *)request completionHandler:(void(^)(NSError * _Nullable error, OCResource * _Nullable resource))completionHandler
+{
+	if (completionHandler != nil)
+	{
+		completionHandler(OCError(OCErrorFeatureNotImplemented), nil);
+	}
+}
 
 @end

@@ -45,6 +45,8 @@ typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, BOOL u
 
 @property(strong,nullable) OCResource *resource;
 
+@property(copy,nullable) OCResourceRequestChangeHandler changeHandler;
+
 - (void)start;
 - (void)stop;
 

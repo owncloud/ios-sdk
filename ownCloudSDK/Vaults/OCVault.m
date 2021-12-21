@@ -33,6 +33,7 @@
 #import "OCHTTPPolicyManager.h"
 #import "OCBookmark+DBMigration.h"
 #import "OCDatabase+Schemas.h"
+#import "OCResourceManager.h"
 
 @implementation OCVault
 
@@ -251,7 +252,10 @@
 					self.bookmark.databaseVersion = OCDatabaseVersionLatest;
 					[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self.bookmark];
 				}
+
+				self->_resourceManager = [[OCResourceManager alloc] initWithStorage:db];
 			}
+
 			completionHandler(db, error);
 		}];
 	}
