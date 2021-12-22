@@ -127,10 +127,10 @@
 
 			[bookmarkData writeToURL:self.bookmarkStoreURL atomically:YES];
 		}
-
-		[self postRemoteChangeNotification];
-		[self postLocalChangeNotification];
 	}
+
+	[self postRemoteChangeNotification];
+	[self postLocalChangeNotification];
 }
 
 #pragma mark - Change notification

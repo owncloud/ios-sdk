@@ -24,6 +24,7 @@
 #import "OCRunLoopThread.h"
 #import "OCLogTag.h"
 #import "OCBackgroundTask.h"
+#import "OCSQLiteCollation.h"
 
 // #define OCSQLITE_RAWLOG_ENABLED 1
 
@@ -80,6 +81,8 @@ typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!
 	NSUInteger _savepointCounter;
 
 	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
+	NSMutableDictionary <OCSQLiteCollationName, OCSQLiteCollation *> *_collationsByName;
+
 	NSHashTable<OCSQLiteStatement *> *_liveStatements;
 
 	sqlite3 *_db;
@@ -142,6 +145,10 @@ typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!
 
 #pragma mark - Insertion Row ID
 - (nullable NSNumber *)lastInsertRowID; //!< Returns the last insert row ID. May only be used within query and transaction completionHandlers. Will return nil otherwise.
+
+#pragma mark - Collations
+- (void)registerCollation:(OCSQLiteCollation *)collation;
+- (nullable OCSQLiteCollation *)collationForName:(OCSQLiteCollationName)name;
 
 #pragma mark - Miscellaneous
 - (void)shrinkMemory; //!< Tells SQLite to release as much memory as it can.

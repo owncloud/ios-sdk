@@ -22,6 +22,7 @@
 #import "OCHTTPRequest.h"
 #import "OCAuthenticationMethod.h"
 #import "NSError+OCError.h"
+#import "NSError+OCErrorTools.h"
 #import "OCMacros.h"
 #import "OCHTTPDAVRequest.h"
 #import "OCIssue.h"
@@ -49,6 +50,7 @@
 #import "OCHTTPRequest.h"
 #import "NSURL+OCURLNormalization.h"
 #import "OCDAVRawResponse.h"
+#import "OCBookmarkManager.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -1424,74 +1426,64 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 							}
 							else
 							{
-								// Connection authenticated. Now send an authenticated WebDAV request
-								OCHTTPDAVRequest *davRequest;
-								
-								davRequest = [OCHTTPDAVRequest propfindRequestWithURL:[self URLForEndpoint:OCConnectionEndpointIDWebDAV options:nil] depth:0];
-								davRequest.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
-								
-								[davRequest.xmlRequestPropAttribute addChildren:@[
-									[OCXMLNode elementWithName:@"D:supported-method-set"],
-								]];
-								
-								// OCLogDebug(@"%@", davRequest.xmlRequest.XMLString);
+								// Connection authenticated. Now send an authenticated capabilities request.
 
-								[self sendRequest:davRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-									if ((error == nil) && (response.status.isSuccess))
+								// Retrieve capabilities
+								connectProgress.localizedDescription = OCLocalizedString(@"Retrieving capabilities…", @"");
+
+								[self retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
+									if (error == nil)
 									{
-										// DAV request executed successfully
+										// Check minimum version
+										NSError *minimumVersionError;
 
-										// Retrieve capabilities
-										connectProgress.localizedDescription = OCLocalizedString(@"Retrieving capabilities…", @"");
+										if ((minimumVersionError = [self supportsServerVersion:capabilities.version product:capabilities.productName longVersion:capabilities.longProductVersionString allowHiddenVersion:NO]) != nil)
+										{
+											completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
 
-										[self retrieveCapabilitiesWithCompletionHandler:^(NSError * _Nullable error, OCCapabilities * _Nullable capabilities) {
-											if (error == nil)
+											return;
+										}
+
+										// Get user info
+										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
+
+										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+											self.loggedInUser = loggedInUser;
+
+											// Update bookmark.userDisplayName if it has changed
+											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName])
 											{
-												// Check minimum version
-												NSError *minimumVersionError;
+												self.bookmark.userDisplayName = loggedInUser.displayName;
 
-												if ((minimumVersionError = [self supportsServerVersion:capabilities.version product:capabilities.productName longVersion:capabilities.longProductVersionString allowHiddenVersion:NO]) != nil)
+												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
 												{
-													completionHandler(minimumVersionError, [OCIssue issueForError:minimumVersionError level:OCIssueLevelError issueHandler:nil]);
-
-													return;
+													// Update bookmark - IF it is not a working copy
+													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
 												}
+											}
 
-												// Get user info
-												connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
+											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
-												[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
-													self.loggedInUser = loggedInUser;
-
-													connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-													if (error!=nil)
-													{
-														completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
-													}
-													else
-													{
-														// DONE!
-														connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
-
-														self.state = OCConnectionStateConnected;
-
-														completionHandler(nil, nil);
-													}
-												}];
+											if (error!=nil)
+											{
+												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 											}
 											else
 											{
-												completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+												// DONE!
+												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+												self.state = OCConnectionStateConnected;
+
+												completionHandler(nil, nil);
 											}
 										}];
 									}
 									else
 									{
-										// Intentionally no error handling here! If an error occurs here, it's handled by the auth system, so that calling the completionHandler here will lead to a crash.
-										// (crash reproducable in CoreTests.testInvalidLoginData)
+										completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
 									}
-								})];
+								}];
 							}
 						}];
 					}

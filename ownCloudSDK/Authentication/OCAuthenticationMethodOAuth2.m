@@ -34,7 +34,8 @@
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
-static OA2DictKeyPath OA2ExpirationDate	= @"expirationDate";
+static OA2DictKeyPath OA2ExpirationDate		= @"expirationDate";
+static OA2DictKeyPath OA2ExpirationTimePeriod	= @"expirationTimePeriod";
 
 static OA2DictKeyPath OA2TokenResponse  = @"tokenResponse";
 static OA2DictKeyPath OA2BearerString   = @"bearerString";
@@ -560,11 +561,24 @@ OCAuthenticationMethodAutoRegister
 	if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
 	{
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
+		NSTimeInterval preemtiveRefreshThreshold = 0;
+		NSNumber *expiresInSeconds = [authSecret valueForKeyPath:OA2ExpirationTimePeriod];
+
+		if (expiresInSeconds.integerValue > (OA2RefreshSafetyMarginInSeconds + 20))
+		{
+			// Expiration happening not before (OA2RefreshSafetyMarginInSeconds + 20) seconds
+			preemtiveRefreshThreshold = OA2RefreshSafetyMarginInSeconds;
+		}
+		else
+		{
+			// Expiration happening before (OA2RefreshSafetyMarginInSeconds + 20) seconds, do not perform preemtive refresh (would lead to infinite loop)
+			preemtiveRefreshThreshold = 0;
+		}
 
 		// Get a new token up to OA2RefreshSafetyMarginInSeconds seconds before the old one expires
-		if ((timeLeftUntilExpiration < OA2RefreshSafetyMarginInSeconds) || _receivedUnauthorizedResponse)
+		if ((timeLeftUntilExpiration < preemtiveRefreshThreshold) || _receivedUnauthorizedResponse)
 		{
-			OCLogDebug(@"OAuth2 token expired %@ - refreshing token for connection..", authSecret[OA2ExpirationDate])
+			OCLogDebug(@"OAuth2 token expired %@ (%@ secs) - refreshing token for connection..", authSecret[OA2ExpirationDate], authSecret[OA2ExpirationTimePeriod]);
 			[self _refreshTokenForConnection:connection availabilityHandler:availabilityHandler];
 
 			return (NO);
@@ -817,16 +831,19 @@ OCAuthenticationMethodAutoRegister
 					{
 						// Success
 						NSDate *validUntil = nil;
+						NSNumber *expiresInSeconds = nil;
 						NSString *bearerString;
 
 						// Compute expiration date
 						if (jsonResponseDict[@"expires_in"] != nil)
 						{
 							validUntil = [NSDate dateWithTimeIntervalSinceNow:[jsonResponseDict[@"expires_in"] integerValue]];
+							expiresInSeconds = @([jsonResponseDict[@"expires_in"] integerValue]);
 						}
 						else
 						{
 							validUntil = [NSDate dateWithTimeIntervalSinceNow:3600];
+							expiresInSeconds = @(3600);
 						}
 
 						// #warning !! REMOVE LINE BELOW - FOR TESTING TOKEN RENEWAL ONLY !!
@@ -837,6 +854,7 @@ OCAuthenticationMethodAutoRegister
 						{
 							OCLogWarning(@"Overriding expiration time of %@ with %@ as per class settings", jsonResponseDict[@"expires_in"], expirationOverrideSeconds);
 							validUntil = [NSDate dateWithTimeIntervalSinceNow:OA2RefreshSafetyMarginInSeconds + expirationOverrideSeconds.doubleValue];
+							expiresInSeconds = @(OA2RefreshSafetyMarginInSeconds + expirationOverrideSeconds.integerValue);
 						}
 
 						// Reuse refresh_token if no new one was provided
@@ -881,9 +899,10 @@ OCAuthenticationMethodAutoRegister
 							}
 
 							authenticationDataDict = @{
-								OA2ExpirationDate : validUntil,
-								OA2BearerString   : bearerString,
-								OA2TokenResponse  : jsonResponseDict
+								OA2ExpirationDate 	: validUntil,
+								OA2ExpirationTimePeriod	: expiresInSeconds,
+								OA2BearerString   	: bearerString,
+								OA2TokenResponse  	: jsonResponseDict
 							};
 
 							// Give opportunity to add additional keys

@@ -44,9 +44,46 @@
 
 				if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&error]) != nil)
 				{
-					if ((capabilities = [[OCCapabilities alloc] initWithRawJSON:rawJSON]) != nil)
+					if ((rawJSON = OCTypedCast(rawJSON, NSDictionary)) != nil)
 					{
-						self.capabilities = capabilities;
+						if ([rawJSON[@"ocs"][@"meta"][@"status"] isEqual:@"failure"])
+						{
+							/*
+								Example error:
+								{
+								    "ocs": {
+									"meta": {
+									    "status": "failure",
+									    "statuscode": 997,
+									    "message": "Unauthorised",
+									    "totalitems": "",
+									    "itemsperpage": ""
+									},
+									"data": []
+								    }
+								}
+							*/
+							if ([rawJSON[@"ocs"][@"meta"][@"message"] isEqual:@"Unauthorised"] ||
+							    [rawJSON[@"ocs"][@"meta"][@"statuscode"] isEqual:@(997)])
+							{
+								error = OCError(OCErrorAuthorizationFailed);
+							}
+							else
+							{
+								error = OCErrorWithDescription(OCErrorUnknown, rawJSON[@"ocs"][@"meta"][@"message"]);
+							}
+						}
+						else
+						{
+							if ((capabilities = [[OCCapabilities alloc] initWithRawJSON:rawJSON]) != nil)
+							{
+								self.capabilities = capabilities;
+							}
+						}
+					}
+					else
+					{
+						error = OCError(OCErrorResponseUnknownFormat);
 					}
 				}
 			}

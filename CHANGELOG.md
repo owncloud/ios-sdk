@@ -1,3 +1,14 @@
+## 11.8.1 version
+- OCSQL: add collation support via new OCSQLiteCollation class, making it as simple as possible to encapsulate and add collations, avoiding string format conversions (i.e. UTF-8 <-> UTF-16) where possible
+- OCSQL: add collation OCSQLiteCollationLocalized (OCLOCALIZED) for "Finder-like" sorting
+- OCDatabase+Schema: upgrade schema for metadata to use OCLOCALIZED for item name
+- OAuth2 improvements
+	- add authentication-oauth2.oidc-fallback-on-client-registration-failure (default: true). Allows the automatic fallback to default client_id / client_secret if OpenID Connect Dynamic Client Registration fails with any error.
+	- store token expiration timespan and - if stored token expiration timespan < (safetyMargin + 20) seconds - no longer preemptively refresh the token within the safety margin
+- OCConnection: remove authenticated WebDAV request asking root WebDAV endpoint for D:supported-method-set, instead rely on capabilities to respond with an authentication error if auth credentials are not valid.
+- OCBookmark: add first-level support for access to the user.displayName with new property userDisplayName. The property is kept up-to-date by OCConnection, which updates it on every connect, if it was changed
+- OCBookmarkManager: fix possible deadlock
+
 ## 11.8 version
 - Infinite PROPFIND: add support for dav > propfind > depth_infinity capability
 - OCLocale: modular localization system replacing direct system localization calls, allowing overrides via MDM and Branding.plist, adding variable support

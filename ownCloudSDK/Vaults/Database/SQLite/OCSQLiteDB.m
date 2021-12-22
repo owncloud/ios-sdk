@@ -27,6 +27,7 @@
 #import "OCSQLiteQuery+Private.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCCoreManager.h"
+#import "OCSQLiteCollationLocalized.h"
 
 #import "OCExtension+License.h"
 
@@ -243,6 +244,26 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 }
 
 #pragma mark - Open & Close
+static void collationProvider(void *dbObj, sqlite3 *db, int eTextRep, const char *name) {
+	OCSQLiteDB *sqlDB = (__bridge OCSQLiteDB *)dbObj;
+	NSString *collationName;
+
+	if ((collationName = [NSString stringWithUTF8String:name]) != nil)
+	{
+		OCSQLiteCollation *collation;
+
+		OCRLogDebug((@[@"SQL", @"Collation"]), @"Collation %@ requested by SQLite database", collationName);
+
+		if ((collation = [sqlDB collationForName:collationName]) != nil)
+		{
+			[collation registerCollationFor:sqlDB representationHint:eTextRep];
+			return;
+		}
+
+		OCRLogError((@[@"SQL", @"Collation"]), @"Unknown collation %@ requested by SQLite database", collationName);
+	}
+};
+
 - (void)openWithFlags:(OCSQLiteOpenFlags)flags completionHandler:(OCSQLiteDBCompletionHandler)completionHandler
 {
 	[self queueBlock:^{
@@ -267,6 +288,12 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 			{
 				// Set max busy retry time interval
 				self.maxBusyRetryTimeInterval = self->_maxBusyRetryTimeInterval;
+
+				// Register collation needed callback
+				if ((sqErr = sqlite3_collation_needed(self->_db, (__bridge void *)self, collationProvider)) != SQLITE_OK)
+				{
+					OCLogError(@"Error adding collation needed callback: %d", sqErr);
+				}
 
 				// Journal mode
 				if (self->_journalMode != nil)
@@ -1137,6 +1164,41 @@ static int OCSQLiteDBBusyHandler(void *refCon, int count)
 
 	// Will return nil otherwise.
 	return (nil);
+}
+
+#pragma mark - Collations
+- (void)registerCollation:(OCSQLiteCollation *)collation
+{
+	if (_collationsByName == nil) { _collationsByName = [NSMutableDictionary new]; }
+
+	@synchronized (_collationsByName)
+	{
+		_collationsByName[collation.name] = collation;
+	}
+}
+
+- (nullable OCSQLiteCollation *)collationForName:(OCSQLiteCollationName)name
+{
+	OCSQLiteCollation *collation = nil;
+
+	if (_collationsByName != nil)
+	{
+		@synchronized (_collationsByName)
+		{
+			collation = _collationsByName[name];
+		}
+	}
+
+	if (collation == nil)
+	{
+		// Dynamically instantiate and register standard collations as they are requested
+		if ([name isEqual:OCSQLiteCollationNameLocalized])
+		{
+			[self registerCollation:(collation = [OCSQLiteCollationLocalized new])];
+		}
+	}
+
+	return (collation);
 }
 
 #pragma mark - Miscellaneous
