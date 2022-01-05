@@ -22,28 +22,36 @@
 #import "OCResourceRequest.h"
 
 @class OCCore;
+@class OCResourceManager;
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCResourceSourceResultHandler)(NSError * _Nullable error, OCResource * _Nullable resource);
-typedef BOOL(^OCResourceSourceShouldProvideCheck)(void);
+typedef BOOL(^OCResourceSourceShouldContinueHandler)(void);
+
+typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
+{
+	OCResourceSourcePriorityNone = 0, //!< Do not use source
+	OCResourceSourcePriorityRemote = 100, //!< Resource is fetched remotely
+	OCResourceSourcePriorityLocalFallback = 200, //!< Resource is a locally generated fallback
+	OCResourceSourcePriorityLocal = 300 //!< Resource is locally generated
+};
 
 @interface OCResourceSource : NSObject
+
+@property(weak,nullable) OCResourceManager *manager;
 
 @property(strong,readonly) OCResourceSourceIdentifier identifier;
 @property(strong,readonly) OCResourceType type;
 
 @property(weak,nullable) OCCore *core;
 
-#pragma mark - Routing
-- (BOOL)canHandleRequest:(OCResourceRequest *)request; //!< Returns if the source can handle the request
+- (instancetype)initWithCore:(OCCore *)core;
 
-#pragma mark - Main API
-- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type; //!< Returns the priority with which the source should be used, allowing to establish an ordering
+- (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request; //!< Returns which quality the source can deliver the requested resource in
 
-#pragma mark - Request grouping
-- (OCResourceRequestGroupIdentifier)groupIdentifierForRequest:(OCResourceRequest *)request; //!< The group identifier returned here is used to group requests to reduce overhead and memory consumption when several identical requests are provided
-- (void)startProvidingResourceForRequest:(OCResourceRequest *)request shouldProvideCheck:(OCResourceSourceShouldProvideCheck)shouldProvideCheck resultHandler:(OCResourceSourceResultHandler)resultHandler; // Subclass this
+- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(nullable OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
 
 @end
 

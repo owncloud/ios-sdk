@@ -17,7 +17,47 @@
  */
 
 #import "OCResourceRequest.h"
+#import "OCResourceRequest+Internal.h"
+#import "OCResourceManagerJob.h"
+
+@interface OCResourceRequest ()
+{
+	__weak OCResourceManagerJob *_job;
+}
+
+@end
 
 @implementation OCResourceRequest
+
+- (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest
+{
+	return (OCResourceRequestRelationDistinct);
+}
+
+- (void)setResource:(OCResource *)resource
+{
+	OCResource *previousResource = _resource;
+
+	_resource = resource;
+
+	if (_changeHandler != nil)
+	{
+		_changeHandler(self, nil, previousResource, resource);
+	}
+}
+
+@end
+
+@implementation OCResourceRequest (Internal)
+
+- (OCResourceManagerJob *)job
+{
+	return (_job);
+}
+
+- (void)setJob:(OCResourceManagerJob *)job
+{
+	_job = job;
+}
 
 @end

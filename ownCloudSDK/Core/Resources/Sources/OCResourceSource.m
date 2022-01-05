@@ -21,16 +21,31 @@
 
 @implementation OCResourceSource
 
-- (OCResourceSourcePriority)priorityForRequest:(OCResourceRequest *)request
+- (instancetype)initWithCore:(OCCore *)core
+{
+	if ((self = [super init]) != nil)
+	{
+		_core = core;
+	}
+
+	return (self);
+}
+
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type
 {
 	return (OCResourceSourcePriorityNone);
 }
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request completionHandler:(void(^)(NSError * _Nullable error, OCResource * _Nullable resource))completionHandler
+- (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
-	if (completionHandler != nil)
+	return (OCResourceQualityNone);
+}
+
+- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(nullable OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler
+{
+	if (resultHandler != nil)
 	{
-		completionHandler(OCError(OCErrorFeatureNotImplemented), nil);
+		resultHandler(OCError(OCErrorFeatureNotImplemented), nil);
 	}
 }
 

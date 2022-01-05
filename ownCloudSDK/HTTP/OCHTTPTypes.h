@@ -28,7 +28,7 @@ typedef NSDictionary<OCHTTPHeaderFieldName,NSString*>* OCHTTPStaticHeaderFields;
 typedef NSMutableDictionary<OCHTTPHeaderFieldName,NSString*>* OCHTTPHeaderFields;
 typedef NSMutableDictionary<NSString*,NSString*>* OCHTTPRequestParameters;
 
-typedef float OCHTTPRequestPriority;
+typedef float OCHTTPRequestPriority; // equivalent to NSURLSessionTaskPriority(Low|Default|High) with values of (0.25|0.5|0.75) respectively
 typedef NSString* OCHTTPRequestID;
 typedef NSString* OCHTTPRequestGroupID;
 

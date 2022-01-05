@@ -228,6 +228,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			OCLogError(@"Error creating pthread key: %d", pthreadKeyError);
 		}
 
+		OCLog(@"Priorities: default %f low %f high %f", NSURLSessionTaskPriorityDefault, NSURLSessionTaskPriorityLow, NSURLSessionTaskPriorityHigh);
+
 		_runIdentifier = [NSUUID new];
 
 		_bookmark = bookmark;

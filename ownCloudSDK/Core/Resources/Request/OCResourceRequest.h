@@ -26,7 +26,14 @@ NS_ASSUME_NONNULL_BEGIN
 @class OCResourceRequest;
 @class OCResource;
 
-typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, BOOL updatedResourceContent);
+typedef NS_ENUM(NSInteger, OCResourceRequestRelation)
+{
+	OCResourceRequestRelationDistinct,	//!< Distinct requests, no relation (f.ex. for different request types, different resources, etc.)
+	OCResourceRequestRelationGroupWith,	//!< Request points to same resource, should/can be linked with other request
+	OCResourceRequestRelationReplace	//!< Request points to a newer/better version of same resource, should/can replace the other request
+};
+
+typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource);
 
 typedef NSString* OCResourceRequestGroupIdentifier;
 
@@ -41,17 +48,22 @@ typedef NSString* OCResourceRequestGroupIdentifier;
 @property(strong,nullable) OCResourceVersion version;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
+@property(assign) OCResourceQuality quality;
+@property(assign) BOOL cancelled;
+
 @property(assign) CGSize maxPointSize;
 @property(assign) CGFloat scale;
 
 @property(assign) BOOL waitForConnectivity;
 
-@property(strong,nullable) OCResource *resource;
+@property(strong,nullable,nonatomic) OCResource *resource;
 
 @property(copy,nullable) OCResourceRequestChangeHandler changeHandler;
 
-- (void)start;
-- (void)stop;
+- (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest; //!< return how this request is related with otherRequest
+
+//- (void)start;
+//- (void)stop;
 
 @end
 

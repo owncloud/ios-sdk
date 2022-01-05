@@ -829,7 +829,7 @@
 				return (NSOrderedSame);
 			}
 
-			return ((task1Priority < task2Priority) ? NSOrderedAscending : NSOrderedDescending);
+			return ((task1Priority > task2Priority) ? NSOrderedAscending : NSOrderedDescending); // In reverse order, so highest value comes first
 		};
 
 		// Sort defaultGroup requests by request.priority

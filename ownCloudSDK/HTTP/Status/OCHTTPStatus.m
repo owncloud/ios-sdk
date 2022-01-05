@@ -84,6 +84,10 @@
 			return (@"MOVED TEMPORARILY");
 		break;
 
+		case OCHTTPStatusCodeNOT_MODIFIED:
+			return (@"NOT MODIFIED");
+		break;
+
 		case OCHTTPStatusCodeTEMPORARY_REDIRECT:
 			return (@"TEMPORARY REDIRECT");
 		break;

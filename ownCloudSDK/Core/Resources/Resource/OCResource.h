@@ -23,18 +23,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResource : NSObject
+@interface OCResource : NSObject <NSSecureCoding>
 
 @property(strong) OCResourceType type;
 @property(strong) OCResourceIdentifier identifier;
 @property(strong,nullable) OCResourceVersion version;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
-@property(assign) OCResourceStatus status;
+@property(assign) OCResourceQuality quality;
 
 @property(strong,nullable) OCResourceMetadata metaData;
 @property(strong,nullable) NSData *data;
 
 @end
+
+extern OCResourceType OCResourceTypeAny;
 
 NS_ASSUME_NONNULL_END

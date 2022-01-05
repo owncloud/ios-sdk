@@ -20,25 +20,23 @@
 
 typedef NSString* OCResourceSourceIdentifier NS_TYPED_ENUM;
 
-typedef NS_ENUM(NSUInteger, OCResourceSourcePriority)
+typedef NS_ENUM(NSInteger, OCResourceQuality)
 {
-	OCResourceSourcePriorityNone = 0,	//!< Priority returned by a source that can't provide a resource
-	OCResourceSourcePriorityFallback = 25,	//!< Priority returned by a source providing generated content, i.e. placeholder thumbnails
-	OCResourceSourcePriorityNormal = 50,	//!< Priority returned by a source that can provide a resource, i.e. from a remote location
-	OCResourceSourcePriorityHigh = 100	//!< Priority returned by a source that can provide a higher-quality version of a resourcem i.e. a local thumbnail generator for PDFs or videos
+	OCResourceQualityNone = 0,	//!< Resource can't be provided
+
+	// Dynamically generated, may be cached
+	OCResourceQualityFallback = 25,	//!< Fallback content, i.e. generated placeholder thumbnails
+
+	// Stored permanently
+	OCResourceQualityNormal = 50,	//!< Normal quality, i.e. thumbnails from the server
+	OCResourceQualityHigh = 75,	//!< High quality, i.e. a local thumbnail generator for videos, PDFs, office formats
+
+	// Ordering logic only
+	OCResourceQualityCached = 100	//!< Intermediate quality returned by the cache to ensure the cache response is awaited before any other source is asked to retrieve the resource. Returned resource's quality will differ and represent the actual quality that was stored in the cache.
 };
 
 typedef NSString* OCResourceType NS_TYPED_ENUM; //!< Type of resource, f.ex. thumbnail or avatar
 typedef NSString* OCResourceIdentifier; //!< An identifier that identifies the resource, f.ex. the file ID or user name
 typedef NSString* OCResourceVersion; //!< A string that can be used to distinguish versions (throug equality comparison), f.ex. ETags or checksums
 typedef NSString* OCResourceStructureDescription; //!< A string describing the structure properties of the resource that can affect resource generation or return, such as f.ex. the MIME type (which can change after a rename, without causing ID or version to change)
-typedef NSString* OCResourceMetadata; //!< A resource-specific string with metadata on the resource's data 
-
-typedef NS_ENUM(NSUInteger, OCResourceStatus)
-{
-	OCResourceStatusUnsupported,	//!< Resource is not supported
-	OCResourceStatusPlaceholder, 	//!< Placeholder for the requested resource (cache, but do not persist)
-	OCResourceStatusFromCache,	//!< Resource from cache
-	OCResourceStatusLatest,		//!< Resource is latest version
-	OCResourceStatusLocal		//!< Resource is local version
-};
+typedef NSString* OCResourceMetadata; //!< A resource-specific string with metadata on the resource's data

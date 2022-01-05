@@ -26,7 +26,7 @@ typedef void(^OCResourceRetrieveCompletionHandler)(NSError * _Nullable error, OC
 
 @property(weak,nullable) id<OCResourceStorage> storage;
 
-- (instancetype)initWithStorage:(id<OCResourceStorage>)storage;
+- (instancetype)initWithStorage:(nullable id<OCResourceStorage>)storage;
 
 #pragma mark - Sources
 - (void)addSource:(OCResourceSource *)source;

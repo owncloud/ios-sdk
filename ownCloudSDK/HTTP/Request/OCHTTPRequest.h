@@ -104,7 +104,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong) OCEventTarget *eventTarget;		//!< The target the parsed result should be delivered to as an event.
 @property(strong) NSDictionary *userInfo;		//!< User-info for free use. All contents should be serializable.
 
-@property(assign) OCHTTPRequestPriority priority; //!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
+@property(assign) OCHTTPRequestPriority priority; 	//!< Priority of the request from 0.0 (lowest priority) to 1.0 (highest priority). Defaults to NSURLSessionTaskPriorityDefault (= 0.5).
 @property(strong) OCHTTPRequestGroupID groupID; 	//!< ID of the Group the request belongs to (if any). Requests in the same group are executed serially, whereas requests that belong to no group are executed as soon as possible.
 
 @property(copy) OCHTTPRequestObserver requestObserver; //!< OCHTTPRequestObserver block called as the request encounters various events
