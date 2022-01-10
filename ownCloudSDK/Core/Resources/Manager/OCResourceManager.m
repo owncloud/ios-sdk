@@ -10,6 +10,7 @@
 #import "OCCache.h"
 #import "OCResourceRequest+Internal.h"
 #import "OCResourceManagerJob.h"
+#import "OCResourceSourceStorage.h"
 #import "OCLogger.h"
 
 @interface OCResourceManager ()
@@ -35,6 +36,8 @@
 		_jobs = [NSMutableArray new];
 
 		_queue = dispatch_queue_create("OCResourceManager", DISPATCH_QUEUE_SERIAL);
+
+		[self addSource:[OCResourceSourceStorage new]];
 	}
 
 	return (self);
@@ -274,6 +277,29 @@
 			if (job.state == OCResourceManagerJobStateComplete)
 			{
 				// Job complete
+
+				// Store in database
+				if ((job.latestResource != nil) &&
+				    (job.latestResource.quality >= OCResourceQualityNormal) && // require "normal" as minimum quality
+				    (job.lastStoredResource != job.latestResource))
+				{
+					OCResource *resource;
+
+					if ((resource = job.latestResource) != nil)
+					{
+						job.lastStoredResource = resource;
+
+						if (![resource.originSourceIdentifier isEqual:OCResourceSourceIdentifierStorage]) // Avoid writing back what was also retrieved from storage
+						{
+							[self.storage storeResource:job.latestResource completionHandler:^(NSError * _Nullable error) {
+								if (error != nil)
+								{
+									OCLogError(@"Error %@ storing resource %@", error, resource);
+								}
+							}];
+						}
+					}
+				}
 
 				// Remove "single-run" requests
 				[job removeRequestsWithLifetime:OCResourceRequestLifetimeSingleRun];

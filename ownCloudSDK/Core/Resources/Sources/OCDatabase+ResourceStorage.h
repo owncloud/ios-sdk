@@ -1,8 +1,8 @@
 //
-//  OCResourceSourceStorage.h
+//  OCDatabase+ResourceStorage.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 03.01.22.
+//  Created by Felix Schwarz on 10.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,14 +16,13 @@
  *
  */
 
-#import "OCResourceSource.h"
+#import "OCDatabase.h"
+#import "OCResourceManager.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceSourceStorage : OCResourceSource
+@interface OCDatabase (ResourceStorage) <OCResourceStorage>
 
 @end
-
-extern OCResourceSourceIdentifier OCResourceSourceIdentifierStorage;
 
 NS_ASSUME_NONNULL_END

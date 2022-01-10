@@ -18,6 +18,7 @@
 
 #import "OCResource.h"
 #import "OCImage.h"
+#import "OCItemThumbnail.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) CGSize maxPixelSize; //!< Maximum size of the resource in pixels, CGSizeZero otherwise
 @property(strong,nullable,nonatomic) OCImage *image; //!< OCImage representation of image, for caching existing instances - or generated on-the-fly. NOT serialized!
+@property(strong,readonly,nullable,nonatomic) OCItemThumbnail *thumbnail; //!< OCItemThumbnail representation of .image - generated on-the-fly. NOT serialized!
 
 // - (void)drawInRect:(CGRect)rect;
 

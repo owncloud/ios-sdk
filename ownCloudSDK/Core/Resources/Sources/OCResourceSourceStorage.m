@@ -17,7 +17,49 @@
  */
 
 #import "OCResourceSourceStorage.h"
+#import "OCResourceManager.h"
+#import "OCMacros.h"
+#import "OCItem.h"
 
 @implementation OCResourceSourceStorage
 
+- (OCResourceType)type
+{
+	return (OCResourceTypeAny);
+}
+
+- (OCResourceSourceIdentifier)identifier
+{
+	return (OCResourceSourceIdentifierStorage);
+}
+
+- (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
+{
+	if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
+	{
+		OCItem *item;
+
+		if ((item = OCTypedCast(request.reference, OCItem)) != nil)
+		{
+			if (item.type == OCItemTypeFile)
+			{
+				return (OCResourceQualityCached);
+			}
+		}
+	}
+
+	return (OCResourceQualityNone);
+}
+
+- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler
+{
+	[self.manager.storage retrieveResourceForRequest:request completionHandler:^(NSError * _Nullable error, OCResource * _Nullable resource) {
+		resource.originSourceIdentifier = OCResourceSourceIdentifierStorage;
+
+		resultHandler(error, resource);
+	}];
+}
+
 @end
+
+OCResourceSourceIdentifier OCResourceSourceIdentifierStorage = @"vault.storage";

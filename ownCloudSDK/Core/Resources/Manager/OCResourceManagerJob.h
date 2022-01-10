@@ -49,6 +49,7 @@ typedef NSUInteger OCResourceManagerJobSeed;
 @property(strong,nullable) NSNumber *sourcesCursorPosition;
 
 @property(strong,nullable) OCResource *latestResource;
+@property(weak,nullable) OCResource *lastStoredResource;
 
 - (instancetype)initWithPrimaryRequest:(OCResourceRequest *)primaryRequest forManager:(OCResourceManager *)manager;
 

@@ -17,6 +17,8 @@
  */
 
 #import "OCResourceImage.h"
+#import "OCItemThumbnail.h"
+#import "OCMacros.h"
 
 @implementation OCResourceImage
 
@@ -37,6 +39,27 @@
 	}
 
 	return (_image);
+}
+
+- (OCItemThumbnail *)thumbnail
+{
+	if (_image == nil)
+	{
+		OCItemThumbnail *thumbnail = [OCItemThumbnail new];
+
+		thumbnail.mimeType = self.mimeType;
+		thumbnail.maximumSizeInPixels = self.maxPixelSize;
+
+		thumbnail.data = self.data;
+		thumbnail.itemVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:self.identifier eTag:self.version];
+		thumbnail.specID = self.structureDescription;
+
+		_image = thumbnail;
+
+		return (thumbnail);
+	}
+
+	return (OCTypedCast(_image, OCItemThumbnail));
 }
 
 #pragma mark - Secure Coding

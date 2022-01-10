@@ -94,6 +94,6 @@
 
 @end
 
-OCResourceType OCResourceTypeAny = @"_any";
-OCResourceType OCResourceTypeAvatar = @"avtr";
-OCResourceType OCResourceTypeItemThumbnail = @"itmT";
+OCResourceType OCResourceTypeAny = @"*";
+OCResourceType OCResourceTypeAvatar = @"image.avatar";
+OCResourceType OCResourceTypeItemThumbnail = @"image.thumbnail";

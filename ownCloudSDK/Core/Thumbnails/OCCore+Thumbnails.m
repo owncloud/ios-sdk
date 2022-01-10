@@ -75,9 +75,7 @@
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
 	OCResourceRequestItemThumbnail *itemThumbnailRequest = [OCResourceRequestItemThumbnail requestThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:waitForConnectivity changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
-		OCImage *thumbnail = OCTypedCast(newResource, OCResourceImage).image;
-
-		retrieveHandler(error, self, item, OCTypedCast(thumbnail, OCItemThumbnail), YES, nil);
+		retrieveHandler(error, self, item, OCTypedCast(newResource, OCResourceImage).thumbnail, YES, nil);
 	}];
 
 	itemThumbnailRequest.lifetime = OCResourceRequestLifetimeSingleRun;

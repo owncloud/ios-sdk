@@ -67,6 +67,8 @@
 
 		if ((connection = self.core.connection) != nil)
 		{
+			NSString *specID = item.thumbnailSpecID;
+
 			[connection retrieveThumbnailFor:item to:nil maximumSize:request.maxPixelSize waitForConnectivity:request.waitForConnectivity resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 				OCItemThumbnail *thumbnail;
 
@@ -81,13 +83,15 @@
 					// Map thumbnail to corresponding resource fields
 					resource.identifier = thumbnail.itemVersionIdentifier.fileID;
 					resource.version = thumbnail.itemVersionIdentifier.eTag;
-					resource.structureDescription = thumbnail.specID;
+					resource.structureDescription = specID;
 
 					// Transfer thumbnail image properties / data to resource
 					resource.maxPixelSize = thumbnail.maximumSizeInPixels;
 					resource.data = thumbnail.data;
 
 					resource.image = thumbnail;
+
+					resource.quality = OCResourceQualityNormal;
 
 					resultHandler(nil, resource);
 				}

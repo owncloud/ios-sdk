@@ -146,14 +146,21 @@
 
 - (void)handleBookmarkUpdatedNotification:(NSNotification *)updateNotification
 {
+	BOOL saveBookmarks = NO;
+
 	if (updateNotification.object == nil) { return; }
 
 	@synchronized(self)
 	{
 		if ([_bookmarks indexOfObjectIdenticalTo:updateNotification.object] != NSNotFound)
 		{
-			[self saveBookmarks];
+			saveBookmarks = YES;
 		}
+	}
+
+	if (saveBookmarks)
+	{
+		[self saveBookmarks];
 	}
 }
 

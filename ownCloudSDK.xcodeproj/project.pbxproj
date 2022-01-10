@@ -436,6 +436,8 @@
 		DC9C19E7278488360021222E /* OCResourceManagerJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E5278488360021222E /* OCResourceManagerJob.m */; };
 		DC9C19EA2785F5830021222E /* OCResourceSourceItemIcons.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19E82785F5830021222E /* OCResourceSourceItemIcons.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9C19EB2785F5830021222E /* OCResourceSourceItemIcons.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E92785F5830021222E /* OCResourceSourceItemIcons.m */; };
+		DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19EC278CD0B30021222E /* OCDatabase+ResourceStorage.h */; };
+		DC9C19EF278CD0B30021222E /* OCDatabase+ResourceStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19ED278CD0B30021222E /* OCDatabase+ResourceStorage.m */; };
 		DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */; };
 		DCA35D4D24CF685B00DBE2B0 /* OCDiagnosticNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA35D4B24CF685B00DBE2B0 /* OCDiagnosticNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1277,6 +1279,8 @@
 		DC9C19E5278488360021222E /* OCResourceManagerJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceManagerJob.m; sourceTree = "<group>"; };
 		DC9C19E82785F5830021222E /* OCResourceSourceItemIcons.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceItemIcons.h; sourceTree = "<group>"; };
 		DC9C19E92785F5830021222E /* OCResourceSourceItemIcons.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceItemIcons.m; sourceTree = "<group>"; };
+		DC9C19EC278CD0B30021222E /* OCDatabase+ResourceStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+ResourceStorage.h"; sourceTree = "<group>"; };
+		DC9C19ED278CD0B30021222E /* OCDatabase+ResourceStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+ResourceStorage.m"; sourceTree = "<group>"; };
 		DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPRequest+JSON.h"; sourceTree = "<group>"; };
 		DC9D22E925A8754200CF5675 /* OCHTTPRequest+JSON.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPRequest+JSON.m"; sourceTree = "<group>"; };
 		DCA35D4B24CF685B00DBE2B0 /* OCDiagnosticNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDiagnosticNode.h; sourceTree = "<group>"; };
@@ -2093,6 +2097,8 @@
 				DC41C78E25EA5F7A0074F23B /* OCResourceSource.h */,
 				DC9C19E127839E440021222E /* OCResourceSourceStorage.m */,
 				DC9C19E027839E440021222E /* OCResourceSourceStorage.h */,
+				DC9C19ED278CD0B30021222E /* OCDatabase+ResourceStorage.m */,
+				DC9C19EC278CD0B30021222E /* OCDatabase+ResourceStorage.h */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -3660,6 +3666,7 @@
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
+				DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */,
 				DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
@@ -4056,6 +4063,7 @@
 				DCC3701424D4D134008B0DEB /* OCScanJobActivity.m in Sources */,
 				DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */,
 				DC3CE066242A49E100AB8B88 /* OCMessagePresenter.m in Sources */,
+				DC9C19EF278CD0B30021222E /* OCDatabase+ResourceStorage.m in Sources */,
 				DCD038A12542CA4500F97534 /* NSString+OCClassSettings.m in Sources */,
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
 				DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */,
