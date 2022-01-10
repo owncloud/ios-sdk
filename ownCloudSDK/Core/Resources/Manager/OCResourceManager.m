@@ -195,7 +195,7 @@
 {
 	for (OCResourceManagerJob *job in _jobs)
 	{
-		[job.requests removeObject:request];
+		[job removeRequest:request];
 	}
 
 	[self setNeedsScheduling];
@@ -247,7 +247,7 @@
 				// Copy pre-sorted array of sources for this resourse type
 				if ((resourceType = primaryRequest.type) != nil)
 				{
-					job.sources = [_sourcesByType[primaryRequest.type] copy];
+					job.sources = [_sourcesByType[resourceType] copy];
 				}
 
 				// Start going through sources
@@ -273,8 +273,16 @@
 
 			if (job.state == OCResourceManagerJobStateComplete)
 			{
-				// Complete… remove job? Notify requests?
-				// removeJob = YES;
+				// Job complete
+
+				// Remove "single-run" requests
+				[job removeRequestsWithLifetime:OCResourceRequestLifetimeSingleRun];
+
+				// Remove "empty" jobs
+				if (job.primaryRequest == nil)
+				{
+					removeJob = YES;
+				}
 			}
 		}
 		else
@@ -286,6 +294,7 @@
 		if (removeJob)
 		{
 			if (removeJobs == nil) { removeJobs = [NSMutableArray new]; }
+			[removeJobs addObject:job];
 		}
 	}
 
@@ -305,7 +314,7 @@
  		job.state = OCResourceManagerJobStateComplete;
 	}
 
-	if (job.state != OCResourceManagerJobStateComplete)
+	if ((job.state != OCResourceManagerJobStateComplete) && (primaryRequest != nil))
 	{
 		if (job.sourcesCursorPosition == nil)
 		{
@@ -352,7 +361,7 @@
 		}
 	}
 
-	if (job.state != OCResourceManagerJobStateComplete)
+	if ((job.state != OCResourceManagerJobStateComplete) && (primaryRequest != nil))
 	{
 		if (job.sourcesCursorPosition.unsignedIntegerValue < job.sources.count)
 		{

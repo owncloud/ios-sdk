@@ -20,13 +20,13 @@
 #import "OCFeatureAvailability.h"
 #import "OCBookmark.h"
 #import "OCKeyValueStore.h"
+#import "OCResourceManager.h"
 
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 #import <FileProvider/FileProvider.h>
 #endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @class OCDatabase;
-@class OCResourceManager;
 @class OCItem;
 
 NS_ASSUME_NONNULL_BEGIN

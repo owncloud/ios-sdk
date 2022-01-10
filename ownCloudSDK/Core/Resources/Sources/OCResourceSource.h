@@ -20,6 +20,7 @@
 #import "OCResourceTypes.h"
 #import "OCResource.h"
 #import "OCResourceRequest.h"
+#import "OCEvent.h"
 
 @class OCCore;
 @class OCResourceManager;
@@ -37,7 +38,7 @@ typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 	OCResourceSourcePriorityLocal = 300 //!< Resource is locally generated
 };
 
-@interface OCResourceSource : NSObject
+@interface OCResourceSource : NSObject <OCEventHandler>
 
 @property(weak,nullable) OCResourceManager *manager;
 
@@ -45,6 +46,7 @@ typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 @property(strong,readonly) OCResourceType type;
 
 @property(weak,nullable) OCCore *core;
+@property(readonly,strong) OCEventHandlerIdentifier eventHandlerIdentifier;
 
 - (instancetype)initWithCore:(OCCore *)core;
 
@@ -52,6 +54,12 @@ typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request; //!< Returns which quality the source can deliver the requested resource in
 
 - (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(nullable OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
+
+#pragma mark - Event handler convenience integration
+@property(readonly,nonatomic) BOOL shouldRegisterEventHandler;
+
+- (void)registerEventHandler;
+- (void)unregisterEventHandler;
 
 @end
 

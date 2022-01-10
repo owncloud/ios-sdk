@@ -18,6 +18,8 @@
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface OCImage : NSObject <NSSecureCoding>
 {
 	NSURL *_url;
@@ -29,14 +31,24 @@
 	NSRecursiveLock *_processingLock;
 }
 
-@property(strong) NSURL *url; //!< URL of the image file
-@property(strong,nonatomic) NSData *data; //!< Binary data of the image. If none is present, tries to synchronously load the data from the URL.
+@property(strong,nullable) NSURL *url; //!< URL of the image file
+@property(strong,nullable,nonatomic) NSData *data; //!< Binary data of the image. If none is present, tries to synchronously load the data from the URL.
 @property(strong) NSString *mimeType; //!< MIME-Type of the image
 
-@property(strong,nonatomic) UIImage *image; //!< The decoded image. Attention: if not decoded already, decodes .data synchronously. For best performance, use -requestImageWithCompletionHandler:
+#pragma mark - Basic decoding
+@property(strong,nullable,nonatomic) UIImage *image; //!< The decoded image. Attention: if not decoded already, decodes .data synchronously. For best performance, use -requestImageWithCompletionHandler:
 
-- (UIImage *)decodeImage; //!< Called by .image if data hasn't yet been decoded.
+- (nullable UIImage *)decodeImage; //!< Called by .image if data hasn't yet been decoded.
 
-- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError *error, UIImage *image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
+- (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError * _Nullable error, UIImage * _Nullable image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
+
+#pragma mark - Scaled version
+@property(assign) CGSize maximumSizeInPixels;
+
+- (BOOL)requestImageForSize:(CGSize)maximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCImage * _Nullable ocImage, NSError * _Nullable error, CGSize maximumSizeInPoints, UIImage * _Nullable image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
+
+- (BOOL)canProvideForMaximumSizeInPixels:(CGSize)maximumSizeInPixels;
 
 @end
+
+NS_ASSUME_NONNULL_END

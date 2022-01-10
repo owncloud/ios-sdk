@@ -1,5 +1,5 @@
 //
-//  OCResourceRequestThumbnail.m
+//  OCResourceSourceItemThumbnails.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 27.02.21.
@@ -16,8 +16,14 @@
  *
  */
 
-#import "OCResourceRequestThumbnail.h"
+#import "OCResourceSource.h"
 
-@implementation OCResourceRequestThumbnail
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCResourceSourceItemThumbnails : OCResourceSource
 
 @end
+
+extern OCResourceSourceIdentifier OCResourceSourceIdentifierItemThumbnails;
+
+NS_ASSUME_NONNULL_END

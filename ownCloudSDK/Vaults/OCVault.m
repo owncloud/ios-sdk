@@ -46,6 +46,7 @@
 
 @synthesize database = _database;
 @synthesize keyValueStore = _keyValueStore;
+@synthesize resourceManager = _resourceManager;
 
 + (BOOL)vaultInitializedForBookmark:(OCBookmark *)bookmark
 {
@@ -235,6 +236,21 @@
 	}
 
 	return (_keyValueStore);
+}
+
+- (OCResourceManager *)resourceManager
+{
+	if (_resourceManager == nil)
+	{
+		OCDatabase *database;
+
+		if ((database = self.database) != nil)
+		{
+			_resourceManager = [[OCResourceManager alloc] initWithStorage:database];
+		}
+	}
+
+	return (_resourceManager);
 }
 
 #pragma mark - Operations

@@ -56,6 +56,9 @@
 #import "OCProcessManager.h"
 #import "OCBookmark+DBMigration.h"
 #import "OCMeasurement.h"
+#import "OCResourceManager.h"
+#import "OCResourceSourceAvatars.h"
+#import "OCResourceSourceItemThumbnails.h"
 
 @interface OCCore ()
 {
@@ -490,6 +493,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 				// Register as message response handler
 				[self.messageQueue addResponseHandler:self];
+
+				// Register resource sources
+				[self.vault.resourceManager addSource:[[OCResourceSourceAvatars alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
 			}
 			else
 			{

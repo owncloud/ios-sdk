@@ -17,8 +17,33 @@
  */
 
 #import "OCResource.h"
+#import "OCResourceRequest.h"
 
 @implementation OCResource
+
+- (instancetype)initWithRequest:(OCResourceRequest *)request
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = request.type;
+		_identifier = request.identifier;
+
+		_version = request.version;
+		_structureDescription = request.structureDescription;
+	}
+
+	return (self);
+}
+
+- (NSData *)data
+{
+	if ((_data == nil) && (_url != nil))
+	{
+		_data = [[NSData alloc] initWithContentsOfURL:_url];
+	}
+
+	return (_data);
+}
 
 #pragma mark - Secure Coding
 
@@ -37,7 +62,13 @@
 	[coder encodeInteger:_quality forKey:@"quality"];
 
 	[coder encodeObject:_metaData forKey:@"metaData"];
-	[coder encodeObject:_data forKey:@"data"];
+	[coder encodeObject:_mimeType forKey:@"mimeType"];
+
+	[coder encodeObject:_url forKey:@"url"];
+	if (_url == nil)
+	{
+		[coder encodeObject:_data forKey:@"data"];
+	}
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder
@@ -52,6 +83,9 @@
 		_quality = [coder decodeIntegerForKey:@"quality"];
 
 		_metaData = [coder decodeObjectOfClass:NSString.class forKey:@"metaData"];
+		_mimeType = [coder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
+
+		_url = [coder decodeObjectOfClass:NSURL.class forKey:@"url"];
 		_data = [coder decodeObjectOfClass:NSData.class forKey:@"data"];
 	}
 
@@ -60,4 +94,6 @@
 
 @end
 
-OCResourceType OCResourceTypeAny = @"any";
+OCResourceType OCResourceTypeAny = @"_any";
+OCResourceType OCResourceTypeAvatar = @"avtr";
+OCResourceType OCResourceTypeItemThumbnail = @"itmT";

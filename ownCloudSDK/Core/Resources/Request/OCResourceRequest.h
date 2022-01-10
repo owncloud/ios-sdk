@@ -33,32 +33,42 @@ typedef NS_ENUM(NSInteger, OCResourceRequestRelation)
 	OCResourceRequestRelationReplace	//!< Request points to a newer/better version of same resource, should/can replace the other request
 };
 
-typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource);
+typedef NS_ENUM(NSInteger, OCResourceRequestLifetime)
+{
+	OCResourceRequestLifetimeUntilDeallocation,
+	OCResourceRequestLifetimeSingleRun,
+	OCResourceRequestLifetimeUntilStopped
+};
 
+typedef void(^OCResourceRequestChangeHandler)(OCResourceRequest *request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource);
 typedef NSString* OCResourceRequestGroupIdentifier;
 
 @interface OCResourceRequest : NSObject
 
 @property(weak,nullable) OCCore *core;
 
-@property(strong,readonly) OCResourceType type;
+@property(assign) OCResourceRequestLifetime lifetime; //!< Determines how long a request is considered / served.
+
+@property(strong) OCResourceType type;
 @property(strong) OCResourceIdentifier identifier;
-@property(strong) id reference;
+@property(strong,nullable) id reference; //!< Depending on resource, instance of a reference, i.e. OCItem, OCUser, ...
 
 @property(strong,nullable) OCResourceVersion version;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
-@property(assign) OCResourceQuality quality;
 @property(assign) BOOL cancelled;
 
-@property(assign) CGSize maxPointSize;
-@property(assign) CGFloat scale;
+@property(assign) CGSize maxPointSize; 	//!< Maximum size in points on screen
+@property(assign) CGFloat scale;	//!< Number of pixels per point
+@property(readonly) CGSize maxPixelSize; //!< Computed from maxPointSize and scale
 
-@property(assign) BOOL waitForConnectivity;
+@property(assign) BOOL waitForConnectivity; //!< Sources that send requests to servers should wait for connectivity
 
 @property(strong,nullable,nonatomic) OCResource *resource;
 
 @property(copy,nullable) OCResourceRequestChangeHandler changeHandler;
+
+- (instancetype)initWithType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier;
 
 - (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest; //!< return how this request is related with otherRequest
 

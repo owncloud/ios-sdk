@@ -20,4 +20,16 @@
 
 @implementation OCResourceSourceAvatars
 
+- (OCResourceType)type
+{
+	return (OCResourceTypeAvatar);
+}
+
+- (OCResourceSourceIdentifier)identifier
+{
+	return (OCResourceSourceIdentifierAvatar);
+}
+
 @end
+
+OCResourceSourceIdentifier OCResourceSourceIdentifierAvatar = @"core.avatar";

@@ -24,4 +24,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCResourceSourceIdentifier OCResourceSourceIdentifierAvatar;
+
 NS_ASSUME_NONNULL_END

@@ -19,6 +19,7 @@
 #import "OCResourceRequest.h"
 #import "OCResourceRequest+Internal.h"
 #import "OCResourceManagerJob.h"
+#import "OCLogger.h"
 
 @interface OCResourceRequest ()
 {
@@ -28,6 +29,22 @@
 @end
 
 @implementation OCResourceRequest
+
+- (instancetype)initWithType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier
+{
+	if ((self = [super init]) != nil)
+	{
+		_type = type;
+		_identifier= identifier;
+	}
+
+	return (self);
+}
+
+- (void)dealloc
+{
+	OCLogDebug(@"Deallocating OCResourceManagerJob");
+}
 
 - (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest
 {
@@ -44,6 +61,19 @@
 	{
 		_changeHandler(self, nil, previousResource, resource);
 	}
+}
+
+- (CGSize)maxPixelSize
+{
+	CGSize pointSize = self.maxPointSize;
+	CGFloat scale = self.scale;
+
+	if (scale == 0)
+	{
+		scale = 1.0;
+	}
+
+	return (CGSizeMake(pointSize.width * scale, pointSize.height * scale));
 }
 
 @end

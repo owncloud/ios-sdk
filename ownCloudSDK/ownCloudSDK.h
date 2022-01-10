@@ -151,6 +151,21 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCVault+Prepopulation.h>
 #import <ownCloudSDK/OCDAVRawResponse.h>
 
+#import <ownCloudSDK/OCResourceTypes.h>
+#import <ownCloudSDK/OCResourceManager.h>
+#import <ownCloudSDK/OCResourceManagerJob.h>
+#import <ownCloudSDK/OCResourceSource.h>
+#import <ownCloudSDK/OCResourceSourceStorage.h>
+#import <ownCloudSDK/OCResourceRequest.h>
+#import <ownCloudSDK/OCResource.h>
+#import <ownCloudSDK/OCResourceImage.h>
+#import <ownCloudSDK/OCResourceSourceAvatars.h>
+#import <ownCloudSDK/OCResourceRequestAvatar.h>
+#import <ownCloudSDK/OCResourceSourceItemIcons.h>
+#import <ownCloudSDK/OCResourceSourceItemThumbnails.h>
+#import <ownCloudSDK/OCResourceSourceItemLocalThumbnails.h>
+#import <ownCloudSDK/OCResourceRequestItemThumbnail.h>
+
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>

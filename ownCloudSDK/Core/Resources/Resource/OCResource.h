@@ -23,6 +23,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class OCResourceRequest;
+
 @interface OCResource : NSObject <NSSecureCoding>
 
 @property(strong) OCResourceType type;
@@ -33,10 +35,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCResourceQuality quality;
 
 @property(strong,nullable) OCResourceMetadata metaData;
-@property(strong,nullable) NSData *data;
+@property(strong,nullable) OCResourceMIMEType mimeType;
+
+@property(strong,nullable) NSURL *url; //!< URL at which the resource is stored (optional)
+@property(strong,nullable,nonatomic) NSData *data; //!< Data, at which the resource is stored. If data == nil and url != nil, loads contents of url.
+
+- (instancetype)initWithRequest:(OCResourceRequest *)request;
 
 @end
 
 extern OCResourceType OCResourceTypeAny;
+extern OCResourceType OCResourceTypeAvatar;
+extern OCResourceType OCResourceTypeItemThumbnail;
 
 NS_ASSUME_NONNULL_END

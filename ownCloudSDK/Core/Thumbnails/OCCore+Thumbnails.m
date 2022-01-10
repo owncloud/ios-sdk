@@ -23,6 +23,8 @@
 #import "NSError+OCError.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCLogger.h"
+#import "OCResourceImage.h"
+#import "OCResourceRequestItemThumbnail.h"
 
 @implementation OCCore (Thumbnails)
 
@@ -71,6 +73,21 @@
 }
 
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
+{
+	OCResourceRequestItemThumbnail *itemThumbnailRequest = [OCResourceRequestItemThumbnail requestThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:waitForConnectivity changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
+		OCImage *thumbnail = OCTypedCast(newResource, OCResourceImage).image;
+
+		retrieveHandler(error, self, item, OCTypedCast(thumbnail, OCItemThumbnail), YES, nil);
+	}];
+
+	itemThumbnailRequest.lifetime = OCResourceRequestLifetimeSingleRun;
+
+	[self.vault.resourceManager startRequest:itemThumbnailRequest];
+
+	return (nil);
+}
+
+- (nullable NSProgress *)__retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
 	NSProgress *progress = [NSProgress indeterminateProgress];
 	OCFileID fileID = item.fileID;

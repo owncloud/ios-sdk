@@ -7,7 +7,7 @@
 //
 
 /*
- * Copyright (C) 2021, ownCloud GmbH.
+ * Copyright (C) 2022, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *

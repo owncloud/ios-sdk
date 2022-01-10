@@ -7,7 +7,7 @@
 //
 
 /*
- * Copyright (C) 2021, ownCloud GmbH.
+ * Copyright (C) 2022, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -17,11 +17,11 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCResourceRequest.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCResourceManager;
-@class OCResourceRequest;
 @class OCResourceSource;
 @class OCResource;
 
@@ -42,9 +42,10 @@ typedef NSUInteger OCResourceManagerJobSeed;
 @property(assign) OCResourceManagerJobSeed seed;
 
 @property(strong) NSHashTable<OCResourceRequest *> *requests;
+@property(strong) NSMutableArray<OCResourceRequest *> *managedRequests;
 @property(weak,nullable,nonatomic) OCResourceRequest *primaryRequest;
 
-@property(strong) NSMutableArray<OCResourceSource *> *sources;
+@property(strong,nullable) NSMutableArray<OCResourceSource *> *sources;
 @property(strong,nullable) NSNumber *sourcesCursorPosition;
 
 @property(strong,nullable) OCResource *latestResource;
@@ -53,6 +54,9 @@ typedef NSUInteger OCResourceManagerJobSeed;
 
 - (void)addRequest:(OCResourceRequest *)request; //!< Adds an additional request
 - (void)replacePrimaryRequestWith:(OCResourceRequest *)request; //!< Replace primary request with this request and start anew
+- (void)removeRequest:(OCResourceRequest *)request; //!< Removes a request
+
+- (void)removeRequestsWithLifetime:(OCResourceRequestLifetime)lifetime; //!< For removal of (managed) requests with a lifetime other than OCResourceRequestLifetimeUntilDeallocation
 
 @end
 

@@ -1,5 +1,5 @@
 //
-//  OCResourceRequestThumbnail.h
+//  OCResourceSourceItemLocalThumbnails.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 27.02.21.
@@ -16,14 +16,14 @@
  *
  */
 
-#import "OCResourceRequest.h"
+#import "OCResourceSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceRequestThumbnail : OCResourceRequest
-
-+ (instancetype)requestThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(OCResourceRequestChangeHandler)changeHandler;
+@interface OCResourceSourceItemLocalThumbnails : OCResourceSource
 
 @end
+
+extern OCResourceSourceIdentifier OCResourceSourceIdentifierItemLocalThumbnails;
 
 NS_ASSUME_NONNULL_END

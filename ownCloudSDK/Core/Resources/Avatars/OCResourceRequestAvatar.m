@@ -17,7 +17,13 @@
  */
 
 #import "OCResourceRequestAvatar.h"
+#import "OCResource.h"
 
 @implementation OCResourceRequestAvatar
+
+- (OCResourceType)type
+{
+	return (OCResourceTypeAvatar);
+}
 
 @end

@@ -7,7 +7,7 @@
 //
 
 /*
- * Copyright (C) 2021, ownCloud GmbH.
+ * Copyright (C) 2022, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -21,6 +21,7 @@
 #import "OCResourceRequest.h"
 #import "OCResourceRequest+Internal.h"
 #import "OCResourceSource.h"
+#import "OCLogger.h"
 
 @implementation OCResourceManagerJob
 
@@ -34,7 +35,7 @@
 		_requests = [NSHashTable weakObjectsHashTable];
 		_sources = [NSMutableArray new];
 
-		[_requests addObject:primaryRequest];
+		[self addRequest:primaryRequest];
 	}
 
 	return (self);
@@ -59,6 +60,16 @@
 	{
 		request.job = self;
 		[_requests addObject:request];
+
+		if (request.lifetime != OCResourceRequestLifetimeUntilDeallocation)
+		{
+			if (_managedRequests == nil)
+			{
+				_managedRequests = [NSMutableArray new];
+			}
+
+			[_managedRequests addObject:request];
+		}
 	}
 }
 
@@ -66,9 +77,8 @@
 {
 	@synchronized(self)
 	{
-		request.job = self;
+		[self addRequest:request];
 
-		[_requests addObject:request];
 		_primaryRequest = request;
 
 		_state = OCResourceManagerJobStateNew;
@@ -77,6 +87,45 @@
 		_sourcesCursorPosition = nil;
 
 		_seed++;
+	}
+}
+
+- (void)removeRequest:(OCResourceRequest *)request
+{
+	@synchronized(self)
+	{
+		[_requests removeObject:request];
+		[_managedRequests removeObject:request];
+	}
+}
+
+- (void)removeRequestsWithLifetime:(OCResourceRequestLifetime)lifetime
+{
+	@synchronized(self)
+	{
+		if (_managedRequests != nil)
+		{
+			NSMutableIndexSet *removeIndexes = nil;
+			NSUInteger idx = 0;
+
+			for (OCResourceRequest *request in _managedRequests)
+			{
+				if (request.lifetime == lifetime)
+				{
+					if ((removeIndexes = [NSMutableIndexSet new]) != nil)
+					{
+						[removeIndexes addIndex:idx];
+					}
+				}
+
+				idx++;
+			}
+
+			if (removeIndexes != nil)
+			{
+				[_managedRequests removeObjectsAtIndexes:removeIndexes];
+			}
+		}
 	}
 }
 
