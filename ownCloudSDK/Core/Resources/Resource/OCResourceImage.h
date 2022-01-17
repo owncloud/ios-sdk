@@ -19,16 +19,22 @@
 #import "OCResource.h"
 #import "OCImage.h"
 #import "OCItemThumbnail.h"
+#import "OCAvatar.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCResourceImage : OCResource
 
 @property(assign) CGSize maxPixelSize; //!< Maximum size of the resource in pixels, CGSizeZero otherwise
+
+@property(assign) OCImageFillMode fillMode; //!< Fill mode of the image
+
 @property(strong,nullable,nonatomic) OCImage *image; //!< OCImage representation of image, for caching existing instances - or generated on-the-fly. NOT serialized!
 @property(strong,readonly,nullable,nonatomic) OCItemThumbnail *thumbnail; //!< OCItemThumbnail representation of .image - generated on-the-fly. NOT serialized!
+@property(strong,readonly,nullable,nonatomic) OCAvatar *avatar; //!< OCAvatar representation of .image - generated on-the-fly. NOT serialized!
 
 // - (void)drawInRect:(CGRect)rect;
+// - (UIView *)provideView;
 
 @end
 

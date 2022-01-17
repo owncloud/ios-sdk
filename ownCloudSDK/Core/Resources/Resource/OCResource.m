@@ -45,8 +45,13 @@
 	return (_data);
 }
 
-#pragma mark - Secure Coding
+#pragma mark - View Provider
+- (UIView *)provideViewForSize:(CGSize)size
+{
+	return (nil);
+}
 
+#pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
 	return (YES);
@@ -69,6 +74,8 @@
 	{
 		[coder encodeObject:_data forKey:@"data"];
 	}
+
+	[coder encodeObject:_timestamp forKey:@"timestamp"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder
@@ -87,6 +94,8 @@
 
 		_url = [coder decodeObjectOfClass:NSURL.class forKey:@"url"];
 		_data = [coder decodeObjectOfClass:NSData.class forKey:@"data"];
+
+		_timestamp = [coder decodeObjectOfClass:NSDate.class forKey:@"timestamp"];
 	}
 
 	return (self);

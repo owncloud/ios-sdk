@@ -16,15 +16,15 @@
  *
  */
 
-#import "OCResourceRequest.h"
+#import "OCResourceRequestImage.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceRequestItemThumbnail : OCResourceRequest
+@interface OCResourceRequestItemThumbnail : OCResourceRequestImage
 
-@property(strong) OCItem *item;
+@property(strong,readonly,nonatomic) OCItem *item;
 
-+ (instancetype)requestThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(OCResourceRequestChangeHandler)changeHandler;
++ (instancetype)requestThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(nullable OCResourceRequestChangeHandler)changeHandler;
 
 @end
 

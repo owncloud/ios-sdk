@@ -25,6 +25,7 @@
 #import "OCLogger.h"
 #import "OCResourceImage.h"
 #import "OCResourceRequestItemThumbnail.h"
+#import "OCResourceManager.h"
 
 @implementation OCCore (Thumbnails)
 
@@ -74,8 +75,8 @@
 
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
 {
-	OCResourceRequestItemThumbnail *itemThumbnailRequest = [OCResourceRequestItemThumbnail requestThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:waitForConnectivity changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
-		retrieveHandler(error, self, item, OCTypedCast(newResource, OCResourceImage).thumbnail, YES, nil);
+	OCResourceRequestItemThumbnail *itemThumbnailRequest = [OCResourceRequestItemThumbnail requestThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:waitForConnectivity changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, BOOL isOngoing, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
+		retrieveHandler(error, self, item, OCTypedCast(newResource, OCResourceImage).thumbnail, isOngoing, nil);
 	}];
 
 	itemThumbnailRequest.lifetime = OCResourceRequestLifetimeSingleRun;
@@ -168,7 +169,7 @@
 							// Create OCItemThumbnail from data returned from database
 							OCItemThumbnail *cachedThumbnail = [OCItemThumbnail new];
 
-							cachedThumbnail.maximumSizeInPixels = maxSize;
+							cachedThumbnail.maxPixelSize = maxSize;
 							cachedThumbnail.mimeType = mimeType;
 							cachedThumbnail.data = thumbnailData;
 							cachedThumbnail.specID = specID;
@@ -314,7 +315,7 @@
 
 			// Store in database
 			OCLogVerbose(@"Updating database with %@", thumbnail);
-			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maximumSizeInPixels completionHandler:nil];
+			[self.vault.database storeThumbnailData:thumbnail.data withMIMEType:thumbnail.mimeType specID:specID forItemVersion:itemVersionIdentifier maximumSizeInPixels:thumbnail.maxPixelSize completionHandler:nil];
 		}
 
 		// Call all retrieveHandlers

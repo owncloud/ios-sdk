@@ -1,8 +1,8 @@
 //
-//  OCAvatar.h
+//  OCViewProvider.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 29.09.20.
+//  Created by Felix Schwarz on 17.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,19 +16,14 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCImage.h"
-#import "OCTypes.h"
-#import "OCUser.h"
+#import "OCPlatform.h"
+#import "OCViewProviderContext.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCAvatar : OCImage <NSSecureCoding>
+@protocol OCViewProvider <NSObject>
 
-@property(strong,nullable) OCUserIdentifier userIdentifier;
-@property(strong,nullable) OCFileETag eTag;
-
-@property(strong,nullable) NSDate *timestamp;
+- (nullable OCView *)provideViewForSize:(CGSize)size inContext:(nullable OCViewProviderContext *)context; //!< Returns a view suitable to display the object. Sizes are only passed to allow optimization. Pass CGSizeZero if the size at which the object will be displayed is unknown.
 
 @end
 

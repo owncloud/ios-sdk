@@ -37,11 +37,24 @@
 {
 	if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
 	{
-		OCItem *item;
-
-		if ((item = OCTypedCast(request.reference, OCItem)) != nil)
+		if ([request.type isEqual:OCResourceTypeItemThumbnail])
 		{
-			if (item.type == OCItemTypeFile)
+			OCItem *item;
+
+			if ((item = OCTypedCast(request.reference, OCItem)) != nil)
+			{
+				if (item.type == OCItemTypeFile)
+				{
+					return (OCResourceQualityCached);
+				}
+			}
+		}
+
+		if ([request.type isEqual:OCResourceTypeAvatar])
+		{
+			OCUser *user;
+
+			if ((user = OCTypedCast(request.reference, OCUser)) != nil)
 			{
 				return (OCResourceQualityCached);
 			}
@@ -51,9 +64,9 @@
 	return (OCResourceQualityNone);
 }
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler
 {
-	[self.manager.storage retrieveResourceForRequest:request completionHandler:^(NSError * _Nullable error, OCResource * _Nullable resource) {
+	[self.manager retrieveResourceForRequest:request completionHandler:^(NSError * _Nullable error, OCResource * _Nullable resource) {
 		resource.originSourceIdentifier = OCResourceSourceIdentifierStorage;
 
 		resultHandler(error, resource);

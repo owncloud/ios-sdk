@@ -31,6 +31,9 @@
 	OCIPCNotificationName _coreUpdateNotificationName;
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
 
+	id<OCViewProvider> _avatar;
+	NSData *_avatarData;
+
 	NSString *_lastUsername;
 }
 @end
@@ -211,6 +214,54 @@
 	return (_lastUsername);
 }
 
+#pragma mark - Avatar
+- (id<OCViewProvider>)avatar
+{
+	@synchronized(self)
+	{
+		if ((_avatar == nil) && (_avatarData != nil))
+		{
+			@try
+			{
+				_avatar = [NSKeyedUnarchiver unarchiveObjectWithData:_avatarData];
+			}
+			@catch (NSException *exception)
+			{
+			}
+		}
+	}
+
+	return (_avatar);
+}
+
+- (void)setAvatar:(id<OCViewProvider>)avatar
+{
+	@synchronized(self)
+	{
+		NSData *avatarData = nil;
+
+		if (avatar != nil)
+		{
+			@try
+			{
+				NSError *error = nil;
+				avatarData = [NSKeyedArchiver archivedDataWithRootObject:avatar requiringSecureCoding:YES error:&error];
+
+				if (error != nil)
+				{
+					OCLogError(@"Error serializing %@: %@", avatar, error);
+				}
+			}
+			@catch (NSException *exception)
+			{
+			}
+		}
+
+		_avatar = (avatarData != nil) ? avatar : nil;
+		_avatarData = avatarData;
+	}
+}
+
 #pragma mark - Certificate approval
 - (NSNotificationName)certificateUserApprovalUpdateNotificationName
 {
@@ -241,6 +292,9 @@
 	_authenticationData = sourceBookmark.authenticationData;
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
 	_authenticationValidationDate = sourceBookmark.authenticationValidationDate;
+
+	_avatar = sourceBookmark->_avatar;
+	_avatarData = sourceBookmark->_avatarData;
 
 	_lastUsername = sourceBookmark->_lastUsername;
 
@@ -277,6 +331,8 @@
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
+		_avatarData = [decoder decodeObjectOfClass:NSData.class forKey:@"avatarData"];
+
 		_databaseVersion = [decoder decodeIntegerForKey:@"databaseVersion"];
 
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
@@ -305,6 +361,8 @@
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
+
+	[coder encodeObject:_avatarData forKey:@"avatarData"];
 
 	[coder encodeInteger:_databaseVersion forKey:@"databaseVersion"];
 

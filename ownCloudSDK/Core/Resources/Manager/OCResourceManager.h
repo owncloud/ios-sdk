@@ -11,6 +11,8 @@
 #import "OCResourceRequest.h"
 #import "OCResourceSource.h"
 #import "OCResource.h"
+#import "OCCache.h"
+#import "OCCore.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,10 +24,14 @@ typedef void(^OCResourceRetrieveCompletionHandler)(NSError * _Nullable error, OC
 - (void)storeResource:(OCResource *)resource completionHandler:(OCResourceStoreCompletionHandler)completionHandler;
 @end
 
-@interface OCResourceManager : NSObject
+@interface OCResourceManager : NSObject <OCResourceStorage>
 
 @property(weak,nullable) id<OCResourceStorage> storage;
 @property(weak,nullable) OCCore *core;
+
+@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+
+// @property(assign) NSUInteger maximumConcurrentJobs; //!< Maximum number of jobs to work on in parallel. A value of 0 indicates no limit.
 
 - (instancetype)initWithStorage:(nullable id<OCResourceStorage>)storage;
 

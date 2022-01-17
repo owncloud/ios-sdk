@@ -20,6 +20,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NSString* OCUserIdentifier; //!< Internal SDK unique identifier for the user
+
 @interface OCUser : NSObject <NSSecureCoding, NSCopying>
 {
 	UIImage *_avatar;
@@ -36,9 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,readonly) NSString *remoteUserName; //!< Returns the part before the @ sign for usernames containing an @ sign (nil otherwise)
 @property(nullable,readonly) NSString *remoteHost; //!< Returns the part after the @ sign for usernames containing an @ sign (nil otherwise)
 
-@property(nullable,strong) NSData *avatarData; //!< Image data for the avatar of the user (or nil if none is available)
-
-@property(nullable,readonly,nonatomic) UIImage *avatar; //!< Avatar for the user (or nil if none is available) - auto-generated from avatarData, not archived
+@property(nullable,readonly) OCUserIdentifier userIdentifier; //!< Unique SDK internal identifier for the user
 
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote;

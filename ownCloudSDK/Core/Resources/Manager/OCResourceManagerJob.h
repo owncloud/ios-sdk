@@ -34,6 +34,8 @@ typedef NS_ENUM(NSInteger, OCResourceManagerJobState)
 
 typedef NSUInteger OCResourceManagerJobSeed;
 
+typedef void(^OCResourceManagerJobCancellationHandler)(void);
+
 @interface OCResourceManagerJob : NSObject
 
 @property(weak,nullable) OCResourceManager *manager;
@@ -45,11 +47,16 @@ typedef NSUInteger OCResourceManagerJobSeed;
 @property(strong) NSMutableArray<OCResourceRequest *> *managedRequests;
 @property(weak,nullable,nonatomic) OCResourceRequest *primaryRequest;
 
+@property(assign) OCResourceQuality minimumQuality;
+
 @property(strong,nullable) NSMutableArray<OCResourceSource *> *sources;
 @property(strong,nullable) NSNumber *sourcesCursorPosition;
 
 @property(strong,nullable) OCResource *latestResource;
 @property(weak,nullable) OCResource *lastStoredResource;
+
+@property(assign,nonatomic) BOOL cancelled;
+@property(copy,nullable) OCResourceManagerJobCancellationHandler cancellationHandler;
 
 - (instancetype)initWithPrimaryRequest:(OCResourceRequest *)primaryRequest forManager:(OCResourceManager *)manager;
 

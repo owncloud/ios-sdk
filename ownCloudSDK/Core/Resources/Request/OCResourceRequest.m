@@ -3,11 +3,11 @@
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 30.09.20.
-//  Copyright © 2020 ownCloud GmbH. All rights reserved.
+//  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2021, ownCloud GmbH.
+ * Copyright (C) 2022, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -17,22 +17,25 @@
  */
 
 #import "OCResourceRequest.h"
-#import "OCResourceRequest+Internal.h"
 #import "OCResourceManagerJob.h"
+#import "OCResource.h"
 #import "OCLogger.h"
-
-@interface OCResourceRequest ()
-{
-	__weak OCResourceManagerJob *_job;
-}
-
-@end
 
 @implementation OCResourceRequest
 
-- (instancetype)initWithType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier
+- (instancetype)init
 {
 	if ((self = [super init]) != nil)
+	{
+		_minimumQuality = OCResourceQualityFallback;
+	}
+
+	return (self);
+}
+
+- (instancetype)initWithType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier
+{
+	if ((self = [self init]) != nil)
 	{
 		_type = type;
 		_identifier= identifier;
@@ -43,12 +46,26 @@
 
 - (void)dealloc
 {
-	OCLogDebug(@"Deallocating OCResourceManagerJob");
+	[self endRequest];
+	OCTLogDebug(@[@"ResMan"], @"Deallocating OCResourceRequest");
 }
 
 - (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest
 {
 	return (OCResourceRequestRelationDistinct);
+}
+
+- (BOOL)satisfiedByResource:(OCResource *)resource
+{
+	if ([self.type isEqual:resource.type] &&
+	    [self.identifier isEqual:resource.identifier] &&
+	    [self.version isEqual:resource.version] &&
+	    [self.structureDescription isEqual:resource.structureDescription])
+	{
+		return (YES);
+	}
+
+	return (NO);
 }
 
 - (void)setResource:(OCResource *)resource
@@ -57,9 +74,19 @@
 
 	_resource = resource;
 
+	[self notifyWithError:nil isOngoing:YES previousResource:previousResource newResource:resource];
+}
+
+- (void)notifyWithError:(NSError *)error isOngoing:(BOOL)isOngoing previousResource:(OCResource *)previousResource newResource:(OCResource *)newResource
+{
+	if (_delegate != nil)
+	{
+		[_delegate resourceRequest:self didChangeWithError:error isOngoing:isOngoing previousResource:previousResource newResource:newResource];
+	}
+
 	if (_changeHandler != nil)
 	{
-		_changeHandler(self, nil, previousResource, resource);
+		_changeHandler(self, error, isOngoing, previousResource, newResource);
 	}
 }
 
@@ -76,18 +103,41 @@
 	return (CGSizeMake(pointSize.width * scale, pointSize.height * scale));
 }
 
-@end
-
-@implementation OCResourceRequest (Internal)
-
-- (OCResourceManagerJob *)job
+- (void)setCancelled:(BOOL)cancelled
 {
-	return (_job);
+	_cancelled = cancelled;
+
+	if (cancelled)
+	{
+		[self endRequest];
+	}
 }
 
-- (void)setJob:(OCResourceManagerJob *)job
+- (void)endRequest
 {
-	_job = job;
+	OCResourceRequestChangeHandler changeHandler = nil;
+	OCResource *resource = nil;
+
+	[self willChangeValueForKey:@"ended"];
+
+	@synchronized(self)
+	{
+		changeHandler = _changeHandler;
+		resource = _resource;
+
+		_changeHandler = nil;
+		_ended = YES;
+	}
+
+	[self didChangeValueForKey:@"ended"];
+
+	if (changeHandler != nil)
+	{
+		OCTLogDebug(@[@"ResMan"], @"Ending OCResourceRequest %@", self);
+		changeHandler(self, nil, NO, resource, resource);
+	}
+
+	[self notifyWithError:nil isOngoing:NO previousResource:resource newResource:resource]; // only notifies delegate here, as _changeHandler is nil at this point
 }
 
 @end

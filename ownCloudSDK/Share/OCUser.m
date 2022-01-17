@@ -23,7 +23,6 @@
 
 @synthesize userName = _userName;
 @synthesize displayName = _displayName;
-@synthesize avatarData = _avatarData;
 
 @dynamic isRemote;
 @dynamic remoteHost;
@@ -100,14 +99,9 @@
 	return (nil);
 }
 
-- (UIImage *)avatar
+- (OCUserIdentifier)userIdentifier
 {
-	if ((_avatar == nil) && (_avatarData != nil))
-	{
-		_avatar = [UIImage imageWithData:self.avatarData];
-	}
-
-	return (_avatar);
+	return ([NSString stringWithFormat:@"%@:%d", self.userName, self.isRemote]);
 }
 
 #pragma mark - Comparison
@@ -124,7 +118,7 @@
 	{
 		#define compareVar(var) ((otherUser->var == var) || [otherUser->var isEqual:var])
 
-		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_avatarData) && compareVar(_forceIsRemote));
+		return (compareVar(_userName) && compareVar(_displayName) && compareVar(_emailAddress) && compareVar(_forceIsRemote));
 	}
 
 	return (NO);
@@ -138,8 +132,6 @@
 	user->_userName = _userName;
 	user->_displayName = _displayName;
 	user->_emailAddress = _emailAddress;
-	user->_avatarData = _avatarData;
-	user->_avatar = _avatar;
 	user->_forceIsRemote = _forceIsRemote;
 
 	return (user);
@@ -158,7 +150,6 @@
 		self.userName = [decoder decodeObjectOfClass:[NSString class] forKey:@"userName"];
 		self.displayName = [decoder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
 		self.emailAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"emailAddress"];
-		self.avatarData = [decoder decodeObjectOfClass:[NSData class] forKey:@"avatarData"];
 		_forceIsRemote = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"forceIsRemote"];
 	}
 
@@ -170,14 +161,13 @@
 	[coder encodeObject:self.userName forKey:@"userName"];
 	[coder encodeObject:self.displayName forKey:@"displayName"];
 	[coder encodeObject:self.emailAddress forKey:@"emailAddress"];
-	[coder encodeObject:self.avatarData forKey:@"avatarData"];
 	[coder encodeObject:_forceIsRemote forKey:@"forceIsRemote"];
 }
 
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, userName: %@, displayName: %@%@%@>", NSStringFromClass(self.class), self, _userName, _displayName, ((_emailAddress!=nil) ? [NSString stringWithFormat:@", emailAddress: [%@]",_emailAddress] : @""), ((self.avatarData!=nil) ? @", avatarData" : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, userName: %@, displayName: %@%@>", NSStringFromClass(self.class), self, _userName, _displayName, ((_emailAddress!=nil) ? [NSString stringWithFormat:@", emailAddress: [%@]",_emailAddress] : @"")]);
 }
 
 @end

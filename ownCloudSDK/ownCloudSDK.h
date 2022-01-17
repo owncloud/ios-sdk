@@ -26,9 +26,14 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <ownCloudSDK/PublicHeader.h>
 
+#import <ownCloudSDK/OCPlatform.h>
+
 #import <ownCloudSDK/OCTypes.h>
 #import <ownCloudSDK/OCMacros.h>
 #import <ownCloudSDK/OCFeatureAvailability.h>
+
+#import <ownCloudSDK/OCViewProvider.h>
+#import <ownCloudSDK/OCViewProviderContext.h>
 
 #import <ownCloudSDK/OCLocale.h>
 #import <ownCloudSDK/OCLocaleFilter.h>
@@ -157,6 +162,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCResourceSource.h>
 #import <ownCloudSDK/OCResourceSourceStorage.h>
 #import <ownCloudSDK/OCResourceRequest.h>
+#import <ownCloudSDK/OCResourceRequestImage.h>
 #import <ownCloudSDK/OCResource.h>
 #import <ownCloudSDK/OCResourceImage.h>
 #import <ownCloudSDK/OCResourceSourceAvatars.h>
@@ -165,6 +171,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCResourceSourceItemThumbnails.h>
 #import <ownCloudSDK/OCResourceSourceItemLocalThumbnails.h>
 #import <ownCloudSDK/OCResourceRequestItemThumbnail.h>
+
+#import <ownCloudSDK/OCAvatar.h>
 
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>

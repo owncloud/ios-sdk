@@ -32,7 +32,10 @@ typedef NS_ENUM(NSInteger, OCResourceQuality)
 	OCResourceQualityHigh = 75,	//!< High quality, i.e. a local thumbnail generator for videos, PDFs, office formats
 
 	// Ordering logic only
-	OCResourceQualityCached = 100	//!< Intermediate quality returned by the cache to ensure the cache response is awaited before any other source is asked to retrieve the resource. Returned resource's quality will differ and represent the actual quality that was stored in the cache.
+	OCResourceQualityCached = 100,	//!< Intermediate quality returned by the cache to ensure the cache response is awaited before any other source is asked to retrieve the resource. Returned resource's quality will differ and represent the actual quality that was stored in the cache.
+
+	// Logically maximum quality
+	OCResourceQualityMaximum = OCResourceQualityCached
 };
 
 typedef NSString* OCResourceType NS_TYPED_ENUM; //!< Type of resource, f.ex. thumbnail or avatar

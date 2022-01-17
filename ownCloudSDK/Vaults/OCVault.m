@@ -34,6 +34,7 @@
 #import "OCBookmark+DBMigration.h"
 #import "OCDatabase+Schemas.h"
 #import "OCResourceManager.h"
+#import "OCDatabase+ResourceStorage.h"
 
 @implementation OCVault
 

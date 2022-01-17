@@ -20,6 +20,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSInteger, OCImageFillMode)
+{
+	OCImageFillModeUnknown,
+	OCImageFillModeScaleToFit,
+	OCImageFillModeScaleToFill
+};
+
 @interface OCImage : NSObject <NSSecureCoding>
 {
 	NSURL *_url;
@@ -35,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable,nonatomic) NSData *data; //!< Binary data of the image. If none is present, tries to synchronously load the data from the URL.
 @property(strong) NSString *mimeType; //!< MIME-Type of the image
 
+@property(assign) OCImageFillMode fillMode; //!< Fill mode of the image, defaults to unkonwn
+
 #pragma mark - Basic decoding
 @property(strong,nullable,nonatomic) UIImage *image; //!< The decoded image. Attention: if not decoded already, decodes .data synchronously. For best performance, use -requestImageWithCompletionHandler:
 
@@ -43,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)requestImageWithCompletionHandler:(void(^)(OCImage *ocImage, NSError * _Nullable error, UIImage * _Nullable image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
 
 #pragma mark - Scaled version
-@property(assign) CGSize maximumSizeInPixels;
+@property(assign) CGSize maxPixelSize;
 
 - (BOOL)requestImageForSize:(CGSize)maximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCImage * _Nullable ocImage, NSError * _Nullable error, CGSize maximumSizeInPoints, UIImage * _Nullable image))completionHandler; //!< Returns YES if the image is already available and the completionHandler has already been called. Returns NO if the image is not yet available, will call completionHandler when it is.
 

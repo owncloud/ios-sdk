@@ -59,6 +59,7 @@
 #import "OCResourceManager.h"
 #import "OCResourceSourceAvatars.h"
 #import "OCResourceSourceItemThumbnails.h"
+#import "OCResourceSourceItemLocalThumbnails.h"
 
 @interface OCCore ()
 {
@@ -497,6 +498,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				// Register resource sources
 				[self.vault.resourceManager addSource:[[OCResourceSourceAvatars alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceItemLocalThumbnails alloc] initWithCore:self]];
 			}
 			else
 			{
@@ -940,6 +942,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 - (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
+
+	self.vault.resourceManager.memoryConfiguration = memoryConfiguration;
 
 	switch (_memoryConfiguration)
 	{

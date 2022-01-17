@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCResourceRequestAvatar : OCResourceRequest
 
-+ (instancetype)requestAvatarFor:(OCUser *)user maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(OCResourceRequestChangeHandler)changeHandler;
++ (instancetype)requestAvatarFor:(OCUser *)user maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(nullable OCResourceRequestChangeHandler)changeHandler;
 
 @end
 

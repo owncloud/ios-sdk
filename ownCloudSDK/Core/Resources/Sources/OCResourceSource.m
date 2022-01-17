@@ -45,7 +45,7 @@
 	return (OCResourceQualityNone);
 }
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(nullable OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler
 {
 	if (resultHandler != nil)
 	{
@@ -99,7 +99,7 @@
 	}
 	else
 	{
-		OCLogError(@"Unroutable resource source event: %@", event);
+		OCTLogError(@[@"ResMan"], @"Unroutable resource source event: %@", event);
 	}
 }
 

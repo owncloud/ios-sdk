@@ -21,6 +21,7 @@
 #import "OCResource.h"
 #import "OCResourceRequest.h"
 #import "OCEvent.h"
+#import "OCResourceManagerJob.h"
 
 @class OCCore;
 @class OCResourceManager;
@@ -28,7 +29,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^OCResourceSourceResultHandler)(NSError * _Nullable error, OCResource * _Nullable resource);
-typedef BOOL(^OCResourceSourceShouldContinueHandler)(void);
 
 typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 {
@@ -53,7 +53,7 @@ typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 - (OCResourceSourcePriority)priorityForType:(OCResourceType)type; //!< Returns the priority with which the source should be used, allowing to establish an ordering
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request; //!< Returns which quality the source can deliver the requested resource in
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(nullable OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler; //!< Returns the resource for a request
 
 #pragma mark - Event handler convenience integration
 @property(readonly,nonatomic) BOOL shouldRegisterEventHandler;

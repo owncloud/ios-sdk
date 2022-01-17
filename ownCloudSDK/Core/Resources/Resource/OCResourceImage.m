@@ -19,23 +19,44 @@
 #import "OCResourceImage.h"
 #import "OCItemThumbnail.h"
 #import "OCMacros.h"
+#import "OCResourceRequest.h"
+#import "OCResourceRequestImage.h"
 
 @implementation OCResourceImage
+
+- (instancetype)initWithRequest:(OCResourceRequest *)request
+{
+	if ((self = [super initWithRequest:request]) != nil)
+	{
+		self.maxPixelSize = request.maxPixelSize;
+		self.fillMode = OCTypedCast(request, OCResourceRequestImage).fillMode;
+	}
+
+	return (self);
+}
+
+- (id)_createImageWithClass:(Class)imageClass
+{
+	OCImage *image = [imageClass new];
+
+	image.mimeType = self.mimeType;
+	image.maxPixelSize = self.maxPixelSize;
+	image.fillMode = self.fillMode;
+
+	image.url = self.url;
+	if (self.url == nil)
+	{
+		image.data = self.data;
+	}
+
+	return (image);
+}
 
 - (OCImage *)image
 {
 	if (_image == nil)
 	{
-		_image = [OCImage new];
-
-		_image.mimeType = self.mimeType;
-		_image.maximumSizeInPixels = self.maxPixelSize;
-
-		_image.url = self.url;
-		if (self.url == nil)
-		{
-			_image.data = self.data;
-		}
+		_image = [self _createImageWithClass:OCImage.class];
 	}
 
 	return (_image);
@@ -45,12 +66,8 @@
 {
 	if (_image == nil)
 	{
-		OCItemThumbnail *thumbnail = [OCItemThumbnail new];
+		OCItemThumbnail *thumbnail = [self _createImageWithClass:OCItemThumbnail.class];
 
-		thumbnail.mimeType = self.mimeType;
-		thumbnail.maximumSizeInPixels = self.maxPixelSize;
-
-		thumbnail.data = self.data;
 		thumbnail.itemVersionIdentifier = [[OCItemVersionIdentifier alloc] initWithFileID:self.identifier eTag:self.version];
 		thumbnail.specID = self.structureDescription;
 
@@ -60,6 +77,25 @@
 	}
 
 	return (OCTypedCast(_image, OCItemThumbnail));
+}
+
+- (OCAvatar *)avatar
+{
+	if (_image == nil)
+	{
+		OCAvatar *avatar = [self _createImageWithClass:OCAvatar.class];
+
+		avatar.userIdentifier = self.identifier;
+		avatar.eTag = self.version;
+
+		avatar.timestamp = self.timestamp;
+
+		_image = avatar;
+
+		return (avatar);
+	}
+
+	return (OCTypedCast(_image, OCAvatar));
 }
 
 #pragma mark - Secure Coding
@@ -73,6 +109,7 @@
 	[super encodeWithCoder:coder];
 
 	[coder encodeCGSize:_maxPixelSize forKey:@"maxPixelSize"];
+	[coder encodeInteger:_fillMode forKey:@"fillMode"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder
@@ -80,6 +117,7 @@
 	if ((self = [super initWithCoder:coder]) != nil)
 	{
 		_maxPixelSize = [coder decodeCGSizeForKey:@"maxPixelSize"];
+		_fillMode = [coder decodeIntegerForKey:@"fillMode"];
 	}
 
 	return (self);

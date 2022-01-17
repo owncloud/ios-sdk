@@ -347,6 +347,9 @@
 // OCErrorLockInvalidated
 "Lock invalidated." = "Lock invalidated.";
 
+// OCErrorAvatarNotFound
+"Avatar not found." = "Avatar not found.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

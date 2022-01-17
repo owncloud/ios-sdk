@@ -17,6 +17,9 @@
  */
 
 #import "OCConnection.h"
+#import "OCAvatar.h"
+#import "NSError+OCError.h"
+#import "OCHTTPResponse+DAVError.h"
 
 @implementation OCConnection (Avatars)
 
@@ -29,7 +32,7 @@
 	- the response comes with an ETag that only changes when the avatar is changed
 */
 
-- (nullable NSProgress *)retrieveAvatarDataForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCFileETag _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData))completionHandler
+- (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCAvatar * _Nullable avatar))completionHandler
 {
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
@@ -48,11 +51,41 @@
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		if (error != nil)
 		{
-			completionHandler(error, NO, nil, nil, nil);
+			completionHandler(error, NO, nil);
+			return;
 		}
-		else
+
+		switch (response.status.code)
 		{
-			completionHandler(nil, (response.status.code == OCHTTPStatusCodeNOT_MODIFIED), response.headerFields[@"ETag"], response.headerFields[@"Content-Type"], response.bodyData);
+			case OCHTTPStatusCodeNOT_MODIFIED:
+			case OCHTTPStatusCodeOK: {
+				OCAvatar *avatar = [[OCAvatar alloc] init];
+
+				avatar.userIdentifier = user.userIdentifier;
+				avatar.eTag = response.headerFields[@"ETag"];
+				avatar.mimeType = response.headerFields[@"Content-Type"];
+				avatar.data = response.bodyData;
+				avatar.timestamp = [NSDate new];
+
+				completionHandler(nil, (response.status.code == OCHTTPStatusCodeNOT_MODIFIED), avatar);
+			}
+			break;
+
+			case OCHTTPStatusCodeNOT_FOUND:
+				completionHandler(OCError(OCErrorAvatarNotFound), NO, nil);
+			break;
+
+			default: {
+				NSError *responseError;
+
+				if ((responseError = response.bodyParsedAsDAVError) == nil)
+				{
+					responseError = response.status.error;
+				}
+
+				completionHandler(responseError, NO, nil);
+			}
+			break;
 		}
 	}];
 

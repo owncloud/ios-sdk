@@ -28,15 +28,9 @@
 
 - (void)storeResource:(nonnull OCResource *)resource completionHandler:(nonnull OCResourceStoreCompletionHandler)completionHandler
 {
-	if ((resource.identifier == nil) || (resource.version == nil))
+	if ((resource.type == nil) || (resource.identifier == nil) || (resource.version == nil))
 	{
-		OCLogError(@"Error storing resource %@ because it lacks identifier or version.", OCLogPrivate(resource));
-		return;
-	}
-
-	if (resource.structureDescription == nil)
-	{
-		OCLogError(@"Error storing resource %@ because it lacks a structureDescription.", OCLogPrivate(resource));
+		OCTLogError(@[@"ResMan"], @"Error storing resource %@ because it lacks type, identifier or version.", OCLogPrivate(resource));
 		return;
 	}
 
@@ -45,7 +39,7 @@
 
 	if (resourceData == nil)
 	{
-		OCLogError(@"Error storing resource %@ because it can't be serialized (error=%@).", OCLogPrivate(resource), error);
+		OCTLogError(@[@"ResMan"], @"Error storing resource %@ because it can't be serialized (error=%@).", OCLogPrivate(resource), error);
 		return;
 	}
 
@@ -53,13 +47,13 @@
 
 	[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:@[
 		// Remove outdated versions and smaller resource sizes
-		[OCSQLiteQuery  query:@"DELETE FROM thumb.resources WHERE identifier = :identifier AND type = :type AND ((version != :version) OR (maxWidth < :maxWidth AND maxHeight < :maxHeight) OR (structDesc != :structDesc))" // relatedTo:OCDatabaseTableNameResources
+		[OCSQLiteQuery  query:@"DELETE FROM thumb.resources WHERE identifier = :identifier AND type = :type AND ((version != :version) OR (maxWidth <= :maxWidth AND maxHeight <= :maxHeight) OR (structDesc != :structDesc))" // relatedTo:OCDatabaseTableNameResources
 			        withNamedParameters:@{
 					@"type" : resource.type,
 
 					@"identifier" : resource.identifier,
-					@"version" : resource.version,
-					@"structDesc" : resource.structureDescription,
+					@"version" : OCSQLiteNullProtect(resource.version),
+					@"structDesc" : OCSQLiteNullProtect(resource.structureDescription),
 
 					@"maxWidth" : @((imageResource != nil) ? imageResource.maxPixelSize.width : 0),
 					@"maxHeight" : @((imageResource != nil) ? imageResource.maxPixelSize.height : 0),
@@ -71,8 +65,8 @@
 					@"type" : resource.type,
 
 					@"identifier" : resource.identifier,
-					@"version" : resource.version,
-					@"structDesc" : resource.structureDescription,
+					@"version" : OCSQLiteNullProtect(resource.version),
+					@"structDesc" : OCSQLiteNullProtect(resource.structureDescription),
 
 					@"maxWidth" : ((imageResource != nil) ? @(imageResource.maxPixelSize.width) : NSNull.null),
 					@"maxHeight" : ((imageResource != nil) ? @(imageResource.maxPixelSize.height) : NSNull.null),
@@ -129,7 +123,7 @@
 		this way will be tiny and shouldn't have any measurable performance impact.
 	*/
 
-	if ((request.identifier==nil) || (request.version==nil) || (request.structureDescription == nil))
+	if ((request.type==nil) || (request.identifier==nil))
 	{
 		if (completionHandler!=nil)
 		{
@@ -138,10 +132,12 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT maxWidth, maxHeight, data FROM thumb.resources WHERE identifier = :identifier AND version = :version AND structDesc = :structDesc ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1" withNamedParameters:@{
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:[NSString stringWithFormat:@"SELECT maxWidth, maxHeight, data FROM thumb.resources WHERE identifier = :identifier %@ %@ ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1",
+		((request.version != nil) ? @"AND version = :version" : @""),
+		((request.structureDescription != nil) ? @"AND structDesc = :structDesc" : @"")] withNamedParameters:@{
 		@"identifier"	: request.identifier,
-		@"version"	: request.version,
-		@"structDesc"	: request.structureDescription,
+		@"version"	: OCSQLiteNullProtect(request.version),
+		@"structDesc"	: OCSQLiteNullProtect(request.structureDescription),
 		@"maxWidth"  	: @(request.maxPixelSize.width),
 		@"maxHeight" 	: @(request.maxPixelSize.height),
 	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {

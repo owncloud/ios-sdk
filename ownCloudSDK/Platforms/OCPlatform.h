@@ -1,8 +1,8 @@
 //
-//  OCAvatar.h
+//  OCPlatform.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 29.09.20.
+//  Created by Felix Schwarz on 17.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,18 +17,26 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCImage.h"
-#import "OCTypes.h"
-#import "OCUser.h"
+
+#pragma mark - iOS, iPadOS, watchOS, tvOS
+
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+
+#define OCView UIView
+#endif /* TARGET_OS_IPHONE */
+
+#pragma mark - macOS
+
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+
+#define OCView NSView
+#endif /* TARGET_OS_OSX */
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCAvatar : OCImage <NSSecureCoding>
-
-@property(strong,nullable) OCUserIdentifier userIdentifier;
-@property(strong,nullable) OCFileETag eTag;
-
-@property(strong,nullable) NSDate *timestamp;
+@interface OCPlatform : NSObject
 
 @end
 

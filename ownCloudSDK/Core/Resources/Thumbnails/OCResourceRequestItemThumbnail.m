@@ -26,6 +26,11 @@
 {
 	OCResourceRequestItemThumbnail *request = [[self alloc] initWithType:OCResourceTypeItemThumbnail identifier:item.fileID];
 
+	if (scale == 0)
+	{
+		scale = UIScreen.mainScreen.scale;
+	}
+
 	request.version = item.eTag;
 	request.structureDescription = item.thumbnailSpecID;
 
@@ -39,6 +44,11 @@
 	request.changeHandler = changeHandler;
 
 	return (request);
+}
+
+- (OCItem *)item
+{
+	return (self.reference);
 }
 
 @end

@@ -19,7 +19,6 @@
 #import "OCResourceManagerJob.h"
 #import "OCResourceManager.h"
 #import "OCResourceRequest.h"
-#import "OCResourceRequest+Internal.h"
 #import "OCResourceSource.h"
 #import "OCLogger.h"
 
@@ -54,6 +53,21 @@
 	}
 }
 
+- (void)_computeMinimumQuality
+{
+	OCResourceQuality minimumQuality = OCResourceQualityMaximum;
+
+	for (OCResourceRequest *request in _requests)
+	{
+		if (request.minimumQuality < minimumQuality)
+		{
+			minimumQuality = request.minimumQuality;
+		}
+	}
+
+	_minimumQuality = minimumQuality;
+}
+
 - (void)addRequest:(OCResourceRequest *)request
 {
 	@synchronized(self)
@@ -70,6 +84,8 @@
 
 			[_managedRequests addObject:request];
 		}
+
+		[self _computeMinimumQuality];
 	}
 }
 
@@ -88,14 +104,63 @@
 
 		_seed++;
 	}
+
+	[self _callCancellationHandlerAndResetIt];
+}
+
+- (void)setCancelled:(BOOL)cancelled
+{
+	if (cancelled != _cancelled)
+	{
+		_cancelled = cancelled;
+
+		if (cancelled)
+		{
+			[self _callCancellationHandlerAndResetIt];
+		}
+	}
+}
+
+- (void)_callCancellationHandlerAndResetIt
+{
+	OCResourceManagerJobCancellationHandler cancellationHandler = nil;
+
+	@synchronized(self)
+	{
+		cancellationHandler = _cancellationHandler;
+		_cancellationHandler = nil;
+	}
+
+	if (cancellationHandler != nil)
+	{
+		cancellationHandler();
+	}
 }
 
 - (void)removeRequest:(OCResourceRequest *)request
 {
+	BOOL cancelled = YES;
+
 	@synchronized(self)
 	{
 		[_requests removeObject:request];
 		[_managedRequests removeObject:request];
+
+		for (OCResourceRequest *request in _requests)
+		{
+			if ((request != nil) && !request.cancelled)
+			{
+				cancelled = NO;
+				break;
+			}
+		}
+
+		[self _computeMinimumQuality];
+	}
+
+	if (cancelled)
+	{
+		self.cancelled = YES;
 	}
 }
 

@@ -21,9 +21,25 @@
 
 @implementation OCResourceRequestAvatar
 
-- (OCResourceType)type
++ (instancetype)requestAvatarFor:(OCUser *)user maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity changeHandler:(OCResourceRequestChangeHandler)changeHandler
 {
-	return (OCResourceTypeAvatar);
+	OCResourceRequestAvatar *request;
+
+	if (scale == 0)
+	{
+		scale = UIScreen.mainScreen.scale;
+	}
+
+	request = [[OCResourceRequestAvatar alloc] initWithType:OCResourceTypeAvatar identifier:user.userIdentifier];
+	request.reference = user;
+
+	request.maxPointSize = requestedMaximumSizeInPoints;
+	request.scale = scale;
+
+	request.waitForConnectivity = waitForConnectivity;
+	request.changeHandler = changeHandler;
+
+	return (request);
 }
 
 @end

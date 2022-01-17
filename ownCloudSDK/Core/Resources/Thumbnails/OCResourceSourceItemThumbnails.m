@@ -55,7 +55,7 @@
 	return (OCResourceQualityNone);
 }
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request shouldContinueHandler:(OCResourceSourceShouldContinueHandler)shouldContinueHandler resultHandler:(OCResourceSourceResultHandler)resultHandler
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler
 {
 	OCResourceRequestItemThumbnail *thumbnailRequest;
 	OCItem *item;
@@ -68,8 +68,9 @@
 		if ((connection = self.core.connection) != nil)
 		{
 			NSString *specID = item.thumbnailSpecID;
+			NSProgress *progress = nil;
 
-			[connection retrieveThumbnailFor:item to:nil maximumSize:request.maxPixelSize waitForConnectivity:request.waitForConnectivity resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+			progress = [connection retrieveThumbnailFor:item to:nil maximumSize:request.maxPixelSize waitForConnectivity:request.waitForConnectivity resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 				OCItemThumbnail *thumbnail;
 
 				if (event.error != nil)
@@ -86,7 +87,7 @@
 					resource.structureDescription = specID;
 
 					// Transfer thumbnail image properties / data to resource
-					resource.maxPixelSize = thumbnail.maximumSizeInPixels;
+					resource.maxPixelSize = thumbnail.maxPixelSize;
 					resource.data = thumbnail.data;
 
 					resource.image = thumbnail;
@@ -96,6 +97,10 @@
 					resultHandler(nil, resource);
 				}
 			} userInfo:nil ephermalUserInfo:nil]];
+
+			request.job.cancellationHandler = ^{
+				[progress cancel];
+			};
 
 			return;
 		}

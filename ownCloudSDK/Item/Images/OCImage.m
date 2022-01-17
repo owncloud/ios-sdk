@@ -270,7 +270,7 @@
 
 - (BOOL)canProvideForMaximumSizeInPixels:(CGSize)maximumSizeInPixels
 {
-	return ((maximumSizeInPixels.width <= _maximumSizeInPixels.width) && (maximumSizeInPixels.height <= _maximumSizeInPixels.height));
+	return ((maximumSizeInPixels.width <= _maxPixelSize.width) && (maximumSizeInPixels.height <= _maxPixelSize.height));
 }
 
 
@@ -282,10 +282,10 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeObject:_url    			forKey:@"url"];
-	[coder encodeObject:_data    			forKey:@"data"];
-	[coder encodeObject:_mimeType  			forKey:@"mimeType"];
-	[coder encodeCGSize:_maximumSizeInPixels 	forKey:@"maximumSizeInPixels"];
+	[coder encodeObject:_url    		forKey:@"url"];
+	[coder encodeObject:_data    		forKey:@"data"];
+	[coder encodeObject:_mimeType  		forKey:@"mimeType"];
+	[coder encodeCGSize:_maxPixelSize 	forKey:@"maxPixelSize"];
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -295,7 +295,7 @@
 		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];
 		_data = [decoder decodeObjectOfClass:NSData.class forKey:@"data"];
 		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
-		_maximumSizeInPixels = [decoder decodeCGSizeForKey:@"maximumSizeInPixels"];
+		_maxPixelSize = [decoder decodeCGSizeForKey:@"maxPixelSize"];
 	}
 
 	return (self);

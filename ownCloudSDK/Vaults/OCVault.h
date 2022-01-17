@@ -20,7 +20,6 @@
 #import "OCFeatureAvailability.h"
 #import "OCBookmark.h"
 #import "OCKeyValueStore.h"
-#import "OCResourceManager.h"
 
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 #import <FileProvider/FileProvider.h>
@@ -28,6 +27,7 @@
 
 @class OCDatabase;
 @class OCItem;
+@class OCResourceManager;
 
 NS_ASSUME_NONNULL_BEGIN
 

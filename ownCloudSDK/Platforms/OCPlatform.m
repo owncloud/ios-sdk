@@ -1,8 +1,8 @@
 //
-//  OCResourceRequest+Internal.h
+//  OCPlatform.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 03.01.22.
+//  Created by Felix Schwarz on 17.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,15 +16,8 @@
  *
  */
 
-#import "OCResourceRequest.h"
-#import "OCResourceManagerJob.h"
+#import "OCPlatform.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface OCResourceRequest (Internal)
-
-@property(weak,nullable,nonatomic) OCResourceManagerJob *job;
+@implementation OCPlatform
 
 @end
-
-NS_ASSUME_NONNULL_END

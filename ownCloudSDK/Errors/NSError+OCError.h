@@ -113,7 +113,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorAuthorizationCantOpenCustomSchemeURL, //!< Can't open authorization URL with custom scheme.
 
-	OCErrorLockInvalidated //!< Lock invalidated.
+	OCErrorLockInvalidated, //!< Lock invalidated.
+
+	OCErrorAvatarNotFound //!< Avatar not found
 };
 
 @class OCIssue;

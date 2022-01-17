@@ -1,8 +1,8 @@
 //
-//  OCAvatar.h
+//  OCResourceRequestImage.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 29.09.20.
+//  Created by Felix Schwarz on 12.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,19 +16,15 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCImage.h"
-#import "OCTypes.h"
-#import "OCUser.h"
+#import "OCResourceRequest.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCAvatar : OCImage <NSSecureCoding>
+@interface OCResourceRequestImage : OCResourceRequest
 
-@property(strong,nullable) OCUserIdentifier userIdentifier;
-@property(strong,nullable) OCFileETag eTag;
+@property(assign) OCImageFillMode fillMode;
 
-@property(strong,nullable) NSDate *timestamp;
+- (BOOL)resourceMeetsSizeRequirement:(OCResource *)resource;
 
 @end
 

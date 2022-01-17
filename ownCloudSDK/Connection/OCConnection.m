@@ -1451,12 +1451,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
 											self.loggedInUser = loggedInUser;
 
-											[self retrieveAvatarDataForUser:loggedInUser existingETag:nil withSize:CGSizeMake(32,32) completionHandler:^(NSError * _Nullable error, BOOL unchanged, OCFileETag  _Nullable eTag, NSString * _Nullable avatarContentType, NSData * _Nullable avatarData) {
-												OCLog(@"Avatar %@, %@", avatarContentType, avatarData);
-											}];
-
 											// Update bookmark.userDisplayName if it has changed
-											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName])
+											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName] && (error == nil))
 											{
 												self.bookmark.userDisplayName = loggedInUser.displayName;
 
@@ -2975,7 +2971,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				}
 
 				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
-				thumbnail.maximumSizeInPixels = maximumSize;
+				thumbnail.maxPixelSize = maximumSize;
+
+				thumbnail.fillMode = self.supportsPreviewAPI ? OCImageFillModeScaleToFit : OCImageFillModeScaleToFill;
 
 				event.result = thumbnail;
 			}

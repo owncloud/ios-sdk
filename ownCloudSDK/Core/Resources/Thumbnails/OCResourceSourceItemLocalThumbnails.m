@@ -25,6 +25,9 @@
 #import "OCItem.h"
 #import "NSError+OCError.h"
 
+#import <QuickLookThumbnailing/QuickLookThumbnailing.h>
+#import <CoreServices/CoreServices.h>
+
 @implementation OCResourceSourceItemLocalThumbnails
 
 - (OCResourceType)type
@@ -39,20 +42,92 @@
 
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
-	if ([request isKindOfClass:OCResourceRequestItemThumbnail.class] && [request.reference isKindOfClass:OCItem.class])
+	if (@available(iOS 13, macOS 10.15, *))
 	{
-		OCItem *item;
-
-		if ((item = OCTypedCast(request.reference, OCItem)) != nil)
+		if ([request isKindOfClass:OCResourceRequestItemThumbnail.class] && [request.reference isKindOfClass:OCItem.class])
 		{
-			if ((item.type == OCItemTypeFile) && (item.localRelativePath.length > 0))
+			OCItem *item;
+
+			if ((item = OCTypedCast(request.reference, OCItem)) != nil)
 			{
-				return (OCResourceQualityHigh);
+				if ((item.type == OCItemTypeFile) &&
+				    ([self.core localCopyOfItem:item] != nil))
+				{
+					return (OCResourceQualityHigh);
+				}
 			}
 		}
 	}
 
 	return (OCResourceQualityNone);
+}
+
+- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler
+{
+	if (@available(iOS 13, macOS 10.15, *))
+	{
+		OCItem *item;
+		OCResourceRequestItemThumbnail *thumbnailRequest;
+
+		if (((thumbnailRequest = OCTypedCast(request, OCResourceRequestItemThumbnail)) != nil) &&
+		    ((item = OCTypedCast(request.reference, OCItem)) != nil))
+		{
+			NSURL *localURL;
+
+			if ((localURL = [[self.core localCopyOfItem:item] absoluteURL]) != nil) // absoluteURL is needed. For relative URLs QLThumbnailGenerator will return error: QLThumbnailErrorDomain, Code=3 "No thumbnail in the cloud…"
+			{
+				QLThumbnailGenerationRequest *thumbnailRequest = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:localURL size:request.maxPointSize scale:request.scale representationTypes:(QLThumbnailGenerationRequestRepresentationTypeLowQualityThumbnail | QLThumbnailGenerationRequestRepresentationTypeThumbnail)];
+
+				[QLThumbnailGenerator.sharedGenerator generateBestRepresentationForRequest:thumbnailRequest completionHandler:^(QLThumbnailRepresentation * _Nullable thumbnail, NSError * _Nullable error) {
+					CGImageRef imageRef;
+
+					if (error != nil)
+					{
+						resultHandler(error, nil);
+						return;
+					}
+
+					if ((imageRef = thumbnail.CGImage) != NULL)
+					{
+						NSMutableData *imageData = [NSMutableData new];
+
+						CGImageDestinationRef imageDestinationRef;
+
+						if ((imageDestinationRef = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageData, kUTTypeJPEG, 1, NULL)) != NULL)
+						{
+							CGImageDestinationSetProperties(imageDestinationRef, (__bridge CFDictionaryRef)@{ (__bridge id)kCGImageDestinationLossyCompressionQuality : @(1.0) });
+							CGImageDestinationAddImage(imageDestinationRef, imageRef, NULL);
+
+							if (CGImageDestinationFinalize(imageDestinationRef))
+							{
+								OCResourceImage *thumbnailImage;
+
+								if ((thumbnailImage = [[OCResourceImage alloc] initWithRequest:request]) != nil)
+								{
+									thumbnailImage.quality = OCResourceQualityHigh;
+
+									thumbnailImage.mimeType = @"image/jpeg";
+									thumbnailImage.data = imageData;
+
+									// thumbnailImage.thumbnail.image = thumbnail.UIImage;
+
+									resultHandler(nil, thumbnailImage);
+
+									return;
+								}
+							}
+						}
+					}
+
+					resultHandler(OCError(OCErrorFeatureNotSupportedForItem), nil);
+				}];
+
+				return;
+			}
+		}
+	}
+
+	resultHandler(OCError(OCErrorFeatureNotSupportedForItem), nil);
 }
 
 @end
