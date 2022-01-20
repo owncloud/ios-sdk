@@ -37,6 +37,11 @@
 	return (OCResourceSourceIdentifierItemThumbnails);
 }
 
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type
+{
+	return (OCResourceSourcePriorityRemote);
+}
+
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
 	if ([request isKindOfClass:OCResourceRequestItemThumbnail.class] && [request.reference isKindOfClass:OCItem.class])

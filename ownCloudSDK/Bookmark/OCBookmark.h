@@ -21,6 +21,7 @@
 #import "OCCertificate.h"
 #import "OCDatabase+Versions.h"
 #import "OCViewProvider.h"
+#import "OCUser.h"
 
 typedef NSUUID* OCBookmarkUUID;
 typedef NSString* OCBookmarkUUIDString;
@@ -46,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData
 @property(strong,nullable) NSString *userDisplayName; //!< Display name of a user
+@property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner
 
 @property(strong,nullable,nonatomic) id<OCViewProvider> avatar; //!< Object that can provide a view to display the avatar of the user
 

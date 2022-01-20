@@ -40,6 +40,11 @@
 	return (OCResourceSourceIdentifierItemLocalThumbnails);
 }
 
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type
+{
+	return (OCResourceSourcePriorityLocal);
+}
+
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
 	if (@available(iOS 13, macOS 10.15, *))

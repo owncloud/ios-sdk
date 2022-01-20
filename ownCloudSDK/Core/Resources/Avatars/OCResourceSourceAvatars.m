@@ -25,6 +25,12 @@
 #import "OCConnection.h"
 #import "NSError+OCError.h"
 
+@interface OCResourceSourceAvatars ()
+{
+	NSMutableSet<OCUserIdentifier> *_forceRefreshedAvatars;
+}
+@end
+
 @implementation OCResourceSourceAvatars
 
 - (OCResourceType)type
@@ -37,6 +43,11 @@
 	return (OCResourceSourceIdentifierAvatar);
 }
 
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type
+{
+	return (OCResourceSourcePriorityRemote);
+}
+
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
 	if ([request isKindOfClass:OCResourceRequestAvatar.class] && [request.reference isKindOfClass:OCUser.class])
@@ -45,6 +56,37 @@
 
 		if ((user = OCTypedCast(request.reference, OCUser)) != nil)
 		{
+			OCResourceImage *avatarImage;
+
+			if ((avatarImage = OCTypedCast(request.resource, OCResourceImage)) != nil)
+			{
+				OCUserIdentifier userIdentifier;
+
+				if ((userIdentifier = user.userIdentifier) != nil)
+				{
+					if (_forceRefreshedAvatars == nil)
+					{
+						_forceRefreshedAvatars = [NSMutableSet new];
+					}
+
+					if (![_forceRefreshedAvatars containsObject:userIdentifier])
+					{
+						// Return fake high quality to force refresh once per session
+						[_forceRefreshedAvatars addObject:userIdentifier];
+
+						return (OCResourceQualityHigh);
+					}
+
+					if ((avatarImage.timestamp != nil) &&
+					    (-avatarImage.timestamp.timeIntervalSinceNow > (3600.0 * 12.0)))
+					{
+						// Avatar is more than 12 hours old -> force refresh by returning a fake high quality
+
+						return (OCResourceQualityHigh);
+					}
+				}
+			}
+
 			return (OCResourceQualityNormal);
 		}
 	}
@@ -72,12 +114,20 @@
 			progress = [connection retrieveAvatarForUser:user existingETag:existingETag withSize:avatarRequest.maxPixelSize completionHandler:^(NSError * _Nullable error, BOOL unchanged, OCAvatar * _Nullable avatar) {
 				if (error != nil)
 				{
+					if ([error isOCErrorWithCode:OCErrorResourceDoesNotExist] && (existingETag == nil))
+					{
+						// Clear OCErrorResourceDoesNotExist if there was no previous version of the resource
+						error = nil;
+					}
+
 					resultHandler(error, nil);
 				}
 				else if (unchanged && (existingETag != nil))
 				{
-					// Return a nil error and avatar if the avatar has not changed
-					resultHandler(nil, nil);
+					// Return a nil error and update existing avatar timestamp if the avatar has not changed
+					avatarImageResource.timestamp = [NSDate new];
+
+					resultHandler(nil, avatarImageResource);
 				}
 				else
 				{

@@ -23,7 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol OCViewProvider <NSObject>
 
-- (nullable OCView *)provideViewForSize:(CGSize)size inContext:(nullable OCViewProviderContext *)context; //!< Returns a view suitable to display the object. Sizes are only passed to allow optimization. Pass CGSizeZero if the size at which the object will be displayed is unknown.
+@required
+- (void)provideViewForSize:(CGSize)size inContext:(nullable OCViewProviderContext *)context completion:(void(^)(OCView * _Nullable view))completionHandler; //!< Returns a view suitable to display the object. Sizes are only passed to allow optimization. Pass CGSizeZero if the size at which the object will be displayed is unknown.
 
 @end
 

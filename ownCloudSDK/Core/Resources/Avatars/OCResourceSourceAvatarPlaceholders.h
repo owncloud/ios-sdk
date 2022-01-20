@@ -1,8 +1,8 @@
 //
-//  OCResourceSourceItemIcons.m
+//  OCResourceSourceAvatarPlaceholders.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.01.22.
+//  Created by Felix Schwarz on 19.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,8 +16,14 @@
  *
  */
 
-#import "OCResourceSourceItemIcons.h"
+#import "OCResourceSource.h"
 
-@implementation OCResourceSourceItemIcons
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCResourceSourceAvatarPlaceholders : OCResourceSource
 
 @end
+
+extern OCResourceSourceIdentifier OCResourceSourceIdentifierAvatarPlaceholder;
+
+NS_ASSUME_NONNULL_END

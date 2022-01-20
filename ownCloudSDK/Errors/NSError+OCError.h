@@ -115,7 +115,7 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorLockInvalidated, //!< Lock invalidated.
 
-	OCErrorAvatarNotFound //!< Avatar not found
+	OCErrorResourceDoesNotExist //!< Resource does not exist
 };
 
 @class OCIssue;

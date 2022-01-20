@@ -35,7 +35,8 @@ typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 	OCResourceSourcePriorityNone = 0, //!< Do not use source
 	OCResourceSourcePriorityRemote = 100, //!< Resource is fetched remotely
 	OCResourceSourcePriorityLocalFallback = 200, //!< Resource is a locally generated fallback
-	OCResourceSourcePriorityLocal = 300 //!< Resource is locally generated
+	OCResourceSourcePriorityLocal = 300, //!< Resource is locally generated
+	OCResourceSourcePriorityLocalCache = 400 //!< Resource is from local cache
 };
 
 @interface OCResourceSource : NSObject <OCEventHandler>

@@ -42,6 +42,7 @@
 #define OCSyncExecDone(label)	dispatch_semaphore_signal(label)
 
 #define OCTypedCast(var,className) ([var isKindOfClass:[className class]] ? ((className *)var) : nil)
+#define OCConformanceCast(var,protocolName) ([var conformsToProtocol:@protocol(protocolName)] ? ((id<protocolName>)var) : nil)
 
 // nil-aware comparisons
 #define OCNANotEqual(a,b) ((![(a) isEqual:(b)]) && ((a) != (b)))

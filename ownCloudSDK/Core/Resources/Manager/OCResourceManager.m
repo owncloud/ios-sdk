@@ -6,11 +6,22 @@
 //  Copyright © 2021 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2022, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import "OCResourceManager.h"
 #import "OCCache.h"
 #import "OCResourceManagerJob.h"
 #import "OCResourceSourceStorage.h"
 #import "OCLogger.h"
+#import "NSError+OCError.h"
 
 @interface OCResourceManager ()
 {
@@ -323,6 +334,9 @@
 				{
 					removeJob = YES;
 				}
+
+				// Remove job when complete (preliminary catch-all)
+				removeJob = YES;
 			}
 		}
 		else
@@ -423,9 +437,41 @@
 {
 	OCTLogDebug(@[@"ResMan"], @"Source %@ returned resource=%@, error=%@", source.identifier, resource, error);
 
-	if ((resource != nil) && // A resource must have been returned
+	if ([error isOCErrorWithCode:OCErrorResourceDoesNotExist])
+	{
+		// Resource does not exist anymore: delete from cache + restart job
+		__weak OCResourceManager *weakSelf = self;
+		[self removeResourceOfType:job.primaryRequest.type identifier:job.primaryRequest.identifier completionHandler:^(NSError * _Nullable error) {
+			OCResourceManager *strongSelf = weakSelf;
+
+			if ((error == nil) && (strongSelf != nil))
+			{
+				dispatch_async(strongSelf->_queue, ^{
+					// Remove any previously found resources from job and requests
+					job.latestResource = nil;
+
+					NSArray<OCResourceRequest *> *jobRequests = job.requests.allObjects; // Make a copy to preserve requests for the duration of the iteration and to prevent exceptions caused by possible mutations
+
+					for (OCResourceRequest *request in jobRequests)
+					{
+						request.resource = nil; // Updates the resource of the request, which will notify its changeHandler
+					}
+
+					// Restart job
+					job.state = OCResourceManagerJobStateNew;
+					job.sourcesCursorPosition = nil;
+
+					[strongSelf setNeedsScheduling];
+				});
+			}
+		}];
+
+		return;
+	}
+
+	if ((resource != nil)    && // A resource must have been returned
 	    (originalSeed == job.seed) && // The seed must match (otherwise the returned resource has to be considered outdated)
-	    ((job.latestResource == nil) || ((job.latestResource != nil) && (job.latestResource.quality < resource.quality)))) // First resource for job - or resource has higher quality than existing one
+	    ((job.latestResource == nil) || ((job.latestResource != nil) && (job.latestResource.quality <= resource.quality)))) // First resource for job - or resource has identical or higher quality than existing one
 	{
 		job.latestResource = resource;
 
@@ -481,6 +527,16 @@
 
 	// Store resource in storage
 	[self.storage storeResource:resource completionHandler:completionHandler];
+}
+
+- (void)removeResourceOfType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier completionHandler:(OCResourceStoreCompletionHandler)completionHandler;
+{
+	// Remove from cache
+	NSString *cacheKey = [type stringByAppendingFormat:@":%@", identifier];
+	[_cache removeObjectForKey:cacheKey];
+
+	// Remove resource from storage
+	[self.storage removeResourceOfType:type identifier:identifier completionHandler:completionHandler];
 }
 
 @end

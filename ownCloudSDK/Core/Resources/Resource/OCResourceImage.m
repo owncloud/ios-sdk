@@ -56,6 +56,9 @@
 {
 	if (_image == nil)
 	{
+		if ([self.type isEqual:OCResourceTypeAvatar]) 		{ return ([self avatar]);	}
+		if ([self.type isEqual:OCResourceTypeItemThumbnail]) 	{ return ([self thumbnail]);	}
+
 		_image = [self _createImageWithClass:OCImage.class];
 	}
 
@@ -96,6 +99,19 @@
 	}
 
 	return (OCTypedCast(_image, OCAvatar));
+}
+
+#pragma mark - View provider
+- (void)provideViewForSize:(CGSize)size inContext:(OCViewProviderContext *)context completion:(void (^)(UIView * _Nullable))completionHandler
+{
+	if ([self.image conformsToProtocol:@protocol(OCViewProvider)])
+	{
+		[(id<OCViewProvider>)self.image provideViewForSize:size inContext:context completion:completionHandler];
+		
+		return;
+	}
+
+	completionHandler(nil);
 }
 
 #pragma mark - Secure Coding

@@ -668,6 +668,10 @@
 		DCEEB2F22047094500189B9A /* NSData+OCHash.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F02047094500189B9A /* NSData+OCHash.m */; };
 		DCEEB2F5204802CF00189B9A /* OCIssue.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEEB2F3204802CF00189B9A /* OCIssue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEEB2F4204802CF00189B9A /* OCIssue.m */; };
+		DCF072E42798630900E0B01D /* OCResourceTextPlaceholder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCF072E52798630900E0B01D /* OCResourceTextPlaceholder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */; };
+		DCF072E82798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCF072E92798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF072E72798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m */; };
 		DCF163F2274B917C00E0182A /* OCSQLiteCollation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF163F0274B917C00E0182A /* OCSQLiteCollation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF163F3274B917C00E0182A /* OCSQLiteCollation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF163F1274B917C00E0182A /* OCSQLiteCollation.m */; };
 		DCF163F6274BA6C300E0182A /* OCSQLiteCollationLocalized.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF163F4274BA6C300E0182A /* OCSQLiteCollationLocalized.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1523,6 +1527,10 @@
 		DCEEB2F02047094500189B9A /* NSData+OCHash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSData+OCHash.m"; sourceTree = "<group>"; };
 		DCEEB2F3204802CF00189B9A /* OCIssue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIssue.h; sourceTree = "<group>"; };
 		DCEEB2F4204802CF00189B9A /* OCIssue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIssue.m; sourceTree = "<group>"; };
+		DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceTextPlaceholder.h; sourceTree = "<group>"; };
+		DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceTextPlaceholder.m; sourceTree = "<group>"; };
+		DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceAvatarPlaceholders.h; sourceTree = "<group>"; };
+		DCF072E72798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceAvatarPlaceholders.m; sourceTree = "<group>"; };
 		DCF163F0274B917C00E0182A /* OCSQLiteCollation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteCollation.h; sourceTree = "<group>"; };
 		DCF163F1274B917C00E0182A /* OCSQLiteCollation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSQLiteCollation.m; sourceTree = "<group>"; };
 		DCF163F4274BA6C300E0182A /* OCSQLiteCollationLocalized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSQLiteCollationLocalized.h; sourceTree = "<group>"; };
@@ -2122,6 +2130,8 @@
 				DCDBB5F525248B0300FAD707 /* OCResource.h */,
 				DCE62EAC2771ED5700E3193F /* OCResourceImage.m */,
 				DCE62EAB2771ED5700E3193F /* OCResourceImage.h */,
+				DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */,
+				DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -2155,6 +2165,8 @@
 		DC41C7D925EA62B20074F23B /* Avatars */ = {
 			isa = PBXGroup;
 			children = (
+				DCF072E72798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m */,
+				DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */,
 				DC41C7DB25EA62CD0074F23B /* OCResourceSourceAvatars.m */,
 				DC41C7DA25EA62CD0074F23B /* OCResourceSourceAvatars.h */,
 				DC41C7EE25EA62E40074F23B /* OCResourceRequestAvatar.m */,
@@ -3510,6 +3522,7 @@
 				DC9C19E227839E440021222E /* OCResourceSourceStorage.h in Headers */,
 				DCE17BC126B5A7E400B7C7DD /* OCHTTPRequest+Stream.h in Headers */,
 				DC6CC30726428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h in Headers */,
+				DCF072E42798630900E0B01D /* OCResourceTextPlaceholder.h in Headers */,
 				DC4AFAB4206AE61400189B9A /* OCSQLiteQuery.h in Headers */,
 				DC4AFAA6206A6E7100189B9A /* OCSQLiteResultSet.h in Headers */,
 				DCEAA0B125CEB7290017F99B /* OCLock.h in Headers */,
@@ -3590,6 +3603,7 @@
 				DCAEB07121FA67060067E147 /* OCActivityUpdate.h in Headers */,
 				DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */,
 				DCF163F2274B917C00E0182A /* OCSQLiteCollation.h in Headers */,
+				DCF072E82798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h in Headers */,
 				DC4E0A5820927048007EB05F /* OCItemVersionIdentifier.h in Headers */,
 				DCD2D40322F059190071FB8F /* OCClassSettingsUserPreferences.h in Headers */,
 				DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */,
@@ -4226,12 +4240,14 @@
 				DCEE0B7025E697AF006534B5 /* OCCoreManager+ItemResolution.m in Sources */,
 				DC0376EF271B1C8500151E8C /* OCLocaleFilterClassSettings.m in Sources */,
 				DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */,
+				DCF072E92798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m in Sources */,
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
 				DCC832CF242BB05A00153F8C /* OCCore+MessageResponseHandler.m in Sources */,
 				DC51FD8E247565080069AB79 /* OCCellularSwitch.m in Sources */,
+				DCF072E52798630900E0B01D /* OCResourceTextPlaceholder.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
 				DC0AE4F32311C75300428681 /* OCKeyValueStack.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,

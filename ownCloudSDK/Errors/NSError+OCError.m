@@ -345,8 +345,8 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Lock invalidated.";
 				break;
 
-				case OCErrorAvatarNotFound:
-					unlocalizedString = @"Avatar not found.";
+				case OCErrorResourceDoesNotExist:
+					unlocalizedString = @"Resource does not exist.";
 				break;
 			}
 		}

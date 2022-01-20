@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCAvatar : OCImage <NSSecureCoding>
 
+@property(class,nonatomic,readonly) CGSize defaultSize;
+
 @property(strong,nullable) OCUserIdentifier userIdentifier;
 @property(strong,nullable) OCFileETag eTag;
 

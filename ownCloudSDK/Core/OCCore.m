@@ -58,6 +58,7 @@
 #import "OCMeasurement.h"
 #import "OCResourceManager.h"
 #import "OCResourceSourceAvatars.h"
+#import "OCResourceSourceAvatarPlaceholders.h"
 #import "OCResourceSourceItemThumbnails.h"
 #import "OCResourceSourceItemLocalThumbnails.h"
 
@@ -496,6 +497,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				[self.messageQueue addResponseHandler:self];
 
 				// Register resource sources
+				[self.vault.resourceManager addSource:[[OCResourceSourceAvatarPlaceholders alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceAvatars alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemLocalThumbnails alloc] initWithCore:self]];

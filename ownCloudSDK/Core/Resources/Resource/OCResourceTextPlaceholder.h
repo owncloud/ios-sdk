@@ -1,8 +1,8 @@
 //
-//  OCResourceSourceItemIcons.m
+//  OCResourceTextPlaceholder.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 05.01.22.
+//  Created by Felix Schwarz on 19.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,8 +16,14 @@
  *
  */
 
-#import "OCResourceSourceItemIcons.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
-@implementation OCResourceSourceItemIcons
+NS_ASSUME_NONNULL_BEGIN
+
+@interface OCResourceTextPlaceholder : OCResource
+
+@property(strong,nullable) NSString *text;
 
 @end
+
+NS_ASSUME_NONNULL_END

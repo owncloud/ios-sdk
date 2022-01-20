@@ -104,6 +104,38 @@
 	return ([NSString stringWithFormat:@"%@:%d", self.userName, self.isRemote]);
 }
 
++ (NSPersonNameComponentsFormatter *)localizedInitialsFormatter
+{
+	static dispatch_once_t onceToken;
+	static NSPersonNameComponentsFormatter *formatter;
+	dispatch_once(&onceToken, ^{
+		formatter = [NSPersonNameComponentsFormatter new];
+		formatter.style= NSPersonNameComponentsFormatterStyleAbbreviated;
+	});
+
+	return (formatter);
+}
+
++ (NSString *)localizedInitialsForName:(NSString *)name
+{
+	if (name.length > 0)
+	{
+		NSPersonNameComponentsFormatter *localizedFormatter = OCUser.localizedInitialsFormatter;
+		NSPersonNameComponents *nameComponents = [localizedFormatter personNameComponentsFromString:name];
+
+		return ([localizedFormatter stringFromPersonNameComponents:nameComponents]);
+	}
+
+	return (nil);
+}
+
+- (NSString *)localizedInitials
+{
+	NSString *name = (self.displayName.length > 0) ? self.displayName : self.userName;
+
+	return ([OCUser localizedInitialsForName:name]);
+}
+
 #pragma mark - Comparison
 - (NSUInteger)hash
 {

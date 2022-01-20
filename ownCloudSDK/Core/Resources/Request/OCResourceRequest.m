@@ -18,6 +18,7 @@
 
 #import "OCResourceRequest.h"
 #import "OCResourceManagerJob.h"
+#import "OCResourceManager.h"
 #import "OCResource.h"
 #import "OCLogger.h"
 
@@ -46,8 +47,12 @@
 
 - (void)dealloc
 {
+	OCResourceManager *manager = self.job.manager;
+
 	[self endRequest];
 	OCTLogDebug(@[@"ResMan"], @"Deallocating OCResourceRequest");
+
+	[manager setNeedsScheduling];
 }
 
 - (OCResourceRequestRelation)relationWithRequest:(OCResourceRequest *)otherRequest

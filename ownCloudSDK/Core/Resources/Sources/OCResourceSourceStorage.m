@@ -33,6 +33,11 @@
 	return (OCResourceSourceIdentifierStorage);
 }
 
+- (OCResourceSourcePriority)priorityForType:(OCResourceType)type
+{
+	return (OCResourceSourcePriorityLocalCache);
+}
+
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
 	if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))

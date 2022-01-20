@@ -72,7 +72,7 @@
 			break;
 
 			case OCHTTPStatusCodeNOT_FOUND:
-				completionHandler(OCError(OCErrorAvatarNotFound), NO, nil);
+				completionHandler(OCError(OCErrorResourceDoesNotExist), NO, nil);
 			break;
 
 			default: {

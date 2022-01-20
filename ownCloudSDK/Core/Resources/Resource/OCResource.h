@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) OCResourceMIMEType mimeType;
 
 @property(strong,nullable) NSURL *url; //!< URL at which the resource is stored (optional)
-@property(strong,nullable,nonatomic) NSData *data; //!< Data, at which the resource is stored. If data == nil and url != nil, loads contents of url.
+@property(strong,nullable,nonatomic) NSData *data; //!< Data of the resource. If data == nil and url != nil, loads contents of url.
 
 @property(strong,nullable) NSDate *timestamp;
 

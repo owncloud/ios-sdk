@@ -20,6 +20,11 @@
 
 @implementation OCAvatar
 
++ (CGSize)defaultSize
+{
+	return (CGSizeMake(128,128));
+}
+
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {

@@ -21,6 +21,7 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
 #import "OCAppIdentity.h"
+#import "OCResourceTextPlaceholder.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -229,6 +230,19 @@
 			{
 			}
 		}
+
+		if (_avatar == nil)
+		{
+			NSString *userName;
+
+			if ((userName = ((self.userDisplayName != nil) ? self.userDisplayName : self.userName)) != nil)
+			{
+				OCResourceTextPlaceholder *placeholder = [OCResourceTextPlaceholder new];
+				placeholder.text = [OCUser localizedInitialsForName:userName];
+
+				return ((id<OCViewProvider>)placeholder);
+			}
+		}
 	}
 
 	return (_avatar);
@@ -338,6 +352,7 @@
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
 
 		_userDisplayName = [decoder decodeObjectOfClass:NSString.class forKey:@"userDisplayName"];
+		_user = [decoder decodeObjectOfClass:OCUser.class forKey:@"user"];
 
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
@@ -369,6 +384,7 @@
 	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
 	[coder encodeObject:_userDisplayName forKey:@"userDisplayName"];
+	[coder encodeObject:_user forKey:@"user"];
 
 	if (_userInfo.count > 0)
 	{
@@ -383,7 +399,7 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
 			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
@@ -395,6 +411,7 @@
 			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
 			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
 			((_userDisplayName!=nil) ? [@", userDisplayName: " stringByAppendingString:_userDisplayName] : @""),
+			((_user!=nil) ? [@", user: " stringByAppendingString:_user.description] : @""),
 			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
 		]);
 }

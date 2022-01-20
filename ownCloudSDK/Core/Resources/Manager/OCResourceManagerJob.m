@@ -40,6 +40,14 @@
 	return (self);
 }
 
+- (void)dealloc
+{
+	for (OCResourceRequest *request in _requests)
+	{
+		[request endRequest];
+	}
+}
+
 - (OCResourceRequest *)primaryRequest
 {
 	@synchronized(self)

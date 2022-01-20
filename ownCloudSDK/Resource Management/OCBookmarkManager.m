@@ -77,11 +77,79 @@
 	{
 		if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
 		{
-			NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
+			NSMutableArray<OCBookmark *> *reconstructedBookmarks = nil;
 
 			@try
 			{
+				NSArray<OCBookmark *> *existingBookmarks = nil;
+				NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
+
 				loadedBookmarks = [NSKeyedUnarchiver unarchiveObjectWithData:bookmarkData];
+
+				@synchronized(self)
+				{
+					existingBookmarks = [_bookmarks copy];
+				}
+
+				if (existingBookmarks != nil)
+				{
+					// Look for changed bookmarks and update only those that don't match the existing instances
+					reconstructedBookmarks = [NSMutableArray new];
+
+					for (OCBookmark *loadedBookmark in loadedBookmarks)
+					{
+						OCBookmark *existingBookmark = nil;
+
+						for (OCBookmark *bookmark in existingBookmarks)
+						{
+							if ([bookmark.uuid isEqual:loadedBookmark.uuid])
+							{
+								existingBookmark = bookmark;
+								break;
+							}
+						}
+
+						if (existingBookmark == nil)
+						{
+							// New bookmark
+							[reconstructedBookmarks addObject:loadedBookmark];
+						}
+						else
+						{
+							// Existing bookmark - check for changes
+							NSError *error = nil;
+							NSData *existingBookmarkData = nil, *loadedBookmarkData = nil;
+							BOOL isIdentical = NO;
+
+							if ((existingBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:existingBookmark requiringSecureCoding:NO error:&error]) != nil)
+							{
+								if ((loadedBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:loadedBookmark requiringSecureCoding:NO error:&error]) != nil)
+								{
+									if ([existingBookmarkData isEqual:loadedBookmarkData])
+									{
+										isIdentical = YES;
+									}
+								}
+							}
+
+							if (isIdentical)
+							{
+								// Bookmark unchanged - use existing copy
+								[reconstructedBookmarks addObject:existingBookmark];
+							}
+							else
+							{
+								// Bookmark changed - use loaded copy
+								[reconstructedBookmarks addObject:loadedBookmark];
+							}
+						}
+					}
+				}
+				else
+				{
+					// No bookmarks previously loaded - just use the loaded ones
+					reconstructedBookmarks = loadedBookmarks;
+				}
 			}
 			@catch(NSException *exception) {
 				OCLogError(@"Error loading bookmarks: %@", OCLogPrivate(exception));
@@ -89,9 +157,9 @@
 
 			@synchronized(self)
 			{
-				if (loadedBookmarks != nil)
+				if (reconstructedBookmarks != nil)
 				{
-					_bookmarks = loadedBookmarks;
+					_bookmarks = reconstructedBookmarks;
 				}
 				else
 				{

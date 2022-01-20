@@ -39,6 +39,9 @@ typedef NSString* OCUserIdentifier; //!< Internal SDK unique identifier for the 
 @property(nullable,readonly) NSString *remoteHost; //!< Returns the part after the @ sign for usernames containing an @ sign (nil otherwise)
 
 @property(nullable,readonly) OCUserIdentifier userIdentifier; //!< Unique SDK internal identifier for the user
+@property(nullable,readonly) NSString *localizedInitials; //!< Returns localized initials for user
+
++ (nullable NSString *)localizedInitialsForName:(NSString *)name;
 
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote;

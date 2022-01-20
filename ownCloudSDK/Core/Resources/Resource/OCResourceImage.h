@@ -20,10 +20,11 @@
 #import "OCImage.h"
 #import "OCItemThumbnail.h"
 #import "OCAvatar.h"
+#import "OCViewProvider.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceImage : OCResource
+@interface OCResourceImage : OCResource <OCViewProvider>
 
 @property(assign) CGSize maxPixelSize; //!< Maximum size of the resource in pixels, CGSizeZero otherwise
 

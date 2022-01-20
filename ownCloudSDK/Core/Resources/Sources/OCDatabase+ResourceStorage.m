@@ -175,4 +175,17 @@
 	}]];
 }
 
+- (void)removeResourceOfType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier completionHandler:(OCResourceStoreCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery  query:@"DELETE FROM thumb.resources WHERE identifier = :identifier AND type = :type" withNamedParameters:@{ // relatedTo:OCDatabaseTableNameResources
+		@"type" : type,
+		@"identifier" : identifier,
+	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		if (completionHandler != nil)
+		{
+			completionHandler(error);
+		}
+	}]];
+}
+
 @end

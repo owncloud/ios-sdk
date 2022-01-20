@@ -6,6 +6,16 @@
 //  Copyright © 2021 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2022, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import <Foundation/Foundation.h>
 #import "OCResourceTypes.h"
 #import "OCResourceRequest.h"
@@ -22,6 +32,7 @@ typedef void(^OCResourceRetrieveCompletionHandler)(NSError * _Nullable error, OC
 @protocol OCResourceStorage <NSObject>
 - (void)retrieveResourceForRequest:(OCResourceRequest *)request completionHandler:(OCResourceRetrieveCompletionHandler)completionHandler;
 - (void)storeResource:(OCResource *)resource completionHandler:(OCResourceStoreCompletionHandler)completionHandler;
+- (void)removeResourceOfType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier completionHandler:(OCResourceStoreCompletionHandler)completionHandler;
 @end
 
 @interface OCResourceManager : NSObject <OCResourceStorage>
@@ -42,6 +53,9 @@ typedef void(^OCResourceRetrieveCompletionHandler)(NSError * _Nullable error, OC
 #pragma mark - Requests
 - (void)startRequest:(OCResourceRequest *)request;
 - (void)stopRequest:(OCResourceRequest *)request;
+
+#pragma mark - Scheduler
+- (void)setNeedsScheduling;
 
 @end
 
