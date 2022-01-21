@@ -45,9 +45,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
 
-@property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData
-@property(strong,nullable) NSString *userDisplayName; //!< Display name of a user
-@property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner
+@property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData. Use .user.userName instead if possible.
+@property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
+@property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
 @property(strong,nullable,nonatomic) id<OCViewProvider> avatar; //!< Object that can provide a view to display the avatar of the user
 

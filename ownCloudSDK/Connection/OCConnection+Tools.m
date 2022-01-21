@@ -31,23 +31,18 @@
 		{
 			endpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDWebDAV];
 
-			if (_loggedInUser.userName != nil)
+			NSString *userName = _loggedInUser.userName; 			// User name from the active connection
+			if (userName == nil) { userName = _bookmark.user.userName; } 	// User name from a previous connection
+			if (userName == nil) { userName = _bookmark.userName; }		// User name from authentication data. !! WARNING: Can differ from _loggedInUser.userName and _bookmark.user.userName (see https://github.com/owncloud/enterprise/issues/4924), i.e. "user123" instead of "user123@some.org"). !!
+
+			if (userName != nil)
 			{
-				endpointPath = [endpointPath stringByAppendingPathComponent:_loggedInUser.userName];
+				endpointPath = [endpointPath stringByAppendingPathComponent:userName];
 			}
 			else
 			{
-				NSString *bookmarkUsername = _bookmark.userName;
-
-				if (bookmarkUsername != nil)
-				{
-					endpointPath = [endpointPath stringByAppendingPathComponent:bookmarkUsername];
-				}
-				else
-				{
-					OCLogError(@"Could not generate path for endpoint %@ because the username is missing", endpoint);
-					endpointPath = nil;
-				}
+				OCLogError(@"Could not generate path for endpoint %@ because the username is missing", endpoint);
+				endpointPath = nil;
 			}
 		}
 		else
