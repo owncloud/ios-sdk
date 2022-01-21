@@ -433,8 +433,6 @@
 		DC9C19E327839E440021222E /* OCResourceSourceStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E127839E440021222E /* OCResourceSourceStorage.m */; };
 		DC9C19E6278488360021222E /* OCResourceManagerJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19E4278488360021222E /* OCResourceManagerJob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9C19E7278488360021222E /* OCResourceManagerJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E5278488360021222E /* OCResourceManagerJob.m */; };
-		DC9C19EA2785F5830021222E /* OCResourceSourceItemIcons.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19E82785F5830021222E /* OCResourceSourceItemIcons.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC9C19EB2785F5830021222E /* OCResourceSourceItemIcons.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E92785F5830021222E /* OCResourceSourceItemIcons.m */; };
 		DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19EC278CD0B30021222E /* OCDatabase+ResourceStorage.h */; };
 		DC9C19EF278CD0B30021222E /* OCDatabase+ResourceStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19ED278CD0B30021222E /* OCDatabase+ResourceStorage.m */; };
 		DC9C19F2278EE7230021222E /* OCResourceRequestImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19F0278EE7230021222E /* OCResourceRequestImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1286,8 +1284,6 @@
 		DC9C19E127839E440021222E /* OCResourceSourceStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceStorage.m; sourceTree = "<group>"; };
 		DC9C19E4278488360021222E /* OCResourceManagerJob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceManagerJob.h; sourceTree = "<group>"; };
 		DC9C19E5278488360021222E /* OCResourceManagerJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceManagerJob.m; sourceTree = "<group>"; };
-		DC9C19E82785F5830021222E /* OCResourceSourceItemIcons.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceItemIcons.h; sourceTree = "<group>"; };
-		DC9C19E92785F5830021222E /* OCResourceSourceItemIcons.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceItemIcons.m; sourceTree = "<group>"; };
 		DC9C19EC278CD0B30021222E /* OCDatabase+ResourceStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+ResourceStorage.h"; sourceTree = "<group>"; };
 		DC9C19ED278CD0B30021222E /* OCDatabase+ResourceStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+ResourceStorage.m"; sourceTree = "<group>"; };
 		DC9C19F0278EE7230021222E /* OCResourceRequestImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceRequestImage.h; sourceTree = "<group>"; };
@@ -2150,8 +2146,6 @@
 		DC41C7B725EA62240074F23B /* Thumbnails */ = {
 			isa = PBXGroup;
 			children = (
-				DC9C19E92785F5830021222E /* OCResourceSourceItemIcons.m */,
-				DC9C19E82785F5830021222E /* OCResourceSourceItemIcons.h */,
 				DC41C7B925EA62520074F23B /* OCResourceSourceItemThumbnails.m */,
 				DC41C7B825EA62520074F23B /* OCResourceSourceItemThumbnails.h */,
 				DC41C7FC25EA63A00074F23B /* OCResourceSourceItemLocalThumbnails.m */,
@@ -3555,7 +3549,6 @@
 				DC4A2C5E20D4608100A47260 /* OCIssueChoice.h in Headers */,
 				DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */,
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
-				DC9C19EA2785F5830021222E /* OCResourceSourceItemIcons.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
 				DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */,
@@ -4319,7 +4312,6 @@
 				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
 				DCA35D5A24CF6B2000DBE2B0 /* OCSyncRecord+Diagnostic.m in Sources */,
 				DC41C7F025EA62E40074F23B /* OCResourceRequestAvatar.m in Sources */,
-				DC9C19EB2785F5830021222E /* OCResourceSourceItemIcons.m in Sources */,
 				DC7650092403DF5000201812 /* NSError+OCNetworkFailure.m in Sources */,
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DC5B96D624916CF200733594 /* OCConnection+Upload.m in Sources */,
