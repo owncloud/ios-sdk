@@ -191,6 +191,16 @@
 						OCMeasureEventBegin(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Queue update of retrieved set for %@", self.path]));
 
 						[self->_core queueBlock:^{
+							if (self.core.state != OCCoreStateRunning)
+							{
+								// Skip processing the response if the core is not starting or running
+								self.retrievedSet.state = OCCoreItemListStateNew;
+								completionHandler(); // we're done for now, make sure the queue doesn't get stuck
+
+								[self->_core endActivity:@"update retrieved set"];
+								return;
+							}
+
 							// Update inside the core's serial queue to make sure we never change the data while the core is also working on it
 							OCMeasureEventEnd(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Processing update of retrieved set for %@", self.path]));
 
