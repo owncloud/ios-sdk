@@ -169,7 +169,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCResourceSourceAvatarPlaceholders.h>
 #import <ownCloudSDK/OCResourceSourceAvatars.h>
 #import <ownCloudSDK/OCResourceRequestAvatar.h>
-#import <ownCloudSDK/OCResourceSourceItemIcons.h>
 #import <ownCloudSDK/OCResourceSourceItemThumbnails.h>
 #import <ownCloudSDK/OCResourceSourceItemLocalThumbnails.h>
 #import <ownCloudSDK/OCResourceRequestItemThumbnail.h>
