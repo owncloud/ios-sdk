@@ -1451,8 +1451,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 											self.loggedInUser = loggedInUser;
 
 											// Update bookmark.userDisplayName if it has changed
-											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName])
+											if ((((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName]) ||
+											    (![loggedInUser isEqual:self.bookmark.user])) && (error == nil))
 											{
+												self.bookmark.user = loggedInUser;
 												self.bookmark.userDisplayName = loggedInUser.displayName;
 
 												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)

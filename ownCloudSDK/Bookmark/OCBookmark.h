@@ -20,6 +20,7 @@
 #import "OCAuthenticationMethod.h"
 #import "OCCertificate.h"
 #import "OCDatabase+Versions.h"
+#import "OCUser.h"
 
 typedef NSUUID* OCBookmarkUUID;
 typedef NSString* OCBookmarkUUIDString;
@@ -41,11 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *name; //!< Name of the server
 @property(strong,nullable) NSURL *url; //!< URL to use to connect to the server
 
-@property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData
-
-@property(strong,nullable) NSString *userDisplayName; //!< Display name of a user
-
 @property(strong,nullable) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
+
+@property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData. Use .user.userName instead if possible.
+@property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
+@property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
 @property(strong,nullable) OCCertificate *certificate; //!< Certificate last used by the server this bookmark refers to
 @property(strong,nullable) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
