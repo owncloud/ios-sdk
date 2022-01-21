@@ -20,10 +20,4 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCCore (ThumbnailInternals)
-
-- (void)_handleRetrieveThumbnailEvent:(OCEvent *)event sender:(id)sender;
-
-@end
-
 NS_ASSUME_NONNULL_END

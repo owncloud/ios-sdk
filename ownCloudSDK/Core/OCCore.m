@@ -1906,11 +1906,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		// Handle by event type
 		switch (event.eventType)
 		{
-			case OCEventTypeRetrieveThumbnail: {
-				queueBlock = ^{
-					[self _handleRetrieveThumbnailEvent:event sender:sender];
-				};
-			}
+			case OCEventTypeRetrieveThumbnail:
+				// Legacy thumbnail event (pre-OCResourceManager era)
+				OCLogWarning(@"Dropping legacy thumbnail event: %@", event);
+				completionHandler();
 			break;
 
 			case OCEventTypeRetrieveItemList: {
