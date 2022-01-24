@@ -70,6 +70,13 @@
 	{
 		OCConnection *connection;
 
+		if (item.thumbnailAvailability == OCItemThumbnailAvailabilityNone)
+		{
+			// Do not initiate a thumbnail request for items that indicate no thumbnail is available
+			resultHandler(nil, nil);
+			return;
+		}
+
 		if ((connection = self.core.connection) != nil)
 		{
 			NSString *specID = item.thumbnailSpecID;

@@ -66,25 +66,5 @@
 	return (NO);
 }
 
-
-#pragma mark - Command: Retrieve Thumbnail
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
-{
-	return ([self retrieveThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:YES retrieveHandler:retrieveHandler]);
-}
-
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler
-{
-	OCResourceRequestItemThumbnail *itemThumbnailRequest = [OCResourceRequestItemThumbnail requestThumbnailFor:item maximumSize:requestedMaximumSizeInPoints scale:scale waitForConnectivity:waitForConnectivity changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, BOOL isOngoing, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
-		retrieveHandler(error, self, item, OCTypedCast(newResource, OCResourceImage).thumbnail, isOngoing, nil);
-	}];
-
-	itemThumbnailRequest.lifetime = OCResourceRequestLifetimeSingleRun;
-
-	[self.vault.resourceManager startRequest:itemThumbnailRequest];
-
-	return (nil);
-}
-
 @end
 

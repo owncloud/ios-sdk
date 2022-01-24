@@ -280,16 +280,6 @@
 	return (_thumbnailAvailability);
 }
 
-- (void)setThumbnail:(OCItemThumbnail *)thumbnail
-{
-	_thumbnail = thumbnail;
-
-	if (thumbnail != nil)
-	{
-		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
-	}
-}
-
 #pragma mark - Local attributes
 - (BOOL)hasLocalAttributes
 {

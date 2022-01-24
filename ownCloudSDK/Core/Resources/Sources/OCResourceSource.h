@@ -33,10 +33,11 @@ typedef void(^OCResourceSourceResultHandler)(NSError * _Nullable error, OCResour
 typedef NS_ENUM(NSInteger, OCResourceSourcePriority)
 {
 	OCResourceSourcePriorityNone = 0, //!< Do not use source
-	OCResourceSourcePriorityRemote = 100, //!< Resource is fetched remotely
-	OCResourceSourcePriorityLocalFallback = 200, //!< Resource is a locally generated fallback
-	OCResourceSourcePriorityLocal = 300, //!< Resource is locally generated
-	OCResourceSourcePriorityLocalCache = 400 //!< Resource is from local cache
+	OCResourceSourcePriorityRemote = 100, //!< Source fetches resource remotely
+	OCResourceSourcePriorityLocalFallback = 200, //!< Source returns a locally generated fallback resource
+	OCResourceSourcePriorityLocal = 300, //!< Source returns a locally generated resource
+	OCResourceSourcePriorityLocalCache = 400, //!< Source returns resource from local cache
+	OCResourceSourcePriorityInstant = 500 //!< Source makes a resource available instantly (for trivial fallback resources)
 };
 
 @interface OCResourceSource : NSObject <OCEventHandler>

@@ -156,8 +156,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) UInt64 tusMaximumSize; //!< For folders only: Tus maximum chunk size; undefined for files
 // @property(strong,nullable) OCTUSHeader *tusHeader; //!< For folders only: detailed Tus support info (optional); nil for files
 
-@property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item. If OCItemThumbnailAvailabilityUnknown, call -[OCCore retrieveThumbnailFor:resultHandler:] to update it.
-@property(nullable,strong,nonatomic) OCItemThumbnail *thumbnail; //!< Thumbnail for the item.
+@property(readonly,nonatomic) OCItemThumbnailAvailability thumbnailAvailability; //!< Availability of thumbnails for this item.
 
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the item in the database
 @property(nullable,strong) OCDatabaseTimestamp databaseTimestamp; //!< OCDatabase-specific: ((NSUInteger)NSDate.timeIntervalSinceReferenceDate) value this item was added or last updated in the database (most useful when reading items from the database). Not preserved (ephermal!), read-only.

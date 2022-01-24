@@ -78,8 +78,6 @@
 	{
 		NSMutableArray<OCResourceSource *> *sources;
 
-		source.manager = self;
-
 		if ((sources = _sourcesByType[source.type]) == nil)
 		{
 			sources = [NSMutableArray new];
@@ -93,6 +91,19 @@
 				if ((anySources = _sourcesByType[OCResourceTypeAny]) != nil)
 				{
 					[sources addObjectsFromArray:anySources];
+				}
+			}
+		}
+		else
+		{
+			// Check if source with same identifier already exists
+			for (OCResourceSource *existingSource in sources)
+			{
+				if ([existingSource.identifier isEqual:source.identifier])
+				{
+					// If it does, log warning and return
+					OCLogWarning(@"Did not add resource source %@ because another instance with the same identifier (%@) already exists: %@", source, existingSource.identifier, existingSource);
+					return;
 				}
 			}
 		}
@@ -110,6 +121,7 @@
 			}
 		}
 
+		source.manager = self;
 		[sources addObject:source];
 
 		if (![source.type isEqual:OCResourceTypeAny]) // Sources for type any need no sorting as they are not used directly

@@ -29,7 +29,7 @@
 
 - (OCResourceSourcePriority)priorityForType:(OCResourceType)type
 {
-	return (OCResourceSourcePriorityLocalFallback);
+	return (OCResourceSourcePriorityInstant);
 }
 
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
