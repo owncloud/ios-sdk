@@ -19,17 +19,20 @@
 #import "OCConnection.h"
 #import "NSError+OCError.h"
 #import "NSURL+OCURLNormalization.h"
+#import "OCServerLocator.h"
 #import "OCMacros.h"
 
 @implementation OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	/*
 		Setup preparation steps overview:
 
-		1) Query [url]/status.php.
+		1) Perform server location if username is provided and flag for it is passed
+
+		2) Query [url]/status.php.
 		   - Redirect? Create issue, follow redirect, restart at 1).
 		   - Error (no OC status.php content):
 		     - check if [url] last path component is "owncloud".
@@ -39,7 +42,7 @@
 		         - if NO: create error issue
 		   - Success (OC status.php content): proceed to step 2
 
-		2) Send PROPFIND to [finalurl]/remote.php/dav/files to determine available authentication mechanisms (=> use -requestSupportedAuthenticationMethodsWithOptions:.. for this)
+		3) Send PROPFIND to [finalurl]/remote.php/dav/files to determine available authentication mechanisms (=> use -requestSupportedAuthenticationMethodsWithOptions:.. for this)
 	*/
 
 	// Since this is far easier to implement when making requests synchronously, move the whole method to a private method and execute it asynchronously on a global queue
@@ -48,12 +51,13 @@
 	});
 }
 
-- (void)_prepareForSetupWithOptions:(NSDictionary<NSString *, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)_prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
 {
 	NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
 	NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 	NSMutableSet <OCCertificate *> *certificatesUsedInIssues = [NSMutableSet new];
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
+	OCServerLocatorIdentifier serverLocatorIdentifier = OCServerLocator.useServerLocatorIdentifier;
 
 	// Tools
 	void (^AddIssue)(OCIssue *issue) = ^(OCIssue *issue) {
@@ -96,11 +100,9 @@
 		AddIssue(issue);
 	};
 
-	NSError *(^MakeRequest)(NSURL *url, OCHTTPRequest **outRequest) = ^(NSURL *url, OCHTTPRequest **outRequest){
-		OCHTTPRequest *request;
+	NSError *(^MakeRawRequest)(OCHTTPRequest *request) = ^(OCHTTPRequest *request) {
 		NSError *error = nil;
-		
-		request = [OCHTTPRequest requestWithURL:url];
+
 		request.forceCertificateDecisionDelegation = YES;
 		request.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest *request, OCCertificate *certificate, OCCertificateValidationResult validationResult, NSError *certificateValidationError, OCConnectionCertificateProceedHandler proceedHandler) {
 			switch (validationResult)
@@ -156,17 +158,28 @@
 				break;
 			}
 		};
-		
+
 		error = [self sendSynchronousRequest:request];
-		
+
+		requestCount++;
+
+		// OCLogDebug(@"Loaded URL %@ with error=%@", url, error);
+
+		return (error);
+	};
+
+	NSError *(^MakeRequest)(NSURL *url, OCHTTPRequest **outRequest) = ^(NSURL *url, OCHTTPRequest **outRequest) {
+		OCHTTPRequest *request;
+		NSError *error = nil;
+
+		request = [OCHTTPRequest requestWithURL:url];
+
+		error = MakeRawRequest(request);
+
 		if (outRequest != NULL)
 		{
 			*outRequest = request;
 		}
-		
-		requestCount++;
-
-		// OCLogDebug(@"Loaded URL %@ with error=%@", url, error);
 
 		return (error);
 	};
@@ -327,6 +340,65 @@
 		{
 			completionHandler(issue, nil, nil, nil);
 			return;
+		}
+	}
+
+	// Locate server by user name
+	if (serverLocatorIdentifier != nil)
+	{
+		// Determine userName
+		NSString *userName;
+
+		userName = options[OCConnectionSetupOptionUserName];
+
+		if (userName == nil) { userName = self.bookmark.serverLocationUserName; }
+		if (userName == nil) { userName = self.bookmark.userName; }
+
+		if (userName == nil)
+		{
+			completionHandler([OCIssue issueForError:OCError(OCErrorInsufficientParameters) level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+			return;
+		}
+
+		// Determine locator
+		OCServerLocator *locator = [OCServerLocator serverLocatorForIdentifier:serverLocatorIdentifier];
+
+		if (locator == nil)
+		{
+			completionHandler([OCIssue issueForError:OCError(OCErrorUnknown) level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+			return;
+		}
+
+		locator.url = url;
+		locator.userName = userName;
+		locator.requestSender = MakeRawRequest;
+		locator.options = options;
+
+		// Perform server location
+		NSError *locatorError = [locator locate];
+
+		if (locatorError != nil)
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler([OCIssue issueForError:locatorError level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+				return;
+			}
+		}
+		else if (locator.url != nil)
+		{
+			// Use URL returned from locator
+			if (![locator.url isEqual:url])
+			{
+				if (_bookmark.originURL == nil)
+				{
+					_bookmark.originURL = _bookmark.url;
+				}
+
+				_bookmark.serverLocationUserName = locator.userName;
+				_bookmark.url = locator.url;
+				url = locator.url;
+			}
 		}
 	}
 

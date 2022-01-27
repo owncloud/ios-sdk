@@ -564,6 +564,14 @@
 		DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD9B8812379783200691929 /* UIDevice+ModelID.m */; };
 		DCDA307121412A0100DB61A9 /* OCSyncAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDA306F21412A0100DB61A9 /* OCSyncAction.h */; };
 		DCDA307221412A0100DB61A9 /* OCSyncAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDA307021412A0100DB61A9 /* OCSyncAction.m */; };
+		DCDB76122739D30500EE7A06 /* OCServerLocator.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDB76102739D30500EE7A06 /* OCServerLocator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCDB76132739D30500EE7A06 /* OCServerLocator.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDB76112739D30500EE7A06 /* OCServerLocator.m */; };
+		DCDB761E2739D4A300EE7A06 /* OCServerLocatorWebFinger.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDB761C2739D4A300EE7A06 /* OCServerLocatorWebFinger.h */; };
+		DCDB761F2739D4A300EE7A06 /* OCServerLocatorWebFinger.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDB761D2739D4A300EE7A06 /* OCServerLocatorWebFinger.m */; };
+		DCDB76242739D51200EE7A06 /* OCServerLocatorLookupTable.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDB76222739D51200EE7A06 /* OCServerLocatorLookupTable.h */; };
+		DCDB76252739D51200EE7A06 /* OCServerLocatorLookupTable.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDB76232739D51200EE7A06 /* OCServerLocatorLookupTable.m */; };
+		DCDB76282739EF9A00EE7A06 /* OCExtension+ServerLocator.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDB76262739EF9A00EE7A06 /* OCExtension+ServerLocator.h */; };
+		DCDB76292739EF9A00EE7A06 /* OCExtension+ServerLocator.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDB76272739EF9A00EE7A06 /* OCExtension+ServerLocator.m */; };
 		DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */; };
 		DCDBEE302048A71200189B9A /* OCConnection+Tools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */; };
 		DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */; };
@@ -1381,6 +1389,14 @@
 		DCD9B8812379783200691929 /* UIDevice+ModelID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+ModelID.m"; sourceTree = "<group>"; };
 		DCDA306F21412A0100DB61A9 /* OCSyncAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncAction.h; sourceTree = "<group>"; };
 		DCDA307021412A0100DB61A9 /* OCSyncAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncAction.m; sourceTree = "<group>"; };
+		DCDB76102739D30500EE7A06 /* OCServerLocator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCServerLocator.h; sourceTree = "<group>"; };
+		DCDB76112739D30500EE7A06 /* OCServerLocator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerLocator.m; sourceTree = "<group>"; };
+		DCDB761C2739D4A300EE7A06 /* OCServerLocatorWebFinger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCServerLocatorWebFinger.h; sourceTree = "<group>"; };
+		DCDB761D2739D4A300EE7A06 /* OCServerLocatorWebFinger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerLocatorWebFinger.m; sourceTree = "<group>"; };
+		DCDB76222739D51200EE7A06 /* OCServerLocatorLookupTable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCServerLocatorLookupTable.h; sourceTree = "<group>"; };
+		DCDB76232739D51200EE7A06 /* OCServerLocatorLookupTable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerLocatorLookupTable.m; sourceTree = "<group>"; };
+		DCDB76262739EF9A00EE7A06 /* OCExtension+ServerLocator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCExtension+ServerLocator.h"; sourceTree = "<group>"; };
+		DCDB76272739EF9A00EE7A06 /* OCExtension+ServerLocator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCExtension+ServerLocator.m"; sourceTree = "<group>"; };
 		DCDBEE2A2048A6A700189B9A /* OCConnection+Setup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Setup.m"; sourceTree = "<group>"; };
 		DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Tools.m"; sourceTree = "<group>"; };
 		DCDBEE322048A8BC00189B9A /* OCConnection+Authentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Authentication.m"; sourceTree = "<group>"; };
@@ -2529,6 +2545,7 @@
 				DCCE49362684BBF5005961D8 /* DAVResponse */,
 				DCD63279223BB1930090169E /* Capabilities */,
 				DC85570A204FEA5E00189B9A /* Categories */,
+				DCDB760F2739D26100EE7A06 /* ServerLocator */,
 			);
 			path = Connection;
 			sourceTree = "<group>";
@@ -3105,6 +3122,37 @@
 			path = Capabilities;
 			sourceTree = "<group>";
 		};
+		DCDB760F2739D26100EE7A06 /* ServerLocator */ = {
+			isa = PBXGroup;
+			children = (
+				DCDB76112739D30500EE7A06 /* OCServerLocator.m */,
+				DCDB76102739D30500EE7A06 /* OCServerLocator.h */,
+				DCDB76272739EF9A00EE7A06 /* OCExtension+ServerLocator.m */,
+				DCDB76262739EF9A00EE7A06 /* OCExtension+ServerLocator.h */,
+				DCDB76212739D4FD00EE7A06 /* LookupTable */,
+				DCDB76202739D4AA00EE7A06 /* WebFinger */,
+			);
+			path = ServerLocator;
+			sourceTree = "<group>";
+		};
+		DCDB76202739D4AA00EE7A06 /* WebFinger */ = {
+			isa = PBXGroup;
+			children = (
+				DCDB761D2739D4A300EE7A06 /* OCServerLocatorWebFinger.m */,
+				DCDB761C2739D4A300EE7A06 /* OCServerLocatorWebFinger.h */,
+			);
+			path = WebFinger;
+			sourceTree = "<group>";
+		};
+		DCDB76212739D4FD00EE7A06 /* LookupTable */ = {
+			isa = PBXGroup;
+			children = (
+				DCDB76232739D51200EE7A06 /* OCServerLocatorLookupTable.m */,
+				DCDB76222739D51200EE7A06 /* OCServerLocatorLookupTable.h */,
+			);
+			path = LookupTable;
+			sourceTree = "<group>";
+		};
 		DCE227CC22D60CF4000BE0A5 /* ItemPolicies */ = {
 			isa = PBXGroup;
 			children = (
@@ -3286,6 +3334,7 @@
 				DC35969A2240EC0A00C4D6E6 /* OCQueryCondition+Item.h in Headers */,
 				DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */,
 				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
+				DCDB761E2739D4A300EE7A06 /* OCServerLocatorWebFinger.h in Headers */,
 				DCEE0B6F25E697AF006534B5 /* OCCoreManager+ItemResolution.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DCC3701324D4D134008B0DEB /* OCScanJobActivity.h in Headers */,
@@ -3299,6 +3348,7 @@
 				DC1C7AC2253F3CD9002F2B9F /* OCClassSettings+Metadata.h in Headers */,
 				DC2AA57922DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h in Headers */,
 				DCA35D7624D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h in Headers */,
+				DCDB76242739D51200EE7A06 /* OCServerLocatorLookupTable.h in Headers */,
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
@@ -3371,6 +3421,7 @@
 				DC114A9422A7A87C00CBD597 /* NSData+OCRandom.h in Headers */,
 				DC114A9822A7AA2E00CBD597 /* NSString+OCRandom.h in Headers */,
 				DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */,
+				DCDB76282739EF9A00EE7A06 /* OCExtension+ServerLocator.h in Headers */,
 				DCA35D5D24CF6BEC00DBE2B0 /* NSArray+OCNullable.h in Headers */,
 				DC3CE065242A49E100AB8B88 /* OCMessagePresenter.h in Headers */,
 				DC04A4942330290A006285AC /* OCCoreProxy.h in Headers */,
@@ -3398,6 +3449,7 @@
 				DCCE49392684BC1B005961D8 /* OCDAVRawResponse.h in Headers */,
 				DCC83307242E1B4600153F8C /* OCCore+MessageAutoresolver.h in Headers */,
 				DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */,
+				DCDB76122739D30500EE7A06 /* OCServerLocator.h in Headers */,
 				DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */,
 				DC47DF762770CEE300989D84 /* NSError+OCErrorTools.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
@@ -3919,6 +3971,7 @@
 				DCE451A62459AD3F0074363F /* OCTUSJob.m in Sources */,
 				DC19BFEE21CBACBC007C20D1 /* OCProcessManager.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
+				DCDB761F2739D4A300EE7A06 /* OCServerLocatorWebFinger.m in Sources */,
 				DCDD9B15222986D50052A001 /* OCShare+OCXMLObjectCreation.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DCF163F7274BA6C300E0182A /* OCSQLiteCollationLocalized.m in Sources */,
@@ -3963,6 +4016,7 @@
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */,
 				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
+				DCDB76292739EF9A00EE7A06 /* OCExtension+ServerLocator.m in Sources */,
 				DC73F3C0254BFE9900CE5FA9 /* NSArray+ObjCRuntime.m in Sources */,
 				DC39DC472041A03300189B9A /* OCAuthenticationMethodBasicAuth.m in Sources */,
 				DCEAA0D125CEB7F90017F99B /* OCLockRequest.m in Sources */,
@@ -4119,6 +4173,7 @@
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
 				DC35969B2240EC0A00C4D6E6 /* OCQueryCondition+Item.m in Sources */,
 				DC708CE1214135D100FE43CA /* OCSyncActionDelete.m in Sources */,
+				DCDB76132739D30500EE7A06 /* OCServerLocator.m in Sources */,
 				DC2D646621C3D63000EB26FD /* OCCore+Thumbnails.m in Sources */,
 				DC188998218B09CC00CFB3F9 /* OCLogFileSource.m in Sources */,
 				DC72E42F2063DBF900189B9A /* OCClassSettingsFlatSourceManagedConfiguration.m in Sources */,
@@ -4127,6 +4182,7 @@
 				DC179CD2209475C20018DF7F /* UIImage+OCTools.m in Sources */,
 				DC2AA57122DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m in Sources */,
 				DC14CC4B21067320006DDA69 /* OCCore+ItemList.m in Sources */,
+				DCDB76252739D51200EE7A06 /* OCServerLocatorLookupTable.m in Sources */,
 				DC166E9F2428FD9A00347714 /* OCItemPolicyProcessorVersionUpdates.m in Sources */,
 				DC4AFAB5206AE61400189B9A /* OCSQLiteQuery.m in Sources */,
 				DCD7AA452580E5A5000CD155 /* NSURLSessionTask+Debug.m in Sources */,

@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *name; //!< Name of the server
 @property(strong,nullable) NSURL *url; //!< URL to use to connect to the server
 
+@property(strong,nullable) NSString *serverLocationUserName; //!< User name to use for server location
+
 @property(strong,nullable) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
 
 @property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData. Use .user.userName instead if possible.

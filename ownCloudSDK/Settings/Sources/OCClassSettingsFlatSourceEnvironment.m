@@ -69,6 +69,8 @@
 						static NSString *boolPrefix = @"bool:";
 						static NSString *arrayPrefix = @"[";
 						static NSString *arraySuffix = @"]";
+						static NSString *dictionaryPrefix = @"{";
+						static NSString *dictionarySuffix = @"}";
 						NSString *settingsKey;
 
 						// Remove prefix
@@ -101,10 +103,16 @@
 							{
 								value = @(NO);
 							}
-						} else if ([valueString hasPrefix:arrayPrefix] && [valueString hasSuffix:arraySuffix])
+						}
+						else if ([valueString hasPrefix:arrayPrefix] && [valueString hasSuffix:arraySuffix])
 						{
 							// Array pre- und suffix
 							value = [[valueString substringWithRange:NSMakeRange(1, valueString.length-2)] componentsSeparatedByString:@","];
+						}
+						else if ([valueString hasPrefix:dictionaryPrefix] && [valueString hasSuffix:dictionarySuffix])
+						{
+							// JSON Dictionary
+							value = [NSJSONSerialization JSONObjectWithData:[valueString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:NULL];
 						}
 
 						// Try to detect type

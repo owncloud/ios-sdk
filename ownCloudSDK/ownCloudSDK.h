@@ -257,3 +257,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCancelAction.h>
 #import <ownCloudSDK/OCMeasurement.h>
 #import <ownCloudSDK/OCMeasurementEvent.h>
+
+#import <ownCloudSDK/OCServerLocator.h>
