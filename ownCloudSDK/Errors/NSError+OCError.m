@@ -349,6 +349,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Resource does not exist.";
 				break;
 
+				case OCErrorWebFingerLacksServerInstanceRelation:
+					unlocalizedString = @"Web finger response lacks server instance relation.";
+				break;
+
+				case OCErrorUnknownUser:
+					unlocalizedString = @"Unknown user";
+				break;
+
 				case OCErrorInvalidType:
 					unlocalizedString = @"Invalid type.";
 				break;

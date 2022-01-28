@@ -322,19 +322,34 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Generate bookmark authentication data
 - (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
 {
-// 	** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
-//	** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
-//
-//	NSString *username;
-//
-//	if ((username = connection.bookmark.userName) != nil)
-//	{
-//		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
-//
-//		mutableParameters[@"user"] = username;
-//
-//		return (mutableParameters);
-//	}
+	// ** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
+	// ** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
+
+	// Limited to iOS 15+, because with previous server and iOS versions, providing the user name
+	// led to a crash in ASWebAuthenticationSession and Safari in Simulator + on device (see above).
+	// Successfully tested with iOS 15.1 and ownCloud 10.8.0.4.
+	if (@available(iOS 15.1, *))
+	{
+		NSString *username;
+
+		// From options: used with webfinger server locator
+		username = options[OCAuthenticationMethodUsernameKey];
+
+		// From bookmark: used for re-authentication
+		if (username == nil)
+		{
+			username = connection.bookmark.userName;
+		}
+
+		if (username != nil)
+		{
+			NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+
+			mutableParameters[@"user"] = username;
+
+			return (mutableParameters);
+		}
+	}
 
 	return (parameters);
 }
