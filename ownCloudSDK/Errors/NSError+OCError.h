@@ -115,7 +115,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorLockInvalidated, //!< Lock invalidated.
 
-	OCErrorResourceDoesNotExist //!< Resource does not exist
+	OCErrorResourceDoesNotExist, //!< Resource does not exist
+	OCErrorInvalidType, //!< Invalid type
+	OCErrorRequiredValueMissing //!< Invalid type
 };
 
 @class OCIssue;

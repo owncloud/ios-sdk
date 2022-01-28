@@ -350,6 +350,12 @@
 // OCErrorResourceDoesNotExist
 "Resource does not exist." = "Resource does not exist.";
 
+// OCErrorInvalidType
+"Invalid type." = "Invalid type.";
+
+// OCErrorRequiredValueMissing
+"Required value missing." = "Required value missing.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

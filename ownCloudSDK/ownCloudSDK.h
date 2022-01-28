@@ -175,6 +175,11 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCAvatar.h>
 
+#import <ownCloudSDK/OCGraph.h>
+#import <ownCloudSDK/OCGraphObject.h>
+#import <ownCloudSDK/OCGraphContext.h>
+#import <ownCloudSDK/OCConnection+GraphAPI.h>
+
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>

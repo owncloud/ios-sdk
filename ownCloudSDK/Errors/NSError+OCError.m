@@ -348,6 +348,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorResourceDoesNotExist:
 					unlocalizedString = @"Resource does not exist.";
 				break;
+
+				case OCErrorInvalidType:
+					unlocalizedString = @"Invalid type.";
+				break;
+
+				case OCErrorRequiredValueMissing:
+					unlocalizedString = @"Required value missing.";
+				break;
 			}
 		}
 	}

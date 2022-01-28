@@ -1,0 +1,379 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DCFE3BB427A1E7B900939415 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BB327A1E7B900939415 /* main.m */; };
+		DCFE3BBF27A1E7E200939415 /* OCYAMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BBE27A1E7E200939415 /* OCYAMLParser.m */; };
+		DCFE3BC227A1E84600939415 /* OCYAMLNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BC127A1E84600939415 /* OCYAMLNode.m */; };
+		DCFE3BC527A1FB4C00939415 /* OCSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BC427A1FB4C00939415 /* OCSchema.m */; };
+		DCFE3BCA27A1FBB200939415 /* OCSchemaProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BC927A1FBB200939415 /* OCSchemaProperty.m */; };
+		DCFE3BCD27A1FC5F00939415 /* OCSchemaConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BCC27A1FC5F00939415 /* OCSchemaConstraint.m */; };
+		DCFE3BD027A2081900939415 /* OCCodeGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BCF27A2081900939415 /* OCCodeGenerator.m */; };
+		DCFE3BD327A2988600939415 /* OCCodeFile.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BD227A2988600939415 /* OCCodeFile.m */; };
+		DCFE3BD627A2AA2B00939415 /* OCCodeGeneratorObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BD527A2AA2B00939415 /* OCCodeGeneratorObjC.m */; };
+		DCFE3BDC27A2D38B00939415 /* OCCodeFileSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BDB27A2D38B00939415 /* OCCodeFileSegment.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DCFE3BAE27A1E7B900939415 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		DCFE3BB027A1E7B900939415 /* ocapigen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ocapigen; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCFE3BB327A1E7B900939415 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		DCFE3BBD27A1E7E200939415 /* OCYAMLParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCYAMLParser.h; sourceTree = "<group>"; };
+		DCFE3BBE27A1E7E200939415 /* OCYAMLParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCYAMLParser.m; sourceTree = "<group>"; };
+		DCFE3BC027A1E84600939415 /* OCYAMLNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCYAMLNode.h; sourceTree = "<group>"; };
+		DCFE3BC127A1E84600939415 /* OCYAMLNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCYAMLNode.m; sourceTree = "<group>"; };
+		DCFE3BC327A1FB4C00939415 /* OCSchema.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSchema.h; sourceTree = "<group>"; };
+		DCFE3BC427A1FB4C00939415 /* OCSchema.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSchema.m; sourceTree = "<group>"; };
+		DCFE3BC827A1FBB200939415 /* OCSchemaProperty.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSchemaProperty.h; sourceTree = "<group>"; };
+		DCFE3BC927A1FBB200939415 /* OCSchemaProperty.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSchemaProperty.m; sourceTree = "<group>"; };
+		DCFE3BCB27A1FC5F00939415 /* OCSchemaConstraint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSchemaConstraint.h; sourceTree = "<group>"; };
+		DCFE3BCC27A1FC5F00939415 /* OCSchemaConstraint.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSchemaConstraint.m; sourceTree = "<group>"; };
+		DCFE3BCE27A2081900939415 /* OCCodeGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCodeGenerator.h; sourceTree = "<group>"; };
+		DCFE3BCF27A2081900939415 /* OCCodeGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCodeGenerator.m; sourceTree = "<group>"; };
+		DCFE3BD127A2988600939415 /* OCCodeFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCodeFile.h; sourceTree = "<group>"; };
+		DCFE3BD227A2988600939415 /* OCCodeFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCodeFile.m; sourceTree = "<group>"; };
+		DCFE3BD427A2AA2B00939415 /* OCCodeGeneratorObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCodeGeneratorObjC.h; sourceTree = "<group>"; };
+		DCFE3BD527A2AA2B00939415 /* OCCodeGeneratorObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCodeGeneratorObjC.m; sourceTree = "<group>"; };
+		DCFE3BDA27A2D38B00939415 /* OCCodeFileSegment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCodeFileSegment.h; sourceTree = "<group>"; };
+		DCFE3BDB27A2D38B00939415 /* OCCodeFileSegment.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCodeFileSegment.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DCFE3BAD27A1E7B900939415 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DCFE3BA727A1E7B900939415 = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BC727A1FB5B00939415 /* Code Generation */,
+				DCFE3BC627A1FB4F00939415 /* YAML Parser */,
+				DCFE3BB227A1E7B900939415 /* ocapigen */,
+				DCFE3BB127A1E7B900939415 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DCFE3BB127A1E7B900939415 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BB027A1E7B900939415 /* ocapigen */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DCFE3BB227A1E7B900939415 /* ocapigen */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BB327A1E7B900939415 /* main.m */,
+			);
+			path = ocapigen;
+			sourceTree = "<group>";
+		};
+		DCFE3BC627A1FB4F00939415 /* YAML Parser */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BBE27A1E7E200939415 /* OCYAMLParser.m */,
+				DCFE3BBD27A1E7E200939415 /* OCYAMLParser.h */,
+				DCFE3BC127A1E84600939415 /* OCYAMLNode.m */,
+				DCFE3BC027A1E84600939415 /* OCYAMLNode.h */,
+			);
+			path = "YAML Parser";
+			sourceTree = "<group>";
+		};
+		DCFE3BC727A1FB5B00939415 /* Code Generation */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BD827A2AB4B00939415 /* Generator */,
+				DCFE3BD727A2AB3400939415 /* Schema */,
+			);
+			path = "Code Generation";
+			sourceTree = "<group>";
+		};
+		DCFE3BD727A2AB3400939415 /* Schema */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BC427A1FB4C00939415 /* OCSchema.m */,
+				DCFE3BC327A1FB4C00939415 /* OCSchema.h */,
+				DCFE3BC927A1FBB200939415 /* OCSchemaProperty.m */,
+				DCFE3BC827A1FBB200939415 /* OCSchemaProperty.h */,
+				DCFE3BCC27A1FC5F00939415 /* OCSchemaConstraint.m */,
+				DCFE3BCB27A1FC5F00939415 /* OCSchemaConstraint.h */,
+			);
+			path = Schema;
+			sourceTree = "<group>";
+		};
+		DCFE3BD827A2AB4B00939415 /* Generator */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BCF27A2081900939415 /* OCCodeGenerator.m */,
+				DCFE3BCE27A2081900939415 /* OCCodeGenerator.h */,
+				DCFE3BD227A2988600939415 /* OCCodeFile.m */,
+				DCFE3BD127A2988600939415 /* OCCodeFile.h */,
+				DCFE3BDB27A2D38B00939415 /* OCCodeFileSegment.m */,
+				DCFE3BDA27A2D38B00939415 /* OCCodeFileSegment.h */,
+				DCFE3BD927A2AB5600939415 /* ObjC */,
+			);
+			path = Generator;
+			sourceTree = "<group>";
+		};
+		DCFE3BD927A2AB5600939415 /* ObjC */ = {
+			isa = PBXGroup;
+			children = (
+				DCFE3BD527A2AA2B00939415 /* OCCodeGeneratorObjC.m */,
+				DCFE3BD427A2AA2B00939415 /* OCCodeGeneratorObjC.h */,
+			);
+			path = ObjC;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DCFE3BAF27A1E7B900939415 /* ocapigen */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCFE3BB727A1E7B900939415 /* Build configuration list for PBXNativeTarget "ocapigen" */;
+			buildPhases = (
+				DCFE3BAC27A1E7B900939415 /* Sources */,
+				DCFE3BAD27A1E7B900939415 /* Frameworks */,
+				DCFE3BAE27A1E7B900939415 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ocapigen;
+			productName = ocapigen;
+			productReference = DCFE3BB027A1E7B900939415 /* ocapigen */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DCFE3BA827A1E7B900939415 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1320;
+				ORGANIZATIONNAME = "ownCloud GmbH";
+				TargetAttributes = {
+					DCFE3BAF27A1E7B900939415 = {
+						CreatedOnToolsVersion = 13.2;
+					};
+				};
+			};
+			buildConfigurationList = DCFE3BAB27A1E7B900939415 /* Build configuration list for PBXProject "ocapigen" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DCFE3BA727A1E7B900939415;
+			productRefGroup = DCFE3BB127A1E7B900939415 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DCFE3BAF27A1E7B900939415 /* ocapigen */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DCFE3BAC27A1E7B900939415 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCFE3BCD27A1FC5F00939415 /* OCSchemaConstraint.m in Sources */,
+				DCFE3BD627A2AA2B00939415 /* OCCodeGeneratorObjC.m in Sources */,
+				DCFE3BBF27A1E7E200939415 /* OCYAMLParser.m in Sources */,
+				DCFE3BC227A1E84600939415 /* OCYAMLNode.m in Sources */,
+				DCFE3BDC27A2D38B00939415 /* OCCodeFileSegment.m in Sources */,
+				DCFE3BC527A1FB4C00939415 /* OCSchema.m in Sources */,
+				DCFE3BD327A2988600939415 /* OCCodeFile.m in Sources */,
+				DCFE3BB427A1E7B900939415 /* main.m in Sources */,
+				DCFE3BD027A2081900939415 /* OCCodeGenerator.m in Sources */,
+				DCFE3BCA27A1FBB200939415 /* OCSchemaProperty.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DCFE3BB527A1E7B900939415 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		DCFE3BB627A1E7B900939415 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DCFE3BB827A1E7B900939415 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		DCFE3BB927A1E7B900939415 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4AP2STM4H5;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DCFE3BAB27A1E7B900939415 /* Build configuration list for PBXProject "ocapigen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCFE3BB527A1E7B900939415 /* Debug */,
+				DCFE3BB627A1E7B900939415 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DCFE3BB727A1E7B900939415 /* Build configuration list for PBXNativeTarget "ocapigen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DCFE3BB827A1E7B900939415 /* Debug */,
+				DCFE3BB927A1E7B900939415 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DCFE3BA827A1E7B900939415 /* Project object */;
+}
