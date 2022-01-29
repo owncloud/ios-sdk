@@ -47,7 +47,7 @@
 
 - (NSString *)nativeTypesPrefix
 {
-	return (@"OCG");
+	return (@"GA");
 }
 
 - (OCCodeNativeType)collectionTypeFor:(OCCodeNativeType)collectionType itemType:(OCCodeNativeType)itemType asReference:(BOOL)asReference inFile:(OCCodeFile *)file
@@ -163,7 +163,7 @@
 	segment = [[headerFile segmentForName:OCCodeFileSegmentNameIncludes after:segment] clear];
 
 	[segment addLine:@"#import <Foundation/Foundation.h>"];
-	[segment addLine:@"#import \"OCGraphObject.h\""];
+	[segment addLine:@"#import \"GAGraphObject.h\""];
 
 	// Forward declarations (prepare)
 	forwardDeclarationsSegment = [[headerFile segmentForName:OCCodeFileSegmentNameForwardDeclarations after:segment] clear];
@@ -173,7 +173,7 @@
 
 
 	[segment addLine:@"NS_ASSUME_NONNULL_BEGIN"];
-	[segment addLine:@"@interface %@ : NSObject <OCGraphObject>", className];
+	[segment addLine:@"@interface %@ : NSObject <GAGraphObject>", className];
 
 	// Properties
 	headerPropertiesSegment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeProperties after:segment] clear];
@@ -262,7 +262,7 @@
 	[segment addLine:@"@implementation %@", className];
 
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeSerialization after:segment] clear];
-	[segment addLine:@"+ (nullable instancetype)decodeGraphData:(OCGraphData)structure context:(nullable OCGraphContext *)context error:(NSError * _Nullable * _Nullable)outError"];
+	[segment addLine:@"+ (nullable instancetype)decodeGraphData:(GAGraphData)structure context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError"];
 	[segment addLine:@"{"];
 	[segment addLine:@"	%@ *instance = [self new];", className];
 	[segment addLine:@""];
@@ -286,22 +286,22 @@
 		{
 			if (property.required)
 			{
-				[segment addLine:@"	OCG_SET_REQ(%@, %@, %@);", property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_SET_REQ(%@, %@, %@);", property.name, propertClassName, collectionType];
 			}
 			else
 			{
-				[segment addLine:@"	OCG_SET(%@, %@, %@);", property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_SET(%@, %@, %@);", property.name, propertClassName, collectionType];
 			}
 		}
 		else
 		{
 			if (property.required)
 			{
-				[segment addLine:@"	OCG_MAP_REQ(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_MAP_REQ(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
 			}
 			else
 			{
-				[segment addLine:@"	OCG_MAP(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_MAP(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
 			}
 		}
 	}

@@ -17,9 +17,9 @@
  */
 
 #import "OCConnection+GraphAPI.h"
-#import "OCGIdentitySet.h"
-#import "OCGDrive.h"
-#import "OCGraphData+Decoder.h"
+#import "GAIdentitySet.h"
+#import "GADrive.h"
+#import "GAGraphData+Decoder.h"
 
 @implementation OCConnection (GraphAPI)
 
@@ -40,8 +40,8 @@
 		if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
 		{
 			NSError *error = nil;
-			NSArray<OCGDrive *> *drives = [jsonDictionary objectForKey:@"value" ofClass:OCGDrive.class inCollection:NSArray.class required:NO context:nil error:&error];
-			OCGIdentitySet *idSet = [OCGIdentitySet decodeGraphData:jsonDictionary[@"value"][0][@"owner"] context:nil error:&error];
+			NSArray<GADrive *> *drives = [jsonDictionary objectForKey:@"value" ofClass:GADrive.class inCollection:NSArray.class required:NO context:nil error:&error];
+			GAIdentitySet *idSet = [GAIdentitySet decodeGraphData:jsonDictionary[@"value"][0][@"owner"] context:nil error:&error];
 
 			OCLogDebug(@"Drives response: %@ %@ %@ %@", drives, idSet, error, jsonDictionary);
 		}
