@@ -1,5 +1,5 @@
 //
-//  OCStructureContext.m
+//  GAGraphContext.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 26.01.22.
