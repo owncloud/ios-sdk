@@ -173,7 +173,7 @@
 
 
 	[segment addLine:@"NS_ASSUME_NONNULL_BEGIN"];
-	[segment addLine:@"@interface %@ : NSObject <GAGraphObject>", className];
+	[segment addLine:@"@interface %@ : NSObject <GAGraphObject, NSSecureCoding>", className];
 
 	// Properties
 	headerPropertiesSegment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeProperties after:segment] clear];
@@ -243,7 +243,9 @@
 	// ##
 
 	NSString *implementationFileName = [className stringByAppendingString:@".m"];
+	NSMutableString *debugDescriptionStringFormat = [NSMutableString new], *debugDescriptionStringContent = [NSMutableString new];
 	OCCodeFile *implementationFile = [self fileForName:implementationFileName];
+	OCCodeFileSegment *nativeSerializationSegment = nil, *nativeDeserializationSegment = nil, *debugDescriptionSegment = nil;
 
 	// Lead comment
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameLeadComment] clear];
@@ -258,59 +260,108 @@
 		[segment addLine:@"#import \"%@.h\"", typeName];
 	}
 
+	// Implementation lead-in
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeLeadIn after:segment] clear];
 	[segment addLine:@"@implementation %@", className];
 
+	// Implementation serialization
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeSerialization after:segment] clear];
+	nativeDeserializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeNativeDeserialization after:segment] clear];
+	nativeSerializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeNativeSerialization after:nativeDeserializationSegment] clear];
+	debugDescriptionSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeDebugDescription after:nativeSerializationSegment] clear];
+
 	[segment addLine:@"+ (nullable instancetype)decodeGraphData:(GAGraphData)structure context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError"];
 	[segment addLine:@"{"];
 	[segment addLine:@"	%@ *instance = [self new];", className];
 	[segment addLine:@""];
 
+	[nativeDeserializationSegment addLine:@"+ (BOOL)supportsSecureCoding"];
+	[nativeDeserializationSegment addLine:@"{"];
+	[nativeDeserializationSegment addLine:@"	return (YES);"];
+	[nativeDeserializationSegment addLine:@"}"];
+	[nativeDeserializationSegment addLine:@""];
+	[nativeDeserializationSegment addLine:@"- (instancetype)initWithCoder:(NSCoder *)decoder"];
+	[nativeDeserializationSegment addLine:@"{"];
+	[nativeDeserializationSegment addLine:@"	if ((self = [super init]) != nil)"];
+	[nativeDeserializationSegment addLine:@"	{"];
+
+	[nativeSerializationSegment addLine:@"- (void)encodeWithCoder:(NSCoder *)coder"];
+	[nativeSerializationSegment addLine:@"{"];
+
 	for (OCSchemaProperty *property in schema.properties)
 	{
 		NSString *comment = [self commentForProperty:property ofSchema:schema];
-		NSString *propertClassName = [self nativeTypeForProperty:property asReference:NO remappedFrom:NULL inSegment:segment];
+		NSString *propertyClassName = [self nativeTypeForProperty:property asReference:NO remappedFrom:NULL inSegment:segment];
 		NSString *propertyName = [self nativeNameForProperty:property inSegment:segment];
 		NSString *collectionType = @"Nil";
 
+		// JSON -> properties mapping
 		comment = ((comment != nil) ? [NSString stringWithFormat:@" //!< %@", comment] : @"");
 
 		if (property.isCollection)
 		{
 			collectionType = [[self nativeTypeForRAWType:property.type rawFormat:nil rawItemType:nil asReference:NO inSegment:segment] stringByAppendingString:@".class"];
-			propertClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO inSegment:segment];
+			propertyClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO inSegment:segment];
 		}
 
 		if ([property.name isEqual:propertyName])
 		{
 			if (property.required)
 			{
-				[segment addLine:@"	GA_SET_REQ(%@, %@, %@);", property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_SET_REQ(%@, %@, %@);", property.name, propertyClassName, collectionType];
 			}
 			else
 			{
-				[segment addLine:@"	GA_SET(%@, %@, %@);", property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_SET(%@, %@, %@);", property.name, propertyClassName, collectionType];
 			}
 		}
 		else
 		{
 			if (property.required)
 			{
-				[segment addLine:@"	GA_MAP_REQ(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_MAP_REQ(%@, \"%@\", %@, %@);", propertyName, property.name, propertyClassName, collectionType];
 			}
 			else
 			{
-				[segment addLine:@"	GA_MAP(%@, \"%@\", %@, %@);", propertyName, property.name, propertClassName, collectionType];
+				[segment addLine:@"	GA_MAP(%@, \"%@\", %@, %@);", propertyName, property.name, propertyClassName, collectionType];
 			}
 		}
+
+		// Secure Coding deserialization
+		if ([collectionType isEqual:@"Nil"])
+		{
+			[nativeDeserializationSegment addLine:@"		_%@ = [decoder decodeObjectOfClass:%@.class forKey:@\"%@\"];", propertyName, propertyClassName, propertyName];
+		}
+		else
+		{
+			[nativeDeserializationSegment addLine:@"		_%@ = [decoder decodeObjectOfClasses:[NSSet setWithObjects: %@.class, %@.class, nil] forKey:@\"%@\"];", propertyName, propertyClassName, collectionType, propertyName];
+		}
+
+		// Secure Coding serialization
+		[nativeSerializationSegment addLine:@"	[coder encodeObject:_%@ forKey:@\"%@\"];", propertyName, propertyName];
+
+		// Debug description
+		[debugDescriptionStringFormat appendString:@"\%@"];
+		[debugDescriptionStringContent appendFormat:@", ((_%@!=nil) ? [NSString stringWithFormat:@\", %@: %%@\", _%@] : @\"\")", propertyName, propertyName, propertyName];
 	}
 	[segment addLine:@""];
 	[segment addLine:@"	return (instance);"];
 	[segment addLine:@"}"];
 
+	[nativeDeserializationSegment addLine:@"	}"];
+	[nativeDeserializationSegment addLine:@""];
+	[nativeDeserializationSegment addLine:@"	return (self);"];
+	[nativeDeserializationSegment addLine:@"}"];
+
+	[nativeSerializationSegment addLine:@"}"];
+
+	[debugDescriptionSegment addLine:@"- (NSString *)description"];
+	[debugDescriptionSegment addLine:@"{"];
+	[debugDescriptionSegment addLine:@"	return ([NSString stringWithFormat:@\"<%%@: %%p%@>\", NSStringFromClass(self.class), self%@]);", debugDescriptionStringFormat, debugDescriptionStringContent];
+	[debugDescriptionSegment addLine:@"}"];
+
 	// Protected
-	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeProtected after:segment] clear];
+	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeProtected after:debugDescriptionSegment] clear];
 	segment.locked = YES;
 
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeLeadOut after:segment] clear];

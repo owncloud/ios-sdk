@@ -24,7 +24,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAUser : NSObject <GAGraphObject>
+@interface GAUser : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *identifier; //!< Read-only.

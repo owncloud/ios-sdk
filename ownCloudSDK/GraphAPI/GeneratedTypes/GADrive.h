@@ -14,11 +14,12 @@
  *
  */
 
-// occgen: includes
+// occgen: includes { "locked" : true }
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCDrive.h"
 
-// occgen: forward declarations
+// occgen: forward declarations { "locked" : true }
 @class GAQuota;
 @class GAUser;
 @class GADriveItem;
@@ -27,9 +28,9 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GADrive : NSObject <GAGraphObject>
+@interface GADrive : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "driveType" : "OCDriveType" }}
 @property(strong, nullable) NSString *identifier; //!< Read-only.
 @property(strong, nullable) GAIdentitySet *createdBy; //!< Identity of the user, device, or application which created the item. Read-only.
 @property(strong, nullable) NSDate *createdDateTime; //!< [string:date-time] Date and time of item creation. Read-only. | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?([Zz]|[+-][0-9][0-9]:[0-9][0-9])$
@@ -42,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSURL *webUrl; //!< URL that displays the resource in the browser. Read-only.
 @property(strong, nullable) GAUser *createdByUser; //!< Identity of the user who created the item. Read-only.
 @property(strong, nullable) GAUser *lastModifiedByUser; //!< Identity of the user who last modified the item. Read-only.
-@property(strong, nullable) NSString *driveType; //!< Describes the type of drive represented by this resource. Values are "personal" for users home spaces, "project" or "share". Read-only.
+@property(strong, nullable) OCDriveType driveType; //!< Describes the type of drive represented by this resource. Values are "personal" for users home spaces, "project" or "share". Read-only.
 @property(strong, nullable) GAIdentitySet *owner;
 @property(strong, nullable) GAQuota *quota;
 @property(strong, nullable) NSArray<GADriveItem *> *items; //!< All items contained in the drive. Read-only. Nullable.

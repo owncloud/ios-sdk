@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GASpecialFolder : NSObject <GAGraphObject>
+@interface GASpecialFolder : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *name; //!< The unique identifier for this item in the /drive/special collection

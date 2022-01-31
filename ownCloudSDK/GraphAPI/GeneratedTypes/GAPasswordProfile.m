@@ -31,6 +31,36 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_forceChangePasswordNextSignIn = [decoder decodeObjectOfClass:NSNumber.class forKey:@"forceChangePasswordNextSignIn"];
+		_password = [decoder decodeObjectOfClass:NSString.class forKey:@"password"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_forceChangePasswordNextSignIn forKey:@"forceChangePasswordNextSignIn"];
+	[coder encodeObject:_password forKey:@"password"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_forceChangePasswordNextSignIn!=nil) ? [NSString stringWithFormat:@", forceChangePasswordNextSignIn: %@", _forceChangePasswordNextSignIn] : @""), ((_password!=nil) ? [NSString stringWithFormat:@", password: %@", _password] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

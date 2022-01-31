@@ -364,6 +364,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorRequiredValueMissing:
 					unlocalizedString = @"Required value missing.";
 				break;
+
+				case OCErrorGraphError:
+					unlocalizedString = @"Generic graph error.";
+				break;
 			}
 		}
 	}

@@ -23,13 +23,13 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAODataError : NSObject <GAGraphObject>
+@interface GAODataError : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong) GAODataErrorMain *error;
 
 // occgen: type protected {"locked":true}
-
+- (NSError *)nativeError;
 
 // occgen: type end
 @end

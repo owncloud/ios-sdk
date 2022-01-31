@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAItemReference : NSObject <GAGraphObject>
+@interface GAItemReference : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *driveId; //!< Unique identifier of the drive instance that contains the item. Read-only.

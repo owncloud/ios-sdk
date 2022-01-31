@@ -23,7 +23,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GATrash : NSObject <GAGraphObject>
+@interface GATrash : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) GAIdentitySet *trashedBy; //!< Identity of the user, device, or application which trashed the item. Read-only.

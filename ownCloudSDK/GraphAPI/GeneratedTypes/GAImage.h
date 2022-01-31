@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAImage : NSObject <GAGraphObject>
+@interface GAImage : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSNumber *height; //!< [integer:int32] Optional. Height of the image, in pixels. Read-only.

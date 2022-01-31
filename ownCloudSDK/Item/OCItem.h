@@ -15,6 +15,7 @@
  * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
  *
  */
+
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCItemThumbnail.h"
@@ -118,6 +119,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCLocalID localID; //!< Unique local identifier of the item (persists over lifetime of item, incl. across modifications and placeholder -> item transitions)
 
 @property(nullable,strong) NSArray<OCChecksum *> *checksums; //!< (Optional) checksums of the item. Typically only requested for uploaded files.
+
+@property(nullable,strong) OCDriveID driveID; //!< Identifier of the drive the item is located on
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)

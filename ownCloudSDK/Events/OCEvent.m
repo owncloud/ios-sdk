@@ -38,7 +38,7 @@
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCProcessSession.h"
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 #import "OCQueryCondition.h"
 #import "OCShare.h"
 #import "OCSyncIssue.h"
@@ -101,6 +101,7 @@
 				OCItemVersionIdentifier.class,
 				OCProcessSession.class,
 				OCProgress.class,
+				OCIdentity.class,
 				OCRecipient.class,
 				OCQueryCondition.class,
 				OCShare.class,

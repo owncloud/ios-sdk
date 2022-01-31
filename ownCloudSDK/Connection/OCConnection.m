@@ -1482,7 +1482,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 												self.state = OCConnectionStateConnected;
 
-												[self retrieveDriveListWithCompletionHandler:^(NSArray * _Nullable drives) {
+												[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
 													OCLogDebug(@"Drive list: %@", drives);
 												}];
 

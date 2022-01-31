@@ -48,4 +48,7 @@
 #define OCNANotEqual(a,b) ((![(a) isEqual:(b)]) && ((a) != (b)))
 #define OCNAIsEqual(a,b)  (([(a) isEqual:(b)]) || ((a) == (b)))
 
+// debug description
+#define OCExpandVar(var) ((_##var!=nil) ? [@", " #var ": " stringByAppendingString:_##var.description] : @"")
+
 #endif /* OCMacros_h */

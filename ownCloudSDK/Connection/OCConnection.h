@@ -325,7 +325,7 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 @end
 
 #pragma mark - RECIPIENTS
-typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCRecipient *> * _Nullable recipients);
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients);
 
 @interface OCConnection (Recipients)
 

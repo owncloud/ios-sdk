@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAIdentity : NSObject <GAGraphObject>
+@interface GAIdentity : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *displayName; //!< The identity''s display name. Note that this may not always be available or up to date. For example, if a user changes their display name, the API may show the new value in a future response, but the items associated with the user won''t show up as having changed when using delta.

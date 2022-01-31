@@ -24,7 +24,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAGroup : NSObject <GAGraphObject>
+@interface GAGroup : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties {"locked":true}
 @property(strong, nullable) NSString *identifier; //!< Read-only.

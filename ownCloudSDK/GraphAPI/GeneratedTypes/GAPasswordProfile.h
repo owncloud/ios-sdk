@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAPasswordProfile : NSObject <GAGraphObject>
+@interface GAPasswordProfile : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSNumber *forceChangePasswordNextSignIn; //!< [boolean] If true the user is required to change their password upon the next login

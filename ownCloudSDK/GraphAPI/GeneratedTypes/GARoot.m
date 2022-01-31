@@ -29,6 +29,32 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p>", NSStringFromClass(self.class), self]);
+}
+
 // occgen: type protected {"locked":true}
 
 

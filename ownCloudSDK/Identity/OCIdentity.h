@@ -1,5 +1,5 @@
 //
-//  OCRecipient.h
+//  OCIdentity.h
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 01.03.19.
@@ -33,7 +33,7 @@ typedef NS_ENUM(NSUInteger, OCRecipientMatchType) {
 	OCRecipientMatchTypeAdditional	//!< Additional match from search
 };
 
-@interface OCRecipient : NSObject <NSSecureCoding, NSCopying>
+@interface OCIdentity : NSObject <NSSecureCoding, NSCopying>
 
 @property(assign) OCRecipientType type;
 
@@ -47,11 +47,15 @@ typedef NS_ENUM(NSUInteger, OCRecipientMatchType) {
 
 @property(assign) OCRecipientMatchType matchType;
 
-+ (instancetype)recipientWithUser:(OCUser *)user;
-+ (instancetype)recipientWithGroup:(OCGroup *)group;
++ (instancetype)identityWithUser:(OCUser *)user;
++ (instancetype)identityWithGroup:(OCGroup *)group;
 
 - (instancetype)withSearchResultName:(nullable NSString *)searchResultName;
 
+@end
+
+// NSCoding compatibility shim following OCRecipient -> OCIdentity refactoring
+@interface OCRecipient : OCIdentity
 @end
 
 NS_ASSUME_NONNULL_END

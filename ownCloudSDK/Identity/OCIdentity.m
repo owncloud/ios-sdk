@@ -1,5 +1,5 @@
 //
-//  OCRecipient.m
+//  OCIdentity.m
 //  ownCloudSDK
 //
 //  Created by Felix Schwarz on 01.03.19.
@@ -16,17 +16,17 @@
  *
  */
 
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 #import "OCMacros.h"
 
-@implementation OCRecipient
+@implementation OCIdentity
 
 @dynamic identifier;
 @dynamic displayName;
 
-+ (instancetype)recipientWithUser:(OCUser *)user
++ (instancetype)identityWithUser:(OCUser *)user
 {
-	OCRecipient *recipient = [self new];
+	OCIdentity *recipient = [self new];
 
 	recipient.type = OCRecipientTypeUser;
 	recipient.user = user;
@@ -34,9 +34,9 @@
 	return (recipient);
 }
 
-+ (instancetype)recipientWithGroup:(OCGroup *)group
++ (instancetype)identityWithGroup:(OCGroup *)group
 {
-	OCRecipient *recipient = [self new];
+	OCIdentity *recipient = [self new];
 
 	recipient.type = OCRecipientTypeGroup;
 	recipient.group = group;
@@ -91,7 +91,7 @@
 
 - (BOOL)isEqual:(id)object
 {
-	OCRecipient *otherRecipient = OCTypedCast(object, OCRecipient);
+	OCIdentity *otherRecipient = OCTypedCast(object, OCIdentity);
 
 	if (otherRecipient != nil)
 	{
@@ -106,7 +106,7 @@
 #pragma mark - Copying
 - (id)copyWithZone:(NSZone *)zone
 {
-	OCRecipient *recipient = [OCRecipient new];
+	OCIdentity *recipient = [OCIdentity new];
 
 	recipient->_type = _type;
 	recipient->_user = _user;
@@ -171,4 +171,8 @@
 	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_searchResultName!=nil)?[NSString stringWithFormat:@", searchResultName: %@", _searchResultName]:@""), ((_matchType!=OCRecipientMatchTypeUnknown) ? ((_matchType==OCRecipientMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
 }
 
+@end
+
+// NSCoding compatibility shim following OCRecipient -> OCIdentity refactoring
+@implementation OCRecipient
 @end

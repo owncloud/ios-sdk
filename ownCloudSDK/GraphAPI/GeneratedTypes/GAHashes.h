@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAHashes : NSObject <GAGraphObject>
+@interface GAHashes : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *crc32Hash; //!< The CRC32 value of the file (if available). Read-only.

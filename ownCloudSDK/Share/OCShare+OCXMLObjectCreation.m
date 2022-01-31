@@ -224,11 +224,11 @@
 							{
 								recipientDisplayName = [recipientDisplayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", share_with_additional_info]];
 							}
-							share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
+							share.recipient = [OCIdentity identityWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
 						break;
 
 						case OCShareTypeGroupShare:
-							share.recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
+							share.recipient = [OCIdentity identityWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
 						break;
 
 						case OCShareTypeLink:
@@ -249,7 +249,7 @@
 
 				if ((user = shareNode.keyValues[@"user"]) != nil)
 				{
-					share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:user displayName:nil]];
+					share.recipient = [OCIdentity identityWithUser:[OCUser userWithUserName:user displayName:nil]];
 				}
 			}
 

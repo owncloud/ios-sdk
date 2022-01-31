@@ -851,7 +851,7 @@
 	__block OCCore *core = nil;
 
 	[remoteConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-		[remoteConnection createShare:[OCShare shareWithRecipient:[OCRecipient recipientWithUser:[OCUser userWithUserName:[OCTestTarget.userLogin stringByAppendingFormat:@"@%@", OCTestTarget.userBookmark.url.host] displayName:nil]] path:@"/Photos/" permissions:OCSharePermissionsMaskRead expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+		[remoteConnection createShare:[OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:[OCTestTarget.userLogin stringByAppendingFormat:@"@%@", OCTestTarget.userBookmark.url.host] displayName:nil]] path:@"/Photos/" permissions:OCSharePermissionsMaskRead expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			XCTAssert(event.error == nil);
 			XCTAssert(event.result != nil);
 

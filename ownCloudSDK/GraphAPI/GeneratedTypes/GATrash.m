@@ -32,6 +32,36 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_trashedBy = [decoder decodeObjectOfClass:GAIdentitySet.class forKey:@"trashedBy"];
+		_trashedDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"trashedDateTime"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_trashedBy forKey:@"trashedBy"];
+	[coder encodeObject:_trashedDateTime forKey:@"trashedDateTime"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_trashedBy!=nil) ? [NSString stringWithFormat:@", trashedBy: %@", _trashedBy] : @""), ((_trashedDateTime!=nil) ? [NSString stringWithFormat:@", trashedDateTime: %@", _trashedDateTime] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

@@ -362,6 +362,8 @@
 // OCErrorRequiredValueMissing
 "Required value missing." = "Required value missing.";
 
+// OCErrorGraphError
+"Generic graph error." = "Generic graph error.";
 
 /* Diagnostic */
 "Files" = "Files";

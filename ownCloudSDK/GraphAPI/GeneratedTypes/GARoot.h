@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GARoot : NSObject <GAGraphObject>
+@interface GARoot : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type protected {"locked":true}
 

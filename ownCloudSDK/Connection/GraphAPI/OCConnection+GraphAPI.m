@@ -19,6 +19,8 @@
 #import "OCConnection+GraphAPI.h"
 #import "GAIdentitySet.h"
 #import "GADrive.h"
+#import "GAODataError.h"
+#import "GAODataErrorMain.h"
 #import "GAGraphData+Decoder.h"
 
 @implementation OCConnection (GraphAPI)
@@ -35,25 +37,58 @@
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		NSError *jsonError = nil;
-		NSDictionary <NSString *, id> *jsonDictionary;
+		NSArray<OCDrive *> *drives = nil;
 
-		if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+		if (error == nil)
 		{
-			NSError *error = nil;
-			NSArray<GADrive *> *drives = [jsonDictionary objectForKey:@"value" ofClass:GADrive.class inCollection:NSArray.class required:NO context:nil error:&error];
-			GAIdentitySet *idSet = [GAIdentitySet decodeGraphData:jsonDictionary[@"value"][0][@"owner"] context:nil error:&error];
+			NSDictionary <NSString *, id> *jsonDictionary;
 
-			OCLogDebug(@"Drives response: %@ %@ %@ %@", drives, idSet, error, jsonDictionary);
-		}
-		else
-		{
-			if (jsonError != nil)
+			if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
 			{
-				error = jsonError;
+				if (jsonDictionary[@"error"])
+				{
+					NSError *decodeError = nil;
+
+					GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
+					error = dataError.nativeError;
+				}
+				else if (jsonDictionary[@"value"])
+				{
+					NSArray<OCDrive *> *gaDrives;
+
+					if ((gaDrives = [jsonDictionary objectForKey:@"value" ofClass:GADrive.class inCollection:NSArray.class required:NO context:nil error:&error]) != nil)
+					{
+						NSMutableArray<OCDrive *> *ocDrives = [NSMutableArray new];
+
+						for (GADrive *drive in gaDrives)
+						{
+							OCDrive *ocDrive;
+
+							if ((ocDrive = [OCDrive driveFromGDrive:drive]) != nil)
+							{
+								[ocDrives addObject:ocDrive];
+							}
+						}
+
+						if (ocDrives.count > 0)
+						{
+							drives = ocDrives;
+						}
+					}
+				}
+
+				OCLogDebug(@"Drives response: drives=%@, error=%@, json: %@", drives, error, jsonDictionary);
+			}
+			else
+			{
+				if (jsonError != nil)
+				{
+					error = jsonError;
+				}
 			}
 		}
 
-		completionHandler(nil);
+		completionHandler(error, drives);
 	}];
 
 	return (progress);

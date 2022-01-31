@@ -1,8 +1,8 @@
 //
-//  OCConnection+GraphAPI.h
+//  OCQuota.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 26.01.22.
+//  Created by Felix Schwarz on 31.01.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,21 +16,15 @@
  *
  */
 
-#import "OCConnection.h"
+#import "GAQuota.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class OCDrive;
-
-typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives);
-
-@interface OCConnection (GraphAPI)
-
-#pragma mark - Drives
-- (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler;
+@interface OCQuota : GAQuota
 
 @end
 
-extern OCConnectionEndpointID OCConnectionEndpointIDGraphDrives;
+extern OCQuotaState OCQuotaStateNormal;
+extern OCQuotaState OCQuotaStateExceeded;
 
 NS_ASSUME_NONNULL_END

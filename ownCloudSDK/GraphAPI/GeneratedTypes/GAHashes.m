@@ -33,6 +33,40 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_crc32Hash = [decoder decodeObjectOfClass:NSString.class forKey:@"crc32Hash"];
+		_quickXorHash = [decoder decodeObjectOfClass:NSString.class forKey:@"quickXorHash"];
+		_sha1Hash = [decoder decodeObjectOfClass:NSString.class forKey:@"sha1Hash"];
+		_sha256Hash = [decoder decodeObjectOfClass:NSString.class forKey:@"sha256Hash"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_crc32Hash forKey:@"crc32Hash"];
+	[coder encodeObject:_quickXorHash forKey:@"quickXorHash"];
+	[coder encodeObject:_sha1Hash forKey:@"sha1Hash"];
+	[coder encodeObject:_sha256Hash forKey:@"sha256Hash"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@>", NSStringFromClass(self.class), self, ((_crc32Hash!=nil) ? [NSString stringWithFormat:@", crc32Hash: %@", _crc32Hash] : @""), ((_quickXorHash!=nil) ? [NSString stringWithFormat:@", quickXorHash: %@", _quickXorHash] : @""), ((_sha1Hash!=nil) ? [NSString stringWithFormat:@", sha1Hash: %@", _sha1Hash] : @""), ((_sha256Hash!=nil) ? [NSString stringWithFormat:@", sha256Hash: %@", _sha256Hash] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

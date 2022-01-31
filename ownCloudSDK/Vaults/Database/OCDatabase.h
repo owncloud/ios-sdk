@@ -38,10 +38,12 @@
 @class OCEvent;
 @class OCCoreDirectoryUpdateJob;
 @class OCItemPolicy;
+@class OCDrive;
 
 typedef void(^OCDatabaseCompletionHandler)(OCDatabase *db, NSError *error);
 typedef void(^OCDatabaseRetrieveCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray <OCItem *> *items);
 typedef void(^OCDatabaseRetrieveItemCompletionHandler)(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item);
+typedef void(^OCDatabaseRetrieveDriveCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCDrive *> *drives);
 typedef void(^OCDatabaseRetrieveThumbnailCompletionHandler)(OCDatabase *db, NSError *error, CGSize maximumSizeInPixels, NSString *mimeType, NSData *thumbnailData);
 typedef void(^OCDatabaseRetrieveSyncRecordCompletionHandler)(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncRecordsCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncRecord *> *syncRecords);
@@ -125,6 +127,12 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)iterateCacheItemsWithIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through all cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
 - (void)iterateCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition excludeRemoved:(BOOL)excludeRemoved withIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through matching cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
+
+#pragma mark - Drives
+- (void)addDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)updateDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)retrieveDrivesOnlyWithID:(OCDriveID)driveID completionHandler:(OCDatabaseRetrieveDriveCompletionHandler)completionHandler;
+- (void)removeDriveWithID:(OCDriveID)driveID completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - File interface
 //- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;

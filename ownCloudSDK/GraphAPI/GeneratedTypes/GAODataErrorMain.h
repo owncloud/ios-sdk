@@ -23,7 +23,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAODataErrorMain : NSObject <GAGraphObject>
+@interface GAODataErrorMain : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong) NSString *code;
@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSDictionary *innererror; //!< The structure of this object is service-specific
 
 // occgen: type protected {"locked":true}
-
+- (NSError *)nativeError;
 
 // occgen: type end
 @end

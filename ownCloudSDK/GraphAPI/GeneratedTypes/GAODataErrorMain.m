@@ -17,6 +17,7 @@
 // occgen: includes
 #import "GAODataErrorMain.h"
 #import "GAODataErrorDetail.h"
+#import "NSError+OCError.h"
 
 // occgen: type start
 @implementation GAODataErrorMain
@@ -36,7 +37,50 @@
 }
 
 // occgen: type protected {"locked":true}
+- (NSError *)nativeError
+{
+	NSError *error = [NSError errorWithDomain:OCErrorDomain code:OCErrorRequiredValueMissing userInfo:@{
+		@"gaError" : self
+	}];
 
+	return (error);
+}
+
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_code = [decoder decodeObjectOfClass:NSString.class forKey:@"code"];
+		_message = [decoder decodeObjectOfClass:NSString.class forKey:@"message"];
+		_target = [decoder decodeObjectOfClass:NSString.class forKey:@"target"];
+		_details = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAODataErrorDetail.class, NSArray.class.class, nil] forKey:@"details"];
+		_innererror = [decoder decodeObjectOfClass:NSDictionary.class forKey:@"innererror"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_code forKey:@"code"];
+	[coder encodeObject:_message forKey:@"message"];
+	[coder encodeObject:_target forKey:@"target"];
+	[coder encodeObject:_details forKey:@"details"];
+	[coder encodeObject:_innererror forKey:@"innererror"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_code!=nil) ? [NSString stringWithFormat:@", code: %@", _code] : @""), ((_message!=nil) ? [NSString stringWithFormat:@", message: %@", _message] : @""), ((_target!=nil) ? [NSString stringWithFormat:@", target: %@", _target] : @""), ((_details!=nil) ? [NSString stringWithFormat:@", details: %@", _details] : @""), ((_innererror!=nil) ? [NSString stringWithFormat:@", innererror: %@", _innererror] : @"")]);
+}
 
 // occgen: type end
 @end

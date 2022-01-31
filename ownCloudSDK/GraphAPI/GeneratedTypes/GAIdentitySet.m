@@ -33,6 +33,38 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_application = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"application"];
+		_device = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"device"];
+		_user = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"user"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_application forKey:@"application"];
+	[coder encodeObject:_device forKey:@"device"];
+	[coder encodeObject:_user forKey:@"user"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((_application!=nil) ? [NSString stringWithFormat:@", application: %@", _application] : @""), ((_device!=nil) ? [NSString stringWithFormat:@", device: %@", _device] : @""), ((_user!=nil) ? [NSString stringWithFormat:@", user: %@", _user] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

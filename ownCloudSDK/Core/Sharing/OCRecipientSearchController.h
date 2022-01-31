@@ -17,7 +17,7 @@
  */
 
 #import "OCCore.h"
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign,nonatomic) NSUInteger maximumResultCount; //!< The maximum number of results to return
 @property(assign,nonatomic) BOOL isWaitingForResults; //!< YES if the search controller is waiting for a result.
 
-@property(nullable,strong,nonatomic) NSArray <OCRecipient *> *recipients; //!< The recipients returned from the server
+@property(nullable,strong,nonatomic) NSArray <OCIdentity *> *recipients; //!< The recipients returned from the server
 
 @property(weak) id<OCRecipientSearchControllerDelegate> delegate; //!< Delegate receiving events. Alternatively, it's also possible to KVO-observe this class' properties.
 

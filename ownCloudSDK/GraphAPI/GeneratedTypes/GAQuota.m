@@ -34,6 +34,42 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_deleted = [decoder decodeObjectOfClass:NSNumber.class forKey:@"deleted"];
+		_remaining = [decoder decodeObjectOfClass:NSNumber.class forKey:@"remaining"];
+		_state = [decoder decodeObjectOfClass:NSString.class forKey:@"state"];
+		_total = [decoder decodeObjectOfClass:NSNumber.class forKey:@"total"];
+		_used = [decoder decodeObjectOfClass:NSNumber.class forKey:@"used"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_deleted forKey:@"deleted"];
+	[coder encodeObject:_remaining forKey:@"remaining"];
+	[coder encodeObject:_state forKey:@"state"];
+	[coder encodeObject:_total forKey:@"total"];
+	[coder encodeObject:_used forKey:@"used"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_deleted!=nil) ? [NSString stringWithFormat:@", deleted: %@", _deleted] : @""), ((_remaining!=nil) ? [NSString stringWithFormat:@", remaining: %@", _remaining] : @""), ((_state!=nil) ? [NSString stringWithFormat:@", state: %@", _state] : @""), ((_total!=nil) ? [NSString stringWithFormat:@", total: %@", _total] : @""), ((_used!=nil) ? [NSString stringWithFormat:@", used: %@", _used] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

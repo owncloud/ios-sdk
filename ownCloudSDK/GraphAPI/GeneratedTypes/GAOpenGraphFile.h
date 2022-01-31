@@ -23,7 +23,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAOpenGraphFile : NSObject <GAGraphObject>
+@interface GAOpenGraphFile : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) GAHashes *hashes;

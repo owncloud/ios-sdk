@@ -23,7 +23,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAIdentitySet : NSObject <GAGraphObject>
+@interface GAIdentitySet : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) GAIdentity *application; //!< Optional. The application associated with this action.

@@ -32,6 +32,38 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_createdDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"createdDateTime"];
+		_lastAccessedDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastAccessedDateTime"];
+		_lastModifiedDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastModifiedDateTime"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_createdDateTime forKey:@"createdDateTime"];
+	[coder encodeObject:_lastAccessedDateTime forKey:@"lastAccessedDateTime"];
+	[coder encodeObject:_lastModifiedDateTime forKey:@"lastModifiedDateTime"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_lastAccessedDateTime!=nil) ? [NSString stringWithFormat:@", lastAccessedDateTime: %@", _lastAccessedDateTime] : @""), ((_lastModifiedDateTime!=nil) ? [NSString stringWithFormat:@", lastModifiedDateTime: %@", _lastModifiedDateTime] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

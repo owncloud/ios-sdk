@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAFolderView : NSObject <GAGraphObject>
+@interface GAFolderView : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSString *sortBy; //!< The method by which the folder should be sorted.

@@ -18,14 +18,17 @@
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
 
+// occgen: forward declarations { "locked" : true; }
+typedef NSString * OCQuotaState;
+
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAQuota : NSObject <GAGraphObject>
+@interface GAQuota : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "state" : "OCQuotaState" } }
 @property(strong, nullable) NSNumber *deleted; //!< [integer:int64] Total space consumed by files in the recycle bin, in bytes. Read-only.
 @property(strong, nullable) NSNumber *remaining; //!< [integer:int64] Total space remaining before reaching the quota limit, in bytes. Read-only.
-@property(strong, nullable) NSString *state; //!< Enumeration value that indicates the state of the storage space. Read-only.
+@property(strong, nullable) OCQuotaState state; //!< Enumeration value that indicates the state of the storage space. Read-only.
 @property(strong, nullable) NSNumber *total; //!< [integer:int64] Total allowed storage space, in bytes. Read-only.
 @property(strong, nullable) NSNumber *used; //!< [integer:int64] Total space used, in bytes. Read-only.
 

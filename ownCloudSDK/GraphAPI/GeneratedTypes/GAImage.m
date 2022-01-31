@@ -31,6 +31,36 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_height = [decoder decodeObjectOfClass:NSNumber.class forKey:@"height"];
+		_width = [decoder decodeObjectOfClass:NSNumber.class forKey:@"width"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_height forKey:@"height"];
+	[coder encodeObject:_width forKey:@"width"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_height!=nil) ? [NSString stringWithFormat:@", height: %@", _height] : @""), ((_width!=nil) ? [NSString stringWithFormat:@", width: %@", _width] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

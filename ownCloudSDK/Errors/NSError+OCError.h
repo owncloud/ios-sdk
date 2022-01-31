@@ -121,7 +121,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorResourceDoesNotExist, //!< Resource does not exist
 
 	OCErrorInvalidType, //!< Invalid type
-	OCErrorRequiredValueMissing //!< Invalid type
+	OCErrorRequiredValueMissing, //!< Required value missing
+
+	OCErrorGraphError //!< Generic graph error
 };
 
 @class OCIssue;

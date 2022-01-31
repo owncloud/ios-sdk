@@ -29,6 +29,7 @@
 #import "OCMacros.h"
 #import "OCSyncAction.h"
 #import "OCSyncLane.h"
+#import "OCDrive.h"
 #import "OCProcessManager.h"
 #import "OCQueryCondition+SQLBuilder.h"
 #import "OCAsyncSequentialQueue.h"
@@ -303,6 +304,7 @@
 			@"syncActivity"		: @(item.syncActivity),
 			@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 			@"lastModifiedDate"	: OCSQLiteNullProtect(item.lastModified),
+			@"driveID"		: OCSQLiteNullProtect(item.driveID),
 			@"fileID"		: OCSQLiteNullProtect(item.fileID),
 			@"localID"		: OCSQLiteNullProtect(item.localID),
 			@"ownerUserName"	: OCSQLiteNullProtect(item.ownerUserName),
@@ -374,6 +376,7 @@
 				@"syncActivity"		: @(item.syncActivity),
 				@"lastUsedDate" 	: OCSQLiteNullProtect(item.lastUsed),
 				@"lastModifiedDate" 	: OCSQLiteNullProtect(item.lastModified),
+				@"driveID"		: OCSQLiteNullProtect(item.driveID),
 				@"fileID"		: OCSQLiteNullProtect(item.fileID),
 				@"localID"		: OCSQLiteNullProtect(item.localID),
 				@"ownerUserName"	: OCSQLiteNullProtect(item.ownerUserName),
@@ -852,6 +855,153 @@
 		iterator(returnError, nil, nil, NULL);
 	}]];
 }
+
+#pragma mark - Drives interface
+/*
+	schemaWithTableName:OCDatabaseTableNameDrives
+	/ *
+		rowID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
+		identifier : TEXT	- OCDriveID, identifier that identifies the drive
+		type : TEXT		- OCDriveType, type of drive
+		name : TEXT		- name of drive
+		davRootURL : TEXT	- dav root URL of drive
+		data : BLOB		- archived OCDrive data
+	* /
+	@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, data BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
+*/
+
+- (void)addDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if ((drive != nil) && (drive.identifier != nil) && (drive.type != nil))
+	{
+		NSError *error = nil;
+		NSData *driveData = [NSKeyedArchiver archivedDataWithRootObject:drive requiringSecureCoding:YES error:&error];
+
+		if (error != nil)
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+			return;
+		}
+
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameDrives rowValues:@{
+			@"identifier" 	: drive.identifier,
+			@"type"		: drive.type,
+			@"name"		: drive.name,
+			@"davRootURL"	: drive.davRootURL,
+			@"driveData"	: driveData
+		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	}
+	else
+	{
+		OCLogError(@"drive=%@ => could not be stored in database", drive);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)updateDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if ((drive != nil) && (drive.identifier != nil) && (drive.type != nil))
+	{
+		NSError *error = nil;
+		NSData *driveData = [NSKeyedArchiver archivedDataWithRootObject:drive requiringSecureCoding:YES error:&error];
+
+		if (error != nil)
+		{
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+			return;
+		}
+
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryUpdatingRowsWhere:@{
+			@"identifier"	: drive.identifier
+		} inTable:OCDatabaseTableNameDrives withRowValues:@{
+			@"type"		: drive.type,
+			@"name"		: drive.name,
+			@"davRootURL"	: drive.davRootURL,
+			@"driveData"	: driveData
+		} completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	}
+	else
+	{
+		OCLogError(@"drive=%@ => could not be updated in database", drive);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
+- (void)retrieveDrivesOnlyWithID:(OCDriveID)driveID completionHandler:(OCDatabaseRetrieveDriveCompletionHandler)completionHandler;
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[@"identifier", @"driveData"] fromTable:OCDatabaseTableNameDrives where:((driveID != nil) ? @{
+		@"identifier" : driveID
+	} : nil) resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+		__block NSMutableArray<OCDrive *> *drives = nil;
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				NSData *driveData;
+
+				if ((driveData = (NSData *)rowDictionary[@"driveData"]) != nil)
+				{
+					NSError *error = nil;
+					OCDrive *drive = nil;
+
+					if ((drive = [NSKeyedUnarchiver unarchivedObjectOfClass:OCDrive.class fromData:driveData error:&error]) != nil)
+					{
+						if (drives == nil) { drives = [NSMutableArray new]; }
+						[drives addObject:drive];
+					}
+					else
+					{
+						OCLogError(@"Error decoding OCDrive %@ from database: %@", rowDictionary[@"identifier"], error);
+						*stop = YES;
+					}
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, drives);
+		}
+	}]];
+}
+
+- (void)removeDriveWithID:(OCDriveID)driveID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if (driveID != nil)
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowsWhere:@{
+			@"identifier"	: driveID
+		} fromTable:OCDatabaseTableNameDrives completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}]];
+	}
+	else
+	{
+		OCLogError(@"driveID=%@ => could not be removed from database", driveID);
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
 
 #pragma mark - Directory Update Job interface
 - (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateJob completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler

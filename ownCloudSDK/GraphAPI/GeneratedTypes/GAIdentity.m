@@ -31,6 +31,36 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_displayName = [decoder decodeObjectOfClass:NSString.class forKey:@"displayName"];
+		_identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_displayName forKey:@"displayName"];
+	[coder encodeObject:_identifier forKey:@"identifier"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_displayName!=nil) ? [NSString stringWithFormat:@", displayName: %@", _displayName] : @""), ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

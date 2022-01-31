@@ -35,6 +35,44 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_driveId = [decoder decodeObjectOfClass:NSString.class forKey:@"driveId"];
+		_driveType = [decoder decodeObjectOfClass:NSString.class forKey:@"driveType"];
+		_identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
+		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
+		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
+		_shareId = [decoder decodeObjectOfClass:NSString.class forKey:@"shareId"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_driveId forKey:@"driveId"];
+	[coder encodeObject:_driveType forKey:@"driveType"];
+	[coder encodeObject:_identifier forKey:@"identifier"];
+	[coder encodeObject:_name forKey:@"name"];
+	[coder encodeObject:_path forKey:@"path"];
+	[coder encodeObject:_shareId forKey:@"shareId"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_driveId!=nil) ? [NSString stringWithFormat:@", driveId: %@", _driveId] : @""), ((_driveType!=nil) ? [NSString stringWithFormat:@", driveType: %@", _driveType] : @""), ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_name!=nil) ? [NSString stringWithFormat:@", name: %@", _name] : @""), ((_path!=nil) ? [NSString stringWithFormat:@", path: %@", _path] : @""), ((_shareId!=nil) ? [NSString stringWithFormat:@", shareId: %@", _shareId] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

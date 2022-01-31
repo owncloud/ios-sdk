@@ -6,10 +6,21 @@
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
+/*
+ * Copyright (C) 2022, ownCloud GmbH.
+ *
+ * This code is covered by the GNU Public License Version 3.
+ *
+ * For distribution utilizing Apple mechanisms please see https://owncloud.org/contribute/iOS-license-exception/
+ * You should have received a copy of this license along with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.en.html>.
+ *
+ */
+
 #import "GAGraphData+Decoder.h"
 #import "NSError+OCError.h"
 #import "GAGraphObject.h"
 #import "NSDate+OCDateParser.h"
+#import "OCLogger.h"
 
 @implementation NSDictionary (GAGraphDataDecoder)
 
@@ -69,6 +80,21 @@
 			if ((decodedDate = [dateFormatter dateFromString:(NSString *)object]) != nil)
 			{
 				return (decodedDate);
+			}
+		}
+		else if ([object isKindOfClass:NSString.class] && [class isSubclassOfClass:NSURL.class])
+		{
+			// Convert string to URL
+			NSURL *url;
+			if ((url = [NSURL URLWithString:(NSString *)object]) != nil)
+			{
+				// Block file URLs
+				if (url.isFileURL)
+				{
+					OCLogError(@"GAGraphData+Decoder: converted %@ to URL, but it was a fileURL. Dropped conversion for security considerations.", url);
+					return (nil);
+				}
+				return (url);
 			}
 		}
 		else if ([object isKindOfClass:NSDictionary.class] && [class conformsToProtocol:@protocol(GAGraphObject)])

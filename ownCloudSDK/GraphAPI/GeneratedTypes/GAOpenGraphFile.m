@@ -33,6 +33,38 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_hashes = [decoder decodeObjectOfClass:GAHashes.class forKey:@"hashes"];
+		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
+		_processingMetadata = [decoder decodeObjectOfClass:NSNumber.class forKey:@"processingMetadata"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_hashes forKey:@"hashes"];
+	[coder encodeObject:_mimeType forKey:@"mimeType"];
+	[coder encodeObject:_processingMetadata forKey:@"processingMetadata"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((_hashes!=nil) ? [NSString stringWithFormat:@", hashes: %@", _hashes] : @""), ((_mimeType!=nil) ? [NSString stringWithFormat:@", mimeType: %@", _mimeType] : @""), ((_processingMetadata!=nil) ? [NSString stringWithFormat:@", processingMetadata: %@", _processingMetadata] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

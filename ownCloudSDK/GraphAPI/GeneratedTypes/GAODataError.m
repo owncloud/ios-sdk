@@ -17,6 +17,7 @@
 // occgen: includes
 #import "GAODataError.h"
 #import "GAODataErrorMain.h"
+#import "NSError+OCError.h"
 
 // occgen: type start
 @implementation GAODataError
@@ -32,7 +33,39 @@
 }
 
 // occgen: type protected {"locked":true}
+- (NSError *)nativeError
+{
+	NSError *error = _error.nativeError;
+	return ((error != nil) ? error : OCError(OCErrorGraphError));
+}
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_error = [decoder decodeObjectOfClass:GAODataErrorMain.class forKey:@"error"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_error forKey:@"error"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@>", NSStringFromClass(self.class), self, ((_error!=nil) ? [NSString stringWithFormat:@", error: %@", _error] : @"")]);
+}
 
 // occgen: type end
 @end

@@ -23,7 +23,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAFolder : NSObject <GAGraphObject>
+@interface GAFolder : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong, nullable) NSNumber *childCount; //!< [integer:int32] Number of children contained immediately within this container.

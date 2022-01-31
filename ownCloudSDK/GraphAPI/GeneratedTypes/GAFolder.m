@@ -32,6 +32,36 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_childCount = [decoder decodeObjectOfClass:NSNumber.class forKey:@"childCount"];
+		_view = [decoder decodeObjectOfClass:GAFolderView.class forKey:@"view"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_childCount forKey:@"childCount"];
+	[coder encodeObject:_view forKey:@"view"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_childCount!=nil) ? [NSString stringWithFormat:@", childCount: %@", _childCount] : @""), ((_view!=nil) ? [NSString stringWithFormat:@", view: %@", _view] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

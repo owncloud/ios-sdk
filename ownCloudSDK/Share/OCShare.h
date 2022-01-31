@@ -18,7 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCUser.h"
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 
 typedef NS_ENUM(NSInteger, OCShareType)
 {
@@ -105,7 +105,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *password; //!< Password of the share (not always available)
 
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
-@property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
+@property(nullable,strong) OCIdentity *recipient; //!< Recipient of the share
 
 @property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
 @property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
@@ -121,7 +121,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expirationDate Optional expiration date.
  @return An OCShare instance configured with the respective options.
  */
-+ (instancetype)shareWithRecipient:(OCRecipient *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
++ (instancetype)shareWithRecipient:(OCIdentity *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
 
 /**
  Creates an object that can be used to create a public link.

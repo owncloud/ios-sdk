@@ -32,6 +32,38 @@
 	return (instance);
 }
 
+// occgen: type native deserialization
++ (BOOL)supportsSecureCoding
+{
+	return (YES);
+}
+
+- (instancetype)initWithCoder:(NSCoder *)decoder
+{
+	if ((self = [super init]) != nil)
+	{
+		_sortBy = [decoder decodeObjectOfClass:NSString.class forKey:@"sortBy"];
+		_sortOrder = [decoder decodeObjectOfClass:NSString.class forKey:@"sortOrder"];
+		_viewType = [decoder decodeObjectOfClass:NSString.class forKey:@"viewType"];
+	}
+
+	return (self);
+}
+
+// occgen: type native serialization
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:_sortBy forKey:@"sortBy"];
+	[coder encodeObject:_sortOrder forKey:@"sortOrder"];
+	[coder encodeObject:_viewType forKey:@"viewType"];
+}
+
+// occgen: type debug description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((_sortBy!=nil) ? [NSString stringWithFormat:@", sortBy: %@", _sortBy] : @""), ((_sortOrder!=nil) ? [NSString stringWithFormat:@", sortOrder: %@", _sortOrder] : @""), ((_viewType!=nil) ? [NSString stringWithFormat:@", viewType: %@", _viewType] : @"")]);
+}
+
 // occgen: type protected {"locked":true}
 
 

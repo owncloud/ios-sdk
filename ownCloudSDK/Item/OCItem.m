@@ -98,6 +98,8 @@
 	[coder encodeObject:_parentLocalID 	forKey:@"parentLocalID"];
 	[coder encodeObject:_localID 		forKey:@"localID"];
 
+	[coder encodeObject:_driveID		forKey:@"driveID"];
+
 	[coder encodeObject:_checksums 		forKey:@"checksums"];
 
 	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
@@ -142,54 +144,56 @@
 
 		_type = [decoder decodeIntegerForKey:@"type"];
 
-		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
 		_localRelativePath = [decoder decodeObjectOfClass:NSString.class forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
-		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
-		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"downloadTriggerIdentifier"];
-		_fileClaim = [decoder decodeObjectOfClass:[OCClaim class] forKey:@"fileClaim"];
+		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:OCItemVersionIdentifier.class forKey:@"localCopyVersionIdentifier"];
+		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"downloadTriggerIdentifier"];
+		_fileClaim = [decoder decodeObjectOfClass:OCClaim.class forKey:@"fileClaim"];
 
-		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
+		_remoteItem = [decoder decodeObjectOfClass:OCItem.class forKey:@"remoteItem"];
 
-		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
 
-		_parentLocalID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentLocalID"];
-		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
+		_parentLocalID = [decoder decodeObjectOfClass:NSString.class forKey:@"parentLocalID"];
+		_localID = [decoder decodeObjectOfClass:NSString.class forKey:@"localID"];
+
+		_driveID = [decoder decodeObjectOfClass:NSString.class forKey:@"driveID"];
 
 		_checksums = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [OCChecksum class], nil] forKey:@"checksums"];
 
-		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
-		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
-		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
+		_parentFileID = [decoder decodeObjectOfClass:NSString.class forKey:@"parentFileID"];
+		_fileID = [decoder decodeObjectOfClass:NSString.class forKey:@"fileID"];
+		_eTag = [decoder decodeObjectOfClass:NSString.class forKey:@"eTag"];
 
 		_activeSyncRecordIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSNumber.class, nil] forKey:@"activeSyncRecordIDs"];
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
-		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], [NSNumber class], nil] forKey:@"syncActivityCounts"];
+		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], NSNumber.class, nil] forKey:@"syncActivityCounts"];
 
 		_size = [decoder decodeIntegerForKey:@"size"];
-		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
-		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
-		_lastUsed = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastUsed"];
+		_creationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"creationDate"];
+		_lastModified = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastModified"];
+		_lastUsed = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastUsed"];
 
-		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
+		_isFavorite = [decoder decodeObjectOfClass:NSNumber.class forKey:@"isFavorite"];
 
 		_localAttributes = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
-		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
+		_owner = [decoder decodeObjectOfClass:OCUser.class forKey:@"owner"];
 
-		_privateLink = [decoder decodeObjectOfClass:[NSURL class] forKey:@"privateLink"];
+		_privateLink = [decoder decodeObjectOfClass:NSURL.class forKey:@"privateLink"];
 
 		_tusInfo = (UInt64)[decoder decodeInt64ForKey:@"tusInfo"];
 
-		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
+		_databaseID = [decoder decodeObjectOfClass:NSValue.class forKey:@"databaseID"];
 
-		_quotaBytesRemaining = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesRemaining"];
-		_quotaBytesUsed = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesUsed"];
+		_quotaBytesRemaining = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesRemaining"];
+		_quotaBytesUsed = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesUsed"];
 	}
 
 	return (self);
@@ -564,6 +568,8 @@
 	CloneMetadata(@"parentFileID");
 	CloneMetadata(@"fileID");
 	CloneMetadata(@"eTag");
+
+	CloneMetadata(@"driveID");
 
 	CloneMetadata(@"localAttributes");
 	CloneMetadata(@"localAttributesLastModified");

@@ -40,7 +40,7 @@
 }
 
 #pragma mark - Convenience constructors
-+ (instancetype)shareWithRecipient:(OCRecipient *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate
++ (instancetype)shareWithRecipient:(OCIdentity *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate
 {
 	OCShare *share = [OCShare new];
 
@@ -203,7 +203,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		_expirationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"expirationDate"];
 
 		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
-		_recipient = [decoder decodeObjectOfClass:[OCRecipient class] forKey:@"recipient"];
+		_recipient = [decoder decodeObjectOfClass:[OCIdentity class] forKey:@"recipient"];
 
 		_mountPoint = [decoder decodeObjectOfClass:[NSString class] forKey:@"mountPoint"];
 		_accepted = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"accepted"];

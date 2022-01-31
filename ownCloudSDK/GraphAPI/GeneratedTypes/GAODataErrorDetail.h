@@ -20,7 +20,7 @@
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
-@interface GAODataErrorDetail : NSObject <GAGraphObject>
+@interface GAODataErrorDetail : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
 @property(strong) NSString *code;
