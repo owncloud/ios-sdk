@@ -211,7 +211,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	OCTUSJob *tusJob;
 	NSURL *creationURL;
 
-	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path]) != nil)
+	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
 		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
 		{
@@ -623,7 +623,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	OCProgress *requestProgress = nil;
 	NSURL *uploadURL;
 
-	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
+	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(newParentDirectory.driveID) }] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:uploadURL];
 

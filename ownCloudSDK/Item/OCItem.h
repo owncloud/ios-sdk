@@ -21,6 +21,7 @@
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCClaim.h"
+#import "OCLocation.h"
 #import "OCTUSHeader.h"
 
 @class OCFile;
@@ -121,6 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSArray<OCChecksum *> *checksums; //!< (Optional) checksums of the item. Typically only requested for uploaded files.
 
 @property(nullable,strong) OCDriveID driveID; //!< Identifier of the drive the item is located on
+@property(nullable,strong) OCLocation *location; //!< Abstract location (encapsulates all information needed to find the item's location in an account)
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)

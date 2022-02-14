@@ -27,10 +27,16 @@ typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, N
 @interface OCConnection (GraphAPI)
 
 #pragma mark - Drives
-- (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler;
+@property(strong,nullable) NSArray<OCDrive *> *drives; //!< Current list of known drives
+
+- (nullable OCDrive *)driveWithID:(OCDriveID)driveID; //!< Returns the OCDrive instance for the provided ID if it is already known locally
+- (void)driveWithID:(OCDriveID)driveID completionHandler:(void(^)(OCDrive * _Nullable drive))completionHandler; //!< Returns the OCDrive instance for the provided ID. Will attempt to retrieve it from the server if not known locally.
+
+- (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler; //!< Retrieves a list of drives and updates .drives
 
 @end
 
+extern OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives;
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphDrives;
 
 NS_ASSUME_NONNULL_END

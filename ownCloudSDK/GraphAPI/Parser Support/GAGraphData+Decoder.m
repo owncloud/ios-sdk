@@ -67,6 +67,7 @@
 			NSDate *decodedDate;
 			static dispatch_once_t onceToken;
 			static NSISO8601DateFormatter *dateFormatter;
+			static NSISO8601DateFormatter *dateFormatter2;
 
 			dispatch_once(&onceToken, ^{
 				dateFormatter = [NSISO8601DateFormatter new];
@@ -75,11 +76,27 @@
 							      NSISO8601DateFormatWithColonSeparatorInTime |
 							      NSISO8601DateFormatWithColonSeparatorInTimeZone |
 							      NSISO8601DateFormatWithFractionalSeconds;
+
+				dateFormatter2 = [NSISO8601DateFormatter new];
+				dateFormatter2.formatOptions = NSISO8601DateFormatWithInternetDateTime |
+							       NSISO8601DateFormatWithDashSeparatorInDate |
+							       NSISO8601DateFormatWithColonSeparatorInTime |
+							       NSISO8601DateFormatWithColonSeparatorInTimeZone;
 			});
 
 			if ((decodedDate = [dateFormatter dateFromString:(NSString *)object]) != nil)
 			{
+				// with fractional seconds
 				return (decodedDate);
+			}
+			else if ((decodedDate = [dateFormatter2 dateFromString:(NSString *)object]) != nil)
+			{
+				// without fractional seconds
+				return (decodedDate);
+			}
+			else
+			{
+				OCLogError(@"GAGraphData+Decoder: error decoding date string %@", object);
 			}
 		}
 		else if ([object isKindOfClass:NSString.class] && [class isSubclassOfClass:NSURL.class])

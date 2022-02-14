@@ -1688,7 +1688,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 {
 	if (item.localRelativePath != nil)
 	{
-		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+		return ([[self.vault localDriveRootURLForDriveID:item.driveID] URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
 	}
 
 	return ([self.vault localURLForItem:item]);

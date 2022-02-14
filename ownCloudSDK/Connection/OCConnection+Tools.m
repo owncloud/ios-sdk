@@ -17,6 +17,7 @@
  */
 
 #import "OCConnection.h"
+#import "OCConnection+GraphAPI.h"
 
 @implementation OCConnection (Tools)
 
@@ -76,6 +77,27 @@
 
 		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
 		{
+			OCDriveID driveID;
+
+			if (((driveID = options[OCConnectionEndpointURLOptionDriveID]) != nil) && ![driveID isKindOfClass:NSNull.class])
+			{
+				OCDrive *drive;
+
+				if ((drive = [self driveWithID:driveID]) == nil)
+				{
+					OCLogError(@"Path for WebDAV endpoint for driveID %@ could not be generated: unknown drive", driveID);
+					return (nil);
+				}
+
+				if (drive.davRootURL == nil)
+				{
+					OCLogError(@"Path for WebDAV endpoint for drive %@ could not be generated: unknown davRootURL", drive);
+					return (nil);
+				}
+
+				url = drive.davRootURL;
+			}
+
 			// Ensure WebDAV endpoint path is slash-terminated
 			if (![url.absoluteString hasSuffix:@"/"])
 			{

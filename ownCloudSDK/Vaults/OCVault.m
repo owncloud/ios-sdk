@@ -138,6 +138,16 @@
 	return (_keyValueStoreURL);
 }
 
+- (NSURL *)drivesRootURL
+{
+	if (_drivesRootURL == nil)
+	{
+		_drivesRootURL = [self.filesRootURL URLByAppendingPathComponent:@"Drives" isDirectory:YES];
+	}
+
+	return (_drivesRootURL);
+}
+
 - (NSURL *)filesRootURL
 {
 	if (_filesRootURL == nil)
@@ -297,6 +307,44 @@
 	} completionHandler:completionHandler];
 }
 
+- (void)eraseDrive:(OCDriveID)driveID withCompletionHandler:(nullable OCCompletionHandler)completionHandler
+{
+	if ((self.rootURL != nil) && (driveID != nil))
+	{
+		NSURL *driveRootURL = [self localDriveRootURLForDriveID:driveID];
+
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+			NSError *error = nil;
+
+			NSFileManager *fileManager = [NSFileManager new];
+
+			fileManager.delegate = self;
+
+			if ([fileManager fileExistsAtPath:driveRootURL.path])
+			{
+				if (![fileManager removeItemAtURL:driveRootURL error:&error])
+				{
+					if (error == nil)
+					{
+						error = OCError(OCErrorInternal);
+					}
+				}
+
+				OCFileOpLog(@"rm", error, @"Removing drive root for %@ at %@", driveID, driveRootURL.path);
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		});
+	}
+	else
+	{
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
+}
+
 - (void)eraseWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
 	if (self.rootURL != nil)
@@ -349,19 +397,36 @@
 			}
 		});
 	}
+	else
+	{
+		completionHandler(self, OCError(OCErrorInsufficientParameters));
+	}
 }
 
 #pragma mark - URL and path builders
+- (NSURL *)localDriveRootURLForDriveID:(nullable OCDriveID)driveID
+{
+	// Returns the root folder for the drive with ID driveID
+	if (driveID == nil)
+	{
+		// oC10 items have no drive ID, so just return the filesRootURL
+		return (self.filesRootURL);
+	}
+
+	// Otherwise return
+	return ([self.drivesRootURL URLByAppendingPathComponent:driveID isDirectory:YES]);
+}
+
 - (NSURL *)localURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item should be stored. Follow <filesRootURL>/<localID>/<fileName> pattern.
-	return ([self.filesRootURL URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
+	return ([[self localDriveRootURLForDriveID:item.driveID] URLByAppendingPathComponent:[self relativePathForItem:item] isDirectory:NO]);
 }
 
 - (NSURL *)localFolderURLForItem:(OCItem *)item
 {
 	// Build the URL to where an item's folder should be stored. Follows <filesRootURL>/<localID>/ pattern.
-	return ([self.filesRootURL URLByAppendingPathComponent:item.localID isDirectory:YES]);
+	return ([[self localDriveRootURLForDriveID:item.driveID] URLByAppendingPathComponent:item.localID isDirectory:YES]);
 }
 
 - (NSString *)relativePathForItem:(OCItem *)item

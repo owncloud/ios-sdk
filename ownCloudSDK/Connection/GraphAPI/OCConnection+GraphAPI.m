@@ -17,83 +17,103 @@
  */
 
 #import "OCConnection+GraphAPI.h"
+#import "OCConnection+OData.h"
 #import "GAIdentitySet.h"
 #import "GADrive.h"
 #import "GAODataError.h"
 #import "GAODataErrorMain.h"
 #import "GAGraphData+Decoder.h"
+#import "OCMacros.h"
 
 @implementation OCConnection (GraphAPI)
 
+- (NSArray<OCDrive *> *)drives
+{
+	@synchronized (_drivesByID)
+	{
+		return (_drives);
+	}
+}
+
+- (void)setDrives:(NSArray<OCDrive *> *)drives
+{
+	NSMutableDictionary<OCDriveID, OCDrive *> *drivesByID = [NSMutableDictionary new];
+
+	for (OCDrive *drive in drives)
+	{
+		if (drive.identifier != nil)
+		{
+			drivesByID[drive.identifier] = drive;
+		}
+	}
+
+	@synchronized (_drivesByID)
+	{
+		_drives = drives;
+		[_drivesByID setDictionary:drivesByID];
+	}
+}
+
+- (OCDrive *)driveWithID:(OCDriveID)driveID
+{
+	@synchronized (_drivesByID)
+	{
+		return (_drivesByID[driveID]);
+	}
+}
+
+- (void)driveWithID:(OCDriveID)driveID completionHandler:(void (^)(OCDrive * _Nullable))completionHandler
+{
+	OCDrive *drive;
+
+	if ((drive = [self driveWithID:driveID]) != nil)
+	{
+		completionHandler(drive);
+	}
+	else
+	{
+		[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
+			completionHandler([self driveWithID:driveID]);
+		}];
+	}
+}
+
 - (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler
 {
-	OCHTTPRequest *request;
-	NSProgress *progress = nil;
-
-	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil]];
-	request.requiredSignals = self.actionSignals;
-//
-//	[request setValue:@"json" forParameter:@"format"];
-
-	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		NSError *jsonError = nil;
-		NSArray<OCDrive *> *drives = nil;
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphMeDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil entityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSMutableArray<OCDrive *> *ocDrives = nil;
 
 		if (error == nil)
 		{
-			NSDictionary <NSString *, id> *jsonDictionary;
+			// Convert GADrives to OCDrives
+			NSArray<GADrive *> *gaDrives;
 
-			if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+			if ((gaDrives = OCTypedCast(response, NSArray)) != nil)
 			{
-				if (jsonDictionary[@"error"])
-				{
-					NSError *decodeError = nil;
+				ocDrives = [NSMutableArray new];
 
-					GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
-					error = dataError.nativeError;
-				}
-				else if (jsonDictionary[@"value"])
+				for (GADrive *drive in gaDrives)
 				{
-					NSArray<OCDrive *> *gaDrives;
+					OCDrive *ocDrive;
 
-					if ((gaDrives = [jsonDictionary objectForKey:@"value" ofClass:GADrive.class inCollection:NSArray.class required:NO context:nil error:&error]) != nil)
+					if ((ocDrive = [OCDrive driveFromGDrive:drive]) != nil)
 					{
-						NSMutableArray<OCDrive *> *ocDrives = [NSMutableArray new];
-
-						for (GADrive *drive in gaDrives)
-						{
-							OCDrive *ocDrive;
-
-							if ((ocDrive = [OCDrive driveFromGDrive:drive]) != nil)
-							{
-								[ocDrives addObject:ocDrive];
-							}
-						}
-
-						if (ocDrives.count > 0)
-						{
-							drives = ocDrives;
-						}
+						[ocDrives addObject:ocDrive];
 					}
 				}
 
-				OCLogDebug(@"Drives response: drives=%@, error=%@, json: %@", drives, error, jsonDictionary);
-			}
-			else
-			{
-				if (jsonError != nil)
-				{
-					error = jsonError;
-				}
+				self.drives = ocDrives;
 			}
 		}
 
-		completionHandler(error, drives);
-	}];
+		OCLogDebug(@"Drives response: drives=%@, error=%@", ocDrives, error);
 
-	return (progress);
+		completionHandler(error, (ocDrives.count > 0) ? ocDrives : nil);
+	}]);
 }
 
 @end
 
+OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives = @"meDrives";
 OCConnectionEndpointID OCConnectionEndpointIDGraphDrives = @"drives";
+

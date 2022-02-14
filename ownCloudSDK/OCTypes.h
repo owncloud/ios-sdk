@@ -21,7 +21,7 @@
 
 typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
 
-typedef NSString* OCDriveID; //!< Unique identifier for an oCIS drive / space.
+typedef NSString* OCDriveID; //!< Unique identifier for an oCIS drive / space. oC10 items have no drive ID.
 
 typedef NSUInteger OCSeed; //!< Generic seed value type. Higher values mean newer objects.
 

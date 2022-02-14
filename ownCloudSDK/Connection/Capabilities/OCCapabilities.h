@@ -57,6 +57,10 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *davReports;
 @property(readonly,nullable,nonatomic) OCCapabilityBool davPropfindSupportsDepthInfinity;
 
+#pragma mark - Spaces
+@property(readonly,nullable,nonatomic) OCCapabilityBool spacesEnabled;
+@property(readonly,nullable,nonatomic) NSString *spacesVersion;
+
 #pragma mark - TUS
 @property(readonly,nonatomic) BOOL tusSupported;
 @property(readonly,nullable,nonatomic) OCTUSCapabilities tusCapabilities;

@@ -982,23 +982,57 @@
 	}]];
 }
 
-- (void)removeDriveWithID:(OCDriveID)driveID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+- (void)removeDriveWithID:(OCDriveID)driveID includingMetadata:(BOOL)includingMetadata completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	if (driveID != nil)
 	{
-		[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowsWhere:@{
-			@"identifier"	: driveID
-		} fromTable:OCDatabaseTableNameDrives completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+		[self performBatchUpdates:^(OCDatabase *database) {
+			__block NSError *databaseError = nil;
+
+			// Delete drive
+			[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowsWhere:@{
+				@"identifier"	: driveID
+			} fromTable:OCDatabaseTableNameDrives completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+				if (error != nil)
+				{
+					databaseError = error;
+				}
+			}]];
+
+			// Delete metadata
+			if (includingMetadata)
+			{
+				[self.sqlDB executeQuery:[OCSQLiteQuery queryDeletingRowsWhere:@{
+					@"driveID"	: driveID
+				} fromTable:OCDatabaseTableNameMetaData completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+					if (error != nil)
+					{
+						databaseError = error;
+					}
+				}]];
+			}
+
+			return ((NSError *)databaseError);
+		} completionHandler:^(OCDatabase *db, NSError *error) {
+			if (error != nil)
+			{
+				OCLogError(@"Error removing drive %@: %@", driveID, error);
+			}
+
 			if (completionHandler != nil)
 			{
-				completionHandler(self, error);
+				completionHandler(db, error);
 			}
-		}]];
+		}];
 	}
 	else
 	{
 		OCLogError(@"driveID=%@ => could not be removed from database", driveID);
-		completionHandler(self, OCError(OCErrorInsufficientParameters));
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, OCError(OCErrorInsufficientParameters));
+		}
 	}
 }
 

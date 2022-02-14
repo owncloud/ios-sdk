@@ -192,6 +192,11 @@
 	return ([self runsServerVersionOrHigher:@"10.0.9"]);
 }
 
+- (BOOL)useDriveAPI
+{
+	return (self.capabilities.spacesEnabled.boolValue);
+}
+
 #pragma mark - Checks
 - (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion
 {

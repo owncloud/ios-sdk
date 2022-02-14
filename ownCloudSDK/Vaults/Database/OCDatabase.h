@@ -132,7 +132,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)addDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)updateDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)retrieveDrivesOnlyWithID:(OCDriveID)driveID completionHandler:(OCDatabaseRetrieveDriveCompletionHandler)completionHandler;
-- (void)removeDriveWithID:(OCDriveID)driveID completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+- (void)removeDriveWithID:(OCDriveID)driveID includingMetadata:(BOOL)includingMetadata completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - File interface
 //- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;

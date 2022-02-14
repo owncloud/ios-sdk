@@ -17,6 +17,7 @@
  */
 
 #import "OCDrive.h"
+#import "GADrive.h"
 #import "GADriveItem.h"
 #import "OCMacros.h"
 

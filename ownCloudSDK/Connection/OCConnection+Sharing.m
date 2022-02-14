@@ -873,7 +873,7 @@
 		NSURL *endpointURL;
 		OCHTTPDAVRequest *davRequest;
 
-		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) == nil)
+		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }]) == nil)
 		{
 			// WebDAV root could not be generated (likely due to lack of username)
 			completionHandler(OCError(OCErrorInternal), nil);
@@ -893,7 +893,7 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
 					NSURL *privateLink;
 
@@ -960,7 +960,7 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
 					NSString *path;
 

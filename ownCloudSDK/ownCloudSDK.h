@@ -178,7 +178,12 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/GAGraph.h>
 #import <ownCloudSDK/GAGraphObject.h>
 #import <ownCloudSDK/GAGraphContext.h>
+#import <ownCloudSDK/GAQuota.h>
 #import <ownCloudSDK/OCConnection+GraphAPI.h>
+
+#import <ownCloudSDK/OCLocation.h>
+#import <ownCloudSDK/OCDrive.h>
+#import <ownCloudSDK/OCQuota.h>
 
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>

@@ -34,6 +34,7 @@
 #import "OCCapabilities.h"
 #import "OCRateLimiter.h"
 #import "OCAvatar.h"
+#import "OCDrive.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -122,6 +123,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSDictionary<NSString *, id> *_serverStatus;
 
 	NSMutableDictionary<NSString *, OCUser *> *_usersByUserID;
+
+	NSArray<OCDrive *> *_drives;
+	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
 
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
@@ -375,18 +379,19 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 - (nullable NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler;
 
 #pragma mark - Version
-- (nullable NSString *)serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
-- (nullable NSString *)serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
+@property(readonly,strong,nullable,nonatomic) NSString *serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
+@property(readonly,strong,nullable,nonatomic) NSString *serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
 - (BOOL)runsServerVersionOrHigher:(NSString *)version; //!< Returns YES if the server runs at least [version].
 
-- (nullable NSString *)serverProductName; //!< After connecting, the product name of the server ("productname"), f.ex. "ownCloud".
-- (nullable NSString *)serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
+@property(readonly,strong,nullable,nonatomic) NSString *serverProductName; //!< After connecting, the product name of the server ("productname"), f.ex. "ownCloud".
+@property(readonly,strong,nullable,nonatomic) NSString *serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
 
-- (nullable NSString *)serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
+@property(readonly,strong,nullable,nonatomic) NSString *serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
 + (nullable NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus;
 
 #pragma mark - API Switches
-- (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+@property(readonly,nonatomic) BOOL supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+@property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
 
 #pragma mark - Checks
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
@@ -406,6 +411,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 extern OCConnectionEndpointID OCConnectionEndpointIDAvatars;
 
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
+extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionDriveID;
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierConnection;
 
@@ -434,6 +440,7 @@ extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
 extern OCConnectionOptionKey OCConnectionOptionResponseDestinationURL; //!< NSURL of where to store a (raw) response
 extern OCConnectionOptionKey OCConnectionOptionResponseStreamHandler; //!< Response stream handler (OCHTTPRequestEphermalStreamHandler) to receive the response body stream
+extern OCConnectionOptionKey OCConnectionOptionDriveID; //!< Drive ID (OCDriveID) to target.
 
 extern OCConnectionSetupOptionKey OCConnectionSetupOptionUserName; //!< User name to feed to OCConnectionServerLocator to determine server.
 

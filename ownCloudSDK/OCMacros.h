@@ -51,4 +51,8 @@
 // debug description
 #define OCExpandVar(var) ((_##var!=nil) ? [@", " #var ": " stringByAppendingString:_##var.description] : @"")
 
+// nil -> NSNull wrapper/unwrapper
+#define OCNullProtect(object) (((object)!=nil) ? (object) : NSNull.null)
+#define OCNullResolved(object) ([(object) isKindOfClass:[NSNull class]] ? nil : (object))
+
 #endif /* OCMacros_h */

@@ -250,6 +250,17 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"dav"][@"propfind"][@"depth_infinity"], NSNumber));
 }
 
+#pragma mark - Spaces
+- (OCCapabilityBool)spacesEnabled
+{
+	return (OCTypedCast(_capabilities[@"spaces"][@"enabled"], NSNumber));
+}
+
+- (NSString *)spacesVersion
+{
+	return (OCTypedCast(_capabilities[@"spaces"][@"version"], NSString));
+}
+
 #pragma mark - TUS
 - (BOOL)tusSupported
 {

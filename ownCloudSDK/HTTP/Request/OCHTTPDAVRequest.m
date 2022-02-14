@@ -90,7 +90,7 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID withErrors:(NSArray <NSError *> **)errors
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID driveID:(nullable OCDriveID)driveID withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
 	NSData *responseData = self.httpResponse.bodyData;
@@ -125,6 +125,14 @@
 					@synchronized(self)
 					{
 						responseItems = _parseResultItems = parser.parsedObjects;
+
+						if (driveID != nil)
+						{
+							for (OCItem *item in responseItems)
+							{
+								item.driveID = driveID;
+							}
+						}
 					}
 				}
 
