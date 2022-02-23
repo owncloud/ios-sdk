@@ -136,7 +136,7 @@
 			// Update items
 			if (updateItems.count > 0)
 			{
-				[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+				[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 			}
 
 			return (nil);

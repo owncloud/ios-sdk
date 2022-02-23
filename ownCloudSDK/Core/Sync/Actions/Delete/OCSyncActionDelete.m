@@ -82,7 +82,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			NSMutableArray <OCItem *> *removedItems = [syncContext.removedItems mutableCopy];
 			NSMutableArray <OCLocalID> *removedLocalIDs = [NSMutableArray new];
 
-			[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:itemToDelete.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			[self.core.vault.database retrieveCacheItemsRecursivelyBelowLocation:itemToDelete.location includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 				for (OCItem *item in items)
 				{
 					[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
@@ -229,7 +229,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			// Items that are still contained in the deleted item itself
 			if (self.localItem.type == OCItemTypeCollection)
 			{
-				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:self.localItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				[self.core.vault.database retrieveCacheItemsRecursivelyBelowLocation:self.localItem.location includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					for (OCItem *item in items)
 					{
 						OCLogDebug(@"Success: remove delete contained %@", OCLogPrivate(item.path));
@@ -300,11 +300,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 				// => also fetch an update of the containing dir, as the missing file could also just have been moved / renamed
 				{
-					NSString *parentPath = self.localItem.path.parentPath;
+					OCLocation *parentLocation = self.localItem.location.parentLocation;
 
-					if (parentPath != nil)
+					if (parentLocation != nil)
 					{
-						syncContext.refreshPaths = @[ parentPath ];
+						syncContext.refreshLocations = @[ parentLocation ];
 					}
 				}
 

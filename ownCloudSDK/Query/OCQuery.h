@@ -87,9 +87,9 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 #pragma mark - Initializers
 // Native queries
-+ (instancetype)queryForPath:(OCPath)queryPath;	//!< Query for directory
-+ (instancetype)queryWithItem:(OCItem *)item;   //!< Query for single file item
-+ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; //!< Query for changed folders since (but not including) a particular sync anchor
++ (instancetype)queryForLocation:(OCLocation *)location;			//!< Query for directory
++ (instancetype)queryWithItem:(OCItem *)item;   				//!< Query for single file item
++ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; 	//!< Query for changed folders since (but not including) a particular sync anchor
 
 // Custom queries
 /**
@@ -109,7 +109,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 + (instancetype)queryWithCondition:(OCQueryCondition *)condition inputFilter:(nullable id<OCQueryFilter>)inputFilter; //!< Custom query for items matching the condition. An inputFilter is automatically generated from the condition. However, for best performance, an inputFilter should be supplied where possible.
 
 #pragma mark - Location
-@property(nullable, strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
+@property(nullable, strong) OCLocation *queryLocation; //!< Location targeted by the query, relative to the server's root directory.
 @property(nullable, strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
 @property(nullable, strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
 

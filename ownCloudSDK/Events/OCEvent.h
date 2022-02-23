@@ -84,6 +84,7 @@ typedef NSString* OCEventUUID;
 	NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *_userInfo;
 	NSDictionary<OCEventUserInfoKey,id> *_ephermalUserInfo;
 
+	OCDriveID _driveID;
 	OCPath _path;
 	NSInteger _depth;
 
@@ -102,8 +103,9 @@ typedef NSString* OCEventUUID;
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id<NSObject,NSSecureCoding>> *userInfo;	//!< The userInfo value of the OCEventTarget used to create this event.
 @property(nullable,readonly) NSDictionary<OCEventUserInfoKey,id> *ephermalUserInfo; //!< The ephermalUserInfo value of the OCEventTarget used to create this event.
 
-@property(nullable,strong) OCPath path;	//!< Used by OCEventTypeRetrieveItemList.
-@property(assign) NSInteger depth;	//!< Used by OCEventTypeRetrieveItemList.
+@property(nullable,strong) OCDriveID driveID;	//!< Used by OCEventTypeRetrieveItemList.
+@property(nullable,strong) OCPath path;		//!< Used by OCEventTypeRetrieveItemList.
+@property(assign) NSInteger depth;		//!< Used by OCEventTypeRetrieveItemList.
 
 @property(nullable,strong) NSString *mimeType;
 @property(nullable,strong) OCFile *file;
@@ -132,6 +134,7 @@ typedef NSString* OCEventUUID;
 extern OCEventUserInfoKey OCEventUserInfoKeyItem;
 extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
 extern OCEventUserInfoKey OCEventUserInfoKeySelector;
+extern OCEventUserInfoKey OCEventUserInfoDriveID;
 
 NS_ASSUME_NONNULL_END
 

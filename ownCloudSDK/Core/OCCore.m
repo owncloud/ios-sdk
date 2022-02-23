@@ -61,6 +61,7 @@
 #import "OCResourceSourceAvatarPlaceholders.h"
 #import "OCResourceSourceItemThumbnails.h"
 #import "OCResourceSourceItemLocalThumbnails.h"
+#import "OCConnection+GraphAPI.h"
 
 @interface OCCore ()
 {
@@ -259,7 +260,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_queries = [NSMutableArray new];
 		_shareQueries = [NSMutableArray new];
 
-		_itemListTasksByPath = [NSMutableDictionary new];
+		_itemListTasksByLocationString = [NSMutableDictionary new];
 		_queuedItemListTaskUpdateJobs = [NSMutableArray new];
 		_scheduledItemListTasks = [NSMutableArray new];
 		_scheduledDirectoryUpdateJobIDs = [NSMutableSet new];
@@ -285,7 +286,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_itemPolicies = [NSMutableArray new];
 		_itemPolicyProcessors = [NSMutableArray new];
 
-		_availableOfflineFolderPaths = [NSMutableSet new];
+		_availableOfflineFolderLocations = [NSMutableSet new];
 		_availableOfflineIDs = [NSMutableSet new];
 
 		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
@@ -472,6 +473,21 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncExecDone(retrieveSyncAnchor);
 					}];
 				});
+			}
+
+			// Get latest drive list
+			if (startError == nil)
+			{
+				__block NSArray<OCDrive *> *cachedDrives = nil;
+
+				OCSyncExec(retrieveDriveList, {
+					[self.database retrieveDrivesOnlyWithID:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCDrive *> *drives) {
+						cachedDrives = drives;
+						OCSyncExecDone(retrieveDriveList);
+					}];
+				});
+
+				self->_connection.drives = cachedDrives;
 			}
 
 			// Proceed with connecting - or stop
@@ -744,17 +760,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		query.state = OCQueryStateStarted;
 
 		// Start task
-		if (query.queryPath != nil)
+		if (query.queryLocation != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
+			[self scheduleItemListTaskForLocation:query.queryLocation forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
+				[self scheduleItemListTaskForLocation:query.queryItem.location.parentLocation forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 			}
 		}
 	}];
@@ -929,7 +945,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 - (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
 {
-	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+	[self.vault.database retrieveCacheItemsAtLocation:item.location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
 }
@@ -1121,7 +1137,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[self performUpdatesForAddedItems:nil
 			   	removedItems:removedItems
 				updatedItems:addedOrUpdatedItems
-				refreshPaths:nil
+				refreshLocations:nil
 				newSyncAnchor:syncAnchor
 				beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 					// Find items that moved to a different path
@@ -1482,21 +1498,22 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 
 #pragma mark - Item lookup and information
-- (OCCoreItemTracking)trackItemAtPath:(OCPath)inPath trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+- (OCCoreItemTracking)trackItemAtLocation:(OCLocation *)location trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
 {
 	NSObject *trackingObject = [NSObject new];
 	__weak NSObject *weakTrackingObject = trackingObject;
 	__weak OCCore *weakSelf = self;
 
 	// Detect unnormalized path
-	if ([inPath isUnnormalizedPath])
+	if ([location.path isUnnormalizedPath])
 	{
 		trackingHandler(OCError(OCErrorUnnormalizedPath), nil, YES);
 		return (nil);
 	}
 
 	[self queueBlock:^{
-		OCPath path = inPath;
+		OCPath path = location.path;
+		OCDriveID driveID = location.driveID;
 		NSError *error = nil;
 		OCItem *item = nil;
 		OCQuery *query = nil;
@@ -1515,13 +1532,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			return;
 		}
 
-		if ((item = [core cachedItemAtPath:path error:&error]) == nil)
+		if ((item = [core cachedItemAtLocation:location error:&error]) == nil)
 		{
 			// No item for this path found in cache
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
 				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
-				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
+				if ((item = [core cachedItemAtLocation:[[OCLocation alloc] initWithDriveID:driveID path:path.normalizedDirectoryPath] error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
 				}
@@ -1557,7 +1574,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			// Item not in cache - create full-fledged query
 			__block BOOL lastSentItemWasNil = YES;
 
-			query = [OCQuery queryForPath:path];
+			query = [OCQuery queryForLocation:[[OCLocation alloc] initWithDriveID:driveID path:path]];
 			query.includeRootItem = YES;
 
 			NSString *pathAsDirectory = path.normalizedDirectoryPath;
@@ -1626,14 +1643,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (trackingObject);
 }
 
-- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+- (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
 	__block OCItem *cachedItem = nil;
 
-	if (path != nil)
+	if (location.path != nil)
 	{
 		OCSyncExec(retrieveCachedItem, {
-			[self.vault.database retrieveCacheItemsAtPath:path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			[self.vault.database retrieveCacheItemsAtLocation:location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 				cachedItem = items.firstObject;
 
 				if (outError != NULL)
@@ -1656,21 +1673,21 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (cachedItem);
 }
 
-- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+- (nullable OCItem *)cachedItemInParentLocation:(OCLocation *)parentLocation withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
-	NSString *path = [parentPath stringByAppendingPathComponent:name];
+	NSString *path = [parentLocation.path stringByAppendingPathComponent:name];
 
 	if (isDirectory)
 	{
 		path = [path normalizedDirectoryPath];
 	}
 
-	return ([self cachedItemAtPath:path error:outError]);
+	return ([self cachedItemAtLocation:[[OCLocation alloc] initWithDriveID:parentLocation.driveID path:path] error:outError]);
 }
 
 - (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
-	return ([self cachedItemInParentPath:parentItem.path withName:name isDirectory:isDirectory error:outError]);
+	return ([self cachedItemInParentLocation:parentItem.location withName:name isDirectory:isDirectory error:outError]);
 }
 
 - (NSURL *)localCopyOfItem:(OCItem *)item
@@ -1968,7 +1985,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		{
 			updatedItem.lastUsed = [NSDate new];
 
-			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 		}
 
 		[self endActivity:@"Registering item usage"];

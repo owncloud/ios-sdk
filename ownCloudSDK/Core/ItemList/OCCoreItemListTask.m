@@ -50,12 +50,12 @@
 	return(self);
 }
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob
+- (instancetype)initWithCore:(OCCore *)core location:(OCLocation *)location updateJob:(OCCoreDirectoryUpdateJob *)updateJob
 {
 	if ((self = [self init]) != nil)
 	{
 		self.core = core;
-		self.path = path;
+		self.location = location;
 		self.updateJob = updateJob;
 	}
 
@@ -95,7 +95,7 @@
 {
 	OCMeasureEventBegin(self, @"db.cache", cacheRetrieveRef, @"Retrieve from cache");
 
-	[_core.vault.database retrieveCacheItemsAtPath:self.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+	[_core.vault.database retrieveCacheItemsAtLocation:self.location itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		OCSyncAnchor latestAnchorAtRetrieval = [self->_core retrieveLatestSyncAnchorWithError:NULL];
 		OCMeasurementEventReference queueRef = 0;
 
@@ -167,16 +167,16 @@
 
 					OCMeasureEventEnd(self, @"core.queue", propFindEvenRef, @"Beginning PROPFIND");
 
-					OCMeasureEventBegin(self, @"network.propfind", propFindEvenRef, ([NSString stringWithFormat:@"Starting PROPFIND for %@", self.path]));
+					OCMeasureEventBegin(self, @"network.propfind", propFindEvenRef, ([NSString stringWithFormat:@"Starting PROPFIND for %@", self.location]));
 
-					retrievalProgress = [self->_core.connection retrieveItemListAtPath:self.path depth:1 options:[NSDictionary dictionaryWithObjectsAndKeys:
+					retrievalProgress = [self->_core.connection retrieveItemListAtLocation:self.location depth:1 options:[NSDictionary dictionaryWithObjectsAndKeys:
 						// For background scan jobs, wait with scheduling until there is connectivity
 						((self.updateJob.isForQuery) ? self.core.connection.propFindSignals : self.core.connection.actionSignals), 	OCConnectionOptionRequiredSignalsKey,
 
 						// Schedule in a particular group
 						((self.groupID != nil) ? self.groupID : nil), 									OCConnectionOptionGroupIDKey,
 					nil] completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-						OCMeasureEventEnd(self, @"network.propfind", propFindEvenRef, ([NSString stringWithFormat:@"Completed PROPFIND for %@", self.path]));
+						OCMeasureEventEnd(self, @"network.propfind", propFindEvenRef, ([NSString stringWithFormat:@"Completed PROPFIND for %@", self.location]));
 
 						if (self.core.state != OCCoreStateRunning)
 						{
@@ -188,7 +188,7 @@
 
 						[self->_core beginActivity:@"update retrieved set"];
 
-						OCMeasureEventBegin(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Queue update of retrieved set for %@", self.path]));
+						OCMeasureEventBegin(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Queue update of retrieved set for %@", self.location]));
 
 						[self->_core queueBlock:^{
 							if (self.core.state != OCCoreStateRunning)
@@ -202,21 +202,21 @@
 							}
 
 							// Update inside the core's serial queue to make sure we never change the data while the core is also working on it
-							OCMeasureEventEnd(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Processing update of retrieved set for %@", self.path]));
+							OCMeasureEventEnd(self, @"core.queue", queueRef, ([NSString stringWithFormat:@"Processing update of retrieved set for %@", self.location]));
 
-							OCMeasureEventBegin(self, @"itemlist.update-from-propfind", propFindRef, ([NSString stringWithFormat:@"Update retrieved set for %@", self.path]));
+							OCMeasureEventBegin(self, @"itemlist.update-from-propfind", propFindRef, ([NSString stringWithFormat:@"Update retrieved set for %@", self.location]));
 
 							OCSyncAnchor latestSyncAnchor = [self.core retrieveLatestSyncAnchorWithError:NULL];
 
 							if ((latestSyncAnchor != nil) && (![latestSyncAnchor isEqualToNumber:self.syncAnchorAtStart]))
 							{
-								OCTLogDebug(@[@"ItemListTask"], @"Sync anchor changed before task finished: latestSyncAnchor=%@ != task.syncAnchorAtStart=%@, path=%@ -> updating inline", latestSyncAnchor, self.syncAnchorAtStart, self.path);
+								OCTLogDebug(@[@"ItemListTask"], @"Sync anchor changed before task finished: latestSyncAnchor=%@ != task.syncAnchorAtStart=%@, path=%@ -> updating inline", latestSyncAnchor, self.syncAnchorAtStart, self.location);
 
 								// Cache set is outdated - update now to avoid unnecessary requests
 								OCSyncExec(inlineUpdate, {
-									OCMeasureEventBegin(self, @"itemlist.cache-reload", cacheUpdateRef, ([NSString stringWithFormat:@"Start inline cache update for %@", self.path]));
+									OCMeasureEventBegin(self, @"itemlist.cache-reload", cacheUpdateRef, ([NSString stringWithFormat:@"Start inline cache update for %@", self.location]));
 									[self _cacheUpdateInline:YES notifyChange:NO completionHandler:^{
-										OCMeasureEventEnd(self, @"itemlist.cache-reload", cacheUpdateRef, ([NSString stringWithFormat:@"Done inline cache update for %@", self.path]));
+										OCMeasureEventEnd(self, @"itemlist.cache-reload", cacheUpdateRef, ([NSString stringWithFormat:@"Done inline cache update for %@", self.location]));
 										OCSyncExecDone(inlineUpdate);
 									}];
 								});
@@ -237,16 +237,16 @@
 							if (self->_retrievedSet.state == OCCoreItemListStateSuccess)
 							{
 								// Update all items with root item
-								if (self.path != nil)
+								if (self.location != nil)
 								{
 									OCItem *rootItem;
 									OCItem *cachedRootItem;
 
-									if ((rootItem = self->_retrievedSet.itemsByPath[self.path]) != nil)
+									if ((rootItem = self->_retrievedSet.itemsByPath[self.location.path]) != nil)
 									{
 										if ((cachedRootItem = self->_cachedSet.itemsByFileID[rootItem.fileID]) == nil)
 										{
-											cachedRootItem = self->_cachedSet.itemsByPath[self.path];
+											cachedRootItem = self->_cachedSet.itemsByPath[self.location.path];
 										}
 
 										if (cachedRootItem != nil)
@@ -278,7 +278,7 @@
 									}
 									else
 									{
-										OCLogWarning(@"Missing root item for %@", self.path);
+										OCLogWarning(@"Missing root item for %@", self.location);
 									}
 								}
 								else
@@ -296,7 +296,7 @@
 
 							[self->_core endActivity:@"update retrieved set"];
 
-							OCMeasureEventEnd(self, @"itemlist.update-from-propfind", propFindRef, ([NSString stringWithFormat:@"Done updating retrieved set for %@", self.path]));
+							OCMeasureEventEnd(self, @"itemlist.update-from-propfind", propFindRef, ([NSString stringWithFormat:@"Done updating retrieved set for %@", self.location]));
 
 							completionHandler();
 						}];
@@ -310,7 +310,7 @@
 			}];
 		};
 
-		if ([self.path isEqual:@"/"])
+		if ([self.location.path isEqual:@"/"])
 		{
 			RetrieveItems(nil);
 		}
@@ -322,7 +322,7 @@
 				NSArray <OCItem *> *items = nil;
 
 				// Retrieve parent item from cache.
-				items = [self->_core.vault.database retrieveCacheItemsSyncAtPath:[self.path parentPath] itemOnly:YES error:&dbError syncAnchor:NULL];
+				items = [self->_core.vault.database retrieveCacheItemsSyncAtLocation:self.location.parentLocation itemOnly:YES error:&dbError syncAnchor:NULL];
 
 				if (dbError != nil)
 				{
@@ -338,7 +338,7 @@
 						// contents after discovery, this should never happen. However, for direct requests to directories, this may happen.
 						// In that case, the parent directory(s) need to be requested first, so that their parent item(s) are known and in
 						// the database.
-						OCQuery *parentDirectoryQuery = [OCQuery queryForPath:[self.path parentPath]];
+						OCQuery *parentDirectoryQuery = [OCQuery queryForLocation:self.location.parentLocation];
 
 						[parentDirectoryQuery attachMeasurement:self.extractedMeasurement];
 
@@ -416,7 +416,7 @@
 
 - (OCActivity *)provideActivity
 {
-	OCActivity *activity = [OCActivity withIdentifier:self.activityIdentifier description:[NSString stringWithFormat:OCLocalized(@"Retrieving items for %@"), self.path] statusMessage:nil ranking:0];
+	OCActivity *activity = [OCActivity withIdentifier:self.activityIdentifier description:[NSString stringWithFormat:OCLocalized(@"Retrieving items for %@"), self.location.path] statusMessage:nil ranking:0];
 
 	activity.progress = NSProgress.indeterminateProgress;
 

@@ -219,6 +219,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			tusJob.fileSize = fileSize;
 			tusJob.fileModDate = modificationDate;
 			tusJob.fileChecksum = checksum;
+			tusJob.fileDriveID = parentItem.driveID;
 
 			tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
 
@@ -404,7 +405,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				[tusJob destroy];
 
 				// Retrieve item information
-				[self retrieveItemListAtPath:tusJob.futureItemPath depth:0 options:@{
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:tusJob.fileDriveID path:tusJob.futureItemPath] depth:0 options:@{
 					@"alternativeEventType"  		: @(OCEventTypeUpload),
 					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 				} resultTarget:tusJob.eventTarget];
@@ -747,7 +748,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		*/
 
 		// Retrieve item information
-		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
+		[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
 			@"alternativeEventType"  		: @(OCEventTypeUpload),
 			OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 		} resultTarget:request.eventTarget];
@@ -786,7 +787,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								// in this place. In order not to return an error if the file on the server equals the file to be uploaded, we first perform a PROPFIND
 								// check and compare the checksums
 
-								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
+								[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
 									@"alternativeEventType"  		: @(OCEventTypeUpload),
 									OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
 

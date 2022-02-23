@@ -194,7 +194,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCRateLimiter *_syncResetRateLimiter;
 
-	NSMutableDictionary <OCPath, OCCoreItemListTask *> *_itemListTasksByPath;
+	NSMutableDictionary <OCLocationString, OCCoreItemListTask *> *_itemListTasksByLocationString;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
 	NSMutableSet <OCCoreDirectoryUpdateJobID> *_scheduledDirectoryUpdateJobIDs;
@@ -214,7 +214,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	BOOL _itemPoliciesAppliedInitially;
 	BOOL _itemPoliciesValid;
 
-	NSMutableSet <OCPath> *_availableOfflineFolderPaths;
+	NSMutableSet <OCLocation *> *_availableOfflineFolderLocations;
 	NSMutableSet <OCLocalID> *_availableOfflineIDs;
 	BOOL _availableOfflineCacheValid;
 	NSMapTable <OCClaimIdentifier, NSObject *> *_claimTokensByClaimIdentifier;
@@ -309,10 +309,10 @@ typedef id<NSObject> OCCoreItemTracking;
 - (BOOL)sendError:(nullable NSError *)error issue:(nullable OCIssue *)issue; //!< If YES is returned, the error was sent to the OCCoreDelegate. If NO is returned, the error was not sent to the OCCoreDelegate.
 
 #pragma mark - Item lookup and information
-- (nullable OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
+- (nullable OCCoreItemTracking)trackItemAtLocation:(OCLocation *)location trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
 
-- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified path from the cache.
-- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
+- (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified path from the cache.
+- (nullable OCItem *)cachedItemInParentLocation:(OCLocation *)parentLocation withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
 - (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the parent directory represented by parentItem.
 - (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 

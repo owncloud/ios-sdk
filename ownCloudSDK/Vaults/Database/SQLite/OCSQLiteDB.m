@@ -1032,7 +1032,10 @@ static void collationProvider(void *dbObj, sqlite3 *db, int eTextRep, const char
 			statement = [OCSQLiteStatement statementFromQuery:sqlQuery database:self error:error];
 
 			// Insert statement at the top of the array
-			[_cachedStatements insertObject:statement atIndex:0];
+			if (statement != nil)
+			{
+				[_cachedStatements insertObject:statement atIndex:0];
+			}
 
 //			if (cutOffIdx != NSNotFound)
 //			{

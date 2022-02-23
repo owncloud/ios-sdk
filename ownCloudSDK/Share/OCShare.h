@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCShareType type; //!< The type of share (i.e. public or user)
 
-@property(strong) OCPath itemPath; //!< Path of the shared item
+@property(strong,nonatomic) OCLocation *itemLocation; //!< Location of the shared item
 @property(assign) OCItemType itemType; //!< Type of the shared item
 @property(nullable,strong) OCUser *itemOwner; //!< Owner of the item
 @property(nullable,strong) NSString *itemMIMEType; //!< MIME-Type of the shared item
@@ -116,24 +116,24 @@ NS_ASSUME_NONNULL_BEGIN
  Creates an object that can be used to create a share on the server.
 
  @param recipient The recipient representing the user or group to share with.
- @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param location The location of the item to share. Can be retrieved from OCItem.location.
  @param permissions Bitmask of permissions.
  @param expirationDate Optional expiration date.
  @return An OCShare instance configured with the respective options.
  */
-+ (instancetype)shareWithRecipient:(OCIdentity *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
++ (instancetype)shareWithRecipient:(OCIdentity *)recipient location:(OCLocation *)location permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
 
 /**
  Creates an object that can be used to create a public link.
 
- @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param location The location of the item to share. Can be retrieved from OCItem.location.
  @param name Optional name for the public link.
  @param permissions Bitmask of permissions: OCSharePermissionsMaskRead for "Download + View". OCSharePermissionsMaskCreate for "Upload" (specify only this for a folder to create a file drop). OCSharePermissionsMaskUpdate|OCSharePermissionsMaskDelete to also allow changes / deletion of items.
  @param password Optional password to control access.
  @param expirationDate Optional expiration date.
  @return An OCShare instance configured with the respective options.
  */
-+ (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
++ (instancetype)shareWithPublicLinkToLocation:(OCLocation *)location linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
 
 @end
 

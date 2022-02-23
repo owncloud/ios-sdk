@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCItemPolicyIdentifier identifier; //!< Optional identifier uniquely identifying a policy (f.ex. to re-recognize an internal policy)
 @property(nullable,strong) NSString *policyDescription; //!< Optional description of the policy (f.ex. to store a user-facing/editable description)
 
-@property(nullable,strong) OCPath path; //!< Optional path for use by clients of the ItemPolicy system such as AvailableOffline.
+@property(nullable,strong) OCLocation *location; //!< Optional location for use by clients of the ItemPolicy system such as AvailableOffline.
 @property(nullable,strong) OCLocalID localID; //!< Optional localID for use by clients of the ItemPolicy system such as AvailableOffline.
 
 #pragma mark - Policy definition

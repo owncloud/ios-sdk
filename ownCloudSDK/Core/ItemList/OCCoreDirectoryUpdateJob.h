@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
+#import "OCLocation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,13 +27,13 @@ typedef NSNumber* OCCoreDirectoryUpdateJobID;
 @interface OCCoreDirectoryUpdateJob : NSObject
 
 @property(nullable,strong) OCCoreDirectoryUpdateJobID identifier;
-@property(strong) OCPath path;
+@property(strong) OCLocation *location;
 
 @property(nonatomic,strong) NSSet<OCCoreDirectoryUpdateJobID> *representedJobIDs; //!< The jobs represented by this job. Typically its own identifier and the identifiers of other jobs it was scheduled for.
 
 @property(nonatomic,readonly) BOOL isForQuery;
 
-+ (instancetype)withPath:(OCPath)path;
++ (instancetype)withLocation:(OCLocation *)location;
 
 - (void)addRepresentedJobID:(nullable OCCoreDirectoryUpdateJobID)jobID;
 

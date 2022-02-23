@@ -116,10 +116,10 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 - (void)retrieveCacheItemForFileIDUniquePrefix:(OCFileIDUniquePrefix)fileIDUniquePrefix includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveItemCompletionHandler)completionHandler;
 
-- (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
-- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
+- (void)retrieveCacheItemsAtLocation:(OCLocation *)location itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtLocation:(OCLocation *)location itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor;
 
-- (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
+- (void)retrieveCacheItemsRecursivelyBelowLocation:(OCLocation *)location includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
 - (void)retrieveCacheItemsUpdatedSinceSyncAnchor:(OCSyncAnchor)synchAnchor foldersOnly:(BOOL)foldersOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler;
 
@@ -141,7 +141,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 
 #pragma mark - Update Scan interface
 - (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateScanPath completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler;
-- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler;
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forLocation:(OCLocation *)location maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler;
 - (void)removeDirectoryUpdateJobWithID:(OCCoreDirectoryUpdateJobID)jobID completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 
 #pragma mark - Sync Lane interface

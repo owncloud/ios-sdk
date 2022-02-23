@@ -1490,6 +1490,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 														}
 														else
 														{
+															if (drives.count > 0)
+															{
+																self.drives = drives;
+															}
+
 															connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
 															self.state = OCConnectionStateConnected;
@@ -1781,14 +1786,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (davRequest);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth options:nil completionHandler:completionHandler]);
-}
-
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
-{
-	return ([self retrieveItemListAtPath:path depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+	return ([self retrieveItemListAtLocation:location depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
 			{
 				completionHandler(event.error, nil);
@@ -1800,13 +1800,28 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
 	NSURL *endpointURL;
+	OCDriveID driveID = options[OCConnectionOptionDriveID];
+	OCPath path = location.path;
 
-	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(options[OCConnectionOptionDriveID]) }]) != nil)
+	if (path == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
+		return (nil);
+	}
+
+	if (driveID == nil)
+	{
+		driveID = location.driveID;
+	}
+
+	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{
+		OCConnectionEndpointURLOptionDriveID : OCNullProtect(driveID)
+	    }]) != nil)
 	{
 		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
@@ -1825,7 +1840,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				@"path" : path,
 				@"depth" : @(depth),
 				@"endpointURL" : endpointURL,
-				@"options" : ((options != nil) ? options : [NSNull null])
+				@"driveID" : OCNullProtect(driveID),
+				@"options" : OCNullProtect(options)
 			};
 			davRequest.eventTarget = eventTarget;
 			davRequest.downloadRequest = YES;
@@ -1907,7 +1923,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
 	OCEventType eventType = OCEventTypeRetrieveItemList;
 	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
-	OCDriveID driveID = OCNullResolved(options[OCConnectionOptionDriveID]);
+	OCDriveID driveID = OCNullResolved(request.userInfo[@"driveID"]);
 
 	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
 	{
@@ -1949,6 +1965,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				event.error = OCError(OCErrorFileNotFound);
 			}
 		}
+
+		event.driveID = driveID;
 
 		if ((event.error == nil) && (responseDestinationURL == nil))
 		{
@@ -2475,7 +2493,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new folder (OC server returns an "Oc-Fileid" in the HTTP headers, but we really need the full set here)
-				[self retrieveItemListAtPath:fullFolderPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:fullFolderPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					OCItem *newFolderItem = items.firstObject;
 
 					newFolderItem.parentFileID = parentItem.fileID;
@@ -2654,7 +2672,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new item
-				[self retrieveItemListAtPath:newFullPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:newFullPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					OCItem *newItem = items.firstObject;
 
 					newItem.parentFileID = parentItem.fileID;

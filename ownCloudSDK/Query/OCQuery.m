@@ -28,7 +28,7 @@
 @implementation OCQuery
 
 #pragma mark - Location
-@synthesize queryPath = _queryPath;
+@synthesize queryLocation = _queryLocation;
 @synthesize queryItem = _queryItem;
 
 #pragma mark - State
@@ -51,14 +51,14 @@
 @synthesize changesAvailableNotificationHandler = _changesAvailableNotificationHandler;
 
 #pragma mark - Initializers
-+ (instancetype)queryForPath:(OCPath)queryPath
++ (instancetype)queryForLocation:(OCLocation *)location
 {
 	OCQuery *query = [self new];
 
-	query.queryPath = queryPath;
+	query.queryLocation = location;
 	query.includeRootItem = NO;
 
-	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query for path %@", queryPath]];
+	OCMeasurement *measurement = [OCMeasurement measurementWithTitle:[NSString stringWithFormat:@"Query for path %@ on drive %@", location.path, location.driveID]];
 	[query attachMeasurement:measurement];
 
 	return (query);
@@ -470,8 +470,8 @@
 - (NSString *)description
 {
 	return ([NSString stringWithFormat:@"<%@: %p, %@=%@, state=%@>", NSStringFromClass(self.class), self,
-			((self.queryPath != nil) ? @"path" : ((self.queryItem != nil) ? @"item" : @"?")),
-			((self.queryPath != nil) ? self.queryPath : ((self.queryItem != nil) ? [NSString stringWithFormat:@"%@ (localID: %@)", self.queryItem.path, self.queryItem.localID] : @"?")),
+			((self.queryLocation != nil) ? @"location" : ((self.queryItem != nil) ? @"item" : @"?")),
+			((self.queryLocation != nil) ? self.queryLocation : ((self.queryItem != nil) ? [NSString stringWithFormat:@"%@ (localID: %@)", self.queryItem.location, self.queryItem.localID] : @"?")),
 			[self _stateAsString]
 		]);
 }

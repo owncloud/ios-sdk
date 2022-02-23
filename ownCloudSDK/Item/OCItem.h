@@ -110,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
-@property(nullable,strong) OCPath path; //!< Path of the item on the server relative to root
+@property(nullable,strong,nonatomic) OCPath path; //!< Path of the item on the server relative to root
 @property(nullable,readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
 @property(nullable,strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
@@ -121,8 +121,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) NSArray<OCChecksum *> *checksums; //!< (Optional) checksums of the item. Typically only requested for uploaded files.
 
-@property(nullable,strong) OCDriveID driveID; //!< Identifier of the drive the item is located on
-@property(nullable,strong) OCLocation *location; //!< Abstract location (encapsulates all information needed to find the item's location in an account)
+@property(nullable,strong,nonatomic) OCDriveID driveID; //!< Identifier of the drive the item is located on
+@property(nullable,strong,nonatomic) OCLocation *location; //!< Abstract location (encapsulates all information needed to find the item's location in an account)
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)

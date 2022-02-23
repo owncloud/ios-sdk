@@ -51,5 +51,10 @@ extern OCDriveType OCDriveTypeVirtual;
 extern OCDriveType OCDriveTypeProject;
 extern OCDriveType OCDriveTypeShare;
 
+#define OCDriveIDNil ((OCDriveID)NSNull.null)
+#define OCDriveIDWrap(driveID) ((OCDriveID)((driveID == nil) ? OCDriveIDNil : driveID))
+#define OCDriveIDUnwrap(driveID) ((OCDriveID)(((driveID!=nil) && [driveID isKindOfClass:NSNull.class]) ? nil : driveID))
+#define OCDriveIDIsIdentical(driveID1,driveID2) ((OCDriveIDUnwrap(driveID1)==OCDriveIDUnwrap(driveID2)) || [driveID1 isEqual:driveID2])
+
 NS_ASSUME_NONNULL_END
 

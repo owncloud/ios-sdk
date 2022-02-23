@@ -77,16 +77,16 @@
 				    (changedItem.type == OCItemTypeCollection)				// .. and a directory
 				   )
 				{
-					if (![changedItem.path isEqual:policy.path])
+					if (![changedItem.location isEqual:policy.location])
 					{
 						if ((policy.condition.operator == OCQueryConditionOperatorPropertyHasPrefix) &&
-						    ([policy.condition.property isEqual:OCItemPropertyNamePath]) &&
-						    ([policy.condition.value isEqual:policy.path]))
+						    ([policy.condition.property isEqual:OCItemPropertyNamePath]) && // TODO:SPACES
+						    ([policy.condition.value isEqual:policy.location.path])) // TODO:SPACES
 						{
-							OCLogDebug(@"Updating existing policy from path %@ to %@", policy.path, changedItem.path);
+							OCLogDebug(@"Updating existing policy from path %@ to %@", policy.location.path, changedItem.location.path);
 
 							policy.condition.value = changedItem.path;
-							policy.path = changedItem.path;
+							policy.location = changedItem.location;
 
 							OCSyncExec(waitForPolicyUpdate, {
 								[self.core updateItemPolicy:policy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:^(NSError * _Nullable error) {
@@ -168,7 +168,7 @@
 			{
 				matchingItem.downloadTriggerIdentifier = OCItemDownloadTriggerIDAvailableOffline;
 
-				[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ matchingItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+				[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ matchingItem ] refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 			}
 		}
 	}

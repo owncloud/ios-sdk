@@ -18,8 +18,28 @@
 
 #import "OCLocation.h"
 #import "OCMacros.h"
+#import "NSString+OCPath.h"
+#import "OCDrive.h"
+
+@interface OCLocation ()
+{
+	OCLocation *_parentLocation;
+	OCLocation *_normalizedDirectoryPathLocation;
+	OCLocation *_normalizedFilePathLocation;
+}
+@end
 
 @implementation OCLocation
+
++ (OCLocation *)legacyRootLocation
+{
+	return ([[OCLocation alloc] initWithDriveID:nil path:@"/"]);
+}
+
++ (OCLocation *)legacyRootPath:(nullable OCPath)path
+{
+	return ([[OCLocation alloc] initWithDriveID:nil path:path]);
+}
 
 - (instancetype)initWithDriveID:(nullable OCDriveID)driveID path:(nullable OCPath)path
 {
@@ -30,6 +50,87 @@
 	}
 
 	return (self);
+}
+
+- (void)setDriveID:(OCDriveID)driveID
+{
+	if ((driveID != nil) && ([driveID isKindOfClass:NSNull.class]))
+	{
+		driveID = nil;
+	}
+
+	_driveID = driveID;
+}
+
+#pragma mark - Tools
+- (OCLocation *)parentLocation
+{
+	if (_parentLocation == nil)
+	{
+		OCPath parentPath;
+
+		if ((parentPath = _path.parentPath) != nil)
+		{
+			_parentLocation = [[OCLocation alloc] initWithDriveID:_driveID path:parentPath];
+		}
+	}
+
+	return (_parentLocation);
+}
+
+- (OCLocation *)normalizedDirectoryPathLocation
+{
+	if (_normalizedDirectoryPathLocation == nil)
+	{
+		OCPath normalizedDirectoryPath;
+
+		if ((normalizedDirectoryPath = _path.normalizedDirectoryPath) != nil)
+		{
+			_normalizedDirectoryPathLocation = [[OCLocation alloc] initWithDriveID:_driveID path:normalizedDirectoryPath];
+		}
+	}
+
+	return (_normalizedDirectoryPathLocation);
+}
+
+- (OCLocation *)normalizedFilePathLocation
+{
+	if (_normalizedFilePathLocation == nil)
+	{
+		OCPath normalizedFilePath;
+
+		if ((normalizedFilePath = _path.normalizedFilePath) != nil)
+		{
+			_normalizedFilePathLocation = [[OCLocation alloc] initWithDriveID:_driveID path:normalizedFilePath];
+		}
+	}
+
+	return (_normalizedFilePathLocation);
+}
+
+- (BOOL)isRoot
+{
+	return (_path.isRootPath);
+}
+
++ (BOOL)driveID:(nullable OCDriveID)driveID1 isEqualDriveID:(nullable OCDriveID)driveID2
+{
+	driveID1 = OCDriveIDUnwrap(driveID1);
+	driveID2 = OCDriveIDUnwrap(driveID2);
+
+	return ((driveID1 == driveID2) || [driveID1 isEqual:driveID2]);
+}
+
+- (BOOL)isLocatedIn:(nullable OCLocation *)location
+{
+	if ((location == nil) || (location.path == nil) || (_path == nil)) { return (NO); }
+
+	if ([OCLocation driveID:location.driveID isEqualDriveID:_driveID])
+	{
+		return ([_path hasPrefix:location.path]);
+	}
+
+	return (NO);
 }
 
 #pragma mark - String composition / decomposition
@@ -112,5 +213,29 @@
 		OCExpandVar(path)
 	]);
 }
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return (_driveID.hash ^ _path.hash);
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCLocation *otherLocation = OCTypedCast(object, OCLocation);
+
+	if (otherLocation != nil)
+	{
+		#define compareVar(var) ((otherLocation->var == var) || [otherLocation->var isEqual:var])
+
+		return (compareVar(_bookmarkUUID) &&
+			compareVar(_driveID) &&
+			compareVar(_path)
+		);
+	}
+
+	return (NO);
+}
+
 
 @end

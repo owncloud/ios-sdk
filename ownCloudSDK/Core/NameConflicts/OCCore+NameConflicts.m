@@ -24,14 +24,14 @@
 @implementation OCCore (NameConflicts)
 
 #pragma mark - Name conflict resolution
-- (void)suggestUnusedNameBasedOn:(NSString *)itemName atPath:(OCPath)path isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)style filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler
+- (void)suggestUnusedNameBasedOn:(NSString *)itemName atLocation:(OCLocation *)location isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)style filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler
 {
 	[self queueBlock:^{
-		[self _suggestUnusedNameBasedOn:itemName atPath:path isDirectory:isDirectory usingNameStyle:style filteredBy:filter resultHandler:resultHandler];
+		[self _suggestUnusedNameBasedOn:itemName atLocation:location isDirectory:isDirectory usingNameStyle:style filteredBy:filter resultHandler:resultHandler];
 	} allowInlining:YES];
 }
 
-- (void)_suggestUnusedNameBasedOn:(NSString *)itemName atPath:(OCPath)path isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)style filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler
+- (void)_suggestUnusedNameBasedOn:(NSString *)itemName atLocation:(OCLocation *)location isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)style filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler
 {
 	OCCoreDuplicateNameStyle nameStyle = style;
 	NSNumber *duplicateCountNumber = nil;
@@ -90,7 +90,7 @@
 		// Check for existing item
 		NSError *error = nil;
 
-		if ([self cachedItemInParentPath:path withName:suggestedName isDirectory:isDirectory error:&error] != nil)
+		if ([self cachedItemInParentLocation:location withName:suggestedName isDirectory:isDirectory error:&error] != nil)
 		{
 			[duplicateNames addObject:suggestedName];
 			duplicateCount++;

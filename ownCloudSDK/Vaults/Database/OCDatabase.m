@@ -651,11 +651,11 @@
 }
 
 
-- (void)retrieveCacheItemsRecursivelyBelowPath:(OCPath)path includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)retrieveCacheItemsRecursivelyBelowLocation:(OCLocation *)location includingPathItself:(BOOL)includingPathItself includingRemoved:(BOOL)includingRemoved completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSMutableArray *parameters = [NSMutableArray new];
 
-	if (path.length == 0)
+	if (location.path.length == 0)
 	{
 		OCLogError(@"Retrieval below zero-length/nil path failed");
 
@@ -663,9 +663,12 @@
 		return;
 	}
 
-	[parameters addObject:[[path stringBySQLLikeEscaping] stringByAppendingString:@"%"]];
+	[parameters addObject:[[location.path stringBySQLLikeEscaping] stringByAppendingString:@"%"]];
 
 	NSString *sqlStatement = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@", removed FROM metaData WHERE path LIKE ?"];
+
+	sqlStatement = [sqlStatement stringByAppendingString:@" AND driveID=?"];
+	[parameters addObject:OCSQLiteNullProtect(location.driveID)];
 
 	if (includingRemoved)
 	{
@@ -675,18 +678,18 @@
 	if (!includingPathItself)
 	{
 		sqlStatement = [sqlStatement stringByAppendingString:@" AND path!=?"];
-		[parameters addObject:path];
+		[parameters addObject:location.path];
 	}
 
 	[self _retrieveCacheItemsForSQLQuery:sqlStatement parameters:parameters cancelAction:nil completionHandler:completionHandler];
 }
 
-- (void)retrieveCacheItemsAtPath:(OCPath)path itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
+- (void)retrieveCacheItemsAtLocation:(OCLocation *)location itemOnly:(BOOL)itemOnly completionHandler:(OCDatabaseRetrieveCompletionHandler)completionHandler
 {
 	NSString *sqlQueryString = nil;
 	NSArray *parameters = nil;
 
-	if (path == nil)
+	if (location.path == nil)
 	{
 		completionHandler(self, OCError(OCErrorInsufficientParameters), nil, nil);
 		return;
@@ -695,23 +698,33 @@
 	if (itemOnly)
 	{
 		sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@" FROM metaData WHERE path=? AND removed=0"];
-		parameters = @[path];
+		parameters = @[location.path];
 	}
 	else
 	{
 		sqlQueryString = [_selectItemRowsSQLQueryPrefix stringByAppendingString:@" FROM metaData WHERE (parentPath=? OR path=?) AND removed=0"];
-		parameters = @[path, path];
+		parameters = @[location.path, location.path];
+	}
+
+	if (location.driveID == nil)
+	{
+		sqlQueryString = [sqlQueryString stringByAppendingString:@" AND driveID IS NULL"];
+	}
+	else
+	{
+		sqlQueryString = [sqlQueryString stringByAppendingString:@" AND driveID=?"];
+		parameters = [parameters arrayByAddingObject:location.driveID];
 	}
 
 	[self _retrieveCacheItemsForSQLQuery:sqlQueryString parameters:parameters cancelAction:nil completionHandler:completionHandler];
 }
 
-- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtPath:(OCPath)path itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
+- (NSArray <OCItem *> *)retrieveCacheItemsSyncAtLocation:(OCLocation *)location itemOnly:(BOOL)itemOnly error:(NSError * __autoreleasing *)outError syncAnchor:(OCSyncAnchor __autoreleasing *)outSyncAnchor
 {
 	__block NSArray <OCItem *> *items = nil;
 
 	OCSyncExec(cacheItemsRetrieval, {
-		[self retrieveCacheItemsAtPath:path itemOnly:itemOnly completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *dbItems) {
+		[self retrieveCacheItemsAtLocation:location itemOnly:itemOnly completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *dbItems) {
 			items = dbItems;
 
 			if (outError != NULL) { *outError = error; }
@@ -1040,10 +1053,11 @@
 #pragma mark - Directory Update Job interface
 - (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateJob completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler
 {
-	if ((updateJob != nil) && (updateJob.path != nil))
+	if ((updateJob != nil) && (updateJob.location.path != nil))
 	{
 		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameUpdateJobs rowValues:@{
-			@"path" 		: updateJob.path
+			@"driveID"		: OCSQLiteNullProtect(updateJob.location.driveID),
+			@"path" 		: updateJob.location.path
 		} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 			updateJob.identifier = rowID;
 
@@ -1055,16 +1069,17 @@
 	}
 	else
 	{
-		OCLogError(@"updateScanPath=%@, updateScanPath.path=%@ => could not be stored in database", updateJob, updateJob.path);
+		OCLogError(@"updateJob=%@, updateJob.location=%@ => could not be stored in database", updateJob, updateJob.location);
 		completionHandler(self, OCError(OCErrorInsufficientParameters), nil);
 	}
 }
 
-- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forPath:(OCPath)path maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler
+- (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forLocation:(OCLocation *)location maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:nil fromTable:OCDatabaseTableNameUpdateJobs where:@{
 		@"jobID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@">=" value:jobID apply:(jobID!=nil)],
-		@"path" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:path apply:(path!=nil)]
+		@"driveID" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:location.driveID apply:(location.driveID!=nil)],
+		@"path" 	: [OCSQLiteQueryCondition queryConditionWithOperator:@"="  value:location.path apply:(location.path!=nil)]
 	} orderBy:@"jobID ASC" limit:((maximumJobs == 0) ? nil : [NSString stringWithFormat:@"0,%ld",maximumJobs]) resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		__block NSMutableArray <OCCoreDirectoryUpdateJob *> *updateJobs = nil;
 		NSError *iterationError = error;
@@ -1079,7 +1094,7 @@
 					if ((updateJob = [OCCoreDirectoryUpdateJob new]) != nil)
 					{
 						updateJob.identifier = (OCCoreDirectoryUpdateJobID)rowDictionary[@"jobID"];
-						updateJob.path = (OCPath)rowDictionary[@"path"];
+						updateJob.location = [[OCLocation alloc] initWithDriveID:(OCDriveID)rowDictionary[@"driveID"] path:(OCPath)rowDictionary[@"path"]];
 
 						if (updateJobs == nil) { updateJobs = [NSMutableArray new]; }
 
@@ -1904,7 +1919,7 @@
 	{
 		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameItemPolicies rowValues:@{
 			@"identifier"	: OCSQLiteNullProtect(itemPolicy.identifier),
-			@"path"		: OCSQLiteNullProtect(itemPolicy.path),
+			@"path"		: OCSQLiteNullProtect(itemPolicy.location.path),
 			@"localID"	: OCSQLiteNullProtect(itemPolicy.localID),
 			@"kind"		: itemPolicy.kind,
 			@"policyData"	: itemPolicyData,
@@ -1929,7 +1944,7 @@
 	{
 		[self.sqlDB executeQuery:[OCSQLiteQuery queryUpdatingRowWithID:itemPolicy.databaseID inTable:OCDatabaseTableNameItemPolicies withRowValues:@{
 			@"identifier"	: OCSQLiteNullProtect(itemPolicy.identifier),
-			@"path"		: OCSQLiteNullProtect(itemPolicy.path),
+			@"path"		: OCSQLiteNullProtect(itemPolicy.location.path),
 			@"localID"	: OCSQLiteNullProtect(itemPolicy.localID),
 			@"kind"		: itemPolicy.kind,
 			@"policyData"	: itemPolicyData,

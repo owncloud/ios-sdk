@@ -50,7 +50,7 @@
 
 	[self addOrUpdateItemPoliciesSchema];
 
-	[self addOrUpdateUpdateScanPaths];
+	[self addOrUpdateUpdateJobs];
 }
 
 - (void)addOrUpdateMetaDataSchema
@@ -1256,7 +1256,7 @@
 	];
 }
 
-- (void)addOrUpdateUpdateScanPaths
+- (void)addOrUpdateUpdateJobs
 {
 	/*** Update Scan Paths ***/
 
@@ -1273,6 +1273,42 @@
 		]
 		openStatements:nil
 		upgradeMigrator:nil]
+	];
+
+	// Version 2
+	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCDatabaseTableNameUpdateJobs
+		version:2
+		creationQueries:@[
+			/*
+				jobID : INTEGER  		- unique ID used to uniquely identify and efficiently update a row
+				driveID : TEXT			- driveID of the drive on which path is located
+				path : TEXT			- path to scan as part of an update
+			*/
+			@"CREATE TABLE updateJobs (jobID INTEGER PRIMARY KEY AUTOINCREMENT, driveID TEXT, path TEXT NOT NULL)", // relatedTo:OCDatabaseTableNameUpdateJobs
+
+			// Create index over path
+			@"CREATE INDEX idx_updateJobs_path ON updateJobs (path)" // relatedTo:OCDatabaseTableNameUpdateJobs
+		]
+		openStatements:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 5
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *sqlDB, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Add revision column
+				[sqlDB executeQuery:[OCSQLiteQuery query:@"ALTER TABLE updateJobs ADD COLUMN driveID TEXT" resultHandler:resultHandler]]; // relatedTo:OCDatabaseTableNameUpdateJobs
+				if (transactionError != nil) { return(transactionError); }
+
+				// Add index over path
+				[sqlDB executeQuery:[OCSQLiteQuery query:@"CREATE INDEX idx_updateJobs_path ON updateJobs (path)" resultHandler:resultHandler]]; // relatedTo:OCDatabaseTableNameUpdateJobs
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
 	];
 }
 

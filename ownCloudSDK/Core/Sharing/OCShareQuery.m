@@ -19,6 +19,7 @@
 #import "OCShareQuery.h"
 #import "OCShareQuery+Internal.h"
 #import "OCLogger.h"
+#import "OCDrive.h"
 
 @interface OCShareQuery ()
 {
@@ -205,14 +206,14 @@
 			case OCShareScopeItemWithReshares:
 				if (_item.path != nil)
 				{
-					doAdd = [addedShare.itemPath isEqual:_item.path];
+					doAdd = [addedShare.itemLocation isEqual:_item.location];
 				}
 			break;
 
 			case OCShareScopeSubItems:
 				if (_item.path != nil)
 				{
-					doAdd = [addedShare.itemPath hasPrefix:_item.path];
+					doAdd = [addedShare.itemLocation isLocatedIn:_item.location];
 				}
 			break;
 		}

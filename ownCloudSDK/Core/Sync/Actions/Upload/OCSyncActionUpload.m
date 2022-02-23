@@ -407,7 +407,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 	if ((localItemLocalID = self.localItem.localID) != nil)
 	{
-		[self.core.vault.database retrieveCacheItemsAtPath:self.localItem.path itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+		[self.core.vault.database retrieveCacheItemsAtLocation:self.localItem.location itemOnly:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			for (OCItem *item in items)
 			{
 				if (![item.localID isEqual:localItemLocalID])
@@ -482,10 +482,10 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				syncContext.updatedItems = @[ self.localItem ];
 
 				// Initiate scan to get the item that took this item's place
-				OCPath parentPath;
-				if ((parentPath = self.localItem.path.parentPath) != nil)
+				OCLocation *parentLocation;
+				if ((parentLocation = self.localItem.location.parentLocation) != nil)
 				{
-					syncContext.refreshPaths = @[ parentPath ];
+					syncContext.refreshLocations = @[ parentLocation ];
 				}
 				syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
 			}

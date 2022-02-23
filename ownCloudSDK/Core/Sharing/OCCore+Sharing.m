@@ -211,9 +211,9 @@
 		if (removedShare != nil)
 		{
 			// Update parent path of removed items to quickly bring the item back in sync
-			if (removedShare.itemPath.parentPath != nil)
+			if (removedShare.itemLocation.parentLocation != nil)
 			{
-				[self scheduleItemListTaskForPath:removedShare.itemPath.parentPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:removedShare.itemLocation.parentLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 		else if (updatedShare != nil)
@@ -221,15 +221,15 @@
 			if ([updatedShare.state isEqual:OCShareStateRejected])
 			{
 				// Update parent path of removed items to quickly bring the item back in sync
-				if (updatedShare.itemPath.parentPath != nil)
+				if (updatedShare.itemLocation.parentLocation != nil)
 				{
-					[self scheduleItemListTaskForPath:updatedShare.itemPath.parentPath forDirectoryUpdateJob:nil withMeasurement:nil];
+					[self scheduleItemListTaskForLocation:updatedShare.itemLocation.parentLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 				}
 			}
 			else
 			{
 				// Update item metadata to quickly bring the item up-to-date
-				[self scheduleItemListTaskForPath:updatedShare.itemPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:updatedShare.itemLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 		else if (addedShare != nil)
@@ -238,12 +238,12 @@
 			if ([addedShare.owner isEqual:self->_connection.loggedInUser])
 			{
 				// Shared by user
-				[self scheduleItemListTaskForPath:addedShare.itemPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:addedShare.itemLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 			else
 			{
 				// Shared with user (typically added to root dir. Should it ever not, will still trigger retrieval of updates.)
-				[self scheduleItemListTaskForPath:@"/" forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:[[OCLocation alloc] initWithDriveID:addedShare.itemLocation.driveID path:@"/"] forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 	}];
@@ -400,7 +400,7 @@
 			__block BOOL trackingCompleted = NO;
 			OCCoreItemTracking tracking;
 
-			if ((tracking = [self trackItemAtPath:path trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+			if ((tracking = [self trackItemAtLocation:[OCLocation legacyRootPath:path] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
 				BOOL endTracking = NO;
 
 				if (trackingCompleted)

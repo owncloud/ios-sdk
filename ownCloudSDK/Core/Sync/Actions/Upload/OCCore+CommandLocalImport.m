@@ -53,7 +53,7 @@
 			__block NSString *outSuggestedName = nil;
 
 			OCSyncExec(checkForExistingItems, {
-				[self suggestUnusedNameBasedOn:newFileName atPath:parentItem.path isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+				[self suggestUnusedNameBasedOn:newFileName atLocation:parentItem.location isDirectory:NO usingNameStyle:nameStyleNumber.unsignedIntegerValue filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 					outSuggestedName = suggestedName;
 					OCSyncExecDone(checkForExistingItems);
 				}];

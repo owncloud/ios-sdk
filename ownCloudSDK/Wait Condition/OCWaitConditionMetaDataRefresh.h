@@ -18,13 +18,14 @@
 
 #import "OCWaitCondition.h"
 #import "OCItemVersionIdentifier.h"
+#import "OCLocation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCWaitConditionMetaDataRefresh : OCWaitCondition <NSSecureCoding>
 
 #pragma mark - Item path
-@property(strong) OCPath itemPath;
+@property(strong) OCLocation *itemLocation;
 
 #pragma mark - Metadata
 @property(strong,nullable) OCItemVersionIdentifier *itemVersionIdentifier;
@@ -32,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Condition expiration
 @property(strong,nullable) NSDate *expirationDate;
 
-+ (instancetype)waitForPath:(OCPath)path versionOtherThan:(OCItemVersionIdentifier *)itemVersionIdentifier until:(NSDate * _Nullable)expirationDate;
++ (instancetype)waitForLocation:(OCLocation *)location versionOtherThan:(OCItemVersionIdentifier *)itemVersionIdentifier until:(NSDate * _Nullable)expirationDate;
 
 @end
 

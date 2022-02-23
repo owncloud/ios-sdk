@@ -20,6 +20,7 @@
 #import "OCXMLParserNode.h"
 #import "NSDate+OCDateParser.h"
 #import "NSString+OCPath.h"
+#import "OCDrive.h"
 
 @implementation OCShare (OCXMLObjectCreation)
 
@@ -57,9 +58,13 @@
 			}
 
 			// Item path
-			share.itemPath = shareNode.keyValues[@"path"];
+			OCPath sharePath = shareNode.keyValues[@"path"];
 
-			if (share.itemPath == nil)
+			if (sharePath != nil)
+			{
+				share.itemLocation = [OCLocation legacyRootPath:sharePath];
+			}
+			else
 			{
 				// Special case: federated share
 				NSString *mountPoint = nil;
@@ -70,7 +75,7 @@
 					
 					if (![mountPoint hasPrefix:@"{{TemporaryMountPointName#"])
 					{
-						share.itemPath = mountPoint;
+						share.itemLocation = [OCLocation legacyRootPath:mountPoint];
 					}
 				}
 			}
@@ -110,7 +115,7 @@
 			if (share.itemType == OCItemTypeCollection)
 			{
 				// Ensure itemPath conforms to OCPath convention that directories end with a "/"
-				share.itemPath = [share.itemPath normalizedDirectoryPath];
+				share.itemLocation = share.itemLocation.normalizedDirectoryPathLocation;
 			}
 
 			// Item owner

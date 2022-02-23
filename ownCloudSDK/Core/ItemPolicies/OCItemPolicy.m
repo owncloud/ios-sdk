@@ -62,7 +62,16 @@
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 		_policyDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"policyDescription"];
 
-		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_location = [decoder decodeObjectOfClass:OCLocation.class forKey:@"location"];
+		if (_location == nil)
+		{
+			OCPath path;
+
+			if ((path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"]) != nil)
+			{
+				_location = [OCLocation legacyRootPath:path];
+			}
+		}
 		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
 
 		_kind = [decoder decodeObjectOfClass:[NSString class] forKey:@"kind"];
@@ -80,7 +89,7 @@
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_policyDescription forKey:@"policyDescription"];
 
-	[coder encodeObject:_path forKey:@"path"];
+	[coder encodeObject:_location forKey:@"location"];
 	[coder encodeObject:_localID forKey:@"localID"];
 
 	[coder encodeObject:_kind forKey:@"kind"];

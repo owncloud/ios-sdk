@@ -23,6 +23,12 @@
 #import "OCItem+OCItemCreationDebugging.h"
 #import "OCMacros.h"
 
+@interface OCItem ()
+{
+	OCLocation *_location;
+}
+@end
+
 @implementation OCItem
 
 @dynamic cloudStatus;
@@ -256,6 +262,39 @@
 - (NSString *)ownerUserName
 {
 	return (_owner.userName);
+}
+
+- (void)setPath:(OCPath)path
+{
+	_location = nil;
+	_path = path;
+}
+
+- (void)setDriveID:(OCDriveID)driveID
+{
+	_location = nil;
+	_driveID = driveID;
+}
+
+- (OCLocation *)location
+{
+	if (_location != nil)
+	{
+		return (_location);
+	}
+
+	OCLocation *location = [[OCLocation alloc] initWithDriveID:_driveID path:_path];
+
+	_location = location;
+
+	return (location);
+}
+
+- (void)setLocation:(OCLocation *)location
+{
+	_driveID = location.driveID;
+	_path = location.path;
+	_location = location;
 }
 
 #pragma mark - Thumbnails

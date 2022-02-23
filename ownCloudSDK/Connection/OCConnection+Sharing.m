@@ -355,7 +355,9 @@
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
 
-	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:nil]];
+	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+		OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+	}]];
 	request.method = OCHTTPMethodPOST;
 	request.requiredSignals = self.propFindSignals;
 
@@ -366,7 +368,7 @@
 
 	[request setValue:[NSString stringWithFormat:@"%ld", share.type] forParameter:@"shareType"];
 
-	[request setValue:share.itemPath forParameter:@"path"];
+	[request setValue:share.itemLocation.path forParameter:@"path"];
 
 	[request setValue:[NSString stringWithFormat:@"%ld", share.permissions] forParameter:@"permissions"];
 
@@ -394,7 +396,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeCreateShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating share for %@…"), share.itemPath.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating share for %@…"), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -695,7 +697,9 @@
 		return (nil);
 	}
 
-	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
+	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+		OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+	}] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.propFindSignals;
 	request.forceCertificateDecisionDelegation = YES;
@@ -707,7 +711,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeDeleteShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemPath.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -775,11 +779,15 @@
 	{
 		case OCShareTypeUserShare:
 		case OCShareTypeGroupShare:
-			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+				OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+			}];
 		break;
 
 		case OCShareTypeRemote:
-			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:@{
+				OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+			}];
 		break;
 
 		default: break;
@@ -873,7 +881,7 @@
 		NSURL *endpointURL;
 		OCHTTPDAVRequest *davRequest;
 
-		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }]) == nil)
+		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCDriveIDWrap(item.driveID) }]) == nil)
 		{
 			// WebDAV root could not be generated (likely due to lack of username)
 			completionHandler(OCError(OCErrorInternal), nil);
@@ -962,15 +970,15 @@
 
 				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
-					NSString *path;
+					OCLocation *location;
 
-					if ((path = items.firstObject.path) != nil)
+					if ((location = items.firstObject.location) != nil)
 					{
 						// OC Server will return "/Documents" for the documents folder => make sure to normalize the path to follow OCPath conventions in that case
 						// The value of D:resourcetype is not correct when requested with the same (resolution) request. OC server will return d:collection for files, too.
 
 						// Perform standard depth 0 PROPFIND on path to determine type
-						[strongSelf retrieveItemListAtPath:path depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
+						[strongSelf retrieveItemListAtLocation:location depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
 							OCPath normalizedPath = nil;
 
 							if (error == nil)
@@ -982,15 +990,15 @@
 									switch (item.type)
 									{
 										case OCItemTypeFile:
-											normalizedPath = path.normalizedFilePath;
+											normalizedPath = location.path.normalizedFilePath;
 										break;
 
 										case OCItemTypeCollection:
-											normalizedPath = path.normalizedDirectoryPath;
+											normalizedPath = location.path.normalizedDirectoryPath;
 										break;
 
 										default:
-											normalizedPath = path;
+											normalizedPath = location.path;
 										break;
 									}
 								}

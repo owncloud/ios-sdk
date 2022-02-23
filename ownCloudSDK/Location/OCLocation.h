@@ -26,12 +26,26 @@ typedef NSString* OCLocationString; //!< DriveID + path encoded into a single st
 
 @interface OCLocation : NSObject <NSSecureCoding, NSCopying>
 
+@property(class,strong,readonly,nonatomic) OCLocation *legacyRootLocation;
++ (OCLocation *)legacyRootPath:(nullable OCPath)path;
+
 @property(strong,nullable) OCBookmarkUUID bookmarkUUID; //!< UUID of the account containing the location. A nil value represents the account managed by the receiver of the location.
 
-@property(strong,nullable) OCDriveID driveID; //!< DriveID of the drive. A nil value indicates a legacy WebDAV endpoint path.
+@property(strong,nullable,nonatomic) OCDriveID driveID; //!< DriveID of the drive. A nil value indicates a legacy WebDAV endpoint path.
 @property(strong,nullable) OCPath path; //!< The path of the location inside the drive and account.
 
 - (instancetype)initWithDriveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
+
+#pragma mark - Tools
+@property(strong,readonly,nonatomic) OCLocation *parentLocation;
+@property(strong,nullable,readonly,nonatomic) OCLocation *normalizedDirectoryPathLocation;
+@property(strong,nullable,readonly,nonatomic) OCLocation *normalizedFilePathLocation;
+
+@property(readonly,nonatomic) BOOL isRoot;
+
++ (BOOL)driveID:(nullable OCDriveID)driveID1 isEqualDriveID:(nullable OCDriveID)driveID2;
+
+- (BOOL)isLocatedIn:(nullable OCLocation *)location;
 
 #pragma mark - En-/Decoding as unified string
 @property(strong,readonly,nonatomic) OCLocationString string;

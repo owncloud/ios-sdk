@@ -166,7 +166,7 @@
 				NSMutableArray <OCItem *> *updatedItems = [syncContext.updatedItems mutableCopy];
 				NSMutableArray <OCLocalID> *updatedLocalIDs = [NSMutableArray new];
 
-				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:sourceItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				[self.core.vault.database retrieveCacheItemsRecursivelyBelowLocation:sourceItem.location includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					for (OCItem *item in items)
 					{
 						item.previousPath = item.path;

@@ -33,7 +33,7 @@
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
 		       removedItems:(nullable NSArray<OCItem *> *)removedItems
 		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-		       refreshPaths:(nullable NSArray<OCPath> *)refreshPaths
+		   refreshLocations:(nullable NSArray<OCLocation *> *)refreshLocations
 		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction
@@ -41,11 +41,16 @@
 		       skipDatabase:(BOOL)skipDatabase
 {
 	// Discard empty updates
-	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshPaths.count == 0) &&
+	if ((addedItems.count==0) && (removedItems.count == 0) && (updatedItems.count == 0) && (refreshLocations.count == 0) &&
 	     (beforeQueryUpdatesAction == nil) && (afterQueryUpdatesAction == nil) && (queryPostProcessor == nil))
 	{
 		return;
 	}
+
+	// Determine driveID
+//	if (driveID == nil) { driveID = addedItems.firstObject.driveID; }
+//	if (driveID == nil) { driveID = removedItems.firstObject.driveID; }
+//	if (driveID == nil) { driveID = updatedItems.firstObject.driveID; }
 
 	// Begin
 	[self beginActivity:@"Perform item and query updates"];
@@ -55,7 +60,7 @@
 	{
 		// Make sure updates are wrapped into -incrementSyncAnchorWithProtectedBlock
 		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
-			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshPaths:refreshPaths newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor skipDatabase:skipDatabase];
+			[self performUpdatesForAddedItems:addedItems removedItems:removedItems updatedItems:updatedItems refreshLocations:refreshLocations newSyncAnchor:newSyncAnchor beforeQueryUpdates:beforeQueryUpdatesAction afterQueryUpdates:afterQueryUpdatesAction queryPostProcessor:queryPostProcessor skipDatabase:skipDatabase];
 
 			return ((NSError *)nil);
 		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
@@ -235,10 +240,17 @@
 				@synchronized(query)
 				{
 					// Queries targeting directories
+					OCLocation *queryLocation = query.queryLocation;
 					OCPath queryPath;
 
-					if ((queryPath = query.queryPath) != nil)
+					if ((queryPath = queryLocation.path) != nil)
 					{
+						// Create drive-specific item lists
+						OCDriveID queryDriveID = OCDriveIDWrap(queryLocation.driveID);
+						OCCoreItemList *driveAddedItemList   = addedItemList.itemListsByDriveID[queryDriveID];
+						OCCoreItemList *driveRemovedItemList = removedItemList.itemListsByDriveID[queryDriveID];
+						OCCoreItemList *driveUpdatedItemList = updatedItemList.itemListsByDriveID[queryDriveID];
+
 						// Only update queries that ..
 						if ((query.state == OCQueryStateIdle) || // .. have already gone through their complete, initial content update.
 						    ((query.state == OCQueryStateWaitingForServerReply) && (self.connectionStatus != OCCoreConnectionStatusOnline)) || // .. have not yet been able to factor in server replies because the connection isn't online.
@@ -268,12 +280,12 @@
 								}
 							};
 
-							if ((addedItemList != nil) && (addedItemList.itemsByParentPaths[queryPath].count > 0))
+							if ((driveAddedItemList != nil) && (driveAddedItemList.itemsByParentPaths[queryPath].count > 0))
 							{
 								// Items were added in the target path of this query
 								GetUpdatedFullResultsReady();
 
-								for (OCItem *item in addedItemList.itemsByParentPaths[queryPath])
+								for (OCItem *item in driveAddedItemList.itemsByParentPaths[queryPath])
 								{
 									if (!query.includeRootItem && [item.path isEqual:queryPath])
 									{
@@ -285,14 +297,14 @@
 								}
 							}
 
-							if (removedItemList != nil)
+							if (driveRemovedItemList != nil)
 							{
-								if (removedItemList.itemsByParentPaths[queryPath].count > 0)
+								if (driveRemovedItemList.itemsByParentPaths[queryPath].count > 0)
 								{
 									// Items were removed in the target path of this query
 									GetUpdatedFullResultsReady();
 
-									for (OCItem *item in removedItemList.itemsByParentPaths[queryPath])
+									for (OCItem *item in driveRemovedItemList.itemsByParentPaths[queryPath])
 									{
 										if (item.path != nil)
 										{
@@ -310,12 +322,12 @@
 									}
 								}
 
-								if (removedItemList.itemsByPath[queryPath] != nil)
+								if (driveRemovedItemList.itemsByPath[queryPath] != nil)
 								{
-									if (addedItemList.itemsByPath[queryPath] != nil)
+									if (driveAddedItemList.itemsByPath[queryPath] != nil)
 									{
 										// Handle replacement scenario
-										query.rootItem = addedItemList.itemsByPath[queryPath];
+										query.rootItem = driveAddedItemList.itemsByPath[queryPath];
 									}
 									else
 									{
@@ -328,11 +340,11 @@
 								// Check if a parent folder of the queryPath has been removed
 								if (query.state != OCQueryStateTargetRemoved)
 								{
-									for (OCItem *removedItem in removedItemList.items)
+									for (OCItem *removedItem in driveRemovedItemList.items)
 									{
 										OCPath removedItemPath = removedItem.path;
 
-										if (removedItemPath.isNormalizedDirectoryPath && [query.queryPath hasPrefix:removedItemPath])
+										if (removedItemPath.isNormalizedDirectoryPath && [queryPath hasPrefix:removedItemPath])
 										{
 											// A parent folder of this query has been removed
 											updatedFullQueryResults = [NSMutableArray new];
@@ -344,19 +356,19 @@
 								}
 							}
 
-							if ((updatedItemList != nil) && (query.state != OCQueryStateTargetRemoved))
+							if ((driveUpdatedItemList != nil) && (query.state != OCQueryStateTargetRemoved))
 							{
 								OCItem *updatedRootItem = nil;
 
 								GetUpdatedFullResultsReady();
 
-								if ((updatedItemList.itemsByParentPaths[query.queryPath].count > 0) || // path match
-								    ([updatedItemList.itemLocalIDsSet intersectsSet:updatedFullQueryResultsItemList.itemLocalIDsSet])) // Contained localID match
+								if ((driveUpdatedItemList.itemsByParentPaths[queryPath].count > 0) || // path match
+								    ([driveUpdatedItemList.itemLocalIDsSet intersectsSet:updatedFullQueryResultsItemList.itemLocalIDsSet])) // Contained localID match
 								{
 									// Items were updated
-									for (OCItem *item in updatedItemList.itemsByParentPaths[query.queryPath])
+									for (OCItem *item in driveUpdatedItemList.itemsByParentPaths[queryPath])
 									{
-										if (!query.includeRootItem && [item.path isEqual:query.queryPath])
+										if (!query.includeRootItem && [item.path isEqual:queryPath])
 										{
 											// Respect query.includeRootItem for special case "/" and don't include root items if not wanted
 											continue;
@@ -403,7 +415,7 @@
 									}
 								}
 
-								if ((updatedRootItem = updatedItemList.itemsByPath[query.queryPath]) != nil)
+								if ((updatedRootItem = driveUpdatedItemList.itemsByPath[queryPath]) != nil)
 								{
 									// Root item of query was updated
 									query.rootItem = updatedRootItem;
@@ -412,7 +424,7 @@
 									{
 										OCItem *removeItem;
 
-										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[query.queryPath]) != nil)
+										if ((removeItem = updatedFullQueryResultsItemList.itemsByPath[queryPath]) != nil)
 										{
 											[updatedFullQueryResults removeObject:removeItem];
 										}
@@ -441,28 +453,33 @@
 						{
 							OCPath queryItemPath = query.queryItem.path;
 							OCLocalID queryItemLocalID = query.queryItem.localID;
+							OCDriveID queryItemDriveID = OCDriveIDWrap(query.queryItem.driveID);
 							OCItem *resultItem = nil;
 							OCItem *setNewItem = nil;
 
-							if (addedItemList!=nil)
+							OCCoreItemList *itemQueryAddedItemList   = addedItemList.itemListsByDriveID[queryItemDriveID];
+							OCCoreItemList *itemQueryRemovedItemList = removedItemList.itemListsByDriveID[queryItemDriveID];
+							OCCoreItemList *itemQueryUpdatedItemList = updatedItemList.itemListsByDriveID[queryItemDriveID];
+
+							if (itemQueryAddedItemList!=nil)
 							{
-								if ((resultItem = addedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = itemQueryAddedItemList.itemsByPath[queryItemPath]) != nil)
 								{
 									setNewItem = resultItem;
 								}
-								else if ((resultItem = addedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								else if ((resultItem = itemQueryAddedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
 									setNewItem = resultItem;
 								}
 							}
 
-							if (updatedItemList!=nil)
+							if (itemQueryUpdatedItemList!=nil)
 							{
-								if ((resultItem = updatedItemList.itemsByPath[queryItemPath]) != nil)
+								if ((resultItem = itemQueryUpdatedItemList.itemsByPath[queryItemPath]) != nil)
 								{
 									setNewItem = resultItem;
 								}
-								else if ((resultItem = updatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
+								else if ((resultItem = itemQueryUpdatedItemList.itemsByLocalID[queryItemLocalID]) != nil)
 								{
 									setNewItem = resultItem;
 								}
@@ -476,9 +493,9 @@
 							}
 							else
 							{
-								if (removedItemList!=nil)
+								if (itemQueryRemovedItemList!=nil)
 								{
-									if ((removedItemList.itemsByPath[queryItemPath] != nil) || (removedItemList.itemsByLocalID[queryItemLocalID] != nil))
+									if ((itemQueryRemovedItemList.itemsByPath[queryItemPath] != nil) || (itemQueryRemovedItemList.itemsByLocalID[queryItemLocalID] != nil))
 									{
 										query.state = OCQueryStateTargetRemoved;
 										query.fullQueryResults = [NSMutableArray new];
@@ -545,12 +562,12 @@
 	}
 
 	// - Fetch updated directory contents as needed
-	if (refreshPaths.count > 0)
+	if (refreshLocations.count > 0)
 	{
-		for (OCPath path in refreshPaths)
+		for (OCLocation *location in refreshLocations)
 		{
 			// Ensure the sync anchor was updated following these updates before triggering a refresh
-			[self scheduleUpdateScanForPath:[path normalizedDirectoryPath] waitForNextQueueCycle:YES];
+			[self scheduleUpdateScanForLocation:location.normalizedDirectoryPathLocation waitForNextQueueCycle:YES];
 		}
 	}
 

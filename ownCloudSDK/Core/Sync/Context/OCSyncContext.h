@@ -41,10 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCSyncIssue *issue; //!< Sync issue that should be relayed to the user [Result Handler]
 
 // Item changes properties
-@property(nullable,strong) NSArray <OCPath>   *refreshPaths;	//!< List of paths for which a refresh should be requested by the Sync Engine
-@property(nullable,strong) NSArray <OCItem *> *addedItems; 	//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
-@property(nullable,strong) NSArray <OCItem *> *removedItems;  	//!< Removed items (f.ex. after deleting an item), used to update database and queries
-@property(nullable,strong) NSArray <OCItem *> *updatedItems;  	//!< Updated items (f.ex. after renaming an item), used to update database and queries
+@property(nullable,strong) NSArray <OCLocation *> *refreshLocations;	//!< List of locations for which a refresh should be requested by the Sync Engine
+@property(nullable,strong) NSArray <OCItem *> *addedItems; 		//!< Newly created items (f.ex. after creating a directory or uploading a file), used to update database and queries
+@property(nullable,strong) NSArray <OCItem *> *removedItems;  		//!< Removed items (f.ex. after deleting an item), used to update database and queries
+@property(nullable,strong) NSArray <OCItem *> *updatedItems;  		//!< Updated items (f.ex. after renaming an item), used to update database and queries
 
 @property(assign) BOOL updateStoredSyncRecordAfterItemUpdates; //!< After processing newItems, removedItems, updatedItems (but not refreshPaths), send .syncRecord to the database for updating (NO by default)
 

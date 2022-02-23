@@ -247,6 +247,8 @@
 
 		[matchValues enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull columnName, id<NSObject>  _Nonnull obj, BOOL * _Nonnull stop) {
 			NSString *sqlOperator = @"=";
+			NSString *placeholderString = @"?";
+			BOOL addObject = YES;
 
 			if ([obj isKindOfClass:[OCSQLiteQueryCondition class]])
 			{
@@ -261,15 +263,37 @@
 				obj = condition.value;
 			}
 
-			[parameters addObject:obj];
+			if ([obj isKindOfClass:NSNull.class])
+			{
+				if ([sqlOperator isEqual:@"="])
+				{
+					// "xyz = NULL" always returns false; SQLite requires usage of "xyz IS NULL" instead
+					sqlOperator = @" IS NULL";
+					placeholderString = @"";
+					addObject = NO;
+				}
+
+				if ([sqlOperator isEqual:@"!="])
+				{
+					// SQLite requires usage of "xyz IS NOT NULL" instead of "xyz != NULL"
+					sqlOperator = @" IS NOT NULL";
+					placeholderString = @"";
+					addObject = NO;
+				}
+			}
+
+			if (addObject)
+			{
+				[parameters addObject:obj];
+			}
 
 			if (addedConditions > 0)
 			{
-				[whereString appendFormat:@" AND %@%@?", columnName, sqlOperator];
+				[whereString appendFormat:@" AND %@%@%@", columnName, sqlOperator, placeholderString];
 			}
 			else
 			{
-				[whereString appendFormat:@" WHERE %@%@?", columnName, sqlOperator];
+				[whereString appendFormat:@" WHERE %@%@%@", columnName, sqlOperator, placeholderString];
 			}
 
 			addedConditions++;
