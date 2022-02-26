@@ -101,7 +101,7 @@
 				{
 					OCDrive *ocDrive;
 
-					if ((ocDrive = [OCDrive driveFromGDrive:drive]) != nil)
+					if ((ocDrive = [OCDrive driveFromGADrive:drive]) != nil)
 					{
 						[ocDrives addObject:ocDrive];
 					}

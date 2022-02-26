@@ -19,18 +19,19 @@
 #import "GAGraphObject.h"
 
 // occgen: forward declarations
-@class GAUser;
-@class GAOpenGraphFile;
-@class GAItemReference;
-@class GARoot;
-@class GATrash;
-@class GAFileSystemInfo;
-@class GASpecialFolder;
-@class GADriveItem;
-@class GAImage;
-@class GAFolder;
 @class GADeleted;
+@class GADriveItem;
+@class GAFileSystemInfo;
+@class GAFolder;
 @class GAIdentitySet;
+@class GAImage;
+@class GAItemReference;
+@class GAOpenGraphFile;
+@class GAPermission;
+@class GARoot;
+@class GASpecialFolder;
+@class GATrash;
+@class GAUser;
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
@@ -62,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSNumber *size; //!< [integer:int64] Size of the item in bytes. Read-only.
 @property(strong, nullable) NSURL *webDavUrl; //!< WebDAV compatible URL for the item. Read-only.
 @property(strong, nullable) NSArray<GADriveItem *> *children; //!< Collection containing Item objects for the immediate children of Item. Only items representing folders have children. Read-only. Nullable.
+@property(strong, nullable) NSArray<GAPermission *> *permissions; //!< The set of permissions for the item. Read-only. Nullable.
 
 // occgen: type protected {"locked":true}
 

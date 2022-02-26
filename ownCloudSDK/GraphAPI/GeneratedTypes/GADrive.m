@@ -16,11 +16,11 @@
 
 // occgen: includes
 #import "GADrive.h"
-#import "GAQuota.h"
-#import "GAUser.h"
 #import "GADriveItem.h"
 #import "GAIdentitySet.h"
 #import "GAItemReference.h"
+#import "GAQuota.h"
+#import "GAUser.h"
 
 // occgen: type start
 @implementation GADrive

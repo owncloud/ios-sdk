@@ -17,6 +17,8 @@
 // occgen: includes
 #import "GAODataErrorMain.h"
 #import "GAODataErrorDetail.h"
+
+// occgen: error include {"locked":true}
 #import "NSError+OCError.h"
 
 // occgen: type start

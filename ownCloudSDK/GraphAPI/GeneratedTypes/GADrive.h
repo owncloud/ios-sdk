@@ -43,11 +43,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSURL *webUrl; //!< URL that displays the resource in the browser. Read-only.
 @property(strong, nullable) GAUser *createdByUser; //!< Identity of the user who created the item. Read-only.
 @property(strong, nullable) GAUser *lastModifiedByUser; //!< Identity of the user who last modified the item. Read-only.
-@property(strong, nullable) OCDriveType driveType; //!< Describes the type of drive represented by this resource. Values are "personal" for users home spaces, "project" or "share". Read-only.
+@property(strong, nullable) OCDriveType driveType; //!< Describes the type of drive represented by this resource. Values are "personal" for users home spaces, "project", "virtual" or "share". Read-only.
 @property(strong, nullable) GAIdentitySet *owner;
 @property(strong, nullable) GAQuota *quota;
 @property(strong, nullable) NSArray<GADriveItem *> *items; //!< All items contained in the drive. Read-only. Nullable.
-@property(strong, nullable) GADriveItem *root;
+@property(strong, nullable) GADriveItem *root; //!< Drive item describing the drive's root. Read-only.
 @property(strong, nullable) NSArray<GADriveItem *> *special; //!< A collection of special drive resources.
 
 // occgen: type protected {"locked":true}

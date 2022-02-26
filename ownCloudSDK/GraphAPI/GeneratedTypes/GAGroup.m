@@ -16,8 +16,8 @@
 
 // occgen: includes
 #import "GAGroup.h"
-#import "GADrive.h"
 #import "GADirectoryObject.h"
+#import "GADrive.h"
 
 // occgen: type start
 @implementation GAGroup

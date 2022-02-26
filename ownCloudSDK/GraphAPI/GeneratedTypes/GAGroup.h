@@ -19,8 +19,8 @@
 #import "GAGraphObject.h"
 
 // occgen: forward declarations
-@class GADrive;
 @class GADirectoryObject;
+@class GADrive;
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN

@@ -23,7 +23,7 @@
 
 @implementation OCDrive
 
-+ (instancetype)driveFromGDrive:(GADrive *)gDrive
++ (instancetype)driveFromGADrive:(GADrive *)gDrive
 {
 	OCDrive *drive = nil;
 
@@ -40,7 +40,7 @@
 
 		drive.quota = (OCQuota *)gDrive.quota;
 
-		drive.gDrive = gDrive;
+		drive.gaDrive = gDrive;
 	}
 
 	return (drive);
@@ -70,7 +70,7 @@
 
 		_quota = [decoder decodeObjectOfClass:GAQuota.class forKey:@"quota"];
 
-		_gDrive = [decoder decodeObjectOfClass:GADrive.class forKey:@"gDrive"];
+		_gaDrive = [decoder decodeObjectOfClass:GADrive.class forKey:@"gaDrive"];
 	}
 
 	return (self);
@@ -87,7 +87,7 @@
 
 	[coder encodeObject:_quota forKey:@"quota"];
 
-	[coder encodeObject:_gDrive forKey:@"gDrive"];
+	[coder encodeObject:_gaDrive forKey:@"gaDrive"];
 }
 
 #pragma mark - Description

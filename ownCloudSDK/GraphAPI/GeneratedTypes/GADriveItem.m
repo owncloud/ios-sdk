@@ -16,18 +16,19 @@
 
 // occgen: includes
 #import "GADriveItem.h"
-#import "GAUser.h"
-#import "GAOpenGraphFile.h"
-#import "GAItemReference.h"
-#import "GARoot.h"
-#import "GATrash.h"
-#import "GAFileSystemInfo.h"
-#import "GASpecialFolder.h"
-#import "GADriveItem.h"
-#import "GAImage.h"
-#import "GAFolder.h"
 #import "GADeleted.h"
+#import "GADriveItem.h"
+#import "GAFileSystemInfo.h"
+#import "GAFolder.h"
 #import "GAIdentitySet.h"
+#import "GAImage.h"
+#import "GAItemReference.h"
+#import "GAOpenGraphFile.h"
+#import "GAPermission.h"
+#import "GARoot.h"
+#import "GASpecialFolder.h"
+#import "GATrash.h"
+#import "GAUser.h"
 
 // occgen: type start
 @implementation GADriveItem
@@ -62,6 +63,7 @@
 	GA_SET(size, NSNumber, Nil);
 	GA_SET(webDavUrl, NSURL, Nil);
 	GA_SET(children, GADriveItem, NSArray.class);
+	GA_SET(permissions, GAPermission, NSArray.class);
 
 	return (instance);
 }
@@ -101,6 +103,7 @@
 		_size = [decoder decodeObjectOfClass:NSNumber.class forKey:@"size"];
 		_webDavUrl = [decoder decodeObjectOfClass:NSURL.class forKey:@"webDavUrl"];
 		_children = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class.class, nil] forKey:@"children"];
+		_permissions = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAPermission.class, NSArray.class.class, nil] forKey:@"permissions"];
 	}
 
 	return (self);
@@ -134,12 +137,13 @@
 	[coder encodeObject:_size forKey:@"size"];
 	[coder encodeObject:_webDavUrl forKey:@"webDavUrl"];
 	[coder encodeObject:_children forKey:@"children"];
+	[coder encodeObject:_permissions forKey:@"permissions"];
 }
 
 // occgen: type debug description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_createdBy!=nil) ? [NSString stringWithFormat:@", createdBy: %@", _createdBy] : @""), ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_desc!=nil) ? [NSString stringWithFormat:@", desc: %@", _desc] : @""), ((_eTag!=nil) ? [NSString stringWithFormat:@", eTag: %@", _eTag] : @""), ((_lastModifiedBy!=nil) ? [NSString stringWithFormat:@", lastModifiedBy: %@", _lastModifiedBy] : @""), ((_lastModifiedDateTime!=nil) ? [NSString stringWithFormat:@", lastModifiedDateTime: %@", _lastModifiedDateTime] : @""), ((_name!=nil) ? [NSString stringWithFormat:@", name: %@", _name] : @""), ((_parentReference!=nil) ? [NSString stringWithFormat:@", parentReference: %@", _parentReference] : @""), ((_webUrl!=nil) ? [NSString stringWithFormat:@", webUrl: %@", _webUrl] : @""), ((_createdByUser!=nil) ? [NSString stringWithFormat:@", createdByUser: %@", _createdByUser] : @""), ((_lastModifiedByUser!=nil) ? [NSString stringWithFormat:@", lastModifiedByUser: %@", _lastModifiedByUser] : @""), ((_content!=nil) ? [NSString stringWithFormat:@", content: %@", _content] : @""), ((_cTag!=nil) ? [NSString stringWithFormat:@", cTag: %@", _cTag] : @""), ((_deleted!=nil) ? [NSString stringWithFormat:@", deleted: %@", _deleted] : @""), ((_file!=nil) ? [NSString stringWithFormat:@", file: %@", _file] : @""), ((_fileSystemInfo!=nil) ? [NSString stringWithFormat:@", fileSystemInfo: %@", _fileSystemInfo] : @""), ((_folder!=nil) ? [NSString stringWithFormat:@", folder: %@", _folder] : @""), ((_image!=nil) ? [NSString stringWithFormat:@", image: %@", _image] : @""), ((_root!=nil) ? [NSString stringWithFormat:@", root: %@", _root] : @""), ((_trash!=nil) ? [NSString stringWithFormat:@", trash: %@", _trash] : @""), ((_specialFolder!=nil) ? [NSString stringWithFormat:@", specialFolder: %@", _specialFolder] : @""), ((_size!=nil) ? [NSString stringWithFormat:@", size: %@", _size] : @""), ((_webDavUrl!=nil) ? [NSString stringWithFormat:@", webDavUrl: %@", _webDavUrl] : @""), ((_children!=nil) ? [NSString stringWithFormat:@", children: %@", _children] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_createdBy!=nil) ? [NSString stringWithFormat:@", createdBy: %@", _createdBy] : @""), ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_desc!=nil) ? [NSString stringWithFormat:@", desc: %@", _desc] : @""), ((_eTag!=nil) ? [NSString stringWithFormat:@", eTag: %@", _eTag] : @""), ((_lastModifiedBy!=nil) ? [NSString stringWithFormat:@", lastModifiedBy: %@", _lastModifiedBy] : @""), ((_lastModifiedDateTime!=nil) ? [NSString stringWithFormat:@", lastModifiedDateTime: %@", _lastModifiedDateTime] : @""), ((_name!=nil) ? [NSString stringWithFormat:@", name: %@", _name] : @""), ((_parentReference!=nil) ? [NSString stringWithFormat:@", parentReference: %@", _parentReference] : @""), ((_webUrl!=nil) ? [NSString stringWithFormat:@", webUrl: %@", _webUrl] : @""), ((_createdByUser!=nil) ? [NSString stringWithFormat:@", createdByUser: %@", _createdByUser] : @""), ((_lastModifiedByUser!=nil) ? [NSString stringWithFormat:@", lastModifiedByUser: %@", _lastModifiedByUser] : @""), ((_content!=nil) ? [NSString stringWithFormat:@", content: %@", _content] : @""), ((_cTag!=nil) ? [NSString stringWithFormat:@", cTag: %@", _cTag] : @""), ((_deleted!=nil) ? [NSString stringWithFormat:@", deleted: %@", _deleted] : @""), ((_file!=nil) ? [NSString stringWithFormat:@", file: %@", _file] : @""), ((_fileSystemInfo!=nil) ? [NSString stringWithFormat:@", fileSystemInfo: %@", _fileSystemInfo] : @""), ((_folder!=nil) ? [NSString stringWithFormat:@", folder: %@", _folder] : @""), ((_image!=nil) ? [NSString stringWithFormat:@", image: %@", _image] : @""), ((_root!=nil) ? [NSString stringWithFormat:@", root: %@", _root] : @""), ((_trash!=nil) ? [NSString stringWithFormat:@", trash: %@", _trash] : @""), ((_specialFolder!=nil) ? [NSString stringWithFormat:@", specialFolder: %@", _specialFolder] : @""), ((_size!=nil) ? [NSString stringWithFormat:@", size: %@", _size] : @""), ((_webDavUrl!=nil) ? [NSString stringWithFormat:@", webDavUrl: %@", _webDavUrl] : @""), ((_children!=nil) ? [NSString stringWithFormat:@", children: %@", _children] : @""), ((_permissions!=nil) ? [NSString stringWithFormat:@", permissions: %@", _permissions] : @"")]);
 }
 
 // occgen: type protected {"locked":true}

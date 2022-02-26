@@ -224,9 +224,10 @@
 	segment.locked = YES;
 
 	// Forward declarations (render)
+	NSArray<NSString *> *forwardDeclaredTypeNamesSorted = [forwardDeclaredTypeNames.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
 	if (forwardDeclarationsSegment != nil)
 	{
-		for (NSString *typeName in forwardDeclaredTypeNames)
+		for (NSString *typeName in forwardDeclaredTypeNamesSorted)
 		{
 			[forwardDeclarationsSegment addLine:@"@class %@;", typeName];
 		}
@@ -255,7 +256,7 @@
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameIncludes after:segment] clear];
 
 	[segment addLine:@"#import \"%@\"", headerFileName];
-	for (NSString *typeName in forwardDeclaredTypeNames)
+	for (NSString *typeName in forwardDeclaredTypeNamesSorted)
 	{
 		[segment addLine:@"#import \"%@.h\"", typeName];
 	}
