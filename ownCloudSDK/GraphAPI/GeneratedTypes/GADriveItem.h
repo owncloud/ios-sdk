@@ -14,11 +14,12 @@
  *
  */
 
-// occgen: includes
+// occgen: includes { "locked" : true }
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCDrive.h"
 
-// occgen: forward declarations
+// occgen: forward declarations { "locked" : true }
 @class GADeleted;
 @class GADriveItem;
 @class GAFileSystemInfo;
@@ -37,12 +38,12 @@
 NS_ASSUME_NONNULL_BEGIN
 @interface GADriveItem : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "eTag" : "OCFileETag" }}
 @property(strong, nullable) NSString *identifier; //!< Read-only.
 @property(strong, nullable) GAIdentitySet *createdBy; //!< Identity of the user, device, or application which created the item. Read-only.
 @property(strong, nullable) NSDate *createdDateTime; //!< [string:date-time] Date and time of item creation. Read-only. | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?([Zz]|[+-][0-9][0-9]:[0-9][0-9])$
 @property(strong, nullable) NSString *desc; //!< Provides a user-visible description of the item. Optional.
-@property(strong, nullable) NSString *eTag; //!< ETag for the item. Read-only.
+@property(strong, nullable) OCFileETag eTag; //!< ETag for the item. Read-only.
 @property(strong, nullable) GAIdentitySet *lastModifiedBy; //!< Identity of the user, device, and application which last modified the item. Read-only.
 @property(strong, nullable) NSDate *lastModifiedDateTime; //!< [string:date-time] Date and time the item was last modified. Read-only. | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?([Zz]|[+-][0-9][0-9]:[0-9][0-9])$
 @property(strong, nullable) NSString *name; //!< The name of the item. Read-write.

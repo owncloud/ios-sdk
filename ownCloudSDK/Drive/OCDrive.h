@@ -43,6 +43,7 @@ typedef NSString *OCDriveType;
 @property(assign) OCSeed seed;
 
 @property(strong,nonatomic,readonly) OCLocation *rootLocation;
+@property(strong,nonatomic,readonly) OCFileETag rootETag;
 
 + (instancetype)driveFromGADrive:(GADrive *)drive; //!< oCIS drive, initialized from a GADrive instance
 + (instancetype)personalDrive; //!< OC10 root folder drive

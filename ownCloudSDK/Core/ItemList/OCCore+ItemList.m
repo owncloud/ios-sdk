@@ -39,6 +39,7 @@
 #import "OCLockRequest.h"
 #import "OCConnection+GraphAPI.h"
 #import "GADrive.h"
+#import "GADriveItem.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -1315,22 +1316,27 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 								[strongSelf updateWithDrives:drives initialize:NO];
 
-								for (OCDriveID subscribedDriveID in self.subscribedDriveIDs)
+								// Discover whose drives' root eTag has changed
+								@synchronized(strongSelf->_lastRootETagsByDriveID)
 								{
-									OCDrive *subscribedDrive;
-
-									if ((subscribedDrive = [self driveWithIdentifier:subscribedDriveID]) != nil)
+									for (OCDriveID subscribedDriveID in self.subscribedDriveIDs)
 									{
-										OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
+										OCDrive *subscribedDrive;
 
-										if ((lastETag == nil) || ![lastETag isEqual:subscribedDrive.gaDrive.eTag])
+										if ((subscribedDrive = [self driveWithIdentifier:subscribedDriveID]) != nil)
 										{
-											OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDrive.gaDrive.eTag, subscribedDrive);
+											OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
+											OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
 
-											foundChanges = YES;
-											[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+											if ((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag])
+											{
+												OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
 
-											strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDrive.gaDrive.eTag;
+												foundChanges = YES;
+												[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+
+												strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
+											}
 										}
 									}
 								}

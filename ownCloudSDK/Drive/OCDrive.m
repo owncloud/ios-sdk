@@ -57,13 +57,25 @@
 	return (![drive.identifier isEqual:_identifier] ||
 	 	![drive.type isEqual:_type] ||
 	 	![drive.name isEqual:_name] ||
-	 	![drive.davRootURL isEqual:_davRootURL]); 
-//	 	![drive.gaDrive.eTag isEqual:_gaDrive.eTag]);
+	 	![drive.davRootURL isEqual:_davRootURL] ||
+	 	(![drive.rootETag isEqual:self.rootETag] && (drive.rootETag != self.rootETag)));
 }
 
 - (OCLocation *)rootLocation
 {
 	return ([[OCLocation alloc] initWithDriveID:_identifier path:@"/"]);
+}
+
+- (OCFileETag)rootETag
+{
+	OCFileETag rootETag = _gaDrive.root.eTag;
+
+	if (rootETag == nil)
+	{
+		rootETag = _gaDrive.eTag;
+	}
+
+	return (rootETag);
 }
 
 #pragma mark - Secure coding

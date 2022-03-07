@@ -899,7 +899,7 @@
 			return;
 		}
 
-		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingIntoTable:OCDatabaseTableNameDrives rowValues:@{
+		[self.sqlDB executeQuery:[OCSQLiteQuery queryInsertingOrReplacingIntoTable:OCDatabaseTableNameDrives rowValues:@{
 			@"identifier" 	: drive.identifier,
 			@"type"		: drive.type,
 			@"name"		: drive.name,

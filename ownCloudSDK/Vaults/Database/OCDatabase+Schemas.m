@@ -980,21 +980,23 @@
 
 - (void)addOrUpdateDrivesSchema
 {
-	// Version 2
+	// All previous versions are purely development versions
+
+	// Version 3
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameDrives
-		version:2
+		version:3
 		creationQueries:@[
 			/*
 				rowID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
-				identifier : TEXT	- OCDriveID, identifier that identifies the drive
+				identifier : TEXT	- OCDriveID, identifier that identifies the drive (UNIQUE)
 				type : TEXT		- OCDriveType, type of drive
 				name : TEXT		- name of drive
 				davRootURL : TEXT	- dav root URL of drive
 				seed : INTEGER		- seed
 				driveData : BLOB	- archived OCDrive data
 			*/
-			@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
+			@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL UNIQUE, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
 
 			// Create index over identifier
 			@"CREATE INDEX idx_drives_identifier ON drives (identifier)" // relatedTo:OCDatabaseTableNameDrives
@@ -1010,7 +1012,7 @@
 				if (transactionError != nil) { return(transactionError); }
 
 				// Create new table
-				[db executeQuery:[OCSQLiteQuery query:@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)" resultHandler:resultHandler]];
+				[db executeQuery:[OCSQLiteQuery query:@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL UNIQUE, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)" resultHandler:resultHandler]];
 				if (transactionError != nil) { return(transactionError); }
 
 				return (transactionError);

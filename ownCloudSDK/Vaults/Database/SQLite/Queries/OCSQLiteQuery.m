@@ -93,7 +93,7 @@
 }
 
 #pragma mark - INSERT query builder
-+ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
++ (instancetype)_queryWith:(NSString *)statement intoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
 {
 	OCSQLiteQuery *query = nil;
 	NSUInteger rowValuesCount;
@@ -128,7 +128,7 @@
 			i++;
 		}];
 
-		sqlQuery = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, [columnNames componentsJoinedByString:@","], placeholdersString];
+		sqlQuery = [NSString stringWithFormat:@"%@ INTO %@ (%@) VALUES (%@)", statement, tableName, [columnNames componentsJoinedByString:@","], placeholdersString];
 
 		query = [self new];
 		query.sqlQuery = sqlQuery;
@@ -139,6 +139,16 @@
 	}
 
 	return (query);
+}
+
++ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
+{
+	return ([self _queryWith:@"INSERT" intoTable:tableName rowValues:rowValues resultHandler:resultHandler]);
+}
+
++ (instancetype)queryInsertingOrReplacingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
+{
+	return ([self _queryWith:@"INSERT OR REPLACE" intoTable:tableName rowValues:rowValues resultHandler:resultHandler]);
 }
 
 #pragma mark - UPDATE query builder

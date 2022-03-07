@@ -2017,17 +2017,24 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	@synchronized(_drives)
 	{
+		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d existing=%@ new=%@", doInitialize, _drives, drives);
+
 		if (doInitialize)
 		{
 			// Initialize from provided drives
+			[self willChangeValueForKey:@"drives"];
 			[_drives removeAllObjects];
-			[_drivesByID removeAllObjects];
-
 			[_drives addObjectsFromArray:drives];
+			[self didChangeValueForKey:@"drives"];
 
-			for (OCDrive *drive in drives)
+			[_drivesByID removeAllObjects];
+			@synchronized(_lastRootETagsByDriveID)
 			{
-				_drivesByID[drive.identifier] = drive;
+				for (OCDrive *drive in drives)
+				{
+					_drivesByID[drive.identifier] = drive;
+					_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
+				}
 			}
 		}
 		else
@@ -2076,15 +2083,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				}
 			}
 
+			// Update _drivesByID
+			[_drivesByID removeObjectsForKeys:removedDriveIDs];
+
 			// Update _drives
 			[self willChangeValueForKey:@"drives"];
 			[_drives removeAllObjects];
 			[_drives addObjectsFromArray:drives];
 			[self didChangeValueForKey:@"drives"];
-
-			// Update _drivesByID
-			[_drivesByID removeObjectsForKeys:removedDriveIDs];
 		}
+
+		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d now=%@, updated=%@, added=%@, removed=%@", doInitialize, _drives, updatedDrives, addedDrives, removedDrives);
 	}
 
 	// Notify about removed and added drives - outside of lock
