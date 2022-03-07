@@ -276,6 +276,48 @@
 	}
 }
 
+#pragma mark - Capabilities
+- (void)addCapability:(OCBookmarkCapability)capability
+{
+	if (capability == nil)
+	{
+		OCLogError(@"Attempt to add nil capability to bookmark %@", self);
+		return;
+	}
+
+	if (_capabilities == nil)
+	{
+		_capabilities = [[NSSet alloc] initWithObjects:capability, nil];
+	}
+	else
+	{
+		_capabilities = [_capabilities setByAddingObject:capability];
+	}
+}
+
+- (void)removeCapability:(OCBookmarkCapability)capability
+{
+	if (capability == nil)
+	{
+		OCLogError(@"Attempt to add nil capability to bookmark %@", self);
+		return;
+	}
+
+	if (_capabilities != nil)
+	{
+		NSMutableSet<OCBookmarkCapability> *capabilities = [_capabilities mutableCopy];
+
+		[capabilities removeObject:capability];
+
+		_capabilities = [_capabilities copy];
+	}
+}
+
+- (BOOL)hasCapability:(OCBookmarkCapability)capability
+{
+	return ([_capabilities containsObject:capability]);
+}
+
 #pragma mark - Certificate approval
 - (NSNotificationName)certificateUserApprovalUpdateNotificationName
 {
@@ -298,6 +340,8 @@
 	_url  = sourceBookmark.url;
 
 	_originURL = sourceBookmark.originURL;
+
+	_capabilities = sourceBookmark.capabilities;
 
 	_certificate = sourceBookmark.certificate;
 	_certificateModificationDate = sourceBookmark.certificateModificationDate;
@@ -341,6 +385,8 @@
 
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
+		_capabilities = [decoder decodeObjectOfClasses:[NSSet setWithObjects:NSSet.class, NSString.class, nil] forKey:@"capabilities"];
+
 		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
 		_certificateModificationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"certificateModificationDate"];
 
@@ -375,6 +421,8 @@
 
 	[coder encodeObject:_originURL forKey:@"originURL"];
 
+	[coder encodeObject:_capabilities forKey:@"capabilities"];
+
 	[coder encodeObject:_certificate forKey:@"certificate"];
 	[coder encodeObject:_certificateModificationDate forKey:@"certificateModificationDate"];
 
@@ -403,12 +451,13 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
 			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
 			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
 			((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
+			((_capabilities!=nil) ? [@", capabilities: " stringByAppendingString:_capabilities.description] : @""),
 			((_certificate!=nil) ? [@", certificate: " stringByAppendingString:_certificate.description] : @""),
 			((_certificateModificationDate!=nil) ? [@", certificateModificationDate: " stringByAppendingString:_certificateModificationDate.description] : @""),
 			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
@@ -465,6 +514,8 @@
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo = @"statusInfo";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creation";
+
+OCBookmarkCapability OCBookmarkCapabilityDrives = @"drives";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

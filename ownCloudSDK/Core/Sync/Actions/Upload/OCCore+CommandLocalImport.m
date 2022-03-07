@@ -71,6 +71,7 @@
 
 	placeholderItem.parentLocalID = parentItem.localID;
 	placeholderItem.parentFileID = parentItem.fileID;
+	placeholderItem.driveID = parentItem.driveID;
 	placeholderItem.path = [parentItem.path stringByAppendingPathComponent:newFileName];
 
 	// Move file into the vault for uploading

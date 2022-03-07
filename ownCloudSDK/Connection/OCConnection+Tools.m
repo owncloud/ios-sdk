@@ -75,7 +75,7 @@
 			}
 		}
 
-		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAVRoot])
 		{
 			OCDriveID driveID;
 
@@ -85,19 +85,22 @@
 
 				if ((drive = [self driveWithID:driveID]) == nil)
 				{
-					OCLogError(@"Path for WebDAV endpoint for driveID %@ could not be generated: unknown drive", driveID);
+					OCTLogError(@[@"Drives"], @"Path for WebDAV endpoint for driveID %@ could not be generated: unknown drive", driveID);
 					return (nil);
 				}
 
 				if (drive.davRootURL == nil)
 				{
-					OCLogError(@"Path for WebDAV endpoint for drive %@ could not be generated: unknown davRootURL", drive);
+					OCTLogError(@[@"Drives"], @"Path for WebDAV endpoint for drive %@ could not be generated: unknown davRootURL", drive);
 					return (nil);
 				}
 
 				url = drive.davRootURL;
 			}
+		}
 
+		if ([endpoint isEqualToString:OCConnectionEndpointIDWebDAV] && (options == nil))
+		{
 			// Ensure WebDAV endpoint path is slash-terminated
 			if (![url.absoluteString hasSuffix:@"/"])
 			{

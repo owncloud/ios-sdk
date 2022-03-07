@@ -280,6 +280,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_progressByLocalID = [NSMutableDictionary new];
 
+		_drives = [NSMutableArray new];
+		_drivesByID = [NSMutableDictionary new];
+		_lastRootETagsByDriveID = [NSMutableDictionary new];
+
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
 
@@ -486,6 +490,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncExecDone(retrieveDriveList);
 					}];
 				});
+
+				[self updateWithDrives:cachedDrives initialize:YES];
 
 				self->_connection.drives = cachedDrives;
 			}
@@ -1995,6 +2001,210 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			completionHandler(self, nil);
 		}
 	}];
+}
+
+#pragma mark - Drives
+- (BOOL)useDrives
+{
+	return (_connection.useDriveAPI);
+}
+
+- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize
+{
+	NSMutableArray<OCDrive *> *removedDrives = nil;
+	NSMutableArray<OCDrive *> *updatedDrives = nil;
+	NSMutableArray<OCDrive *> *addedDrives = nil;
+
+	@synchronized(_drives)
+	{
+		if (doInitialize)
+		{
+			// Initialize from provided drives
+			[_drives removeAllObjects];
+			[_drivesByID removeAllObjects];
+
+			[_drives addObjectsFromArray:drives];
+
+			for (OCDrive *drive in drives)
+			{
+				_drivesByID[drive.identifier] = drive;
+			}
+		}
+		else
+		{
+			// Find differences
+			NSMutableArray<OCDriveID> *removedDriveIDs = [[_drivesByID allKeys] mutableCopy];
+
+			for (OCDrive *drive in drives)
+			{
+				if (drive.identifier != nil)
+				{
+					OCDrive *existingDrive = nil;
+
+					if ((existingDrive = _drivesByID[drive.identifier]) == nil)
+					{
+						// New drive found
+						if (addedDrives == nil) { addedDrives = [NSMutableArray new]; }
+						[addedDrives addObject:drive];
+					}
+					else
+					{
+						// Existing drive found, remove it from list of removed drives
+						[removedDriveIDs removeObject:drive.identifier];
+
+						// Has drive changed substantially?
+						if ([existingDrive isSubstantiallyDifferentFrom:drive])
+						{
+							// If YES, add to list of updated drives
+							if (updatedDrives == nil) { updatedDrives = [NSMutableArray new]; }
+							[updatedDrives addObject:drive];
+						}
+					}
+				}
+
+				_drivesByID[drive.identifier] = drive;
+			}
+
+			for (OCDriveID removedDriveID in removedDriveIDs)
+			{
+				OCDrive *drive = nil;
+
+				if ((drive = _drivesByID[removedDriveID]) != nil)
+				{
+					if (removedDrives == nil) { removedDrives = [NSMutableArray new]; }
+					[removedDrives addObject:drive];
+				}
+			}
+
+			// Update _drives
+			[self willChangeValueForKey:@"drives"];
+			[_drives removeAllObjects];
+			[_drives addObjectsFromArray:drives];
+			[self didChangeValueForKey:@"drives"];
+
+			// Update _drivesByID
+			[_drivesByID removeObjectsForKeys:removedDriveIDs];
+		}
+	}
+
+	// Notify about removed and added drives - outside of lock
+	if ((addedDrives.count > 0) || (updatedDrives.count > 0) || (removedDrives.count > 0))
+	{
+		[self handleDriveAdditions:addedDrives updates:updatedDrives removals:removedDrives];
+	}
+}
+
+- (void)handleDriveAdditions:(NSArray<OCDrive *> *)addedDrives updates:(NSArray<OCDrive *> *)updatedDrives removals:(NSArray<OCDrive *> *)removedDrives
+{
+	__weak OCCore *weakSelf = self;
+
+	OCTLogDebug(@[@"Drives"], @"Updating database with addedDrives=%@, updatedDrives=%@, removedDrives=%@", addedDrives, updatedDrives, removedDrives);
+
+	// Update database
+	OCWaitInit(driveDBUpdates);
+	OCWaitWillStartTask(driveDBUpdates);
+
+	[self.database performBatchUpdates:^NSError *(OCDatabase *database) {
+		for (OCDrive *removedDrive in removedDrives)
+		{
+			[database removeDriveWithID:removedDrive.identifier includingMetadata:NO completionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil) {
+					OCWTLogWarning(@[@"Drives"], @"Error removing drive %@: %@", removedDrive, error);
+				}
+			}];
+		}
+
+		for (OCDrive *updatedDrive in updatedDrives)
+		{
+			[database updateDrive:updatedDrive completionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil) {
+					OCWTLogWarning(@[@"Drives"], @"Error updating drive %@: %@", updatedDrive, error);
+				}
+			}];
+		}
+
+		for (OCDrive *addedDrive in addedDrives)
+		{
+			[database addDrive:addedDrive completionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil) {
+					OCWTLogWarning(@[@"Drives"], @"Error adding drive %@: %@", addedDrive, error);
+				}
+			}];
+		}
+
+		return (nil);
+	} completionHandler:^(OCDatabase *db, NSError *error) {
+		OCWaitDidFinishTask(driveDBUpdates);
+	}];
+
+	OCWaitForCompletion(driveDBUpdates);
+
+	// Notifications
+	for (OCDrive *removedDrive in removedDrives)
+	{
+		[self driveRemoved:removedDrive];
+	}
+
+	for (OCDrive *updatedDrive in updatedDrives)
+	{
+		[self driveUpdated:updatedDrive];
+	}
+
+	for (OCDrive *addedDrive in addedDrives)
+	{
+		[self driveAdded:addedDrive];
+	}
+}
+
+- (void)driveAdded:(OCDrive *)drive
+{
+	OCTLogDebug(@[@"Drives"], @"Drive added: %@", drive);
+}
+
+- (void)driveUpdated:(OCDrive *)drive
+{
+	OCTLogDebug(@[@"Drives"], @"Drive updated: %@", drive);
+}
+
+- (void)driveRemoved:(OCDrive *)drive
+{
+	OCTLogDebug(@[@"Drives"], @"Drive removed: %@", drive);
+}
+
+- (void)subscribeToDrive:(OCDrive *)drive
+{
+
+}
+
+- (void)unsubscribeFromDrive:(OCDrive *)drive
+{
+
+}
+
+- (NSArray<OCDrive *> *)drives
+{
+	@synchronized (_drives)
+	{
+		return ([_drives copy]);
+	}
+}
+
+- (NSArray<OCDriveID> *)subscribedDriveIDs
+{
+	@synchronized(_drives)
+	{
+		return (_drivesByID.allKeys);
+	}
+}
+
+- (OCDrive *)driveWithIdentifier:(OCDriveID)driveID
+{
+	if (driveID == nil) { return (nil); }
+
+	@synchronized (_drives)
+	{
+		return (_drivesByID[driveID]);
+	}
 }
 
 #pragma mark - Indicating activity requiring the core

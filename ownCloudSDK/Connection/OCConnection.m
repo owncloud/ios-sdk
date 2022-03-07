@@ -1482,7 +1482,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 											{
 												if (self.useDriveAPI)
 												{
-													// Drives? Get a list.
+													// Drives
+													// Make sure drives capability is present in bookmark
+													if (![self.bookmark hasCapability:OCBookmarkCapabilityDrives])
+													{
+														[self.bookmark addCapability:OCBookmarkCapabilityDrives];
+													}
+
+													// Get a list of drives
 													[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
 														if (error!=nil)
 														{
@@ -1490,11 +1497,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 														}
 														else
 														{
-															if (drives.count > 0)
-															{
-																self.drives = drives;
-															}
-
 															connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
 
 															self.state = OCConnectionStateConnected;

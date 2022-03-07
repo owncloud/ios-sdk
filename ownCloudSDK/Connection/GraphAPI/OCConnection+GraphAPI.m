@@ -73,11 +73,6 @@
 	else
 	{
 		[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
-			if (drives.count > 0)
-			{
-				self.drives = drives;
-			}
-
 			completionHandler([self driveWithID:driveID]);
 		}];
 	}
@@ -105,6 +100,11 @@
 					{
 						[ocDrives addObject:ocDrive];
 					}
+				}
+
+				if (ocDrives.count > 0)
+				{
+					self.drives = ocDrives;
 				}
 			}
 		}

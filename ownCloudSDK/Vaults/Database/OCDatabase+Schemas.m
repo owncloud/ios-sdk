@@ -980,10 +980,10 @@
 
 - (void)addOrUpdateDrivesSchema
 {
-	// Version 1
+	// Version 2
 	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
 		schemaWithTableName:OCDatabaseTableNameDrives
-		version:1
+		version:2
 		creationQueries:@[
 			/*
 				rowID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
@@ -991,15 +991,33 @@
 				type : TEXT		- OCDriveType, type of drive
 				name : TEXT		- name of drive
 				davRootURL : TEXT	- dav root URL of drive
+				seed : INTEGER		- seed
 				driveData : BLOB	- archived OCDrive data
 			*/
-			@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, driveData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
+			@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
 
 			// Create index over identifier
 			@"CREATE INDEX idx_drives_identifier ON drives (identifier)" // relatedTo:OCDatabaseTableNameDrives
 		]
 		openStatements:nil
-		upgradeMigrator:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 15
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Drop old table
+				[db executeQuery:[OCSQLiteQuery query:@"DROP TABLE drives" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				// Create new table
+				[db executeQuery:[OCSQLiteQuery query:@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}
 	]];
 }
 

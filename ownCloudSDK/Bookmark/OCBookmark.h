@@ -34,6 +34,8 @@ typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 
 typedef NSString* OCBookmarkUserInfoKey NS_TYPED_ENUM;
 
+typedef NSString* OCBookmarkCapability NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCBookmark : NSObject <NSSecureCoding, NSCopying>
@@ -76,6 +78,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark; //!< Replaces all values in the receiving bookmark with those in the source bookmark.
 - (void)setLastUserName:(nullable NSString *)userName; //!< Replaces the internally stored fallback user name returned by .userName for when no authentication data is available.
 
+#pragma mark - Capabilities
+@property(strong,nullable,nonatomic) NSSet<OCBookmarkCapability> *capabilities;
+- (void)addCapability:(OCBookmarkCapability)capability;
+- (void)removeCapability:(OCBookmarkCapability)capability;
+- (BOOL)hasCapability:(OCBookmarkCapability)capability;
+
 #pragma mark - Certificate approval
 - (NSNotificationName)certificateUserApprovalUpdateNotificationName; //!< Notification that gets sent if the bookmark's certificate user-approved status changed
 - (void)postCertificateUserApprovalUpdateNotification; //!< Posts a .certificateUserApprovalUpdateNotificationName notification
@@ -85,6 +93,8 @@ NS_ASSUME_NONNULL_BEGIN
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo; //!<  .userInfo key with a NSDictionary holding the info from "status.php".
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation; //!<  .userInfo key with a NSDictionary holding information on the creation of the bookmark.
+
+extern OCBookmarkCapability OCBookmarkCapabilityDrives; //!< This bookmark is drive-based.
 
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 

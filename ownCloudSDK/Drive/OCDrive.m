@@ -20,6 +20,7 @@
 #import "GADrive.h"
 #import "GADriveItem.h"
 #import "OCMacros.h"
+#import "OCLocation.h"
 
 @implementation OCDrive
 
@@ -49,6 +50,20 @@
 + (instancetype)personalDrive
 {
 	return(nil);
+}
+
+- (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive
+{
+	return (![drive.identifier isEqual:_identifier] ||
+	 	![drive.type isEqual:_type] ||
+	 	![drive.name isEqual:_name] ||
+	 	![drive.davRootURL isEqual:_davRootURL]); 
+//	 	![drive.gaDrive.eTag isEqual:_gaDrive.eTag]);
+}
+
+- (OCLocation *)rootLocation
+{
+	return ([[OCLocation alloc] initWithDriveID:_identifier path:@"/"]);
 }
 
 #pragma mark - Secure coding

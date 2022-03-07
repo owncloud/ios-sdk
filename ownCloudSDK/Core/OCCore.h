@@ -236,6 +236,10 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSMutableArray <OCCertificate *> *_warnedCertificates;
 
+	NSMutableArray<OCDrive *> *_drives;
+	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
+	NSMutableDictionary<OCDriveID, OCFileETag> *_lastRootETagsByDriveID;
+
 	__weak id <OCCoreDelegate> _delegate;
 
 	NSNumber *_rootQuotaBytesRemaining;
@@ -326,6 +330,21 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
+
+#pragma mark - Drives
+@property(readonly,nonatomic) BOOL useDrives; //!< Returns YES if this account is drive-based (oCIS) rather than driven by a single WebDAV endpoint (OC10)
+
+- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize; //!< Updates the internal drive table with the provided drives
+
+- (void)driveAdded:(OCDrive *)drive; //!< Called when a new drive is discovered
+- (void)driveRemoved:(OCDrive *)drive; //!< Called when a drive is no longer included in the list of drives by the server
+
+- (void)subscribeToDrive:(OCDrive *)drive; //!< Subscribes to a drive. The metadata for subscribed drives are actively kept up-to-date. [TBD]
+- (void)unsubscribeFromDrive:(OCDrive *)drive; //!< Unsubscribe from a drive. Metadata + files may be kept around, but are not kept up-to-date. [TBD]
+
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *drives; //!< Returns all known drives.
+@property(strong,readonly,nonatomic) NSArray<OCDriveID> *subscribedDriveIDs; //!< Returns the OCDriveIDs of all drives the core is subscribed to.
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
 
 #pragma mark - Item usage
 - (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Registers that the item has been used by the user, updating the locally tracked OCItem.lastUsed date with the current date and time.

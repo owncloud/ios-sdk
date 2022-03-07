@@ -21,6 +21,7 @@
 #import "OCQuota.h"
 
 @class GADrive;
+@class OCLocation;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,8 +42,12 @@ typedef NSString *OCDriveType;
 
 @property(assign) OCSeed seed;
 
+@property(strong,nonatomic,readonly) OCLocation *rootLocation;
+
 + (instancetype)driveFromGADrive:(GADrive *)drive; //!< oCIS drive, initialized from a GADrive instance
 + (instancetype)personalDrive; //!< OC10 root folder drive
+
+- (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive;
 
 @end
 

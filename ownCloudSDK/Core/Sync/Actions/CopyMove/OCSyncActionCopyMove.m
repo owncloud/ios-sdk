@@ -83,6 +83,7 @@
 			// Set path and parent folder
 			placeholderItem.parentFileID = self.targetParentItem.fileID;
 			placeholderItem.parentLocalID = self.targetParentItem.localID;
+			placeholderItem.driveID = self.targetParentItem.driveID;
 			placeholderItem.path = targetPath;
 
 			// Copy actual file if it exists locally

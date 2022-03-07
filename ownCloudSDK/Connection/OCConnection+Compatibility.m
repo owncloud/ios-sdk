@@ -194,7 +194,7 @@
 
 - (BOOL)useDriveAPI
 {
-	return (self.capabilities.spacesEnabled.boolValue);
+	return (self.capabilities.spacesEnabled.boolValue || [self.bookmark hasCapability:OCBookmarkCapabilityDrives]);
 }
 
 #pragma mark - Checks

@@ -37,6 +37,8 @@
 #import "OCCoreUpdateScheduleRecord.h"
 #import "OCLockManager.h"
 #import "OCLockRequest.h"
+#import "OCConnection+GraphAPI.h"
+#import "GADrive.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -1290,10 +1292,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		{
 			if (strongSelf.state == OCCoreStateRunning)
 			{
-				OCEventTarget *eventTarget;
-
-				eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
-
 				NSDictionary<OCConnectionOptionKey,id> *options = nil;
 
 				if (nonCritical)
@@ -1303,7 +1301,65 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					};
 				}
 
-				[strongSelf.connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:options resultTarget:eventTarget];
+				if (self.useDrives)
+				{
+					[strongSelf.connection retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
+						[weakSelf queueBlock:^{
+							OCCore *strongSelf;
+
+							OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"New drive list: %@", drives);
+
+							if ((strongSelf = weakSelf) != nil)
+							{
+								BOOL foundChanges = NO;
+
+								[strongSelf updateWithDrives:drives initialize:NO];
+
+								for (OCDriveID subscribedDriveID in self.subscribedDriveIDs)
+								{
+									OCDrive *subscribedDrive;
+
+									if ((subscribedDrive = [self driveWithIdentifier:subscribedDriveID]) != nil)
+									{
+										OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
+
+										if ((lastETag == nil) || ![lastETag isEqual:subscribedDrive.gaDrive.eTag])
+										{
+											OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDrive.gaDrive.eTag, subscribedDrive);
+
+											foundChanges = YES;
+											[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+
+											strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDrive.gaDrive.eTag;
+										}
+									}
+								}
+
+								if (!foundChanges)
+								{
+									// No changes. We're done.
+									@synchronized(strongSelf->_scheduledDirectoryUpdateJobIDs)
+									{
+										if (strongSelf->_scheduledDirectoryUpdateJobActivity == nil)
+										{
+											[strongSelf _finishedUpdateScanWithError:nil foundChanges:NO];
+										}
+									}
+								}
+
+								// Schedule next
+								[self coordinatedScanForChangesDidFinish];
+							}
+						}];
+					}];
+				}
+				else
+				{
+					OCEventTarget *eventTarget;
+
+					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+					[strongSelf.connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:options resultTarget:eventTarget];
+				}
 			}
 		}
 	} inBackground:inBackground];
@@ -1547,11 +1603,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 #pragma mark - Update Scans
 - (void)scheduleUpdateScanForLocation:(OCLocation *)location waitForNextQueueCycle:(BOOL)waitForNextQueueCycle
 {
-	OCCoreDirectoryUpdateJob *updateScanPath;
+	OCCoreDirectoryUpdateJob *updateJob;
 
 	OCLogDebug(@"Scheduling scan for location=%@, waitForNextCycle: %d", location, waitForNextQueueCycle);
 
-	if ((updateScanPath = [OCCoreDirectoryUpdateJob withLocation:location]) != nil)
+	if ((updateJob = [OCCoreDirectoryUpdateJob withLocation:location]) != nil)
 	{
 		[self beginActivity:@"Scheduling update scan"];
 
@@ -1580,19 +1636,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				return;
 			}
 
-			[self.database addDirectoryUpdateJob:updateScanPath completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *scanPath) {
+			[self.database addDirectoryUpdateJob:updateJob completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *scanPath) {
 				if (error == nil)
 				{
 					if (waitForNextQueueCycle)
 					{
 						[self queueBlock:^{
-							[self _scheduleUpdateJob:updateScanPath];
+							[self _scheduleUpdateJob:updateJob];
 							doneSchedulingPendingDirectoryUpdateJob();
 						}];
 					}
 					else
 					{
-						[self _scheduleUpdateJob:updateScanPath];
+						[self _scheduleUpdateJob:updateJob];
 						doneSchedulingPendingDirectoryUpdateJob();
 					}
 				}
