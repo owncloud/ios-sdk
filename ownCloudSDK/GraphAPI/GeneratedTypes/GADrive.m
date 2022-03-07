@@ -43,6 +43,7 @@
 	GA_SET(createdByUser, GAUser, Nil);
 	GA_SET(lastModifiedByUser, GAUser, Nil);
 	GA_SET(driveType, NSString, Nil);
+	GA_SET(driveAlias, NSString, Nil);
 	GA_SET(owner, GAIdentitySet, Nil);
 	GA_SET(quota, GAQuota, Nil);
 	GA_SET(items, GADriveItem, NSArray.class);
@@ -75,6 +76,7 @@
 		_createdByUser = [decoder decodeObjectOfClass:GAUser.class forKey:@"createdByUser"];
 		_lastModifiedByUser = [decoder decodeObjectOfClass:GAUser.class forKey:@"lastModifiedByUser"];
 		_driveType = [decoder decodeObjectOfClass:NSString.class forKey:@"driveType"];
+		_driveAlias = [decoder decodeObjectOfClass:NSString.class forKey:@"driveAlias"];
 		_owner = [decoder decodeObjectOfClass:GAIdentitySet.class forKey:@"owner"];
 		_quota = [decoder decodeObjectOfClass:GAQuota.class forKey:@"quota"];
 		_items = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class.class, nil] forKey:@"items"];
@@ -101,6 +103,7 @@
 	[coder encodeObject:_createdByUser forKey:@"createdByUser"];
 	[coder encodeObject:_lastModifiedByUser forKey:@"lastModifiedByUser"];
 	[coder encodeObject:_driveType forKey:@"driveType"];
+	[coder encodeObject:_driveAlias forKey:@"driveAlias"];
 	[coder encodeObject:_owner forKey:@"owner"];
 	[coder encodeObject:_quota forKey:@"quota"];
 	[coder encodeObject:_items forKey:@"items"];
@@ -111,7 +114,7 @@
 // occgen: type debug description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_createdBy!=nil) ? [NSString stringWithFormat:@", createdBy: %@", _createdBy] : @""), ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_desc!=nil) ? [NSString stringWithFormat:@", desc: %@", _desc] : @""), ((_eTag!=nil) ? [NSString stringWithFormat:@", eTag: %@", _eTag] : @""), ((_lastModifiedBy!=nil) ? [NSString stringWithFormat:@", lastModifiedBy: %@", _lastModifiedBy] : @""), ((_lastModifiedDateTime!=nil) ? [NSString stringWithFormat:@", lastModifiedDateTime: %@", _lastModifiedDateTime] : @""), ((_name!=nil) ? [NSString stringWithFormat:@", name: %@", _name] : @""), ((_parentReference!=nil) ? [NSString stringWithFormat:@", parentReference: %@", _parentReference] : @""), ((_webUrl!=nil) ? [NSString stringWithFormat:@", webUrl: %@", _webUrl] : @""), ((_createdByUser!=nil) ? [NSString stringWithFormat:@", createdByUser: %@", _createdByUser] : @""), ((_lastModifiedByUser!=nil) ? [NSString stringWithFormat:@", lastModifiedByUser: %@", _lastModifiedByUser] : @""), ((_driveType!=nil) ? [NSString stringWithFormat:@", driveType: %@", _driveType] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_quota!=nil) ? [NSString stringWithFormat:@", quota: %@", _quota] : @""), ((_items!=nil) ? [NSString stringWithFormat:@", items: %@", _items] : @""), ((_root!=nil) ? [NSString stringWithFormat:@", root: %@", _root] : @""), ((_special!=nil) ? [NSString stringWithFormat:@", special: %@", _special] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_createdBy!=nil) ? [NSString stringWithFormat:@", createdBy: %@", _createdBy] : @""), ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_desc!=nil) ? [NSString stringWithFormat:@", desc: %@", _desc] : @""), ((_eTag!=nil) ? [NSString stringWithFormat:@", eTag: %@", _eTag] : @""), ((_lastModifiedBy!=nil) ? [NSString stringWithFormat:@", lastModifiedBy: %@", _lastModifiedBy] : @""), ((_lastModifiedDateTime!=nil) ? [NSString stringWithFormat:@", lastModifiedDateTime: %@", _lastModifiedDateTime] : @""), ((_name!=nil) ? [NSString stringWithFormat:@", name: %@", _name] : @""), ((_parentReference!=nil) ? [NSString stringWithFormat:@", parentReference: %@", _parentReference] : @""), ((_webUrl!=nil) ? [NSString stringWithFormat:@", webUrl: %@", _webUrl] : @""), ((_createdByUser!=nil) ? [NSString stringWithFormat:@", createdByUser: %@", _createdByUser] : @""), ((_lastModifiedByUser!=nil) ? [NSString stringWithFormat:@", lastModifiedByUser: %@", _lastModifiedByUser] : @""), ((_driveType!=nil) ? [NSString stringWithFormat:@", driveType: %@", _driveType] : @""), ((_driveAlias!=nil) ? [NSString stringWithFormat:@", driveAlias: %@", _driveAlias] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_quota!=nil) ? [NSString stringWithFormat:@", quota: %@", _quota] : @""), ((_items!=nil) ? [NSString stringWithFormat:@", items: %@", _items] : @""), ((_root!=nil) ? [NSString stringWithFormat:@", root: %@", _root] : @""), ((_special!=nil) ? [NSString stringWithFormat:@", special: %@", _special] : @"")]);
 }
 
 // occgen: type protected {"locked":true}

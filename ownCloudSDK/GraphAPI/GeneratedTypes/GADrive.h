@@ -44,6 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) GAUser *createdByUser; //!< Identity of the user who created the item. Read-only.
 @property(strong, nullable) GAUser *lastModifiedByUser; //!< Identity of the user who last modified the item. Read-only.
 @property(strong, nullable) OCDriveType driveType; //!< Describes the type of drive represented by this resource. Values are "personal" for users home spaces, "project", "virtual" or "share". Read-only.
+@property(strong, nullable) NSString *driveAlias; //!< "The drive alias can be used in clients to make the urls user friendly. Example: 'personal/einstein'. This will be used to resolve to the correct driveID."
 @property(strong, nullable) GAIdentitySet *owner;
 @property(strong, nullable) GAQuota *quota;
 @property(strong, nullable) NSArray<GADriveItem *> *items; //!< All items contained in the drive. Read-only. Nullable.
