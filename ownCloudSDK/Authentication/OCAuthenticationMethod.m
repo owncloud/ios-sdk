@@ -29,6 +29,8 @@
 
 @implementation OCAuthenticationMethod
 
+@synthesize cachedAuthenticationDataID = _cachedAuthenticationDataID;
+
 #pragma mark - Registration
 + (NSMutableSet <Class> *)_registeredAuthenticationMethodClasses
 {
@@ -210,6 +212,7 @@
 
 	if ((authHeaders = [self authorizationHeadersForConnection:connection error:&error]) != nil)
 	{
+		request.authenticationDataID = self.cachedAuthenticationDataID;
 		[request addHeaderFields:authHeaders];
 	}
 
@@ -219,6 +222,19 @@
 - (NSDictionary<NSString *, NSString *> *)authorizationHeadersForConnection:(OCConnection *)connection error:(NSError **)outError
 {
 	return (nil);
+}
+
+#pragma mark - Authentication Data ID computation
++ (nullable OCAuthenticationDataID)authenticationDataIDForAuthenticationData:(nullable NSData *)authenticationData
+{
+	OCAuthenticationDataID identifier = nil;
+
+	if (authenticationData != nil)
+	{
+		identifier = [[[authenticationData sha256Hash] sha1Hash] asHexStringWithSeparator:nil];
+	}
+
+	return (identifier);
 }
 
 #pragma mark - Generate bookmark authentication data
@@ -276,6 +292,7 @@
 	@synchronized(self)
 	{
 		_cachedAuthenticationSecret = nil;
+		_cachedAuthenticationDataID = nil;
 		[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
 		_authenticationDataKnownInvalidDate = nil;
 		[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];

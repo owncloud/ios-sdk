@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) OCHTTPRequestID requestID;			//!< The OCHTTPRequestID this is the response to
 
+@property(strong,nullable) OCAuthenticationDataID authenticationDataID;	//!< The ID of the authentication data that was used to authorize the request to which this is the response.
+
 @property(strong,nullable) NSDate *date; 			//!< The date this response was initially created (typically identical to the date the response was received)
 
 @property(strong,nullable) OCCertificate *certificate;		//!< The certificate served by the server
