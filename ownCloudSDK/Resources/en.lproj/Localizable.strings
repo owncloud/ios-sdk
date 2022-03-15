@@ -347,6 +347,12 @@
 // OCErrorLockInvalidated
 "Lock invalidated." = "Lock invalidated.";
 
+// OCErrorWebFingerLacksServerInstanceRelation
+"Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
+
+// OCErrorUnknownUser
+"Unknown user" = "Unknown user";
+
 // OCErrorResourceDoesNotExist
 "Resource does not exist." = "Resource does not exist.";
 

@@ -22,6 +22,7 @@
 #import "OCEvent.h"
 #import "OCAppIdentity.h"
 #import "OCResourceTextPlaceholder.h"
+#import "NSData+OCHash.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -131,6 +132,11 @@
 - (void)setAuthenticationData:(NSData *)authenticationData
 {
 	[self setAuthenticationData:authenticationData saveToKeychain:(_authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
+}
+
+- (OCAuthenticationDataID)authenticationDataID
+{
+	return ([OCAuthenticationMethod authenticationDataIDForAuthenticationData:self.authenticationData]);
 }
 
 - (void)setAuthenticationData:(NSData *)authenticationData saveToKeychain:(BOOL)saveToKeychain
@@ -337,6 +343,8 @@
 		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
 		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];
 
+		_serverLocationUserName = [decoder decodeObjectOfClass:NSString.class forKey:@"serverLocationUserName"];
+
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
 		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
@@ -368,6 +376,8 @@
 
 	[coder encodeObject:_name forKey:@"name"];
 	[coder encodeObject:_url forKey:@"url"];
+
+	[coder encodeObject:_serverLocationUserName forKey:@"serverLocationUserName"];
 
 	[coder encodeObject:_originURL forKey:@"originURL"];
 

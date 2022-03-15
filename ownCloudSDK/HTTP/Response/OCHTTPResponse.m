@@ -44,6 +44,7 @@
 	if ((self = [self init]) != nil)
 	{
 		_requestID = request.identifier;
+		_authenticationDataID = request.authenticationDataID;
 		_httpError = error;
 	}
 
@@ -222,6 +223,8 @@
 	{
 		_requestID			= [decoder decodeObjectOfClass:[NSString class] forKey:@"requestID"];
 
+		_authenticationDataID		= [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationDataID"];
+
 		_date				= [decoder decodeObjectOfClass:[NSString class] forKey:@"date"];
 
 		_certificate 			= [decoder decodeObjectOfClass:[OCCertificate class] forKey:@"certificate"];
@@ -249,6 +252,8 @@
 {
 	[coder encodeObject:_requestID 				forKey:@"requestID"];
 
+	[coder encodeObject:_authenticationDataID		forKey:@"authenticationDataID"];
+
 	[coder encodeObject:_date 				forKey:@"date"];
 
 	[coder encodeObject:_certificate 			forKey:@"certificate"];
@@ -268,6 +273,5 @@
 	[coder encodeObject:_error				forKey:@"error"];
 	[coder encodeObject:_httpError				forKey:@"httpError"];
 }
-
 
 @end

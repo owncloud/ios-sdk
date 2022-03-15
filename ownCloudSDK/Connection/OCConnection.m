@@ -3188,6 +3188,8 @@ OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
 OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
 
+OCConnectionSetupOptionKey OCConnectionSetupOptionUserName = @"user-name";
+
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 
 OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";

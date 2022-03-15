@@ -49,13 +49,20 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
 @property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
+@property(strong,nullable) NSString *serverLocationUserName; //!< User name to use for server location
+
 @property(strong,nullable,nonatomic) id<OCViewProvider> avatar; //!< Object that can provide a view to display the avatar of the user
+
+@property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData. Use .user.userName instead if possible.
+@property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
+@property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
 @property(strong,nullable) OCCertificate *certificate; //!< Certificate last used by the server this bookmark refers to
 @property(strong,nullable) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
 
 @property(strong,nullable) OCAuthenticationMethodIdentifier authenticationMethodIdentifier; //!< Identifies the authentication method to use
 @property(strong,nonatomic,nullable) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.
+@property(readonly,nonatomic,nullable) OCAuthenticationDataID authenticationDataID; //!< Unique ID of the currently set authentication data. Backed by .authenticationData.
 @property(assign,nonatomic) OCBookmarkAuthenticationDataStorage authenticationDataStorage; //! Determines where to store authenticationData. Keychain by default. Changing the storage copies the data from the old to the new storage.
 @property(strong,nullable) NSDate *authenticationValidationDate; //!< The date that the authenticationData was last known to be in valid state (typically changed when editing/creating bookmarks, used to f.ex. automatically handle sync issues predating that date).
 

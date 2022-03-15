@@ -115,6 +115,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorLockInvalidated, //!< Lock invalidated.
 
+	OCErrorWebFingerLacksServerInstanceRelation, //!< Web finger response lacks server instance relation.
+	OCErrorUnknownUser, //!< Unknown user
+
 	OCErrorResourceDoesNotExist //!< Resource does not exist
 };
 
