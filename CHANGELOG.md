@@ -18,7 +18,7 @@
 	- add .user property, storing the last retrieved version of OCConnection.loggedInUser
 	- use .user property to compose WebDAV endpoint path (fixing https://github.com/owncloud/enterprise/issues/4924 )
 - OCChecksumAlgorithm: add convenience method to use OCChecksumAlgorithms for checksum calculations on NSData objects
-- Adding support for webfinger
+- Server Locator: allow locating the actual server for a user via webfinger or lookup table
 - OCCore+CommandLocalModification: no longer handle failure of -startAccessingSecurityScopedResource as an error, as that may indicate the inputFileURL is not actually security scoped, not that the file can't be accessed. Fixes enterprise#4934.
 
 ## 11.8.1 version
