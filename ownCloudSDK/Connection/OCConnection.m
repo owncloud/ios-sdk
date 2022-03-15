@@ -1451,8 +1451,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 											self.loggedInUser = loggedInUser;
 
 											// Update bookmark.userDisplayName if it has changed
-											if ((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName])
+											if ((((loggedInUser.displayName != nil) && ![loggedInUser.displayName isEqual:self.bookmark.userDisplayName]) ||
+											    (![loggedInUser isEqual:self.bookmark.user])) && (error == nil))
 											{
+												self.bookmark.user = loggedInUser;
 												self.bookmark.userDisplayName = loggedInUser.displayName;
 
 												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
@@ -3181,6 +3183,8 @@ OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"tempora
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
 OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
+
+OCConnectionSetupOptionKey OCConnectionSetupOptionUserName = @"user-name";
 
 OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailable";
 

@@ -90,7 +90,7 @@
 		return;
 	}
 
-	dispatch_async([OCChecksumAlgorithm computationQueue], ^{
+	dispatch_async(OCChecksumAlgorithm.computationQueue, ^{
 		NSInputStream *inputStream;
 		NSError *error = nil;
 		OCChecksum *checksum = nil;
@@ -143,6 +143,21 @@
 	[self computeChecksumForFileAtURL:fileURL completionHandler:^(NSError *error, OCChecksum *computedChecksum) {
 		completionHandler(error, [computedChecksum isEqual:checksum], computedChecksum);
 	}];
+}
+
+- (OCChecksum *)computeChecksumForData:(NSData *)data error:(NSError **)error
+{
+	NSInputStream *inputStream;
+
+	if (data != nil)
+	{
+		if ((inputStream = [NSInputStream inputStreamWithData:data]) != nil)
+		{
+			return ([self computeChecksumForInputStream:inputStream error:error]);
+		}
+	}
+
+	return (nil);
 }
 
 #pragma mark - Algorithm implementation

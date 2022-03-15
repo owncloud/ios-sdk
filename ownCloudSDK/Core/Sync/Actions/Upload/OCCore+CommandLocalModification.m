@@ -35,6 +35,7 @@
 	    ((temporaryFileURL = [self availableTemporaryURLAlongsideItem:item fileName:NULL]) != nil))
 	{
 		BOOL proceed = YES;
+		BOOL relinquishSecurityScopedResourceAccess = NO;
 
 		// Use itemFileURL if no inputFileURL was provided
 		if (inputFileURL == nil)
@@ -45,7 +46,7 @@
 		// Copy file into the vault for uploading
 		if (isSecurityScoped)
 		{
-			proceed = [inputFileURL startAccessingSecurityScopedResource];
+			relinquishSecurityScopedResourceAccess = [inputFileURL startAccessingSecurityScopedResource];
 		}
 
 		if (proceed)
@@ -93,7 +94,7 @@
 				}
 			}
 
-			if (isSecurityScoped)
+			if (relinquishSecurityScopedResourceAccess)
 			{
 				[inputFileURL stopAccessingSecurityScopedResource];
 			}

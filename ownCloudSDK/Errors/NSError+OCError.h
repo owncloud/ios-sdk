@@ -113,7 +113,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorAuthorizationCantOpenCustomSchemeURL, //!< Can't open authorization URL with custom scheme.
 
-	OCErrorLockInvalidated //!< Lock invalidated.
+	OCErrorLockInvalidated, //!< Lock invalidated.
+
+	OCErrorWebFingerLacksServerInstanceRelation, //!< Web finger response lacks server instance relation.
+	OCErrorUnknownUser //!< Unknown user
 };
 
 @class OCIssue;

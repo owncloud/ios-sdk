@@ -738,6 +738,10 @@
       {
         "description" : "Redirect any request without cookies to a cookie-setting endpoint, where cookies are set - and then redirect back.",
         "value" : "simple-apm"
+      },
+      {
+        "description" : "Responds to all .well-known\/webfinger requests with server-instance responses.",
+        "value" : "web-finger"
       }
     ],
     "status" : "debugOnly",
@@ -1081,6 +1085,42 @@
     "label" : "measurements.enabled",
     "status" : "debugOnly",
     "type" : "bool"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Connection",
+    "categoryTag" : "connection",
+    "classIdentifier" : "server-locator",
+    "className" : "OCServerLocator",
+    "description" : "Lookup table that maps users to server URLs",
+    "flatIdentifier" : "server-locator.lookup-table",
+    "key" : "lookup-table",
+    "label" : "server-locator.lookup-table",
+    "status" : "advanced",
+    "type" : "dictionary"
+  },
+  {
+    "autoExpansion" : "none",
+    "category" : "Connection",
+    "categoryTag" : "connection",
+    "classIdentifier" : "server-locator",
+    "className" : "OCServerLocator",
+    "description" : "Use Server Locator",
+    "flatIdentifier" : "server-locator.use",
+    "key" : "use",
+    "label" : "server-locator.use",
+    "possibleValues" : [
+      {
+        "description" : "Locate server via lookup table. Keys can match against the beginning (f.ex. \"begins:bob@\"), end (f.ex. \"ends:@owncloud.org\") or regular expression (f.ex. \"regexp:\")",
+        "value" : "lookup-table"
+      },
+      {
+        "description" : "Locate server via Webfinger service-instance relation (http:\/\/webfinger.owncloud\/rel\/server-instance) using the entered\/provided server URL",
+        "value" : "web-finger"
+      }
+    ],
+    "status" : "advanced",
+    "type" : "string"
   },
   {
     "autoExpansion" : "none",

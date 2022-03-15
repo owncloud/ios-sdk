@@ -322,19 +322,34 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Generate bookmark authentication data
 - (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
 {
-// 	** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
-//	** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
-//
-//	NSString *username;
-//
-//	if ((username = connection.bookmark.userName) != nil)
-//	{
-//		NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
-//
-//		mutableParameters[@"user"] = username;
-//
-//		return (mutableParameters);
-//	}
+	// ** Implementation for OC OAuth2 - commented out because ASWebAuthenticationSession and Safari crash (in Simulator and iOS device - 14.2.1) **
+	// ** Test URL: https://demo.owncloud.com/index.php/apps/oauth2/authorize?response_type=code&redirect_uri=oc://ios.owncloud.com&client_id=mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1&user=test **
+
+	// Limited to iOS 15+, because with previous server and iOS versions, providing the user name
+	// led to a crash in ASWebAuthenticationSession and Safari in Simulator + on device (see above).
+	// Successfully tested with iOS 15.1 and ownCloud 10.8.0.4.
+	if (@available(iOS 15.1, *))
+	{
+		NSString *username;
+
+		// From options: used with webfinger server locator
+		username = options[OCAuthenticationMethodUsernameKey];
+
+		// From bookmark: used for re-authentication
+		if (username == nil)
+		{
+			username = connection.bookmark.userName;
+		}
+
+		if (username != nil)
+		{
+			NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+
+			mutableParameters[@"user"] = username;
+
+			return (mutableParameters);
+		}
+	}
 
 	return (parameters);
 }
@@ -540,6 +555,7 @@ OCAuthenticationMethodAutoRegister
 	
 	if ((authenticationData = connection.bookmark.authenticationData) != nil)
 	{
+		_cachedAuthenticationDataID = [self.class authenticationDataIDForAuthenticationData:authenticationData];
 		return ([NSPropertyListSerialization propertyListWithData:authenticationData options:NSPropertyListImmutable format:NULL error:NULL]);
 	}
 	
@@ -563,6 +579,7 @@ OCAuthenticationMethodAutoRegister
 		NSTimeInterval timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
 		NSTimeInterval preemtiveRefreshThreshold = 0;
 		NSNumber *expiresInSeconds = [authSecret valueForKeyPath:OA2ExpirationTimePeriod];
+		BOOL preemtiveTokenRenewal = NO;
 
 		if (expiresInSeconds.integerValue > (OA2RefreshSafetyMarginInSeconds + 20))
 		{
@@ -575,10 +592,28 @@ OCAuthenticationMethodAutoRegister
 			preemtiveRefreshThreshold = 0;
 		}
 
-		// Get a new token up to OA2RefreshSafetyMarginInSeconds seconds before the old one expires
-		if ((timeLeftUntilExpiration < preemtiveRefreshThreshold) || _receivedUnauthorizedResponse)
+		// Get a new token up to OA2RefreshSafetyMarginInSeconds seconds before the old one expires - or when an unauthorized response was received
+		preemtiveTokenRenewal = (timeLeftUntilExpiration < preemtiveRefreshThreshold);
+
+		if (preemtiveTokenRenewal)
 		{
-			OCLogDebug(@"OAuth2 token expired %@ (%@ secs) - refreshing token for connection..", authSecret[OA2ExpirationDate], authSecret[OA2ExpirationTimePeriod]);
+			// Ensure there wasn't a token refresh in the meantime we didn't get notified about (yet)
+			// - flush cached secret
+			[self flushCachedAuthenticationSecret];
+
+			// - load secret from keychain
+			if ((authSecret = [self cachedAuthenticationSecretForConnection:connection]) != nil)
+			{
+				timeLeftUntilExpiration = [((NSDate *)[authSecret valueForKeyPath:OA2ExpirationDate]) timeIntervalSinceNow];
+
+				// - check preemtive condition again
+				preemtiveTokenRenewal = (timeLeftUntilExpiration < preemtiveRefreshThreshold);
+			}
+		}
+
+		if (preemtiveTokenRenewal || _receivedUnauthorizedResponse)
+		{
+			OCLogDebug(@"OAuth2 token expired (reason: %d:%d, date: %@, timeout period: %@ secs) - refreshing token for connection..", preemtiveTokenRenewal, _receivedUnauthorizedResponse, authSecret[OA2ExpirationDate], authSecret[OA2ExpirationTimePeriod]);
 			[self _refreshTokenForConnection:connection availabilityHandler:availabilityHandler];
 
 			return (NO);
@@ -601,18 +636,33 @@ OCAuthenticationMethodAutoRegister
 	{
 		if (response.status.code == OCHTTPStatusCodeUNAUTHORIZED)
 		{
-			// Token invalid. Attempt token refresh. If that fails, too, the token has become invalid and an error should be issued to the user.
-			if (!_receivedUnauthorizedResponse)
+			// Check if the token has changed between sending the request and receiving the response
+			if (OCNANotEqual(response.authenticationDataID, connection.bookmark.authenticationDataID))
 			{
-				// Unexpected 401 response - request a retry that'll also invoke canSendAuthenticatedRequestsForConnection:withAvailabilityHandler:
-				// which will attempt a token refresh
-				_receivedUnauthorizedResponse = YES;
-				OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d (known invalid %@)", _tokenRefreshFollowingUnauthorizedResponseFailed, self.authenticationDataKnownInvalidDate);
-			}
+				// Force reload of secret from authentication data
+				[self flushCachedAuthenticationSecret];
 
-			if (!_tokenRefreshFollowingUnauthorizedResponseFailed)
-			{
+				// Reschedule the request
 				error = OCError(OCErrorAuthorizationRetry);
+
+				OCLogWarning(@"Received UNAUTHORIZED response to a request with an outdated token. Retrying request to %@ with latest token.", request.url.absoluteString);
+			}
+			else
+			{
+				// Token unchanged and probably invalid.
+				// => Attempt token refresh. If that fails, too, the token has become invalid and an error should be issued to the user.
+				if (!_receivedUnauthorizedResponse)
+				{
+					// Unexpected 401 response - request a retry that'll also invoke canSendAuthenticatedRequestsForConnection:withAvailabilityHandler:
+					// which will attempt a token refresh
+					_receivedUnauthorizedResponse = YES;
+					OCLogError(@"Received unexpected UNAUTHORIZED response. tokenRefreshFollowingUnauthorizedResponseFailed=%d (known invalid %@)", _tokenRefreshFollowingUnauthorizedResponseFailed, self.authenticationDataKnownInvalidDate);
+				}
+
+				if (!_tokenRefreshFollowingUnauthorizedResponseFailed)
+				{
+					error = OCError(OCErrorAuthorizationRetry);
+				}
 			}
 		}
 

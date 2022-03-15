@@ -1,3 +1,26 @@
+## 11.9 version
+- Authentication: new type OCAuthenticationDataID
+	- an ID that's unique for every OCBookmark.authenticationData and changes when the authenticationData is changed
+	- is attached to OCHTTPRequests and OCHTTPResponses, allowing to determine if a request's "Authorization" is based on a different token
+- OCHTTPRequest / OCHTTPResponse
+	- add authenticationDataID property
+	- added counter to logged "Authorization" header fields that allow to determine if its contents was changed between requests
+	- the counter issues a new number for every new and not previously used header field contents
+	- initial idea was to log the OCAuthenticationDataID, but that could have given hints to its content
+- OCAuthenticationMethodOAuth2 / OCAuthenticationMethodOIDC:
+	- add support for authenticationDataID
+	- in case of preemptive token renewals, now reloads the secret from keychain and performs another date check before triggering a refresh
+	- used OCAuthenticationDataID to reschedule/resend HTTP requests that were responded to with a 401 status code and that was sent with another (older) token
+- OCAuthenticationMethodBasicAuth
+	- store authenticationDataID when loading secret
+- OCBookmark
+	- add .authenticationDataID property that returns the OCAuthenticationDataID for the bookmark's authenticationData
+	- add .user property, storing the last retrieved version of OCConnection.loggedInUser
+	- use .user property to compose WebDAV endpoint path (fixing https://github.com/owncloud/enterprise/issues/4924 )
+- OCChecksumAlgorithm: add convenience method to use OCChecksumAlgorithms for checksum calculations on NSData objects
+- Server Locator: allow locating the actual server for a user via webfinger or lookup table
+- OCCore+CommandLocalModification: no longer handle failure of -startAccessingSecurityScopedResource as an error, as that may indicate the inputFileURL is not actually security scoped, not that the file can't be accessed. Fixes enterprise#4934.
+
 ## 11.8.1 version
 - OCSQL: add collation support via new OCSQLiteCollation class, making it as simple as possible to encapsulate and add collations, avoiding string format conversions (i.e. UTF-8 <-> UTF-16) where possible
 - OCSQL: add collation OCSQLiteCollationLocalized (OCLOCALIZED) for "Finder-like" sorting

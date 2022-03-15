@@ -80,6 +80,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 @property(strong,nonatomic) NSData *bodyData;		//!< The HTTP body to send (as body data). Ignored / overwritten if .method is POST and .parameters has key-value pairs.
 @property(strong) NSURL *bodyURL;			//!< The HTTP body to send (from a file). Ignored if .method is POST and .parameters has key-value pairs.
 
+@property(strong) OCAuthenticationDataID authenticationDataID; //!< The ID of the authentication data that was used for the authentication parts of the request.
+
 @property(assign,nonatomic) OCHTTPRequestRedirectPolicy redirectPolicy; //!< Controls redirect handling for this request. Defaults to OCHTTPRequestRedirectPolicyDefault.
 @property(assign,nonatomic) NSUInteger maximumRedirectionDepth; //!< Maximum number of redirects to follow before failing. Defaults to 5.
 @property(strong,nonatomic) NSArray<NSURL *> *redirectionHistory; //!< URLs visited during redirection, starting with the original URL.

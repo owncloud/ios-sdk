@@ -344,6 +344,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorLockInvalidated:
 					unlocalizedString = @"Lock invalidated.";
 				break;
+
+				case OCErrorWebFingerLacksServerInstanceRelation:
+					unlocalizedString = @"Web finger response lacks server instance relation.";
+				break;
+
+				case OCErrorUnknownUser:
+					unlocalizedString = @"Unknown user";
+				break;
 			}
 		}
 	}

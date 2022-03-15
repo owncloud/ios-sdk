@@ -21,6 +21,7 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
 #import "OCAppIdentity.h"
+#import "NSData+OCHash.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -127,6 +128,11 @@
 - (void)setAuthenticationData:(NSData *)authenticationData
 {
 	[self setAuthenticationData:authenticationData saveToKeychain:(_authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
+}
+
+- (OCAuthenticationDataID)authenticationDataID
+{
+	return ([OCAuthenticationMethod authenticationDataIDForAuthenticationData:self.authenticationData]);
 }
 
 - (void)setAuthenticationData:(NSData *)authenticationData saveToKeychain:(BOOL)saveToKeychain
@@ -269,6 +275,8 @@
 		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
 		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];
 
+		_serverLocationUserName = [decoder decodeObjectOfClass:NSString.class forKey:@"serverLocationUserName"];
+
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
 		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
@@ -282,6 +290,7 @@
 		_lastUsername = [decoder decodeObjectOfClass:NSString.class forKey:@"lastUsername"];
 
 		_userDisplayName = [decoder decodeObjectOfClass:NSString.class forKey:@"userDisplayName"];
+		_user = [decoder decodeObjectOfClass:OCUser.class forKey:@"user"];
 
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
@@ -298,6 +307,8 @@
 	[coder encodeObject:_name forKey:@"name"];
 	[coder encodeObject:_url forKey:@"url"];
 
+	[coder encodeObject:_serverLocationUserName forKey:@"serverLocationUserName"];
+
 	[coder encodeObject:_originURL forKey:@"originURL"];
 
 	[coder encodeObject:_certificate forKey:@"certificate"];
@@ -311,6 +322,7 @@
 	[coder encodeObject:_lastUsername forKey:@"lastUsername"];
 
 	[coder encodeObject:_userDisplayName forKey:@"userDisplayName"];
+	[coder encodeObject:_user forKey:@"user"];
 
 	if (_userInfo.count > 0)
 	{
@@ -325,7 +337,7 @@
 {
 	NSData *authData = self.authenticationData;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
 			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
 			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
 			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
@@ -337,6 +349,7 @@
 			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
 			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
 			((_userDisplayName!=nil) ? [@", userDisplayName: " stringByAppendingString:_userDisplayName] : @""),
+			((_user!=nil) ? [@", user: " stringByAppendingString:_user.description] : @""),
 			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
 		]);
 }

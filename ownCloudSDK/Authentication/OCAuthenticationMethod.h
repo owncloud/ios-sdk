@@ -30,6 +30,7 @@ typedef NSString* OCAuthenticationMethodIdentifier NS_TYPED_EXTENSIBLE_ENUM; //!
 typedef NSString* OCAuthenticationMethodKey NS_TYPED_ENUM; //!< NSString key used in the options dictionary used to generate the authentication data for a bookmark.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions; //!< Dictionary with options used to generate the authentication data for a bookmark. F.ex. passwords or the view controller to attach own UI to.
 typedef NSDictionary<OCAuthenticationMethodKey,id>* OCAuthenticationMethodDetectionOptions; //!< Dictionary with options used to detect available authentication methods
+typedef NSString* OCAuthenticationDataID; //!< String that's unique for a particular authenticationData. (format not detailed)
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -44,6 +45,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 @interface OCAuthenticationMethod : NSObject <OCLogTagging, OCClassSettingsSupport>
 {
 	NSDate *_authenticationDataKnownInvalidDate;
+	OCAuthenticationDataID _cachedAuthenticationDataID;
 
 	@private
 	id _cachedAuthenticationSecret;
@@ -72,6 +74,9 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 + (nullable NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection; //!< Provides a list of URLs whose content is needed to determine whether this authentication method is supported
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler; //!< Detects authentication method support using collected responses (for URL provided by -detectionRequestsForConnection:) and then returns result via the completionHandler.
 
+#pragma mark - Authentication Data ID computation
++ (nullable OCAuthenticationDataID)authenticationDataIDForAuthenticationData:(nullable NSData *)data; //!< Returns the OCAuthenticationDataID for the passed authenticationData (usually from OCBookmark).
+
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
 - (void)authenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Authenticates the connection.
 - (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler; //!< Deauthenticates the connection.
@@ -86,6 +91,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 #pragma mark - Authentication Secret Caching
 - (nullable id)cachedAuthenticationSecretForConnection:(OCConnection *)connection; //!< Method that allows an authentication method to cache a secret in memory. If none is present in memory, -loadCachedAuthenticationSecretForConnection: is called.
 - (nullable id)loadCachedAuthenticationSecretForConnection:(OCConnection *)connection; //!< Called by -cachedAuthenticationSecretForConnection: if no authentication secret is stored in memory. Should retrieve and return the authentication secret for the connection.
+@property(readonly,strong,nullable) OCAuthenticationDataID cachedAuthenticationDataID; //!< Returns the authentication data ID for the currently cached auth secret
 - (void)flushCachedAuthenticationSecret; //!< Flushes the cached authentication secret. Called f.ex. if the device is locked or the user switches to another app.
 
 #pragma mark - Wait for authentication
