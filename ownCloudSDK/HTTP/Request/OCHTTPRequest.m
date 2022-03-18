@@ -281,8 +281,14 @@
 - (NSMutableURLRequest *)generateURLRequest
 {
 	NSMutableURLRequest *urlRequest;
-	
-	if ((urlRequest = [[NSMutableURLRequest alloc] initWithURL:self.effectiveURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]) != nil)
+	NSTimeInterval timeoutInterval = 60;
+
+	if (self.customTimeout != nil)
+	{
+		timeoutInterval = self.customTimeout.doubleValue;
+	}
+
+	if ((urlRequest = [[NSMutableURLRequest alloc] initWithURL:self.effectiveURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:timeoutInterval]) != nil)
 	{
 		// Apply method
 		urlRequest.HTTPMethod = self.method;
@@ -589,6 +595,8 @@
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
 		self.userInfo	 	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
+		self.customTimeout	= [decoder decodeObjectOfClass:NSNumber.class forKey:@"customTimeout"];
+
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
 
@@ -643,6 +651,8 @@
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];
+
+	[coder encodeObject:_customTimeout	forKey:@"customTimeout"];
 
 	[coder encodeFloat:_priority 		forKey:@"priority"];
 	[coder encodeObject:_groupID 		forKey:@"groupID"];

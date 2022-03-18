@@ -1802,6 +1802,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			davRequest.downloadRequest = YES;
 			davRequest.priority = NSURLSessionTaskPriorityHigh;
 			davRequest.forceCertificateDecisionDelegation = YES;
+			if (depth == OCPropfindDepthInfinity)
+			{
+				// Extend timeout to 5 minutes for infinite PROPFIND
+				davRequest.customTimeout =  @(5 * 60.0);
+			}
 
 			if (options[OCConnectionOptionRequestObserverKey] != nil)
 			{
