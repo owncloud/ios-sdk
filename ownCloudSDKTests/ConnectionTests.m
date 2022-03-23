@@ -520,7 +520,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
@@ -569,7 +569,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:[OCLocation legacyRootPath:@"/Photos"] depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at /Photos: %@", items);
 
 				for (OCItem *item in items)
@@ -658,7 +658,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/Photos" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:[OCLocation legacyRootPath:@"/Photos"] depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at /Photos: %@", items);
 				OCItem *downloadItem = nil;
 
@@ -731,7 +731,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
@@ -799,7 +799,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/Photos" depth:1 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtLocation:[OCLocation legacyRootPath:@"/Photos"] depth:1 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCLog(@"Items at /Photos: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 				XCTAssert(event.result!=nil);
@@ -844,7 +844,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at /: %@", items);
 				OCItem *rootItem = nil;
 
@@ -914,7 +914,7 @@
 		{
 			// connection.bookmark.url = [NSURL URLWithString:@"https://owncloud-io.lan/"];
 
-			[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 				OCLog(@"Items at root: %@", items);
 
 				XCTAssert((error==nil), @"No error");
@@ -1092,7 +1092,7 @@
 
 		if (error == nil)
 		{
-			[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+			[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 				OCItem *rootFolder = ((NSArray <OCItem *> *)event.result).firstObject;
 
 				for (NSUInteger i=0; i < scheduleCount; i++)
@@ -1123,14 +1123,14 @@
 								}
 							}
 
-							[connection retrieveItemListAtPath:@"/" depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+							[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 								OCLog(@"Items at /: %@, Error: %@", items, error);
 
 								XCTAssert(items.count > 0);
 								XCTAssert(items.firstObject.eTag != nil);
 							}];
 
-							[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+							[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 								OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 								XCTAssert(event.result!=nil);
@@ -1144,7 +1144,7 @@
 						} userInfo:nil ephermalUserInfo:nil]];
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[connection retrieveItemListAtPath:@"/" depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
+					[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent *event, id sender) {
 						OCLog(@"Item at /: %@, Error: %@, Path: %@, Depth: %ld", event.result, event.error, event.path, event.depth);
 
 						XCTAssert(event.result!=nil);
@@ -1166,7 +1166,7 @@
 						}
 					} userInfo:nil ephermalUserInfo:nil]];
 
-					[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+					[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 						OCLog(@"Items at /: %@, Error: %@", items, error);
 
 						XCTAssert(items.count > 0);

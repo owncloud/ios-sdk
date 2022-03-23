@@ -257,7 +257,6 @@
 	user.displayName = @"Display Name";
 	user.userName = @"userName";
 	user.emailAddress = @"em@il.address";
-	user.avatarData = [NSData data];
 
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -274,7 +273,6 @@
 	XCTAssert([deserializedUser.displayName isEqual:user.displayName]);
 	XCTAssert([deserializedUser.userName isEqual:user.userName]);
 	XCTAssert([deserializedUser.emailAddress isEqual:user.emailAddress]);
-	XCTAssert([deserializedUser.avatarData isEqual:user.avatarData]);
 }
 
 #pragma mark - OCHTTPStatus

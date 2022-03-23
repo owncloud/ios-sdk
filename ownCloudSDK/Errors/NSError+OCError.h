@@ -123,7 +123,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorInvalidType, //!< Invalid type
 	OCErrorRequiredValueMissing, //!< Required value missing
 
-	OCErrorGraphError //!< Generic graph error
+	OCErrorGraphError, //!< Generic graph error
+
+	OCErrorDataItemTypeUnavailable, //!< Object does not return DataItemType.
+	OCErrorDataConverterUnavailable	//!< No data converter available for conversion.
 };
 
 @class OCIssue;

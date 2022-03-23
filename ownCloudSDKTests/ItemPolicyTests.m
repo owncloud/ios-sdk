@@ -53,7 +53,7 @@
 			}];
 		};
 
-		OCQuery *query = [OCQuery queryForPath:@"/"];
+		OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 
 		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 			if (query.state == OCQueryStateIdle)
@@ -122,7 +122,7 @@
 						{
 							folderItem = item;
 
-							folderQuery = [OCQuery queryForPath:folderItem.path];
+							folderQuery = [OCQuery queryForLocation:folderItem.location];
 
 							folderQuery.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 								if (query.state == OCQueryStateIdle)

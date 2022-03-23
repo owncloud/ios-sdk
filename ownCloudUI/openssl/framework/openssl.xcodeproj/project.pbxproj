@@ -410,7 +410,7 @@
 		DC309494205749EA00189B9A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1230;
+				LastUpgradeCheck = 1330;
 				ORGANIZATIONNAME = "ownCloud GmbH";
 				TargetAttributes = {
 					DC30949C205749EA00189B9A = {

@@ -365,6 +365,12 @@
 // OCErrorGraphError
 "Generic graph error." = "Generic graph error.";
 
+// OCErrorDataItemTypeUnavailable
+"Object does not return DataItemType." = "Object does not return DataItemType.";
+
+// OCErrorDataConverterUnavailable
+"No data converter available for conversion." = "No data converter available for conversion.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

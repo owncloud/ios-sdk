@@ -1328,7 +1328,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 											OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
 											OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
 
-											if ((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag])
+											if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
+											    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
 											{
 												OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
 

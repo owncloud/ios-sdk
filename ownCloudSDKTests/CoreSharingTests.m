@@ -31,7 +31,7 @@
 	__block XCTestExpectation *expectReceiveSecondResults = [self expectationWithDescription:@"Receipt of second results"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	__block OCRecipientSearchController *searchController;
 
 	__weak CoreSharingTests *weakSelf = self;
@@ -163,7 +163,7 @@
 	__block XCTestExpectation *expectShareQuerySubItemsLosesNewShare = [self expectationWithDescription:@"shareQuerySubitems loses new share"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
 	NSString *initialName = NSUUID.UUID.UUIDString, *updatedName= NSUUID.UUID.UUIDString;
 	__block OCShare *createdShare = nil;
@@ -345,7 +345,7 @@
 
 					[core startQuery:shareQuery];
 
-					[core createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
+					[core createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
 						OCLogDebug(@"Created share: %@, error: %@", newShare, error);
 
 						XCTAssert(error == nil);
@@ -394,7 +394,7 @@
 	__block XCTestExpectation *expectInitialShareQueryResults = [self expectationWithDescription:@"Initial share query results"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
 	NSString *initialName = NSUUID.UUID.UUIDString;
 	__block OCShare *createdShare = nil;
@@ -434,7 +434,7 @@
 
 				if (shareItem != nil)
 				{
-					[core createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
+					[core createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
 						OCLogDebug(@"Created share: %@, error: %@", newShare, error);
 
 						XCTAssert(error == nil);
@@ -491,7 +491,7 @@
 	__block XCTestExpectation *expectUpdatedShareQueryResults = [self expectationWithDescription:@"Updated share query results"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
 	NSString *initialName = NSUUID.UUID.UUIDString, *secondName = NSUUID.UUID.UUIDString;
 	__block OCShare *createdShare = nil;
@@ -548,7 +548,7 @@
 
 				if (shareItem != nil)
 				{
-					[core createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
+					[core createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
 						OCLogDebug(@"Created share: %@, error: %@", newShare, error);
 
 						XCTAssert(error == nil);
@@ -566,7 +566,7 @@
 								[expectInitialShareQueryResults fulfill];
 								expectInitialShareQueryResults = nil;
 
-								[core.connection createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:secondName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+								[core.connection createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:secondName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 									createdSecondShare = (OCShare *)event.result;
 
 									[core reloadQuery:query]; // Reload query so that the core gets to compare existing results with fresh results and include the second created one
@@ -626,7 +626,7 @@
 	__block XCTestExpectation *expectUpdatedShareQueryResults = [self expectationWithDescription:@"Updated share query results"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
 	NSString *initialName = NSUUID.UUID.UUIDString, *secondName = NSUUID.UUID.UUIDString;
 	__block OCShare *createdShare = nil;
@@ -666,7 +666,7 @@
 
 				if (shareItem != nil)
 				{
-					[core createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
+					[core createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
 						OCLogDebug(@"Created share: %@, error: %@", newShare, error);
 
 						XCTAssert(error == nil);
@@ -738,7 +738,7 @@
 	__block XCTestExpectation *expectInitialPopulationHandlerCall = [self expectationWithDescription:@"Initial population handler called"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	OCShareQuery *shareQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
 	NSString *initialName = NSUUID.UUID.UUIDString;
 	__block OCShare *createdShare = nil;
@@ -816,7 +816,7 @@
 
 						XCTAssert(query.queryResults.count == 0);
 
-						[core.connection createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+						[core.connection createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 							createdShare = (OCShare *)event.result;
 
 							OCLogDebug(@"Created share: %@, error: %@", createdShare, error);
@@ -851,7 +851,7 @@
 	__block OCCore *core = nil;
 
 	[remoteConnection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
-		[remoteConnection createShare:[OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:[OCTestTarget.userLogin stringByAppendingFormat:@"@%@", OCTestTarget.userBookmark.url.host] displayName:nil]] path:@"/Photos/" permissions:OCSharePermissionsMaskRead expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+		[remoteConnection createShare:[OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:[OCTestTarget.userLogin stringByAppendingFormat:@"@%@", OCTestTarget.userBookmark.url.host] displayName:nil]] location:[OCLocation legacyRootPath:@"/Photos/"] permissions:OCSharePermissionsMaskRead expiration:nil] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			XCTAssert(event.error == nil);
 			XCTAssert(event.result != nil);
 
@@ -958,7 +958,7 @@
 	__block XCTestExpectation *expectLinkShareDisappear = [self expectationWithDescription:@"Link share disappeared"];
 
 	OCCore *core = [[OCCore alloc] initWithBookmark:OCTestTarget.userBookmark];
-	OCQuery *query = [OCQuery queryForPath:@"/"];
+	OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	NSString *initialName = NSUUID.UUID.UUIDString;
 
 	__block OCItem *shareItem = nil;
@@ -987,7 +987,7 @@
 								XCTAssert(((shareItem.shareTypesMask & OCShareTypesMaskLink) == 0), @"Item %@ on test server may not already be shared by a link", item);
 							}
 
-							[core createShare:[OCShare shareWithPublicLinkToPath:shareItem.path linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
+							[core createShare:[OCShare shareWithPublicLinkToLocation:shareItem.location linkName:initialName permissions:OCSharePermissionsMaskRead password:nil expiration:nil] options:nil completionHandler:^(NSError * _Nullable error, OCShare * _Nullable newShare) {
 								XCTAssert(error == nil);
 								XCTAssert(newShare != nil);
 
@@ -1065,7 +1065,7 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 			[expectLists fulfill];
 
 			testItemSelector(connection, items, ^(OCItem *item) {
@@ -1152,7 +1152,7 @@
 		{
 			if ((item.type == OCItemTypeCollection) && (item.privateLink == nil) && !item.isRoot)
 			{
-				[connection retrieveItemListAtPath:item.path depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *subItems) {
+				[connection retrieveItemListAtLocation:item.location depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *subItems) {
 					for (OCItem *item in subItems)
 					{
 						if ((item.type == OCItemTypeFile) && (item.privateLink == nil))

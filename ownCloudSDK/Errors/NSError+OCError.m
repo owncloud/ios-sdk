@@ -368,6 +368,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorGraphError:
 					unlocalizedString = @"Generic graph error.";
 				break;
+
+				case OCErrorDataItemTypeUnavailable:
+					unlocalizedString = @"Object does not return DataItemType.";
+				break;
+
+				case OCErrorDataConverterUnavailable:
+					unlocalizedString = @"No data converter available for conversion.";
+				break;
 			}
 		}
 	}

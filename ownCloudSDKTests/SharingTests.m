@@ -35,8 +35,8 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			OCShare *createShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *createShare = [OCShare shareWithPublicLinkToLocation:items[1].location linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
 
 			[expectList fulfill];
 
@@ -50,7 +50,7 @@
 
 				XCTAssert([createShare.name 		isEqual:newShare.name]);
 				XCTAssert(createShare.permissions 	== newShare.permissions);
-				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+				XCTAssert([createShare.itemLocation 	isEqual:newShare.itemLocation]);
 
 				XCTAssert(newShare.url != nil);
 				XCTAssert(newShare.token != nil);
@@ -78,7 +78,7 @@
 					XCTAssert([share.token 		isEqual:newShare.token]);
 					XCTAssert([share.creationDate 	isEqual:newShare.creationDate]);
 					XCTAssert([share.expirationDate isEqual:newShare.expirationDate]);
-					XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
+					XCTAssert([share.itemLocation 	isEqual:newShare.itemLocation]);
 
 					[expectSingleShareRetrieved fulfill];
 
@@ -106,7 +106,7 @@
 									XCTAssert([share.token 		isEqual:newShare.token]);
 									XCTAssert([share.creationDate 	isEqual:newShare.creationDate]);
 									XCTAssert([share.expirationDate isEqual:newShare.expirationDate]);
-									XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
+									XCTAssert([share.itemLocation 	isEqual:newShare.itemLocation]);
 								}
 							}
 
@@ -153,11 +153,11 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			OCShare *passwordLessShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:nil expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *passwordLessShare = [OCShare shareWithPublicLinkToLocation:items[1].location linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:nil expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
 			XCTAssert(!passwordLessShare.protectedByPassword);
 
-			OCShare *createShare = [OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
+			OCShare *createShare = [OCShare shareWithPublicLinkToLocation:items[1].location linkName:@"iOS SDK CI Share" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]];
 			XCTAssert(createShare.protectedByPassword);
 
 			[expectList fulfill];
@@ -172,7 +172,7 @@
 
 				XCTAssert([createShare.name 		isEqual:newShare.name]);
 				XCTAssert(createShare.permissions 	== newShare.permissions);
-				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+				XCTAssert([createShare.itemLocation 	isEqual:newShare.itemLocation]);
 
 				XCTAssert(newShare.url != nil);
 				XCTAssert(newShare.token != nil);
@@ -218,7 +218,7 @@
 							#warning Temporarily removed due to https://github.com/owncloud/core/issues/35541
 							XCTAssert(!share.protectedByPassword);
 							XCTAssert(share.expirationDate.timeIntervalSinceNow >= (24*60*60*12));
-							XCTAssert([share.itemPath 	isEqual:newShare.itemPath]);
+							XCTAssert([share.itemLocation 	isEqual:newShare.itemLocation]);
 
 							[connection deleteShare:newShare resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 								OCLogDebug(@"deleteShare: error=%@", event.error);
@@ -271,11 +271,11 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 			OCItem *shareItem = items.lastObject;
 			OCItem *rootItem = items.firstObject;
 
-			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] path:shareItem.path permissions:OCSharePermissionsMaskRead expiration:nil];
+			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] location:shareItem.location permissions:OCSharePermissionsMaskRead expiration:nil];
 
 			[expectList fulfill];
 
@@ -292,7 +292,7 @@
 				XCTAssert(!createShare.recipient.user.isRemote);
 				XCTAssert(createShare.recipient.user.isRemote == newShare.recipient.user.isRemote);
 				XCTAssert(createShare.permissions 	== newShare.permissions);
-				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+				XCTAssert([createShare.itemLocation 	isEqual:newShare.itemLocation]);
 
 				XCTAssert(newShare.token == nil);
 				XCTAssert(newShare.creationDate != nil);
@@ -459,11 +459,11 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 			OCItem *shareItem = items.lastObject;
 			OCItem *rootItem = items.firstObject;
 
-			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] path:shareItem.path permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare expiration:nil];
+			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] location:shareItem.location permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare expiration:nil];
 
 			[expectList fulfill];
 
@@ -480,7 +480,7 @@
 				XCTAssert(!createShare.recipient.user.isRemote);
 				XCTAssert(createShare.recipient.user.isRemote == newShare.recipient.user.isRemote);
 				XCTAssert(createShare.permissions 	== newShare.permissions);
-				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+				XCTAssert([createShare.itemLocation 	isEqual:newShare.itemLocation]);
 
 				XCTAssert(newShare.token == nil);
 				XCTAssert(newShare.creationDate != nil);
@@ -527,7 +527,7 @@
 									{
 										[expectRecipientSharesContainNewShare fulfill];
 
-										OCShare *createReshare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.demoLogin displayName:nil]] path:share.itemPath permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare expiration:nil];
+										OCShare *createReshare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.demoLogin displayName:nil]] location:share.itemLocation permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare expiration:nil];
 
 										[recipientConnection createShare:createReshare options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 											OCShare *newReshare = (OCShare *)event.result;
@@ -652,8 +652,8 @@
 
 		NSString *remoteUserIDFull = [remoteUser stringByAppendingFormat:@"@%@", remoteHost];
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:remoteUserIDFull displayName:nil]] path:items[1].path permissions:OCSharePermissionsMaskRead expiration:nil];
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			OCShare *createShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:remoteUserIDFull displayName:nil]] location:items[1].location permissions:OCSharePermissionsMaskRead expiration:nil];
 
 			[expectList fulfill];
 
@@ -673,7 +673,7 @@
 				XCTAssert([createShare.recipient.user.remoteUserName isEqual:remoteUser]);
 				XCTAssert([createShare.recipient.user.remoteHost isEqual:remoteHost]);
 				XCTAssert(createShare.permissions 	== newShare.permissions);
-				XCTAssert([createShare.itemPath 	isEqual:newShare.itemPath]);
+				XCTAssert([createShare.itemLocation 	isEqual:newShare.itemLocation]);
 
 				XCTAssert(newShare.token != nil);
 				XCTAssert(newShare.creationDate != nil);
@@ -804,14 +804,14 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 
 			dispatch_group_t waitForCompletion = dispatch_group_create();
 
 //			OCItem *shareItem = items.lastObject;
 			OCItem *rootItem = items.firstObject;
 
-			OCShare *createRootShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] path:rootItem.path permissions:OCSharePermissionsMaskRead expiration:nil];
+			OCShare *createRootShare = [OCShare shareWithRecipient:[OCIdentity identityWithUser:[OCUser userWithUserName:OCTestTarget.userLogin displayName:nil]] location:rootItem.location permissions:OCSharePermissionsMaskRead expiration:nil];
 
 			[expectList fulfill];
 
@@ -872,13 +872,13 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-			[connection createShare:[OCShare shareWithPublicLinkToPath:items[1].path linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+			[connection createShare:[OCShare shareWithPublicLinkToLocation:items[1].location linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 				OCLog(@"error=%@, newShare=%@", event.error, event.result);
 
 				[expectShareCreated fulfill];
 
-				[connection retrieveItemListAtPath:@"/Documents/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[connection retrieveItemListAtLocation:[OCLocation legacyRootPath:@"/Documents/"] depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					[expectLists fulfill];
 
 					if (error == nil)
@@ -1039,7 +1039,7 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 			NSString *folderName = [@"Test+" stringByAppendingString:[NSDate new].description];
 
 			[expectLists fulfill];
@@ -1054,7 +1054,7 @@
 
 				[expectFolderCreated fulfill];
 
-				[connection createShare:[OCShare shareWithPublicLinkToPath:newFolderItem.path linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+				[connection createShare:[OCShare shareWithPublicLinkToLocation:newFolderItem.location linkName:@"iOS SDK CI" permissions:OCSharePermissionsMaskRead password:@"test" expiration:[NSDate dateWithTimeIntervalSinceNow:24*60*60 * 2]] options:nil resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 					OCLog(@"error=%@, newShare=%@", event.error, event.result);
 
 					XCTAssert(event.error == nil);
@@ -1100,7 +1100,7 @@
 		XCTAssert(error==nil);
 		XCTAssert(issue==nil);
 
-		[connection retrieveItemListAtPath:@"/" depth:1 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+		[connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:1 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 			[expectLists fulfill];
 
 			for (OCItem *item in items)
