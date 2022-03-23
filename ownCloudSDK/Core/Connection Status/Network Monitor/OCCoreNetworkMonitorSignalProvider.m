@@ -86,6 +86,8 @@
 
 		self.shortDescription = shortDescription;
 		self.state = state;
+
+		OCTLogDebug(@[@"NetworkAvailability"], @"Reachable signal changed to %lu (%@)", (unsigned long)state, shortDescription);
 	}
 }
 

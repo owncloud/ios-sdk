@@ -31,6 +31,7 @@
 #import "OCMacros.h"
 #import "OCLockManager.h"
 #import "OCLockRequest.h"
+#import "NSError+OCNetworkFailure.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -740,9 +741,13 @@ OCAuthenticationMethodAutoRegister
 					else
 					{
 						// Did not receive update
-						[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
-						self->_authenticationDataKnownInvalidDate = [NSDate new];
-						[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+						if ((error == nil) || ((error != nil) && !error.isNetworkFailureError))
+						{
+							// Not a network failure, either, so handle as actual error refreshing the token
+							[self willChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+							self->_authenticationDataKnownInvalidDate = [NSDate new];
+							[self didChangeValueForKey:@"authenticationDataKnownInvalidDate"];
+						}
 					}
 
 					if (self->_receivedUnauthorizedResponse)
