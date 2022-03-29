@@ -1,3 +1,8 @@
+## 11.9.1 version
+- OCAuthenticationMethodOAuth2/OIDC: no longer treat network errors during token refresh as permanently failed refresh
+- OCHostSimulator: add auth-race-condition host simulator, to test handling of race conditions in Authorization
+- OCNetworkMonitor / OCCoreNetworkMonitorSignalProvider: add logging
+
 ## 11.9 version
 - Authentication: new type OCAuthenticationDataID
 	- an ID that's unique for every OCBookmark.authenticationData and changes when the authenticationData is changed

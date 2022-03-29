@@ -82,6 +82,8 @@
 
 					weakSelf.isExpensive = nw_path_is_expensive(path); // Cellular data or tethered connection
 
+					OCWTLogDebug(@[@"NetworkAvailability"], @"Network availability changed to available=%d, isCellularConnection=%d, isWifiOrEthernetConnection=%d", weakSelf.networkAvailable, weakSelf.isCellularConnection, weakSelf.isWifiOrEthernetConnection);
+
 					// Post local notification
 					[NSNotificationCenter.defaultCenter postNotificationName:OCNetworkMonitorStatusChangedNotification object:self];
 				});

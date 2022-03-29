@@ -30,6 +30,7 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @
 static OCHostSimulationIdentifier OCHostSimulationIdentifierSimpleAPM = @"simple-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"recovering-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-finger";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierAuthRaceCondition = @"auth-race-condition";
 
 @implementation OCHostSimulator (BuiltIn)
 
@@ -75,6 +76,13 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-fi
 		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
 	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self webFingerSimulator]);
+	}]];
+
+	// AuthRaceCondition
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierAuthRaceCondition locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self authRaceConditionSimulator]);
 	}]];
 }
 
@@ -262,6 +270,46 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-fi
 			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:statusCode headers:nil contentType:@"application/jrd+json" bodyData:[NSJSONSerialization dataWithJSONObject:jsonResponseDict options:NSJSONWritingPrettyPrinted error:NULL]]);
 
 			return (YES);
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
+}
+
+#pragma mark - Auth Race Condition Simulator
++ (instancetype)authRaceConditionSimulator
+{
+	OCHostSimulator *hostSimulator;
+
+	NSMutableSet<NSString *> *disruptedAuthHeaders = [NSMutableSet new];
+	__block NSUInteger requestCounter = 0;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		NSString *authorizationHeader = request.headerFields[@"Authorization"];
+		NSString *invalidAuthContent = @"INVALID";
+
+		if ((authorizationHeader != nil) && ![authorizationHeader isEqual:invalidAuthContent] && ![disruptedAuthHeaders containsObject:authorizationHeader])
+		{
+			requestCounter++;
+
+			if (requestCounter < 5)
+			{
+				request.headerFields[@"Authorization"] = invalidAuthContent;
+				request.authenticationDataID = invalidAuthContent;
+
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeUNAUTHORIZED headers:nil contentType:@"text/html" bodyData:nil]);
+
+				return (YES);
+			}
+			else
+			{
+				[disruptedAuthHeaders addObject:authorizationHeader];
+			}
 		}
 
 		return (NO);
