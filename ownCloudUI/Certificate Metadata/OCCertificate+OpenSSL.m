@@ -77,7 +77,7 @@
 	return (string);
 }
 
-- (NSString *)_hexStringFromBigNum:(BIGNUM *)asn1BigNum
+- (NSString *)_hexStringFromBigNum:(const BIGNUM *)asn1BigNum
 {
 	char *bigNumHexString;
 	NSString *hexString = nil;
@@ -148,7 +148,7 @@
 	return (metaData);
 }
 
-- (NSString *)_nameForAlgorithm:(ASN1_OBJECT *)algorithm
+- (NSString *)_nameForAlgorithm:(const ASN1_OBJECT *)algorithm
 {
 	int pkeySignatureAlgorithmNID;
 	NSString *algorithmName = nil;
@@ -204,270 +204,254 @@
 
 - (NSDictionary<OCCertificateMetadataKey, id> *)metaDataWithError:(NSError **)error
 {
-	NSMutableDictionary<OCCertificateMetadataKey, id> *metaData = nil;
-	NSData *x509Data = self.certificateData;
-	BOOL certificateParsable = NO;
-
-	[[self class] _initializeOpenSSL];
-
-	if (x509Data !=  nil)
-	{
-		X509 *x509Cert = NULL;
-		const unsigned char *p_x509Data = [x509Data bytes];
-
-		if ((x509Cert = d2i_X509(NULL, &p_x509Data, x509Data.length)) != NULL)
-		{
-			certificateParsable = YES;
-
-			if ((metaData = [NSMutableDictionary new]) != nil)
-			{
-				X509_NAME *x509Name;
-				ASN1_INTEGER *asn1SerialNumber;
-				ASN1_TIME *asn1Time;
-
-				// Parse subject
-				if ((x509Name = X509_get_subject_name(x509Cert)) != NULL)
-				{
-					NSDictionary<OCCertificateMetadataKey, id> *subjectMetaData;
-
-					if ((subjectMetaData = [self _keyValuePairsForX509Name:x509Name]) != nil)
-					{
-						metaData[OCCertificateMetadataSubjectKey] = subjectMetaData;
-					}
-				}
-
-				// Parse issuer
-				if ((x509Name = X509_get_issuer_name(x509Cert)) != NULL)
-				{
-					NSDictionary<OCCertificateMetadataKey, id> *issuerMetaData;
-
-					if ((issuerMetaData = [self _keyValuePairsForX509Name:x509Name]) != nil)
-					{
-						metaData[OCCertificateMetadataIssuerKey] = issuerMetaData;
-					}
-				}
-
-				// Version
-				metaData[OCCertificateMetadataVersionKey] = @(X509_get_version(x509Cert)+1);
-
-				// Serial Number
-				if ((asn1SerialNumber = X509_get_serialNumber(x509Cert)) != NULL)
-				{
-					metaData[OCCertificateMetadataSerialNumberKey] = [self _hexStringFromASN1Integer:asn1SerialNumber];
-				}
-
-				// Certificate Signature Algorithm
-				if ((x509Cert->cert_info!=NULL) && (x509Cert->cert_info->signature!=NULL) && (x509Cert->cert_info->signature->algorithm!=NULL))
-				{
-					NSString *algorithmName;
-
-					if ((algorithmName = [self _nameForAlgorithm:x509Cert->cert_info->signature->algorithm]) != nil)
-					{
-						metaData[OCCertificateMetadataSignatureAlgorithmKey] = algorithmName;
-					}
-				}
-
-				// Public Key
-				if ((x509Cert->cert_info!=NULL) && (x509Cert->cert_info->key!=NULL))
-				{
-					NSMutableDictionary <NSString *, id> *publicKeyDict = [NSMutableDictionary new];
-
-					// Public Key Signature Algorithm
-					if ((x509Cert->cert_info->key->algor!=NULL) && (x509Cert->cert_info->key->algor->algorithm!=NULL))
-					{
-						NSString *algorithmName;
-
-						if ((algorithmName = [self _nameForAlgorithm:x509Cert->cert_info->key->algor->algorithm]) != nil)
-						{
-							publicKeyDict[OCCertificateMetadataSignatureAlgorithmKey] = algorithmName;
-						}
-					}
-
-					// Key bytes
-					EVP_PKEY *evpPKey;
-
-					if ((evpPKey = X509_get_pubkey(x509Cert)) != NULL)
-					{
-						BIO *bio;
-
-						if ((bio = BIO_new(BIO_s_mem())) != NULL)
-						{
-							switch (EVP_PKEY_base_id(evpPKey))
-							{
-								case EVP_PKEY_RSA: {
-									RSA *rsa;
-
-									if ((rsa = EVP_PKEY_get1_RSA(evpPKey)) != NULL)
-									{
-										if (rsa->e != NULL)
-										{
-											publicKeyDict[OCCertificateMetadataKeyExponentKey] = @(BN_get_word(rsa->e)); // Exponent
-										}
-
-										if (rsa->n != NULL)
-										{
-											publicKeyDict[OCCertificateMetadataKeyBytesKey] = [self _hexStringFromBigNum:rsa->n]; // Modulus
-										}
-
-										publicKeyDict[OCCertificateMetadataKeySizeInBitsKey] = @(RSA_size(rsa)*8); // Key size in bits
-									}
-								}
-								break;
-
-								case EVP_PKEY_DSA:
-								case EVP_PKEY_DH:
-								case EVP_PKEY_EC:
-								default: {
-
-									if (EVP_PKEY_print_public(bio, evpPKey, 0, NULL) > 0)
-									{
-										long availableBytes;
-										char *p_bytes = NULL;
-
-										BIO_flush(bio);
-
-										if ((availableBytes = BIO_get_mem_data(bio, &p_bytes)) > 0)
-										{
-											if (p_bytes != NULL)
-											{
-												publicKeyDict[OCCertificateMetadataKeyInformationKey] = [[NSString alloc] initWithBytes:(const void *)p_bytes length:availableBytes encoding:NSUTF8StringEncoding];
-											}
-										}
-									}
-								}
-								break;
-							}
-
-							BIO_free(bio);
-						}
-
-						EVP_PKEY_free(evpPKey);
-					}
-
-					// Save content to metaData
-					if (publicKeyDict.count > 0)
-					{
-						metaData[OCCertificateMetadataPublicKeyKey] = publicKeyDict;
-					}
-				}
-
-				if ((x509Cert->cert_info!=NULL) && (x509Cert->cert_info->validity!=NULL))
-				{
-					// Validity from
-					if ((asn1Time = X509_get_notBefore(x509Cert)) != NULL)
-					{
-						NSString *iso8601DateString;
-
-						if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
-						{
-							metaData[OCCertificateMetadataValidFromKey] = iso8601DateString;
-						}
-					}
-
-					// Validity until
-					if ((asn1Time = X509_get_notAfter(x509Cert)) != NULL)
-					{
-						NSString *iso8601DateString;
-
-						if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
-						{
-							metaData[OCCertificateMetadataValidUntilKey] = iso8601DateString;
-						}
-					}
-				}
-
-				// Extensions
-				if ((x509Cert->cert_info!=NULL) && (x509Cert->cert_info->extensions!=NULL))
-				{
-					STACK_OF(X509_EXTENSION) *x509Extensions = x509Cert->cert_info->extensions;
-					long numOfExtensions;
-
-					if ((numOfExtensions = sk_X509_EXTENSION_num(x509Extensions)) > 0)
-					{
-						NSMutableArray <NSDictionary<NSString*,NSString*> *> *extensions = [NSMutableArray new];
-
-						for (int i=0; i<numOfExtensions; i++)
-						{
-							X509_EXTENSION *x509Extension;
-
-							if ((x509Extension = sk_X509_EXTENSION_value(x509Extensions, i)) != NULL)
-							{
-								int extensionNID;
-								const char *extensionNameBuffer;
-								const char *extensionIdentifierBuffer;
-
-								extensionNID = OBJ_obj2nid(x509Extension->object);
-								extensionNameBuffer = OBJ_nid2ln(extensionNID);
-								extensionIdentifierBuffer = OBJ_nid2sn(extensionNID);
-
-								NSString *extensionInfo = nil;
-								NSString *extensionName = [NSString stringWithCString:extensionNameBuffer encoding:NSUTF8StringEncoding];
-								NSString *extensionIdentifier = [NSString stringWithCString:extensionIdentifierBuffer encoding:NSUTF8StringEncoding];
-
-								switch (extensionNID)
-								{
-									case NID_subject_alt_name:
-
-									// break;
-
-									default: {
-										BIO *bio;
-
-										if ((bio = BIO_new(BIO_s_mem())) != NULL)
-										{
-											if (X509V3_EXT_print(bio, x509Extension, 0, 0) != 0)
-											{
-												long availableBytes;
-												char *p_bytes = NULL;
-
-												BIO_flush(bio);
-
-												if ((availableBytes = BIO_get_mem_data(bio, &p_bytes)) != 0)
-												{
-													extensionInfo = [[[NSString alloc] initWithBytes:(const void *)p_bytes length:availableBytes encoding:NSUTF8StringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-												}
-											}
-
-											BIO_free(bio);
-										}
-									}
-									break;
-								}
-
-								if ((extensionName != nil) && (extensionInfo != nil) && (extensionIdentifier != nil))
-								{
-									if ([extensionName hasPrefix:@"X509v3 "])
-									{
-										extensionName = [extensionName substringFromIndex:7];
-									}
-
-									[extensions addObject:@{
-										OCCertificateMetadataExtensionIdentifierKey : extensionIdentifier,
-										OCCertificateMetadataExtensionNameKey : extensionName,
-										OCCertificateMetadataExtensionDescriptionKey : extensionInfo
-									}];
-								}
-							}
-						}
-
-						if (extensions.count > 0)
-						{
-							metaData[OCCertificateMetadataExtensionsKey] = extensions;
-						}
-					}
-				}
-			}
-
-			X509_free(x509Cert);
-		}
-	}
-
-	if (!certificateParsable && (error != NULL))
-	{
-		*error = OCError(OCErrorCertificateInvalid);
-	}
-
-	return (metaData);
+    NSMutableDictionary<OCCertificateMetadataKey, id> *metaData = nil;
+    NSData *x509Data = self.certificateData;
+    BOOL certificateParsable = NO;
+    
+    [[self class] _initializeOpenSSL];
+    
+    if (x509Data !=  nil)
+    {
+        X509 *x509Cert = NULL;
+        const unsigned char *p_x509Data = [x509Data bytes];
+        
+        if ((x509Cert = d2i_X509(NULL, &p_x509Data, x509Data.length)) != NULL)
+        {
+            certificateParsable = YES;
+            
+            if ((metaData = [NSMutableDictionary new]) != nil)
+            {
+                X509_NAME *x509Name;
+                ASN1_INTEGER *asn1SerialNumber;
+                ASN1_TIME *asn1Time;
+                
+                // Parse subject
+                if ((x509Name = X509_get_subject_name(x509Cert)) != NULL)
+                {
+                    NSDictionary<OCCertificateMetadataKey, id> *subjectMetaData;
+                    
+                    if ((subjectMetaData = [self _keyValuePairsForX509Name:x509Name]) != nil)
+                    {
+                        metaData[OCCertificateMetadataSubjectKey] = subjectMetaData;
+                    }
+                }
+                
+                // Parse issuer
+                if ((x509Name = X509_get_issuer_name(x509Cert)) != NULL)
+                {
+                    NSDictionary<OCCertificateMetadataKey, id> *issuerMetaData;
+                    
+                    if ((issuerMetaData = [self _keyValuePairsForX509Name:x509Name]) != nil)
+                    {
+                        metaData[OCCertificateMetadataIssuerKey] = issuerMetaData;
+                    }
+                }
+                
+                // Version
+                metaData[OCCertificateMetadataVersionKey] = @(X509_get_version(x509Cert)+1);
+                
+                // Serial Number
+                if ((asn1SerialNumber = X509_get_serialNumber(x509Cert)) != NULL)
+                {
+                    metaData[OCCertificateMetadataSerialNumberKey] = [self _hexStringFromASN1Integer:asn1SerialNumber];
+                }
+                
+                // Public Key
+                NSMutableDictionary <NSString *, id> *publicKeyDict = [NSMutableDictionary new];
+                
+                // Public Key Signature Algorithm
+                const ASN1_OBJECT *paobj;
+                X509_ALGOR_get0(&paobj, NULL, NULL, X509_get0_tbs_sigalg(x509Cert));
+                if (paobj != NULL)
+                {
+                    NSString *algorithmName;
+                    
+                    if ((algorithmName = [self _nameForAlgorithm:paobj]) != nil)
+                    {
+                        metaData[OCCertificateMetadataSignatureAlgorithmKey] = algorithmName;
+                    }
+                }
+                
+                // Key bytes
+                EVP_PKEY *evpPKey;
+                
+                if ((evpPKey = X509_get_pubkey(x509Cert)) != NULL)
+                {
+                    BIO *bio;
+                    
+                    if ((bio = BIO_new(BIO_s_mem())) != NULL)
+                    {
+                        switch (EVP_PKEY_base_id(evpPKey))
+                        {
+                            case EVP_PKEY_RSA: {
+                                RSA *rsa;
+                                
+                                if ((rsa = EVP_PKEY_get1_RSA(evpPKey)) != NULL)
+                                {
+                                    const BIGNUM *n, *e, *d;
+                                    RSA_get0_key(rsa, &n, &e, &d);
+                                    if (e != NULL)
+                                    {
+                                        publicKeyDict[OCCertificateMetadataKeyExponentKey] = @(BN_get_word(e)); // Exponent
+                                    }
+                                    
+                                    if (n != NULL)
+                                    {
+                                        publicKeyDict[OCCertificateMetadataKeyBytesKey] = [self _hexStringFromBigNum:n]; // Modulus
+                                    }
+                                    
+                                    publicKeyDict[OCCertificateMetadataKeySizeInBitsKey] = @(RSA_size(rsa)*8); // Key size in bits
+                                }
+                            }
+                                break;
+                                
+                            case EVP_PKEY_DSA:
+                            case EVP_PKEY_DH:
+                            case EVP_PKEY_EC:
+                            default: {
+                                
+                                if (EVP_PKEY_print_public(bio, evpPKey, 0, NULL) > 0)
+                                {
+                                    long availableBytes;
+                                    char *p_bytes = NULL;
+                                    
+                                    BIO_flush(bio);
+                                    
+                                    if ((availableBytes = BIO_get_mem_data(bio, &p_bytes)) > 0)
+                                    {
+                                        if (p_bytes != NULL)
+                                        {
+                                            publicKeyDict[OCCertificateMetadataKeyInformationKey] = [[NSString alloc] initWithBytes:(const void *)p_bytes length:availableBytes encoding:NSUTF8StringEncoding];
+                                        }
+                                    }
+                                }
+                            }
+                                break;
+                        }
+                        
+                        BIO_free(bio);
+                    }
+                    
+                    EVP_PKEY_free(evpPKey);
+                }
+                
+                // Save content to metaData
+                if (publicKeyDict.count > 0)
+                {
+                    metaData[OCCertificateMetadataPublicKeyKey] = publicKeyDict;
+                }
+                
+                // Validity from
+                if ((asn1Time = X509_get_notBefore(x509Cert)) != NULL)
+                {
+                    NSString *iso8601DateString;
+                    
+                    if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+                    {
+                        metaData[OCCertificateMetadataValidFromKey] = iso8601DateString;
+                    }
+                }
+                
+                // Validity until
+                if ((asn1Time = X509_get_notAfter(x509Cert)) != NULL)
+                {
+                    NSString *iso8601DateString;
+                    
+                    if ((iso8601DateString = [self _iso8601DateStringForASN1Time:asn1Time]) != nil)
+                    {
+                        metaData[OCCertificateMetadataValidUntilKey] = iso8601DateString;
+                    }
+                }
+                
+                // Extensions
+                const STACK_OF(X509_EXTENSION) *x509Extensions = X509_get0_extensions(x509Cert);
+                long numOfExtensions;
+                
+                if ((numOfExtensions = sk_X509_EXTENSION_num(x509Extensions)) > 0)
+                {
+                    NSMutableArray <NSDictionary<NSString*,NSString*> *> *extensions = [NSMutableArray new];
+                    
+                    for (int i=0; i<numOfExtensions; i++)
+                    {
+                        X509_EXTENSION *x509Extension;
+                        
+                        if ((x509Extension = sk_X509_EXTENSION_value(x509Extensions, i)) != NULL)
+                        {
+                            int extensionNID;
+                            const char *extensionNameBuffer;
+                            const char *extensionIdentifierBuffer;
+                            
+                            extensionNID = OBJ_obj2nid(X509_EXTENSION_get_object(x509Extension));
+                            extensionNameBuffer = OBJ_nid2ln(extensionNID);
+                            extensionIdentifierBuffer = OBJ_nid2sn(extensionNID);
+                            
+                            NSString *extensionInfo = nil;
+                            NSString *extensionName = [NSString stringWithCString:extensionNameBuffer encoding:NSUTF8StringEncoding];
+                            NSString *extensionIdentifier = [NSString stringWithCString:extensionIdentifierBuffer encoding:NSUTF8StringEncoding];
+                            
+                            switch (extensionNID)
+                            {
+                                case NID_subject_alt_name:
+                                    
+                                    // break;
+                                    
+                                default: {
+                                    BIO *bio;
+                                    
+                                    if ((bio = BIO_new(BIO_s_mem())) != NULL)
+                                    {
+                                        if (X509V3_EXT_print(bio, x509Extension, 0, 0) != 0)
+                                        {
+                                            long availableBytes;
+                                            char *p_bytes = NULL;
+                                            
+                                            BIO_flush(bio);
+                                            
+                                            if ((availableBytes = BIO_get_mem_data(bio, &p_bytes)) != 0)
+                                            {
+                                                extensionInfo = [[[NSString alloc] initWithBytes:(const void *)p_bytes length:availableBytes encoding:NSUTF8StringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                                            }
+                                        }
+                                        
+                                        BIO_free(bio);
+                                    }
+                                }
+                                    break;
+                            }
+                            
+                            if ((extensionName != nil) && (extensionInfo != nil) && (extensionIdentifier != nil))
+                            {
+                                if ([extensionName hasPrefix:@"X509v3 "])
+                                {
+                                    extensionName = [extensionName substringFromIndex:7];
+                                }
+                                
+                                [extensions addObject:@{
+                                    OCCertificateMetadataExtensionIdentifierKey : extensionIdentifier,
+                                    OCCertificateMetadataExtensionNameKey : extensionName,
+                                    OCCertificateMetadataExtensionDescriptionKey : extensionInfo
+                                }];
+                            }
+                        }
+                    }
+                    
+                    if (extensions.count > 0)
+                    {
+                        metaData[OCCertificateMetadataExtensionsKey] = extensions;
+                    }
+                }
+            }
+            
+            X509_free(x509Cert);
+        }
+    }
+    
+    if (!certificateParsable && (error != NULL))
+    {
+        *error = OCError(OCErrorCertificateInvalid);
+    }
+    
+    return (metaData);
 }
 
 - (void)certificateDetailsViewNodesComparedTo:(nullable OCCertificate *)previousCertificate withValidationCompletionHandler:(void(^)(NSArray <OCCertificateDetailsViewNode *> *))validationCompletionHandler
