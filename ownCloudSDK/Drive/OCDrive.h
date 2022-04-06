@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCQuota.h"
+#import "OCDataTypes.h"
 
 @class GADrive;
 @class OCLocation;
@@ -27,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *OCDriveType;
 
-@interface OCDrive : NSObject <NSSecureCoding>
+@interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersion>
 
 @property(strong) OCDriveID identifier;
 @property(strong) OCDriveType type;

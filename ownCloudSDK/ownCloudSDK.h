@@ -187,12 +187,16 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCDataTypes.h>
 #import <ownCloudSDK/OCDataSource.h>
+#import <ownCloudSDK/OCDataSourceArray.h>
 #import <ownCloudSDK/OCDataSourceSubscription.h>
 #import <ownCloudSDK/OCDataSourceSnapshot.h>
 #import <ownCloudSDK/OCDataItemRecord.h>
 #import <ownCloudSDK/OCDataConverter.h>
 #import <ownCloudSDK/OCDataConverterPipeline.h>
+#import <ownCloudSDK/OCDataItemPresentable.h>
 #import <ownCloudSDK/OCDataRenderer.h>
+
+#import <ownCloudSDK/OCCore+DataSources.h>
 
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
@@ -238,6 +242,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSString+OCFormatting.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
 #import <ownCloudSDK/NSArray+ObjCRuntime.h>
+#import <ownCloudSDK/NSArray+OCFiltering.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
 

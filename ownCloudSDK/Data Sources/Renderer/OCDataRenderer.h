@@ -26,11 +26,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCDataRenderer : NSObject
 
-+ (instancetype)defaultRenderer; //!< Globally shared default renderer
+@property(readonly,class,nonatomic,strong) OCDataRenderer *defaultRenderer; //!< Globally shared default renderer
 
 - (instancetype)initWithConverters:(nullable NSArray<OCDataConverter *> *)converters; //!< Initialize a new renderer with an array of converters
 
 - (void)addConverters:(NSArray<OCDataConverter *> *)converters; //!< Add one or more converter(s)
+
+- (nullable OCDataConverter *)assembledConverterFrom:(OCDataItemType)inputType to:(OCDataItemType)outputType; //!< Returns existing converters from inputType to outputType. If none is found, attempts to assemble a new pipeline from existing converters. Returns nil if none was found or could be assembled.
 
 - (nullable id)renderObject:(id)object ofType:(OCDataItemType)inputType asType:(OCDataItemType)outputType error:(NSError * _Nullable * _Nullable)outError withOptions:(nullable OCDataViewOptions)options; //!< Render an input object (of inputType) as an object of type outputType using the renderer's converters
 

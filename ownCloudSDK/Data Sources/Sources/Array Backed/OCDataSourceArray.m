@@ -57,6 +57,39 @@
 	}
 }
 
+- (void)setVersionedItems:(nullable NSArray<id<OCDataItem,OCDataItemVersion>> *)items
+{
+	NSMutableSet<id<OCDataItem>> *updatedItems = nil;
+
+	@synchronized(self)
+	{
+		for (id<OCDataItem,OCDataItemVersion> item in items)
+		{
+			OCDataItemReference itemRef;
+
+			if ((itemRef = item.dataItemReference) != nil)
+			{
+				id<OCDataItem,OCDataItemVersion> oldItem;
+
+				if ((oldItem = (id<OCDataItem,OCDataItemVersion>)[_itemsByReference objectForKey:itemRef]) != nil)
+				{
+					OCDataItemVersion newVersion = item.dataItemVersion;
+					OCDataItemVersion oldVersion = oldItem.dataItemVersion;
+
+					if (![newVersion isEqual:oldVersion])
+					{
+						if (updatedItems == nil) { updatedItems = [NSMutableSet new]; }
+
+						[updatedItems addObject:item];
+					}
+				}
+			}
+		}
+	}
+
+	[self setItems:items updated:updatedItems];
+}
+
 - (nullable OCDataItemRecord *)recordForItemRef:(OCDataItemReference)itemRef error:(NSError * _Nullable * _Nullable)error
 {
 	id<OCDataItem> item;
@@ -70,9 +103,16 @@
 	{
 		BOOL hasChildren = NO;
 
-		if ([item respondsToSelector:@selector(hasChildrenUsingSource:)])
+		if (_dataItemHasChildrenProvider != nil)
 		{
-			hasChildren = [item hasChildrenUsingSource:self];
+			hasChildren = _dataItemHasChildrenProvider(self, item);
+		}
+		else
+		{
+			if ([item respondsToSelector:@selector(hasChildrenUsingSource:)])
+			{
+				hasChildren = [item hasChildrenUsingSource:self];
+			}
 		}
 
 		return ([[OCDataItemRecord alloc] initWithSource:self item:item hasChildren:hasChildren]);

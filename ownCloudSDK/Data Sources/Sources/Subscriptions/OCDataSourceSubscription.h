@@ -32,17 +32,22 @@ typedef void(^OCDataSourceSubscriptionUpdateHandler)(OCDataSourceSubscription *s
 	NSMutableSet<OCDataItemReference> *_addedItemRefs;
 	NSMutableSet<OCDataItemReference> *_updatedItemRefs;
 	NSMutableSet<OCDataItemReference> *_removedItemRefs;
+
+	BOOL _needsUpdateHandling;
 }
+
+@property(class,strong,readonly,nonatomic) dispatch_queue_t defaultUpdateQueue;
 
 @property(weak,nullable) OCDataSource *source;
 
+@property(strong,nullable) dispatch_queue_t updateQueue;
 @property(copy,nullable) OCDataSourceSubscriptionUpdateHandler updateHandler;
 
 @property(assign) BOOL trackDifferences;
 
 @property(assign) BOOL terminated;
 
-- (instancetype)initWithSource:(OCDataSource *)source trackDifferences:(BOOL)trackDifferences itemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler;
+- (instancetype)initWithSource:(OCDataSource *)source trackDifferences:(BOOL)trackDifferences itemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue;
 
 - (BOOL)hasChangesSinceLastTrackingReset; //!< Returns YES if changes have occured since the last snapshot with change tracking reset. Returns NO otherwise. Will always return NO if .trackDifferences = NO or .terminated = YES.
 - (OCDataSourceSnapshot *)snapshotResettingChangeTracking:(BOOL)resetChangeTracking; //!< Returns a snapshot. Added/Updated/Removed items are only filled if .trackDifferences = YES. Pass YES for resetChangeTracking to reset the change tracking. If you pass NO, changes will continue to accumulate.

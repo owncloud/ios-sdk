@@ -1,8 +1,8 @@
 //
-//  OCDataSourceSubscription+Internal.h
+//  NSArray+OCFiltering.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 16.03.22.
+//  Created by Felix Schwarz on 04.04.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,13 +17,12 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCDataSourceSubscription.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCDataSourceSubscription (Internal)
+@interface NSArray (OCFiltering)
 
-- (void)_updateWithItemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updated:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
+- (NSArray *)filteredArrayUsingBlock:(BOOL(^)(id object, BOOL * _Nonnull stop))filter;
 
 @end
 

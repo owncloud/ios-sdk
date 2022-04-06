@@ -18,8 +18,9 @@
 
 #import <Foundation/Foundation.h>
 
-typedef id<NSObject/*,NSCopying*/> OCDataItemReference; //!< Unique reference that uniquely identifies an item within a data source, typically a string or number
+typedef NSObject* OCDataItemReference; //!< Unique reference that uniquely identifies an item within a data source, typically a string or number
 typedef NSString* OCDataItemType NS_TYPED_ENUM; //!< The item type, i.e. OCItem, OCDrive, ItemDescription, Section, TableCell, CollectionCell, View
+typedef id<NSObject> OCDataItemVersion; //!< The version of the item, i.e. a string or a number. Can be used by data sources to find changed items in small data sets.
 
 typedef NSString* OCDataSourceType NS_TYPED_ENUM; //!< Optional data source type, i.e. List, SectionedList
 
@@ -38,8 +39,23 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) OCDataItemReference dataItemReference;
 
 @optional
-- (BOOL)hasChildrenUsingSource:(OCDataSource *)source;
+- (BOOL)hasChildrenUsingSource:(OCDataSource *)source; //!< Indiciates if the item has children
+- (nullable OCDataSource *)dataSourceForChildrenUsingSource:(OCDataSource *)source; //!< Provides a datasource containing the children of the item. The parent item's data source is provided as parameter.
 
 @end
+
+@protocol OCDataItemVersion
+@property(readonly) OCDataItemVersion dataItemVersion;
+@end
+
+typedef BOOL(^OCDataItemHasChildrenProvider)(OCDataSource *dataSource, id<OCDataItem> item);
+typedef OCDataSource * _Nullable(^OCDataItemChildrenDataSourceProvider)(OCDataSource *parentItemDataSource, id<OCDataItem> parentItem);
+
+extern OCDataItemType OCDataItemTypeDrive; //!< Item of type OCDrive
+extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPresentable
+extern OCDataItemType OCDataItemTypeListContentConfiguration; //!< Item of type UIListContentConfiguration
+
+extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
+extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill
 
 NS_ASSUME_NONNULL_END

@@ -29,6 +29,8 @@ typedef OCDataItemRecord * _Nullable (^OCDataSourceItemRecordForReferenceProvide
 typedef void(^OCDataSourceItemForReferenceCompletionHandler)(NSError * _Nullable error, OCDataItemRecord * _Nullable record);
 typedef void(^OCDataSourceItemForReferenceProvider)(OCDataSource *source, OCDataItemReference itemRef, OCDataItemRecord * _Nullable reuseRecord, OCDataSourceItemForReferenceCompletionHandler completionHandler);
 
+typedef OCDataSource * _Nullable (^OCDataSourceChildDataSourceProvider)(OCDataSource *source, OCDataItemReference itemRef);
+
 @interface OCDataSource : NSObject
 {
 	NSMutableArray<OCDataItemReference> *_itemReferences;
@@ -55,10 +57,11 @@ typedef void(^OCDataSourceItemForReferenceProvider)(OCDataSource *source, OCData
 - (void)invalidateCache;
 
 #pragma mark - Children
+@property(copy,nullable) OCDataSourceChildDataSourceProvider childDataSourceProvider;
 - (nullable OCDataSource *)dataSourceForChildrenOfItemReference:(OCDataItemReference)itemRef;
 
 #pragma mark - Managing subscriptions
-- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler trackDifferences:(BOOL)trackDifferences;
+- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate;
 - (void)terminateSubscription:(OCDataSourceSubscription *)subscription;
 
 #pragma mark - Managing content

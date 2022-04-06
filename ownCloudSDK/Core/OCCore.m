@@ -62,6 +62,8 @@
 #import "OCResourceSourceItemThumbnails.h"
 #import "OCResourceSourceItemLocalThumbnails.h"
 #import "OCConnection+GraphAPI.h"
+#import "NSArray+OCFiltering.h"
+#import "OCCore+DataSources.h"
 
 @interface OCCore ()
 {
@@ -283,6 +285,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_drives = [NSMutableArray new];
 		_drivesByID = [NSMutableDictionary new];
 		_lastRootETagsByDriveID = [NSMutableDictionary new];
+
+		_drivesDataSource = [[OCDataSourceArray alloc] init];
+		_hierarchicDrivesDataSource = [[OCDataSourceArray alloc] init];
+		_hierarchicDrivesLogicalProjectsFolderPresentable = [[OCDataItemPresentable alloc] initWithReference:@"_projects" originalDataItemType:nil version:@"1"];
+		_hierarchicDrivesLogicalProjectsFolderPresentable.title = @"Spaces";
+		_hierarchicDrivesLogicalProjectsFolderPresentable.childrenDataSourceProvider = ^OCDataSource * _Nullable(OCDataSource * _Nonnull parentItemDataSource, id<OCDataItem>  _Nonnull parentItem) {
+			return ([weakSelf projectDrivesDataSource]);
+		};
+		_projectDrivesDataSource = [[OCDataSourceArray alloc] init];
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
@@ -2093,7 +2104,51 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[self didChangeValueForKey:@"drives"];
 		}
 
+		// Sort _drives by type and name
+		[_drives sortUsingComparator:^NSComparisonResult(OCDrive *drive1, OCDrive *drive2) {
+			NSComparisonResult result;
+
+			if ((result = [drive1.type localizedCompare:drive2.type]) != NSOrderedSame)
+			{
+				return (result);
+			}
+
+			return ([drive1.name localizedCompare:drive2.name]);
+		}];
+
 		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d now=%@, updated=%@, added=%@, removed=%@", doInitialize, _drives, updatedDrives, addedDrives, removedDrives);
+
+		// Update data sources
+		[_drivesDataSource setVersionedItems:_drives];
+
+		NSMutableArray<OCDrive *> *hierarchicDrivesTopLevelItems = [[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+			if ([drive.type isEqual:OCDriveTypePersonal])
+			{
+				return (YES);
+			}
+
+			return (NO);
+		}] mutableCopy];
+
+		[hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
+
+		[_hierarchicDrivesDataSource setVersionedItems:hierarchicDrivesTopLevelItems];
+
+		[_projectDrivesDataSource setVersionedItems:[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+			return ([drive.type isEqual:OCDriveTypeProject]);
+		}]];
+
+		if (_drivesDataSourceSubscription == nil)
+		{
+			_drivesDataSourceSubscription = [_drivesDataSource subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+				OCDataSourceSnapshot *snapshot = [subscription snapshotResettingChangeTracking:YES];
+
+				OCTLogDebug(@[@"DataSource"], @"Drives: %@", snapshot.items);
+				OCTLogDebug(@[@"DataSource"], @"Added drives: %@", snapshot.addedItems);
+				OCTLogDebug(@[@"DataSource"], @"Updated drives: %@", snapshot.updatedItems);
+				OCTLogDebug(@[@"DataSource"], @"Removed drives: %@", snapshot.removedItems);
+			} onQueue:OCDataSourceSubscription.defaultUpdateQueue trackDifferences:YES performIntialUpdate:YES];
+		}
 	}
 
 	// Notify about removed and added drives - outside of lock

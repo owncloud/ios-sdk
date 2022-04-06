@@ -26,7 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMapTable<OCDataItemReference,id<OCDataItem>> *_itemsByReference;
 }
 
-- (void)setItems:(nullable NSArray<id<OCDataItem>> *)items updated:(nullable NSSet<id<OCDataItem>> *)updatedItems;
+@property(copy,nullable) OCDataItemHasChildrenProvider dataItemHasChildrenProvider;
+
+- (void)setItems:(nullable NSArray<id<OCDataItem>> *)items updated:(nullable NSSet<id<OCDataItem>> *)updatedItems; //!< Uses item IDs to populate the data source
+- (void)setVersionedItems:(nullable NSArray<id<OCDataItem,OCDataItemVersion>> *)items; //!< Uses item versions and item IDs to populate the data source
 
 @end
 

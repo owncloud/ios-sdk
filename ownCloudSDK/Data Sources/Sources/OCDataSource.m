@@ -70,6 +70,11 @@
 #pragma mark - Children
 - (nullable OCDataSource *)dataSourceForChildrenOfItemReference:(OCDataItemReference)itemRef
 {
+	if (_childDataSourceProvider != nil)
+	{
+		return (_childDataSourceProvider(self, itemRef));
+	}
+
 	return (nil);
 }
 
@@ -101,14 +106,19 @@
 }
 
 #pragma mark - Managing subscriptions
-- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler trackDifferences:(BOOL)trackDifferences
+- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate
 {
 	OCDataSourceSubscription *subscription;
 
 	@synchronized (_subscriptions)
 	{
-		subscription = [[OCDataSourceSubscription alloc] initWithSource:self trackDifferences:trackDifferences itemReferences:_itemReferences updateHandler:updateHandler];
+		subscription = [[OCDataSourceSubscription alloc] initWithSource:self trackDifferences:trackDifferences itemReferences:_itemReferences updateHandler:updateHandler onQueue:updateQueue];
 		[_subscriptions addObject:subscription];
+	}
+
+	if (performIntialUpdate)
+	{
+		[subscription setNeedsUpdateHandling];
 	}
 
 	return (subscription);
@@ -137,12 +147,6 @@
 			[subscription _updateWithItemReferences:itemRefs updated:updatedItemRefs];
 		}
 	}
-}
-
-#pragma mark - Synchronization queue
-- (void)queue:(dispatch_block_t)block
-{
-	block();
 }
 
 @end

@@ -39,6 +39,8 @@
 #import "OCMeasurement.h"
 #import "OCLock.h"
 #import "OCLockRequest.h"
+#import "OCDataSourceArray.h"
+#import "OCDataItemPresentable.h"
 
 @class OCCore;
 @class OCItem;
@@ -239,6 +241,14 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray<OCDrive *> *_drives;
 	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
 	NSMutableDictionary<OCDriveID, OCFileETag> *_lastRootETagsByDriveID;
+
+	OCDataSourceArray *_drivesDataSource;
+	OCDataSourceSubscription *_drivesDataSourceSubscription;
+
+	OCDataSourceArray *_hierarchicDrivesDataSource;
+	OCDataItemPresentable *_hierarchicDrivesLogicalProjectsFolderPresentable;
+
+	OCDataSourceArray *_projectDrivesDataSource;
 
 	__weak id <OCCoreDelegate> _delegate;
 

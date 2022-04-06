@@ -22,6 +22,10 @@
 #import "OCMacros.h"
 #import "OCLocation.h"
 
+#import "OCDataConverter.h"
+#import "OCDataRenderer.h"
+#import "OCDataItemPresentable.h"
+
 @implementation OCDrive
 
 + (instancetype)driveFromGADrive:(GADrive *)gDrive
@@ -50,6 +54,28 @@
 + (instancetype)personalDrive
 {
 	return(nil);
+}
+
++ (void)load
+{
+	OCDataConverter *driveToPresentableConverter;
+
+	driveToPresentableConverter = [[OCDataConverter alloc] initWithInputType:OCDataItemTypeDrive outputType:OCDataItemTypePresentable conversion:^id _Nullable(OCDataConverter * _Nonnull converter, OCDrive * _Nullable inDrive, OCDataRenderer * _Nullable renderer, NSError * _Nullable __autoreleasing * _Nullable outError, OCDataViewOptions  _Nullable options) {
+		OCDataItemPresentable *presentable = nil;
+
+		if (inDrive != nil)
+		{
+			presentable = [[OCDataItemPresentable alloc] initWithItem:inDrive];
+			presentable.title = inDrive.name;
+			presentable.subtitle = inDrive.type;
+		}
+
+		return (presentable);
+	}];
+
+	[OCDataRenderer.defaultRenderer addConverters:@[
+		driveToPresentableConverter
+	]];
 }
 
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive
@@ -115,6 +141,38 @@
 	[coder encodeObject:_quota forKey:@"quota"];
 
 	[coder encodeObject:_gaDrive forKey:@"gaDrive"];
+}
+
+#pragma mark - OCDataItem / OCDataItemVersion compliance
+- (OCDataItemType)dataItemType
+{
+	return (OCDataItemTypeDrive);
+}
+
+- (OCDataItemReference)dataItemReference
+{
+	return (_identifier);
+}
+
+- (OCDataItemVersion)dataItemVersion
+{
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@", _identifier, _type, _name, _davRootURL, _gaDrive.eTag]);
+}
+
+#pragma mark - Comparison
+- (NSUInteger)hash
+{
+	return (_identifier.hash ^ _gaDrive.eTag.hash ^ _name.hash ^ _davRootURL.hash);
+}
+
+- (BOOL)isEqual:(id)object
+{
+	if ([object isKindOfClass:OCDrive.class])
+	{
+		return ([self isSubstantiallyDifferentFrom:object]);
+	}
+
+	return (NO);
 }
 
 #pragma mark - Description

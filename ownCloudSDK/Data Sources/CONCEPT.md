@@ -1,6 +1,6 @@
 #  Data Sources
 
-## Objectives
+## Concept / Objectives
 - mechanism to provide data items in a structured way
 	- supports updates
 	- supports hierarchies
@@ -20,7 +20,11 @@
 		- performance / memory optimized
 			- memory: converters don't save state, so can be used in multiple renderers
 			- performance: options dictionary allows passing f.ex. existing cells for possible reuse
+	- presentables
+		- standardized intermediate representation
+		- allows simplified display and conversion from many input to many output types
 	- renderers
 		- manage data sources
 		- render items to the desired output type using converters / converter pipelines
+		- can dynamically assemble new pipelines from a combination of existing converters / converter pipelines
 

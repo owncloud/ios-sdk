@@ -21,7 +21,12 @@
 
 @implementation OCDataSourceSubscription
 
--(instancetype)initWithSource:(OCDataSource *)source trackDifferences:(BOOL)trackDifferences itemReferences:(NSArray<OCDataItemReference> *)itemRefs updateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler
++ (dispatch_queue_t)defaultUpdateQueue
+{
+	return (dispatch_get_main_queue());
+}
+
+- (instancetype)initWithSource:(OCDataSource *)source trackDifferences:(BOOL)trackDifferences itemReferences:(NSArray<OCDataItemReference> *)itemRefs updateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue
 {
 	if ((self = [super init]) != nil)
 	{
@@ -34,6 +39,8 @@
 		_addedItemRefs = [NSMutableSet new];
 		_updatedItemRefs = [NSMutableSet new];
 		_removedItemRefs = [NSMutableSet new];
+
+		_updateQueue = updateQueue;
 	}
 
 	return (self);

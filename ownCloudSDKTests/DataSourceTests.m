@@ -9,6 +9,52 @@
 #import <XCTest/XCTest.h>
 #import <ownCloudSDK/ownCloudSDK.h>
 
+OCDataItemType DataTypeA = @"A";
+OCDataItemType DataTypeB = @"B";
+OCDataItemType DataTypeC = @"C";
+OCDataItemType DataTypeD = @"D";
+OCDataItemType DataTypeE = @"E";
+
+@interface TypeA2BConverter : OCDataConverter
+@end
+
+@interface TypeB2CConverter : OCDataConverter
+@end
+
+@interface TypeC2DConverter : OCDataConverter
+@end
+
+@interface TypeD2EConverter : OCDataConverter
+@end
+
+@interface TypeB2DConverter : OCDataConverter
+@end
+
+@implementation TypeA2BConverter
+-(OCDataItemType)inputType { return (DataTypeA); }
+-(OCDataItemType)outputType { return (DataTypeB); }
+@end
+
+@implementation TypeB2CConverter
+-(OCDataItemType)inputType { return (DataTypeB); }
+-(OCDataItemType)outputType { return (DataTypeC); }
+@end
+
+@implementation TypeC2DConverter
+-(OCDataItemType)inputType { return (DataTypeC); }
+-(OCDataItemType)outputType { return (DataTypeD); }
+@end
+
+@implementation TypeD2EConverter
+-(OCDataItemType)inputType { return (DataTypeD); }
+-(OCDataItemType)outputType { return (DataTypeE); }
+@end
+
+@implementation TypeB2DConverter
+-(OCDataItemType)inputType { return (DataTypeB); }
+-(OCDataItemType)outputType { return (DataTypeD); }
+@end
+
 @interface DataSourceTests : XCTestCase
 
 @end
@@ -218,6 +264,78 @@
 	XCTAssert( ([snapshot.addedItems isEqual:[NSSet set]]) );
 	XCTAssert( ([snapshot.updatedItems isEqual:[NSSet set]]) );
 	XCTAssert( ([snapshot.removedItems isEqual:[NSSet set]]) );
+}
+
+- (void)testDataConverterAssembly
+{
+	OCDataRenderer *renderer = [[OCDataRenderer alloc] initWithConverters:@[
+		[[TypeA2BConverter alloc] init],
+		[[TypeB2CConverter alloc] init],
+		[[TypeC2DConverter alloc] init],
+		[[TypeD2EConverter alloc] init],
+	]];
+
+	// Assemble viable pipeline
+
+	OCDataConverterPipeline *pipelineAToE;
+
+	pipelineAToE = (OCDataConverterPipeline *)[renderer assembledConverterFrom:DataTypeA to:DataTypeE];
+
+	XCTAssert(pipelineAToE != nil);
+	XCTAssert(pipelineAToE.converters.count == 4);
+	XCTAssert([pipelineAToE.converters[0] isKindOfClass:TypeA2BConverter.class]);
+	XCTAssert([pipelineAToE.converters[1] isKindOfClass:TypeB2CConverter.class]);
+	XCTAssert([pipelineAToE.converters[2] isKindOfClass:TypeC2DConverter.class]);
+	XCTAssert([pipelineAToE.converters[3] isKindOfClass:TypeD2EConverter.class]);
+
+	OCLogDebug(@"Assembled pipeline from A to E: %@", pipelineAToE.converters);
+
+	// Try to assemble unviable pipeline
+
+	OCDataConverterPipeline *pipelineEToA;
+
+	pipelineEToA = (OCDataConverterPipeline *)[renderer assembledConverterFrom:DataTypeE to:DataTypeA];
+
+	XCTAssert(pipelineEToA == nil);
+}
+
+- (void)testDataConverterAssemblyShortestRoute
+{
+	OCDataRenderer *renderer = [[OCDataRenderer alloc] initWithConverters:@[
+		// 4-step route
+		[[TypeA2BConverter alloc] init],
+		[[TypeB2CConverter alloc] init],
+		[[TypeC2DConverter alloc] init],
+		[[TypeD2EConverter alloc] init],
+
+		// Shortcut to allow 3-step route
+		[[TypeB2DConverter alloc] init],
+	]];
+
+	// Assemble 3-4 step pipeline
+	OCDataConverterPipeline *pipelineAToE;
+
+	pipelineAToE = (OCDataConverterPipeline *)[renderer assembledConverterFrom:DataTypeA to:DataTypeE];
+
+	XCTAssert(pipelineAToE != nil);
+	XCTAssert(pipelineAToE.converters.count == 3);
+	XCTAssert([pipelineAToE.converters[0] isKindOfClass:TypeA2BConverter.class]);
+	XCTAssert([pipelineAToE.converters[1] isKindOfClass:TypeB2DConverter.class]);
+	XCTAssert([pipelineAToE.converters[2] isKindOfClass:TypeD2EConverter.class]);
+
+	OCLogDebug(@"Assembled pipeline from A to E: %@", pipelineAToE.converters);
+
+	// Assemble 2-3 step pipeline
+	OCDataConverterPipeline *pipelineAToD;
+
+	pipelineAToD = (OCDataConverterPipeline *)[renderer assembledConverterFrom:DataTypeA to:DataTypeD];
+
+	XCTAssert(pipelineAToD != nil);
+	XCTAssert(pipelineAToD.converters.count == 2);
+	XCTAssert([pipelineAToD.converters[0] isKindOfClass:TypeA2BConverter.class]);
+	XCTAssert([pipelineAToD.converters[1] isKindOfClass:TypeB2DConverter.class]);
+
+	OCLogDebug(@"Assembled pipeline from A to E: %@", pipelineAToD.converters);
 }
 
 @end

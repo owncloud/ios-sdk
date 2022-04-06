@@ -18,7 +18,9 @@
 
 #import "OCDataRenderer.h"
 #import "OCDataConverter.h"
+#import "OCDataConverterPipeline.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 typedef NSString* OCDataItemTypePair;
 
@@ -87,6 +89,69 @@ typedef NSString* OCDataItemTypePair;
 	return (_convertersByTypePair[pair]);
 }
 
+- (OCDataConverter *)assembledConverterFrom:(OCDataItemType)inputType to:(OCDataItemType)outputType
+{
+	return ([self _assembledConverterFrom:inputType to:outputType topLevel:YES]);
+
+}
+
+- (OCDataConverter *)_assembledConverterFrom:(OCDataItemType)inputType to:(OCDataItemType)outputType topLevel:(BOOL)topLevel
+{
+	OCDataConverter *converter = nil;
+
+	// Return existing converter for input/output pair
+	if ((converter = [self converterFrom:inputType to:outputType]) != nil)
+	{
+		return (converter);
+	}
+
+	// Attempt to assemble new pair
+	NSArray<OCDataConverter *> *converters = _convertersByTypePair.allValues;
+	for (OCDataConverter *inputConverter in converters)
+	{
+		if ([inputConverter.inputType isEqual:inputType])
+		{
+			// Input type matches
+			OCDataConverter *outputConverter;
+
+			if ((outputConverter = [self _assembledConverterFrom:inputConverter.outputType to:outputType topLevel:NO]) != nil)
+			{
+				OCDataConverterPipeline *outputPipeline = OCTypedCast(outputConverter, OCDataConverterPipeline);
+				NSArray<OCDataConverter *> *assembledConverters = nil;
+
+				if ((outputPipeline != nil) && (outputPipeline.converters.count > 0))
+				{
+					// Flatten pipelines
+					assembledConverters = [@[ inputConverter ] arrayByAddingObjectsFromArray:outputPipeline.converters];
+				}
+				else
+				{
+					// Assemble from converters
+					assembledConverters = @[
+						inputConverter, outputConverter
+					];
+				}
+
+				// Prefer shorter pipelines
+				if ((converter == nil) || ((converter != nil) && (((OCDataConverterPipeline *)converter).converters.count > assembledConverters.count)))
+				{
+					converter = [[OCDataConverterPipeline alloc] initWithConverters:assembledConverters];
+				}
+			}
+		}
+	}
+
+	if (topLevel && (converter != nil))
+	{
+		// Add assembled converter
+		[self addConverters:@[
+			converter
+		]];
+	}
+
+	return (converter);
+}
+
 - (nullable id)renderObject:(id)object ofType:(OCDataItemType)inputType asType:(OCDataItemType)outputType error:(NSError * _Nullable * _Nullable)outError withOptions:(nullable OCDataViewOptions)options
 {
 	OCDataConverter *converter;
@@ -102,8 +167,15 @@ typedef NSString* OCDataItemTypePair;
 		return (nil);
 	}
 
+	// Check if input and output type are identical
+	if ([inputType isEqual:outputType])
+	{
+		// object already has requested type - return it directly
+		return (object);
+	}
+
 	// Find suitable converter
-	if ((converter = [self converterFrom:inputType to:outputType]) != nil)
+	if ((converter = [self assembledConverterFrom:inputType to:outputType]) != nil)
 	{
 		// Perform conversion
 		return ([converter convert:object renderer:self error:outError withOptions:options]);
