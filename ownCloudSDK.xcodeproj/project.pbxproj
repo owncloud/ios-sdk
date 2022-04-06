@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3924AB5527FC6A030055DC8A /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 3924AB5427FC6A030055DC8A /* OpenSSL */; };
 		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
 		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -597,6 +596,7 @@
 		DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661B2113323C0001FB2C /* OCCore+CommandDownload.m */; };
 		DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */; };
 		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
+		DCE2F04E27FDE01D00E9E136 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = DCE2F04D27FDE01D00E9E136 /* OpenSSL */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */; };
@@ -1461,6 +1461,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC309492205735C200189B9A /* ownCloudSDK.framework in Frameworks */,
+				DCE2F04E27FDE01D00E9E136 /* OpenSSL in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1497,7 +1498,6 @@
 				DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */,
 				DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */,
 				DCC8FA082029BB1200EB6701 /* libsqlite3.tbd in Frameworks */,
-				3924AB5527FC6A030055DC8A /* OpenSSL in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3529,6 +3529,9 @@
 				DC309491205735BD00189B9A /* PBXTargetDependency */,
 			);
 			name = ownCloudUI;
+			packageProductDependencies = (
+				DCE2F04D27FDE01D00E9E136 /* OpenSSL */,
+			);
 			productName = ownCloudUI;
 			productReference = DC3094842057358800189B9A /* ownCloudUI.framework */;
 			productType = "com.apple.product-type.framework";
@@ -3608,7 +3611,6 @@
 			);
 			name = ownCloudSDK;
 			packageProductDependencies = (
-				3924AB5427FC6A030055DC8A /* OpenSSL */,
 			);
 			productName = ownCloudSDK;
 			productReference = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */;
@@ -4773,7 +4775,7 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3924AB5427FC6A030055DC8A /* OpenSSL */ = {
+		DCE2F04D27FDE01D00E9E136 /* OpenSSL */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */;
 			productName = OpenSSL;
