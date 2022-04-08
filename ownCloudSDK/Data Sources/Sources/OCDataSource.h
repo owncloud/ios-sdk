@@ -37,6 +37,7 @@ typedef OCDataSource * _Nullable (^OCDataSourceChildDataSourceProvider)(OCDataSo
 	NSMutableArray<OCDataSourceSubscription *> *_subscriptions;
 }
 
+@property(strong) OCDataSourceUUID uuid;
 @property(strong,nullable) OCDataSourceType type;
 
 @property(readonly,nonatomic) NSUInteger numberOfItems;

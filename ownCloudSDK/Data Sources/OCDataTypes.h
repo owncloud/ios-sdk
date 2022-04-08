@@ -22,6 +22,7 @@ typedef NSObject* OCDataItemReference; //!< Unique reference that uniquely ident
 typedef NSString* OCDataItemType NS_TYPED_ENUM; //!< The item type, i.e. OCItem, OCDrive, ItemDescription, Section, TableCell, CollectionCell, View
 typedef id<NSObject> OCDataItemVersion; //!< The version of the item, i.e. a string or a number. Can be used by data sources to find changed items in small data sets.
 
+typedef NSString* OCDataSourceUUID; //!< Unique data source UUID
 typedef NSString* OCDataSourceType NS_TYPED_ENUM; //!< Optional data source type, i.e. List, SectionedList
 
 typedef NSString* OCDataViewOption NS_TYPED_ENUM; //!< Options for view pipeline, i.e. reusable view

@@ -27,4 +27,4 @@
 		- manage data sources
 		- render items to the desired output type using converters / converter pipelines
 		- can dynamically assemble new pipelines from a combination of existing converters / converter pipelines
-
+		- cell configurations allow temporarily passing additional objects to cell renderers alongside item references, where it is otherwise not possible

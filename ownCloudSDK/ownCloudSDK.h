@@ -195,6 +195,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCDataConverterPipeline.h>
 #import <ownCloudSDK/OCDataItemPresentable.h>
 #import <ownCloudSDK/OCDataRenderer.h>
+#import <ownCloudSDK/OCDataItemCellConfiguration.h>
+#import <ownCloudSDK/NSObject+OCDataItemCellConfiguration.h>
 
 #import <ownCloudSDK/OCCore+DataSources.h>
 
