@@ -18,6 +18,10 @@
 
 #import <Foundation/Foundation.h>
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#endif /* TARGET_OS_IPHONE */
+
 #import "OCDataTypes.h"
 #import "OCDataSource.h"
 #import "OCDataItemRecord.h"
@@ -34,6 +38,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable) OCDataRenderer *renderer;
 @property(strong,nullable) OCDataViewOptions viewOptions;
+
+#if TARGET_OS_IPHONE
+@property(weak,nullable) UIViewController *hostViewController;
+#endif /* TARGET_OS_IPHONE */
 
 - (instancetype)initWithSource:(OCDataSource *)source;
 
