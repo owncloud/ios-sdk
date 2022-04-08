@@ -706,10 +706,6 @@
 		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
 		DCE2F04327FB928B00E9E136 /* NSArray+OCFiltering.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE2F04127FB928B00E9E136 /* NSArray+OCFiltering.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE2F04427FB928B00E9E136 /* NSArray+OCFiltering.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2F04227FB928B00E9E136 /* NSArray+OCFiltering.m */; };
-		DCE2F05C27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE2F05A27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DCE2F05D27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2F05B27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.m */; };
-		DCE2F06027FEE76C00E9E136 /* OCDataItemCellConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE2F05E27FEE76C00E9E136 /* OCDataItemCellConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DCE2F06127FEE76C00E9E136 /* OCDataItemCellConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2F05F27FEE76C00E9E136 /* OCDataItemCellConfiguration.m */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */; };
@@ -1672,10 +1668,6 @@
 		DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandLocalImport.m"; sourceTree = "<group>"; };
 		DCE2F04127FB928B00E9E136 /* NSArray+OCFiltering.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSArray+OCFiltering.h"; sourceTree = "<group>"; };
 		DCE2F04227FB928B00E9E136 /* NSArray+OCFiltering.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSArray+OCFiltering.m"; sourceTree = "<group>"; };
-		DCE2F05A27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+OCDataItemCellConfiguration.h"; sourceTree = "<group>"; };
-		DCE2F05B27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OCDataItemCellConfiguration.m"; sourceTree = "<group>"; };
-		DCE2F05E27FEE76C00E9E136 /* OCDataItemCellConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataItemCellConfiguration.h; sourceTree = "<group>"; };
-		DCE2F05F27FEE76C00E9E136 /* OCDataItemCellConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDataItemCellConfiguration.m; sourceTree = "<group>"; };
 		DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDatabaseConsistentOperation.h; sourceTree = "<group>"; };
 		DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDatabaseConsistentOperation.m; sourceTree = "<group>"; };
 		DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreUpdateScheduleRecord.h; sourceTree = "<group>"; };
@@ -3366,7 +3358,6 @@
 				DCC4F40127D75DFF00ABF4C9 /* Sources */,
 				DCC4F40227D75E0B00ABF4C9 /* Converters */,
 				DCED67D927F1B0FE00686E4F /* Presentable */,
-				DCE2F05927FEE63E00E9E136 /* Cell Configuration */,
 				DCC4F40327D75E2100ABF4C9 /* Renderer */,
 			);
 			path = "Data Sources";
@@ -3726,17 +3717,6 @@
 				DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */,
 			);
 			path = AvailableOffline;
-			sourceTree = "<group>";
-		};
-		DCE2F05927FEE63E00E9E136 /* Cell Configuration */ = {
-			isa = PBXGroup;
-			children = (
-				DCE2F05F27FEE76C00E9E136 /* OCDataItemCellConfiguration.m */,
-				DCE2F05E27FEE76C00E9E136 /* OCDataItemCellConfiguration.h */,
-				DCE2F05B27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.m */,
-				DCE2F05A27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.h */,
-			);
-			path = "Cell Configuration";
 			sourceTree = "<group>";
 		};
 		DCE62EA62771E9E000E3193F /* Manager */ = {
@@ -4111,7 +4091,6 @@
 				DCC8F9E22028554E00EB6701 /* OCBookmark.h in Headers */,
 				DC20DE4B21BFCBC20096000B /* OCLogComponent.h in Headers */,
 				DC47E4CD27A5820D0020E8EF /* GAImage.h in Headers */,
-				DCE2F05C27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.h in Headers */,
 				DC2F66A02603FCF6001BFDB6 /* OCCancelAction.h in Headers */,
 				DCADC0482072CDEA00DB8E83 /* OCCoreItemList.h in Headers */,
 				DC8245BA21FB334200775AB9 /* OCCore+Internal.h in Headers */,
@@ -4227,7 +4206,6 @@
 				DCA35D5924CF6B2000DBE2B0 /* OCSyncRecord+Diagnostic.h in Headers */,
 				DC8556F1204DEB9200189B9A /* OCXMLNode.h in Headers */,
 				DC47E4C227A5820D0020E8EF /* GAGroup.h in Headers */,
-				DCE2F06027FEE76C00E9E136 /* OCDataItemCellConfiguration.h in Headers */,
 				DC39DC4B2041A2FB00189B9A /* NSError+OCError.h in Headers */,
 				DC139CD020DBC1690090175A /* OCChecksumAlgorithmSHA1.h in Headers */,
 				DCA35D5524CF688700DBE2B0 /* OCDiagnosticSource.h in Headers */,
@@ -4804,7 +4782,6 @@
 				DC0376EF271B1C8500151E8C /* OCLocaleFilterClassSettings.m in Sources */,
 				DC47E4BF27A5820D0020E8EF /* GASpecialFolder.m in Sources */,
 				DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */,
-				DCE2F05D27FEE67200E9E136 /* NSObject+OCDataItemCellConfiguration.m in Sources */,
 				DCF072E92798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m in Sources */,
 				DC47E4C027A5820D0020E8EF /* GAUser.m in Sources */,
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
@@ -4897,7 +4874,6 @@
 				DC41C7F025EA62E40074F23B /* OCResourceRequestAvatar.m in Sources */,
 				DCFE3B9E27A1A6E500939415 /* GAGraphData+Decoder.m in Sources */,
 				DC7650092403DF5000201812 /* NSError+OCNetworkFailure.m in Sources */,
-				DCE2F06127FEE76C00E9E136 /* OCDataItemCellConfiguration.m in Sources */,
 				DC4B11FF220996480062BCDD /* OCProgress.m in Sources */,
 				DC47E4C327A5820D0020E8EF /* GAODataError.m in Sources */,
 				DC5B96D624916CF200733594 /* OCConnection+Upload.m in Sources */,
