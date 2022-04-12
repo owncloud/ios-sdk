@@ -34,4 +34,17 @@
 	return ([self objectsAtIndexes:selectedIndexSet]);
 }
 
+- (nullable id)firstObjectMatching:(BOOL(^)(id object))matcher
+{
+	for (id object in self)
+	{
+		if (matcher(object))
+		{
+			return (object);
+		}
+	}
+
+	return (nil);
+}
+
 @end

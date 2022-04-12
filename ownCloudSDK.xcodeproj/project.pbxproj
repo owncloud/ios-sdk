@@ -784,6 +784,12 @@
 		DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */ = {isa = PBXBuildFile; fileRef = DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */; };
 		DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF621BAB35A00943F76 /* PerformanceTests.m */; };
 		DCFBACF921BAB5F500943F76 /* OCDetailedPerformanceTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */; };
+		DCFC9ED828003EFC005D9144 /* GAShared.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFC9ED628003EFB005D9144 /* GAShared.m */; };
+		DCFC9ED928003EFC005D9144 /* GAShared.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9ED728003EFB005D9144 /* GAShared.h */; };
+		DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */; };
+		DCFC9EDD28003F0D005D9144 /* GARemoteItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */; };
+		DCFC9EE128004791005D9144 /* OCDataSourceComposition.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCFC9EE228004791005D9144 /* OCDataSourceComposition.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFC9EE028004791005D9144 /* OCDataSourceComposition.m */; };
 		DCFE3B7A27A1666B00939415 /* GAGraphObject.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFE3B7827A1666B00939415 /* GAGraphObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCFE3B7E27A1669300939415 /* GAGraphContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFE3B7C27A1669300939415 /* GAGraphContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCFE3B7F27A1669300939415 /* GAGraphContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3B7D27A1669300939415 /* GAGraphContext.m */; };
@@ -1745,6 +1751,12 @@
 		DCFBACF621BAB35A00943F76 /* PerformanceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerformanceTests.m; sourceTree = "<group>"; };
 		DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDetailedPerformanceTestCase.m; sourceTree = "<group>"; };
 		DCFBACFA21BAB6F200943F76 /* OCDetailedPerformanceTestCase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDetailedPerformanceTestCase.h; sourceTree = "<group>"; };
+		DCFC9ED628003EFB005D9144 /* GAShared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAShared.m; sourceTree = "<group>"; };
+		DCFC9ED728003EFB005D9144 /* GAShared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAShared.h; sourceTree = "<group>"; };
+		DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GARemoteItem.h; sourceTree = "<group>"; };
+		DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GARemoteItem.m; sourceTree = "<group>"; };
+		DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataSourceComposition.h; sourceTree = "<group>"; };
+		DCFC9EE028004791005D9144 /* OCDataSourceComposition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDataSourceComposition.m; sourceTree = "<group>"; };
 		DCFE3B7827A1666B00939415 /* GAGraphObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAGraphObject.h; sourceTree = "<group>"; };
 		DCFE3B7C27A1669300939415 /* GAGraphContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAGraphContext.h; sourceTree = "<group>"; };
 		DCFE3B7D27A1669300939415 /* GAGraphContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAGraphContext.m; sourceTree = "<group>"; };
@@ -2478,8 +2490,12 @@
 				DC9A116727CFCC1200D90BA4 /* GAPermission.m */,
 				DC47E4A927A5820C0020E8EF /* GAQuota.h */,
 				DC47E49327A5820C0020E8EF /* GAQuota.m */,
+				DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */,
+				DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */,
 				DC47E4BB27A5820C0020E8EF /* GARoot.h */,
 				DC47E4A227A5820C0020E8EF /* GARoot.m */,
+				DCFC9ED728003EFB005D9144 /* GAShared.h */,
+				DCFC9ED628003EFB005D9144 /* GAShared.m */,
 				DC47E4AB27A5820C0020E8EF /* GASpecialFolder.h */,
 				DC47E49127A5820C0020E8EF /* GASpecialFolder.m */,
 				DC47E4B327A5820C0020E8EF /* GATrash.h */,
@@ -3369,6 +3385,7 @@
 				DCC4F3E927D74DE300ABF4C9 /* OCDataSource.m */,
 				DCC4F3E827D74DE300ABF4C9 /* OCDataSource.h */,
 				DCD3F6A227EA887B00D86662 /* Array Backed */,
+				DCFC9EDE28004767005D9144 /* Composition */,
 				DC04FFBF27F5988F00F22569 /* Subscriptions */,
 				DC04FFC027F5989B00F22569 /* Snapshots */,
 				DC04FFC127F598A800F22569 /* Item Records */,
@@ -3838,6 +3855,15 @@
 			path = Platforms;
 			sourceTree = "<group>";
 		};
+		DCFC9EDE28004767005D9144 /* Composition */ = {
+			isa = PBXGroup;
+			children = (
+				DCFC9EE028004791005D9144 /* OCDataSourceComposition.m */,
+				DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */,
+			);
+			path = Composition;
+			sourceTree = "<group>";
+		};
 		DCFE3B7327A1660C00939415 /* GraphAPI */ = {
 			isa = PBXGroup;
 			children = (
@@ -3994,6 +4020,7 @@
 				DCDB76242739D51200EE7A06 /* OCServerLocatorLookupTable.h in Headers */,
 				DCD3F6A027EA887600D86662 /* OCDataSourceArray.h in Headers */,
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
+				DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
@@ -4048,6 +4075,7 @@
 				DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */,
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
+				DCFC9ED928003EFC005D9144 /* GAShared.h in Headers */,
 				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
 				DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */,
 				DCC599F422EEE65700499B29 /* OCCore+Claims.h in Headers */,
@@ -4238,6 +4266,7 @@
 				DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */,
 				DCFE3B7A27A1666B00939415 /* GAGraphObject.h in Headers */,
 				DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */,
+				DCFC9EE128004791005D9144 /* OCDataSourceComposition.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
 				DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */,
 				DCD038A02542CA4500F97534 /* NSString+OCClassSettings.h in Headers */,
@@ -4613,6 +4642,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCFC9EDD28003F0D005D9144 /* GARemoteItem.m in Sources */,
 				DC381FCC22C8146F00284699 /* NSString+NameConflicts.m in Sources */,
 				DCF95AEB25666FBB00806D2A /* OCClassSetting.m in Sources */,
 				DC8EB30523952085009148F9 /* OCAuthenticationBrowserSessionUIWebView.m in Sources */,
@@ -4794,6 +4824,7 @@
 				DC510D3727E146BD00F2754F /* OCDataItemRecord.m in Sources */,
 				DCF072E52798630900E0B01D /* OCResourceTextPlaceholder.m in Sources */,
 				DCC8F9EB2028557100EB6701 /* OCDatabase.m in Sources */,
+				DCFC9EE228004791005D9144 /* OCDataSourceComposition.m in Sources */,
 				DCED67DD27F1B13600686E4F /* OCDataItemPresentable.m in Sources */,
 				DC0AE4F32311C75300428681 /* OCKeyValueStack.m in Sources */,
 				DC19BFCB21CA6B91007C20D1 /* OCSyncIssue.m in Sources */,
@@ -4809,6 +4840,7 @@
 				DC576ECB226484F50087316D /* OCBackgroundTask.m in Sources */,
 				DC2565F22260BE3700828AA5 /* OCCertificate+PrivacyLogging.m in Sources */,
 				DCA35D6624CF72B500DBE2B0 /* OCDiagnosticContext.m in Sources */,
+				DCFC9ED828003EFC005D9144 /* GAShared.m in Sources */,
 				DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */,
 				DC41C7CE25EA627A0074F23B /* OCResourceRequestItemThumbnail.m in Sources */,
 				DC22669B22817DC600FB29EE /* OCVault+Internal.m in Sources */,

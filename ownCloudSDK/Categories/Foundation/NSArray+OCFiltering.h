@@ -20,9 +20,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSArray (OCFiltering)
+@interface NSArray<ObjectType> (OCFiltering)
 
-- (NSArray *)filteredArrayUsingBlock:(BOOL(^)(id object, BOOL * _Nonnull stop))filter;
+- (NSArray<ObjectType> *)filteredArrayUsingBlock:(BOOL(^)(ObjectType object, BOOL * _Nonnull stop))filter; //!< Returns a new array with all objects passing the provided filter block. Iteration can be stopped at any time by setting *stop to true.
+
+- (nullable ObjectType)firstObjectMatching:(BOOL(^)(ObjectType object))matcher; //!< Returns the first object matching the provided matcher block
 
 @end
 

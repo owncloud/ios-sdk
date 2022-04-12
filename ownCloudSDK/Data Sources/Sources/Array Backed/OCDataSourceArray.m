@@ -50,7 +50,7 @@
 		}
 	}
 
-	@synchronized(self)
+	@synchronized(_subscriptions)
 	{
 		_itemsByReference = itemsByReference;
 		[self setItemReferences:itemReferences updated:updatedItemReferences];
@@ -61,7 +61,7 @@
 {
 	NSMutableSet<id<OCDataItem>> *updatedItems = nil;
 
-	@synchronized(self)
+	@synchronized(_subscriptions)
 	{
 		for (id<OCDataItem,OCDataItemVersion> item in items)
 		{
@@ -94,7 +94,7 @@
 {
 	id<OCDataItem> item;
 
-	@synchronized(self)
+	@synchronized(_subscriptions)
 	{
 		item = [_itemsByReference objectForKey:itemRef];
 	}
@@ -127,7 +127,7 @@
 	OCDataItemRecord *itemRecord = reuseRecord;
 	NSError *error = nil;
 
-	@synchronized(self)
+	@synchronized(_subscriptions)
 	{
 		item = [_itemsByReference objectForKey:itemRef];
 	}

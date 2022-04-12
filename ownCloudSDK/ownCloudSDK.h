@@ -188,6 +188,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCDataTypes.h>
 #import <ownCloudSDK/OCDataSource.h>
 #import <ownCloudSDK/OCDataSourceArray.h>
+#import <ownCloudSDK/OCDataSourceComposition.h>
 #import <ownCloudSDK/OCDataSourceSubscription.h>
 #import <ownCloudSDK/OCDataSourceSnapshot.h>
 #import <ownCloudSDK/OCDataItemRecord.h>

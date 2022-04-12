@@ -33,6 +33,7 @@
 @class GASpecialFolder;
 @class GATrash;
 @class GAUser;
+@class GARemoteItem;
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
@@ -61,6 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) GARoot *root;
 @property(strong, nullable) GATrash *trash;
 @property(strong, nullable) GASpecialFolder *specialFolder;
+@property(strong, nullable) GARemoteItem *remoteItem;
 @property(strong, nullable) NSNumber *size; //!< [integer:int64] Size of the item in bytes. Read-only.
 @property(strong, nullable) NSURL *webDavUrl; //!< WebDAV compatible URL for the item. Read-only.
 @property(strong, nullable) NSArray<GADriveItem *> *children; //!< Collection containing Item objects for the immediate children of Item. Only items representing folders have children. Read-only. Nullable.

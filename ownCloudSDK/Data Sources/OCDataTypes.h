@@ -33,6 +33,7 @@ typedef NSString* OCDataSourceSpecialItem NS_TYPED_ENUM;
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCDataSource;
+@class OCDataItemRecord;
 
 @protocol OCDataItem <NSObject>
 
@@ -51,6 +52,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef BOOL(^OCDataItemHasChildrenProvider)(OCDataSource *dataSource, id<OCDataItem> item);
 typedef OCDataSource * _Nullable(^OCDataItemChildrenDataSourceProvider)(OCDataSource *parentItemDataSource, id<OCDataItem> parentItem);
+
+typedef BOOL(^OCDataSourceItemFilter)(OCDataSource *source, OCDataItemReference itemRef);
+typedef NSComparisonResult(^OCDataSourceItemComparator)(OCDataSource *source1, OCDataItemReference itemRef1, OCDataSource *source2, OCDataItemReference itemRef2);
+
+typedef BOOL(^OCDataSourceItemRecordFilter)(OCDataItemRecord * _Nullable itemRecord);
+typedef NSComparisonResult(^OCDataSourceItemRecordComparator)(OCDataItemRecord * _Nullable itemRecord1, OCDataItemRecord * _Nullable itemRecord2);
 
 extern OCDataItemType OCDataItemTypeDrive; //!< Item of type OCDrive
 extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPresentable
