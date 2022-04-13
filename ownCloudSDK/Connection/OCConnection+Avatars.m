@@ -63,7 +63,7 @@
 
 				avatar.userIdentifier = user.userIdentifier;
 				avatar.eTag = response.headerFields[@"ETag"];
-				avatar.mimeType = response.headerFields[@"Content-Type"];
+				avatar.mimeType = response.contentType;
 				avatar.data = response.bodyData;
 				avatar.timestamp = [NSDate new];
 

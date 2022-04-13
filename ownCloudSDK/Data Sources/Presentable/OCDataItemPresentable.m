@@ -59,36 +59,27 @@
 	return (OCDataItemTypePresentable);
 }
 
-- (void)requestResource:(OCDataItemPresentableResource)presentableResource withOptions:(OCDataViewOptions)options completionHandler:(void(^)(NSError * _Nullable error, id _Nullable resource))completionHandler
+- (nullable OCResourceRequest *)provideResourceRequest:(OCDataItemPresentableResource)presentableResource withOptions:(nullable OCDataViewOptions)options error:(NSError * _Nullable * _Nullable)outError
 {
 	if (presentableResource != nil)
 	{
-		OCDataItemPresentableResourceProvider provider;
+		OCDataItemPresentableResourceRequestProvider requestProvider;
 
 		if (![_availableResources containsObject:presentableResource])
 		{
 			// Resource is not available
-			completionHandler(nil, nil);
-			return;
+			return(nil);
 		}
 
-		if ((provider = self.resourceProvider) != nil)
+		if ((requestProvider = self.resourceRequestProvider) != nil)
 		{
 			// Provide resource
-			provider(self, presentableResource, options, completionHandler);
-			return;
-		}
-		else
-		{
-			// No resource provider - nothing to return
-			completionHandler(nil, nil);
+			return (requestProvider(self, presentableResource, options, outError));
 		}
 	}
-	else
-	{
-		// "resource" is required
-		completionHandler(OCError(OCErrorInsufficientParameters), nil);
-	}
+
+	// No resource request provider or no resource provided
+	return (nil);
 }
 
 - (BOOL)respondsToSelector:(SEL)selector

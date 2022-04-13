@@ -559,7 +559,7 @@
 	[OCEvent registerEventHandler:self forIdentifier:@"test"];
 
 	[self _testConnectWithUserEnteredURLString:@"http://admin:admin@demo.owncloud.org" useAuthMethod:OCAuthenticationMethodIdentifierBasicAuth preConnectAction:nil connectAction:^(NSError *error, OCIssue *issue, OCConnection *connection) {
-		OCLog(@"User: %@ Preview API: %d", connection.loggedInUser.userName, connection.supportsPreviewAPI);
+		OCLog(@"User: %@", connection.loggedInUser.userName);
 
 		XCTAssert((error==nil), @"No error: %@", error);
 		XCTAssert((issue==nil), @"No issue: %@", issue);

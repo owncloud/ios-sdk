@@ -22,9 +22,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class OCDataItemPresentable;
+@class OCResourceRequest;
 
 typedef NSString* OCDataItemPresentableResource NS_TYPED_ENUM;
-typedef NSProgress * _Nullable(^OCDataItemPresentableResourceProvider)(OCDataItemPresentable *presentable, OCDataItemPresentableResource presentableResource, OCDataViewOptions _Nullable options, void(^completionHandler)(NSError * _Nullable error, id _Nullable resource));
+typedef OCResourceRequest * _Nullable(^OCDataItemPresentableResourceRequestProvider)(OCDataItemPresentable *presentable, OCDataItemPresentableResource presentableResource, OCDataViewOptions _Nullable options, NSError * _Nullable * _Nullable outError);
 
 @interface OCDataItemPresentable : NSObject <OCDataItem, OCDataItemVersion>
 
@@ -46,9 +47,9 @@ typedef NSProgress * _Nullable(^OCDataItemPresentableResourceProvider)(OCDataIte
 
 #pragma mark - Asynchronous resource retrieval
 @property(strong,nullable) NSArray<OCDataItemPresentableResource> *availableResources; //!< Set of available resources that can be requested
-@property(copy,nullable) OCDataItemPresentableResourceProvider resourceProvider; //!< Resource provider, used by -requestResource:withOptions:completionHandler:
+@property(copy,nullable) OCDataItemPresentableResourceRequestProvider resourceRequestProvider; //!< Resource request provider, used by - provideResourceRequest:withOptions:completionHandler:
 
-- (void)requestResource:(OCDataItemPresentableResource)presentableResource withOptions:(nullable OCDataViewOptions)options completionHandler:(void(^)(NSError * _Nullable error, id _Nullable resource))completionHandler; //!< Asynchronously request a resource associated with the representable, i.e. a thumbnail, using the representable's resourceProvider
+- (nullable OCResourceRequest *)provideResourceRequest:(OCDataItemPresentableResource)presentableResource withOptions:(nullable OCDataViewOptions)options error:(NSError * _Nullable * _Nullable)outError; //!< Returns an OCResourceRequest for a particular resource associated with the presentable, i.e. a thumbnail, using the presentable's resourceRequestProvider
 
 #pragma mark - Children data source provider
 @property(copy,nullable) OCDataItemHasChildrenProvider hasChildrenProvider;

@@ -2897,60 +2897,35 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if (item.type != OCItemTypeCollection)
 	{
-		if (self.supportsPreviewAPI)
+		// Preview API (OC 10.0.9+)
+		url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
+
+		if (url == nil)
 		{
-			// Preview API (OC 10.0.9+)
-			url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
-
-			if (url == nil)
-			{
-				// WebDAV root could not be generated (likely due to lack of username)
-				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
-				return (nil);
-			}
-
-			// Add path
-			if (item.path != nil)
-			{
-				url = [url URLByAppendingPathComponent:item.path];
-			}
-
-			// Compose request
-			request = [OCHTTPRequest requestWithURL:url];
-
-			request.groupID = item.path.stringByDeletingLastPathComponent;
-			request.priority = NSURLSessionTaskPriorityDefault;
-
-			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-				@(size.width).stringValue, 	@"x",
-				@(size.height).stringValue,	@"y",
-				item.eTag, 			@"c",
-				@"1",				@"a", // Request resize respecting aspect ratio 
-				@"1", 				@"preview",
-			nil];
+			// WebDAV root could not be generated (likely due to lack of username)
+			[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+			return (nil);
 		}
-		else
+
+		// Add path
+		if (item.path != nil)
 		{
-			// Thumbnail API (OC < 10.0.9)
-			url = [self URLForEndpoint:OCConnectionEndpointIDThumbnail options:nil];
-
-			if (url == nil)
-			{
-				// WebDAV root could not be generated (likely due to lack of username)
-				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
-				return (nil);
-			}
-
-			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
-
-			// Compose request
-			request = [OCHTTPRequest requestWithURL:url];
-			/*
-
-			// Not supported for OC < 10.0.9
-			error = [NSError errorWithOCError:OCErrorFeatureNotSupportedByServer];
-			*/
+			url = [url URLByAppendingPathComponent:item.path];
 		}
+
+		// Compose request
+		request = [OCHTTPRequest requestWithURL:url];
+
+		request.groupID = item.path.stringByDeletingLastPathComponent;
+		request.priority = NSURLSessionTaskPriorityDefault;
+
+		request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+			@(size.width).stringValue, 	@"x",
+			@(size.height).stringValue,	@"y",
+			item.eTag, 			@"c",
+			@"1",				@"a", // Request resize respecting aspect ratio 
+			@"1", 				@"preview",
+		nil];
 	}
 	else
 	{
@@ -3024,7 +2999,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
 				thumbnail.maxPixelSize = maximumSize;
 
-				thumbnail.fillMode = self.supportsPreviewAPI ? OCImageFillModeScaleToFit : OCImageFillModeScaleToFill;
+				thumbnail.fillMode = OCImageFillModeScaleToFit;
 
 				event.result = thumbnail;
 			}

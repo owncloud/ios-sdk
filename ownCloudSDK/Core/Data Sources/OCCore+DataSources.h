@@ -22,9 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCore (DataSources)
 
-@property(strong,nonatomic) OCDataSource *drivesDataSource;
-@property(strong,nonatomic) OCDataSource *hierarchicDrivesDataSource;
-@property(strong,nonatomic) OCDataSource *projectDrivesDataSource;
+@property(readonly,strong,nonatomic) OCDataSource *drivesDataSource;
+@property(readonly,strong,nonatomic) OCDataSource *hierarchicDrivesDataSource;
+@property(readonly,strong,nonatomic) OCDataSource *projectDrivesDataSource;
 
 @end
 

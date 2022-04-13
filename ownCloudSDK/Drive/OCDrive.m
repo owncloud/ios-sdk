@@ -85,68 +85,22 @@
 								((readmeDriveItem != nil) ? 	@[OCDataItemPresentableResourceCoverDescription] :
 												nil);
 
-			presentable.resourceProvider = ^(OCDataItemPresentable * _Nonnull presentable, OCDataItemPresentableResource  _Nonnull resource, OCDataViewOptions  _Nullable options, void (^ _Nonnull completionHandler)(NSError * _Nullable, id _Nullable)) {
-				OCCore *core;
-				NSProgress *progress = NSProgress.indeterminateProgress;
+			presentable.resourceRequestProvider = ^OCResourceRequest * _Nullable(OCDataItemPresentable * _Nonnull presentable, OCDataItemPresentableResource  _Nonnull presentableResource, OCDataViewOptions  _Nullable options, NSError * _Nullable __autoreleasing * _Nullable outError) {
+				OCResourceRequestDriveItem *resourceRequest = nil;
 
-				if ((core = options[OCDataViewOptionCore]) != nil)
+				if ([presentableResource isEqual:OCDataItemPresentableResourceCoverImage] && (imageDriveItem != nil))
 				{
-					OCResourceRequestDriveItem *resourceRequest = nil;
-					GADriveItem *requestItem = nil;
-
-					if ([resource isEqual:OCDataItemPresentableResourceCoverImage])
-					{
-						if (imageDriveItem != nil)
-						{
-							requestItem = imageDriveItem;
-						}
-						else
-						{
-							completionHandler(nil, nil);
-						}
-					}
-
-					if ([resource isEqual:OCDataItemPresentableResourceCoverDescription])
-					{
-						if (readmeDriveItem != nil)
-						{
-							requestItem = readmeDriveItem;
-						}
-						else
-						{
-							completionHandler(nil, nil);
-						}
-					}
-
-					if (requestItem != nil)
-					{
-						resourceRequest = [OCResourceRequestDriveItem requestDriveItem:requestItem waitForConnectivity:NO changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, BOOL isOngoing, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
-							if (!isOngoing)
-							{
-								completionHandler(error, newResource);
-							}
-						}];
-						resourceRequest.lifetime = OCResourceRequestLifetimeSingleRun;
-					}
-
-					if (resourceRequest != nil)
-					{
-						__weak OCResourceRequest *weakResourceRequest = resourceRequest;
-
-						progress.cancellationHandler = ^{
-							[weakResourceRequest endRequest];
-						};
-
-						[core.vault.resourceManager startRequest:resourceRequest];
-					}
-				}
-				else
-				{
-					// Missing core in options
-					completionHandler(OCError(OCErrorInsufficientParameters), nil);
+					resourceRequest = [OCResourceRequestDriveItem requestDriveItem:imageDriveItem waitForConnectivity:YES changeHandler:nil];
 				}
 
-				return (progress);
+				if ([presentableResource isEqual:OCDataItemPresentableResourceCoverDescription] && (readmeDriveItem != nil))
+				{
+					resourceRequest = [OCResourceRequestDriveItem requestDriveItem:readmeDriveItem waitForConnectivity:YES changeHandler:nil];
+				}
+
+				resourceRequest.lifetime = OCResourceRequestLifetimeSingleRun;
+
+				return (resourceRequest);
 			};
 		}
 

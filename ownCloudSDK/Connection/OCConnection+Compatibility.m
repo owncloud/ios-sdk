@@ -187,11 +187,6 @@
 	return ([self.serverVersion compareVersionWith:version] >= NSOrderedSame);
 }
 
-- (BOOL)supportsPreviewAPI
-{
-	return ([self runsServerVersionOrHigher:@"10.0.9"]);
-}
-
 - (BOOL)useDriveAPI
 {
 	return (self.capabilities.spacesEnabled.boolValue || [self.bookmark hasCapability:OCBookmarkCapabilityDrives]);

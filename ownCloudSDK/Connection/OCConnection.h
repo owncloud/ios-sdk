@@ -388,7 +388,6 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 + (nullable NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus;
 
 #pragma mark - API Switches
-@property(readonly,nonatomic) BOOL supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
 @property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
 
 #pragma mark - Checks
