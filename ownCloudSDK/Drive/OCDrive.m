@@ -21,10 +21,16 @@
 #import "GADriveItem.h"
 #import "OCMacros.h"
 #import "OCLocation.h"
+#import "OCCore.h"
+#import "NSError+OCError.h"
+#import "NSProgress+OCExtensions.h"
 
 #import "OCDataConverter.h"
 #import "OCDataRenderer.h"
 #import "OCDataItemPresentable.h"
+#import "OCResourceManager.h"
+
+#import "OCResourceRequestDriveItem.h"
 
 @implementation OCDrive
 
@@ -40,6 +46,7 @@
 		drive.type = gDrive.driveType;
 
 		drive.name = gDrive.name;
+		drive.desc = gDrive.desc;
 
 		drive.davRootURL = gDrive.root.webDavUrl;
 
@@ -65,9 +72,82 @@
 
 		if (inDrive != nil)
 		{
+			GADriveItem *imageDriveItem = [inDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage];
+			GADriveItem *readmeDriveItem = [inDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme];
+
 			presentable = [[OCDataItemPresentable alloc] initWithItem:inDrive];
 			presentable.title = inDrive.name;
 			presentable.subtitle = inDrive.type;
+
+			presentable.availableResources = (imageDriveItem != nil) ?
+								((readmeDriveItem != nil) ? 	@[OCDataItemPresentableResourceCoverImage, OCDataItemPresentableResourceCoverDescription] :
+												@[OCDataItemPresentableResourceCoverImage]) :
+								((readmeDriveItem != nil) ? 	@[OCDataItemPresentableResourceCoverDescription] :
+												nil);
+
+			presentable.resourceProvider = ^(OCDataItemPresentable * _Nonnull presentable, OCDataItemPresentableResource  _Nonnull resource, OCDataViewOptions  _Nullable options, void (^ _Nonnull completionHandler)(NSError * _Nullable, id _Nullable)) {
+				OCCore *core;
+				NSProgress *progress = NSProgress.indeterminateProgress;
+
+				if ((core = options[OCDataViewOptionCore]) != nil)
+				{
+					OCResourceRequestDriveItem *resourceRequest = nil;
+					GADriveItem *requestItem = nil;
+
+					if ([resource isEqual:OCDataItemPresentableResourceCoverImage])
+					{
+						if (imageDriveItem != nil)
+						{
+							requestItem = imageDriveItem;
+						}
+						else
+						{
+							completionHandler(nil, nil);
+						}
+					}
+
+					if ([resource isEqual:OCDataItemPresentableResourceCoverDescription])
+					{
+						if (readmeDriveItem != nil)
+						{
+							requestItem = readmeDriveItem;
+						}
+						else
+						{
+							completionHandler(nil, nil);
+						}
+					}
+
+					if (requestItem != nil)
+					{
+						resourceRequest = [OCResourceRequestDriveItem requestDriveItem:requestItem waitForConnectivity:NO changeHandler:^(OCResourceRequest * _Nonnull request, NSError * _Nullable error, BOOL isOngoing, OCResource * _Nullable previousResource, OCResource * _Nullable newResource) {
+							if (!isOngoing)
+							{
+								completionHandler(error, newResource);
+							}
+						}];
+						resourceRequest.lifetime = OCResourceRequestLifetimeSingleRun;
+					}
+
+					if (resourceRequest != nil)
+					{
+						__weak OCResourceRequest *weakResourceRequest = resourceRequest;
+
+						progress.cancellationHandler = ^{
+							[weakResourceRequest endRequest];
+						};
+
+						[core.vault.resourceManager startRequest:resourceRequest];
+					}
+				}
+				else
+				{
+					// Missing core in options
+					completionHandler(OCError(OCErrorInsufficientParameters), nil);
+				}
+
+				return (progress);
+			};
 		}
 
 		return (presentable);
@@ -83,6 +163,7 @@
 	return (![drive.identifier isEqual:_identifier] ||
 	 	![drive.type isEqual:_type] ||
 	 	![drive.name isEqual:_name] ||
+	 	![drive.desc isEqual:_desc] ||
 	 	![drive.davRootURL isEqual:_davRootURL] ||
 	 	(![drive.rootETag isEqual:self.rootETag] && (drive.rootETag != self.rootETag)));
 }
@@ -118,6 +199,7 @@
 		_type = [decoder decodeObjectOfClass:NSString.class forKey:@"type"];
 
 		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
+		_desc = [decoder decodeObjectOfClass:NSString.class forKey:@"desc"];
 
 		_davRootURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"davURL"];
 
@@ -135,6 +217,7 @@
 	[coder encodeObject:_type forKey:@"type"];
 
 	[coder encodeObject:_name forKey:@"name"];
+	[coder encodeObject:_desc forKey:@"desc"];
 
 	[coder encodeObject:_davRootURL forKey:@"davURL"];
 
@@ -156,13 +239,13 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@", _identifier, _type, _name, _davRootURL, _gaDrive.eTag]);
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag]);
 }
 
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
-	return (_identifier.hash ^ _gaDrive.eTag.hash ^ _name.hash ^ _davRootURL.hash);
+	return (_identifier.hash ^ _gaDrive.eTag.hash ^ _name.hash ^ _desc.hash ^ _davRootURL.hash);
 }
 
 - (BOOL)isEqual:(id)object

@@ -27,13 +27,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *OCDriveType;
+typedef NSString* OCDriveAlias;
 
 @interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersion>
 
 @property(strong) OCDriveID identifier;
 @property(strong) OCDriveType type;
 
-@property(strong,nullable) NSString* name;
+@property(strong,nullable) NSString *name;
+@property(strong,nullable) NSString *desc;
 
 @property(strong,nullable) NSURL *davRootURL;
 

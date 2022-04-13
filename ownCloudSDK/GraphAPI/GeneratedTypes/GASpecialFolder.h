@@ -18,17 +18,37 @@
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
 
+// occgen: forward declarations
+typedef NSString * GASpecialFolderName;
+
+// occgen: typedefs {"locked":true}
+typedef NSString* GASpecialFolderName NS_TYPED_ENUM;
+
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
 @interface GASpecialFolder : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
-@property(strong, nullable) NSString *name; //!< The unique identifier for this item in the /drive/special collection
+// occgen: type properties { "customPropertyTypes" : { "name" : "GASpecialFolderName" }}
+@property(strong, nullable) GASpecialFolderName name; //!< The unique identifier for this item in the /drive/special collection
 
 // occgen: type protected {"locked":true}
 
 
-// occgen: type end
+// occgen: type end {"locked":true}
 @end
+
+extern GASpecialFolderName GASpecialFolderNameReadme;
+extern GASpecialFolderName GASpecialFolderNameImage;
+
 NS_ASSUME_NONNULL_END
+
+
+
+
+
+
+
+
+
+
 

@@ -61,6 +61,18 @@
 // occgen: type protected {"locked":true}
 
 
-// occgen: type end
+// occgen: type end {"locked":true}
 @end
+
+GASpecialFolderName GASpecialFolderNameReadme = @"readme";
+GASpecialFolderName GASpecialFolderNameImage = @"image";
+
+
+
+
+
+
+
+
+
 

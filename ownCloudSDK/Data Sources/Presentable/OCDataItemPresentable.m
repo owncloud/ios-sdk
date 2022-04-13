@@ -59,15 +59,23 @@
 	return (OCDataItemTypePresentable);
 }
 
-- (void)requestResource:(OCDataItemPresentableResource)resource withOptions:(OCDataViewOptions)options completionHandler:(void(^)(NSError * _Nullable error, id _Nullable resource))completionHandler
+- (void)requestResource:(OCDataItemPresentableResource)presentableResource withOptions:(OCDataViewOptions)options completionHandler:(void(^)(NSError * _Nullable error, id _Nullable resource))completionHandler
 {
-	if (resource != nil)
+	if (presentableResource != nil)
 	{
 		OCDataItemPresentableResourceProvider provider;
 
+		if (![_availableResources containsObject:presentableResource])
+		{
+			// Resource is not available
+			completionHandler(nil, nil);
+			return;
+		}
+
 		if ((provider = self.resourceProvider) != nil)
 		{
-			provider(self, resource, options, completionHandler);
+			// Provide resource
+			provider(self, presentableResource, options, completionHandler);
 			return;
 		}
 		else
@@ -124,3 +132,6 @@
 }
 
 @end
+
+OCDataItemPresentableResource OCDataItemPresentableResourceCoverImage = @"coverImage";
+OCDataItemPresentableResource OCDataItemPresentableResourceCoverDescription = @"coverDescription";

@@ -19,6 +19,7 @@
 #import "GAGraphObject.h"
 
 // occgen: forward declarations
+typedef NSString * OCFileETag;
 @class GAFileSystemInfo;
 @class GAFolder;
 @class GAIdentitySet;
@@ -32,7 +33,7 @@
 NS_ASSUME_NONNULL_BEGIN
 @interface GARemoteItem : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "eTag" : "OCFileETag" }}
 @property(strong, nullable) GAIdentitySet *createdBy;
 @property(strong, nullable) NSDate *createdDateTime; //!< [string:date-time] Date and time of item creation. Read-only. | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?(Z|[+-][0-9][0-9]:[0-9][0-9])$
 @property(strong, nullable) GAOpenGraphFile *file;
@@ -43,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) GAIdentitySet *lastModifiedBy;
 @property(strong, nullable) NSDate *lastModifiedDateTime; //!< [string:date-time] Date and time the item was last modified. Read-only. | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?(Z|[+-][0-9][0-9]:[0-9][0-9])$
 @property(strong, nullable) NSString *name; //!< Optional. Filename of the remote item. Read-only.
-@property(strong, nullable) NSString *eTag; //!< ETag for the item. Read-only.
+@property(strong, nullable) OCFileETag eTag; //!< ETag for the item. Read-only.
 @property(strong, nullable) NSString *cTag; //!< An eTag for the content of the item. This eTag is not changed if only the metadata is changed. Note This property is not returned if the item is a folder. Read-only.
 @property(strong, nullable) GAItemReference *parentReference;
 @property(strong, nullable) GAShared *shared;

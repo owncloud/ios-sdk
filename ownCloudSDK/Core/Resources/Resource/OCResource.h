@@ -51,5 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 extern OCResourceType OCResourceTypeAny;
 extern OCResourceType OCResourceTypeAvatar;
 extern OCResourceType OCResourceTypeItemThumbnail;
+extern OCResourceType OCResourceTypeDriveItem;
 
 NS_ASSUME_NONNULL_END

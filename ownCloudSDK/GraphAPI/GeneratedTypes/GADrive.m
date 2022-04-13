@@ -22,6 +22,10 @@
 #import "GAQuota.h"
 #import "GAUser.h"
 
+// occgen: more includes
+#import "GASpecialFolder.h"
+#import "NSArray+OCFiltering.h"
+
 // occgen: type start
 @implementation GADrive
 
@@ -118,8 +122,26 @@
 }
 
 // occgen: type protected {"locked":true}
+- (GADriveItem *)specialDriveItemFor:(GASpecialFolderName)name
+{
+	return ([_special firstObjectMatching:^BOOL(GADriveItem * _Nonnull driveItem) {
+		return ([driveItem.specialFolder.name isEqual:name]);
+	}]);
+}
 
-
-// occgen: type end
+// occgen: type end {"locked":true}
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
 

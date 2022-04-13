@@ -61,6 +61,7 @@
 #import "OCResourceSourceAvatarPlaceholders.h"
 #import "OCResourceSourceItemThumbnails.h"
 #import "OCResourceSourceItemLocalThumbnails.h"
+#import "OCResourceSourceDriveItems.h"
 #import "OCConnection+GraphAPI.h"
 #import "NSArray+OCFiltering.h"
 #import "OCCore+DataSources.h"
@@ -534,6 +535,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				[self.vault.resourceManager addSource:[[OCResourceSourceAvatars alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemLocalThumbnails alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceDriveItems alloc] initWithCore:self]];
 			}
 			else
 			{
