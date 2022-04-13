@@ -118,6 +118,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorWebFingerLacksServerInstanceRelation, //!< Web finger response lacks server instance relation.
 	OCErrorUnknownUser, //!< Unknown user
 
+	OCErrorRequestTimeout, //!< Request timed out
+
 	OCErrorResourceDoesNotExist, //!< Resource does not exist
 
 	OCErrorInvalidType, //!< Invalid type

@@ -345,6 +345,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Lock invalidated.";
 				break;
 
+				case OCErrorRequestTimeout:
+					unlocalizedString = @"Request timed out";
+				break;
+
 				case OCErrorResourceDoesNotExist:
 					unlocalizedString = @"Resource does not exist.";
 				break;

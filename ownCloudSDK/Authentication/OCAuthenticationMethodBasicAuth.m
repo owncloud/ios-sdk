@@ -151,7 +151,11 @@ OCAuthenticationMethodAutoRegister
 #pragma mark - Authentication Secret Caching
 - (id)loadCachedAuthenticationSecretForConnection:(OCConnection *)connection
 {
-	NSDictionary *authDataDict = [OCAuthenticationMethodBasicAuth _decodedAuthenticationData:connection.bookmark.authenticationData];
+	NSData *authenticationData = connection.bookmark.authenticationData;
+
+	_cachedAuthenticationDataID = [self.class authenticationDataIDForAuthenticationData:authenticationData];
+	
+	NSDictionary *authDataDict = [OCAuthenticationMethodBasicAuth _decodedAuthenticationData:authenticationData];
 
 	return (authDataDict[OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey]);
 }

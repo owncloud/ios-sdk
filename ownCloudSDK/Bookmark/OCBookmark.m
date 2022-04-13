@@ -22,6 +22,7 @@
 #import "OCEvent.h"
 #import "OCAppIdentity.h"
 #import "OCResourceTextPlaceholder.h"
+#import "NSData+OCHash.h"
 
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
@@ -131,6 +132,11 @@
 - (void)setAuthenticationData:(NSData *)authenticationData
 {
 	[self setAuthenticationData:authenticationData saveToKeychain:(_authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)];
+}
+
+- (OCAuthenticationDataID)authenticationDataID
+{
+	return ([OCAuthenticationMethod authenticationDataIDForAuthenticationData:self.authenticationData]);
 }
 
 - (void)setAuthenticationData:(NSData *)authenticationData saveToKeychain:(BOOL)saveToKeychain

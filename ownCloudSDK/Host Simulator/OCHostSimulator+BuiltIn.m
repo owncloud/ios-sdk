@@ -30,6 +30,8 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierFiveSecondsOf404 = @
 static OCHostSimulationIdentifier OCHostSimulationIdentifierSimpleAPM = @"simple-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"recovering-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-finger";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierAuthRaceCondition = @"auth-race-condition";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierActionTimeoutSimulator = @"action-timeout-simulator";
 
 @implementation OCHostSimulator (BuiltIn)
 
@@ -75,6 +77,20 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-fi
 		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
 	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self webFingerSimulator]);
+	}]];
+
+	// AuthRaceCondition
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierAuthRaceCondition locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self authRaceConditionSimulator]);
+	}]];
+
+	// ActionTimeoutSimulator
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierActionTimeoutSimulator locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Lets all MOVE/COPY/DELETE/PUT requests fail with a timeout error."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self actionTimeoutSimulator]);
 	}]];
 }
 
@@ -260,6 +276,74 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-fi
 			}
 
 			responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:statusCode headers:nil contentType:@"application/jrd+json" bodyData:[NSJSONSerialization dataWithJSONObject:jsonResponseDict options:NSJSONWritingPrettyPrinted error:NULL]]);
+
+			return (YES);
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
+}
+
+#pragma mark - Auth Race Condition Simulator
++ (instancetype)authRaceConditionSimulator
+{
+	OCHostSimulator *hostSimulator;
+
+	NSMutableSet<NSString *> *disruptedAuthHeaders = [NSMutableSet new];
+	__block NSUInteger requestCounter = 0;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection *connection, OCHTTPRequest *request, OCHostSimulatorResponseHandler responseHandler) {
+		NSString *authorizationHeader = request.headerFields[@"Authorization"];
+		NSString *invalidAuthContent = @"INVALID";
+
+		if ((authorizationHeader != nil) && ![authorizationHeader isEqual:invalidAuthContent] && ![disruptedAuthHeaders containsObject:authorizationHeader])
+		{
+			requestCounter++;
+
+			if (requestCounter < 5)
+			{
+				request.headerFields[@"Authorization"] = invalidAuthContent;
+				request.authenticationDataID = invalidAuthContent;
+
+				responseHandler(nil, [OCHostSimulatorResponse responseWithURL:request.url statusCode:OCHTTPStatusCodeUNAUTHORIZED headers:nil contentType:@"text/html" bodyData:nil]);
+
+				return (YES);
+			}
+			else
+			{
+				[disruptedAuthHeaders addObject:authorizationHeader];
+			}
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
+}
+
+#pragma mark - Action Timeout
++ (instancetype)actionTimeoutSimulator
+{
+	OCHostSimulator *hostSimulator;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection * _Nonnull connection, OCHTTPRequest * _Nonnull request, OCHostSimulatorResponseHandler  _Nonnull responseHandler) {
+		OCHTTPMethod method = request.method;
+
+		if ([method isEqual:OCHTTPMethodCOPY] ||
+		    [method isEqual:OCHTTPMethodMOVE] ||
+		    [method isEqual:OCHTTPMethodDELETE] ||
+		    [method isEqual:OCHTTPMethodPUT] ||
+		    [method isEqual:OCHTTPMethodMKCOL])
+		{
+			responseHandler([NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil], [OCHostSimulatorResponse responseWithURL:request.url statusCode:0 headers:nil contentType:nil bodyData:nil]);
 
 			return (YES);
 		}

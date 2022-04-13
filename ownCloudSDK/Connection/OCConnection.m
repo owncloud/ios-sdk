@@ -52,6 +52,7 @@
 #import "OCDAVRawResponse.h"
 #import "OCBookmarkManager.h"
 #import "OCConnection+GraphAPI.h"
+#import "NSError+OCNetworkFailure.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -1849,6 +1850,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			davRequest.downloadRequest = YES;
 			davRequest.priority = NSURLSessionTaskPriorityHigh;
 			davRequest.forceCertificateDecisionDelegation = YES;
+			if (depth == OCPropfindDepthInfinity)
+			{
+				// Extend timeout to 5 minutes for infinite PROPFIND
+				davRequest.customTimeout =  @(5 * 60.0);
+			}
 
 			if (options[OCConnectionOptionRequestObserverKey] != nil)
 			{
@@ -2183,7 +2189,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		}
 		else
 		{
-			if (request.error != nil)
+			if (error != nil)
+			{
+				event.error = error;
+			}
+			else if (request.error != nil)
 			{
 				event.error = request.error;
 			}
@@ -2368,7 +2378,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}
@@ -2481,7 +2495,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateFolder uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}
@@ -2619,6 +2637,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			};
 			request.priority = NSURLSessionTaskPriorityHigh;
 
+			if ([requestMethod isEqual:OCHTTPMethodCOPY])
+			{
+				// Extend timeout to 10 minutes for COPY
+				request.customTimeout =  @(10 * 60.0);
+			}
+
 			request.forceCertificateDecisionDelegation = YES;
 
 			[request setValue:[destinationURL absoluteString] forHeaderField:OCHTTPHeaderFieldNameDestination];
@@ -2653,7 +2677,18 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			if (error.isNetworkTimeoutError)
+			{
+				event.error = OCError(OCErrorRequestTimeout);
+			}
+			else
+			{
+				event.error = error;
+			}
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}
@@ -2786,7 +2821,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDelete uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}
@@ -2973,7 +3012,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeRetrieveThumbnail uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}
@@ -3079,7 +3122,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeFilterFiles uuid:request.identifier attributes:nil]) != nil)
 	{
-		if (request.error != nil)
+		if (error != nil)
+		{
+			event.error = error;
+		}
+		else if (request.error != nil)
 		{
 			event.error = request.error;
 		}

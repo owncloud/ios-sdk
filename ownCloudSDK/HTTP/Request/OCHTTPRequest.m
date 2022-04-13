@@ -281,8 +281,14 @@
 - (NSMutableURLRequest *)generateURLRequest
 {
 	NSMutableURLRequest *urlRequest;
-	
-	if ((urlRequest = [[NSMutableURLRequest alloc] initWithURL:self.effectiveURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]) != nil)
+	NSTimeInterval timeoutInterval = 60;
+
+	if (self.customTimeout != nil)
+	{
+		timeoutInterval = self.customTimeout.doubleValue;
+	}
+
+	if ((urlRequest = [[NSMutableURLRequest alloc] initWithURL:self.effectiveURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:timeoutInterval]) != nil)
 	{
 		// Apply method
 		urlRequest.HTTPMethod = self.method;
@@ -421,18 +427,39 @@
 {
 	NSMutableString *formattedHeaders = [NSMutableString new];
 
+	static dispatch_once_t onceToken;
+	static NSMutableArray<NSString *> *knownAuthorizationHeaders;
+
+	dispatch_once(&onceToken, ^{
+		knownAuthorizationHeaders = [NSMutableArray new];
+	});
+
 	[headers enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull headerField, NSString * _Nonnull value, BOOL * _Nonnull stop) {
 		if ([headerField isEqualToString:OCHTTPHeaderFieldNameAuthorization])
 		{
 			NSArray<NSString *> *authorizationComponents = [value componentsSeparatedByString:@" "];
+			NSUInteger authHeaderIndex = 0;
+
+			@synchronized (knownAuthorizationHeaders)
+			{
+				// Do not store copies of header in the cache/memory - use its SHA-1 hash instead
+				NSString *hashedAuthorizationHeader = [[[value dataUsingEncoding:NSUTF8StringEncoding] sha1Hash] asHexStringWithSeparator:nil lowercase:YES];
+
+				if (![knownAuthorizationHeaders containsObject:hashedAuthorizationHeader])
+				{
+					[knownAuthorizationHeaders addObject:hashedAuthorizationHeader];
+				}
+
+				authHeaderIndex = [knownAuthorizationHeaders indexOfObject:hashedAuthorizationHeader];
+			}
 
 			if (authorizationComponents.count > 1)
 			{
-				value = [authorizationComponents[0] stringByAppendingString:@" [redacted]"];
+				value = [authorizationComponents[0] stringByAppendingFormat:@" [redacted:%lu]", authHeaderIndex];
 			}
 			else
 			{
-				value = @"[redacted]";
+				value = [NSString stringWithFormat:@"[redacted:%lu]", authHeaderIndex];
 			}
 		}
 
@@ -549,6 +576,8 @@
 		self.bodyData 		= [decoder decodeObjectOfClass:[NSData class] forKey:@"bodyData"];
 		self.bodyURL 		= [decoder decodeObjectOfClass:[NSURL class] forKey:@"bodyURL"];
 
+		self.authenticationDataID = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationDataID"];
+
 		self.redirectPolicy	= [decoder decodeIntegerForKey:@"redirectPolicy"];
 		self.maximumRedirectionDepth = [decoder decodeIntegerForKey:@"maximumRedirectionDepth"];
 		self.redirectionHistory = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSMutableDictionary.class, NSURL.class, nil] forKey:@"redirectionHistory"];
@@ -565,6 +594,8 @@
 
 		self.eventTarget 	= [decoder decodeObjectOfClass:[OCEventTarget class] forKey:@"eventTarget"];
 		self.userInfo	 	= [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
+
+		self.customTimeout	= [decoder decodeObjectOfClass:NSNumber.class forKey:@"customTimeout"];
 
 		self.priority		= [decoder decodeFloatForKey:@"priority"];
 		self.groupID		= [decoder decodeObjectOfClass:[NSString class] forKey:@"groupID"];
@@ -602,6 +633,8 @@
 	[coder encodeObject:_bodyData 		forKey:@"bodyData"];
 	[coder encodeObject:_bodyURL 		forKey:@"bodyURL"];
 
+	[coder encodeObject:_authenticationDataID forKey:@"authenticationDataID"];
+
 	[coder encodeInteger:_redirectPolicy 		forKey:@"redirectPolicy"];
 	[coder encodeInteger:_maximumRedirectionDepth 	forKey:@"maximumRedirectionDepth"];
 	[coder encodeObject:_redirectionHistory 	forKey:@"redirectionHistory"];
@@ -618,6 +651,8 @@
 
 	[coder encodeObject:_eventTarget 	forKey:@"eventTarget"];
 	[coder encodeObject:_userInfo 		forKey:@"userInfo"];
+
+	[coder encodeObject:_customTimeout	forKey:@"customTimeout"];
 
 	[coder encodeFloat:_priority 		forKey:@"priority"];
 	[coder encodeObject:_groupID 		forKey:@"groupID"];
