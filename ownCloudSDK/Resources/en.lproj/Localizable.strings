@@ -353,6 +353,8 @@
 // OCErrorUnknownUser
 "Unknown user" = "Unknown user";
 
+// OCErrorRequestTimeout
+"Request timed out" = "Request timed out";
 
 /* Diagnostic */
 "Files" = "Files";

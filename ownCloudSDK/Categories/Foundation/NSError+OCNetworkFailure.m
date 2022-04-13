@@ -34,4 +34,9 @@
 		));
 }
 
+- (BOOL)isNetworkTimeoutError
+{
+	return  ([self.domain isEqual:NSURLErrorDomain] && (self.code == NSURLErrorTimedOut));
+}
+
 @end

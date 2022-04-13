@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSError (OCNetworkFailure)
 
 @property(readonly,nonatomic) BOOL isNetworkFailureError;
+@property(readonly,nonatomic) BOOL isNetworkTimeoutError;
 
 @end
 

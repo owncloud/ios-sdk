@@ -31,6 +31,7 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierSimpleAPM = @"simple
 static OCHostSimulationIdentifier OCHostSimulationIdentifierRecoveringAPM = @"recovering-apm";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierWebFinger = @"web-finger";
 static OCHostSimulationIdentifier OCHostSimulationIdentifierAuthRaceCondition = @"auth-race-condition";
+static OCHostSimulationIdentifier OCHostSimulationIdentifierActionTimeoutSimulator = @"action-timeout-simulator";
 
 @implementation OCHostSimulator (BuiltIn)
 
@@ -83,6 +84,13 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierAuthRaceCondition = 
 		OCExtensionMetadataKeyDescription : @"Responds to all .well-known/webfinger requests with server-instance responses."
 	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
 		return ([self authRaceConditionSimulator]);
+	}]];
+
+	// ActionTimeoutSimulator
+	[OCExtensionManager.sharedExtensionManager addExtension:[OCExtension hostSimulationExtensionWithIdentifier:OCHostSimulationIdentifierActionTimeoutSimulator locations:@[ OCExtensionLocationIdentifierAllCores, OCExtensionLocationIdentifierAccountSetup ] metadata:@{
+		OCExtensionMetadataKeyDescription : @"Lets all MOVE/COPY/DELETE/PUT requests fail with a timeout error."
+	} provider:^id<OCConnectionHostSimulator> _Nullable(OCExtension * _Nonnull extension, OCExtensionContext * _Nonnull context, NSError * _Nullable __autoreleasing * _Nullable error) {
+		return ([self actionTimeoutSimulator]);
 	}]];
 }
 
@@ -310,6 +318,34 @@ static OCHostSimulationIdentifier OCHostSimulationIdentifierAuthRaceCondition = 
 			{
 				[disruptedAuthHeaders addObject:authorizationHeader];
 			}
+		}
+
+		return (NO);
+	};
+
+	hostSimulator.unroutableRequestHandler = nil;
+
+	return (hostSimulator);
+}
+
+#pragma mark - Action Timeout
++ (instancetype)actionTimeoutSimulator
+{
+	OCHostSimulator *hostSimulator;
+
+	hostSimulator = [OCHostSimulator new];
+	hostSimulator.requestHandler = ^BOOL(OCConnection * _Nonnull connection, OCHTTPRequest * _Nonnull request, OCHostSimulatorResponseHandler  _Nonnull responseHandler) {
+		OCHTTPMethod method = request.method;
+
+		if ([method isEqual:OCHTTPMethodCOPY] ||
+		    [method isEqual:OCHTTPMethodMOVE] ||
+		    [method isEqual:OCHTTPMethodDELETE] ||
+		    [method isEqual:OCHTTPMethodPUT] ||
+		    [method isEqual:OCHTTPMethodMKCOL])
+		{
+			responseHandler([NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil], [OCHostSimulatorResponse responseWithURL:request.url statusCode:0 headers:nil contentType:nil bodyData:nil]);
+
+			return (YES);
 		}
 
 		return (NO);
