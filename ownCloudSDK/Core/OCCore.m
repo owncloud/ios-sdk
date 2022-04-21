@@ -2124,7 +2124,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		[_drivesDataSource setVersionedItems:_drives];
 
 		NSMutableArray<OCDrive *> *hierarchicDrivesTopLevelItems = [[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-			if ([drive.type isEqual:OCDriveTypePersonal])
+			if ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual])
 			{
 				return (YES);
 			}

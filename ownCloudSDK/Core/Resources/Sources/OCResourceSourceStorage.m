@@ -40,9 +40,9 @@
 
 - (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
 {
-	if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
+	if ([request.type isEqual:OCResourceTypeItemThumbnail])
 	{
-		if ([request.type isEqual:OCResourceTypeItemThumbnail])
+		if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
 		{
 			OCItem *item;
 
@@ -55,7 +55,12 @@
 			}
 		}
 
-		if ([request.type isEqual:OCResourceTypeAvatar])
+		return (OCResourceQualityNone);
+	}
+
+	if ([request.type isEqual:OCResourceTypeAvatar])
+	{
+		if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
 		{
 			OCUser *user;
 
@@ -64,9 +69,11 @@
 				return (OCResourceQualityCached);
 			}
 		}
+
+		return (OCResourceQualityNone);
 	}
 
-	return (OCResourceQualityNone);
+	return (OCResourceQualityCached);
 }
 
 - (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler

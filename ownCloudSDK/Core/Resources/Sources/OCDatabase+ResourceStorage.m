@@ -132,27 +132,16 @@
 		return;
 	}
 
-	[self.sqlDB executeQuery:[OCSQLiteQuery query:[NSString stringWithFormat:@"SELECT maxWidth, maxHeight, data FROM thumb.resources WHERE identifier = :identifier %@ %@ ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1",
-		((request.version != nil) ? @"AND version = :version" : @""),
-		((request.structureDescription != nil) ? @"AND structDesc = :structDesc" : @"")] withNamedParameters:@{
-		@"identifier"	: request.identifier,
-		@"version"	: OCSQLiteNullProtect(request.version),
-		@"structDesc"	: OCSQLiteNullProtect(request.structureDescription),
-		@"maxWidth"  	: @(request.maxPixelSize.width),
-		@"maxHeight" 	: @(request.maxPixelSize.height),
-	} resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+	OCSQLiteDBResultHandler resultHandler = ^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
 		NSError *returnError = error;
 		__block BOOL calledCompletionHandler = NO;
 
 		if (returnError == nil)
 		{
 			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id> *rowDictionary, BOOL *stop) {
-				NSNumber *maxWidthNumber = nil, *maxHeightNumber = nil;
 				NSData *data = nil;
 
-				if (((maxWidthNumber = rowDictionary[@"maxWidth"])!=nil) &&
-				    ((maxHeightNumber = rowDictionary[@"maxHeight"])!=nil) &&
-				    ((data = rowDictionary[@"data"])!=nil))
+				if ((data = rowDictionary[@"data"])!=nil)
 				{
 					NSError *error;
 					OCResource *resource;
@@ -172,7 +161,34 @@
 		{
 			completionHandler(returnError, nil);
 		}
-	}]];
+	};
+
+	if ((request.maxPixelSize.width == 0) || (request.maxPixelSize.height == 0))
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery query:[NSString stringWithFormat:@"SELECT data FROM thumb.resources WHERE identifier = :identifier AND type = :type %@ %@ LIMIT 0,1",
+			((request.version != nil) ? @"AND version = :version" : @""),
+			((request.structureDescription != nil) ? @"AND structDesc = :structDesc" : @"")]
+		withNamedParameters:@{
+			@"type"		: request.type,
+			@"identifier"	: request.identifier,
+			@"version"	: OCSQLiteNullProtect(request.version),
+			@"structDesc"	: OCSQLiteNullProtect(request.structureDescription),
+		} resultHandler:resultHandler]];
+	}
+	else
+	{
+		[self.sqlDB executeQuery:[OCSQLiteQuery query:[NSString stringWithFormat:@"SELECT maxWidth, maxHeight, data FROM thumb.resources WHERE identifier = :identifier AND type = :type %@ %@ ORDER BY (maxWidth = :maxWidth AND maxHeight = :maxHeight) DESC, (maxWidth >= :maxWidth AND maxHeight >= :maxHeight) DESC, (((maxWidth < :maxWidth AND maxHeight < :maxHeight) * -1000 + 1) * ((maxWidth * maxHeight) - (:maxWidth * :maxHeight))) ASC LIMIT 0,1",
+			((request.version != nil) ? @"AND version = :version" : @""),
+			((request.structureDescription != nil) ? @"AND structDesc = :structDesc" : @"")]
+		withNamedParameters:@{
+			@"type"		: request.type,
+			@"identifier"	: request.identifier,
+			@"version"	: OCSQLiteNullProtect(request.version),
+			@"structDesc"	: OCSQLiteNullProtect(request.structureDescription),
+			@"maxWidth"  	: @(request.maxPixelSize.width),
+			@"maxHeight" 	: @(request.maxPixelSize.height),
+		} resultHandler:resultHandler]];
+	}
 }
 
 - (void)removeResourceOfType:(OCResourceType)type identifier:(OCResourceIdentifier)identifier completionHandler:(OCResourceStoreCompletionHandler)completionHandler

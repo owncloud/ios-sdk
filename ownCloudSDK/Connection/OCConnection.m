@@ -3024,27 +3024,40 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		{
 			if (request.httpResponse.status.isSuccess)
 			{
-				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
-				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
-				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
-
-				thumbnail.mimeType = request.httpResponse.headerFields[OCHTTPHeaderFieldNameContentType];
-
-				if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
+				if (![request.httpResponse.contentType hasPrefix:@"image/"])
 				{
-					thumbnail.url = request.downloadedFileURL;
+					// Do not accept anything but images as thumbnail (https://github.com/owncloud/ocis/issues/3558)
+					event.error = OCError(OCErrorFeatureNotSupportedForItem);
 				}
 				else
 				{
-					thumbnail.data = request.httpResponse.bodyData;
+					OCItemThumbnail *thumbnail = [OCItemThumbnail new];
+					OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
+					CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
+
+					thumbnail.mimeType = request.httpResponse.contentType;
+
+					if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
+					{
+						thumbnail.url = request.downloadedFileURL;
+					}
+					else
+					{
+						thumbnail.data = request.httpResponse.bodyData;
+					}
+
+					thumbnail.itemVersionIdentifier = itemVersionIdentifier;
+					thumbnail.maxPixelSize = maximumSize;
+
+					thumbnail.fillMode = OCImageFillModeScaleToFit;
+
+					event.result = thumbnail;
 				}
-
-				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
-				thumbnail.maxPixelSize = maximumSize;
-
-				thumbnail.fillMode = OCImageFillModeScaleToFit;
-
-				event.result = thumbnail;
+			}
+			else if (request.httpResponse.status.code == OCHTTPStatusCodeNOT_FOUND)
+			{
+				// No thumbnail available for item
+				event.error = OCError(OCErrorFeatureNotSupportedForItem);
 			}
 			else
 			{
