@@ -21,6 +21,7 @@
 #import "OCQuery+Internal.h"
 #import "OCLogger.h"
 #import "OCQueryCondition+Item.h"
+#import "OCItem+OCDataItem.h"
 #import "NSError+OCError.h"
 
 #import <objc/runtime.h>
@@ -350,6 +351,22 @@
 	}
 
 	return (queryResults);
+}
+
+#pragma mark - Data sources
+- (OCDataSource *)queryResultsDataSource
+{
+	@synchronized(self)
+	{
+		if (_queryResultsDataSource == nil)
+		{
+			_queryResultsDataSource = [[OCDataSourceArray alloc] init];
+
+			[_queryResultsDataSource setVersionedItems:_processedQueryResults];
+		}
+	}
+
+	return (_queryResultsDataSource);
 }
 
 #pragma mark - Change Sets

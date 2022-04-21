@@ -76,6 +76,8 @@ typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
 };
 
+typedef NSInteger OCItemVersionSeed; //!< Version seed (opaque format) that changes whenever an item changes
+
 #import "OCShare.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -90,6 +92,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSTimeInterval _localAttributesLastModified;
 
 	NSString *_creationHistory;
+
+	OCItemVersionSeed _versionSeed;
 }
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
@@ -171,6 +175,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
+@property(assign) OCItemVersionSeed versionSeed; //!< Version seed that changes whenever the item is updated
+
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
 + (OCFileID)generatePlaceholderFileID; //!< Generates a new, unique placeholder OCFileID
@@ -196,6 +202,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - File tools
 - (nullable OCFile *)fileWithCore:(OCCore *)core; //!< OCFile instance generated from the data in the OCItem. Returns nil if the item doesn't reference a local file. To test local availability of a file, use -[OCCore localCopyOfItem:] instead of this method.
+
+#pragma mark - Version seed
+- (void)regenerateSeed; //!< Regenerates the seed from scratch.
+- (void)updateSeed; //!< Update the seed based on its own seed.
+- (void)updateSeedFrom:(OCItemVersionSeed)previousVersionSeed; //!< Updates the item's .versionSeed from another item's .versionSeed
 
 #pragma mark - Serialization tools
 + (nullable instancetype)itemFromSerializedData:(NSData *)serializedData;

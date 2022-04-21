@@ -154,6 +154,8 @@
 			// We just recomputed
 			_processedQueryResults = newProcessedResults;
 			_needsRecomputation = NO;
+
+			[_queryResultsDataSource setVersionedItems:newProcessedResults];
 		}
 	}
 }
@@ -161,10 +163,22 @@
 #pragma mark - Needs recomputation
 - (void)setNeedsRecomputation
 {
+	BOOL updateProcessedResults = NO;
+
 	@synchronized(self)
 	{
 		_needsRecomputation = YES;
 		self.hasChangesAvailable = YES;
+
+		if (_queryResultsDataSource != nil)
+		{
+			updateProcessedResults = YES;
+		}
+	}
+
+	if (updateProcessedResults)
+	{
+		[self updateProcessedResultsIfNeeded:YES];
 	}
 }
 

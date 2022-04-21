@@ -17,12 +17,13 @@
  */
 
 #import "OCResource.h"
+#import "OCDataTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceText : OCResource
+@interface OCResourceText : OCResource <OCDataItem, OCDataItemVersion>
 
-@property(strong) NSString *text;
+@property(strong,nullable) NSString *text;
 
 @end
 

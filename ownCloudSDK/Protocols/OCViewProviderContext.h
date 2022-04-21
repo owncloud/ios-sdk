@@ -25,12 +25,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCViewProviderContextKey;
+typedef NSString* OCViewProviderContextKey NS_TYPED_ENUM;
 
 @interface OCViewProviderContext : NSObject
 
 @property(strong,nullable) NSDictionary<OCViewProviderContextKey,id> *attributes;
 
+- (instancetype)initWithAttributes:(NSDictionary<OCViewProviderContextKey,id> *)attributes;
+
 @end
+
+extern OCViewProviderContextKey OCViewProviderContextKeyContentMode; //!< UIViewContentMode for content arrangement
 
 NS_ASSUME_NONNULL_END

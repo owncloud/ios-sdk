@@ -18,9 +18,10 @@
 
 #import "OCDataTypes.h"
 
+OCDataItemType OCDataItemTypeItem = @"item";
 OCDataItemType OCDataItemTypeDrive = @"drive";
 OCDataItemType OCDataItemTypePresentable = @"presentable";
-OCDataItemType OCDataItemTypeListContentConfiguration = @"listContentConfiguration";
+OCDataItemType OCDataItemTypeTextResource = @"textResource";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

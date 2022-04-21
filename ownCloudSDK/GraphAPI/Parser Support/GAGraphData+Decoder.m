@@ -103,7 +103,13 @@
 		{
 			// Convert string to URL
 			NSURL *url;
-			if ((url = [NSURL URLWithString:(NSString *)object]) != nil)
+			if ((url = [NSURL URLWithString:(NSString *)object]) == nil)
+			{
+				// Implement fallback in case of unescaped URLs (https://github.com/owncloud/ocis/issues/3538)
+				url = [NSURL URLWithString:[(NSString *)object stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet]];
+			}
+
+			if (url != nil)
 			{
 				// Block file URLs
 				if (url.isFileURL)

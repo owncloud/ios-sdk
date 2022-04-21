@@ -25,6 +25,7 @@
 #import "OCCoreItemList.h"
 #import "OCQueryCondition.h"
 #import "OCCancelAction.h"
+#import "OCDataSourceArray.h"
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCQueryState)
@@ -68,6 +69,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 	NSMutableArray <OCItem *> *_fullQueryResults; 	  		// All items matching the query, before applying filters and sorting.
 	NSMutableArray <OCItem *> *_processedQueryResults; 		// Like full query results, but after applying sorting and filtering.
+	OCDataSourceArray *_queryResultsDataSource;
 
 	OCCoreItemList *_fullQueryResultsItemList;			// Cached item list of _fullQueryResults used in the default
 
@@ -137,9 +139,11 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)removeFilter:(id<OCQueryFilter>)filter; //!< Remove a filter
 
 #pragma mark - Query results
-@property(nullable, strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
-@property(nullable, strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
+@property(nullable,strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
+@property(nullable,strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
 @property(assign,nonatomic) BOOL includeRootItem; //!< If YES, the rootItem is included in the queryResults and change sets. If NO, it's only exposed via .rootItem.
+
+@property(nullable,strong,readonly,nonatomic) OCDataSource *queryResultsDataSource; //!< Returns a data source providing the OCItems in .queryResults. The data source is only created on demand.
 
 #pragma mark - Change Sets
 @property(assign,nonatomic) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval

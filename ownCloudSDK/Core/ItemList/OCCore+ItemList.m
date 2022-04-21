@@ -550,6 +550,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						[queryResults addObject:cacheItem];
 
 						// Update cache
+						[cacheItem updateSeedFrom:retrievedItem.versionSeed];
 						[changedCacheItems addObject:cacheItem];
 					}
 					else
@@ -573,6 +574,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
 							{
 								// Update item in the cache if the server has a different version
+								[retrievedItem updateSeedFrom:cacheItem.versionSeed];
 								[changedCacheItems addObject:retrievedItem];
 							}
 						}
@@ -592,6 +594,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							//    Result: new file's item still points to the local copy it downloaded, but which has been removed by vacuuming of the OLD file -> viewing and other actions requiring the local copy fail unexpectedly
 
 							// Remove cacheItem (with different fileID)
+							[cacheItem updateSeed];
 							[deletedCacheItems addObject:cacheItem];
 
 							// Add retrievedItem (with different fileID + different localID)
@@ -634,6 +637,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					else
 					{
 						// Remove item
+						[cacheItem updateSeed];
 						[deletedCacheItems addObject:cacheItem];
 					}
 				}
@@ -745,6 +749,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						}
 
 						// Add to updatedItems
+						[newItem updateSeedFrom:knownItem.versionSeed];
 						[changedCacheItems addObject:newItem];
 					}
 
@@ -843,6 +848,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 												containedItem.removed = NO;
 											}
 
+											[containedItem updateSeedFrom:item.versionSeed];
 											[movedItems addObject:containedItem];
 										}
 										else

@@ -63,12 +63,14 @@
 	return(nil);
 }
 
+#pragma mark - OCDataConverter for OCDrives
 + (void)load
 {
 	OCDataConverter *driveToPresentableConverter;
 
 	driveToPresentableConverter = [[OCDataConverter alloc] initWithInputType:OCDataItemTypeDrive outputType:OCDataItemTypePresentable conversion:^id _Nullable(OCDataConverter * _Nonnull converter, OCDrive * _Nullable inDrive, OCDataRenderer * _Nullable renderer, NSError * _Nullable __autoreleasing * _Nullable outError, OCDataViewOptions  _Nullable options) {
 		OCDataItemPresentable *presentable = nil;
+		__weak OCCore *weakCore = options[OCDataViewOptionCore];
 
 		if (inDrive != nil)
 		{
@@ -77,7 +79,7 @@
 
 			presentable = [[OCDataItemPresentable alloc] initWithItem:inDrive];
 			presentable.title = inDrive.name;
-			presentable.subtitle = inDrive.type;
+			presentable.subtitle = (inDrive.desc.length > 0) ? inDrive.desc : inDrive.type;
 
 			presentable.availableResources = (imageDriveItem != nil) ?
 								((readmeDriveItem != nil) ? 	@[OCDataItemPresentableResourceCoverImage, OCDataItemPresentableResourceCoverDescription] :
@@ -99,6 +101,7 @@
 				}
 
 				resourceRequest.lifetime = OCResourceRequestLifetimeSingleRun;
+				resourceRequest.core = weakCore;
 
 				return (resourceRequest);
 			};
@@ -112,6 +115,7 @@
 	]];
 }
 
+#pragma mark - Comparison
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive
 {
 	return (![drive.identifier isEqual:_identifier] ||
@@ -119,9 +123,12 @@
 	 	![drive.name isEqual:_name] ||
 	 	![drive.desc isEqual:_desc] ||
 	 	![drive.davRootURL isEqual:_davRootURL] ||
+	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag) ||
+	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag) ||
 	 	(![drive.rootETag isEqual:self.rootETag] && (drive.rootETag != self.rootETag)));
 }
 
+#pragma mark - Utility accessors
 - (OCLocation *)rootLocation
 {
 	return ([[OCLocation alloc] initWithDriveID:_identifier path:@"/"]);
@@ -193,7 +200,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag]);
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag]);
 }
 
 #pragma mark - Comparison

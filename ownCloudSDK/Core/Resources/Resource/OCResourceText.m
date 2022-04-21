@@ -17,6 +17,7 @@
  */
 
 #import "OCResourceText.h"
+#import "OCDataTypes.h"
 
 @implementation OCResourceText
 
@@ -41,6 +42,22 @@
 	}
 
 	return (self);
+}
+
+#pragma mark - Data Item
+- (OCDataItemType)dataItemType
+{
+	return (OCDataItemTypeTextResource);
+}
+
+- (OCDataItemReference)dataItemReference
+{
+	return (self.identifier);
+}
+
+- (OCDataItemVersion)dataItemVersion
+{
+	return (self.version);
 }
 
 @end

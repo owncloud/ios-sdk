@@ -110,7 +110,7 @@
 						// Text
 						OCResourceText *resource = [[OCResourceText alloc] initWithRequest:driveItemRequest];
 
-						resource.text = response.bodyAsString; // takes encoding passed in Content-Type into account
+						resource.text = [response bodyAsStringWithFallbackEncoding:NSUTF8StringEncoding]; // takes encoding passed in Content-Type into account, defaults to UTF-8
 
 						returnResource = resource;
 					}

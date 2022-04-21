@@ -108,6 +108,11 @@
 	return (_normalizedFilePathLocation);
 }
 
+- (NSString *)lastPathComponent
+{
+	return (_path.lastPathComponent);
+}
+
 - (BOOL)isRoot
 {
 	return (_path.isRootPath);

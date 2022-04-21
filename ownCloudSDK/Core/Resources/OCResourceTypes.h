@@ -44,4 +44,4 @@ typedef NSString* OCResourceVersion; //!< A string that can be used to distingui
 typedef NSString* OCResourceStructureDescription; //!< A string describing the structure properties of the resource that can affect resource generation or return, such as f.ex. the MIME type (which can change after a rename, without causing ID or version to change)
 typedef NSString* OCResourceMetadata; //!< A resource-specific string with metadata on the resource's data
 
-typedef NSString* OCResourceMIMEType NS_TYPED_ENUM;
+typedef NSString* OCResourceMIMEType;

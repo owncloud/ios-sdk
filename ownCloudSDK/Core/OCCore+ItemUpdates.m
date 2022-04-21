@@ -70,6 +70,10 @@
 		return;
 	}
 
+	// Update version seeds for updated and removed items
+	[updatedItems makeObjectsPerformSelector:@selector(updateSeed)];
+	[removedItems makeObjectsPerformSelector:@selector(updateSeed)];
+
 	// Update metaData table and queries
 	if ((addedItems.count > 0) || (removedItems.count > 0) || (updatedItems.count > 0) || (beforeQueryUpdatesAction!=nil))
 	{

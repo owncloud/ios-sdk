@@ -40,6 +40,7 @@ typedef NSString* OCLocationString; //!< DriveID + path encoded into a single st
 @property(strong,readonly,nonatomic) OCLocation *parentLocation;
 @property(strong,nullable,readonly,nonatomic) OCLocation *normalizedDirectoryPathLocation;
 @property(strong,nullable,readonly,nonatomic) OCLocation *normalizedFilePathLocation;
+@property(strong,nullable,readonly,nonatomic) NSString *lastPathComponent;
 
 @property(readonly,nonatomic) BOOL isRoot;
 

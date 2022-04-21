@@ -2132,7 +2132,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			return (NO);
 		}] mutableCopy];
 
-		[hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
+		// [hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
 
 		[_hierarchicDrivesDataSource setVersionedItems:hierarchicDrivesTopLevelItems];
 

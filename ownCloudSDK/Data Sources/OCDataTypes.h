@@ -59,9 +59,10 @@ typedef NSComparisonResult(^OCDataSourceItemComparator)(OCDataSource *source1, O
 typedef BOOL(^OCDataSourceItemRecordFilter)(OCDataItemRecord * _Nullable itemRecord);
 typedef NSComparisonResult(^OCDataSourceItemRecordComparator)(OCDataItemRecord * _Nullable itemRecord1, OCDataItemRecord * _Nullable itemRecord2);
 
+extern OCDataItemType OCDataItemTypeItem;  //!< Item of type OCItem
 extern OCDataItemType OCDataItemTypeDrive; //!< Item of type OCDrive
 extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPresentable
-extern OCDataItemType OCDataItemTypeListContentConfiguration; //!< Item of type UIListContentConfiguration
+extern OCDataItemType OCDataItemTypeTextResource; //!< Item of type OCResourceText
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
 extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill

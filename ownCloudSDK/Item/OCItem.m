@@ -53,6 +53,8 @@
 
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 		_localID = [OCItem generateNewLocalID];
+
+		[self regenerateSeed];
 	}
 
 	return (self);
@@ -138,6 +140,8 @@
 	[coder encodeObject:_quotaBytesRemaining forKey:@"quotaBytesRemaining"];
 	[coder encodeObject:_quotaBytesUsed forKey:@"quotaBytesUsed"];
 
+	[coder encodeInteger:_versionSeed 	forKey:@"versionSeed"];
+
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -200,6 +204,8 @@
 
 		_quotaBytesRemaining = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesRemaining"];
 		_quotaBytesUsed = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesUsed"];
+
+		_versionSeed = [decoder decodeIntegerForKey:@"versionSeed"];
 	}
 
 	return (self);
@@ -668,6 +674,27 @@
 	}
 
 	return (file);
+}
+
+#pragma mark - Version seed
++ (OCItemVersionSeed)randomSeed
+{
+	return ((NSInteger)NSDate.timeIntervalSinceReferenceDate) ^ ((NSInteger)getpid());
+}
+
+- (void)updateSeedFrom:(OCItemVersionSeed)previousVersionSeed
+{
+	_versionSeed = (previousVersionSeed + 1) ^ OCItem.randomSeed;
+}
+
+- (void)updateSeed
+{
+	[self regenerateSeed];
+}
+
+- (void)regenerateSeed
+{
+	_versionSeed = (NSInteger)_localID.hash ^ OCItem.randomSeed;
 }
 
 #pragma mark - Description

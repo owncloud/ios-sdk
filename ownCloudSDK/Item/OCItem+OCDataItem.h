@@ -1,8 +1,8 @@
 //
-//  OCViewProviderContext.m
+//  OCItem+OCDataItem.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 17.01.22.
+//  Created by Felix Schwarz on 14.04.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,20 +16,14 @@
  *
  */
 
-#import "OCViewProviderContext.h"
+#import <ownCloudSDK/ownCloudSDK.h>
+#import "OCDataTypes.h"
 
-@implementation OCViewProviderContext
+NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)initWithAttributes:(NSDictionary<OCViewProviderContextKey,id> *)attributes
-{
-	if ((self = [super init]) != nil)
-	{
-		_attributes = attributes;
-	}
+@interface OCItem (DataItem) <OCDataItem, OCDataItemVersion>
 
-	return (self);
-}
 
 @end
 
-OCViewProviderContextKey OCViewProviderContextKeyContentMode = @"contentMode";
+NS_ASSUME_NONNULL_END
