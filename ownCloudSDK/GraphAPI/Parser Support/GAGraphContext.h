@@ -24,10 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface GAGraphContext : NSObject
 
-- (nullable id)provideObjectForData:(GAGraphData)structure type:(GAGraphType)type;
+// To implement (and use):
 
-- (void)cacheGraphObject:(id<GAGraphObject>)graphObject;
-- (nullable id<GAGraphObject>)cachedObjectForType:(GAGraphType)type identifier:(GAGraphIdentifier)identifier;
+//- (nullable id)provideObjectForData:(GAGraphData)structure type:(GAGraphType)type;
+//
+//- (void)cacheGraphObject:(id<GAGraphObject>)graphObject;
+//- (nullable id<GAGraphObject>)cachedObjectForType:(GAGraphType)type identifier:(GAGraphIdentifier)identifier;
 
 @end
 

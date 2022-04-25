@@ -60,6 +60,45 @@
 - (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <OCConnectionEndpointURLOption,id> *)options
 {
 	NSString *endpointPath;
+
+	if ([endpoint isEqual:OCConnectionEndpointIDPreview])
+	{
+		endpoint = OCConnectionEndpointIDWebDAVRoot;
+
+		/*
+		// Temporary fix for https://github.com/owncloud/ocis/issues/3558
+		
+		OCDriveID driveID;
+
+		driveID = options[OCConnectionEndpointURLOptionDriveID];
+		driveID = OCDriveIDUnwrap(driveID);
+
+		if (driveID != nil)
+		{
+			NSURL *webdavRootURL;
+
+			if ((webdavRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:options]) != nil)
+			{
+				// Insert "remote.php" at beginning of URL path
+				// - works:
+				// 	https://localhost:9200/remote.php/dav/spaces/480d46a8-4b90-41ca-83bc-a22382197355/IMG_0005.JPG?scalingup=0&preview=1&a=1&c=35b2f49cf8d94c365e6b47da2c2a561e&x=36&y=36
+				// - doesn't work:
+				// 	https://localhost:9200		 /dav/spaces/d9cc2f67-fff8-4c67-81e9-072fc8db8628/.space/readme.md?y=180&preview=1&scalingup=0&x=180&c=%22462b38a361467dfb230981813803d9bf%22&a=1
+				NSURLComponents *components = [[NSURLComponents alloc] initWithURL:webdavRootURL resolvingAgainstBaseURL:YES];
+
+				components.path = [@"/remote.php" stringByAppendingString:components.path];
+
+				webdavRootURL = components.URL;
+			}
+
+			return (webdavRootURL);
+		}
+		else
+		{
+			endpoint = OCConnectionEndpointIDWebDAVRoot;
+		}
+		*/
+	}
 	
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{

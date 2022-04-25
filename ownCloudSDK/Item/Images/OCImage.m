@@ -212,7 +212,7 @@
 						{
 							CGSize otherMaximumSize = otherMaximumSizeValue.CGSizeValue;
 
-							if ((otherMaximumSize.width < requestedMaximumSizeInPixels.width) || (otherMaximumSize.height < requestedMaximumSizeInPixels.height))
+							if ((otherMaximumSize.width > requestedMaximumSizeInPixels.width) && (otherMaximumSize.height > requestedMaximumSizeInPixels.height))
 							{
 								CGFloat pixelCount = otherMaximumSize.width * otherMaximumSize.height;
 
@@ -236,7 +236,19 @@
 
 					if (sourceImage != nil)
 					{
-						if ((returnImage = [sourceImage scaledImageFittingInSize:requestedMaximumSizeInPoints scale:scale]) != nil)
+						// Could offer performance advantage on iOS 15, but seems to return a too-low res image (Simulator iPhone 12 mini, iOS 15.4)
+						//
+						// if (@available(iOS 15, *))
+						// {
+						// 	returnImage = [sourceImage imageByPreparingThumbnailOfSize:requestedMaximumSizeInPoints];
+						// }
+
+						if (returnImage == nil)
+						{
+							returnImage = [sourceImage scaledImageFittingInSize:requestedMaximumSizeInPoints scale:scale];
+						}
+
+						if (returnImage != nil)
 						{
 							@synchronized(self)
 							{
