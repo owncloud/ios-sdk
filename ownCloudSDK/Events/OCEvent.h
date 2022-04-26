@@ -59,7 +59,7 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 
 	// Wakeup
 	OCEventTypeWakeupSyncRecord
-};
+} __attribute__((enum_extensibility(closed)));
 
 @class OCEvent;
 @class OCEventTarget;

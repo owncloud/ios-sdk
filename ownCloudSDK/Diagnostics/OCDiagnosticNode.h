@@ -27,7 +27,7 @@ typedef NS_ENUM(NSUInteger, OCDiagnosticNodeType)
 	OCDiagnosticNodeTypeInfo,
 	OCDiagnosticNodeTypeAction,
 	OCDiagnosticNodeTypeGroup
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef void(^OCDiagnosticNodeAction)(OCDiagnosticContext * _Nullable context);
 

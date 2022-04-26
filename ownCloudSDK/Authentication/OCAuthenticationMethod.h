@@ -40,7 +40,7 @@ typedef NS_ENUM(NSUInteger, OCAuthenticationMethodType)
 {
 	OCAuthenticationMethodTypePassphrase,	//!< Authentication method is password based (=> UI should show username and password entry field)
 	OCAuthenticationMethodTypeToken		//!< Authentication method is token based (=> UI should show no username and password entry field)
-};
+} __attribute__((enum_extensibility(closed)));
 
 @interface OCAuthenticationMethod : NSObject <OCLogTagging, OCClassSettingsSupport>
 {

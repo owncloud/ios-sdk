@@ -64,7 +64,7 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 	OCCoreStateReady,	//!< The core is started and ready, awaiting connecting to complete
 
 	OCCoreStateRunning	//!< The core is fully operational - and now running
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 {
@@ -72,7 +72,7 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 	OCCoreConnectionStatusUnavailable,	//!< The server is in maintenance mode and returns with 503 Service Unavailable or /status.php returns "maintenance"=true
 	OCCoreConnectionStatusConnecting,	//!< The connection is available and the client is actively trying to connect to the server
 	OCCoreConnectionStatusOnline		//!< The server and client device are online
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 {
@@ -82,7 +82,7 @@ typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 	OCCoreConnectionStatusSignalConnected	= (1 << 3), 	//!< The OCConnection has connected successfully
 
 	OCCoreConnectionStatusSignalBitCount	= 4		//!< Number of bits used for status signal
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 {
@@ -90,20 +90,20 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 	OCCoreConnectionStatusSignalStateTrue,  	//!< Signal state is true
 	OCCoreConnectionStatusSignalStateForceFalse,	//!< Signal state is force false (overriding any true + force true states)
 	OCCoreConnectionStatusSignalStateForceTrue   	//!< Signal state is force true (overriding any false states)
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
 {
 	OCCoreMemoryConfigurationDefault,	//!< Default memory configuration
 	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger,OCCoreAvailableOfflineCoverage)
 {
 	OCCoreAvailableOfflineCoverageNone,	//!< Item is not targeted by available offline item policy
 	OCCoreAvailableOfflineCoverageIndirect,	//!< Item is indirectly targeted by available offline item policy (f.ex. returned for /Photos/Paris.jpg if /Photos/ is available offline
 	OCCoreAvailableOfflineCoverageDirect	//!< Item is directly targeted by available offline item policy
-};
+} __attribute__((enum_extensibility(closed)));
 
 NS_ASSUME_NONNULL_BEGIN
 

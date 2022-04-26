@@ -33,7 +33,7 @@ typedef NS_ENUM(NSInteger, OCItemType)
 {
 	OCItemTypeFile,		//!< This item is a file.
 	OCItemTypeCollection	//!< This item is a collection (usually a directory)
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 {
@@ -57,7 +57,7 @@ typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 	OCItemPermissionDelete		= (1<<6), 	//!< Code "D"	File or Folder	can delete file or folder
 	OCItemPermissionRename		= (1<<7), 	//!< Code "N"	File or Folder	can rename file or folder
 	OCItemPermissionMove		= (1<<8)	//!< Code "V"	File or Folder	can move file or folder
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 {
