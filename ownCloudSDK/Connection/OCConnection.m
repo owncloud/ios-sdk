@@ -1813,6 +1813,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		driveID = location.driveID;
 	}
 
+	if (self.useDriveAPI && (driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"retrieveItemListAtLocation: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
+		return (nil);
+	}
+
 	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{
 		OCConnectionEndpointURLOptionDriveID : OCNullProtect(driveID)
 	    }]) != nil)
@@ -2119,6 +2127,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return(nil);
 	}
 
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"downloadItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeDownload uuid:nil sender:self];
+		return (nil);
+	}
+
 	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:downloadURL];
@@ -2264,6 +2280,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 {
 	OCProgress *requestProgress = nil;
 	NSURL *itemURL;
+
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"updateItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeUpdate uuid:nil sender:self];
+		return (nil);
+	}
 
 	if ((itemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
@@ -2441,6 +2465,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return(nil);
 	}
 
+	if (self.useDriveAPI && (parentItem.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"createFolder: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeCreateFolder uuid:nil sender:self];
+		return (nil);
+	}
+
 	fullFolderPath =  [parentItem.path pathForSubdirectoryWithName:folderName];
 
 	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:fullFolderPath]) != nil)
@@ -2609,6 +2641,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	NSURL *sourceItemURL, *destinationURL;
 	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }];
 
+	if (self.useDriveAPI && ((item.driveID == nil) || (parentItem.driveID == nil)))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"copyMoveItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:eventType uuid:nil sender:self];
+		return (nil);
+	}
+
 	if ((sourceItemURL = [webDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
 	{
 		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
@@ -2766,6 +2806,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCProgress *requestProgress = nil;
 	NSURL *deleteItemURL;
 
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"deleteItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeDelete uuid:nil sender:self];
+		return (nil);
+	}
+
 	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:deleteItemURL];
@@ -2922,6 +2970,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	{
 		// No remote thumbnails available for placeholders
 		[eventTarget handleError:OCError(OCErrorItemNotFound) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+		return (nil);
+	}
+
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"retrieveThumbnail: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
 		return (nil);
 	}
 

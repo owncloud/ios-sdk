@@ -380,6 +380,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorDataConverterUnavailable:
 					unlocalizedString = @"No data converter available for conversion.";
 				break;
+
+				case OCErrorMissingDriveID:
+					unlocalizedString = @"Missing Drive ID.";
+				break;
 			}
 		}
 	}

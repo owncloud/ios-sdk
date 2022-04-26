@@ -128,7 +128,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorGraphError, //!< Generic graph error
 
 	OCErrorDataItemTypeUnavailable, //!< Object does not return DataItemType.
-	OCErrorDataConverterUnavailable	//!< No data converter available for conversion.
+	OCErrorDataConverterUnavailable,//!< No data converter available for conversion.
+
+	OCErrorMissingDriveID //!< Missing Drive ID.
 };
 
 @class OCIssue;

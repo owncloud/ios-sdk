@@ -374,6 +374,9 @@
 // OCErrorDataConverterUnavailable
 "No data converter available for conversion." = "No data converter available for conversion.";
 
+// OCErrorMissingDriveID
+"Missing Drive ID." = "Missing Drive ID.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

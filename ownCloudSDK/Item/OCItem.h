@@ -66,7 +66,7 @@ typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
 	OCItemThumbnailAvailabilityNone,	//!< No thumbnail is available for this item
 
 	OCItemThumbnailAvailabilityInternal = -1 //!< Internal value. Don't use.
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 {
@@ -74,7 +74,7 @@ typedef NS_ENUM(NSInteger, OCItemCloudStatus)
 	OCItemCloudStatusLocalCopy,		//!< Item is a local copy of a file on the server
 	OCItemCloudStatusLocallyModified,	//!< Item is a modified copy of a file on the server
 	OCItemCloudStatusLocalOnly		//!< Item only exists locally. There's no remote copy.
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NSInteger OCItemVersionSeed; //!< Version seed (opaque format) that changes whenever an item changes
 

@@ -47,6 +47,14 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		return(nil);
 	}
 
+	if (self.useDriveAPI && (newParentDirectory.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"uploadFile: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeUpload uuid:nil sender:self];
+		return (nil);
+	}
+
 	if (fileName == nil)
 	{
 		if (replacedItem != nil)
