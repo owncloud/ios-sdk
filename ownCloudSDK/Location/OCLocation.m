@@ -41,11 +41,22 @@
 	return ([[OCLocation alloc] initWithDriveID:nil path:path]);
 }
 
++ (OCLocation *)withVFSPath:(nullable OCPath)path
+{
+	return ([[OCLocation alloc] initWithDriveID:nil path:path]);
+}
+
 - (instancetype)initWithDriveID:(nullable OCDriveID)driveID path:(nullable OCPath)path
+{
+	return ([self initWithBookmarkUUID:nil driveID:driveID path:path]);
+}
+
+- (instancetype)initWithBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID driveID:(nullable OCDriveID)driveID path:(nullable OCPath)path
 {
 	if ((self = [super init]) != nil)
 	{
-		_driveID = driveID;
+		_bookmarkUUID = bookmarkUUID;
+		self.driveID = driveID;
 		_path = path;
 	}
 

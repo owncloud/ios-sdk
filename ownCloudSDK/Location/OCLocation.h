@@ -29,12 +29,15 @@ typedef NSString* OCLocationString; //!< DriveID + path encoded into a single st
 @property(class,strong,readonly,nonatomic) OCLocation *legacyRootLocation;
 + (OCLocation *)legacyRootPath:(nullable OCPath)path;
 
++ (OCLocation *)withVFSPath:(nullable OCPath)path;
+
 @property(strong,nullable) OCBookmarkUUID bookmarkUUID; //!< UUID of the account containing the location. A nil value represents the account managed by the receiver of the location.
 
 @property(strong,nullable,nonatomic) OCDriveID driveID; //!< DriveID of the drive. A nil value indicates a legacy WebDAV endpoint path.
 @property(strong,nullable) OCPath path; //!< The path of the location inside the drive and account.
 
 - (instancetype)initWithDriveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
+- (instancetype)initWithBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID driveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
 
 #pragma mark - Tools
 @property(strong,readonly,nonatomic) OCLocation *parentLocation;

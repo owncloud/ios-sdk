@@ -20,6 +20,8 @@
 #import "OCFeatureAvailability.h"
 #import "OCBookmark.h"
 #import "OCKeyValueStore.h"
+#import "OCLocation.h"
+#import "OCVaultLocation.h"
 
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 #import <FileProvider/FileProvider.h>
@@ -28,6 +30,52 @@
 @class OCDatabase;
 @class OCItem;
 @class OCResourceManager;
+
+/*
+	# Filesystem layout						# API
+
+	[App Group Container]/						- OCAppIdentity.appGroupContainerURL
+		"Vaults"/ 						- OCVaultPathVaults
+			[Bookmark UUID]/ 				- OCVault.rootURL
+				[Bookmark UUID].db			- OCVault.databaseURL
+				[Bookmark UUID].tdb			  + (thumbnail part of .database)
+
+				[Bookmark UUID].ockvs			- OCVault.keyValueStoreURL
+
+		"HTTPPipeline"/						- OCVault.httpPipelineRootURL
+			backend.sqlite					- OCHTTPPipelineManager.backendRootURL
+			tmp/						- OCHTTPPipelineBackend.backendTemporaryFilesRootURL
+
+		"TemporaryDownloads"/					- OCVault.temporaryDownloadURL
+			[Random UUID] (temporary files for downloads)
+
+		"messageQueue.dat"					- OCMessageQueue.globalQueue KVS
+
+
+	[NSFileProviderManager documentStorageURL]/
+		"VFS"/							- OCVault.vfsStorageRootURLForBookmarkUUID:nil
+			[VFS Node ID]
+			…
+
+		[Bookmark UUID]/					- OCVault.filesRootURL
+			"org.owncloud.fp-services:[Bookmark UUID]" 	- OCVault.fpServicesURL (file)
+
+			"VFS"/						- OCVault.vfsStorageRootURLForBookmarkUUID:bookmarkUUID
+				[VFS Node ID]
+				…
+
+			*OC10/without drives*
+			[Local ID]/					- OCVault.localFolderURLForItem
+				[filename.xyz]				- OCVault.localURLForItem
+
+
+			*Drive-based*
+			"Drives"/					- OCVault.drivesRootURL
+				[Drive ID]/				- OCVault.localDriveRootURLForDriveID
+					[Local ID]/			- OCVault.localFolderURLForItem
+						[filename.xyz]		- OCVault.localURLForItem
+
+ */
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -71,6 +119,11 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
 
+@property(nullable,readonly,class,nonatomic) NSURL *storageRootURL; //!< The root URL for file storage for file providers
+
++ (NSURL *)storageRootURLForBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID; //!< The root URL for file storage: globally for bookmarkUUID==nil, per-account if a bookmarkUUID is passed
++ (NSURL *)vfsStorageRootURLForBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID; //!< The root URL for VFS virtual node storage: globally for bookmarkUUID==nil, per-account if a bookmarkUUID is passed
+
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 @property(nullable,readonly,nonatomic) NSFileProviderDomain *fileProviderDomain; //!< File provider domain matching the bookmark's UUID
 @property(nullable,readonly,nonatomic) NSFileProviderManager *fileProviderManager; //!< File provider manager for .fileProviderDomain
@@ -103,10 +156,16 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 @property(nullable,readonly,nonatomic,class) NSURL *httpPipelineRootURL;
 
+#pragma mark - URL/path parser
++ (nullable OCVaultLocation *)locationForURL:(NSURL *)url;
++ (nullable NSURL *)urlForLocation:(OCVaultLocation *)location;
+
 @end
 
 extern NSString *OCVaultPathVaults;
 extern NSString *OCVaultPathHTTPPipeline;
+extern NSString *OCVaultPathDrives;
+extern NSString *OCVaultPathVFS;
 
 NS_ASSUME_NONNULL_END
 

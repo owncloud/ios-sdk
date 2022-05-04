@@ -142,10 +142,56 @@
 {
 	if (_drivesRootURL == nil)
 	{
-		_drivesRootURL = [self.filesRootURL URLByAppendingPathComponent:@"Drives" isDirectory:YES];
+		_drivesRootURL = [self.filesRootURL URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES];
 	}
 
 	return (_drivesRootURL);
+}
+
++ (NSURL *)storageRootURL
+{
+	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
+	static dispatch_once_t onceToken;
+	static NSURL *storageRootURL;
+
+	if (OCVault.hostHasFileProvider)
+	{
+		dispatch_once(&onceToken, ^{
+			storageRootURL = NSFileProviderManager.defaultManager.documentStorageURL;
+		});
+
+		return (storageRootURL);
+	}
+	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
+
+	return (nil);
+}
+
++ (NSURL *)storageRootURLForBookmarkUUID:(OCBookmarkUUID)bookmarkUUID
+{
+	if (bookmarkUUID == nil)
+	{
+		return ([self storageRootURL]);
+	}
+
+	return ([[self storageRootURL] URLByAppendingPathComponent:bookmarkUUID.UUIDString isDirectory:YES]);
+}
+
++ (NSURL *)vfsStorageRootURLForBookmarkUUID:(OCBookmarkUUID)bookmarkUUID
+{
+	static dispatch_once_t onceToken;
+	static NSURL *vsfStorageRootURL;
+
+	dispatch_once(&onceToken, ^{
+		vsfStorageRootURL = [[self storageRootURL] URLByAppendingPathComponent:@"VFS" isDirectory:YES];
+	});
+
+	if (bookmarkUUID == nil)
+	{
+		return (vsfStorageRootURL);
+	}
+
+	return ([[self storageRootURL] URLByAppendingPathComponent:[@"VFS" stringByAppendingPathComponent:bookmarkUUID.UUIDString] isDirectory:YES]);
 }
 
 - (NSURL *)filesRootURL
@@ -155,12 +201,12 @@
 		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		if (OCVault.hostHasFileProvider)
 		{
-			_filesRootURL = [[NSFileProviderManager defaultManager].documentStorageURL URLByAppendingPathComponent:[_uuid UUIDString]];
+			_filesRootURL = [OCVault.storageRootURL URLByAppendingPathComponent:_uuid.UUIDString isDirectory:YES];
 		}
 		else
 		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 		{
-			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files"];
+			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files" isDirectory:YES];
 		}
 	}
 
@@ -455,8 +501,124 @@
 	return [[[OCAppIdentity sharedAppIdentity] appGroupContainerURL] URLByAppendingPathComponent:OCVaultPathHTTPPipeline];
 }
 
+#pragma mark - URL/path parser
++ (nullable OCVaultLocation *)locationForURL:(NSURL *)url
+{
+	OCVaultLocation *location = nil;
+	NSString *urlPath = url.path;
+	NSString *storageRootPath = OCVault.storageRootURL.path;
+
+	if (![urlPath hasPrefix:storageRootPath])
+	{
+		// URL not in file provider's storage root path
+		return (nil);
+	}
+
+	NSString *relativePath = [urlPath substringFromIndex:storageRootPath.length];
+	NSArray<NSString *> *pathComponents = relativePath.pathComponents;
+
+	if (pathComponents.count > 0)
+	{
+		// Possible layouts:
+		// [Bookmark UUID]/[Local ID]/[filename.xyz]
+		// [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/[filename.xyz]
+		const NSUInteger uuidStringLength = 36;
+		NSUInteger parsedElements = 0;
+
+		if (pathComponents[0].length == uuidStringLength) // [Bookmark UUID]/…
+		{
+			location = [OCVaultLocation new];
+
+			location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:pathComponents[0]];
+			parsedElements = 1;
+
+			if (pathComponents.count > 1)
+			{
+				if ([pathComponents[1] isEqual:OCVaultPathVFS]) // [Bookmark UUID]/VFS/…
+				{
+					parsedElements = 2;
+					if (pathComponents.count > 2)
+					{
+						location.vfsNodeID = pathComponents[2]; // [Bookmark UUID]/VFS/[VFS Node ID]/…
+						parsedElements = 3;
+
+						if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+						{
+							location.localID = pathComponents[3];
+							parsedElements = 4;
+						}
+					}
+				}
+
+				if ([pathComponents[1] isEqual:OCVaultPathDrives]) // [Bookmark UUID]/Drives/…
+				{
+					parsedElements = 2;
+					if (pathComponents.count > 2)
+					{
+						location.driveID = pathComponents[2]; // [Bookmark UUID]/Drives/[Drive ID]/…
+						parsedElements = 3;
+
+						if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+						{
+							location.localID = pathComponents[3];
+							parsedElements = 4;
+						}
+					}
+				}
+				else if (pathComponents[1].length == uuidStringLength) // [Bookmark UUID]/[Local ID]/…
+				{
+					location.localID = pathComponents[1];
+					parsedElements = 2;
+				}
+			}
+
+			if (pathComponents.count > parsedElements)
+			{
+				location.additionalPathElements = [pathComponents subarrayWithRange:NSMakeRange(parsedElements, pathComponents.count - parsedElements)];
+			}
+		}
+	}
+
+	return (location);
+}
+
++ (nullable NSURL *)urlForLocation:(OCVaultLocation *)location
+{
+	NSURL *returnURL = nil;
+
+	if (location.vfsNodeID != nil)
+	{
+		// VFS Node
+		returnURL = [[self vfsStorageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:location.vfsNodeID];
+	}
+	else if ((location.bookmarkUUID != nil) && (location.localID != nil))
+	{
+		// Item location
+		if (location.driveID != nil)
+		{
+			// Drive-based: [storageRoot]/Drives/[LocalID]/…
+			returnURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.localID isDirectory:YES];
+		}
+		else
+		{
+			// OC10 based: [storageRoot]/[LocalID]/…
+			returnURL = [[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:location.localID isDirectory:YES];
+		}
+	}
+
+	if ((returnURL != nil) && (location.additionalPathElements.count > 0))
+	{
+		// Append (additional) path elements
+		[returnURL URLByAppendingPathComponent:[location.additionalPathElements componentsJoinedByString:@"/"] isDirectory:NO];
+	}
+
+	return (returnURL);
+}
+
 @end
 
 NSString *OCVaultPathVaults = @"Vaults";
 NSString *OCVaultPathHTTPPipeline = @"HTTPPipeline";
+NSString *OCVaultPathDrives = @"Drives";
+NSString *OCVaultPathVFS = @"VFS";
 

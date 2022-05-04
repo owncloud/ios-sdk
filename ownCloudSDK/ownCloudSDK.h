@@ -141,6 +141,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCEventTarget.h>
 
 #import <ownCloudSDK/OCVault.h>
+#import <ownCloudSDK/OCVaultLocation.h>
 #import <ownCloudSDK/OCDatabase.h>
 #import <ownCloudSDK/OCDatabase+Versions.h>
 #import <ownCloudSDK/OCDatabaseConsistentOperation.h>
@@ -310,3 +311,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCMeasurementEvent.h>
 
 #import <ownCloudSDK/OCServerLocator.h>
+
+#import <ownCloudSDK/OCVFSTypes.h>
+#import <ownCloudSDK/OCVFSCore.h>
+#import <ownCloudSDK/OCVFSNode.h>
+#import <ownCloudSDK/OCVFSContent.h>
