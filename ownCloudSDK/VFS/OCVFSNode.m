@@ -18,14 +18,35 @@
 
 #import "OCVFSNode.h"
 #import "NSData+OCHash.h"
+#import "NSString+OCPath.h"
+#import "OCVFSCore.h"
+#import "OCLocation.h"
 
 @interface OCVFSNode ()
 {
 	OCVFSNodeID _identifier;
+	OCVFSItemID _itemID;
 }
 @end
 
 @implementation OCVFSNode
+
+- (OCVFSNode *)parentNode
+{
+	if (_path.isRootPath)
+	{
+		return (nil);
+	}
+
+	return ([_vfsCore nodeAtPath:_path.parentPath]);
+}
+
+- (void)setVfsCore:(OCVFSCore *)vfsCore
+{
+	_vfsCore = vfsCore;
+
+	[self locationItem];
+}
 
 - (OCVFSNodeID)identifier
 {
@@ -42,13 +63,74 @@
 	return (_identifier);
 }
 
-+ (OCVFSNode *)virtualFolderAtPath:(OCPath)path withName:(NSString *)name location:(OCLocation *)location
+- (OCVFSItemID)itemID
+{
+	if (_itemID == nil)
+	{
+//		if (self.locationItem != nil)
+//		{
+//			_itemID = [OCVFSCore composeVFSItemIDForOCItemWithBookmarkUUID:_location.bookmarkUUID.UUIDString driveID:_location.driveID localID:self.locationItem.localID];
+//		}
+//		else
+		{
+			_itemID = [@"V\\" stringByAppendingString:self.identifier];
+		}
+	}
+
+	return (_itemID);
+}
+
+- (OCItem *)locationItem
+{
+	if ((_location != nil) && (_locationItem == nil))
+	{
+		_locationItem = [_vfsCore itemForLocation:_location error:NULL];
+	}
+
+	return (_locationItem);
+}
+
+- (void)setPath:(OCPath)path
+{
+	_path = path;
+
+	_identifier = nil;
+	_itemID = nil;
+}
+
+- (void)setName:(NSString *)name
+{
+	_name = name;
+	_identifier = nil;
+	_itemID = nil;
+}
+
+- (BOOL)isRootNode
+{
+	return ([_path isEqual:@"/"]);
+}
+
++ (OCVFSNode *)virtualFolderAtPath:(OCPath)path location:(nullable OCLocation *)location
 {
 	OCVFSNode *node = [self new];
 
 	node.type = (location != nil) ? OCVFSNodeTypeLocation : OCVFSNodeTypeVirtualFolder;
 
 	node.path = path;
+	node.name = path.lastPathComponent;
+
+	node.location = location;
+
+	return (node);
+}
+
++ (OCVFSNode *)virtualFolderInPath:(OCPath)path withName:(NSString *)name location:(OCLocation *)location;
+{
+	OCVFSNode *node = [self new];
+
+	node.type = (location != nil) ? OCVFSNodeTypeLocation : OCVFSNodeTypeVirtualFolder;
+
+	node.path = [path stringByAppendingPathComponent:name].normalizedDirectoryPath;
 	node.name = name;
 
 	node.location = location;

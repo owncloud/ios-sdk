@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) OCBookmark *bookmark;
 @property(weak,nullable) OCCore *core;
 
+@property(strong,nullable) OCVFSNode *containerNode;
+
 @property(strong,nullable) OCQuery *query;
 @property(strong,nullable) NSArray<OCVFSNode *> *vfsChildNodes;
 

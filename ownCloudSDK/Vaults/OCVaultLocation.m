@@ -17,6 +17,7 @@
  */
 
 #import "OCVaultLocation.h"
+#import "OCVFSCore.h"
 
 @implementation OCVaultLocation
 
@@ -96,14 +97,7 @@
 	}
 	else if ((_bookmarkUUID != nil) && (_localID != nil))
 	{
-		if (_driveID != nil)
-		{
-			return ([[NSString alloc] initWithFormat:@"I\\%@\\%@\\%@", _bookmarkUUID, _driveID, _localID]);
-		}
-		else
-		{
-			return ([[NSString alloc] initWithFormat:@"I\\%@\\%@", _bookmarkUUID, _localID]);
-		}
+		return ([OCVFSCore composeVFSItemIDForOCItemWithBookmarkUUID:_bookmarkUUID.UUIDString driveID:_driveID localID:_localID]);
 	}
 
 	return (nil);

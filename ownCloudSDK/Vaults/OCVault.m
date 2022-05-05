@@ -35,6 +35,7 @@
 #import "OCDatabase+Schemas.h"
 #import "OCResourceManager.h"
 #import "OCDatabase+ResourceStorage.h"
+#import "NSString+OCPath.h"
 
 @implementation OCVault
 
@@ -506,7 +507,7 @@
 {
 	OCVaultLocation *location = nil;
 	NSString *urlPath = url.path;
-	NSString *storageRootPath = OCVault.storageRootURL.path;
+	NSString *storageRootPath = OCVault.storageRootURL.path.normalizedDirectoryPath;
 
 	if (![urlPath hasPrefix:storageRootPath])
 	{
@@ -542,7 +543,7 @@
 						location.vfsNodeID = pathComponents[2]; // [Bookmark UUID]/VFS/[VFS Node ID]/…
 						parsedElements = 3;
 
-						if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+						if (pathComponents.count > 3) // && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
 						{
 							location.localID = pathComponents[3];
 							parsedElements = 4;
@@ -558,14 +559,15 @@
 						location.driveID = pathComponents[2]; // [Bookmark UUID]/Drives/[Drive ID]/…
 						parsedElements = 3;
 
-						if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+						// if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+						if (pathComponents.count > 3) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
 						{
 							location.localID = pathComponents[3];
 							parsedElements = 4;
 						}
 					}
 				}
-				else if (pathComponents[1].length == uuidStringLength) // [Bookmark UUID]/[Local ID]/…
+				else // if (pathComponents[1].length == uuidStringLength) // [Bookmark UUID]/[Local ID]/…
 				{
 					location.localID = pathComponents[1];
 					parsedElements = 2;
@@ -597,7 +599,7 @@
 		if (location.driveID != nil)
 		{
 			// Drive-based: [storageRoot]/Drives/[LocalID]/…
-			returnURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.localID isDirectory:YES];
+			returnURL = [[[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.driveID isDirectory:YES] URLByAppendingPathComponent:location.localID isDirectory:YES];
 		}
 		else
 		{
@@ -609,7 +611,7 @@
 	if ((returnURL != nil) && (location.additionalPathElements.count > 0))
 	{
 		// Append (additional) path elements
-		[returnURL URLByAppendingPathComponent:[location.additionalPathElements componentsJoinedByString:@"/"] isDirectory:NO];
+		returnURL = [returnURL URLByAppendingPathComponent:[location.additionalPathElements componentsJoinedByString:@"/"] isDirectory:NO];
 	}
 
 	return (returnURL);

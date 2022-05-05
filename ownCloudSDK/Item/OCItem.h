@@ -94,6 +94,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_creationHistory;
 
 	OCItemVersionSeed _versionSeed;
+
+	id _customIdentifier1;
+	id _customIdentifier2;
 }
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
@@ -176,6 +179,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 @property(assign) OCItemVersionSeed versionSeed; //!< Version seed that changes whenever the item is updated
+
+@property(nullable,strong) id customIdentifier1; //!< A custom identifier for temporary use (not serialized)
+@property(nullable,strong) id customIdentifier2; //!< A custom identifier for temporary use (not serialized)
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 
