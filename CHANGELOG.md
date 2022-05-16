@@ -1,3 +1,13 @@
+## 11.10 version
+- upgrade OpenSSL to 1.1.1 and switch from bundled version to SwiftPM (#95)
+- NSError+OCNetworkFailure: add .isNetworkTimeoutError convenience property
+- NSError+OCError: add new error for request timeouts
+- OCConnection
+        - make better use of the error parameter in HTTP response handling to actions
+        - increase timeout for COPY requests to 10 minutes
+- OCSyncActionCopyMove: improve error handling for HTTP timeouts
+- OCHostSimulator+Builtin: add new "action-timeout-simulator" that responds to action requests with timeout errors
+
 ## 11.9.1 version
 - OCAuthenticationMethodOAuth2/OIDC: no longer treat network errors during token refresh as permanently failed refresh
 - OCHostSimulator: add auth-race-condition host simulator, to test handling of race conditions in Authorization

@@ -352,6 +352,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorUnknownUser:
 					unlocalizedString = @"Unknown user";
 				break;
+
+				case OCErrorRequestTimeout:
+					unlocalizedString = @"Request timed out";
+				break;
 			}
 		}
 	}

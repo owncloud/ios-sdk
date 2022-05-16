@@ -17,6 +17,7 @@
  */
 
 #import "OCSyncActionCopyMove.h"
+#import "NSError+OCNetworkFailure.h"
 
 @interface OCSyncActionCopyMove ()
 {
@@ -373,103 +374,115 @@
 		[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
 		resultInstruction = OCCoreSyncInstructionDeleteLast;
 	}
-	else if (event.error.isOCError)
+	else if (event.error.isOCError || ((event.error != nil) && !event.error.isNetworkFailureError))
 	{
 		NSString *issueTitle=nil, *issueDescription=nil;
 		OCPath targetPath;
+		BOOL fallbackErrorMessage = YES;
 
 	    	targetPath = [self.targetParentItem.path stringByAppendingString:self.targetName];
 
-		switch (event.error.code)
-		{
-			case OCErrorItemOperationForbidden:
-				issueTitle = OCLocalizedString(@"Operation forbidden",nil);
-				if (isCopy)
-				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be copied to %@.",nil), self.localItem.path, targetPath];
-				}
-				else
-				{
-					if (self.isRename)
+	    	if (event.error.isOCError)
+	    	{
+	    		fallbackErrorMessage = NO;
+
+			switch (event.error.code)
+			{
+				case OCErrorItemOperationForbidden:
+					issueTitle = OCLocalizedString(@"Operation forbidden",nil);
+					if (isCopy)
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), self.localItem.name, self.targetName];
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be copied to %@.",nil), self.localItem.path, targetPath];
 					}
 					else
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), self.localItem.path, targetPath];
+						if (self.isRename)
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be renamed to %@.",nil), self.localItem.name, self.targetName];
+						}
+						else
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), self.localItem.path, targetPath];
+						}
 					}
-				}
-			break;
+				break;
 
-			case OCErrorItemNotFound:
-				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), self.localItem.name];
-				issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ wasn't found at %@.",nil), self.localItem.name, [self.localItem.path stringByDeletingLastPathComponent]];
-			break;
+				case OCErrorItemNotFound:
+					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), self.localItem.name];
+					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ wasn't found at %@.",nil), self.localItem.name, [self.localItem.path stringByDeletingLastPathComponent]];
+				break;
 
-			case OCErrorItemDestinationNotFound:
-				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), [[targetPath stringByDeletingLastPathComponent] lastPathComponent]];
-				issueDescription = [NSString stringWithFormat:OCLocalizedString(@"The target directory %@ doesn't seem to exist.",nil), [targetPath stringByDeletingLastPathComponent]];
-			break;
+				case OCErrorItemDestinationNotFound:
+					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ not found",nil), [[targetPath stringByDeletingLastPathComponent] lastPathComponent]];
+					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"The target directory %@ doesn't seem to exist.",nil), [targetPath stringByDeletingLastPathComponent]];
+				break;
 
-			case OCErrorItemAlreadyExists:
-				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ already exists",nil), self.targetName];
-				if (isCopy)
-				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't copy %@ to %@, because an item called %@ already exists there.",nil), self.localItem.name, targetPath, self.targetName];
-				}
-				else
-				{
-					if (self.isRename)
+				case OCErrorItemAlreadyExists:
+					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"%@ already exists",nil), self.targetName];
+					if (isCopy)
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't rename %@ to %@, because another item with that name already exists.",nil), self.localItem.name, self.targetName];
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't copy %@ to %@, because an item called %@ already exists there.",nil), self.localItem.name, targetPath, self.targetName];
 					}
 					else
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't move %@ to %@, because an item called %@ already exists there.",nil), self.localItem.name, targetPath, self.targetName];
+						if (self.isRename)
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't rename %@ to %@, because another item with that name already exists.",nil), self.localItem.name, self.targetName];
+						}
+						else
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"Couldn't move %@ to %@, because an item called %@ already exists there.",nil), self.localItem.name, targetPath, self.targetName];
+						}
 					}
-				}
-			break;
+				break;
 
-			case OCErrorItemInsufficientPermissions:
-				issueTitle = OCLocalizedString(@"Insufficient permissions",nil);
-				if (isCopy)
-				{
-					issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be copied to %@.",nil), self.localItem.path, targetPath];
-				}
-				else
-				{
-					if (self.isRename)
+				case OCErrorItemInsufficientPermissions:
+					issueTitle = OCLocalizedString(@"Insufficient permissions",nil);
+					if (isCopy)
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), self.localItem.name, self.targetName];
+						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be copied to %@.",nil), self.localItem.path, targetPath];
 					}
 					else
 					{
-						issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), self.localItem.path, targetPath];
+						if (self.isRename)
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), self.localItem.name, self.targetName];
+						}
+						else
+						{
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be moved to %@.",nil), self.localItem.path, targetPath];
+						}
 					}
-				}
-			break;
+				break;
 
-			default:
-				if (isCopy)
-				{
-					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error copying %@",nil), self.localItem.path];
-				}
-				else
-				{
-					if (self.isRename)
-					{
-						issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error renaming %@",nil), self.localItem.name];
-					}
-					else
-					{
-						issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error moving %@",nil), self.localItem.path];
-					}
-				}
-				issueDescription = event.error.localizedDescription;
-			break;
+				default:
+					fallbackErrorMessage = YES;
+				break;
+			}
 		}
 
-		if (issueDescription != nil)
+		if (fallbackErrorMessage)
+		{
+			if (isCopy)
+			{
+				issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error copying %@",nil), self.localItem.path];
+			}
+			else
+			{
+				if (self.isRename)
+				{
+					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error renaming %@",nil), self.localItem.name];
+				}
+				else
+				{
+					issueTitle = [NSString stringWithFormat:OCLocalizedString(@"Error moving %@",nil), self.localItem.path];
+				}
+			}
+
+			issueDescription = event.error.localizedDescription;
+		}
+
+		if ((issueDescription != nil) && event.error.isOCError)
 		{
 			event.error = OCErrorWithDescription(event.error.code, issueDescription);
 		}

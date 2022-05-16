@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -174,13 +174,9 @@
 		DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
 		DC30948C2057358800189B9A /* ownCloudUI.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC309492205735C200189B9A /* ownCloudSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */; };
-		DC30954B20574BDC00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
-		DC30954E20574BEC00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
-		DC30954F20574BF400189B9A /* openssl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC30955220574C2C00189B9A /* OCCertificate+OpenSSL.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30955320574C2C00189B9A /* OCCertificate+OpenSSL.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */; };
 		DC30955A2057CF2B00189B9A /* ownCloudUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC3094842057358800189B9A /* ownCloudUI.framework */; };
-		DC30955B2057CF2B00189B9A /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC30954820574BC900189B9A /* openssl.framework */; };
 		DC30955D2057CFC000189B9A /* CertificateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30955C2057CFC000189B9A /* CertificateTests.m */; };
 		DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */; };
 		DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30956020580D5F00189B9A /* OCCertificateViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -600,6 +596,7 @@
 		DCE2661D2113323C0001FB2C /* OCCore+CommandDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661B2113323C0001FB2C /* OCCore+CommandDownload.m */; };
 		DCE26620211348B00001FB2C /* OCCore+CommandLocalModification.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661E211348AF0001FB2C /* OCCore+CommandLocalModification.m */; };
 		DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE2661F211348B00001FB2C /* OCCore+CommandLocalImport.m */; };
+		DCE2F04E27FDE01D00E9E136 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = DCE2F04D27FDE01D00E9E136 /* OpenSSL */; };
 		DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */; };
@@ -679,40 +676,12 @@
 			remoteGlobalIDString = DCC8F9AA202852A200EB6701;
 			remoteInfo = ownCloudSDK;
 		};
-		DC30954720574BC900189B9A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = DC30949D205749EA00189B9A;
-			remoteInfo = openssl;
-		};
-		DC30954920574BD900189B9A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = DC30949C205749EA00189B9A;
-			remoteInfo = openssl;
-		};
-		DC30954C20574BE900189B9A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = DC30949C205749EA00189B9A;
-			remoteInfo = openssl;
-		};
 		DC3095562057CF2500189B9A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DCC8F9A2202852A200EB6701 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = DC3094832057358800189B9A;
 			remoteInfo = ownCloudUI;
-		};
-		DC3095582057CF2500189B9A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC30954320574BC900189B9A /* openssl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = DC30949C205749EA00189B9A;
-			remoteInfo = openssl;
 		};
 		DC7E0A8D203732D6006111FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -783,7 +752,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				DCA8923D20F5F13F00AEFF98 /* ownCloudMocking.framework in CopyFiles */,
-				DC30954F20574BF400189B9A /* openssl.framework in CopyFiles */,
 				DCEEB2E22044065F00189B9A /* ownCloudSDK.framework in CopyFiles */,
 				DC30948C2057358800189B9A /* ownCloudUI.framework in CopyFiles */,
 			);
@@ -989,7 +957,6 @@
 		DC3094842057358800189B9A /* ownCloudUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ownCloudUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC3094862057358800189B9A /* ownCloudUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ownCloudUI.h; sourceTree = "<group>"; };
 		DC3094872057358800189B9A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		DC30954320574BC900189B9A /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openssl.xcodeproj; path = openssl/framework/openssl.xcodeproj; sourceTree = "<group>"; };
 		DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCertificate+OpenSSL.h"; sourceTree = "<group>"; };
 		DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCertificate+OpenSSL.m"; sourceTree = "<group>"; };
 		DC30955C2057CFC000189B9A /* CertificateTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CertificateTests.m; sourceTree = "<group>"; };
@@ -1493,8 +1460,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC30954B20574BDC00189B9A /* openssl.framework in Frameworks */,
 				DC309492205735C200189B9A /* ownCloudSDK.framework in Frameworks */,
+				DCE2F04E27FDE01D00E9E136 /* OpenSSL in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1503,7 +1470,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCA8923C20F5F13F00AEFF98 /* ownCloudMocking.framework in Frameworks */,
-				DC30954E20574BEC00189B9A /* openssl.framework in Frameworks */,
 				DCEEB2E02044065000189B9A /* ownCloudSDK.framework in Frameworks */,
 				DC30948B2057358800189B9A /* ownCloudUI.framework in Frameworks */,
 			);
@@ -1540,7 +1506,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC30955A2057CF2B00189B9A /* ownCloudUI.framework in Frameworks */,
-				DC30955B2057CF2B00189B9A /* openssl.framework in Frameworks */,
 				DCC8F9B5202852A200EB6701 /* ownCloudSDK.framework in Frameworks */,
 				DC20DE5921C013290096000B /* ownCloudMocking.framework in Frameworks */,
 			);
@@ -1950,18 +1915,9 @@
 				DC27A19420CAA370008ACB6C /* UIApp extensions */,
 				DC79E1A3205871FA00189B9A /* Certificate Metadata */,
 				DC79E1A2205871B800189B9A /* Resources */,
-				DC30954320574BC900189B9A /* openssl.xcodeproj */,
 				DC3094872057358800189B9A /* Info.plist */,
 			);
 			path = ownCloudUI;
-			sourceTree = "<group>";
-		};
-		DC30954420574BC900189B9A /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				DC30954820574BC900189B9A /* openssl.framework */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		DC3596A12240F1EC00C4D6E6 /* Condition */ = {
@@ -3570,10 +3526,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				DC30954A20574BD900189B9A /* PBXTargetDependency */,
 				DC309491205735BD00189B9A /* PBXTargetDependency */,
 			);
 			name = ownCloudUI;
+			packageProductDependencies = (
+				DCE2F04D27FDE01D00E9E136 /* OpenSSL */,
+			);
 			productName = ownCloudUI;
 			productReference = DC3094842057358800189B9A /* ownCloudUI.framework */;
 			productType = "com.apple.product-type.framework";
@@ -3590,7 +3548,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				DC30954D20574BE900189B9A /* PBXTargetDependency */,
 				DCEEB2DF2044064C00189B9A /* PBXTargetDependency */,
 				DC30948A2057358800189B9A /* PBXTargetDependency */,
 				DCA8923B20F5F13F00AEFF98 /* PBXTargetDependency */,
@@ -3653,6 +3610,8 @@
 			dependencies = (
 			);
 			name = ownCloudSDK;
+			packageProductDependencies = (
+			);
 			productName = ownCloudSDK;
 			productReference = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */;
 			productType = "com.apple.product-type.framework";
@@ -3670,7 +3629,6 @@
 			);
 			dependencies = (
 				DC3095572057CF2500189B9A /* PBXTargetDependency */,
-				DC3095592057CF2500189B9A /* PBXTargetDependency */,
 				DCC8F9B7202852A200EB6701 /* PBXTargetDependency */,
 				DC7E0A8E203732D6006111FA /* PBXTargetDependency */,
 			);
@@ -3747,14 +3705,11 @@
 				fr,
 			);
 			mainGroup = DCC8F9A1202852A200EB6701;
+			packageReferences = (
+				3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */,
+			);
 			productRefGroup = DCC8F9AC202852A200EB6701 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = DC30954420574BC900189B9A /* Products */;
-					ProjectRef = DC30954320574BC900189B9A /* openssl.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				DCC8F9AA202852A200EB6701 /* ownCloudSDK */,
@@ -3766,16 +3721,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		DC30954820574BC900189B9A /* openssl.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = openssl.framework;
-			remoteRef = DC30954720574BC900189B9A /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		DC3094822057358800189B9A /* Resources */ = {
@@ -4248,25 +4193,10 @@
 			target = DCC8F9AA202852A200EB6701 /* ownCloudSDK */;
 			targetProxy = DC309490205735BD00189B9A /* PBXContainerItemProxy */;
 		};
-		DC30954A20574BD900189B9A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = openssl;
-			targetProxy = DC30954920574BD900189B9A /* PBXContainerItemProxy */;
-		};
-		DC30954D20574BE900189B9A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = openssl;
-			targetProxy = DC30954C20574BE900189B9A /* PBXContainerItemProxy */;
-		};
 		DC3095572057CF2500189B9A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DC3094832057358800189B9A /* ownCloudUI */;
 			targetProxy = DC3095562057CF2500189B9A /* PBXContainerItemProxy */;
-		};
-		DC3095592057CF2500189B9A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = openssl;
-			targetProxy = DC3095582057CF2500189B9A /* PBXContainerItemProxy */;
 		};
 		DC7E0A8E203732D6006111FA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4370,7 +4300,11 @@
 				INFOPLIST_FILE = ownCloudUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4393,7 +4327,11 @@
 				INFOPLIST_FILE = ownCloudUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudUI;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4410,7 +4348,10 @@
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4426,7 +4367,10 @@
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = Example/Ocean/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.Ocean;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4448,7 +4392,11 @@
 				INFOPLIST_FILE = ownCloudMocking/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMocking;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4471,7 +4419,11 @@
 				INFOPLIST_FILE = ownCloudMocking/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMocking;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4487,7 +4439,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ownCloudMockingTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMockingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4503,7 +4459,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ownCloudMockingTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudMockingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4655,7 +4615,11 @@
 				INFOPLIST_FILE = ownCloudSDK/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4681,7 +4645,11 @@
 				INFOPLIST_FILE = ownCloudSDK/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -4697,7 +4665,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = ownCloudSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDKTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4711,7 +4683,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				INFOPLIST_FILE = ownCloudSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.owncloud.ownCloudSDKTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4786,6 +4762,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/OpenSSL.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.180;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DCE2F04D27FDE01D00E9E136 /* OpenSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */;
+			productName = OpenSSL;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DCC8F9A2202852A200EB6701 /* Project object */;
 }

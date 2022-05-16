@@ -78,16 +78,19 @@
 "%@ already exists" = "%@ already exists";
 "Couldn't copy %@ to %@, because an item called %@ already exists there." = "Couldn't copy %@ to %@, because an item called %@ already exists there.";
 "Couldn't move %@ to %@, because an item called %@ already exists there." = "Couldn't move %@ to %@, because an item called %@ already exists there.";
+"Couldn't rename %@ to %@, because another item with that name already exists." = "Couldn't rename %@ to %@, because another item with that name already exists.";
 
 "Insufficient permissions" = "Insufficient permissions";
 "%@ can't be copied to %@." = "%@ can't be copied to %@.";
 "%@ can't be moved to %@." = "%@ can't be moved to %@.";
+"%@ can't be renamed to %@." = "%@ couldn't be renamed to %@.";
 
 "%@ not found on the server" = "%@ not found on the server";
 "%@ may have been renamed, moved or deleted remotely." = "%@ may have been renamed, moved or deleted remotely.";
 
 "Error copying %@" = "Error copying %@";
 "Error moving %@" = "Error moving %@";
+"Error renaming %@" = "Error renaming %@";
 
 "Renaming %@ to %@…" = "Renaming %@ to %@…";
 "Moving %@ to %@…" = "Moving %@ to %@…";
@@ -353,6 +356,8 @@
 // OCErrorUnknownUser
 "Unknown user" = "Unknown user";
 
+// OCErrorRequestTimeout
+"Request timed out" = "Request timed out";
 
 /* Diagnostic */
 "Files" = "Files";
