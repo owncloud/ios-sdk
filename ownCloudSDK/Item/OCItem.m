@@ -825,7 +825,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@, driveID: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.driveID, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), ((_customIdentifier1!=nil) ? [NSString stringWithFormat:@", customIdentifier1: %@", _customIdentifier1] : @""), ((_customIdentifier2!=nil) ? [NSString stringWithFormat:@", customIdentifier2: %@", _customIdentifier2] : @""), [self syncActivityDescription]]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@, driveID: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.driveID, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), ((_bookmarkUUID!=nil) ? [NSString stringWithFormat:@", bookmarkUUID: %@", _bookmarkUUID] : @""), [self syncActivityDescription]]);
 }
 
 #pragma mark - Copying
@@ -833,8 +833,7 @@
 {
 	OCItem *copy = [[self class] itemFromSerializedData:self.serializedData];
 
-	copy.customIdentifier1 = _customIdentifier1;
-	copy.customIdentifier2 = _customIdentifier2;
+	copy.bookmarkUUID = _bookmarkUUID;
 
 	return (copy);
 }

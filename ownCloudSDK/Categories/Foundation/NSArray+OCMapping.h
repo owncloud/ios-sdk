@@ -1,8 +1,8 @@
 //
-//  OCVFSContent.h
+//  NSArray+OCMapping.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 04.05.22.
+//  Created by Felix Schwarz on 17.05.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,24 +17,15 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCVFSNode.h"
-
-@class OCCore;
-@class OCQuery;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCVFSContent : NSObject
+typedef id _Nullable (^OCObjectToKeyMapper)(id obj);
 
-@property(strong,nullable) OCBookmark *bookmark;
-@property(weak,nullable) OCCore *core;
+@interface NSArray (OCMapping)
 
-@property(strong,nullable) OCVFSNode *containerNode;
-
-@property(strong,nullable) OCQuery *query;
-@property(strong,nullable) NSArray<OCVFSNode *> *vfsChildNodes;
-
-@property(assign) BOOL isSnapshot; //!< If YES, content is not self-refreshing and needs to be re-requested to get the latest version
+- (NSMutableDictionary *)dictionaryUsingMapper:(OCObjectToKeyMapper)mapper;
+- (NSMutableSet *)setUsingMapper:(OCObjectToKeyMapper)mapper;
 
 @end
 

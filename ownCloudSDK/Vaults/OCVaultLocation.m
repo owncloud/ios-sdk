@@ -34,19 +34,21 @@
 		{
 			if ([segments[0] isEqual:@"V"])
 			{
-				// Virtual items: V\[bookmarkUUID]\[vfsNodeID] or V\[vfsNodeID]
+				// Virtual items: V\[bookmarkUUID]\[driveID] or V\[vfsNodeID]
 				if (segments.count > 1)
 				{
 					if (segments.count > 2)
 					{
 						OCBookmarkUUIDString uuidString = segments[1];
 						self.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:uuidString];
-						self.vfsNodeID = segments[2];
+						self.driveID = segments[2];
+						self.isVirtual = YES;
 						recognized = YES;
 					}
 					else
 					{
 						self.vfsNodeID = segments[1];
+						self.isVirtual = YES;
 						recognized = YES;
 					}
 				}
@@ -86,9 +88,9 @@
 {
 	if (_vfsNodeID != nil)
 	{
-		if (_bookmarkUUID != nil)
+		if ((_bookmarkUUID != nil) && (_driveID != nil))
 		{
-			return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _vfsNodeID]);
+			return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _driveID]);
 		}
 		else
 		{

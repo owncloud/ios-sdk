@@ -36,6 +36,11 @@
 #import "OCResourceManager.h"
 #import "OCDatabase+ResourceStorage.h"
 #import "NSString+OCPath.h"
+#import "OCVaultDriveList.h"
+#import "NSArray+OCMapping.h"
+#import "NSArray+OCFiltering.h"
+#import "GADrive.h"
+#import "GADriveItem.h"
 
 @implementation OCVault
 
@@ -192,7 +197,7 @@
 		return (vsfStorageRootURL);
 	}
 
-	return ([[self storageRootURL] URLByAppendingPathComponent:[@"VFS" stringByAppendingPathComponent:bookmarkUUID.UUIDString] isDirectory:YES]);
+	return ([[self storageRootURL] URLByAppendingPathComponent:[bookmarkUUID.UUIDString stringByAppendingPathComponent:@"VFS"] isDirectory:YES]);
 }
 
 - (NSURL *)filesRootURL
@@ -291,6 +296,7 @@
 		_keyValueStore = [OCKeyValueStore sharedWithURL:self.keyValueStoreURL identifier:self.uuid.UUIDString owner:nil];
 		[_keyValueStore registerClass:OCEventQueue.class forKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
 		[_keyValueStore registerClass:OCCoreUpdateScheduleRecord.class forKey:OCKeyValueStoreKeyCoreUpdateScheduleRecord];
+		[_keyValueStore registerClass:OCVaultDriveList.class forKey:OCKeyValueStoreKeyVaultDriveList];
 	}
 
 	return (_keyValueStore);
@@ -309,6 +315,363 @@
 	}
 
 	return (_resourceManager);
+}
+
+#pragma mark - VFS
+- (OCVFSCore *)vfs
+{
+	if (_vfsCore == nil)
+	{
+		if ([self conformsToProtocol:@protocol(OCVaultVFSProvider)])
+		{
+			_vfsCore = [(id<OCVaultVFSProvider>)self provideVFS];
+		}
+	}
+
+	return (_vfsCore);
+}
+
+#pragma mark - Drives
+- (NSArray<OCDrive *> *)activeDrives
+{
+	@synchronized(self)
+	{
+		return (_activeDrives);
+	}
+}
+
+- (void)updateWithRemoteDrives:(NSArray<OCDrive *> *)newRemoteDrives
+{
+	// Sort _drives by type and name
+	newRemoteDrives = [newRemoteDrives sortedArrayUsingComparator:^NSComparisonResult(OCDrive *drive1, OCDrive *drive2) {
+		NSComparisonResult result;
+
+		if ((result = [drive1.type localizedCompare:drive2.type]) != NSOrderedSame)
+		{
+			return (result);
+		}
+
+		return ([drive1.name localizedCompare:drive2.name]);
+	}];
+
+	NSMutableSet<OCDriveID> *newDrivesIDs = [newRemoteDrives setUsingMapper:^OCDriveID(OCDrive *drive) {
+		return (drive.identifier);
+	}];
+
+	__block NSMutableArray<OCDrive *> *remotelyAddedDrives = [NSMutableArray new];
+	__block NSMutableArray<OCDrive *> *remotelyRemovedDrives = [NSMutableArray new];
+	__block NSMutableArray<OCDrive *> *remotelyUpdatedDrives = [NSMutableArray new];
+
+	[self _modifyDriveListWith:^OCVaultDriveList *(OCVaultDriveList *driveList, BOOL *outDidModify) {
+		BOOL detachedDrivesChanged = NO;
+
+		NSMutableSet<OCDriveID> *existingDrivesIDs = [driveList.drives setUsingMapper:^OCDriveID(OCDrive *drive) {
+			return (drive.identifier);
+		}];
+
+		// Find no longer detached drives
+		NSMutableArray<OCDrive *> *detachedDrives = [driveList.detachedDrives mutableCopy];
+
+		for (OCDrive *detachedDrive in driveList.detachedDrives)
+		{
+			if ([newDrivesIDs containsObject:detachedDrive.identifier])
+			{
+				OCTLogDebug(@[@"Drives"], @"Re-attached detached drive: %@", detachedDrive);
+
+				[detachedDrives removeObject:detachedDrive];
+				detachedDrivesChanged = YES;
+			}
+		}
+
+		// Find new detached drives
+		for (OCDrive *drive in driveList.drives)
+		{
+			if (![newDrivesIDs containsObject:drive.identifier])
+			{
+				OCTLogDebug(@[@"Drives"], @"Newly detached drive: %@", drive);
+
+				drive.detachedState = OCDriveDetachedStateNew;
+				drive.detachedSinceDate = [NSDate new];
+
+				[detachedDrives addObject:drive];
+				[remotelyRemovedDrives addObject:drive];
+
+				detachedDrivesChanged = YES;
+			}
+		}
+
+		// Find added drives
+		for (OCDrive *newRemoteDrive in newRemoteDrives)
+		{
+			if (![existingDrivesIDs containsObject:newRemoteDrive.identifier])
+			{
+				[remotelyAddedDrives addObject:newRemoteDrive];
+			}
+		}
+
+		// Find updated drives
+		NSMutableDictionary<OCDriveID, OCDrive *> *existingDrivesByDriveID = [driveList.drives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
+			return (drive.identifier);
+		}];
+
+		for (OCDrive *newRemoteDrive in newRemoteDrives)
+		{
+			if (newRemoteDrive.identifier != nil)
+			{
+				OCDrive *existingDrive;
+
+				if ((existingDrive = existingDrivesByDriveID[newRemoteDrive.identifier]) != nil)
+				{
+					if ([newRemoteDrive isSubstantiallyDifferentFrom:existingDrive])
+					{
+						OCLogDebug(@"1: %d", OCNANotEqual(newRemoteDrive.identifier, existingDrive.identifier));
+						OCLogDebug(@"2: %d", OCNANotEqual(newRemoteDrive.type, existingDrive.type));
+						OCLogDebug(@"3: %d", OCNANotEqual(newRemoteDrive.name, existingDrive.name));
+						OCLogDebug(@"4: %d", OCNANotEqual(newRemoteDrive.desc, existingDrive.desc));
+						OCLogDebug(@"5: %d", OCNANotEqual(newRemoteDrive.davRootURL, existingDrive.davRootURL));
+						OCLogDebug(@"6: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag));
+						OCLogDebug(@"7: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag));
+						OCLogDebug(@"8: %d", OCNANotEqual(newRemoteDrive.detachedSinceDate, existingDrive.detachedSinceDate));
+						OCLogDebug(@"9: %d", (newRemoteDrive.detachedState != existingDrive.detachedState));
+						OCLogDebug(@"10: %d", OCNANotEqual(newRemoteDrive.rootETag, existingDrive.rootETag));
+
+						[remotelyUpdatedDrives addObject:newRemoteDrive];
+					}
+				}
+			}
+		}
+
+		// Update drives with new remote drives
+		if ((remotelyAddedDrives.count > 0) || (remotelyUpdatedDrives.count > 0) || (remotelyRemovedDrives.count > 0))
+		{
+			if (remotelyAddedDrives.count > 0)
+			{
+				OCTLogDebug(@[@"Drives"], @"Remotely added drives: %@", remotelyAddedDrives);
+			}
+
+			if (remotelyUpdatedDrives.count > 0)
+			{
+				OCTLogDebug(@[@"Drives"], @"Remotely updated drives: %@", remotelyUpdatedDrives);
+			}
+
+			if (remotelyRemovedDrives.count > 0)
+			{
+				OCTLogDebug(@[@"Drives"], @"Remotely removed drives: %@", remotelyRemovedDrives);
+			}
+
+			for (OCDrive *addedDrive in remotelyAddedDrives)
+			{
+				// Subscribe to new drives by default
+				// (when implementing a policy here in the future, consider always subscribing to the personal space regardless of policy)
+				// (also handle the return of detached drives and don't automatically re-add them as subscribed drives if they weren't before)
+				[driveList.subscribedDriveIDs addObject:addedDrive.identifier];
+			}
+
+			driveList.drives = newRemoteDrives;
+			*outDidModify = YES;
+		}
+
+		// Update detached drives
+		if (detachedDrivesChanged)
+		{
+			driveList.detachedDrives = detachedDrives;
+			*outDidModify = YES;
+		}
+
+		return (driveList);
+	}];
+
+	// Signal drive changes to File Provider
+	if ((remotelyAddedDrives.count > 0) || (remotelyUpdatedDrives.count > 0) || (remotelyRemovedDrives.count > 0))
+	{
+		[self signalDriveChangesWithAdditions:remotelyAddedDrives updates:remotelyUpdatedDrives removals:remotelyRemovedDrives];
+	}
+}
+
+- (NSArray<OCDrive *> *)subscribedDrives
+{
+	@synchronized(self)
+	{
+		return (_subscribedDrives);
+	}
+}
+
+- (NSArray<OCDrive *> *)detachedDrives
+{
+	@synchronized(self)
+	{
+		return (_detachedDrives);
+	}
+}
+
+- (void)subscribeToDrives:(NSArray<OCDrive *> *)drives
+{
+	[self _modifyDriveListWith:^OCVaultDriveList *(OCVaultDriveList *driveList, BOOL *outDidModify) {
+		NSUInteger count = driveList.subscribedDriveIDs.count;
+
+		for (OCDrive *drive in drives)
+		{
+			[driveList.subscribedDriveIDs addObject:drive.identifier];
+		}
+
+		if (count != driveList.subscribedDriveIDs.count)
+		{
+			OCTLogDebug(@[@"Drives"], @"Subscribed to drives: %@", drives);
+			*outDidModify = YES;
+		}
+
+		return (driveList);
+	}];
+}
+
+- (void)unsubscribeFromDrives:(NSArray<OCDrive *> *)drives
+{
+	[self _modifyDriveListWith:^OCVaultDriveList *(OCVaultDriveList *driveList, BOOL *outDidModify) {
+		NSUInteger count = driveList.subscribedDriveIDs.count;
+
+		for (OCDrive *drive in drives)
+		{
+			[driveList.subscribedDriveIDs removeObject:drive.identifier];
+		}
+
+		if (count != driveList.subscribedDriveIDs.count)
+		{
+			OCTLogDebug(@[@"Drives"], @"Unsubscribed from drives: %@", drives);
+			*outDidModify = YES;
+		}
+
+		return (driveList);
+	}];
+}
+
+- (void)changeDetachedState:(OCDriveDetachedState)detachedState forDriveID:(OCDriveID)detachedDriveID
+{
+	[self _modifyDriveListWith:^OCVaultDriveList *(OCVaultDriveList *driveList, BOOL *outDidModify) {
+
+		OCDrive *modifyDrive = [driveList.detachedDrives firstObjectMatching:^BOOL(OCDrive * _Nonnull drive) {
+			return ([drive.identifier isEqual:detachedDriveID]);
+		}];
+
+		if (modifyDrive != nil)
+		{
+			OCTLogDebug(@[@"Drives"], @"Changed detachedState to %ld for drive: %@", (long)detachedState, modifyDrive);
+
+			modifyDrive.detachedState = detachedState;
+			*outDidModify = YES;
+		}
+
+		return (driveList);
+	}];
+}
+
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID
+{
+	OCDrive *drive;
+
+	@synchronized(self)
+	{
+		if ((drive = _activeDrivesByID[driveID]) == nil)
+		{
+			drive = _detachedDrivesByID[driveID];
+		}
+	}
+
+	return (drive);
+}
+
+- (void)startDriveUpdates
+{
+	if (!_observingDrivesUpdates)
+	{
+		__weak OCVault *weakSelf = self;
+		__block BOOL isInitial = YES;
+
+		_observingDrivesUpdates = YES;
+
+		OCTLogDebug(@[@"Drives"], @"Starting drive update observation for bookmark: %@", _bookmark);
+
+		[self.keyValueStore addObserver:^(OCKeyValueStore * _Nonnull store, id  _Nullable owner, OCKeyValueStoreKey  _Nonnull key, OCVaultDriveList * _Nullable driveList) {
+			[weakSelf _updateFromDriveList:driveList];
+
+			if (isInitial)
+			{
+				isInitial = NO;
+			}
+			else
+			{
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[NSNotificationCenter.defaultCenter postNotificationName:OCVaultDriveListChanged object:weakSelf];
+				});
+			}
+		} forKey:OCKeyValueStoreKeyVaultDriveList withOwner:self initial:YES];
+	}
+}
+
+- (void)stopDriveUpdates
+{
+	if (_observingDrivesUpdates)
+	{
+		_observingDrivesUpdates = NO;
+		[self.keyValueStore removeObserverForOwner:self forKey:OCKeyValueStoreKeyVaultDriveList];
+
+		OCTLogDebug(@[@"Drives"], @"Stopped drive update observation for bookmark: %@", _bookmark);
+	}
+}
+
+- (void)_modifyDriveListWith:(OCVaultDriveList *(^)(OCVaultDriveList *driveList, BOOL *outDidModify))driveListModifier
+{
+	__block OCVaultDriveList *updateFromDriveList = nil;
+
+	[self.keyValueStore updateObjectForKey:OCKeyValueStoreKeyVaultDriveList usingModifier:^id _Nullable(OCVaultDriveList *driveList, BOOL * _Nonnull outDidModify) {
+		if (driveList == nil)
+		{
+			driveList = [OCVaultDriveList new];
+		}
+
+		BOOL didModify = NO;
+		OCVaultDriveList *newDriveList = driveListModifier(driveList, &didModify);
+
+		if (didModify)
+		{
+			updateFromDriveList = newDriveList;
+		}
+
+		*outDidModify = didModify;
+		return (newDriveList);
+	}];
+
+	if (updateFromDriveList != nil)
+	{
+		[self _updateFromDriveList:updateFromDriveList];
+	}
+}
+
+- (void)_updateFromDriveList:(OCVaultDriveList *)driveList
+{
+	[self willChangeValueForKey:@"activeDrives"];
+	[self willChangeValueForKey:@"subscribedDrives"];
+	[self willChangeValueForKey:@"detachedDrives"];
+
+	@synchronized(self)
+	{
+		_activeDrives = driveList.drives;
+		_activeDrivesByID = [_activeDrives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
+			return (drive.identifier);
+		}];
+
+		_subscribedDrives = [driveList.drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+			return ([driveList.subscribedDriveIDs containsObject:drive.identifier]);
+		}];
+
+		_detachedDrives = driveList.detachedDrives;
+		_detachedDrivesByID = [_detachedDrives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
+			return (drive.identifier);
+		}];
+	}
+
+	[self didChangeValueForKey:@"detachedDrives"];
+	[self didChangeValueForKey:@"subscribedDrives"];
+	[self didChangeValueForKey:@"activeDrives"];
 }
 
 #pragma mark - Operations
@@ -330,6 +693,8 @@
 				self->_resourceManager = [[OCResourceManager alloc] initWithStorage:db];
 			}
 
+			[self startDriveUpdates];
+
 			completionHandler(db, error);
 		}];
 	}
@@ -344,6 +709,8 @@
 
 - (void)closeWithCompletionHandler:(OCCompletionHandler)completionHandler
 {
+	[self stopDriveUpdates];
+
 	[self.database closeWithCompletionHandler:completionHandler];
 }
 
@@ -520,63 +887,75 @@
 
 	if (pathComponents.count > 0)
 	{
-		// Possible layouts:
-		// [Bookmark UUID]/[Local ID]/[filename.xyz]
-		// [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/[filename.xyz]
-		const NSUInteger uuidStringLength = 36;
-		NSUInteger parsedElements = 0;
-
-		if (pathComponents[0].length == uuidStringLength) // [Bookmark UUID]/…
+		if ([pathComponents.firstObject isEqual:OCVaultPathVFS])
 		{
-			location = [OCVaultLocation new];
+			// Possible layouts:
+		}
+		else
+		{
+			// Possible layouts:
+			// [Bookmark UUID]/[Local ID]/[filename.xyz]
+			// [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/[filename.xyz]
+			const NSUInteger uuidStringLength = 36;
+			NSUInteger parsedElements = 0;
 
-			location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:pathComponents[0]];
-			parsedElements = 1;
-
-			if (pathComponents.count > 1)
+			if (pathComponents[0].length == uuidStringLength) // [Bookmark UUID]/…
 			{
-				if ([pathComponents[1] isEqual:OCVaultPathVFS]) // [Bookmark UUID]/VFS/…
-				{
-					parsedElements = 2;
-					if (pathComponents.count > 2)
-					{
-						location.vfsNodeID = pathComponents[2]; // [Bookmark UUID]/VFS/[VFS Node ID]/…
-						parsedElements = 3;
+				location = [OCVaultLocation new];
 
-						if (pathComponents.count > 3) // && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+				location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:pathComponents[0]];
+				parsedElements = 1;
+
+				if (pathComponents.count > 1)
+				{
+					if ([pathComponents[1] isEqual:OCVaultPathVFS]) // [Bookmark UUID]/VFS/…
+					{
+						parsedElements = 2;
+						if (pathComponents.count > 2)
 						{
-							location.localID = pathComponents[3];
-							parsedElements = 4;
+							location.vfsNodeID = pathComponents[2]; // [Bookmark UUID]/VFS/[VFS Node ID]/…
+							parsedElements = 3;
+
+							if (pathComponents.count > 3) // && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+							{
+								location.localID = pathComponents[3];
+								parsedElements = 4;
+							}
 						}
+					}
+
+					if ([pathComponents[1] isEqual:OCVaultPathDrives]) // [Bookmark UUID]/Drives/…
+					{
+						parsedElements = 2;
+						if (pathComponents.count > 2)
+						{
+							location.driveID = pathComponents[2]; // [Bookmark UUID]/Drives/[Drive ID]/…
+							parsedElements = 3;
+
+							// if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+							if (pathComponents.count > 3) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
+							{
+								location.localID = pathComponents[3];
+								parsedElements = 4;
+							}
+							else
+							{
+								// [Bookmark UUID]/Drives/[Drive ID] is virtual
+								location.isVirtual = YES;
+							}
+						}
+					}
+					else // if (pathComponents[1].length == uuidStringLength) // [Bookmark UUID]/[Local ID]/…
+					{
+						location.localID = pathComponents[1];
+						parsedElements = 2;
 					}
 				}
 
-				if ([pathComponents[1] isEqual:OCVaultPathDrives]) // [Bookmark UUID]/Drives/…
+				if (pathComponents.count > parsedElements)
 				{
-					parsedElements = 2;
-					if (pathComponents.count > 2)
-					{
-						location.driveID = pathComponents[2]; // [Bookmark UUID]/Drives/[Drive ID]/…
-						parsedElements = 3;
-
-						// if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
-						if (pathComponents.count > 3) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
-						{
-							location.localID = pathComponents[3];
-							parsedElements = 4;
-						}
-					}
+					location.additionalPathElements = [pathComponents subarrayWithRange:NSMakeRange(parsedElements, pathComponents.count - parsedElements)];
 				}
-				else // if (pathComponents[1].length == uuidStringLength) // [Bookmark UUID]/[Local ID]/…
-				{
-					location.localID = pathComponents[1];
-					parsedElements = 2;
-				}
-			}
-
-			if (pathComponents.count > parsedElements)
-			{
-				location.additionalPathElements = [pathComponents subarrayWithRange:NSMakeRange(parsedElements, pathComponents.count - parsedElements)];
 			}
 		}
 	}
@@ -588,10 +967,20 @@
 {
 	NSURL *returnURL = nil;
 
-	if (location.vfsNodeID != nil)
+	if (location.isVirtual)
 	{
 		// VFS Node
-		returnURL = [[self vfsStorageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:location.vfsNodeID];
+		if (location.vfsNodeID != nil)
+		{
+			// VFS/[VFS Node ID]
+			// [Bookmark UUID]VFS/[VFS Node ID]
+			returnURL = [[self vfsStorageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:location.vfsNodeID];
+		}
+		else if ((location.bookmarkUUID != nil) && (location.driveID != nil))
+		{
+			// [Bookmark UUID]/Drives/[Drive ID]
+			returnURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.driveID isDirectory:YES];
+		}
 	}
 	else if ((location.bookmarkUUID != nil) && (location.localID != nil))
 	{
@@ -624,3 +1013,6 @@ NSString *OCVaultPathHTTPPipeline = @"HTTPPipeline";
 NSString *OCVaultPathDrives = @"Drives";
 NSString *OCVaultPathVFS = @"VFS";
 
+OCKeyValueStoreKey OCKeyValueStoreKeyVaultDriveList = @"vaultDriveList";
+
+NSNotificationName OCVaultDriveListChanged = @"OCVaultDriveListChanged";

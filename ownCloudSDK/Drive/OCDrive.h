@@ -29,6 +29,16 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString *OCDriveType;
 typedef NSString* OCDriveAlias;
 
+typedef NS_ENUM(NSInteger, OCDriveDetachedState)
+{
+	OCDriveDetachedStateNone,
+
+	OCDriveDetachedStateNew,
+	OCDriveDetachedStateHasUserChanges,
+	OCDriveDetachedStateRetain,
+	OCDriveDetachedStateDisposable
+};
+
 @interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersion>
 
 @property(strong) OCDriveID identifier;
@@ -48,9 +58,16 @@ typedef NSString* OCDriveAlias;
 @property(strong,nonatomic,readonly) OCLocation *rootLocation;
 @property(strong,nonatomic,readonly) OCFileETag rootETag;
 
+#pragma mark - Detached management
+@property(readonly,nonatomic) BOOL isDetached;
+@property(assign) OCDriveDetachedState detachedState;
+@property(strong,nullable) NSDate *detachedSinceDate;
+
+#pragma mark - Instantiation
 + (instancetype)driveFromGADrive:(GADrive *)drive; //!< oCIS drive, initialized from a GADrive instance
 + (instancetype)personalDrive; //!< OC10 root folder drive
 
+#pragma mark - Comparison
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive;
 
 @end

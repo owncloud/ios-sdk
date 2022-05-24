@@ -344,16 +344,11 @@ typedef id<NSObject> OCCoreItemTracking;
 #pragma mark - Drives
 @property(readonly,nonatomic) BOOL useDrives; //!< Returns YES if this account is drive-based (oCIS) rather than driven by a single WebDAV endpoint (OC10)
 
-- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize; //!< Updates the internal drive table with the provided drives
-
-- (void)driveAdded:(OCDrive *)drive; //!< Called when a new drive is discovered
-- (void)driveRemoved:(OCDrive *)drive; //!< Called when a drive is no longer included in the list of drives by the server
-
 - (void)subscribeToDrive:(OCDrive *)drive; //!< Subscribes to a drive. The metadata for subscribed drives are actively kept up-to-date. [TBD]
 - (void)unsubscribeFromDrive:(OCDrive *)drive; //!< Unsubscribe from a drive. Metadata + files may be kept around, but are not kept up-to-date. [TBD]
 
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *drives; //!< Returns all known drives.
-@property(strong,readonly,nonatomic) NSArray<OCDriveID> *subscribedDriveIDs; //!< Returns the OCDriveIDs of all drives the core is subscribed to.
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< Returns all subscribed drives.
 - (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
 
 #pragma mark - Item usage

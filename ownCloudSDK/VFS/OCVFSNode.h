@@ -24,7 +24,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCVFSNode : NSObject
+@interface OCVFSNode : NSObject <OCVFSItem>
 
 @property(weak,nullable,nonatomic) OCVFSCore *vfsCore;
 @property(weak,nullable,readonly,nonatomic) OCVFSNode *parentNode;
@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (OCVFSNode *)virtualFolderAtPath:(OCPath)path location:(nullable OCLocation *)location;
 
 + (OCVFSNode *)virtualFolderInPath:(OCPath)path withName:(NSString *)name location:(nullable OCLocation *)location;
+
++ (OCVFSItemID)rootFolderItemIDForBookmarkUUID:(OCBookmarkUUIDString)bookmarkUUIDString driveID:(nullable OCDriveID)driveID;
 
 @end
 

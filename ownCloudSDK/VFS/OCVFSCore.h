@@ -21,9 +21,11 @@
 #import "OCVFSNode.h"
 #import "OCQuery.h"
 #import "OCVFSContent.h"
-#import "OCCore.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class OCCore;
+@class OCVaultLocation;
 
 @protocol OCVFSCoreDelegate <NSObject>
 
@@ -40,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addNodes:(NSArray<OCVFSNode *> *)nodes; //!< Adds nodes
 - (void)removeNodes:(NSArray<OCVFSNode *> *)nodes; //!< Removes nodes
 
+- (void)setNodes:(NSArray<OCVFSNode *> *)nodes; //!< Replaces all existing nodes with nodes
+
 - (nullable NSURL *)urlForItemIdentifier:(OCVFSItemID)identifier;
 - (nullable OCVFSItemID)itemIdentifierForURL:(NSURL *)url;
 - (nullable id<OCVFSItem>)itemForIdentifier:(OCVFSItemID)identifier error:(NSError * _Nullable * _Nullable)outError;
@@ -53,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Internals
 - (OCVFSNode *)nodeAtPath:(OCPath)vfsPath;
+- (OCVFSNode *)driveRootNodeForLocation:(OCLocation *)location;
 
 - (OCCore *)_acquireCoreForVaultLocation:(OCVaultLocation *)location error:(NSError **)outError;
 - (void)_relinquishCore:(OCCore *)core;

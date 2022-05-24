@@ -35,4 +35,4 @@
 - VFSItemID string addressing scheme
 	- using "\" as separator, not ":", because that might also be used in ocis identifiers
 	- Real items: 	 I\[bookmarkUUID]\[driveID]\[localID][\[fileName]]
-	- Virtual items: V\[bookmarkUUID]\[vfsNodeID] or V\[vfsNodeID]
+	- Virtual items: V\[bookmarkUUID]\[driveID] or V\[vfsNodeID]

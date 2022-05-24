@@ -1,8 +1,8 @@
 //
-//  OCVFSContent.h
+//  OCVaultDriveList.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 04.05.22.
+//  Created by Felix Schwarz on 16.05.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -17,24 +17,16 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "OCVFSNode.h"
-
-@class OCCore;
-@class OCQuery;
+#import "OCDrive.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCVFSContent : NSObject
+@interface OCVaultDriveList : NSObject <NSSecureCoding>
 
-@property(strong,nullable) OCBookmark *bookmark;
-@property(weak,nullable) OCCore *core;
+@property(strong) NSArray<OCDrive *> *drives; //!< All (active) drives
+@property(strong) NSMutableSet<OCDriveID> *subscribedDriveIDs; //!< List of all drives the user is subscribed to, may contain active and detached IDs
 
-@property(strong,nullable) OCVFSNode *containerNode;
-
-@property(strong,nullable) OCQuery *query;
-@property(strong,nullable) NSArray<OCVFSNode *> *vfsChildNodes;
-
-@property(assign) BOOL isSnapshot; //!< If YES, content is not self-refreshing and needs to be re-requested to get the latest version
+@property(strong,nullable) NSArray<OCDrive *> *detachedDrives; //!< All detached drives
 
 @end
 

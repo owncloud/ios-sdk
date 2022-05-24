@@ -95,8 +95,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	OCItemVersionSeed _versionSeed;
 
-	id _customIdentifier1;
-	id _customIdentifier2;
+	OCBookmarkUUIDString _bookmarkUUID;
 }
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
@@ -180,8 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCItemVersionSeed versionSeed; //!< Version seed that changes whenever the item is updated
 
-@property(nullable,strong) id customIdentifier1; //!< A custom identifier for temporary use (not serialized)
-@property(nullable,strong) id customIdentifier2; //!< A custom identifier for temporary use (not serialized)
+@property(nullable,strong) OCBookmarkUUIDString bookmarkUUID; //!< BookmarkUUIDString for temporary use (not serialized)
 
 + (OCLocalID)generateNewLocalID; //!< Generates a new, unique OCLocalID
 

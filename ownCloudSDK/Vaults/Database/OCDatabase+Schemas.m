@@ -40,7 +40,6 @@
 	[self addOrUpdateCountersSchema];
 
 	[self addOrUpdateMetaDataSchema];
-	[self addOrUpdateDrivesSchema];
 	[self addOrUpdateThumbnailsSchema];
 	[self addOrUpdateResourceSchema];
 
@@ -978,51 +977,6 @@
 	];
 }
 
-- (void)addOrUpdateDrivesSchema
-{
-	// All previous versions are purely development versions
-
-	// Version 3
-	[self.sqlDB addTableSchema:[OCSQLiteTableSchema
-		schemaWithTableName:OCDatabaseTableNameDrives
-		version:3
-		creationQueries:@[
-			/*
-				rowID : INTEGER	  	- unique ID used to uniquely identify and efficiently update a row
-				identifier : TEXT	- OCDriveID, identifier that identifies the drive (UNIQUE)
-				type : TEXT		- OCDriveType, type of drive
-				name : TEXT		- name of drive
-				davRootURL : TEXT	- dav root URL of drive
-				seed : INTEGER		- seed
-				driveData : BLOB	- archived OCDrive data
-			*/
-			@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL UNIQUE, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)", // relatedTo:OCDatabaseTableNameDrives
-
-			// Create index over identifier
-			@"CREATE INDEX idx_drives_identifier ON drives (identifier)" // relatedTo:OCDatabaseTableNameDrives
-		]
-		openStatements:nil
-		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
-			// Migrate to version 15
-			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
-				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
-
-				// Drop old table
-				[db executeQuery:[OCSQLiteQuery query:@"DROP TABLE drives" resultHandler:resultHandler]];
-				if (transactionError != nil) { return(transactionError); }
-
-				// Create new table
-				[db executeQuery:[OCSQLiteQuery query:@"CREATE TABLE drives (rowID INTEGER PRIMARY KEY AUTOINCREMENT, identifier TEXT NOT NULL UNIQUE, type TEXT NOT NULL, name TEXT, davRootURL TEXT, seed INTEGER, driveData BLOB NOT NULL)" resultHandler:resultHandler]];
-				if (transactionError != nil) { return(transactionError); }
-
-				return (transactionError);
-			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
-				completionHandler(error);
-			}]];
-		}
-	]];
-}
-
 - (void)addOrUpdateSyncLanesSchema
 {
 	// Version 1
@@ -1641,7 +1595,6 @@
 @end
 
 OCDatabaseTableName OCDatabaseTableNameMetaData = @"metaData";
-OCDatabaseTableName OCDatabaseTableNameDrives = @"drives";
 OCDatabaseTableName OCDatabaseTableNameSyncLanes = @"syncLanes";
 OCDatabaseTableName OCDatabaseTableNameSyncJournal = @"syncJournal";
 OCDatabaseTableName OCDatabaseTableNameUpdateJobs = @"updateJobs";

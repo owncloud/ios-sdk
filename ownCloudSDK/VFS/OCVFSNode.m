@@ -45,7 +45,7 @@
 {
 	_vfsCore = vfsCore;
 
-	[self locationItem];
+//	[self locationItem];
 }
 
 - (OCVFSNodeID)identifier
@@ -65,13 +65,18 @@
 
 - (OCVFSItemID)itemID
 {
+	if (self.isRootNode)
+	{
+		return (OCVFSItemIDRoot);
+	}
+
 	if (_itemID == nil)
 	{
-//		if (self.locationItem != nil)
-//		{
-//			_itemID = [OCVFSCore composeVFSItemIDForOCItemWithBookmarkUUID:_location.bookmarkUUID.UUIDString driveID:_location.driveID localID:self.locationItem.localID];
-//		}
-//		else
+		if ((_location != nil) && (_location.bookmarkUUID != nil) && (_location.driveID != nil) && (_location.path.isRootPath))
+		{
+			_itemID = [OCVFSNode rootFolderItemIDForBookmarkUUID:_location.bookmarkUUID.UUIDString driveID:_location.driveID];
+		}
+		else
 		{
 			_itemID = [@"V\\" stringByAppendingString:self.identifier];
 		}
@@ -136,6 +141,39 @@
 	node.location = location;
 
 	return (node);
+}
+
++ (OCVFSItemID)rootFolderItemIDForBookmarkUUID:(OCBookmarkUUIDString)bookmarkUUIDString driveID:(nullable OCDriveID)driveID
+{
+	if (driveID != nil)
+	{
+		return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", bookmarkUUIDString, driveID]);
+	}
+
+	return (OCVFSItemIDRoot);
+}
+
+#pragma mark - OCVFSItem
+- (OCVFSItemID)vfsItemID
+{
+	OCVFSItemID vfsItemID = self.itemID;
+
+	if ([vfsItemID isEqual:OCVFSItemIDRoot])
+	{
+		return (NSFileProviderRootContainerItemIdentifier);
+	}
+
+	return (vfsItemID);
+}
+
+- (OCVFSItemID)vfsParentItemID
+{
+	return (self.parentNode.vfsItemID);
+}
+
+- (NSString *)vfsItemName
+{
+	return (self.name);
 }
 
 @end

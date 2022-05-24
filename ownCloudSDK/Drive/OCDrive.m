@@ -118,14 +118,16 @@
 #pragma mark - Comparison
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive
 {
-	return (![drive.identifier isEqual:_identifier] ||
-	 	![drive.type isEqual:_type] ||
-	 	![drive.name isEqual:_name] ||
-	 	![drive.desc isEqual:_desc] ||
-	 	![drive.davRootURL isEqual:_davRootURL] ||
+	return (OCNANotEqual(drive.identifier, _identifier) ||
+	 	OCNANotEqual(drive.type, _type) ||
+	 	OCNANotEqual(drive.name, _name) ||
+	 	OCNANotEqual(drive.desc, _desc) ||
+	 	OCNANotEqual(drive.davRootURL, _davRootURL) ||
 	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag) ||
 	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag) ||
-	 	(![drive.rootETag isEqual:self.rootETag] && (drive.rootETag != self.rootETag)));
+	 	OCNANotEqual(drive.detachedSinceDate, _detachedSinceDate) ||
+	 	(drive.detachedState != _detachedState) ||
+	 	OCNANotEqual(drive.rootETag, self.rootETag));
 }
 
 #pragma mark - Utility accessors
@@ -167,6 +169,9 @@
 		_quota = [decoder decodeObjectOfClass:GAQuota.class forKey:@"quota"];
 
 		_gaDrive = [decoder decodeObjectOfClass:GADrive.class forKey:@"gaDrive"];
+
+		_detachedState = [decoder decodeIntegerForKey:@"detachedState"];
+		_detachedSinceDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"detachedSinceDate"];
 	}
 
 	return (self);
@@ -185,6 +190,9 @@
 	[coder encodeObject:_quota forKey:@"quota"];
 
 	[coder encodeObject:_gaDrive forKey:@"gaDrive"];
+
+	[coder encodeInteger:_detachedState forKey:@"detachedState"];
+	[coder encodeObject:_detachedSinceDate forKey:@"detachedSinceDate"];
 }
 
 #pragma mark - OCDataItem / OCDataItemVersion compliance
@@ -200,7 +208,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag]);
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@:%ld:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, (long)_detachedState, _detachedSinceDate]);
 }
 
 #pragma mark - Comparison

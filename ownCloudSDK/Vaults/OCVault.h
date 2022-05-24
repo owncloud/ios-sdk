@@ -22,6 +22,8 @@
 #import "OCKeyValueStore.h"
 #import "OCLocation.h"
 #import "OCVaultLocation.h"
+#import "OCDrive.h"
+#import "OCVFSCore.h"
 
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
 #import <FileProvider/FileProvider.h>
@@ -71,7 +73,7 @@
 
 			*Drive-based*
 			"Drives"/					- OCVault.drivesRootURL
-				[Drive ID]/				- OCVault.localDriveRootURLForDriveID
+				[Drive ID]/				- OCVault.localDriveRootURLForDriveID --> !! Virtual !!
 					[Local ID]/			- OCVault.localFolderURLForItem
 						[filename.xyz]		- OCVault.localURLForItem
 
@@ -95,9 +97,18 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 	NSFileProviderDomain *_fileProviderDomain;
 	NSFileProviderManager *_fileProviderManager;
-	NSMutableDictionary <NSFileProviderItemIdentifier, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
+	NSMutableDictionary <OCVFSItemID, NSNumber *> *_fileProviderSignalCountByContainerItemIdentifiers;
 	NSString *_fileProviderSignalCountByContainerItemIdentifiersLock;
 	#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
+
+	NSArray<OCDrive *> *_activeDrives;
+	NSArray<OCDrive *> *_subscribedDrives;
+	NSArray<OCDrive *> *_detachedDrives;
+	NSDictionary<OCDriveID, OCDrive *> *_activeDrivesByID;
+	NSDictionary<OCDriveID, OCDrive *> *_detachedDrivesByID;
+	BOOL _observingDrivesUpdates;
+
+	OCVFSCore *_vfsCore;
 
 	OCDatabase *_database;
 }
@@ -144,6 +155,22 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 - (void)eraseDrive:(OCDriveID)driveID withCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the contents of a drive
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
 
+#pragma mark - Drives
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *activeDrives; //!< All drives returned by the server
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< All drives the user is subscribed to
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *detachedDrives; //!< Drives that no longer exist on the server but (may) have unsynced user data in them. Check OCDrive.detachedState.
+
+- (void)updateWithRemoteDrives:(NSArray<OCDrive *> *)newDrives; //!< Uses newDrives as new list of drives available on the server to update .activeDrives, .subscribedDrives and .detachedDrives.
+
+- (void)subscribeToDrives:(NSArray<OCDrive *> *)drives; //!< Adds the drives to the list of subscribed drives
+- (void)unsubscribeFromDrives:(NSArray<OCDrive *> *)drives; //!< Removes the drives from the list of subscribed drives
+
+- (void)changeDetachedState:(OCDriveDetachedState)detachedState forDriveID:(OCDriveID)detachedDriveID; //!< Changes the detached state for an already detached drive.
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID;
+
+- (void)startDriveUpdates; //!< Initializes the drive properties and starts observing for changes. This is usually called by -openWithCompletionHandler:. Calling this without opening a vault allows getting access to the drives list and be notified of changes. Useful mostly for VFS implementations.
+- (void)stopDriveUpdates; //!< Stops observing for changes. This is usually called by -closeWithCompletionHandler:.
+
 #pragma mark - URL and path builders
 - (nullable NSURL *)localDriveRootURLForDriveID:(nullable OCDriveID)driveID; //!< Returns the root folder for the drive with ID driveID
 - (nullable NSURL *)localURLForItem:(OCItem *)item; //!< Builds the URL to where an item should be stored. Follows <filesRootURL>/<localID>/<fileName> pattern.
@@ -162,10 +189,33 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 @end
 
+#pragma mark - VFS
+@interface OCVault (VFSExtras)
+
+@property(strong,nullable,readonly,nonatomic) OCVFSCore *vfs; //!< Returns the VFS for the vault, if any. Requires implementation of the OCVaultVFSProvider protocol in an OCVault category.
+- (nullable NSArray<OCLocalID> *)translatedParentIDsForItem:(OCItem *)item suggestedRootFolderID:(nullable OCLocalID)suggestedRootFolderID;
+
+@end
+
+@class OCVFSCore;
+
+@protocol OCVaultVFSTranslation
+- (nullable NSSet<OCVFSItemID> *)vfsRefreshIDsForDriveChangesWithAdditions:(nullable NSArray <OCDrive *> *)addedDrives updates:(nullable NSArray<OCDrive *> *)updatedDrives removals:(nullable NSArray<OCDrive *> *)removedDrives;
+- (nullable NSArray<OCVFSItemID> *)vfsRefreshParentIDsForItem:(OCItem *)item;
+@end
+
+@protocol OCVaultVFSProvider
+- (nullable OCVFSCore *)provideVFS;
+@end
+
 extern NSString *OCVaultPathVaults;
 extern NSString *OCVaultPathHTTPPipeline;
 extern NSString *OCVaultPathDrives;
 extern NSString *OCVaultPathVFS;
+
+extern OCKeyValueStoreKey OCKeyValueStoreKeyVaultDriveList;
+
+extern NSNotificationName OCVaultDriveListChanged; //!< Notification sent when an OCVault's drive list has changed. The object is the OCVault.
 
 NS_ASSUME_NONNULL_END
 

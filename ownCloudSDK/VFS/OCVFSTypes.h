@@ -29,11 +29,29 @@ typedef NS_ENUM(NSInteger, OCVFSNodeType)
 
 //typedef id<NSObject> OCVFSOpaqueItem;
 typedef NSString* OCVFSNodeID;
-typedef NSString* OCVFSItemID NS_TYPED_EXTENSIBLE_ENUM;
+
+typedef NSString* OCVFSItemID NS_TYPED_EXTENSIBLE_ENUM; // The Virtual File System Item ID, used as NSFileProviderItemIdentifier (with OCVFSItemIDRoot being mapped to NSFileProviderRootContainerItemIdentifier)
+/**
+	Supported OCVFSItemID formats:
+	- Root node:
+		R
+
+	- OCItem:
+		I\[bookmarkUUID]\[driveID]\[localID]	// used for drive-based accounts
+		I\[bookmarkUUID]\[localID] 		// used for OC10 accounts
+
+	- OCVFSNode:
+		V\[nodeID]
+		V\[bookmarkUUID]\[driveID]
+ */
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol OCVFSItem <NSObject>
+
+@property(readonly,nonatomic,nullable) OCVFSItemID vfsItemID;
+@property(readonly,nonatomic,nullable) OCVFSItemID vfsParentItemID;
+@property(readonly,nonatomic,nullable) NSString *vfsItemName;
 
 @end
 

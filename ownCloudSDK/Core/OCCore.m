@@ -65,6 +65,7 @@
 #import "OCConnection+GraphAPI.h"
 #import "NSArray+OCFiltering.h"
 #import "OCCore+DataSources.h"
+#import "OCDataSourceKVO.h"
 
 @interface OCCore ()
 {
@@ -287,14 +288,23 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_drivesByID = [NSMutableDictionary new];
 		_lastRootETagsByDriveID = [NSMutableDictionary new];
 
-		_drivesDataSource = [[OCDataSourceArray alloc] init];
-		_hierarchicDrivesDataSource = [[OCDataSourceArray alloc] init];
+		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
+		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersion>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+				return ([drive.type isEqual:OCDriveTypeProject]);
+			}]);
+		}];
+		_hierarchicDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersion>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+				return ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual]);
+			}]);
+		}];
+
 		_hierarchicDrivesLogicalProjectsFolderPresentable = [[OCDataItemPresentable alloc] initWithReference:@"_projects" originalDataItemType:nil version:@"1"];
 		_hierarchicDrivesLogicalProjectsFolderPresentable.title = @"Spaces";
 		_hierarchicDrivesLogicalProjectsFolderPresentable.childrenDataSourceProvider = ^OCDataSource * _Nullable(OCDataSource * _Nonnull parentItemDataSource, id<OCDataItem>  _Nonnull parentItem) {
 			return ([weakSelf projectDrivesDataSource]);
 		};
-		_projectDrivesDataSource = [[OCDataSourceArray alloc] init];
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
@@ -494,18 +504,18 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			// Get latest drive list
 			if (startError == nil)
 			{
-				__block NSArray<OCDrive *> *cachedDrives = nil;
+//				__block NSArray<OCDrive *> *cachedDrives = nil;
+//
+//				OCSyncExec(retrieveDriveList, {
+//					[self.database retrieveDrivesOnlyWithID:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCDrive *> *drives) {
+//						cachedDrives = drives;
+//						OCSyncExecDone(retrieveDriveList);
+//					}];
+//				});
 
-				OCSyncExec(retrieveDriveList, {
-					[self.database retrieveDrivesOnlyWithID:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCDrive *> *drives) {
-						cachedDrives = drives;
-						OCSyncExecDone(retrieveDriveList);
-					}];
-				});
+				[self initializeWithDrives];
 
-				[self updateWithDrives:cachedDrives initialize:YES];
-
-				self->_connection.drives = cachedDrives;
+				self->_connection.drives = self.vault.activeDrives;
 			}
 
 			// Proceed with connecting - or stop
@@ -2022,245 +2032,176 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (_connection.useDriveAPI);
 }
 
-- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize
+- (void)initializeWithDrives
 {
-	NSMutableArray<OCDrive *> *removedDrives = nil;
-	NSMutableArray<OCDrive *> *updatedDrives = nil;
-	NSMutableArray<OCDrive *> *addedDrives = nil;
-
-	@synchronized(_drives)
+	@synchronized(_lastRootETagsByDriveID)
 	{
-		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d existing=%@ new=%@", doInitialize, _drives, drives);
-
-		if (doInitialize)
+		for (OCDrive *drive in self.vault.activeDrives)
 		{
-			// Initialize from provided drives
-			[self willChangeValueForKey:@"drives"];
-			[_drives removeAllObjects];
-			[_drives addObjectsFromArray:drives];
-			[self didChangeValueForKey:@"drives"];
-
-			[_drivesByID removeAllObjects];
-			@synchronized(_lastRootETagsByDriveID)
-			{
-				for (OCDrive *drive in drives)
-				{
-					_drivesByID[drive.identifier] = drive;
-					_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
-				}
-			}
+			_drivesByID[drive.identifier] = drive;
+			_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
 		}
-		else
-		{
-			// Find differences
-			NSMutableArray<OCDriveID> *removedDriveIDs = [[_drivesByID allKeys] mutableCopy];
-
-			for (OCDrive *drive in drives)
-			{
-				if (drive.identifier != nil)
-				{
-					OCDrive *existingDrive = nil;
-
-					if ((existingDrive = _drivesByID[drive.identifier]) == nil)
-					{
-						// New drive found
-						if (addedDrives == nil) { addedDrives = [NSMutableArray new]; }
-						[addedDrives addObject:drive];
-					}
-					else
-					{
-						// Existing drive found, remove it from list of removed drives
-						[removedDriveIDs removeObject:drive.identifier];
-
-						// Has drive changed substantially?
-						if ([existingDrive isSubstantiallyDifferentFrom:drive])
-						{
-							// If YES, add to list of updated drives
-							if (updatedDrives == nil) { updatedDrives = [NSMutableArray new]; }
-							[updatedDrives addObject:drive];
-						}
-					}
-				}
-
-				_drivesByID[drive.identifier] = drive;
-			}
-
-			for (OCDriveID removedDriveID in removedDriveIDs)
-			{
-				OCDrive *drive = nil;
-
-				if ((drive = _drivesByID[removedDriveID]) != nil)
-				{
-					if (removedDrives == nil) { removedDrives = [NSMutableArray new]; }
-					[removedDrives addObject:drive];
-				}
-			}
-
-			// Update _drivesByID
-			[_drivesByID removeObjectsForKeys:removedDriveIDs];
-
-			// Update _drives
-			[self willChangeValueForKey:@"drives"];
-			[_drives removeAllObjects];
-			[_drives addObjectsFromArray:drives];
-			[self didChangeValueForKey:@"drives"];
-		}
-
-		// Sort _drives by type and name
-		[_drives sortUsingComparator:^NSComparisonResult(OCDrive *drive1, OCDrive *drive2) {
-			NSComparisonResult result;
-
-			if ((result = [drive1.type localizedCompare:drive2.type]) != NSOrderedSame)
-			{
-				return (result);
-			}
-
-			return ([drive1.name localizedCompare:drive2.name]);
-		}];
-
-		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d now=%@, updated=%@, added=%@, removed=%@", doInitialize, _drives, updatedDrives, addedDrives, removedDrives);
-
-		// Update data sources
-		[_drivesDataSource setVersionedItems:_drives];
-
-		NSMutableArray<OCDrive *> *hierarchicDrivesTopLevelItems = [[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-			if ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual])
-			{
-				return (YES);
-			}
-
-			return (NO);
-		}] mutableCopy];
-
-		// [hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
-
-		[_hierarchicDrivesDataSource setVersionedItems:hierarchicDrivesTopLevelItems];
-
-		[_projectDrivesDataSource setVersionedItems:[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-			return ([drive.type isEqual:OCDriveTypeProject]);
-		}]];
-
-		if (_drivesDataSourceSubscription == nil)
-		{
-			_drivesDataSourceSubscription = [_drivesDataSource subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
-				OCDataSourceSnapshot *snapshot = [subscription snapshotResettingChangeTracking:YES];
-
-				OCTLogDebug(@[@"DataSource"], @"Drives: %@", snapshot.items);
-				OCTLogDebug(@[@"DataSource"], @"Added drives: %@", snapshot.addedItems);
-				OCTLogDebug(@[@"DataSource"], @"Updated drives: %@", snapshot.updatedItems);
-				OCTLogDebug(@[@"DataSource"], @"Removed drives: %@", snapshot.removedItems);
-			} onQueue:OCDataSourceSubscription.defaultUpdateQueue trackDifferences:YES performIntialUpdate:YES];
-		}
-	}
-
-	// Notify about removed and added drives - outside of lock
-	if ((addedDrives.count > 0) || (updatedDrives.count > 0) || (removedDrives.count > 0))
-	{
-		[self handleDriveAdditions:addedDrives updates:updatedDrives removals:removedDrives];
 	}
 }
 
-- (void)handleDriveAdditions:(NSArray<OCDrive *> *)addedDrives updates:(NSArray<OCDrive *> *)updatedDrives removals:(NSArray<OCDrive *> *)removedDrives
-{
-	__weak OCCore *weakSelf = self;
-
-	OCTLogDebug(@[@"Drives"], @"Updating database with addedDrives=%@, updatedDrives=%@, removedDrives=%@", addedDrives, updatedDrives, removedDrives);
-
-	// Update database
-	OCWaitInit(driveDBUpdates);
-	OCWaitWillStartTask(driveDBUpdates);
-
-	[self.database performBatchUpdates:^NSError *(OCDatabase *database) {
-		for (OCDrive *removedDrive in removedDrives)
-		{
-			[database removeDriveWithID:removedDrive.identifier includingMetadata:NO completionHandler:^(OCDatabase *db, NSError *error) {
-				if (error != nil) {
-					OCWTLogWarning(@[@"Drives"], @"Error removing drive %@: %@", removedDrive, error);
-				}
-			}];
-		}
-
-		for (OCDrive *updatedDrive in updatedDrives)
-		{
-			[database updateDrive:updatedDrive completionHandler:^(OCDatabase *db, NSError *error) {
-				if (error != nil) {
-					OCWTLogWarning(@[@"Drives"], @"Error updating drive %@: %@", updatedDrive, error);
-				}
-			}];
-		}
-
-		for (OCDrive *addedDrive in addedDrives)
-		{
-			[database addDrive:addedDrive completionHandler:^(OCDatabase *db, NSError *error) {
-				if (error != nil) {
-					OCWTLogWarning(@[@"Drives"], @"Error adding drive %@: %@", addedDrive, error);
-				}
-			}];
-		}
-
-		return (nil);
-	} completionHandler:^(OCDatabase *db, NSError *error) {
-		OCWaitDidFinishTask(driveDBUpdates);
-	}];
-
-	OCWaitForCompletion(driveDBUpdates);
-
-	// Notifications
-	for (OCDrive *removedDrive in removedDrives)
-	{
-		[self driveRemoved:removedDrive];
-	}
-
-	for (OCDrive *updatedDrive in updatedDrives)
-	{
-		[self driveUpdated:updatedDrive];
-	}
-
-	for (OCDrive *addedDrive in addedDrives)
-	{
-		[self driveAdded:addedDrive];
-	}
-}
-
-- (void)driveAdded:(OCDrive *)drive
-{
-	OCTLogDebug(@[@"Drives"], @"Drive added: %@", drive);
-}
-
-- (void)driveUpdated:(OCDrive *)drive
-{
-	OCTLogDebug(@[@"Drives"], @"Drive updated: %@", drive);
-}
-
-- (void)driveRemoved:(OCDrive *)drive
-{
-	OCTLogDebug(@[@"Drives"], @"Drive removed: %@", drive);
-}
+//- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize
+//{
+//	NSMutableArray<OCDrive *> *removedDrives = nil;
+//	NSMutableArray<OCDrive *> *updatedDrives = nil;
+//	NSMutableArray<OCDrive *> *addedDrives = nil;
+//
+//	@synchronized(_drives)
+//	{
+//		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d existing=%@ new=%@", doInitialize, _drives, drives);
+//
+//		if (doInitialize)
+//		{
+//			// Initialize from provided drives
+//			[self willChangeValueForKey:@"drives"];
+//			[_drives removeAllObjects];
+//			[_drives addObjectsFromArray:drives];
+//			[self didChangeValueForKey:@"drives"];
+//
+//			[_drivesByID removeAllObjects];
+//			@synchronized(_lastRootETagsByDriveID)
+//			{
+//				for (OCDrive *drive in drives)
+//				{
+//					_drivesByID[drive.identifier] = drive;
+//					_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
+//				}
+//			}
+//		}
+//		else
+//		{
+//			// Find differences
+//			NSMutableArray<OCDriveID> *removedDriveIDs = [[_drivesByID allKeys] mutableCopy];
+//
+//			for (OCDrive *drive in drives)
+//			{
+//				if (drive.identifier != nil)
+//				{
+//					OCDrive *existingDrive = nil;
+//
+//					if ((existingDrive = _drivesByID[drive.identifier]) == nil)
+//					{
+//						// New drive found
+//						if (addedDrives == nil) { addedDrives = [NSMutableArray new]; }
+//						[addedDrives addObject:drive];
+//					}
+//					else
+//					{
+//						// Existing drive found, remove it from list of removed drives
+//						[removedDriveIDs removeObject:drive.identifier];
+//
+//						// Has drive changed substantially?
+//						if ([existingDrive isSubstantiallyDifferentFrom:drive])
+//						{
+//							// If YES, add to list of updated drives
+//							if (updatedDrives == nil) { updatedDrives = [NSMutableArray new]; }
+//							[updatedDrives addObject:drive];
+//						}
+//					}
+//				}
+//
+//				_drivesByID[drive.identifier] = drive;
+//			}
+//
+//			for (OCDriveID removedDriveID in removedDriveIDs)
+//			{
+//				OCDrive *drive = nil;
+//
+//				if ((drive = _drivesByID[removedDriveID]) != nil)
+//				{
+//					if (removedDrives == nil) { removedDrives = [NSMutableArray new]; }
+//					[removedDrives addObject:drive];
+//				}
+//			}
+//
+//			// Update _drivesByID
+//			[_drivesByID removeObjectsForKeys:removedDriveIDs];
+//
+//			// Update _drives
+//			[self willChangeValueForKey:@"drives"];
+//			[_drives removeAllObjects];
+//			[_drives addObjectsFromArray:drives];
+//			[self didChangeValueForKey:@"drives"];
+//		}
+//
+//		// Sort _drives by type and name
+//		[_drives sortUsingComparator:^NSComparisonResult(OCDrive *drive1, OCDrive *drive2) {
+//			NSComparisonResult result;
+//
+//			if ((result = [drive1.type localizedCompare:drive2.type]) != NSOrderedSame)
+//			{
+//				return (result);
+//			}
+//
+//			return ([drive1.name localizedCompare:drive2.name]);
+//		}];
+//
+//		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d now=%@, updated=%@, added=%@, removed=%@", doInitialize, _drives, updatedDrives, addedDrives, removedDrives);
+//
+//		// Update data sources
+//		[_drivesDataSource setVersionedItems:_drives];
+//
+//		NSMutableArray<OCDrive *> *hierarchicDrivesTopLevelItems = [[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+//			if ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual])
+//			{
+//				return (YES);
+//			}
+//
+//			return (NO);
+//		}] mutableCopy];
+//
+//		// [hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
+//
+//		[_hierarchicDrivesDataSource setVersionedItems:hierarchicDrivesTopLevelItems];
+//
+//		[_projectDrivesDataSource setVersionedItems:[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+//			return ([drive.type isEqual:OCDriveTypeProject]);
+//		}]];
+//
+//		if (_drivesDataSourceSubscription == nil)
+//		{
+//			_drivesDataSourceSubscription = [_drivesDataSource subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+//				OCDataSourceSnapshot *snapshot = [subscription snapshotResettingChangeTracking:YES];
+//
+//				OCTLogDebug(@[@"DataSource"], @"Drives: %@", snapshot.items);
+//				OCTLogDebug(@[@"DataSource"], @"Added drives: %@", snapshot.addedItems);
+//				OCTLogDebug(@[@"DataSource"], @"Updated drives: %@", snapshot.updatedItems);
+//				OCTLogDebug(@[@"DataSource"], @"Removed drives: %@", snapshot.removedItems);
+//
+//				[NSNotificationCenter.defaultCenter postNotificationName:OCCoreDriveListChanged object:self.bookmark.uuid];
+//			} onQueue:OCDataSourceSubscription.defaultUpdateQueue trackDifferences:YES performIntialUpdate:YES];
+//		}
+//	}
+//
+//	// Notify about removed and added drives - outside of lock
+////	if ((addedDrives.count > 0) || (updatedDrives.count > 0) || (removedDrives.count > 0))
+////	{
+////		[self handleDriveAdditions:addedDrives updates:updatedDrives removals:removedDrives];
+////	}
+//}
 
 - (void)subscribeToDrive:(OCDrive *)drive
 {
-
+	[self.vault subscribeToDrives:@[ drive ]];
 }
 
 - (void)unsubscribeFromDrive:(OCDrive *)drive
 {
-
+	[self.vault unsubscribeFromDrives:@[ drive ]];
 }
 
 - (NSArray<OCDrive *> *)drives
 {
-	@synchronized (_drives)
-	{
-		return ([_drives copy]);
-	}
+	return (self.vault.activeDrives);
 }
 
-- (NSArray<OCDriveID> *)subscribedDriveIDs
+- (NSArray<OCDrive *> *)subscribedDrives
 {
-	@synchronized(_drives)
-	{
-		return (_drivesByID.allKeys);
-	}
+	return (self.vault.subscribedDrives);
 }
 
 - (OCDrive *)driveWithIdentifier:(OCDriveID)driveID

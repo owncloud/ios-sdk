@@ -18,6 +18,7 @@
 
 #import "OCVFSCore.h"
 #import "OCVault.h"
+#import "OCVaultLocation.h"
 #import "OCBookmarkManager.h"
 #import "OCCoreManager.h"
 #import "NSArray+OCFiltering.h"
@@ -62,10 +63,17 @@
 {
 	for (OCVFSNode *node in nodes)
 	{
+		[_nodesByID removeObjectForKey:node.identifier];
 		node.vfsCore = nil;
 	}
 	[_nodes removeObjectsInArray:nodes];
 	[self _recreateVirtualFillNodes];
+}
+
+- (void)setNodes:(NSArray<OCVFSNode *> *)nodes
+{
+	[self removeNodes:_nodes];
+	[self addNodes:nodes];
 }
 
 - (void)_recreateVirtualFillNodes
@@ -80,7 +88,7 @@
 
 	if ((location = [[OCVaultLocation alloc] initWithVFSItemID:identifier]) != nil)
 	{
-		if (location.vfsNodeID == nil)
+		if (!location.isVirtual)
 		{
 			OCItem *item;
 
@@ -156,11 +164,25 @@
 	__block NSError *returnError = nil;
 	__block id<OCVFSItem> item = nil;
 
+	if ([identifier isEqual:OCVFSItemIDRoot])
+	{
+		return (self.rootNode);
+	}
+
 	if ((location = [[OCVaultLocation alloc] initWithVFSItemID:identifier]) != nil)
 	{
 		if (location.vfsNodeID != nil)
 		{
+			// Virtual item
 			item = (id<OCVFSItem>)[_nodesByID objectForKey:location.vfsNodeID];
+		}
+		else if (location.isVirtual)
+		{
+			// Virtual item not identified by node ID
+			if ((location.driveID != nil) && (location.bookmarkUUID != nil))
+			{
+				item = (id<OCVFSItem>)[self driveRootNodeForLocation:[[OCLocation alloc] initWithBookmarkUUID:location.bookmarkUUID driveID:location.driveID path:@"/"]];
+			}
 		}
 		else
 		{
@@ -180,20 +202,7 @@
 					{
 						OCSyncExec(itemRetrieval, {
 							[core retrieveItemFromDatabaseForLocalID:location.localID completionHandler:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *itemFromDatabase) {
-								itemFromDatabase.customIdentifier1 = location.bookmarkUUID.UUIDString;
-								if (!itemFromDatabase.path.isRootPath && itemFromDatabase.path.parentPath.isRootPath)
-								{
-									OCLocation *dbLocation = [OCLocation new];
-									dbLocation.bookmarkUUID = location.bookmarkUUID;
-									dbLocation.driveID = itemFromDatabase.driveID;
-
-									OCVFSNode *parentVFSNode;
-
-									if ((parentVFSNode = [self driveRootNodeForLocation:dbLocation]) != nil)
-									{
-										itemFromDatabase.customIdentifier2 = parentVFSNode.itemID;
-									}
-								}
+								itemFromDatabase.bookmarkUUID = location.bookmarkUUID.UUIDString;
 								item = (id<OCVFSItem>)itemFromDatabase;
 								returnError = error;
 
@@ -220,7 +229,7 @@
 - (nullable OCItem *)itemForLocation:(OCLocation *)location error:(NSError * _Nullable * _Nullable)outError
 {
 	NSError *returnError = nil;
-	id<OCVFSItem> item = nil;
+	OCItem *item = nil;
 
 	if (location != nil)
 	{
@@ -242,7 +251,7 @@
 				}
 				else
 				{
-					item = (id<OCVFSItem>)[core cachedItemAtLocation:location error:&returnError];
+					item = [core cachedItemAtLocation:location error:&returnError];
 
 					[self _relinquishCore:core];
 				}
@@ -266,7 +275,7 @@
 	OCPath vfsContainerPath = nil;
 	OCLocation *queryLocation = nil;
 
-	if (containerItemID == nil)
+	if ((containerItemID == nil) || [containerItemID isEqual:OCVFSItemIDRoot])
 	{
 		vfsContainerPath = @"/";
 		containerNode = self.rootNode;
@@ -277,9 +286,18 @@
 
 		if ((vaultLocation = [[OCVaultLocation alloc] initWithVFSItemID:containerItemID]) != nil)
 		{
-			if (vaultLocation.vfsNodeID != nil)
+			if (vaultLocation.isVirtual)
 			{
-				if ((containerNode = [self nodeForID:vaultLocation.vfsNodeID]) != nil)
+				if (vaultLocation.vfsNodeID != nil)
+				{
+					containerNode = [self nodeForID:vaultLocation.vfsNodeID];
+				}
+				else if ((vaultLocation.bookmarkUUID != nil) && (vaultLocation.driveID != nil))
+				{
+					containerNode = [self driveRootNodeForLocation:[[OCLocation alloc] initWithBookmarkUUID:vaultLocation.bookmarkUUID driveID:vaultLocation.driveID path:@"/"]];
+				}
+
+				if (containerNode != nil)
 				{
 					queryLocation = containerNode.location;
 					vfsContainerPath = containerNode.path;
@@ -341,6 +359,7 @@
 					content.core = core;
 
 					content.vfsChildNodes = vfsChildNodes;
+					content.isSnapshot = (vfsChildNodes.count > 0);
 					content.containerNode = containerNode;
 					content.query = query;
 
@@ -355,6 +374,7 @@
 	OCVFSContent *content = [[OCVFSContent alloc] init];
 
 	content.vfsChildNodes = vfsChildNodes;
+	content.isSnapshot = (vfsChildNodes.count > 0);
 	content.containerNode = containerNode;
 	content.query = query;
 
@@ -368,8 +388,10 @@
 
 - (OCVFSNode *)driveRootNodeForLocation:(OCLocation *)location
 {
+	if (location == nil) { return (nil); }
+
 	return ([_nodes firstObjectMatching:^BOOL(OCVFSNode * _Nonnull node) {
-		return ([node.location.bookmarkUUID isEqual:location.bookmarkUUID] && [node.location.driveID isEqual:location.driveID] && node.location.path.isRootPath);
+		return ([node.location.bookmarkUUID isEqual:location.bookmarkUUID] && OCNAIsEqual(node.location.driveID, location.driveID) && node.location.path.isRootPath);
 	}]);
 }
 
@@ -411,4 +433,4 @@
 
 @end
 
-OCVFSItemID OCVFSItemIDRoot = @"_root_";
+OCVFSItemID OCVFSItemIDRoot = @"R";

@@ -128,17 +128,6 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)iterateCacheItemsWithIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through all cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
 - (void)iterateCacheItemsForQueryCondition:(OCQueryCondition *)queryCondition excludeRemoved:(BOOL)excludeRemoved withIterator:(OCDatabaseItemIterator)iterator; //!< Iterates through matching cache items using the passed iterator block. The last invocation of the iterator will be with nil values for syncAnchor, item; NULL for stop.
 
-#pragma mark - Drives
-- (void)addDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-- (void)updateDrive:(OCDrive *)drive completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-- (void)retrieveDrivesOnlyWithID:(OCDriveID)driveID completionHandler:(OCDatabaseRetrieveDriveCompletionHandler)completionHandler;
-- (void)removeDriveWithID:(OCDriveID)driveID includingMetadata:(BOOL)includingMetadata completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-
-#pragma mark - File interface
-//- (void)addFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-//- (void)updateFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-//- (void)removeFiles:(NSArray <OCFile *> *)files completionHandler:(OCDatabaseCompletionHandler)completionHandler;
-
 #pragma mark - Update Scan interface
 - (void)addDirectoryUpdateJob:(OCCoreDirectoryUpdateJob *)updateScanPath completionHandler:(OCDatabaseDirectoryUpdateJobCompletionHandler)completionHandler;
 - (void)retrieveDirectoryUpdateJobsAfter:(OCCoreDirectoryUpdateJobID)jobID forLocation:(OCLocation *)location maximumJobs:(NSUInteger)maximumJobs completionHandler:(OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)completionHandler;

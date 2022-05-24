@@ -1320,30 +1320,27 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							{
 								BOOL foundChanges = NO;
 
-								[strongSelf updateWithDrives:drives initialize:NO];
+								[strongSelf.vault updateWithRemoteDrives:drives];
 
 								// Discover whose drives' root eTag has changed
 								@synchronized(strongSelf->_lastRootETagsByDriveID)
 								{
-									for (OCDriveID subscribedDriveID in self.subscribedDriveIDs)
+									for (OCDrive *subscribedDrive in strongSelf.vault.subscribedDrives)
 									{
-										OCDrive *subscribedDrive;
+										OCDriveID subscribedDriveID = subscribedDrive.identifier;
+										OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
 
-										if ((subscribedDrive = [self driveWithIdentifier:subscribedDriveID]) != nil)
+										OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
+
+										if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
+										    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
 										{
-											OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
-											OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
+											OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
 
-											if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
-											    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
-											{
-												OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
+											foundChanges = YES;
+											[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
 
-												foundChanges = YES;
-												[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
-
-												strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
-											}
+											strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
 										}
 									}
 								}

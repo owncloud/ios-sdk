@@ -26,7 +26,6 @@
 @end
 
 extern OCDatabaseTableName OCDatabaseTableNameMetaData;
-extern OCDatabaseTableName OCDatabaseTableNameDrives;
 extern OCDatabaseTableName OCDatabaseTableNameSyncJournal;
 extern OCDatabaseTableName OCDatabaseTableNameSyncLanes;
 extern OCDatabaseTableName OCDatabaseTableNameUpdateJobs;

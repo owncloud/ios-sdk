@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) OCDriveID driveID;
 @property(strong, nullable) OCLocalID localID;
 
+@property(assign)	    BOOL isVirtual;
 @property(strong, nullable) OCVFSNodeID vfsNodeID;
 
 @property(strong, nullable) NSArray<NSString *> *additionalPathElements;
