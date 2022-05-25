@@ -83,9 +83,9 @@
 		_driveAlias = [decoder decodeObjectOfClass:NSString.class forKey:@"driveAlias"];
 		_owner = [decoder decodeObjectOfClass:GAIdentitySet.class forKey:@"owner"];
 		_quota = [decoder decodeObjectOfClass:GAQuota.class forKey:@"quota"];
-		_items = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class.class, nil] forKey:@"items"];
+		_items = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class, nil] forKey:@"items"];
 		_root = [decoder decodeObjectOfClass:GADriveItem.class forKey:@"root"];
-		_special = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class.class, nil] forKey:@"special"];
+		_special = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class, nil] forKey:@"special"];
 	}
 
 	return (self);
@@ -131,6 +131,12 @@
 
 // occgen: type end {"locked":true}
 @end
+
+
+
+
+
+
 
 
 

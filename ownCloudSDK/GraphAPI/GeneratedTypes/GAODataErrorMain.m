@@ -61,7 +61,7 @@
 		_code = [decoder decodeObjectOfClass:NSString.class forKey:@"code"];
 		_message = [decoder decodeObjectOfClass:NSString.class forKey:@"message"];
 		_target = [decoder decodeObjectOfClass:NSString.class forKey:@"target"];
-		_details = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAODataErrorDetail.class, NSArray.class.class, nil] forKey:@"details"];
+		_details = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAODataErrorDetail.class, NSArray.class, nil] forKey:@"details"];
 		_innererror = [decoder decodeObjectOfClass:NSDictionary.class forKey:@"innererror"];
 	}
 

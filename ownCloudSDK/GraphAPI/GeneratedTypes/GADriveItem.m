@@ -105,8 +105,8 @@
 		_remoteItem = [decoder decodeObjectOfClass:GARemoteItem.class forKey:@"remoteItem"];
 		_size = [decoder decodeObjectOfClass:NSNumber.class forKey:@"size"];
 		_webDavUrl = [decoder decodeObjectOfClass:NSURL.class forKey:@"webDavUrl"];
-		_children = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class.class, nil] forKey:@"children"];
-		_permissions = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAPermission.class, NSArray.class.class, nil] forKey:@"permissions"];
+		_children = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADriveItem.class, NSArray.class, nil] forKey:@"children"];
+		_permissions = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAPermission.class, NSArray.class, nil] forKey:@"permissions"];
 	}
 
 	return (self);

@@ -66,6 +66,9 @@
 				[VFS Node ID]
 				…
 
+			"TUS"/						- Storage for TUS segments (OCSyncActionUpload)
+				[Random UUID]
+
 			*OC10/without drives*
 			[Local ID]/					- OCVault.localFolderURLForItem
 				[filename.xyz]				- OCVault.localURLForItem

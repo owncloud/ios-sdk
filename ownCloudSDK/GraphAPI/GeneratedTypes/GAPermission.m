@@ -27,7 +27,7 @@
 	GAPermission *instance = [self new];
 
 	GA_SET(grantedTo, GAIdentitySet, NSArray.class);
-	GA_SET(roles, NSArray, Nil);
+	GA_SET(roles, NSString, NSArray.class);
 
 	return (instance);
 }
@@ -42,8 +42,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_grantedTo = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAIdentitySet.class, NSArray.class.class, nil] forKey:@"grantedTo"];
-		_roles = [decoder decodeObjectOfClass:NSArray.class forKey:@"roles"];
+		_grantedTo = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAIdentitySet.class, NSArray.class, nil] forKey:@"grantedTo"];
+		_roles = [decoder decodeObjectOfClasses:[NSSet setWithObjects: NSString.class, NSArray.class, nil] forKey:@"roles"];
 	}
 
 	return (self);

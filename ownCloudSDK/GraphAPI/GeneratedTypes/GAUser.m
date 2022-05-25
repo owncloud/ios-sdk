@@ -30,7 +30,7 @@
 	GA_MAP(identifier, "id", NSString, Nil);
 	GA_SET(deletedDateTime, NSDate, Nil);
 	GA_SET(accountEnabled, NSNumber, Nil);
-	GA_SET(businessPhones, NSArray, Nil);
+	GA_SET(businessPhones, NSString, NSArray.class);
 	GA_SET(city, NSString, Nil);
 	GA_SET(companyName, NSString, Nil);
 	GA_SET(country, NSString, Nil);
@@ -83,7 +83,7 @@
 		_identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
 		_deletedDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"deletedDateTime"];
 		_accountEnabled = [decoder decodeObjectOfClass:NSNumber.class forKey:@"accountEnabled"];
-		_businessPhones = [decoder decodeObjectOfClass:NSArray.class forKey:@"businessPhones"];
+		_businessPhones = [decoder decodeObjectOfClasses:[NSSet setWithObjects: NSString.class, NSArray.class, nil] forKey:@"businessPhones"];
 		_city = [decoder decodeObjectOfClass:NSString.class forKey:@"city"];
 		_companyName = [decoder decodeObjectOfClass:NSString.class forKey:@"companyName"];
 		_country = [decoder decodeObjectOfClass:NSString.class forKey:@"country"];
@@ -118,7 +118,7 @@
 		_birthday = [decoder decodeObjectOfClass:NSDate.class forKey:@"birthday"];
 		_preferredName = [decoder decodeObjectOfClass:NSString.class forKey:@"preferredName"];
 		_drive = [decoder decodeObjectOfClass:GADrive.class forKey:@"drive"];
-		_drives = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADrive.class, NSArray.class.class, nil] forKey:@"drives"];
+		_drives = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADrive.class, NSArray.class, nil] forKey:@"drives"];
 	}
 
 	return (self);

@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSString *identifier; //!< Read-only.
 @property(strong, nullable) NSDate *deletedDateTime; //!< [string:date-time] | pattern: ^[0-9]{4,}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]([.][0-9]{1,12})?([Zz]|[+-][0-9][0-9]:[0-9][0-9])$
 @property(strong, nullable) NSNumber *accountEnabled; //!< [boolean] true if the account is enabled; otherwise, false. This property is required when a user is created. Returned only on $select. Supports $filter.
-@property(strong, nullable) NSArray *businessPhones; //!< The telephone numbers for the user. Only one number can be set for this property. Returned by default. Read-only for users synced from on-premises directory.
+@property(strong, nullable) NSArray<NSString *> *businessPhones; //!< The telephone numbers for the user. Only one number can be set for this property. Returned by default. Read-only for users synced from on-premises directory.
 @property(strong, nullable) NSString *city; //!< The city in which the user is located. Returned only on $select. Supports $filter.
 @property(strong, nullable) NSString *companyName; //!< The company name which the user is associated. This property can be useful for describing the company that an external user comes from. The maximum length of the company name is 64 characters.Returned only on $select.
 @property(strong, nullable) NSString *country; //!< The country/region in which the user is located; for example, ''US'' or ''UK''. Returned only on $select. Supports $filter.

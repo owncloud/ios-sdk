@@ -53,7 +53,14 @@
 
 			if ([property.type isEqual:@"array"] && (propertyNode.childrenByName[@"items"] != nil))
 			{
-				property.itemType = propertyNode.childrenByName[@"items"].childrenByName[@"$ref"].value;
+				OCSchemaPropertyType itemType = propertyNode.childrenByName[@"items"].childrenByName[@"$ref"].value;
+
+				if (itemType == nil)
+				{
+					itemType = propertyNode.childrenByName[@"items"].childrenByName[@"type"].value;
+				}
+
+				property.itemType = itemType;
 			}
 
 			[self.properties addObject:property];

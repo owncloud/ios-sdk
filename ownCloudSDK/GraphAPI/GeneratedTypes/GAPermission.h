@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // occgen: type properties
 @property(strong, nullable) NSArray<GAIdentitySet *> *grantedTo;
-@property(strong, nullable) NSArray *roles;
+@property(strong, nullable) NSArray<NSString *> *roles;
 
 // occgen: type protected {"locked":true}
 

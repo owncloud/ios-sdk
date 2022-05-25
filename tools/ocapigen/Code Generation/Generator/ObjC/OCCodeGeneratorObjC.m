@@ -335,7 +335,7 @@
 		}
 		else
 		{
-			[nativeDeserializationSegment addLine:@"		_%@ = [decoder decodeObjectOfClasses:[NSSet setWithObjects: %@.class, %@.class, nil] forKey:@\"%@\"];", propertyName, propertyClassName, collectionType, propertyName];
+			[nativeDeserializationSegment addLine:@"		_%@ = [decoder decodeObjectOfClasses:[NSSet setWithObjects: %@.class, %@, nil] forKey:@\"%@\"];", propertyName, propertyClassName, collectionType, propertyName];
 		}
 
 		// Secure Coding serialization
