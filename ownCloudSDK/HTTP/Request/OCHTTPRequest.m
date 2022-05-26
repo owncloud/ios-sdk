@@ -407,6 +407,13 @@
 			return (FormatReadableData([NSData dataWithContentsOfURL:url]));
 		}
 
+		NSNumber *fileSize = nil;
+
+		if ([url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			return ([NSString stringWithFormat:@"%@[Contents from %@ (%ld bytes)]", (prefixed ? @"[body] " : @""), url.path, fileSize.integerValue]);
+		}
+
 		return ([NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path]);
 	}
 

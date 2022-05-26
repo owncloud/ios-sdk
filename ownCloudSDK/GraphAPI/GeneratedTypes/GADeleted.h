@@ -18,17 +18,27 @@
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
 
-// occgen: type start
+// occgen: forward declarations
+typedef NSString * GADeletedState;
+
+// occgen: type start {"locked":true}
 NS_ASSUME_NONNULL_BEGIN
+typedef NSString* GADeletedState NS_TYPED_ENUM;
+
 @interface GADeleted : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
-@property(strong, nullable) NSString *state; //!< Represents the state of the deleted item.
+// occgen: type properties { "customPropertyTypes" : { "state" : "GADeletedState" }}
+@property(strong, nullable) GADeletedState state; //!< Represents the state of the deleted item.
 
 // occgen: type protected {"locked":true}
 
 
-// occgen: type end
+// occgen: type end {"locked":true}
 @end
+
+extern GADeletedState GADeletedStateTrashed;
+
 NS_ASSUME_NONNULL_END
+
+
 

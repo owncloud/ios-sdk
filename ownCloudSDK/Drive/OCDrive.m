@@ -19,6 +19,7 @@
 #import "OCDrive.h"
 #import "GADrive.h"
 #import "GADriveItem.h"
+#import "GADeleted.h"
 #import "OCMacros.h"
 #import "OCLocation.h"
 #import "OCCore.h"
@@ -127,6 +128,7 @@
 	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag) ||
 	 	OCNANotEqual(drive.detachedSinceDate, _detachedSinceDate) ||
 	 	(drive.detachedState != _detachedState) ||
+	 	(drive.isDeactivated != self.isDeactivated) ||
 	 	OCNANotEqual(drive.rootETag, self.rootETag));
 }
 
@@ -146,6 +148,11 @@
 	}
 
 	return (rootETag);
+}
+
+- (BOOL)isDeactivated
+{
+	return ([_gaDrive.root.deleted.state isEqual:GADeletedStateTrashed]);
 }
 
 #pragma mark - Secure coding
@@ -208,7 +215,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@:%ld:%@", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, (long)_detachedState, _detachedSinceDate]);
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@:%ld:%@:%ld", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, (long)_detachedState, _detachedSinceDate, (long)self.isDeactivated]);
 }
 
 #pragma mark - Comparison

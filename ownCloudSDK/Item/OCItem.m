@@ -861,6 +861,7 @@ OCItemDownloadTriggerID OCItemDownloadTriggerIDUser = @"user";
 OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOffline";
 
 OCItemPropertyName OCItemPropertyNameType = @"type";
+OCItemPropertyName OCItemPropertyNameDriveID = @"driveID";
 OCItemPropertyName OCItemPropertyNamePath = @"path";
 OCItemPropertyName OCItemPropertyNameName = @"name";
 OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";

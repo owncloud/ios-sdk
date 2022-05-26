@@ -231,6 +231,7 @@ extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
 
 // Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameDriveID; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder

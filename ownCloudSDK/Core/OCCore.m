@@ -1540,6 +1540,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		return (nil);
 	}
 
+	// Detect unresolvable paths
+	if ((location.driveID == nil) && self.useDrives) // Legacy WebDAV is not available in drive-based accounts
+	{
+		trackingHandler(OCError(OCErrorItemNotFound), nil, YES);
+		return (nil);
+	}
+
 	[self queueBlock:^{
 		OCPath path = location.path;
 		OCDriveID driveID = location.driveID;
@@ -1586,7 +1593,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			}
 
 			// Start custom query to track changes (won't touch network, but will provide updates)
-			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path] inputFilter:nil];
+			OCQueryCondition *queryCondition = nil;
+			if (driveID != nil)
+			{
+				queryCondition = [OCQueryCondition require:@[
+					[OCQueryCondition where:OCItemPropertyNameDriveID isEqualTo:driveID],
+					[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path]
+				]];
+			}
+			else
+			{
+				queryCondition = [OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path];
+			}
+
+			query = [OCQuery queryWithCondition:queryCondition inputFilter:nil];
 			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 				if (weakTrackingObject != nil)
 				{

@@ -26,7 +26,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString *OCDriveType;
+typedef NSString *OCDriveType NS_TYPED_ENUM;
 typedef NSString* OCDriveAlias;
 
 typedef NS_ENUM(NSInteger, OCDriveDetachedState)
@@ -43,6 +43,8 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(strong) OCDriveID identifier;
 @property(strong) OCDriveType type;
+
+@property(readonly,nonatomic) BOOL isDeactivated;
 
 @property(strong,nullable) NSString *name;
 @property(strong,nullable) NSString *desc;

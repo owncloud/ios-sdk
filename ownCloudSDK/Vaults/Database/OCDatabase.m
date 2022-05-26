@@ -762,6 +762,7 @@
 			OCItemPropertyNameFileID : @"fileID",
 
 			OCItemPropertyNameName : @"name",
+			OCItemPropertyNameDriveID : @"driveID",
 			OCItemPropertyNamePath : @"path",
 
 			OCItemPropertyNameLocalRelativePath 	: @"localRelativePath",

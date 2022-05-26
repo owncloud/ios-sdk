@@ -64,3 +64,7 @@
 // occgen: type end
 @end
 
+// occgen: static {"locked":true}
+GADeletedState GADeletedStateTrashed = @"trashed";
+
+
