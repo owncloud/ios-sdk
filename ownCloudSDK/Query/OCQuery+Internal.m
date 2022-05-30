@@ -153,11 +153,38 @@
 
 			// We just recomputed
 			_processedQueryResults = newProcessedResults;
+			_processedQueryResultsHasItems = (newProcessedResults.count > 0);
 			_needsRecomputation = NO;
 
+			_queryResultsDataSource.state = [self _dataSourceState];
 			[_queryResultsDataSource setVersionedItems:newProcessedResults];
 		}
 	}
+}
+
+- (OCDataSourceState)_dataSourceState
+{
+	switch (self.state)
+	{
+		case OCQueryStateStarted:
+			return (OCDataSourceStateLoading);
+		break;
+
+		case OCQueryStateWaitingForServerReply:
+			if (!_processedQueryResultsHasItems)
+			{
+				return (OCDataSourceStateLoading);
+			}
+
+		case OCQueryStateStopped:
+		case OCQueryStateContentsFromCache:
+		case OCQueryStateTargetRemoved:
+		case OCQueryStateIdle:
+			return (OCDataSourceStateIdle);
+		break;
+	}
+
+	return (OCDataSourceStateIdle);
 }
 
 #pragma mark - Needs recomputation

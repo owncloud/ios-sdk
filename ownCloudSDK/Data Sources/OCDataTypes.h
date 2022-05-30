@@ -63,6 +63,8 @@ extern OCDataItemType OCDataItemTypeItem;  //!< Item of type OCItem
 extern OCDataItemType OCDataItemTypeDrive; //!< Item of type OCDrive
 extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPresentable
 extern OCDataItemType OCDataItemTypeTextResource; //!< Item of type OCResourceText
+extern OCDataItemType OCDataItemTypeMessage; //!< Item of type message
+extern OCDataItemType OCDataItemTypeAction;  //!< Item of type OCAction
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
 extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill

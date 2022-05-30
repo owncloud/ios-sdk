@@ -36,6 +36,8 @@
 		_itemReferences = [NSMutableArray new];
 		_subscriptions = [NSMutableArray new];
 		_uuid = NSUUID.UUID.UUIDString;
+
+		_state = OCDataSourceStateIdle;
 	}
 
 	return (self);

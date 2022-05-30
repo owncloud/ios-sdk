@@ -252,6 +252,8 @@
 		DC446C8A206B8FBF00189B9A /* ISRunLoopThread.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */; };
 		DC45ABAE231018250065669D /* OCKeyValueRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC45ABAC231018250065669D /* OCKeyValueRecord.h */; };
 		DC45ABAF231018250065669D /* OCKeyValueRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC45ABAD231018250065669D /* OCKeyValueRecord.m */; };
+		DC46F3C42843C66B00038880 /* OCAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC46F3C22843C66B00038880 /* OCAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC46F3C52843C66B00038880 /* OCAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DC46F3C32843C66B00038880 /* OCAction.m */; };
 		DC47DF762770CEE300989D84 /* NSError+OCErrorTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47DF742770CEE300989D84 /* NSError+OCErrorTools.h */; };
 		DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47DF752770CEE300989D84 /* NSError+OCErrorTools.m */; };
 		DC47E4BF27A5820D0020E8EF /* GASpecialFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E49127A5820C0020E8EF /* GASpecialFolder.m */; };
@@ -1201,6 +1203,8 @@
 		DC446C89206B8FBF00189B9A /* ISRunLoopThread.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = ISRunLoopThread.LICENSE; sourceTree = "<group>"; };
 		DC45ABAC231018250065669D /* OCKeyValueRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCKeyValueRecord.h; sourceTree = "<group>"; };
 		DC45ABAD231018250065669D /* OCKeyValueRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCKeyValueRecord.m; sourceTree = "<group>"; };
+		DC46F3C22843C66B00038880 /* OCAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAction.h; sourceTree = "<group>"; };
+		DC46F3C32843C66B00038880 /* OCAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAction.m; sourceTree = "<group>"; };
 		DC47DF742770CEE300989D84 /* NSError+OCErrorTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCErrorTools.h"; sourceTree = "<group>"; };
 		DC47DF752770CEE300989D84 /* NSError+OCErrorTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCErrorTools.m"; sourceTree = "<group>"; };
 		DC47E49127A5820C0020E8EF /* GASpecialFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GASpecialFolder.m; sourceTree = "<group>"; };
@@ -2458,6 +2462,15 @@
 			path = ISRunLoopThread;
 			sourceTree = "<group>";
 		};
+		DC46F3C12843C65300038880 /* Actions */ = {
+			isa = PBXGroup;
+			children = (
+				DC46F3C32843C66B00038880 /* OCAction.m */,
+				DC46F3C22843C66B00038880 /* OCAction.h */,
+			);
+			path = Actions;
+			sourceTree = "<group>";
+		};
 		DC47E49027A5820C0020E8EF /* GeneratedTypes */ = {
 			isa = PBXGroup;
 			children = (
@@ -3566,6 +3579,7 @@
 				DC19BFF321CBE293007C20D1 /* Wait Condition */,
 				DC855710204FEB1500189B9A /* Query */,
 				DCC4F3E327D74DA500ABF4C9 /* Data Sources */,
+				DC46F3C12843C65300038880 /* Actions */,
 				DC47E4ED27A7E1E70020E8EF /* Drive */,
 				DC74E44127AD86C3005B4B03 /* Location */,
 				DC855711204FEB5200189B9A /* Item */,
@@ -4334,6 +4348,7 @@
 				DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */,
 				DCFE3B7A27A1666B00939415 /* GAGraphObject.h in Headers */,
 				DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */,
+				DC46F3C42843C66B00038880 /* OCAction.h in Headers */,
 				DC2218C228228F7000808BCE /* OCVFSContent.h in Headers */,
 				DCFC9EE128004791005D9144 /* OCDataSourceComposition.h in Headers */,
 				DC02835B209098D7005B6334 /* OCImage.h in Headers */,
@@ -4850,6 +4865,7 @@
 				DC0283642090A3E8005B6334 /* OCItemThumbnail.m in Sources */,
 				DC2CD12722E84AC30099C665 /* OCItemPolicyProcessorVacuum.m in Sources */,
 				DC75D310214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.m in Sources */,
+				DC46F3C52843C66B00038880 /* OCAction.m in Sources */,
 				DC07C28F21244FC800B815A4 /* OCExtensionManager.m in Sources */,
 				DC1C7AC3253F3CD9002F2B9F /* OCClassSettings+Metadata.m in Sources */,
 				DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */,

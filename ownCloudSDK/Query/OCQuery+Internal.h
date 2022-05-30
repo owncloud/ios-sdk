@@ -30,6 +30,7 @@
 
 #pragma mark - Update processed results
 - (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;
+- (OCDataSourceState)_dataSourceState;
 
 #pragma mark - Needs recomputation
 - (void)setNeedsRecomputation;

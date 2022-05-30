@@ -31,6 +31,12 @@ typedef void(^OCDataSourceItemForReferenceProvider)(OCDataSource *source, OCData
 
 typedef OCDataSource * _Nullable (^OCDataSourceChildDataSourceProvider)(OCDataSource *source, OCDataItemReference itemRef);
 
+typedef NS_ENUM(NSInteger, OCDataSourceState)
+{
+	OCDataSourceStateLoading,
+	OCDataSourceStateIdle
+};
+
 @interface OCDataSource : NSObject
 {
 	NSMutableArray<OCDataItemReference> *_itemReferences;
@@ -39,6 +45,8 @@ typedef OCDataSource * _Nullable (^OCDataSourceChildDataSourceProvider)(OCDataSo
 
 @property(strong) OCDataSourceUUID uuid;
 @property(strong,nullable) OCDataSourceType type;
+
+@property(assign) OCDataSourceState state;
 
 @property(readonly,nonatomic) NSUInteger numberOfItems;
 @property(strong,nullable) NSDictionary<OCDataSourceSpecialItem, OCDataItemReference> *specialItemReferences; //!< Headers, Footers, …

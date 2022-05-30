@@ -22,6 +22,8 @@ OCDataItemType OCDataItemTypeItem = @"item";
 OCDataItemType OCDataItemTypeDrive = @"drive";
 OCDataItemType OCDataItemTypePresentable = @"presentable";
 OCDataItemType OCDataItemTypeTextResource = @"textResource";
+OCDataItemType OCDataItemTypeMessage = @"message";
+OCDataItemType OCDataItemTypeAction = @"action";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

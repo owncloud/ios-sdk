@@ -317,3 +317,5 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCVFSNode.h>
 #import <ownCloudSDK/OCVFSContent.h>
 #import <ownCloudSDK/OCItem+OCVFSItem.h>
+
+#import <ownCloudSDK/OCAction.h>
