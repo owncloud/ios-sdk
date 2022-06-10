@@ -85,11 +85,20 @@
 			NSMutableSet<OCDataItemReference> *previouslyAddedAndNowRemovedItemRefs = nil;
 			NSMutableSet<OCDataItemReference> *danglingUpdatedItemRefs = nil;
 			NSSet<OCDataItemReference> *existingItemRefs = nil;
+			BOOL itemRefsChanged = NO;
 
 			if (_itemRefs != nil)
 			{
 				existingItemRefs = [[NSSet alloc] initWithArray:_itemRefs];
 				newlyRemovedItemRefs = [existingItemRefs mutableCopy];
+			}
+
+			if ((_itemRefs.count == newItemRefs.count) && (_itemRefs != nil) && (newItemRefs != nil))
+			{
+				if (![_itemRefs isEqualToArray:newItemRefs])
+				{
+					itemRefsChanged = YES;
+				}
 			}
 
 			if (updatedItemRefs != nil)
@@ -162,7 +171,7 @@
 				[_itemRefs setArray:newItemRefs];
 
 				if ((((_addedItemRefs.count > 0) || (_removedItemRefs.count > 0) || (_updatedItemRefs.count > 0)) && !_needsUpdateHandling) ||
-   				     ((newlyAddedItemRefs.count > 0) || (newlyRemovedItemRefs.count > 0) || (newlyUpdatedItemRefs.count > 0)) )
+   				     ((newlyAddedItemRefs.count > 0) || (newlyRemovedItemRefs.count > 0) || (newlyUpdatedItemRefs.count > 0) || itemRefsChanged) )
 				{
 					wasUpdated = YES;
 				}

@@ -21,7 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCItem (DataItem) <OCDataItem, OCDataItemVersion>
+@interface OCItem (DataItem) <OCDataItem, OCDataItemVersioning>
 
 
 @end

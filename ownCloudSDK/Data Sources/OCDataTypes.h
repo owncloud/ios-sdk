@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@protocol OCDataItemVersion
+@protocol OCDataItemVersioning
 @property(readonly) OCDataItemVersion dataItemVersion;
 @end
 
@@ -65,6 +65,7 @@ extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPre
 extern OCDataItemType OCDataItemTypeTextResource; //!< Item of type OCResourceText
 extern OCDataItemType OCDataItemTypeMessage; //!< Item of type message
 extern OCDataItemType OCDataItemTypeAction;  //!< Item of type OCAction
+extern OCDataItemType OCDataItemTypeView;  //!< Item of type UIView
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
 extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill

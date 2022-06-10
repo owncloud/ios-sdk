@@ -23,12 +23,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class OCAction;
 
+typedef NSString* OCActionIdentifier;
+typedef NSString* OCActionVersion;
+
 typedef NSString* OCActionOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCActionOptionKey,id>* OCActionOptions;
 
 typedef void(^OCActionBlock)(OCAction *action, OCActionOptions _Nullable options, void(^completionHandler)(NSError * _Nullable error));
 
-@interface OCAction : NSObject <OCDataItem, OCDataItemVersion>
+typedef NS_ENUM(NSInteger, OCActionType) {
+	OCActionTypeRegular,
+	OCActionTypeDestructive
+};
+
+@interface OCAction : NSObject <OCDataItem, OCDataItemVersioning>
+
+@property(strong, nullable) OCActionIdentifier identifier; //!< If set, returned as .dataItemReference.
+@property(strong, nullable) OCActionVersion version; //!< If set, returned as .dataItemVersion.
+
+@property(assign) OCActionType type;
 
 @property(strong) NSString *title;
 @property(strong, nullable) UIImage *icon;

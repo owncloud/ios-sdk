@@ -39,7 +39,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 	OCDriveDetachedStateDisposable
 };
 
-@interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersion>
+@interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersioning>
 
 @property(strong) OCDriveID identifier;
 @property(strong) OCDriveType type;

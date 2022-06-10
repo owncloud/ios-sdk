@@ -121,7 +121,7 @@
 	}
 	else if (_versionedItemUpdateHandler != nil)
 	{
-		NSArray<id<OCDataItem,OCDataItemVersion>> *versionedItems;
+		NSArray<id<OCDataItem,OCDataItemVersioning>> *versionedItems;
 
 		versionedItems = _versionedItemUpdateHandler(object, keyPath, newValue);
 
@@ -129,7 +129,7 @@
 	}
 	else
 	{
-		[self setVersionedItems:(NSArray<id<OCDataItem,OCDataItemVersion>> *)newValue];
+		[self setVersionedItems:(NSArray<id<OCDataItem,OCDataItemVersioning>> *)newValue];
 	}
 }
 

@@ -45,9 +45,9 @@
 		_originalDataItemType = item.dataItemType;
 		_dataItemReference = item.dataItemReference;
 
-		if ([item conformsToProtocol:@protocol(OCDataItemVersion)])
+		if ([item conformsToProtocol:@protocol(OCDataItemVersioning)])
 		{
-			_dataItemVersion = ((id<OCDataItemVersion>)item).dataItemVersion;
+			_dataItemVersion = ((id<OCDataItemVersioning>)item).dataItemVersion;
 		}
 	}
 

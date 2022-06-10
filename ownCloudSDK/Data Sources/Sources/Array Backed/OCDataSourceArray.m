@@ -57,21 +57,21 @@
 	}
 }
 
-- (void)setVersionedItems:(nullable NSArray<id<OCDataItem,OCDataItemVersion>> *)items
+- (void)setVersionedItems:(nullable NSArray<id<OCDataItem,OCDataItemVersioning>> *)items
 {
 	NSMutableSet<id<OCDataItem>> *updatedItems = nil;
 
 	@synchronized(_subscriptions)
 	{
-		for (id<OCDataItem,OCDataItemVersion> item in items)
+		for (id<OCDataItem,OCDataItemVersioning> item in items)
 		{
 			OCDataItemReference itemRef;
 
 			if ((itemRef = item.dataItemReference) != nil)
 			{
-				id<OCDataItem,OCDataItemVersion> oldItem;
+				id<OCDataItem,OCDataItemVersioning> oldItem;
 
-				if ((oldItem = (id<OCDataItem,OCDataItemVersion>)[_itemsByReference objectForKey:itemRef]) != nil)
+				if ((oldItem = (id<OCDataItem,OCDataItemVersioning>)[_itemsByReference objectForKey:itemRef]) != nil)
 				{
 					OCDataItemVersion newVersion = item.dataItemVersion;
 					OCDataItemVersion oldVersion = oldItem.dataItemVersion;

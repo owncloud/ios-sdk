@@ -289,12 +289,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_lastRootETagsByDriveID = [NSMutableDictionary new];
 
 		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
-		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersion>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
 				return ([drive.type isEqual:OCDriveTypeProject]);
 			}]);
 		}];
-		_hierarchicDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersion>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+		_hierarchicDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
 				return ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual]);
 			}]);

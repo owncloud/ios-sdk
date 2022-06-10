@@ -21,7 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceText : OCResource <OCDataItem, OCDataItemVersion>
+@interface OCResourceText : OCResource <OCDataItem, OCDataItemVersioning>
 
 @property(strong,nullable) NSString *text;
 

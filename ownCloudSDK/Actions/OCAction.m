@@ -21,7 +21,6 @@
 @interface OCAction ()
 {
 	OCDataItemReference _reference;
-	OCDataItemVersion _version;
 }
 @end
 
@@ -32,7 +31,6 @@
 	if ((self = [super init]) != nil)
 	{
 		_reference = NSUUID.UUID.UUIDString;
-		_version = _reference;
 	}
 
 	return (self);
@@ -64,7 +62,7 @@
 
 - (OCDataItemReference)dataItemReference
 {
-	return (_reference);
+	return ((_identifier != nil) ? _identifier : _reference);
 }
 
 - (OCDataItemType)dataItemType
@@ -74,7 +72,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return (_version);
+	return ((_version != nil) ? _version : _reference);
 }
 
 @end

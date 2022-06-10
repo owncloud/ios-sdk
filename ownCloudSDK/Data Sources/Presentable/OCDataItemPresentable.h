@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString* OCDataItemPresentableResource NS_TYPED_ENUM;
 typedef OCResourceRequest * _Nullable(^OCDataItemPresentableResourceRequestProvider)(OCDataItemPresentable *presentable, OCDataItemPresentableResource presentableResource, OCDataViewOptions _Nullable options, NSError * _Nullable * _Nullable outError);
 
-@interface OCDataItemPresentable : NSObject <OCDataItem, OCDataItemVersion>
+@interface OCDataItemPresentable : NSObject <OCDataItem, OCDataItemVersioning>
 
 #pragma mark - OCDataItem conformance
 @property(strong) OCDataItemReference dataItemReference;

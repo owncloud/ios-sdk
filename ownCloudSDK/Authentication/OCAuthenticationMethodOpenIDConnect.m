@@ -253,7 +253,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (NSString *)prompt
 {
-	return (@"consent");
+	return (@"select_account consent");
 }
 
 #pragma mark - Dynamic Client Registration
