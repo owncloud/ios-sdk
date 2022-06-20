@@ -20,6 +20,7 @@
 #import "OCMacros.h"
 #import "NSString+OCPath.h"
 #import "OCDrive.h"
+#import "OCLogger.h"
 
 @interface OCLocation ()
 {
@@ -185,6 +186,33 @@
 	return (nil);
 }
 
+#pragma mark - En-/Decoding to opaque data
+- (OCLocationData)data
+{
+	NSError *error = nil;
+	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self requiringSecureCoding:YES error:&error];
+
+	if (error != nil)
+	{
+		OCLogError(@"Serialization of %@ to data failed with error: %@", self, error);
+	}
+
+	return (data);
+}
+
++ (nullable instancetype)fromData:(OCLocationData)data
+{
+	NSError *error = nil;
+	OCLocation *location = [NSKeyedUnarchiver unarchivedObjectOfClass:OCLocation.class fromData:data error:&error];
+
+	if (error != nil)
+	{
+		OCLogError(@"Deserialization of data to OCLocation failed with error: %@", error);
+	}
+
+	return (location);
+}
+
 #pragma mark - Secure coding
 + (BOOL)supportsSecureCoding
 {
@@ -254,3 +282,5 @@
 }
 
 @end
+
+NSString* OCLocationDataTypeIdentifier = @"com.owncloud.ios-app.location-data";

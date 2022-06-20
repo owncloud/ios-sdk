@@ -141,7 +141,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 #pragma mark - Query results
 @property(nullable,strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
-@property(nullable,strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
+@property(nullable,strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryLocation/.queryItem.path.
 @property(assign,nonatomic) BOOL includeRootItem; //!< If YES, the rootItem is included in the queryResults and change sets. If NO, it's only exposed via .rootItem.
 
 @property(nullable,strong,readonly,nonatomic) OCDataSource *queryResultsDataSource; //!< Returns a data source providing the OCItems in .queryResults. The data source is only created on demand.

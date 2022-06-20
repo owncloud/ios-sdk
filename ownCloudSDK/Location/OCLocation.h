@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCLocationString; //!< DriveID + path encoded into a single string. Format should be assumed private.
 
+typedef NSData* OCLocationData;
+
 @interface OCLocation : NSObject <NSSecureCoding, NSCopying>
 
 @property(class,strong,readonly,nonatomic) OCLocation *legacyRootLocation;
@@ -55,6 +57,12 @@ typedef NSString* OCLocationString; //!< DriveID + path encoded into a single st
 @property(strong,readonly,nonatomic) OCLocationString string;
 + (nullable instancetype)fromString:(OCLocationString)string;
 
+#pragma mark - En-/Decoding to opaque data
+@property(strong,readonly,nullable,nonatomic) OCLocationData data;
++ (nullable instancetype)fromData:(OCLocationData)data;
+
 @end
+
+extern NSString* OCLocationDataTypeIdentifier;
 
 NS_ASSUME_NONNULL_END
