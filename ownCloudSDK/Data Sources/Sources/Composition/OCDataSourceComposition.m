@@ -34,6 +34,8 @@
 @property(copy,nullable) OCDataSourceItemFilter filter;
 @property(copy,nullable) OCDataSourceItemComparator sortComparator;
 
+@property(assign) BOOL include;
+
 @property(assign) BOOL hasUpdates;
 
 - (instancetype)initWithSource:(OCDataSource *)source composition:(OCDataSourceComposition *)composition;
@@ -191,23 +193,19 @@
 	[self setNeedsCompositionUpdate];
 }
 
-#pragma mark - Composition
-- (dispatch_queue_t)compositionQueue
-{
-	return (_compositionQueue);
-}
-
-- (OCDataSourceCompositionRecord *)recordForSource:(OCDataSource *)source
+- (void)setInclude:(BOOL)include forSource:(OCDataSource *)source
 {
 	@synchronized(_sourceRecords)
 	{
-		return ([_sourceRecords firstObjectMatching:^BOOL(OCDataSourceCompositionRecord * _Nonnull object) {
-			return (object.source == source);
-		}]);
+		[self recordForSource:source].include = include;
 	}
+
+	[self setNeedsCompositionUpdate];
 }
 
-- (void)setSources:(NSArray<OCDataSource *> *)sources
+
+#pragma mark - Sources
+- (NSMutableArray<OCDataSourceCompositionRecord *> *)_sourceRecordsForNewSources:(NSArray<OCDataSource *> *)sources
 {
 	NSMutableArray<OCDataSourceCompositionRecord *> *sourceRecords = [NSMutableArray new];
 
@@ -226,12 +224,92 @@
 		}
 	}
 
+	return (sourceRecords);
+}
+
+- (void)setSources:(NSArray<OCDataSource *> *)sources
+{
+	NSMutableArray<OCDataSourceCompositionRecord *> *newSourceRecords = [self _sourceRecordsForNewSources:sources];
+
 	@synchronized(_sourceRecords)
 	{
-		[_sourceRecords setArray:sourceRecords];
+		[_sourceRecords setArray:newSourceRecords];
 	}
 
 	[self setNeedsCompositionUpdate];
+}
+
+- (void)addSources:(NSArray<OCDataSource *> *)sources
+{
+	NSMutableArray<OCDataSourceCompositionRecord *> *newSourceRecords = [self _sourceRecordsForNewSources:sources];
+
+	if (newSourceRecords.count > 0)
+	{
+		@synchronized(_sourceRecords)
+		{
+			[_sourceRecords addObjectsFromArray:newSourceRecords];
+		}
+
+		[self setNeedsCompositionUpdate];
+	}
+}
+
+- (void)insertSources:(NSArray<OCDataSource *> *)sources after:(OCDataSource *)otherSource
+{
+	NSMutableArray<OCDataSourceCompositionRecord *> *newSourceRecords = [self _sourceRecordsForNewSources:sources];
+
+	if (newSourceRecords.count > 0)
+	{
+		NSLog(@"BEF: Before: %@", _sourceRecords);
+
+		@synchronized(_sourceRecords)
+		{
+			NSUInteger afterIndex = [_sourceRecords indexOfObjectPassingTest:^BOOL(OCDataSourceCompositionRecord * _Nonnull sourceRecord, NSUInteger idx, BOOL * _Nonnull stop) {
+				return (sourceRecord.source == otherSource);
+			}];
+
+			if (afterIndex != NSNotFound)
+			{
+				[_sourceRecords insertObjects:newSourceRecords atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(afterIndex, newSourceRecords.count)]];
+			}
+		}
+
+		NSLog(@"BEF: After: %@", _sourceRecords);
+
+		[self setNeedsCompositionUpdate];
+	}
+}
+
+- (void)removeSources:(NSArray<OCDataSource *> *)removeSources
+{
+	@synchronized(_sourceRecords)
+	{
+		NSArray<OCDataSourceCompositionRecord *> *filteredRecords = nil;
+
+		filteredRecords = [_sourceRecords filteredArrayUsingBlock:^BOOL(OCDataSourceCompositionRecord * _Nonnull sourceRecord, BOOL * _Nonnull stop) {
+			return ([removeSources indexOfObjectIdenticalTo:sourceRecord.source] == NSNotFound);
+		}];
+
+		[_sourceRecords setArray:filteredRecords];
+	}
+
+	[self setNeedsCompositionUpdate];
+}
+
+#pragma mark - Composition
+- (dispatch_queue_t)compositionQueue
+{
+	return (_compositionQueue);
+}
+
+- (OCDataSourceCompositionRecord *)recordForSource:(OCDataSource *)source
+{
+	@synchronized(_sourceRecords)
+	{
+		return ([_sourceRecords firstObjectMatching:^BOOL(OCDataSourceCompositionRecord * _Nonnull object) {
+			return (object.source == source);
+		}]);
+	}
 }
 
 - (void)setNeedsCompositionUpdate
@@ -292,6 +370,12 @@
 	for (OCDataSourceCompositionRecord *record in sourceRecords)
 	{
 		NSRange itemRange = NSMakeRange(composedItemReferences.count, 0);
+
+		// Skip records that shouldn't be included
+		if (!record.include) {
+			record.itemRange = NSMakeRange(NSUIntegerMax, 0);
+			continue;
+		}
 
 		// Fetch updates where available
 		if (record.hasUpdates)
@@ -474,6 +558,7 @@
 		__weak OCDataSourceCompositionRecord *weakSelf = self;
 
 		_composition = composition;
+		_include = YES;
 
 		_source = source;
 		_subscription = [source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {

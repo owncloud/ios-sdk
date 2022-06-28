@@ -34,11 +34,17 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Lookup
 - (nullable OCDataSource *)dataSourceForItemReference:(OCDataItemReference)itemRef; //!< Returns the data source that stores itemRef - or nil if none of the data sources contained the item
 
+#pragma mark - Add/Remove sources
+- (void)addSources:(NSArray<OCDataSource *> *)sources;
+- (void)insertSources:(NSArray<OCDataSource *> *)sources after:(OCDataSource *)otherSource;
+- (void)removeSources:(NSArray<OCDataSource *> *)source;
+
 #pragma mark - Filtering and sorting (merged item set)
 @property(copy,nullable,nonatomic) OCDataSourceItemFilter filter; //!< Filter to apply to the combined item set
 @property(copy,nullable,nonatomic) OCDataSourceItemComparator sortComparator; //!< Sort comparator to apply to the combined item set
 
 #pragma mark - Filtering and sorting (individual sources)
+- (void)setInclude:(BOOL)include forSource:(OCDataSource *)source; //!< Include or exclude items from an individual source
 - (void)setFilter:(nullable OCDataSourceItemFilter)filter forSource:(OCDataSource *)source; //!< Filter to apply to an individual source
 - (void)setSortComparator:(nullable OCDataSourceItemComparator)sortComparator forSource:(OCDataSource *)source; //!< Filter to apply to an individual source
 
