@@ -195,14 +195,22 @@
 
 - (void)setInclude:(BOOL)include forSource:(OCDataSource *)source
 {
+	BOOL didChange = NO;
+
 	@synchronized(_sourceRecords)
 	{
-		[self recordForSource:source].include = include;
+		if ([self recordForSource:source].include != include)
+		{
+			[self recordForSource:source].include = include;
+			didChange = YES;
+		}
 	}
 
-	[self setNeedsCompositionUpdate];
+	if (didChange)
+	{
+		[self setNeedsCompositionUpdate];
+	}
 }
-
 
 #pragma mark - Sources
 - (NSMutableArray<OCDataSourceCompositionRecord *> *)_sourceRecordsForNewSources:(NSArray<OCDataSource *> *)sources
