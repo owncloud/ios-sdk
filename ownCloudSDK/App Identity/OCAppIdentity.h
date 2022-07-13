@@ -60,6 +60,7 @@ typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 
 #pragma mark - Device/Environment/Build Capabilities
 @property(readonly,nonatomic,class) BOOL supportsFileProvider;
+@property(strong,nullable) NSString *hostAppBundleIdentifier;
 
 #pragma mark - App Identifiers
 @property(strong,nonatomic,nullable) NSString *appIdentifierPrefix;
