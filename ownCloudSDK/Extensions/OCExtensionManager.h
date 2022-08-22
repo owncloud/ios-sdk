@@ -21,10 +21,11 @@
 #import "OCExtension.h"
 #import "OCExtensionContext.h"
 #import "OCExtensionMatch.h"
+#import "OCClassSettings.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCExtensionManager : NSObject
+@interface OCExtensionManager : NSObject <OCClassSettingsSupport>
 {
 	NSMutableArray <OCExtension *> *_extensions;
 	NSArray <OCExtension *> *_cachedExtensions;
@@ -41,5 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)provideExtensionsForContext:(OCExtensionContext *)context completionHandler:(void(^)(NSError * _Nullable error, OCExtensionContext *context, NSArray <OCExtensionMatch *> * _Nullable))completionHandler; //!< Async matching of extensions against a given context. Expect the completionHandler to be called on a different thread. Prefer this API over -provideExtensionsForContext:error: whenever feasible.
 
 @end
+
+extern OCClassSettingsIdentifier OCClassSettingsIdentifierExtensions;
+extern OCClassSettingsKey OCClassSettingsKeyExtensionsDisallowed;
 
 NS_ASSUME_NONNULL_END

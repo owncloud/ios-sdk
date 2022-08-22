@@ -59,8 +59,29 @@
 	}
 }
 
+- (BOOL)isExtensionAllowed:(OCExtension *)extension
+{
+	NSArray<OCExtensionIdentifier> *disallowedExtensionIdentifiers = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyExtensionsDisallowed];
+
+	if ([disallowedExtensionIdentifiers isKindOfClass:NSArray.class] && (extension.identifier != nil))
+	{
+		if ([disallowedExtensionIdentifiers containsObject:extension.identifier])
+		{
+			return (NO);
+		}
+	}
+
+	return (YES);
+}
+
 - (void)addExtension:(OCExtension *)extension
 {
+	if (![self isExtensionAllowed:extension])
+	{
+		// Block disallowed extensions
+		return;
+	}
+
 	@synchronized(self)
 	{
 		_cachedExtensions = nil;
@@ -89,6 +110,9 @@
 		for (OCExtension *extension in _extensions)
 		{
 			OCExtensionPriority priority;
+
+			// Block disallowed extensions
+			if (![self isExtensionAllowed:extension]) { continue; }
 
 			if ((priority = [extension matchesContext:context]) != OCExtensionPriorityNoMatch)
 			{
@@ -121,4 +145,59 @@
 	});
 }
 
+#pragma mark - Class settings
++ (OCClassSettingsIdentifier)classSettingsIdentifier
+{
+	return (OCClassSettingsIdentifierExtensions);
+}
+
++ (nullable NSDictionary<OCClassSettingsKey,id> *)defaultSettingsForIdentifier:(nonnull OCClassSettingsIdentifier)identifier
+{
+	return (@{
+		OCClassSettingsKeyExtensionsDisallowed : @[],
+	});
+}
+
++ (BOOL)includeInLogSnapshot
+{
+	return (YES);
+}
+
++ (OCClassSettingsMetadataCollection)classSettingsMetadata
+{
+	NSMutableDictionary<NSString*,NSString*> *possibleValues = [NSMutableDictionary new];
+
+	for (OCExtension *extension in OCExtensionManager.sharedExtensionManager.extensions)
+	{
+		if (extension.identifier != nil)
+		{
+			possibleValues[extension.identifier] = [NSString stringWithFormat:@"Extension with the identifier %@.", extension.identifier];
+		}
+	}
+
+	if (possibleValues.count == 0)
+	{
+		// Do not provide an empty possibleValues dictionary, because that results in a catch-22:
+		// - on launch, OCClassSettings would use OCClassSettingsMetadataKeyPossibleValues to validate the set MDM/branding parameters
+		// - the extensions, however, are only added later, so that the initial possible values are empty, which will effectively block the parameters usage/intention
+
+		possibleValues = nil;
+	}
+
+	OCClassSettingsMetadataCollection metadata = @{
+		OCClassSettingsKeyExtensionsDisallowed : [NSDictionary dictionaryWithObjectsAndKeys:
+			OCClassSettingsMetadataTypeStringArray, 							OCClassSettingsMetadataKeyType,
+			@"List of all disallowed extensions. If provided, extensions not listed here are allowed.", 	OCClassSettingsMetadataKeyDescription,
+			@"Extensions", 											OCClassSettingsMetadataKeyCategory,
+			OCClassSettingsKeyStatusAdvanced, 								OCClassSettingsMetadataKeyStatus,
+			possibleValues,											OCClassSettingsMetadataKeyPossibleValues,
+		nil]
+	};
+
+	return (metadata);
+}
+
 @end
+
+OCClassSettingsIdentifier OCClassSettingsIdentifierExtensions = @"extensions";
+OCClassSettingsKey OCClassSettingsKeyExtensionsDisallowed = @"disallowed";
