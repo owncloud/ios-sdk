@@ -20,7 +20,7 @@
 
 @implementation NSArray (OCMapping)
 
-- (NSMutableDictionary *)dictionaryUsingMapper:(id(^)(id obj))mapper
+- (NSMutableDictionary *)dictionaryUsingMapper:(OCObjectToKeyMapper)mapper
 {
 	NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:self.count];
 
@@ -37,7 +37,7 @@
 	return (dict);
 }
 
-- (NSMutableSet *)setUsingMapper:(OCObjectToKeyMapper)mapper;
+- (NSMutableSet *)setUsingMapper:(OCObjectToObjectMapper)mapper;
 {
 	NSMutableSet *set = [[NSMutableSet alloc] initWithCapacity:self.count];
 
@@ -52,6 +52,23 @@
 	}
 
 	return (set);
+}
+
+- (NSMutableArray *)arrayUsingMapper:(OCObjectToObjectMapper)mapper
+{
+	NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:self.count];
+
+	for (id obj in self)
+	{
+		id objKey;
+
+		if ((objKey = mapper(obj)) != nil)
+		{
+			[array addObject:objKey];
+		}
+	}
+
+	return (array);
 }
 
 @end

@@ -108,4 +108,27 @@
 	return ([[[self class] _ocDateFormatterCompactLocalTimeZone] stringFromDate:self]);
 }
 
+- (nullable NSString *)localizedStringWithTemplate:(NSString *)dateTemplate locale:(nullable NSLocale *)locale
+{
+	if (dateTemplate != nil)
+	{
+		NSString *localizedFormat;
+
+		if (locale == nil)
+		{
+			locale = NSLocale.currentLocale;
+		}
+
+		if ((localizedFormat = [NSDateFormatter dateFormatFromTemplate:dateTemplate options:0 locale:locale]) != nil)
+		{
+			NSDateFormatter *formatter = [NSDateFormatter new];
+			formatter.dateFormat = localizedFormat;
+
+			return ([formatter stringFromDate:self]);
+		}
+	}
+
+	return (nil);
+}
+
 @end

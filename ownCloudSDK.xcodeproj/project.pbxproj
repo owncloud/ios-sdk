@@ -306,7 +306,7 @@
 		DC47E4F127A7E2050020E8EF /* OCDrive.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4EF27A7E2050020E8EF /* OCDrive.m */; };
 		DC47E4F527A83D9B0020E8EF /* OCQuota.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4F327A83D9B0020E8EF /* OCQuota.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC47E4F627A83D9B0020E8EF /* OCQuota.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4F427A83D9B0020E8EF /* OCQuota.m */; };
-		DC49B55328339BE200DAF13B /* NSArray+OCMapping.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49B55128339BE200DAF13B /* NSArray+OCMapping.h */; };
+		DC49B55328339BE200DAF13B /* NSArray+OCMapping.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49B55128339BE200DAF13B /* NSArray+OCMapping.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC49B55428339BE200DAF13B /* NSArray+OCMapping.m in Sources */ = {isa = PBXBuildFile; fileRef = DC49B55228339BE200DAF13B /* NSArray+OCMapping.m */; };
 		DC49B5602837DCE700DAF13B /* OCItem+OCVFSItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49B55E2837DCE700DAF13B /* OCItem+OCVFSItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC49B5612837DCE700DAF13B /* OCItem+OCVFSItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DC49B55F2837DCE700DAF13B /* OCItem+OCVFSItem.m */; };
@@ -364,7 +364,7 @@
 		DC61E931221423D2002889D6 /* HTTPPipelineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC61E930221423D2002889D6 /* HTTPPipelineTests.m */; };
 		DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */; };
 		DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */; };
-		DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */; };
+		DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC66C6B520540DBD00189B9A /* NSDate+OCDateParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC66C6B320540DBD00189B9A /* NSDate+OCDateParser.m */; };
 		DC68057D212EB438006C3B1F /* OCExtensionMatch.h in Headers */ = {isa = PBXBuildFile; fileRef = DC68057B212EB438006C3B1F /* OCExtensionMatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */ = {isa = PBXBuildFile; fileRef = DC68057C212EB438006C3B1F /* OCExtensionMatch.m */; };

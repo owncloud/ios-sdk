@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSString *)compactLocalTimeZoneString;
 
+- (nullable NSString *)localizedStringWithTemplate:(NSString *)dateTemplate locale:(nullable NSLocale *)locale;
+
 @end
 
 NS_ASSUME_NONNULL_END

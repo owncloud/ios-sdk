@@ -247,6 +247,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
 #import <ownCloudSDK/NSArray+ObjCRuntime.h>
 #import <ownCloudSDK/NSArray+OCFiltering.h>
+#import <ownCloudSDK/NSArray+OCMapping.h>
+#import <ownCloudSDK/NSDate+OCDateParser.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
 

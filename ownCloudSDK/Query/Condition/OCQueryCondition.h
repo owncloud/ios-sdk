@@ -38,6 +38,8 @@ typedef NS_ENUM(NSUInteger, OCQueryConditionOperator)
 	OCQueryConditionOperatorNegate
 };
 
+typedef NSString* OCQueryConditionUserInfoKey _NS_TYPED_ENUM;
+
 @interface OCQueryCondition : NSObject <NSSecureCoding>
 
 @property(assign) OCQueryConditionOperator operator;
@@ -49,6 +51,8 @@ typedef NS_ENUM(NSUInteger, OCQueryConditionOperator)
 @property(assign) BOOL sortAscending; //!< If .sortBy is non-nil, whether the sort order should be ascending (YES) or descending (NO).
 
 @property(strong,nullable) NSNumber *maxResultCount; //!< If non-nil, the maximum number of results to fetch from a database
+
+@property(strong,nullable) NSDictionary<OCQueryConditionUserInfoKey, id> *userInfo; //!< User info dictionary, not used by the OCQueryCondition itself
 
 + (instancetype)where:(OCItemPropertyName)property isGreaterThan:(id)value;
 + (instancetype)where:(OCItemPropertyName)property isLessThan:(id)value;

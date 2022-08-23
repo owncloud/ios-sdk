@@ -21,11 +21,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef id _Nullable (^OCObjectToKeyMapper)(id obj);
+typedef id _Nullable (^OCObjectToObjectMapper)(id obj);
 
 @interface NSArray (OCMapping)
 
 - (NSMutableDictionary *)dictionaryUsingMapper:(OCObjectToKeyMapper)mapper;
-- (NSMutableSet *)setUsingMapper:(OCObjectToKeyMapper)mapper;
+- (NSMutableSet *)setUsingMapper:(OCObjectToObjectMapper)mapper;
+- (NSMutableArray *)arrayUsingMapper:(OCObjectToObjectMapper)mapper;
 
 @end
 
