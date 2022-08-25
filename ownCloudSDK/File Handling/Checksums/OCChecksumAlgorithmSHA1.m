@@ -37,7 +37,7 @@ OCChecksumAlgorithmAutoRegister
 	size_t maxLength = 128 * 1024; // 128 KB
 	void *readBuffer = NULL;
 
-	if ((readBuffer = malloc(maxLength)) != NULL)
+	if ((maxLength > 0) && ((readBuffer = calloc(1, maxLength)) != NULL))
 	{
 		UInt8 digest[CC_SHA1_DIGEST_LENGTH];
 		CC_SHA1_CTX digestContext;

@@ -208,12 +208,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},
 
-		// Privacy
 		OCCoreAddAcceptLanguageHeader : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription 	: @"Add an `Accept-Language` HTTP header using the preferred languages set on the device.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Privacy"
+			OCClassSettingsMetadataKeyCategory	: @"Connection"
 		},
 	});
 }

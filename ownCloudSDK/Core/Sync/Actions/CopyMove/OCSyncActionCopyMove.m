@@ -399,7 +399,7 @@
 					{
 						if (self.isRename)
 						{
-							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ couldn't be renamed to %@.",nil), self.localItem.name, self.targetName];
+							issueDescription = [NSString stringWithFormat:OCLocalizedString(@"%@ can't be renamed to %@.",nil), self.localItem.name, self.targetName];
 						}
 						else
 						{
