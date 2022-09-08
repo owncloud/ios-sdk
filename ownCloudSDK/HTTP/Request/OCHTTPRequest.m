@@ -60,10 +60,6 @@
 	return(self);
 }
 
-- (void)dealloc
-{
-}
-
 + (instancetype)requestWithURL:(NSURL *)url
 {
 	OCHTTPRequest *request = [self new];

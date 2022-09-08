@@ -351,6 +351,9 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< Returns all subscribed drives.
 - (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
 
+#pragma mark - App Providers
+@property(readonly,nullable,nonatomic) OCAppProvider *appProvider;
+
 #pragma mark - Item usage
 - (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Registers that the item has been used by the user, updating the locally tracked OCItem.lastUsed date with the current date and time.
 

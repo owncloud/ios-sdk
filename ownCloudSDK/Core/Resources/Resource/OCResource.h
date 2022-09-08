@@ -52,5 +52,6 @@ extern OCResourceType OCResourceTypeAny;
 extern OCResourceType OCResourceTypeAvatar;
 extern OCResourceType OCResourceTypeItemThumbnail;
 extern OCResourceType OCResourceTypeDriveItem;
+extern OCResourceType OCResourceTypeURLItem;
 
 NS_ASSUME_NONNULL_END

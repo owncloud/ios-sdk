@@ -107,3 +107,4 @@ OCResourceType OCResourceTypeAny = @"*";
 OCResourceType OCResourceTypeAvatar = @"image.avatar";
 OCResourceType OCResourceTypeItemThumbnail = @"image.thumbnail";
 OCResourceType OCResourceTypeDriveItem = @"drive.item";
+OCResourceType OCResourceTypeURLItem = @"url.item";

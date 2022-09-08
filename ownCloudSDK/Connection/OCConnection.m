@@ -3290,6 +3290,9 @@ OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 OCConnectionEndpointID OCConnectionEndpointIDAvatars = @"endpoint-avatars";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderList = @"app-provider-list";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb = @"app-provider-open-web";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew = @"app-provider-new";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionDriveID = @"drive-id";

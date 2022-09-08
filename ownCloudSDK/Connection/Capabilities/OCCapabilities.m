@@ -29,6 +29,9 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	OCTUSHeader *_tusCapabilitiesHeader;
 	NSArray<OCTUSVersion> *_tusVersions;
 	NSArray<OCTUSExtension> *_tusExtensions;
+
+	NSArray<OCAppProvider *> *_appProviders;
+	OCAppProvider *_latestSupportedAppProvider;
 }
 
 @end
@@ -259,6 +262,76 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (NSString *)spacesVersion
 {
 	return (OCTypedCast(_capabilities[@"spaces"][@"version"], NSString));
+}
+
+#pragma mark - App Providers
+- (NSArray<OCAppProvider *> *)appProviders
+{
+	if (_appProviders == nil)
+	{
+		NSArray<NSDictionary<NSString*,id> *> *jsonAppProviders;
+		NSMutableArray<OCAppProvider *> *appProviders = [NSMutableArray new];
+
+		if ((jsonAppProviders = OCTypedCast(_capabilities[@"files"][@"app_providers"], NSArray)) != nil)
+		{
+			for (id jsonAppProviderEntry in jsonAppProviders)
+			{
+				NSDictionary<NSString*,id> *jsonAppProviderDict;
+
+				if ((jsonAppProviderDict = OCTypedCast(jsonAppProviderEntry, NSDictionary)) != nil)
+				{
+					NSNumber *enabledNumber = OCTypedCast(jsonAppProviderDict[@"enabled"], NSNumber);
+					NSString *versionString = OCTypedCast(jsonAppProviderDict[@"version"], NSString);
+					NSString *appsURLString = OCTypedCast(jsonAppProviderDict[@"apps_url"], NSString);
+					NSString *openURLString = OCTypedCast(jsonAppProviderDict[@"open_url"], NSString);
+					NSString *openWebURLString = OCTypedCast(jsonAppProviderDict[@"open_web_url"], NSString);
+					NSString *newURLString = OCTypedCast(jsonAppProviderDict[@"new_url"], NSString);
+
+					if ((enabledNumber != nil) && (versionString != nil))
+					{
+						OCAppProvider *appProvider = [OCAppProvider new];
+
+						appProvider.enabled = enabledNumber.boolValue;
+						appProvider.version = versionString;
+						appProvider.appsURLPath = appsURLString;
+						appProvider.openURLPath = openURLString;
+						appProvider.openWebURLPath = openWebURLString;
+						appProvider.createURLPath = newURLString;
+
+						[appProviders addObject:appProvider];
+					}
+				}
+			}
+		}
+
+		if (appProviders.count > 0)
+		{
+			_appProviders = appProviders;
+		}
+	}
+
+	return (_appProviders);
+}
+
+- (OCAppProvider *)latestSupportedAppProvider
+{
+	if (_latestSupportedAppProvider == nil)
+	{
+		OCAppProvider *latestSupportedAppProvider = nil;
+
+		for (OCAppProvider *appProvider in self.appProviders)
+		{
+			if (appProvider.isSupported)
+			{
+				// Assume that versions are returned in ascending order (simple first implementation)
+				latestSupportedAppProvider = appProvider;
+			}
+		}
+
+		_latestSupportedAppProvider = latestSupportedAppProvider;
+	}
+
+	return (_latestSupportedAppProvider);
 }
 
 #pragma mark - TUS

@@ -41,6 +41,7 @@
 @class OCItem;
 @class OCConnection;
 @class OCXMLNode;
+@class OCAppProviderFileType;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -353,6 +354,20 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 @end
 
+#pragma mark - APP PROVIDERS
+@interface OCConnection (AppProviders)
+
+#pragma mark - App List
+- (nullable NSProgress *)retrieveAppProviderListWithCompletionHandler:(void(^)(NSError * _Nullable error, OCAppProvider * _Nullable appProvider))completionHandler;
+
+#pragma mark - Create App Document
+- (nullable NSProgress *)createAppFileOfType:(OCAppProviderFileType *)appType in:(OCItem *)parentDirectoryItem withName:(NSString *)fileName completionHandler:(void(^)(NSError * _Nullable error, OCFileID _Nullable fileID, OCItem * _Nullable item))completionHandler;
+
+#pragma mark - Open in Web
+- (nullable NSProgress *)openInWeb:(OCItem *)item withApp:(nullable OCAppProviderApp *)app completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable webURL))completionHandler;
+
+@end
+
 #pragma mark - TOOLS
 @interface OCConnection (Tools)
 
@@ -406,6 +421,9 @@ extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 extern OCConnectionEndpointID OCConnectionEndpointIDAvatars;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderList;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew;
 
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionDriveID;

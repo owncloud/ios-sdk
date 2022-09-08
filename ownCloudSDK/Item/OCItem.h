@@ -100,7 +100,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign) OCItemType type; //!< The type of the item (e.g. file, collection, ..)
 
-@property(nullable,strong) NSString *mimeType; //!< MIME type ("Content Type") of the item
+@property(nullable,strong) OCMIMEType mimeType; //!< MIME type ("Content Type") of the item
 
 @property(readonly,nonatomic) OCItemCloudStatus cloudStatus; //!< the cloud status of the item (computed using the item's metadata)
 

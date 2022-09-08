@@ -46,6 +46,18 @@
 				endpointPath = nil;
 			}
 		}
+		else if ([endpoint isEqual:OCConnectionEndpointIDAppProviderList])
+		{
+			endpointPath = self.capabilities.latestSupportedAppProvider.appsURLPath;
+		}
+		else if ([endpoint isEqual:OCConnectionEndpointIDAppProviderNew])
+		{
+			endpointPath = self.capabilities.latestSupportedAppProvider.createURLPath;
+		}
+		else if ([endpoint isEqual:OCConnectionEndpointIDAppProviderOpenWeb])
+		{
+			endpointPath = self.capabilities.latestSupportedAppProvider.openWebURLPath;
+		}
 		else
 		{
 			endpointPath = [self classSettingForOCClassSettingsKey:endpoint];
@@ -99,7 +111,7 @@
 		}
 		*/
 	}
-	
+
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
 		NSURL *url = [self URLForEndpointPath:endpointPath];

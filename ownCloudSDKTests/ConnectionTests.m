@@ -1066,6 +1066,30 @@
 	XCTAssert([capabilities.notificationEndpoints isEqualToArray:endpoints]);
 }
 
+- (void)_testAppProviderEndpointRetrieval
+{
+	XCTestExpectation *expectConnect = [self expectationWithDescription:@"Connected"];
+	OCConnection *connection = nil;
+	OCBookmark *bookmark = OCTestTarget.ocisBookmark;
+
+	connection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+	XCTAssert(connection!=nil);
+
+	[connection connectWithCompletionHandler:^(NSError *error, OCIssue *issue) {
+		XCTAssert(error==nil);
+		XCTAssert(issue==nil);
+
+		if (error == nil)
+		{
+			// Unimplemented for now due to unavailability of Basic Auth on public ocis instance
+		}
+
+		[expectConnect fulfill];
+	}];
+
+	[self waitForExpectationsWithTimeout:60 handler:nil];
+}
 
 - (void)_testPropFindZeroStresstest
 {

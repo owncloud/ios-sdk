@@ -62,6 +62,7 @@
 #import "OCResourceSourceItemThumbnails.h"
 #import "OCResourceSourceItemLocalThumbnails.h"
 #import "OCResourceSourceDriveItems.h"
+#import "OCResourceSourceURLItems.h"
 #import "OCConnection+GraphAPI.h"
 #import "NSArray+OCFiltering.h"
 #import "OCCore+DataSources.h"
@@ -545,6 +546,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceItemLocalThumbnails alloc] initWithCore:self]];
 				[self.vault.resourceManager addSource:[[OCResourceSourceDriveItems alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceURLItems alloc] initWithCore:self]];
 			}
 			else
 			{
@@ -742,6 +744,27 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						{
 							self->_preferredChecksumAlgorithm = preferredUploadChecksumType;
 						}
+					}
+
+					// If app provider is available and enabled
+					OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
+
+					if ((latestSupportedAppProvider != nil) && latestSupportedAppProvider.enabled)
+					{
+						[self.connection retrieveAppProviderListWithCompletionHandler:^(NSError * _Nullable error, OCAppProvider * _Nullable appProvider) {
+							OCLogDebug(@"AppProviderList: error=%@, appProvider=%@", error, appProvider);
+
+							if (error == nil)
+							{
+								[self willChangeValueForKey:@"appProvider"];
+								self->_appProvider = appProvider;
+								[self didChangeValueForKey:@"appProvider"];
+							}
+							else
+							{
+								OCLogWarning(@"Error retrieving app provider list: %@", error);
+							}
+						}];
 					}
 				}
 
