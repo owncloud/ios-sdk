@@ -66,8 +66,6 @@ typedef NSString* OCDatabaseCounterIdentifier;
 {
 	NSURL *_databaseURL;
 
-	NSMutableArray <OCSQLiteTableSchema *> *_tableSchemas;
-
 	NSMutableDictionary <OCDatabaseID, OCEvent *> *_eventsByDatabaseID;
 
 	NSString *_selectItemRowsSQLQueryPrefix;

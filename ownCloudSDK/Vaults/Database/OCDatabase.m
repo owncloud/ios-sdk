@@ -22,6 +22,7 @@
 #import "OCSQLiteTransaction.h"
 #import "OCSQLiteQueryCondition.h"
 #import "OCItem.h"
+#import "OCItem+OCTypeAlias.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCSyncRecord.h"
 #import "NSString+OCPath.h"
@@ -139,6 +140,8 @@
 							if (error == nil)
 							{
 								[self.sqlDB executeQueryString:@"PRAGMA journal_mode"];
+
+								[self.sqlDB dropTableSchemas]; //!< Table schemas no longer needed, save memory
 
 								if (completionHandler!=nil)
 								{
@@ -297,6 +300,7 @@
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
 			@"mimeType" 		: OCSQLiteNullProtect(item.mimeType),
+			@"typeAlias" 		: OCSQLiteNullProtect(item.typeAlias),
 			@"size" 		: @(item.size),
 			@"favorite" 		: @(item.isFavorite.boolValue),
 			@"cloudStatus" 		: @(item.cloudStatus),
@@ -369,6 +373,7 @@
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
 				@"mimeType" 		: OCSQLiteNullProtect(item.mimeType),
+				@"typeAlias" 		: OCSQLiteNullProtect(item.typeAlias),
 				@"size" 		: @(item.size),
 				@"favorite" 		: @(item.isFavorite.boolValue),
 				@"cloudStatus" 		: @(item.cloudStatus),
@@ -769,6 +774,7 @@
 			OCItemPropertyNameLocallyModified 	: @"locallyModified",
 
 			OCItemPropertyNameMIMEType 		: @"mimeType",
+			OCItemPropertyNameTypeAlias		: @"typeAlias",
 			OCItemPropertyNameSize 			: @"size",
 			OCItemPropertyNameIsFavorite 		: @"favorite",
 			OCItemPropertyNameCloudStatus 		: @"cloudStatus",

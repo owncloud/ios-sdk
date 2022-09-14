@@ -699,6 +699,7 @@ OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination = @"Destination";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite = @"Overwrite";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNamePrefer = @"Prefer";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch = @"If-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch = @"If-None-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent = @"User-Agent";

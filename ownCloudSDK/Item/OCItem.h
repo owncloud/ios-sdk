@@ -235,6 +235,7 @@ extern OCItemPropertyName OCItemPropertyNameDriveID; //!< Supported by OCQueryCo
 extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameTypeAlias; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameSize; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameCloudStatus; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameHasLocalAttributes; //!< Supported by OCQueryCondition SQLBuilder

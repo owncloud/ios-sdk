@@ -38,6 +38,7 @@
 		]]
 	];
 	[request setValue:@"application/xml" forHeaderField:OCHTTPHeaderFieldNameContentType];
+	[request setValue:@"return=minimal" forHeaderField:OCHTTPHeaderFieldNamePrefer]; // Reduce the HTTP body size by omitting the 404 parts (https://datatracker.ietf.org/doc/html/rfc8144#section-2.1, https://github.com/cs3org/reva/pull/3222)
 	[request setValue:((depth == OCPropfindDepthInfinity) ? @"infinity" : [NSString stringWithFormat:@"%lu", (unsigned long)depth]) forHeaderField:OCHTTPHeaderFieldNameDepth];
 
 	return (request);

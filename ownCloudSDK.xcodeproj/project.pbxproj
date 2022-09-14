@@ -153,6 +153,8 @@
 		DC27BBC42304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27BBC22304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m */; };
 		DC29F4C224323C4900347658 /* OCMessageTemplate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC29F4C024323C4900347658 /* OCMessageTemplate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC29F4C124323C4900347658 /* OCMessageTemplate.m */; };
+		DC2A127628D05DD30088A2B7 /* OCItem+OCTypeAlias.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2A127428D05DD20088A2B7 /* OCItem+OCTypeAlias.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC2A127728D05DD30088A2B7 /* OCItem+OCTypeAlias.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2A127528D05DD30088A2B7 /* OCItem+OCTypeAlias.m */; };
 		DC2AA57022DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2AA56E22DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2AA57122DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2AA56F22DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m */; };
 		DC2AA57922DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2AA57722DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h */; };
@@ -1116,6 +1118,8 @@
 		DC27BBC22304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPCookie+OCCookies.m"; sourceTree = "<group>"; };
 		DC29F4C024323C4900347658 /* OCMessageTemplate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMessageTemplate.h; sourceTree = "<group>"; };
 		DC29F4C124323C4900347658 /* OCMessageTemplate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMessageTemplate.m; sourceTree = "<group>"; };
+		DC2A127428D05DD20088A2B7 /* OCItem+OCTypeAlias.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCTypeAlias.h"; sourceTree = "<group>"; };
+		DC2A127528D05DD30088A2B7 /* OCItem+OCTypeAlias.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCTypeAlias.m"; sourceTree = "<group>"; };
 		DC2AA56E22DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCItemPolicyProcessorAvailableOffline.h; sourceTree = "<group>"; };
 		DC2AA56F22DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCItemPolicyProcessorAvailableOffline.m; sourceTree = "<group>"; };
 		DC2AA57722DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncActionLocalCopyDelete.h; sourceTree = "<group>"; };
@@ -3218,6 +3222,8 @@
 				DC85571A2050196000189B9A /* OCItem+OCXMLObjectCreation.h */,
 				DC3AB1902808B3C400789435 /* OCItem+OCDataItem.m */,
 				DC3AB18F2808B3C400789435 /* OCItem+OCDataItem.h */,
+				DC2A127528D05DD30088A2B7 /* OCItem+OCTypeAlias.m */,
+				DC2A127428D05DD20088A2B7 /* OCItem+OCTypeAlias.h */,
 				DC4E0A5720927048007EB05F /* OCItemVersionIdentifier.m */,
 				DC4E0A5620927048007EB05F /* OCItemVersionIdentifier.h */,
 				DC0283652090A8EE005B6334 /* Images */,
@@ -4341,6 +4347,7 @@
 				DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */,
 				DC47E4CB27A5820D0020E8EF /* GAHashes.h in Headers */,
 				DC51FD8D247565080069AB79 /* OCCellularSwitch.h in Headers */,
+				DC2A127628D05DD30088A2B7 /* OCItem+OCTypeAlias.h in Headers */,
 				DC35969622403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h in Headers */,
 				DC139CCC20DBBA8D0090175A /* OCChecksumAlgorithm.h in Headers */,
 				DC708CE4214135E200FE43CA /* OCSyncActionDownload.h in Headers */,
@@ -5017,6 +5024,7 @@
 				DCED67D827F1A7B200686E4F /* OCCore+DataSources.m in Sources */,
 				DCC83308242E1B4600153F8C /* OCCore+MessageAutoresolver.m in Sources */,
 				DC2F63682239509E0063C2DA /* OCCore+Sharing.m in Sources */,
+				DC2A127728D05DD30088A2B7 /* OCItem+OCTypeAlias.m in Sources */,
 				DC00DB1E219B120300C82737 /* OCHTTPDAVMultistatusResponse.m in Sources */,
 				DC02835C209098D7005B6334 /* OCImage.m in Sources */,
 				DC708CCF2141306100FE43CA /* OCSyncActionCopyMove.m in Sources */,

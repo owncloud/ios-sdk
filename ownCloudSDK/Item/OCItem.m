@@ -867,6 +867,7 @@ OCItemPropertyName OCItemPropertyNameName = @"name";
 OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";
 OCItemPropertyName OCItemPropertyNameSize = @"size";
 OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
+OCItemPropertyName OCItemPropertyNameTypeAlias = @"typeAlias";
 OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified";
 OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath";
 

@@ -531,6 +531,12 @@ static void collationProvider(void *dbObj, sqlite3 *db, int eTextRep, const char
 	}]];
 }
 
+- (void)dropTableSchemas
+{
+	[self queueBlock:^{
+		[self->_tableSchemas removeAllObjects];
+	}];
+}
 
 #pragma mark - Queries (public)
 - (void)executeQuery:(OCSQLiteQuery *)query
