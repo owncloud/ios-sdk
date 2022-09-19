@@ -130,7 +130,10 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorDataItemTypeUnavailable, //!< Object does not return DataItemType.
 	OCErrorDataConverterUnavailable,//!< No data converter available for conversion.
 
-	OCErrorMissingDriveID //!< Missing Drive ID.
+	OCErrorMissingDriveID, //!< Missing Drive ID.
+
+	OCErrorResourceNotFound, //!< Resource not found.
+	OCErrorInvalidParameter //!< Invalid parameter.
 };
 
 @class OCIssue;

@@ -18,8 +18,10 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "NSError+OCISError.h"
 #import "OCMacros.h"
 #import "OCAppProviderApp.h"
+#import "NSDictionary+OCFormEncoding.h"
 
 @implementation OCConnection (AppProviders)
 
@@ -137,6 +139,164 @@
 	return (progress);
 }
 
+#pragma mark - Open
+- (nullable NSProgress *)openInApp:(OCItem *)item withApp:(nullable OCAppProviderApp *)app viewMode:(nullable OCAppProviderViewMode)viewMode completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable appURL, OCHTTPMethod _Nullable httpMethod, OCHTTPHeaderFields _Nullable headerFields, OCHTTPRequestParameters _Nullable parameters, NSMutableURLRequest * _Nullable urlRequest))completionHandler
+{
+	NSProgress *progress = nil;
+	NSURL *appListURL = [self URLForEndpoint:OCConnectionEndpointIDAppProviderOpen options:nil];
+	OCHTTPRequest *request;
+
+	if ((request = [OCHTTPRequest requestWithURL:appListURL]) != nil)
+	{
+		request.method = OCHTTPMethodPOST;
+		request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+		request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+			item.fileID,	@"file_id",
+			app.name,	@"app_name",
+		nil];
+
+		if (viewMode != nil)
+		{
+			[request addParameters:@{
+				@"view_mode" : viewMode
+			}];
+		}
+
+		progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+			NSData *responseBody = response.bodyData;
+			NSURL *appURL = nil;
+			OCHTTPMethod httpMethod = nil;
+			NSDictionary<NSString *, id> *jsonResponse = nil;
+			NSError *jsonError = nil;
+			OCHTTPRequestParameters requestParameters = nil;
+			OCHTTPHeaderFields requestHeaderFields = nil;
+
+			if ((error == nil) && (responseBody != nil))
+			{
+				id rawJSON = nil;
+
+				if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&jsonError]) != nil)
+				{
+					if ((jsonResponse = OCTypedCast(rawJSON, NSDictionary)) == nil)
+					{
+						error = OCErrorFromError(OCErrorResponseUnknownFormat, response.status.error);
+					}
+				}
+			}
+
+			if ((error == nil) && response.status.isSuccess && (jsonResponse != nil))
+			{
+				NSString *appURLString;
+				NSString *methodString;
+
+				if ((appURLString = OCTypedCast(jsonResponse[@"app_url"], NSString)) != nil)
+				{
+					appURL = [NSURL URLWithString:appURLString];
+				}
+
+				if ((methodString = OCTypedCast(jsonResponse[@"method"], NSString)) != nil)
+				{
+					if ([methodString isEqual:@"GET"])  { httpMethod = OCHTTPMethodGET; }
+					if ([methodString isEqual:@"POST"]) { httpMethod = OCHTTPMethodPOST; }
+				}
+
+				if ([httpMethod isEqual:OCHTTPMethodGET])
+				{
+					NSDictionary<NSString *, id> *rawHeaders;
+
+					if ((rawHeaders = OCTypedCast(jsonResponse[@"headers"], NSDictionary)) != nil)
+					{
+						requestHeaderFields = [NSMutableDictionary new];
+
+						[rawHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+							NSString *stringKey, *stringValue;
+
+							if (((stringKey = OCTypedCast(key, NSString)) != nil) && ((stringValue = OCTypedCast(obj, NSString)) != nil))
+							{
+								requestHeaderFields[stringKey] = stringValue;
+							}
+							else
+							{
+								OCLogWarning(@"App Provider Open response 'headers' contained non-string key or value: key=%@, value=%@", key, obj);
+							}
+						}];
+					}
+				}
+
+				if ([httpMethod isEqual:OCHTTPMethodPOST])
+				{
+					NSDictionary<NSString *, id> *rawRequestParameters;
+
+					if ((rawRequestParameters = OCTypedCast(jsonResponse[@"form_parameters"], NSDictionary)) != nil)
+					{
+						requestParameters = [NSMutableDictionary new];
+
+						[rawRequestParameters enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+							NSString *stringKey, *stringValue;
+
+							if (((stringKey = OCTypedCast(key, NSString)) != nil) && ((stringValue = OCTypedCast(obj, NSString)) != nil))
+							{
+								requestParameters[stringKey] = stringValue;
+							}
+							else
+							{
+								OCLogWarning(@"App Provider Open response 'form_parameters' contained non-string key or value: key=%@, value=%@", key, obj);
+							}
+						}];
+					}
+				}
+			}
+			else
+			{
+				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:response.status.error];
+			}
+
+			if (appURL == nil)
+			{
+				error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'app_url' information missing or invalid.");
+			}
+			if (httpMethod == nil)
+			{
+				error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'method' information missing or invalid.");
+			}
+
+			if (error == nil)
+			{
+				NSMutableURLRequest *urlRequest;
+
+
+				// Apply URL + HTTP method
+				urlRequest = [NSMutableURLRequest requestWithURL:appURL];
+				urlRequest.HTTPMethod = httpMethod;
+
+				if (requestHeaderFields != nil)
+				{
+					// Apply HTTP headers
+					[urlRequest setAllHTTPHeaderFields:requestHeaderFields];
+				}
+				if (requestParameters != nil)
+				{
+					// Encode and apply POST parameters
+					[urlRequest setHTTPBody:[requestParameters urlFormEncodedData]];
+					[urlRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:OCHTTPHeaderFieldNameContentType];
+				}
+
+				completionHandler(error, appURL, httpMethod, requestHeaderFields, requestParameters, urlRequest);
+			}
+			else
+			{
+				completionHandler(error, nil, nil, nil, nil, nil);
+			}
+		}];
+	}
+	else
+	{
+		completionHandler(OCError(OCErrorInternal), nil, nil, nil, nil, nil);
+	}
+
+	return (progress);
+}
+
 #pragma mark - Open in Web
 - (nullable NSProgress *)openInWeb:(OCItem *)item withApp:(nullable OCAppProviderApp *)app completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable webURL))completionHandler
 {
@@ -155,34 +315,39 @@
 
 		progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			NSData *responseBody = response.bodyData;
-			NSURL *webURL;
+			NSURL *webURL = nil;
+			NSDictionary<NSString *, id> *jsonResponse = nil;
+			NSError *jsonError = nil;
 
-			if ((error == nil) && response.status.isSuccess && (responseBody!=nil))
+			if ((error == nil) && (responseBody != nil))
 			{
-				id rawJSON;
+				id rawJSON = nil;
 
-				if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&error]) != nil)
+				if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&jsonError]) != nil)
 				{
-					NSDictionary<NSString *, id> *jsonResponse;
-					NSString *uri;
+					if ((jsonResponse = OCTypedCast(rawJSON, NSDictionary)) == nil)
+					{
+						error = OCErrorFromError(OCErrorResponseUnknownFormat, response.status.error);
+					}
+				}
+			}
 
-					if (((jsonResponse = OCTypedCast(rawJSON, NSDictionary)) != nil) &&
-					    ((uri = OCTypedCast(jsonResponse[@"uri"], NSString)) != nil))
-					{
-						webURL = [NSURL URLWithString:uri];
-					}
-					else
-					{
-						error = OCError(OCErrorResponseUnknownFormat);
-					}
+			if ((error == nil) && response.status.isSuccess && (jsonResponse != nil))
+			{
+				NSString *uri;
+
+				if ((uri = OCTypedCast(jsonResponse[@"uri"], NSString)) != nil)
+				{
+					webURL = [NSURL URLWithString:uri];
+				}
+				else
+				{
+					error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'uri' information missing from response.");
 				}
 			}
 			else
 			{
-				if (error == nil)
-				{
-					error = response.status.error;
-				}
+				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:response.status.error];
 			}
 
 			completionHandler(error, (error == nil) ? webURL : nil);

@@ -23,6 +23,8 @@
 
 @class OCAppProvider;
 
+typedef NSString* OCAppProviderViewMode NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCAppProviderApp : NSObject
@@ -42,5 +44,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)supportsItem:(OCItem *)item;
 
 @end
+
+extern OCAppProviderViewMode OCAppProviderViewModeView;  //!< user can view in the opening app (download is not possible)
+extern OCAppProviderViewMode OCAppProviderViewModeRead;  //!< user can view and download from the opening app
+extern OCAppProviderViewMode OCAppProviderViewModeWrite; //!< user can edit and download in the opening app
 
 NS_ASSUME_NONNULL_END

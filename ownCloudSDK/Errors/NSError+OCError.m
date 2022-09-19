@@ -384,6 +384,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorMissingDriveID:
 					unlocalizedString = @"Missing Drive ID.";
 				break;
+
+				case OCErrorResourceNotFound:
+					unlocalizedString = @"Resource not found.";
+				break;
+
+				case OCErrorInvalidParameter:
+					unlocalizedString = @"Invalid parameter.";
+				break;
 			}
 		}
 	}

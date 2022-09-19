@@ -380,6 +380,12 @@
 // OCErrorMissingDriveID
 "Missing Drive ID." = "Missing Drive ID.";
 
+// OCErrorResourceNotFound
+"Resource not found." = "Resource not found.";
+
+// OCErrorInvalidParameter
+"Invalid parameter." = "Invalid parameter.";
+
 /* Diagnostic */
 "Files" = "Files";
 "Folders" = "Folders";

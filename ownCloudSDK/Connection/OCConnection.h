@@ -35,6 +35,7 @@
 #import "OCRateLimiter.h"
 #import "OCAvatar.h"
 #import "OCDrive.h"
+#import "OCAppProviderApp.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -363,6 +364,9 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 #pragma mark - Create App Document
 - (nullable NSProgress *)createAppFileOfType:(OCAppProviderFileType *)appType in:(OCItem *)parentDirectoryItem withName:(NSString *)fileName completionHandler:(void(^)(NSError * _Nullable error, OCFileID _Nullable fileID, OCItem * _Nullable item))completionHandler;
 
+#pragma mark - Open
+- (nullable NSProgress *)openInApp:(OCItem *)item withApp:(nullable OCAppProviderApp *)app viewMode:(nullable OCAppProviderViewMode)viewMode completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable appURL, OCHTTPMethod _Nullable httpMethod, OCHTTPHeaderFields _Nullable headerFields, OCHTTPRequestParameters _Nullable parameters, NSMutableURLRequest * _Nullable urlRequest))completionHandler;
+
 #pragma mark - Open in Web
 - (nullable NSProgress *)openInWeb:(OCItem *)item withApp:(nullable OCAppProviderApp *)app completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable webURL))completionHandler;
 
@@ -422,6 +426,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
 extern OCConnectionEndpointID OCConnectionEndpointIDAvatars;
 extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderList;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpen;
 extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb;
 extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew;
 

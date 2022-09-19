@@ -22,6 +22,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
 #import "OCConnection.h"
+#import "NSDictionary+OCFormEncoding.h"
 
 @implementation OCHTTPRequest
 
@@ -243,18 +244,7 @@
 		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
 			// POST and PUT methods: generate body from parameters
-			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
-			NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
-			
-			[_parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL * _Nonnull stop) {
-				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
-			}];
-			
-			urlComponents.queryItems = queryItems;
-
-			// NSURLComponents.percentEncodedQuery will NOT escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization
-			// (source: http://www.openradar.me/24076063)
-			self.bodyData = [[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding];
+			self.bodyData = [_parameters urlFormEncodedData];
 
 			if (_headerFields[OCHTTPHeaderFieldNameContentType] == nil)
 			{

@@ -54,6 +54,10 @@
 		{
 			endpointPath = self.capabilities.latestSupportedAppProvider.createURLPath;
 		}
+		else if ([endpoint isEqual:OCConnectionEndpointIDAppProviderOpen])
+		{
+			endpointPath = self.capabilities.latestSupportedAppProvider.openURLPath;
+		}
 		else if ([endpoint isEqual:OCConnectionEndpointIDAppProviderOpenWeb])
 		{
 			endpointPath = self.capabilities.latestSupportedAppProvider.openWebURLPath;

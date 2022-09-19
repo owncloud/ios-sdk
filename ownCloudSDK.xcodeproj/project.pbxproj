@@ -835,6 +835,10 @@
 		DCFE3B8927A16AE800939415 /* OCConnection+GraphAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3B8727A16AE800939415 /* OCConnection+GraphAPI.m */; };
 		DCFE3B9D27A1A6E500939415 /* GAGraphData+Decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFE3B9B27A1A6E500939415 /* GAGraphData+Decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCFE3B9E27A1A6E500939415 /* GAGraphData+Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3B9C27A1A6E500939415 /* GAGraphData+Decoder.m */; };
+		DCFE682028D857B500091D2A /* NSError+OCISError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFE681E28D857B500091D2A /* NSError+OCISError.h */; };
+		DCFE682128D857B500091D2A /* NSError+OCISError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE681F28D857B500091D2A /* NSError+OCISError.m */; };
+		DCFE682428D865BD00091D2A /* NSDictionary+OCFormEncoding.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFE682228D865BD00091D2A /* NSDictionary+OCFormEncoding.h */; };
+		DCFE682528D865BD00091D2A /* NSDictionary+OCFormEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE682328D865BD00091D2A /* NSDictionary+OCFormEncoding.m */; };
 		DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		DCFF1AB021655C8800ABE40A /* OCItem+OCFileURLMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFF1AAE21655C8800ABE40A /* OCItem+OCFileURLMetadata.h */; };
 		DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */; };
@@ -1813,6 +1817,10 @@
 		DCFE3B8727A16AE800939415 /* OCConnection+GraphAPI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+GraphAPI.m"; sourceTree = "<group>"; };
 		DCFE3B9B27A1A6E500939415 /* GAGraphData+Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GAGraphData+Decoder.h"; sourceTree = "<group>"; };
 		DCFE3B9C27A1A6E500939415 /* GAGraphData+Decoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "GAGraphData+Decoder.m"; sourceTree = "<group>"; };
+		DCFE681E28D857B500091D2A /* NSError+OCISError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCISError.h"; sourceTree = "<group>"; };
+		DCFE681F28D857B500091D2A /* NSError+OCISError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCISError.m"; sourceTree = "<group>"; };
+		DCFE682228D865BD00091D2A /* NSDictionary+OCFormEncoding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+OCFormEncoding.h"; sourceTree = "<group>"; };
+		DCFE682328D865BD00091D2A /* NSDictionary+OCFormEncoding.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+OCFormEncoding.m"; sourceTree = "<group>"; };
 		DCFF1AAC216552C000ABE40A /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = System/Library/Frameworks/AuthenticationServices.framework; sourceTree = SDKROOT; };
 		DCFF1AAE21655C8800ABE40A /* OCItem+OCFileURLMetadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCFileURLMetadata.h"; sourceTree = "<group>"; };
 		DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCFileURLMetadata.m"; sourceTree = "<group>"; };
@@ -2811,6 +2819,8 @@
 				DC9D22E825A8754200CF5675 /* OCHTTPRequest+JSON.h */,
 				DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */,
 				DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */,
+				DCFE682328D865BD00091D2A /* NSDictionary+OCFormEncoding.m */,
+				DCFE682228D865BD00091D2A /* NSDictionary+OCFormEncoding.h */,
 			);
 			path = Request;
 			sourceTree = "<group>";
@@ -3141,6 +3151,8 @@
 				DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */,
 				DC5B96D424916CF200733594 /* OCConnection+Upload.m */,
 				DC30947220542FA500189B9A /* OCConnection+Users.m */,
+				DCFE681F28D857B500091D2A /* NSError+OCISError.m */,
+				DCFE681E28D857B500091D2A /* NSError+OCISError.h */,
 			);
 			name = Categories;
 			sourceTree = "<group>";
@@ -4147,6 +4159,7 @@
 				DC2AA57922DDD005001D5C39 /* OCSyncActionLocalCopyDelete.h in Headers */,
 				DCA35D7624D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.h in Headers */,
 				DCDB76242739D51200EE7A06 /* OCServerLocatorLookupTable.h in Headers */,
+				DCFE682428D865BD00091D2A /* NSDictionary+OCFormEncoding.h in Headers */,
 				DCD3F6A027EA887600D86662 /* OCDataSourceArray.h in Headers */,
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
 				DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */,
@@ -4210,6 +4223,7 @@
 				DC4A2C5E20D4608100A47260 /* OCIssueChoice.h in Headers */,
 				DC9D22EA25A8754200CF5675 /* OCHTTPRequest+JSON.h in Headers */,
 				DC07C29221244FD800B815A4 /* OCExtension.h in Headers */,
+				DCFE682028D857B500091D2A /* NSError+OCISError.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DC0CE18728C63B15009ABDFB /* OCAppProviderApp.h in Headers */,
 				DCFC9ED928003EFC005D9144 /* GAShared.h in Headers */,
@@ -4906,6 +4920,7 @@
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC0CE19728C8907D009ABDFB /* OCResourceRequestURLItem.m in Sources */,
 				DC47DF772770CEE300989D84 /* NSError+OCErrorTools.m in Sources */,
+				DCFE682128D857B500091D2A /* NSError+OCISError.m in Sources */,
 				DCE62EAA2771EA0200E3193F /* OCResourceManager.m in Sources */,
 				DCA35D7324D00A9800DBE2B0 /* OCHTTPPipeline+Diagnostic.m in Sources */,
 				DCDB76292739EF9A00EE7A06 /* OCExtension+ServerLocator.m in Sources */,
@@ -5087,6 +5102,7 @@
 				DC24F8E921E2B3EF00C9119C /* OCWaitConditionIssue.m in Sources */,
 				DC47E4CF27A5820D0020E8EF /* GAFolderView.m in Sources */,
 				DCE17BC226B5A7E400B7C7DD /* OCHTTPRequest+Stream.m in Sources */,
+				DCFE682528D865BD00091D2A /* NSDictionary+OCFormEncoding.m in Sources */,
 				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
 				DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */,
 				DC47E4DC27A5820D0020E8EF /* GAODataErrorMain.m in Sources */,

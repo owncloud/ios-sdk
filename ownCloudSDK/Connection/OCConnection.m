@@ -3291,6 +3291,7 @@ OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-sh
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
 OCConnectionEndpointID OCConnectionEndpointIDAvatars = @"endpoint-avatars";
 OCConnectionEndpointID OCConnectionEndpointIDAppProviderList = @"app-provider-list";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpen = @"app-provider-open";
 OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb = @"app-provider-open-web";
 OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew = @"app-provider-new";
 

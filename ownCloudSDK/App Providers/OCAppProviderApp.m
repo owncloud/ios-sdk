@@ -97,3 +97,7 @@
 }
 
 @end
+
+OCAppProviderViewMode OCAppProviderViewModeView = @"view";
+OCAppProviderViewMode OCAppProviderViewModeRead = @"read";
+OCAppProviderViewMode OCAppProviderViewModeWrite = @"write";
