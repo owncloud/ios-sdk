@@ -90,7 +90,10 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					OCLogDebug(@"Preflight: delete contained %@", OCLogPrivate(item.path));
 
 					[removedItems addObject:item];
-					[removedLocalIDs addObject:item.localID];
+					if (item.localID != nil)
+					{
+						[removedLocalIDs addObject:item.localID];
+					}
 				}
 			}];
 
