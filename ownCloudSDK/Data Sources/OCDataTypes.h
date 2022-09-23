@@ -65,6 +65,7 @@ extern OCDataItemType OCDataItemTypePresentable; //!< Item of type OCDataItemPre
 extern OCDataItemType OCDataItemTypeTextResource; //!< Item of type OCResourceText
 extern OCDataItemType OCDataItemTypeMessage; //!< Item of type message
 extern OCDataItemType OCDataItemTypeAction;  //!< Item of type OCAction
+extern OCDataItemType OCDataItemTypeSavedSearch; //!< Item of type OCSavedSearch
 extern OCDataItemType OCDataItemTypeView;  //!< Item of type UIView
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance

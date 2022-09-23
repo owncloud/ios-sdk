@@ -24,6 +24,7 @@ OCDataItemType OCDataItemTypePresentable = @"presentable";
 OCDataItemType OCDataItemTypeTextResource = @"textResource";
 OCDataItemType OCDataItemTypeMessage = @"message";
 OCDataItemType OCDataItemTypeAction = @"action";
+OCDataItemType OCDataItemTypeSavedSearch = @"savedSearch";
 OCDataItemType OCDataItemTypeView = @"view";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
