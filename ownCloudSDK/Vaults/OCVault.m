@@ -279,6 +279,26 @@
 	return (_temporaryDownloadURL);
 }
 
+- (NSURL *)wipeContainerRootURL
+{
+	if (_wipeContainerRootURL == nil)
+	{
+		_wipeContainerRootURL = [self.rootURL URLByAppendingPathComponent:@"Erasure"];
+	}
+
+	return (_wipeContainerRootURL);
+}
+
+- (NSURL *)wipeContainerFilesRootURL
+{
+	if (_wipeContainerFilesRootURL == nil)
+	{
+		_wipeContainerFilesRootURL = [self.filesRootURL URLByAppendingPathComponent:@"Erasure"];
+	}
+
+	return (_wipeContainerFilesRootURL);
+}
+
 - (OCDatabase *)database
 {
 	if (_database == nil)
@@ -354,6 +374,14 @@
 		return ([drive1.name localizedCompare:drive2.name]);
 	}];
 
+	NSMutableSet<OCDriveID> *newActiveDrivesIDs = [newRemoteDrives setUsingMapper:^OCDriveID(OCDrive *drive) {
+		if (drive.isDeactivated)
+		{
+			// Do not include deactivated drives in newDrivesIDs
+			return (nil);
+		}
+		return (drive.identifier);
+	}];
 	NSMutableSet<OCDriveID> *newDrivesIDs = [newRemoteDrives setUsingMapper:^OCDriveID(OCDrive *drive) {
 		return (drive.identifier);
 	}];
@@ -361,6 +389,7 @@
 	__block NSMutableArray<OCDrive *> *remotelyAddedDrives = [NSMutableArray new];
 	__block NSMutableArray<OCDrive *> *remotelyRemovedDrives = [NSMutableArray new];
 	__block NSMutableArray<OCDrive *> *remotelyUpdatedDrives = [NSMutableArray new];
+	__block BOOL changedDetachedDrives = NO;
 
 	[self _modifyDriveListWith:^OCVaultDriveList *(OCVaultDriveList *driveList, BOOL *outDidModify) {
 		BOOL detachedDrivesChanged = NO;
@@ -371,10 +400,11 @@
 
 		// Find no longer detached drives
 		NSMutableArray<OCDrive *> *detachedDrives = [driveList.detachedDrives mutableCopy];
+		if (detachedDrives == nil) { detachedDrives = [NSMutableArray new]; }
 
 		for (OCDrive *detachedDrive in driveList.detachedDrives)
 		{
-			if ([newDrivesIDs containsObject:detachedDrive.identifier])
+			if ([newActiveDrivesIDs containsObject:detachedDrive.identifier])
 			{
 				OCTLogDebug(@[@"Drives"], @"Re-attached detached drive: %@", detachedDrive);
 
@@ -403,7 +433,7 @@
 		// Find added drives
 		for (OCDrive *newRemoteDrive in newRemoteDrives)
 		{
-			if (![existingDrivesIDs containsObject:newRemoteDrive.identifier])
+			if (![existingDrivesIDs containsObject:newRemoteDrive.identifier] && !newRemoteDrive.isDeactivated)
 			{
 				[remotelyAddedDrives addObject:newRemoteDrive];
 			}
@@ -424,19 +454,46 @@
 				{
 					if ([newRemoteDrive isSubstantiallyDifferentFrom:existingDrive])
 					{
-						OCLogDebug(@"1: %d", OCNANotEqual(newRemoteDrive.identifier, existingDrive.identifier));
-						OCLogDebug(@"2: %d", OCNANotEqual(newRemoteDrive.type, existingDrive.type));
-						OCLogDebug(@"3: %d", OCNANotEqual(newRemoteDrive.name, existingDrive.name));
-						OCLogDebug(@"4: %d", OCNANotEqual(newRemoteDrive.desc, existingDrive.desc));
-						OCLogDebug(@"5: %d", OCNANotEqual(newRemoteDrive.davRootURL, existingDrive.davRootURL));
-						OCLogDebug(@"6: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag));
-						OCLogDebug(@"7: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag));
-						OCLogDebug(@"8: %d", OCNANotEqual(newRemoteDrive.detachedSinceDate, existingDrive.detachedSinceDate));
-						OCLogDebug(@"9: %d", (newRemoteDrive.detachedState != existingDrive.detachedState));
-						OCLogDebug(@"10: %d", OCNANotEqual(newRemoteDrive.rootETag, existingDrive.rootETag));
+//						OCLogDebug(@"1: %d", OCNANotEqual(newRemoteDrive.identifier, existingDrive.identifier));
+//						OCLogDebug(@"2: %d", OCNANotEqual(newRemoteDrive.type, existingDrive.type));
+//						OCLogDebug(@"3: %d", OCNANotEqual(newRemoteDrive.name, existingDrive.name));
+//						OCLogDebug(@"4: %d", OCNANotEqual(newRemoteDrive.desc, existingDrive.desc));
+//						OCLogDebug(@"5: %d", OCNANotEqual(newRemoteDrive.davRootURL, existingDrive.davRootURL));
+//						OCLogDebug(@"6: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag));
+//						OCLogDebug(@"7: %d", OCNANotEqual([newRemoteDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [existingDrive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag));
+//						OCLogDebug(@"8: %d", OCNANotEqual(newRemoteDrive.detachedSinceDate, existingDrive.detachedSinceDate));
+//						OCLogDebug(@"9: %d", (newRemoteDrive.detachedState != existingDrive.detachedState));
+//						OCLogDebug(@"10: %d", OCNANotEqual(newRemoteDrive.rootETag, existingDrive.rootETag));
 
 						[remotelyUpdatedDrives addObject:newRemoteDrive];
 					}
+				}
+			}
+		}
+
+		// Find deactivated drives
+		for (OCDrive *newRemoteDrive in newRemoteDrives)
+		{
+			if ((newRemoteDrive.identifier != nil) && newRemoteDrive.isDeactivated)
+			{
+				OCDrive *existingDetachedDrive = [detachedDrives firstObjectMatching:^BOOL(OCDrive * _Nonnull detachedDrive) {
+					return ([detachedDrive.identifier isEqual:newRemoteDrive.identifier]);
+				}];
+
+				if (existingDetachedDrive != nil)
+				{
+					// Update existing detached drive with latest drive info
+					existingDetachedDrive.gaDrive = newRemoteDrive.gaDrive;
+				}
+				else
+				{
+					// Add as detached drive
+					newRemoteDrive.detachedState = OCDriveDetachedStateNew;
+					newRemoteDrive.detachedSinceDate = [NSDate new];
+
+					[detachedDrives addObject:newRemoteDrive];
+
+					detachedDrivesChanged = YES;
 				}
 			}
 		}
@@ -474,6 +531,8 @@
 		// Update detached drives
 		if (detachedDrivesChanged)
 		{
+			changedDetachedDrives = detachedDrivesChanged;
+
 			driveList.detachedDrives = detachedDrives;
 			*outDidModify = YES;
 		}
@@ -485,6 +544,12 @@
 	if ((remotelyAddedDrives.count > 0) || (remotelyUpdatedDrives.count > 0) || (remotelyRemovedDrives.count > 0))
 	{
 		[self signalDriveChangesWithAdditions:remotelyAddedDrives updates:remotelyUpdatedDrives removals:remotelyRemovedDrives];
+	}
+
+	// Signal detached drive changes
+	if (changedDetachedDrives)
+	{
+		[NSNotificationCenter.defaultCenter postNotificationName:OCVaultDetachedDrivesListChanged object:self];
 	}
 }
 
@@ -648,22 +713,26 @@
 
 - (void)_updateFromDriveList:(OCVaultDriveList *)driveList
 {
+	NSMutableSet<OCDriveID> *oldSubscribedDriveIDs = [_subscribedDrives setUsingMapper:^id _Nullable(OCDrive *drive) {
+		return (drive.identifier);
+	}];
+
 	[self willChangeValueForKey:@"activeDrives"];
 	[self willChangeValueForKey:@"subscribedDrives"];
 	[self willChangeValueForKey:@"detachedDrives"];
 
 	@synchronized(self)
 	{
-		_activeDrives = driveList.drives;
+		_activeDrives = [driveList.drives copy];
 		_activeDrivesByID = [_activeDrives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
 			return (drive.identifier);
 		}];
 
 		_subscribedDrives = [driveList.drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-			return ([driveList.subscribedDriveIDs containsObject:drive.identifier]);
+			return ([driveList.subscribedDriveIDs containsObject:drive.identifier] && !drive.isDeactivated);
 		}];
 
-		_detachedDrives = driveList.detachedDrives;
+		_detachedDrives = [driveList.detachedDrives copy];
 		_detachedDrivesByID = [_detachedDrives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
 			return (drive.identifier);
 		}];
@@ -672,6 +741,16 @@
 	[self didChangeValueForKey:@"detachedDrives"];
 	[self didChangeValueForKey:@"subscribedDrives"];
 	[self didChangeValueForKey:@"activeDrives"];
+
+	// Signal subscribed drive changes
+	NSMutableSet<OCDriveID> *newSubscribedDriveIDs = [_subscribedDrives setUsingMapper:^id _Nullable(OCDrive *drive) {
+		return (drive.identifier);
+	}];
+
+	if ((oldSubscribedDriveIDs != newSubscribedDriveIDs) && ![oldSubscribedDriveIDs isEqual:newSubscribedDriveIDs])
+	{
+		[NSNotificationCenter.defaultCenter postNotificationName:OCVaultSubscribedDrivesListChanged object:self];
+	}
 }
 
 #pragma mark - Operations
@@ -725,33 +804,58 @@
 {
 	if ((self.rootURL != nil) && (driveID != nil))
 	{
-		NSURL *driveRootURL = [self localDriveRootURLForDriveID:driveID];
+		void(^WipeDriveRootFolder)(OCCompletionHandler completionHandler) = ^(OCCompletionHandler completionHandler){
+			NSURL *driveRootURL;
 
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
-			NSError *error = nil;
-
-			NSFileManager *fileManager = [NSFileManager new];
-
-			fileManager.delegate = self;
-
-			if ([fileManager fileExistsAtPath:driveRootURL.path])
+			if ((driveRootURL = [self localDriveRootURLForDriveID:driveID]) != nil)
 			{
-				if (![fileManager removeItemAtURL:driveRootURL error:&error])
+				[self wipeItemAtURL:driveRootURL returnAfterMove:YES withCompletionHandler:completionHandler];
+			}
+			else
+			{
+				completionHandler(self, OCError(OCErrorInvalidParameter));
+			}
+		};
+
+		if (self.database.isOpened)
+		{
+			[self.database purgeCacheItemsWithDriveID:driveID completionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil)
 				{
-					if (error == nil)
+					if (completionHandler != nil)
 					{
-						error = OCError(OCErrorInternal);
+						completionHandler(self, error);
 					}
+
+					return;
 				}
 
-				OCFileOpLog(@"rm", error, @"Removing drive root for %@ at %@", driveID, driveRootURL.path);
-			}
+				WipeDriveRootFolder(completionHandler);
+			}];
+		}
+		else
+		{
+			[self.database openWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+				if (error != nil)
+				{
+					if (completionHandler != nil)
+					{
+						completionHandler(self, error);
+					}
 
-			if (completionHandler != nil)
-			{
-				completionHandler(self, error);
-			}
-		});
+					return;
+				}
+
+				WipeDriveRootFolder(^(id sender, NSError *wipeError){
+					[self.database closeWithCompletionHandler:^(OCDatabase *db, NSError *error) {
+						if (completionHandler != nil)
+						{
+							completionHandler(self, wipeError);
+						}
+					}];
+				});
+			}];
+		}
 	}
 	else
 	{
@@ -816,6 +920,136 @@
 		completionHandler(self, OCError(OCErrorInsufficientParameters));
 	}
 }
+
+#pragma mark - Wiping
+- (void)wipeItemAtURL:(NSURL *)itemURL returnAfterMove:(BOOL)returnAfterMove withCompletionHandler:(nullable OCCompletionHandler)inCompletionHandler
+{
+	NSURL *temporaryErasureURL = nil;
+	NSURL *wipeRootURL = nil;
+	NSError *createFolderError = nil;
+
+	if ([itemURL.path hasPrefix:self.filesRootURL.path])
+	{
+		// File/Folder to remove is inside filesRootURL -> use .wipeContainerFilesRootURL + UUID
+		wipeRootURL = self.wipeContainerFilesRootURL;
+	}
+	else
+	{
+		// File/Folder to remove is outside filesRootURL -> use .wipeContainerRootURL + UUID for everything else
+		wipeRootURL = self.wipeContainerRootURL;
+	}
+
+	temporaryErasureURL = [wipeRootURL URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+
+	if (![[NSFileManager defaultManager] createDirectoryAtURL:wipeRootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&createFolderError])
+	{
+		if (inCompletionHandler != nil)
+		{
+			inCompletionHandler(self, createFolderError);
+		}
+
+		return;
+	}
+
+	if ((itemURL != nil) && (temporaryErasureURL != nil))
+	{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+			NSError *error = nil;
+			OCCompletionHandler completionHandler = inCompletionHandler;
+			NSFileManager *fileManager = [NSFileManager new];
+
+			fileManager.delegate = self;
+
+			if ([fileManager fileExistsAtPath:itemURL.path])
+			{
+				NSURL *removeURL = itemURL;
+
+				// Move to erasureTargetURL
+				if ([fileManager moveItemAtURL:itemURL toURL:temporaryErasureURL error:&error])
+				{
+					removeURL = temporaryErasureURL;
+
+					if (returnAfterMove && (completionHandler != nil))
+					{
+						completionHandler(self, nil);
+						completionHandler = nil;
+					}
+				}
+
+				// Remove actualEraseURL (which is either inURL or temporaryErasureURL)
+				if (![fileManager removeItemAtURL:removeURL error:&error])
+				{
+					if (error == nil)
+					{
+						error = OCError(OCErrorInternal);
+					}
+				}
+
+				OCFileOpLog(@"rm", error, @"Removing erasure content at %@ (previously moved from %@)", removeURL.path, itemURL.path);
+			}
+
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		});
+	}
+}
+
+- (void)emptyWipeFoldersWithCompletionHandler:(void(^)(NSError * _Nullable error))completionHandler
+{
+	NSMutableArray<NSURL *> *wipeURLs = [NSMutableArray new];
+	NSError *error = nil;
+
+	NSFileManager *fileManager = [NSFileManager new];
+	fileManager.delegate = self;
+
+	OCWaitInit(wipeWait);
+
+	if ([fileManager fileExistsAtPath:self.wipeContainerRootURL.path])
+	{
+		NSArray<NSURL *> *contentURLs;
+
+		if ((contentURLs = [fileManager contentsOfDirectoryAtURL:self.wipeContainerRootURL includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsSubdirectoryDescendants error:&error]) != nil)
+		{
+			[wipeURLs addObjectsFromArray:contentURLs];
+		}
+	}
+
+	if ([fileManager fileExistsAtPath:self.wipeContainerFilesRootURL.path])
+	{
+		NSArray<NSURL *> *contentURLs;
+
+		if ((contentURLs = [fileManager contentsOfDirectoryAtURL:self.wipeContainerFilesRootURL includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsSubdirectoryDescendants error:&error]) != nil)
+		{
+			[wipeURLs addObjectsFromArray:contentURLs];
+		}
+	}
+
+	dispatch_queue_t asyncWipeQueue = dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0);
+
+	for (NSURL *wipeURL in wipeURLs)
+	{
+		OCWaitWillStartTask(wipeWait);
+
+		dispatch_async(asyncWipeQueue, ^{
+			NSFileManager *fileManager = [NSFileManager new];
+			fileManager.delegate = self;
+
+			[fileManager removeItemAtURL:wipeURL error:nil];
+
+			OCWaitDidFinishTask(wipeWait);
+		});
+	}
+
+	OCWaitOnCompletion(wipeWait, asyncWipeQueue, ^{
+		if (completionHandler != nil)
+		{
+			completionHandler(nil);
+		}
+	});
+}
+
 
 #pragma mark - URL and path builders
 - (NSURL *)localDriveRootURLForDriveID:(nullable OCDriveID)driveID

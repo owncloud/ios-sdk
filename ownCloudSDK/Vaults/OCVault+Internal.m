@@ -464,3 +464,6 @@
 #endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @end
+
+NSNotificationName OCVaultDetachedDrivesListChanged = @"OCVaultDetachedDrivesListChanged";
+NSNotificationName OCVaultSubscribedDrivesListChanged = @"OCVaultSubscribedDrivesListChanged";

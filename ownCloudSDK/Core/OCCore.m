@@ -67,6 +67,7 @@
 #import "NSArray+OCFiltering.h"
 #import "OCCore+DataSources.h"
 #import "OCDataSourceKVO.h"
+#import "OCVault+Internal.h"
 
 @interface OCCore ()
 {
@@ -289,7 +290,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_lastRootETagsByDriveID = [NSMutableDictionary new];
 
 		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
-		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+		_subscribedDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:nil];
+
+		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
 				return ([drive.type isEqual:OCDriveTypeProject]);
 			}]);
@@ -504,15 +507,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			// Get latest drive list
 			if (startError == nil)
 			{
-//				__block NSArray<OCDrive *> *cachedDrives = nil;
-//
-//				OCSyncExec(retrieveDriveList, {
-//					[self.database retrieveDrivesOnlyWithID:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCDrive *> *drives) {
-//						cachedDrives = drives;
-//						OCSyncExecDone(retrieveDriveList);
-//					}];
-//				});
-
 				[self initializeWithDrives];
 
 				self->_connection.drives = self.vault.activeDrives;
@@ -614,6 +608,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
 						}
 					}
+
+					// Shutdown drives
+					[weakSelf shutdownWithDrives];
 
 					// Tear down item policies
 					[weakSelf teardownItemPolicies];
@@ -2083,148 +2080,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			_drivesByID[drive.identifier] = drive;
 			_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
 		}
+
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_handleSubscribedDrivesUpdate:) name:OCVaultSubscribedDrivesListChanged object:nil];
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_handleDetachedDrivesUpdate:) name:OCVaultDetachedDrivesListChanged object:nil];
 	}
 }
 
-//- (void)updateWithDrives:(NSArray<OCDrive *> *)drives initialize:(BOOL)doInitialize
-//{
-//	NSMutableArray<OCDrive *> *removedDrives = nil;
-//	NSMutableArray<OCDrive *> *updatedDrives = nil;
-//	NSMutableArray<OCDrive *> *addedDrives = nil;
-//
-//	@synchronized(_drives)
-//	{
-//		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d existing=%@ new=%@", doInitialize, _drives, drives);
-//
-//		if (doInitialize)
-//		{
-//			// Initialize from provided drives
-//			[self willChangeValueForKey:@"drives"];
-//			[_drives removeAllObjects];
-//			[_drives addObjectsFromArray:drives];
-//			[self didChangeValueForKey:@"drives"];
-//
-//			[_drivesByID removeAllObjects];
-//			@synchronized(_lastRootETagsByDriveID)
-//			{
-//				for (OCDrive *drive in drives)
-//				{
-//					_drivesByID[drive.identifier] = drive;
-//					_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
-//				}
-//			}
-//		}
-//		else
-//		{
-//			// Find differences
-//			NSMutableArray<OCDriveID> *removedDriveIDs = [[_drivesByID allKeys] mutableCopy];
-//
-//			for (OCDrive *drive in drives)
-//			{
-//				if (drive.identifier != nil)
-//				{
-//					OCDrive *existingDrive = nil;
-//
-//					if ((existingDrive = _drivesByID[drive.identifier]) == nil)
-//					{
-//						// New drive found
-//						if (addedDrives == nil) { addedDrives = [NSMutableArray new]; }
-//						[addedDrives addObject:drive];
-//					}
-//					else
-//					{
-//						// Existing drive found, remove it from list of removed drives
-//						[removedDriveIDs removeObject:drive.identifier];
-//
-//						// Has drive changed substantially?
-//						if ([existingDrive isSubstantiallyDifferentFrom:drive])
-//						{
-//							// If YES, add to list of updated drives
-//							if (updatedDrives == nil) { updatedDrives = [NSMutableArray new]; }
-//							[updatedDrives addObject:drive];
-//						}
-//					}
-//				}
-//
-//				_drivesByID[drive.identifier] = drive;
-//			}
-//
-//			for (OCDriveID removedDriveID in removedDriveIDs)
-//			{
-//				OCDrive *drive = nil;
-//
-//				if ((drive = _drivesByID[removedDriveID]) != nil)
-//				{
-//					if (removedDrives == nil) { removedDrives = [NSMutableArray new]; }
-//					[removedDrives addObject:drive];
-//				}
-//			}
-//
-//			// Update _drivesByID
-//			[_drivesByID removeObjectsForKeys:removedDriveIDs];
-//
-//			// Update _drives
-//			[self willChangeValueForKey:@"drives"];
-//			[_drives removeAllObjects];
-//			[_drives addObjectsFromArray:drives];
-//			[self didChangeValueForKey:@"drives"];
-//		}
-//
-//		// Sort _drives by type and name
-//		[_drives sortUsingComparator:^NSComparisonResult(OCDrive *drive1, OCDrive *drive2) {
-//			NSComparisonResult result;
-//
-//			if ((result = [drive1.type localizedCompare:drive2.type]) != NSOrderedSame)
-//			{
-//				return (result);
-//			}
-//
-//			return ([drive1.name localizedCompare:drive2.name]);
-//		}];
-//
-//		OCTLogDebug(@[@"DrivesUpdate"], @"Drives: init=%d now=%@, updated=%@, added=%@, removed=%@", doInitialize, _drives, updatedDrives, addedDrives, removedDrives);
-//
-//		// Update data sources
-//		[_drivesDataSource setVersionedItems:_drives];
-//
-//		NSMutableArray<OCDrive *> *hierarchicDrivesTopLevelItems = [[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-//			if ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual])
-//			{
-//				return (YES);
-//			}
-//
-//			return (NO);
-//		}] mutableCopy];
-//
-//		// [hierarchicDrivesTopLevelItems addObject:_hierarchicDrivesLogicalProjectsFolderPresentable];
-//
-//		[_hierarchicDrivesDataSource setVersionedItems:hierarchicDrivesTopLevelItems];
-//
-//		[_projectDrivesDataSource setVersionedItems:[_drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-//			return ([drive.type isEqual:OCDriveTypeProject]);
-//		}]];
-//
-//		if (_drivesDataSourceSubscription == nil)
-//		{
-//			_drivesDataSourceSubscription = [_drivesDataSource subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
-//				OCDataSourceSnapshot *snapshot = [subscription snapshotResettingChangeTracking:YES];
-//
-//				OCTLogDebug(@[@"DataSource"], @"Drives: %@", snapshot.items);
-//				OCTLogDebug(@[@"DataSource"], @"Added drives: %@", snapshot.addedItems);
-//				OCTLogDebug(@[@"DataSource"], @"Updated drives: %@", snapshot.updatedItems);
-//				OCTLogDebug(@[@"DataSource"], @"Removed drives: %@", snapshot.removedItems);
-//
-//				[NSNotificationCenter.defaultCenter postNotificationName:OCCoreDriveListChanged object:self.bookmark.uuid];
-//			} onQueue:OCDataSourceSubscription.defaultUpdateQueue trackDifferences:YES performIntialUpdate:YES];
-//		}
-//	}
-//
-//	// Notify about removed and added drives - outside of lock
-////	if ((addedDrives.count > 0) || (updatedDrives.count > 0) || (removedDrives.count > 0))
-////	{
-////		[self handleDriveAdditions:addedDrives updates:updatedDrives removals:removedDrives];
-////	}
-//}
+- (void)shutdownWithDrives
+{
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCVaultSubscribedDrivesListChanged object:nil];
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCVaultDetachedDrivesListChanged object:nil];
+}
 
 - (void)subscribeToDrive:(OCDrive *)drive
 {
@@ -2246,6 +2112,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (self.vault.subscribedDrives);
 }
 
+- (NSArray<OCDrive *> *)detachedDrives
+{
+	return (self.vault.detachedDrives);
+}
+
 - (OCDrive *)driveWithIdentifier:(OCDriveID)driveID
 {
 	if (driveID == nil) { return (nil); }
@@ -2254,6 +2125,78 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	{
 		return (_drivesByID[driveID]);
 	}
+}
+
+- (void)_handleDetachedDrivesUpdate:(NSNotification *)notification
+{
+	if (notification.object != _vault)
+	{
+		// Only react to notifications from our vault
+		return;
+	}
+
+	[self beginActivity:@"Drive detach handling"];
+
+	[self queueBlock:^{
+		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			NSArray<OCDrive *> *detachedDrives = self.vault.detachedDrives;
+			__block NSError *returnError = nil;
+
+			for (OCDrive *detachedDrive in detachedDrives)
+			{
+				OCDriveID driveID = detachedDrive.identifier;
+
+				if ((detachedDrive.detachedState == OCDriveDetachedStateNew) && (driveID != nil))
+				{
+					[self.database removeCacheItemsWithDriveID:driveID syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						returnError = error;
+					}];
+
+					if (returnError != nil)
+					{
+						return (returnError);
+					}
+
+					[self.vault changeDetachedState:OCDriveDetachedStateItemsRemoved forDriveID:driveID];
+				}
+			}
+
+			return ((NSError *)returnError);
+		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			[self endActivity:@"Drive detach handling"];
+		}];
+	}];
+}
+
+- (void)_handleSubscribedDrivesUpdate:(NSNotification *)notification
+{
+	if (notification.object != _vault)
+	{
+		// Only react to notifications from our vault
+		return;
+	}
+
+	[self beginActivity:@"Subscribed drives update handling"];
+
+	[self queueBlock:^{
+		NSArray<OCQuery *> *queries;
+
+		@synchronized(self->_queries)
+		{
+			queries = [self->_queries copy];
+		}
+
+		for (OCQuery *query in queries)
+		{
+			if (query.isCustom)
+			{
+				// Reload all custom queries as drives are added/removed
+				[self reloadQuery:query];
+			}
+		}
+
+		[self endActivity:@"Subscribed drives update handling"];
+	}];
 }
 
 #pragma mark - Indicating activity requiring the core

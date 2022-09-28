@@ -33,10 +33,11 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 {
 	OCDriveDetachedStateNone,
 
-	OCDriveDetachedStateNew,
-	OCDriveDetachedStateHasUserChanges,
-	OCDriveDetachedStateRetain,
-	OCDriveDetachedStateDisposable
+	OCDriveDetachedStateNew,		//!< Initial state when a drive has been detected as detached, before further examination
+	OCDriveDetachedStateHasUserChanges,	//!< The detached drive has user changes and should be retained (not implemented yet)
+	OCDriveDetachedStateRetain,		//!< The detached drive should be retained (not implemented yet)
+	OCDriveDetachedStateItemsRemoved,	//!< The detached drive's items have been marked as removed in the database and both database and files will be disposed of through the vacuum item policy
+	OCDriveDetachedStateDisposable		//!< The detached drive and its items on disk and in the database can be disposed of (not implemented yet)
 };
 
 @interface OCDrive : NSObject <NSSecureCoding, OCDataItem, OCDataItemVersioning>

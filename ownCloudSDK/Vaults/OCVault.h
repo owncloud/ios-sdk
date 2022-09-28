@@ -44,6 +44,8 @@
 
 				[Bookmark UUID].ockvs			- OCVault.keyValueStoreURL
 
+				"Erasure"/				- OCVault.wipeContainerRootURL (folder whose contents should be erased)
+
 		"HTTPPipeline"/						- OCVault.httpPipelineRootURL
 			backend.sqlite					- OCHTTPPipelineManager.backendRootURL
 			tmp/						- OCHTTPPipelineBackend.backendTemporaryFilesRootURL
@@ -68,6 +70,8 @@
 
 			"TUS"/						- Storage for TUS segments (OCSyncActionUpload)
 				[Random UUID]
+
+			"Erasure"/					- OCVault.wipeContainerFilesRootURL (folder whose contents should be erased)
 
 			*OC10/without drives*
 			[Local ID]/					- OCVault.localFolderURLForItem
@@ -96,6 +100,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	NSURL *_filesRootURL;
 	NSURL *_httpPipelineRootURL;
 	NSURL *_temporaryDownloadURL;
+	NSURL *_wipeContainerRootURL;
+	NSURL *_wipeContainerFilesRootURL;
 
 	#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 	NSFileProviderDomain *_fileProviderDomain;
@@ -133,6 +139,9 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
 
+@property(nullable,readonly,nonatomic) NSURL *wipeContainerRootURL; //!< The vault's rootURL subfolder for items to erase.
+@property(nullable,readonly,nonatomic) NSURL *wipeContainerFilesRootURL; //!< The vault's filesRootURL subfolder for items to erase.
+
 @property(nullable,readonly,class,nonatomic) NSURL *storageRootURL; //!< The root URL for file storage for file providers
 
 + (NSURL *)storageRootURLForBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID; //!< The root URL for file storage: globally for bookmarkUUID==nil, per-account if a bookmarkUUID is passed
@@ -155,8 +164,11 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 #pragma mark - Offline operations
 - (void)compactWithSelector:(nullable OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vaults contents, disposing of unneeded files. If a selector is provided, only files for which it ALSO returns YES are disposed off.
-- (void)eraseDrive:(OCDriveID)driveID withCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the contents of a drive
 - (void)eraseWithCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the vaults contents.
+
+#pragma mark - Wiping
+- (void)wipeItemAtURL:(NSURL *)itemURL returnAfterMove:(BOOL)returnAfterMove withCompletionHandler:(nullable OCCompletionHandler)inCompletionHandler; //!< Moves the filesystem item (file/folder) into a special to-be-wiped folder, then deletes it there. If the app is terminated while at it, the filesystem item to wipe will be deleted at the next call of -emptyWipeFoldersWithCompletionHandler:
+- (void)emptyWipeFoldersWithCompletionHandler:(void(^)(NSError * _Nullable error))completionHandler; //!< Deletes the contents of the vault's wipe folders.
 
 #pragma mark - Drives
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *activeDrives; //!< All drives returned by the server
@@ -173,6 +185,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 - (void)startDriveUpdates; //!< Initializes the drive properties and starts observing for changes. This is usually called by -openWithCompletionHandler:. Calling this without opening a vault allows getting access to the drives list and be notified of changes. Useful mostly for VFS implementations.
 - (void)stopDriveUpdates; //!< Stops observing for changes. This is usually called by -closeWithCompletionHandler:.
+
+- (void)eraseDrive:(OCDriveID)driveID withCompletionHandler:(nullable OCCompletionHandler)completionHandler; //!< Completely erases the contents of a drive.
 
 #pragma mark - URL and path builders
 - (nullable NSURL *)localDriveRootURLForDriveID:(nullable OCDriveID)driveID; //!< Returns the root folder for the drive with ID driveID

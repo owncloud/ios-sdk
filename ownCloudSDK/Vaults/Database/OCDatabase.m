@@ -463,6 +463,58 @@
 	}
 }
 
+- (void)removeCacheItemsWithDriveID:(OCDriveID)driveID syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler;
+{
+	if ((driveID == nil) || (OCTypedCast(driveID, NSString).length == 0))
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+	}
+	else
+	{
+		OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
+
+		OCSQLiteQuery *query = [OCSQLiteQuery queryUpdatingRowsWhere:@{
+			@"driveID" 	: driveID,
+		} inTable:OCDatabaseTableNameMetaData withRowValues:@{
+			@"removed" 	: @(YES),
+			@"syncAnchor" 	: syncAnchor,
+			@"mdTimestamp"	: mdTimestamp
+		} completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}];
+
+		[self.sqlDB executeQuery:query];
+	}
+}
+
+- (void)purgeCacheItemsWithDriveID:(OCDriveID)driveID completionHandler:(OCDatabaseCompletionHandler)completionHandler
+{
+	if ((driveID == nil) || (OCTypedCast(driveID, NSString).length == 0))
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(self, nil);
+		}
+	}
+	else
+	{
+		OCSQLiteQuery *query = [OCSQLiteQuery queryDeletingRowsWhere:@{ @"driveID" : driveID } fromTable:OCDatabaseTableNameMetaData completionHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error) {
+			if (completionHandler != nil)
+			{
+				completionHandler(self, error);
+			}
+		}];
+
+		[self.sqlDB executeQuery:query];
+	}
+}
+
 - (OCItem *)_itemFromResultDict:(NSDictionary<NSString *,id<NSObject>> *)resultDict
 {
 	NSData *itemData;

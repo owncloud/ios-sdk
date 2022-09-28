@@ -37,4 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern NSNotificationName OCVaultDetachedDrivesListChanged; //!< Notification sent when an OCVault's .detachedDrives list has changed. Sent from the thread that modified the list in KVO. The object is the OCVault.
+extern NSNotificationName OCVaultSubscribedDrivesListChanged; //!< Notification sent when an OCVault's .subscribedDrivesList has changed. Sent from the thread that modified the list in KVO. The object is the OCVault.
+
 NS_ASSUME_NONNULL_END

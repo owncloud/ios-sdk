@@ -25,6 +25,11 @@
 	return (_drivesDataSource);
 }
 
+- (NSArray<OCDrive *> *)subscribedDrivesDataSource
+{
+	return (_subscribedDrivesDataSource);
+}
+
 - (OCDataSource *)hierarchicDrivesDataSource
 {
 	return (_hierarchicDrivesDataSource);

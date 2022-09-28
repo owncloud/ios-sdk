@@ -245,6 +245,8 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCDataSourceArray *_drivesDataSource;
 	OCDataSourceSubscription *_drivesDataSourceSubscription;
 
+	OCDataSourceArray *_subscribedDrivesDataSource;
+
 	OCDataSourceArray *_hierarchicDrivesDataSource;
 	OCDataItemPresentable *_hierarchicDrivesLogicalProjectsFolderPresentable;
 
