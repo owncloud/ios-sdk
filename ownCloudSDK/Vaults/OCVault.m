@@ -943,6 +943,12 @@
 
 	if (![[NSFileManager defaultManager] createDirectoryAtURL:wipeRootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&createFolderError])
 	{
+		if (createFolderError == nil)
+		{
+			// Directory creation failed but no error was returned
+			createFolderError = OCError(OCErrorInternal);
+		}
+
 		if (inCompletionHandler != nil)
 		{
 			inCompletionHandler(self, createFolderError);
@@ -975,6 +981,8 @@
 						completionHandler = nil;
 					}
 				}
+
+				OCFileOpLog(@"mv", error, @"Moved erasure content from %@ to %@", itemURL.path, removeURL.path);
 
 				// Remove actualEraseURL (which is either inURL or temporaryErasureURL)
 				if (![fileManager removeItemAtURL:removeURL error:&error])
