@@ -17,6 +17,7 @@
 // occgen: includes
 #import "GAUser.h"
 #import "GADrive.h"
+#import "GAGroup.h"
 #import "GAPasswordProfile.h"
 
 // occgen: type start
@@ -28,44 +29,14 @@
 	GAUser *instance = [self new];
 
 	GA_MAP(identifier, "id", NSString, Nil);
-	GA_SET(deletedDateTime, NSDate, Nil);
-	GA_SET(accountEnabled, NSNumber, Nil);
-	GA_SET(businessPhones, NSString, NSArray.class);
-	GA_SET(city, NSString, Nil);
-	GA_SET(companyName, NSString, Nil);
-	GA_SET(country, NSString, Nil);
-	GA_SET(createdDateTime, NSDate, Nil);
-	GA_SET(department, NSString, Nil);
 	GA_SET(displayName, NSString, Nil);
-	GA_SET(faxNumber, NSString, Nil);
-	GA_SET(givenName, NSString, Nil);
-	GA_SET(lastPasswordChangeDateTime, NSDate, Nil);
-	GA_SET(legalAgeGroupClassification, NSString, Nil);
-	GA_SET(mail, NSString, Nil);
-	GA_SET(mailNickname, NSString, Nil);
-	GA_SET(mobilePhone, NSString, Nil);
-	GA_SET(onPremisesDistinguishedName, NSString, Nil);
-	GA_SET(onPremisesDomainName, NSString, Nil);
-	GA_SET(onPremisesImmutableId, NSString, Nil);
-	GA_SET(onPremisesSyncEnabled, NSNumber, Nil);
-	GA_SET(onPremisesLastSyncDateTime, NSDate, Nil);
-	GA_SET(onPremisesSamAccountName, NSString, Nil);
-	GA_SET(onPremisesUserPrincipalName, NSString, Nil);
-	GA_SET(officeLocation, NSString, Nil);
-	GA_SET(passwordProfile, GAPasswordProfile, Nil);
-	GA_SET(postalCode, NSString, Nil);
-	GA_SET(preferredLanguage, NSString, Nil);
-	GA_SET(state, NSString, Nil);
-	GA_SET(streetAddress, NSString, Nil);
-	GA_SET(surname, NSString, Nil);
-	GA_SET(usageLocation, NSString, Nil);
-	GA_SET(userPrincipalName, NSString, Nil);
-	GA_SET(userType, NSString, Nil);
-	GA_SET(aboutMe, NSString, Nil);
-	GA_SET(birthday, NSDate, Nil);
-	GA_SET(preferredName, NSString, Nil);
-	GA_SET(drive, GADrive, Nil);
 	GA_SET(drives, GADrive, NSArray.class);
+	GA_SET(drive, GADrive, Nil);
+	GA_SET(mail, NSString, Nil);
+	GA_SET(memberOf, GAGroup, NSArray.class);
+	GA_SET(onPremisesSamAccountName, NSString, Nil);
+	GA_SET(passwordProfile, GAPasswordProfile, Nil);
+	GA_SET(surname, NSString, Nil);
 
 	return (instance);
 }
@@ -81,44 +52,14 @@
 	if ((self = [super init]) != nil)
 	{
 		_identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
-		_deletedDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"deletedDateTime"];
-		_accountEnabled = [decoder decodeObjectOfClass:NSNumber.class forKey:@"accountEnabled"];
-		_businessPhones = [decoder decodeObjectOfClasses:[NSSet setWithObjects: NSString.class, NSArray.class, nil] forKey:@"businessPhones"];
-		_city = [decoder decodeObjectOfClass:NSString.class forKey:@"city"];
-		_companyName = [decoder decodeObjectOfClass:NSString.class forKey:@"companyName"];
-		_country = [decoder decodeObjectOfClass:NSString.class forKey:@"country"];
-		_createdDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"createdDateTime"];
-		_department = [decoder decodeObjectOfClass:NSString.class forKey:@"department"];
 		_displayName = [decoder decodeObjectOfClass:NSString.class forKey:@"displayName"];
-		_faxNumber = [decoder decodeObjectOfClass:NSString.class forKey:@"faxNumber"];
-		_givenName = [decoder decodeObjectOfClass:NSString.class forKey:@"givenName"];
-		_lastPasswordChangeDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastPasswordChangeDateTime"];
-		_legalAgeGroupClassification = [decoder decodeObjectOfClass:NSString.class forKey:@"legalAgeGroupClassification"];
-		_mail = [decoder decodeObjectOfClass:NSString.class forKey:@"mail"];
-		_mailNickname = [decoder decodeObjectOfClass:NSString.class forKey:@"mailNickname"];
-		_mobilePhone = [decoder decodeObjectOfClass:NSString.class forKey:@"mobilePhone"];
-		_onPremisesDistinguishedName = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesDistinguishedName"];
-		_onPremisesDomainName = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesDomainName"];
-		_onPremisesImmutableId = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesImmutableId"];
-		_onPremisesSyncEnabled = [decoder decodeObjectOfClass:NSNumber.class forKey:@"onPremisesSyncEnabled"];
-		_onPremisesLastSyncDateTime = [decoder decodeObjectOfClass:NSDate.class forKey:@"onPremisesLastSyncDateTime"];
-		_onPremisesSamAccountName = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesSamAccountName"];
-		_onPremisesUserPrincipalName = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesUserPrincipalName"];
-		_officeLocation = [decoder decodeObjectOfClass:NSString.class forKey:@"officeLocation"];
-		_passwordProfile = [decoder decodeObjectOfClass:GAPasswordProfile.class forKey:@"passwordProfile"];
-		_postalCode = [decoder decodeObjectOfClass:NSString.class forKey:@"postalCode"];
-		_preferredLanguage = [decoder decodeObjectOfClass:NSString.class forKey:@"preferredLanguage"];
-		_state = [decoder decodeObjectOfClass:NSString.class forKey:@"state"];
-		_streetAddress = [decoder decodeObjectOfClass:NSString.class forKey:@"streetAddress"];
-		_surname = [decoder decodeObjectOfClass:NSString.class forKey:@"surname"];
-		_usageLocation = [decoder decodeObjectOfClass:NSString.class forKey:@"usageLocation"];
-		_userPrincipalName = [decoder decodeObjectOfClass:NSString.class forKey:@"userPrincipalName"];
-		_userType = [decoder decodeObjectOfClass:NSString.class forKey:@"userType"];
-		_aboutMe = [decoder decodeObjectOfClass:NSString.class forKey:@"aboutMe"];
-		_birthday = [decoder decodeObjectOfClass:NSDate.class forKey:@"birthday"];
-		_preferredName = [decoder decodeObjectOfClass:NSString.class forKey:@"preferredName"];
-		_drive = [decoder decodeObjectOfClass:GADrive.class forKey:@"drive"];
 		_drives = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GADrive.class, NSArray.class, nil] forKey:@"drives"];
+		_drive = [decoder decodeObjectOfClass:GADrive.class forKey:@"drive"];
+		_mail = [decoder decodeObjectOfClass:NSString.class forKey:@"mail"];
+		_memberOf = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAGroup.class, NSArray.class, nil] forKey:@"memberOf"];
+		_onPremisesSamAccountName = [decoder decodeObjectOfClass:NSString.class forKey:@"onPremisesSamAccountName"];
+		_passwordProfile = [decoder decodeObjectOfClass:GAPasswordProfile.class forKey:@"passwordProfile"];
+		_surname = [decoder decodeObjectOfClass:NSString.class forKey:@"surname"];
 	}
 
 	return (self);
@@ -128,50 +69,20 @@
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeObject:_identifier forKey:@"identifier"];
-	[coder encodeObject:_deletedDateTime forKey:@"deletedDateTime"];
-	[coder encodeObject:_accountEnabled forKey:@"accountEnabled"];
-	[coder encodeObject:_businessPhones forKey:@"businessPhones"];
-	[coder encodeObject:_city forKey:@"city"];
-	[coder encodeObject:_companyName forKey:@"companyName"];
-	[coder encodeObject:_country forKey:@"country"];
-	[coder encodeObject:_createdDateTime forKey:@"createdDateTime"];
-	[coder encodeObject:_department forKey:@"department"];
 	[coder encodeObject:_displayName forKey:@"displayName"];
-	[coder encodeObject:_faxNumber forKey:@"faxNumber"];
-	[coder encodeObject:_givenName forKey:@"givenName"];
-	[coder encodeObject:_lastPasswordChangeDateTime forKey:@"lastPasswordChangeDateTime"];
-	[coder encodeObject:_legalAgeGroupClassification forKey:@"legalAgeGroupClassification"];
-	[coder encodeObject:_mail forKey:@"mail"];
-	[coder encodeObject:_mailNickname forKey:@"mailNickname"];
-	[coder encodeObject:_mobilePhone forKey:@"mobilePhone"];
-	[coder encodeObject:_onPremisesDistinguishedName forKey:@"onPremisesDistinguishedName"];
-	[coder encodeObject:_onPremisesDomainName forKey:@"onPremisesDomainName"];
-	[coder encodeObject:_onPremisesImmutableId forKey:@"onPremisesImmutableId"];
-	[coder encodeObject:_onPremisesSyncEnabled forKey:@"onPremisesSyncEnabled"];
-	[coder encodeObject:_onPremisesLastSyncDateTime forKey:@"onPremisesLastSyncDateTime"];
-	[coder encodeObject:_onPremisesSamAccountName forKey:@"onPremisesSamAccountName"];
-	[coder encodeObject:_onPremisesUserPrincipalName forKey:@"onPremisesUserPrincipalName"];
-	[coder encodeObject:_officeLocation forKey:@"officeLocation"];
-	[coder encodeObject:_passwordProfile forKey:@"passwordProfile"];
-	[coder encodeObject:_postalCode forKey:@"postalCode"];
-	[coder encodeObject:_preferredLanguage forKey:@"preferredLanguage"];
-	[coder encodeObject:_state forKey:@"state"];
-	[coder encodeObject:_streetAddress forKey:@"streetAddress"];
-	[coder encodeObject:_surname forKey:@"surname"];
-	[coder encodeObject:_usageLocation forKey:@"usageLocation"];
-	[coder encodeObject:_userPrincipalName forKey:@"userPrincipalName"];
-	[coder encodeObject:_userType forKey:@"userType"];
-	[coder encodeObject:_aboutMe forKey:@"aboutMe"];
-	[coder encodeObject:_birthday forKey:@"birthday"];
-	[coder encodeObject:_preferredName forKey:@"preferredName"];
-	[coder encodeObject:_drive forKey:@"drive"];
 	[coder encodeObject:_drives forKey:@"drives"];
+	[coder encodeObject:_drive forKey:@"drive"];
+	[coder encodeObject:_mail forKey:@"mail"];
+	[coder encodeObject:_memberOf forKey:@"memberOf"];
+	[coder encodeObject:_onPremisesSamAccountName forKey:@"onPremisesSamAccountName"];
+	[coder encodeObject:_passwordProfile forKey:@"passwordProfile"];
+	[coder encodeObject:_surname forKey:@"surname"];
 }
 
 // occgen: type debug description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_deletedDateTime!=nil) ? [NSString stringWithFormat:@", deletedDateTime: %@", _deletedDateTime] : @""), ((_accountEnabled!=nil) ? [NSString stringWithFormat:@", accountEnabled: %@", _accountEnabled] : @""), ((_businessPhones!=nil) ? [NSString stringWithFormat:@", businessPhones: %@", _businessPhones] : @""), ((_city!=nil) ? [NSString stringWithFormat:@", city: %@", _city] : @""), ((_companyName!=nil) ? [NSString stringWithFormat:@", companyName: %@", _companyName] : @""), ((_country!=nil) ? [NSString stringWithFormat:@", country: %@", _country] : @""), ((_createdDateTime!=nil) ? [NSString stringWithFormat:@", createdDateTime: %@", _createdDateTime] : @""), ((_department!=nil) ? [NSString stringWithFormat:@", department: %@", _department] : @""), ((_displayName!=nil) ? [NSString stringWithFormat:@", displayName: %@", _displayName] : @""), ((_faxNumber!=nil) ? [NSString stringWithFormat:@", faxNumber: %@", _faxNumber] : @""), ((_givenName!=nil) ? [NSString stringWithFormat:@", givenName: %@", _givenName] : @""), ((_lastPasswordChangeDateTime!=nil) ? [NSString stringWithFormat:@", lastPasswordChangeDateTime: %@", _lastPasswordChangeDateTime] : @""), ((_legalAgeGroupClassification!=nil) ? [NSString stringWithFormat:@", legalAgeGroupClassification: %@", _legalAgeGroupClassification] : @""), ((_mail!=nil) ? [NSString stringWithFormat:@", mail: %@", _mail] : @""), ((_mailNickname!=nil) ? [NSString stringWithFormat:@", mailNickname: %@", _mailNickname] : @""), ((_mobilePhone!=nil) ? [NSString stringWithFormat:@", mobilePhone: %@", _mobilePhone] : @""), ((_onPremisesDistinguishedName!=nil) ? [NSString stringWithFormat:@", onPremisesDistinguishedName: %@", _onPremisesDistinguishedName] : @""), ((_onPremisesDomainName!=nil) ? [NSString stringWithFormat:@", onPremisesDomainName: %@", _onPremisesDomainName] : @""), ((_onPremisesImmutableId!=nil) ? [NSString stringWithFormat:@", onPremisesImmutableId: %@", _onPremisesImmutableId] : @""), ((_onPremisesSyncEnabled!=nil) ? [NSString stringWithFormat:@", onPremisesSyncEnabled: %@", _onPremisesSyncEnabled] : @""), ((_onPremisesLastSyncDateTime!=nil) ? [NSString stringWithFormat:@", onPremisesLastSyncDateTime: %@", _onPremisesLastSyncDateTime] : @""), ((_onPremisesSamAccountName!=nil) ? [NSString stringWithFormat:@", onPremisesSamAccountName: %@", _onPremisesSamAccountName] : @""), ((_onPremisesUserPrincipalName!=nil) ? [NSString stringWithFormat:@", onPremisesUserPrincipalName: %@", _onPremisesUserPrincipalName] : @""), ((_officeLocation!=nil) ? [NSString stringWithFormat:@", officeLocation: %@", _officeLocation] : @""), ((_passwordProfile!=nil) ? [NSString stringWithFormat:@", passwordProfile: %@", _passwordProfile] : @""), ((_postalCode!=nil) ? [NSString stringWithFormat:@", postalCode: %@", _postalCode] : @""), ((_preferredLanguage!=nil) ? [NSString stringWithFormat:@", preferredLanguage: %@", _preferredLanguage] : @""), ((_state!=nil) ? [NSString stringWithFormat:@", state: %@", _state] : @""), ((_streetAddress!=nil) ? [NSString stringWithFormat:@", streetAddress: %@", _streetAddress] : @""), ((_surname!=nil) ? [NSString stringWithFormat:@", surname: %@", _surname] : @""), ((_usageLocation!=nil) ? [NSString stringWithFormat:@", usageLocation: %@", _usageLocation] : @""), ((_userPrincipalName!=nil) ? [NSString stringWithFormat:@", userPrincipalName: %@", _userPrincipalName] : @""), ((_userType!=nil) ? [NSString stringWithFormat:@", userType: %@", _userType] : @""), ((_aboutMe!=nil) ? [NSString stringWithFormat:@", aboutMe: %@", _aboutMe] : @""), ((_birthday!=nil) ? [NSString stringWithFormat:@", birthday: %@", _birthday] : @""), ((_preferredName!=nil) ? [NSString stringWithFormat:@", preferredName: %@", _preferredName] : @""), ((_drive!=nil) ? [NSString stringWithFormat:@", drive: %@", _drive] : @""), ((_drives!=nil) ? [NSString stringWithFormat:@", drives: %@", _drives] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@", _identifier] : @""), ((_displayName!=nil) ? [NSString stringWithFormat:@", displayName: %@", _displayName] : @""), ((_drives!=nil) ? [NSString stringWithFormat:@", drives: %@", _drives] : @""), ((_drive!=nil) ? [NSString stringWithFormat:@", drive: %@", _drive] : @""), ((_mail!=nil) ? [NSString stringWithFormat:@", mail: %@", _mail] : @""), ((_memberOf!=nil) ? [NSString stringWithFormat:@", memberOf: %@", _memberOf] : @""), ((_onPremisesSamAccountName!=nil) ? [NSString stringWithFormat:@", onPremisesSamAccountName: %@", _onPremisesSamAccountName] : @""), ((_passwordProfile!=nil) ? [NSString stringWithFormat:@", passwordProfile: %@", _passwordProfile] : @""), ((_surname!=nil) ? [NSString stringWithFormat:@", surname: %@", _surname] : @"")]);
 }
 
 // occgen: type protected {"locked":true}
