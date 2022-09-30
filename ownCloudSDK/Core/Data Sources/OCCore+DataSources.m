@@ -25,7 +25,7 @@
 	return (_drivesDataSource);
 }
 
-- (NSArray<OCDrive *> *)subscribedDrivesDataSource
+- (OCDataSource *)subscribedDrivesDataSource
 {
 	return (_subscribedDrivesDataSource);
 }
