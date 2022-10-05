@@ -43,6 +43,7 @@ static BOOL sOCLogMaskPrivateDataInitialized;
 
 static OCLogFormat sOCLogFormat;
 static BOOL sOCLogSingleLined;
+static BOOL sOCLogReplaceNewLine;
 static NSUInteger sOCLogMessageMaximumSize;
 static OCLogger *sharedLogger;
 
@@ -207,7 +208,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 			OCClassSettingsKeyLogSynchronousLogging    : @(NO),
 			OCClassSettingsKeyLogBlankFilteredMessages : @(NO),
 			OCClassSettingsKeyLogColored		   : @(NO),
-			OCClassSettingsKeyLogSingleLined	   : @(YES),
+			OCClassSettingsKeyLogSingleLined	   : @(NO),
+			OCClassSettingsKeyLogReplaceNewLine	   : @(YES),
 			OCClassSettingsKeyLogMaximumLogMessageSize : @(0),
 			OCClassSettingsKeyLogFormat		   : @"text"
 		});
@@ -358,6 +360,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
 			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCClassSettingsKeyLogReplaceNewLine : @{
+			OCClassSettingsMetadataKeyType 	      	 : OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	 : @"Controls whether messages spanning more than one line should be logged as a single line, after replacing new line characters with \"\\n\".",
+			OCClassSettingsMetadataKeyCategory    	 : @"Logging",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyFlags		 : @(OCClassSettingsFlagDenyUserPreferences)
 		}
 	});
 }
@@ -408,6 +418,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 		} withOwner:self];
 
 		sOCLogSingleLined = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+		sOCLogReplaceNewLine = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogReplaceNewLine] boolValue];
 
 		sOCLogMessageMaximumSize = [[self classSettingForOCClassSettingsKey:OCClassSettingsKeyLogMaximumLogMessageSize] unsignedIntegerValue];
 
@@ -674,15 +685,28 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 
 	NSArray<NSString *> *lines = nil;
 
-	if (sOCLogSingleLined)
+	if (sOCLogReplaceNewLine || sOCLogSingleLined)
 	{
-		static NSString *splitNewLine;
+		static NSString *newLineString;
 		static dispatch_once_t onceToken;
 		dispatch_once(&onceToken, ^{
-			splitNewLine = [[NSString alloc] initWithFormat:@"\n"];
+			newLineString = [[NSString alloc] initWithFormat:@"\n"];
 		});
 
-		lines = [logMessage componentsSeparatedByString:splitNewLine];
+		if (sOCLogReplaceNewLine)
+		{
+			static NSString *newLineReplacementString;
+			static dispatch_once_t onceToken;
+			dispatch_once(&onceToken, ^{
+				newLineReplacementString = [[NSString alloc] initWithFormat:@"\\n"];
+			});
+
+			logMessage = [logMessage stringByReplacingOccurrencesOfString:newLineString withString:newLineReplacementString];
+		}
+		else if (sOCLogSingleLined)
+		{
+			lines = [logMessage componentsSeparatedByString:newLineString];
+		}
 	}
 
 	for (OCLogWriter *writer in self->_writers)
@@ -1033,5 +1057,6 @@ OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching = @"only-matching";
 OCClassSettingsKey OCClassSettingsKeyLogOmitMatching = @"omit-matching";
 OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages = @"blank-filtered-messages";
 OCClassSettingsKey OCClassSettingsKeyLogSingleLined = @"single-lined";
+OCClassSettingsKey OCClassSettingsKeyLogReplaceNewLine = @"replace-newline";
 OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize = @"maximum-message-size";
 OCClassSettingsKey OCClassSettingsKeyLogFormat = @"format";

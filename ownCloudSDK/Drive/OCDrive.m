@@ -80,7 +80,7 @@
 
 			presentable = [[OCDataItemPresentable alloc] initWithItem:inDrive];
 			presentable.title = inDrive.name;
-			presentable.subtitle = (inDrive.desc.length > 0) ? inDrive.desc : inDrive.type;
+			presentable.subtitle = (inDrive.desc.length > 0) ? inDrive.desc : nil; // inDrive.type;
 
 			presentable.availableResources = (imageDriveItem != nil) ?
 								((readmeDriveItem != nil) ? 	@[OCDataItemPresentableResourceCoverImage, OCDataItemPresentableResourceCoverDescription] :
