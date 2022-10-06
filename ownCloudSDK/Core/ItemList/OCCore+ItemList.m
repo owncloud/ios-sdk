@@ -1314,35 +1314,43 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						[weakSelf queueBlock:^{
 							OCCore *strongSelf;
 
-							OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"New drive list: %@", drives);
 
 							if ((strongSelf = weakSelf) != nil)
 							{
 								BOOL foundChanges = NO;
 
-								[strongSelf.vault updateWithRemoteDrives:drives];
-
-								// Discover whose drives' root eTag has changed
-								@synchronized(strongSelf->_lastRootETagsByDriveID)
+								if (error == nil)
 								{
-									for (OCDrive *subscribedDrive in strongSelf.vault.subscribedDrives)
+									OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"New drive list: %@", drives);
+
+									[strongSelf.vault updateWithRemoteDrives:drives];
+
+									// Discover whose drives' root eTag has changed
+									@synchronized(strongSelf->_lastRootETagsByDriveID)
 									{
-										OCDriveID subscribedDriveID = subscribedDrive.identifier;
-										OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
-
-										OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
-
-										if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
-										    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
+										for (OCDrive *subscribedDrive in strongSelf.vault.subscribedDrives)
 										{
-											OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
+											OCDriveID subscribedDriveID = subscribedDrive.identifier;
+											OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
 
-											foundChanges = YES;
-											[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+											OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
 
-											strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
+											if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
+											    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
+											{
+												OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
+
+												foundChanges = YES;
+												[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+
+												strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
+											}
 										}
 									}
+								}
+								else
+								{
+									OCWTLogWarning((@[@"ScanChanges", @"Drives"]), @"Error retrieving drive list: %@", error);
 								}
 
 								if (!foundChanges)
@@ -1358,7 +1366,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 								}
 
 								// Schedule next
-								[self coordinatedScanForChangesDidFinish];
+								[strongSelf coordinatedScanForChangesDidFinish];
 							}
 						}];
 					}];
