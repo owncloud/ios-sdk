@@ -35,6 +35,12 @@ typedef NS_ENUM(NSInteger, OCItemType)
 	OCItemTypeCollection	//!< This item is a collection (usually a directory)
 } __attribute__((enum_extensibility(closed)));
 
+typedef NS_OPTIONS(NSInteger, OCItemState)
+{
+	OCItemStateNormal,				//!< The item is in normal state
+	OCItemStateServerSideProcessing			//!< The item is in server-side processing (f.ex. via a workflow) and can't be downloaded
+};
+
 typedef NS_OPTIONS(NSInteger, OCItemSyncActivity)
 {
 	OCItemSyncActivityNone,
@@ -135,6 +141,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong,nonatomic) OCFileETag eTag; //!< ETag of the item on the server (changes with every modification)
 @property(nullable,readonly,nonatomic) OCItemVersionIdentifier *itemVersionIdentifier; // (dynamic/ephermal)
 @property(readonly,nonatomic) BOOL isPlaceholder; //!< YES if this a placeholder item
+
+@property(assign) OCItemState state; //!< .normal for "normal" items, .serverSideProcessing if item is being processed (f.ex. by a workflow on the server)
 
 @property(readonly,nonatomic) BOOL isRoot; //!< YES if this item is representing the root folder
 

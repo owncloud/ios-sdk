@@ -125,6 +125,8 @@
 
 	[coder encodeObject:_isFavorite		forKey:@"isFavorite"];
 
+	[coder encodeInteger:_state 		forKey:@"state"];
+
 	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
 	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
@@ -189,6 +191,8 @@
 		_lastUsed = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastUsed"];
 
 		_isFavorite = [decoder decodeObjectOfClass:NSNumber.class forKey:@"isFavorite"];
+
+		_state = [decoder decodeIntegerForKey:@"state"];
 
 		_localAttributes = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
@@ -630,6 +634,8 @@
 
 	CloneMetadata(@"isFavorite");
 
+	CloneMetadata(@"state");
+
 	CloneMetadata(@"thumbnail");
 
 	CloneMetadata(@"shares");
@@ -825,7 +831,7 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@, driveID: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.driveID, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), ((_bookmarkUUID!=nil) ? [NSString stringWithFormat:@", bookmarkUUID: %@", _bookmarkUUID] : @""), [self syncActivityDescription]]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@, driveID: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.driveID, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), ((_state!=OCItemStateNormal) ? [NSString stringWithFormat:@", state: %ld", (long)_state] : @""), ((_bookmarkUUID!=nil) ? [NSString stringWithFormat:@", bookmarkUUID: %@", _bookmarkUUID] : @""), [self syncActivityDescription]]);
 }
 
 #pragma mark - Copying
