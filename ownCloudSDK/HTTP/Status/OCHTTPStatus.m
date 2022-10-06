@@ -151,6 +151,10 @@
 		case OCHTTPStatusCodeINSUFFICIENT_STORAGE:
 			return (@"INSUFFICIENT STORAGE");
 		break;
+
+		case OCHTTPStatusCodeTOO_EARLY:
+			return (@"TOO EARLY");
+		break;
 	}
 
 	return (@(_code).stringValue);
