@@ -246,18 +246,21 @@
 					}
 				}
 			}
-			else
+			else if (error == nil)
 			{
 				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:response.status.error];
 			}
 
-			if (appURL == nil)
+			if (error == nil)
 			{
-				error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'app_url' information missing or invalid.");
-			}
-			if (httpMethod == nil)
-			{
-				error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'method' information missing or invalid.");
+				if (appURL == nil)
+				{
+					error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'app_url' information missing or invalid.");
+				}
+				if (httpMethod == nil)
+				{
+					error = OCErrorWithDescription(OCErrorResponseUnknownFormat, @"Mandatory 'method' information missing or invalid.");
+				}
 			}
 
 			if (error == nil)
