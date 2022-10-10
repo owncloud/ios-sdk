@@ -1691,7 +1691,22 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
-		[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+		BOOL publish = NO;
+		OCSyncRecordID syncRecordID = syncRecord.recordID;
+
+		@synchronized(_publishedActivitySyncRecordIDs)
+		{
+			if ((syncRecordID != nil) && (![_publishedActivitySyncRecordIDs containsObject:syncRecordID]))
+			{
+				[_publishedActivitySyncRecordIDs addObject:syncRecordID];
+				publish = YES;
+			}
+		}
+
+		if (publish)
+		{
+			[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+		}
 	}
 
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
@@ -1729,7 +1744,12 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 - (void)updatePublishedSyncRecordActivities
 {
 	[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-		NSMutableSet <OCSyncRecordID> *removedSyncRecordIDs = [[NSMutableSet alloc] initWithSet:self->_publishedActivitySyncRecordIDs];
+		NSMutableSet <OCSyncRecordID> *removedSyncRecordIDs = nil;
+
+		@synchronized(self->_publishedActivitySyncRecordIDs)
+		{
+			removedSyncRecordIDs = [[NSMutableSet alloc] initWithSet:self->_publishedActivitySyncRecordIDs];
+		}
 
 		for (OCSyncRecord *syncRecord in syncRecords)
 		{
@@ -1739,9 +1759,17 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 			if (recordID != nil)
 			{
+				BOOL publish = NO;
+
 				[removedSyncRecordIDs removeObject:recordID];
 
-				if ([self->_publishedActivitySyncRecordIDs containsObject:syncRecord.recordID])
+				@synchronized(self->_publishedActivitySyncRecordIDs)
+				{
+					publish = ![self->_publishedActivitySyncRecordIDs containsObject:recordID];
+					[self->_publishedActivitySyncRecordIDs addObject:recordID];
+				}
+
+				if (!publish)
 				{
 					// Update published activities
 					NSProgress *progress = [syncRecord.progress resolveWith:nil];
@@ -1758,7 +1786,6 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 				{
 					// Publish new activities
 					[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
-					[self->_publishedActivitySyncRecordIDs addObject:recordID];
 
 					syncRecord.action.core = self;
 					[syncRecord.action restoreProgressRegistrationForSyncRecord:syncRecord];
@@ -1772,7 +1799,10 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 			[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:[OCSyncRecord activityIdentifierForSyncRecordID:syncRecordID]]];
 		}
 
-		[self->_publishedActivitySyncRecordIDs minusSet:removedSyncRecordIDs];
+		@synchronized(self->_publishedActivitySyncRecordIDs)
+		{
+			[self->_publishedActivitySyncRecordIDs minusSet:removedSyncRecordIDs];
+		}
 	}];
 }
 
