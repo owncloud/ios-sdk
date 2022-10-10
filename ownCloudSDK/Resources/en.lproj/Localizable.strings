@@ -28,6 +28,7 @@
 
 "Cancel" = "Cancel";
 "Proceed" = "Proceed";
+"Retry" = "Retry";
 "OK" = "OK";
 
 /* Database upgrades */
