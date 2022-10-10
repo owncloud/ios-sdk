@@ -48,12 +48,15 @@
 
 - (void)addNodes:(NSArray<OCVFSNode *> *)nodes
 {
-	[_nodes addObjectsFromArray:nodes];
-
-	for (OCVFSNode *node in nodes)
+	@synchronized(_nodes)
 	{
-		node.vfsCore = self;
-		[_nodesByID setObject:node forKey:node.identifier];
+		[_nodes addObjectsFromArray:nodes];
+
+		for (OCVFSNode *node in nodes)
+		{
+			node.vfsCore = self;
+			[_nodesByID setObject:node forKey:node.identifier];
+		}
 	}
 
 	[self _recreateVirtualFillNodes];
@@ -61,18 +64,24 @@
 
 - (void)removeNodes:(NSArray<OCVFSNode *> *)nodes
 {
-	for (OCVFSNode *node in nodes)
+	@synchronized(_nodes)
 	{
-		[_nodesByID removeObjectForKey:node.identifier];
-		node.vfsCore = nil;
+		for (OCVFSNode *node in nodes)
+		{
+			[_nodesByID removeObjectForKey:node.identifier];
+			node.vfsCore = nil;
+		}
+		[_nodes removeObjectsInArray:nodes];
 	}
-	[_nodes removeObjectsInArray:nodes];
 	[self _recreateVirtualFillNodes];
 }
 
 - (void)setNodes:(NSArray<OCVFSNode *> *)nodes
 {
-	[self removeNodes:_nodes];
+	@synchronized(_nodes)
+	{
+		[self removeNodes:_nodes];
+	}
 	[self addNodes:nodes];
 }
 
@@ -174,7 +183,10 @@
 		if (location.vfsNodeID != nil)
 		{
 			// Virtual item
-			item = (id<OCVFSItem>)[_nodesByID objectForKey:location.vfsNodeID];
+			@synchronized(_nodes)
+			{
+				item = (id<OCVFSItem>)[_nodesByID objectForKey:location.vfsNodeID];
+			}
 		}
 		else if (location.isVirtual)
 		{
@@ -390,30 +402,42 @@
 {
 	if (location == nil) { return (nil); }
 
-	return ([_nodes firstObjectMatching:^BOOL(OCVFSNode * _Nonnull node) {
-		return ([node.location.bookmarkUUID isEqual:location.bookmarkUUID] && OCNAIsEqual(node.location.driveID, location.driveID) && node.location.path.isRootPath);
-	}]);
+	@synchronized(_nodes)
+	{
+		return ([_nodes firstObjectMatching:^BOOL(OCVFSNode * _Nonnull node) {
+			return ([node.location.bookmarkUUID isEqual:location.bookmarkUUID] && OCNAIsEqual(node.location.driveID, location.driveID) && node.location.path.isRootPath);
+		}]);
+	}
 }
 
 - (OCVFSNode *)nodeAtPath:(OCPath)vfsPath
 {
 	if (vfsPath == nil) { return (nil); }
 
-	return ([_nodes firstObjectMatching:^BOOL(OCVFSNode * _Nonnull node) {
-		return ([node.path isEqual:vfsPath]);
-	}]);
+	@synchronized(_nodes)
+	{
+		return ([_nodes firstObjectMatching:^BOOL(OCVFSNode * _Nonnull node) {
+			return ([node.path isEqual:vfsPath]);
+		}]);
+	}
 }
 
 - (NSArray<OCVFSNode *> *)childNodesOf:(OCPath)path
 {
-	return ([_nodes filteredArrayUsingBlock:^BOOL(OCVFSNode * _Nonnull node, BOOL * _Nonnull stop) {
-		return ([node.path.parentPath isEqual:path] && ![node.path isEqual:path]);
-	}]);
+	@synchronized(_nodes)
+	{
+		return ([_nodes filteredArrayUsingBlock:^BOOL(OCVFSNode * _Nonnull node, BOOL * _Nonnull stop) {
+			return ([node.path.parentPath isEqual:path] && ![node.path isEqual:path]);
+		}]);
+	}
 }
 
 - (nullable OCVFSNode *)nodeForID:(OCVFSNodeID)nodeID
 {
-	return ([_nodesByID objectForKey:nodeID]);
+	@synchronized(_nodes)
+	{
+		return ([_nodesByID objectForKey:nodeID]);
+	}
 }
 
 + (OCVFSItemID)composeVFSItemIDForOCItemWithBookmarkUUID:(OCBookmarkUUIDString)bookmarkUUIDString driveID:(OCDriveID)driveID localID:(OCLocalID)localID
