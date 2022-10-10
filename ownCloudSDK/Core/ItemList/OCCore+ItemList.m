@@ -562,6 +562,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							// Attach databaseID of cached items to the retrieved items
 							[retrievedItem prepareToReplace:cacheItem];
 
+							// Preserve path change
+							if (![cacheItem.path isEqual:retrievedItem.path])
+							{
+								// Save cacheItem.path as previousPath if it differs
+								retrievedItem.previousPath = cacheItem.path;
+							}
+
 							retrievedItem.localRelativePath = cacheItem.localRelativePath;
 							retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
 							retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
@@ -841,8 +848,19 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 										if (item.activeSyncRecordIDs.count == 0)
 										{
 											// Item has no sync activity
+											OCPath recomposedPath;
+
+											if (item.type == OCItemTypeCollection)
+											{
+												recomposedPath = [[item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]] normalizedDirectoryPath];
+											}
+											else
+											{
+												recomposedPath = [item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]];
+											}
+
 											containedItem.previousPath = containedItem.path;
-											containedItem.path = [item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]];
+											containedItem.path = recomposedPath;
 
 											if ([containedItem countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
 											{

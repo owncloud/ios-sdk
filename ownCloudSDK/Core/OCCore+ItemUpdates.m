@@ -169,6 +169,7 @@
 			NSArray <OCItem *> *removedItems = theRemovedItems;
 			__block NSMutableArray <OCItem *> *addedUpdatedRemovedItems = nil;
 			NSMutableArray <OCItem *> *relocatedItems = nil;
+			NSMutableArray <OCItem *> *movedFolderItems = nil;
 
 			// Support for relocated items
 			for (OCItem *updatedItem in updatedItems)
@@ -190,6 +191,13 @@
 							if (relocatedItems == nil) { relocatedItems = [NSMutableArray new]; }
 							[relocatedItems addObject:reMovedItem];
 						}
+					}
+
+					// Is this a moved folder?
+					if (updatedItem.type == OCItemTypeCollection)
+					{
+						if (movedFolderItems == nil) { movedFolderItems = [NSMutableArray new]; }
+						[movedFolderItems addObject:updatedItem];
 					}
 				}
 			}
@@ -246,6 +254,23 @@
 					// Queries targeting directories
 					OCLocation *queryLocation = query.queryLocation;
 					OCPath queryPath;
+
+					if ((queryPath = queryLocation.path) != nil)
+					{
+						// Find moved observed folders
+						for (OCItem *movedFolderItem in movedFolderItems)
+						{
+							OCPath previousPath = movedFolderItem.previousPath;
+
+							if ((previousPath != nil) &&
+							    [queryPath isEqual:movedFolderItem.previousPath] &&
+							    OCDriveIDIsIdentical(queryLocation.driveID, movedFolderItem.driveID))
+							{
+								query.queryLocation = movedFolderItem.location;
+								queryLocation = query.queryLocation;
+							}
+						}
+					}
 
 					if ((queryPath = queryLocation.path) != nil)
 					{
