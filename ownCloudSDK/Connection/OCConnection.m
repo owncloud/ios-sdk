@@ -53,6 +53,7 @@
 #import "OCBookmarkManager.h"
 #import "OCConnection+GraphAPI.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCLocaleFilterVariables.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -2240,6 +2241,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 							{
 								event.error = OCErrorFromError(OCErrorItemChanged, request.httpResponse.status.error);
 							}
+						}
+						break;
+
+						case OCHTTPStatusCodeTOO_EARLY: {
+							NSString *itemName = OCTypedCast(request.userInfo[@"item"], OCItem).name;
+
+							if (itemName == nil)
+							{
+								itemName = OCLocalized(@"File");
+							}
+
+							event.error = OCErrorWithDescriptionFromError(OCErrorItemProcessing, OCLocalizedFormat(@"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.", @{
+								@"itemName" : itemName
+							}), request.httpResponse.status.error);
 						}
 						break;
 

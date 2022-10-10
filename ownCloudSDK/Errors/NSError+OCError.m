@@ -392,6 +392,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorInvalidParameter:
 					unlocalizedString = @"Invalid parameter.";
 				break;
+
+				case OCErrorItemProcessing:
+					unlocalizedString = @"Item is currently processing.";
+				break;
 			}
 		}
 	}

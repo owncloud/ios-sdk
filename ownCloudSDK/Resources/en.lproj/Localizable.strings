@@ -113,6 +113,7 @@
 "\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
 "Couldn't download %@" = "Couldn't download %@";
 "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";
@@ -385,6 +386,9 @@
 
 // OCErrorInvalidParameter
 "Invalid parameter." = "Invalid parameter.";
+
+// OCErrorItemProcessing
+"Item is currently processing." = "Item is currently processing.";
 
 /* Diagnostic */
 "Files" = "Files";

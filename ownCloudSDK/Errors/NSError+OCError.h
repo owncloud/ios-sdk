@@ -133,7 +133,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorMissingDriveID, //!< Missing Drive ID.
 
 	OCErrorResourceNotFound, //!< Resource not found.
-	OCErrorInvalidParameter //!< Invalid parameter.
+	OCErrorInvalidParameter, //!< Invalid parameter.
+
+	OCErrorItemProcessing //!< Item is currently processing.
 };
 
 @class OCIssue;
