@@ -25,6 +25,7 @@
 #import "NSURL+OCPrivateLink.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCLogger.h"
+#import "NSError+OCHTTPStatus.h"
 
 @implementation OCCore (Sharing)
 
@@ -155,36 +156,35 @@
 
 		if (core != nil)
 		{
-			if (error == nil)
+			if (error != nil)
 			{
-				[core beginActivity:@"Updating retrieved shares"];
-
-				[core queueBlock:^{
-					OCCore *core = weakCore;
-
-					if (core != nil)
-					{
-						for (OCShareQuery *query in core->_shareQueries)
-						{
-							[query _updateWithRetrievedShares:shares forItem:item scope:scope];
-						}
-					}
-
-					if (completionHandler != nil)
-					{
-						completionHandler();
-					}
-
-					[core endActivity:@"Updating retrieved shares"];
-				}];
+				// Output error only if not due to status 404
+				if (![error isHTTPStatusErrorWithCode:OCHTTPStatusCodeNOT_FOUND])
+				{
+					OCLogError(@"Error retrieving shares of scope %ld for %@: %@", scope, item, error);
+				}
 			}
-			else
-			{
+
+			[core beginActivity:@"Updating retrieved shares"];
+
+			[core queueBlock:^{
+				OCCore *core = weakCore;
+
+				if (core != nil)
+				{
+					for (OCShareQuery *query in core->_shareQueries)
+					{
+						[query _updateWithRetrievedShares:((error == nil) ? shares : @[]) forItem:item scope:scope];
+					}
+				}
+
 				if (completionHandler != nil)
 				{
 					completionHandler();
 				}
-			}
+
+				[core endActivity:@"Updating retrieved shares"];
+			}];
 		}
 		else
 		{

@@ -31,4 +31,14 @@
 	return (nil);
 }
 
+- (BOOL)isHTTPStatusErrorWithCode:(OCHTTPStatusCode)code;
+{
+	if ([self.domain isEqualToString:OCHTTPStatusErrorDomain])
+	{
+		return (code == self.code);
+	}
+
+	return (NO);
+}
+
 @end

@@ -583,6 +583,17 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"federation"][@"outgoing"], NSNumber));
 }
 
+- (BOOL)federatedSharingSupported
+{
+	if (self.spacesEnabled.boolValue)
+	{
+		// ocis bug: can't depend on federatedSharingIncoming and federatedSharingOutgoing: https://github.com/owncloud/ocis/issues/4788
+		return (NO);
+	}
+
+	return (self.federatedSharingIncoming.boolValue || self.federatedSharingOutgoing.boolValue);
+}
+
 #pragma mark - Notifications
 - (NSArray<NSString *> *)notificationEndpoints
 {

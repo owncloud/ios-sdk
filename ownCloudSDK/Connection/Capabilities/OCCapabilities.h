@@ -123,6 +123,8 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool federatedSharingIncoming;
 @property(readonly,nullable,nonatomic) OCCapabilityBool federatedSharingOutgoing;
 
+@property(readonly,nonatomic) BOOL federatedSharingSupported;
+
 #pragma mark - Notifications
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *notificationEndpoints;
 

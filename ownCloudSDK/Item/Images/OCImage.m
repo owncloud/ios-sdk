@@ -138,7 +138,7 @@
 		}
 		else
 		{
-			dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+			dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 				UIImage *image = nil;
 
 				image = self.image;
@@ -190,7 +190,7 @@
 	if (existingImage == nil)
 	{
 		// No existing image, compute async
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			UIImage *returnImage = nil;
 
 			[self->_processingLock lock]; // Lock to make any subsequent (possibly identical) computations wait until this one is done, in order not to do the same computations twice
