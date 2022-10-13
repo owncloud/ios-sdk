@@ -23,8 +23,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString* OCLocationString; //!< DriveID + path encoded into a single string. Format should be assumed private.
-
 typedef NSData* OCLocationData;
+
+typedef NS_OPTIONS(NSInteger, OCLocationType) {
+	OCLocationTypeUnknown = 0,
+	
+	OCLocationTypeFile	= (1 << 0),	//!< Location points to a file
+	OCLocationTypeFolder	= (1 << 1),	//!< Location points to a folder
+	OCLocationTypeDrive	= (1 << 2),	//!< Location points to a space or its root folder
+	OCLocationTypeAccount	= (1 << 3)	//!< Location points to an entire account
+};
 
 @interface OCLocation : NSObject <NSSecureCoding, NSCopying>
 
@@ -48,6 +56,7 @@ typedef NSData* OCLocationData;
 @property(strong,nullable,readonly,nonatomic) NSString *lastPathComponent;
 
 @property(readonly,nonatomic) BOOL isRoot;
+@property(readonly,nonatomic) OCLocationType type;
 
 + (BOOL)driveID:(nullable OCDriveID)driveID1 isEqualDriveID:(nullable OCDriveID)driveID2;
 

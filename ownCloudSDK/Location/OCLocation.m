@@ -130,6 +130,39 @@
 	return (_path.isRootPath);
 }
 
+- (OCLocationType)type
+{
+	if (_path != nil)
+	{
+		if (_path.isNormalizedDirectoryPath)
+		{
+			if (_driveID != nil)
+			{
+				if (_path.isRootPath)
+				{
+					return (OCLocationTypeDrive);
+				}
+			}
+
+			return (OCLocationTypeFolder);
+		}
+
+		return (OCLocationTypeFile);
+	}
+
+	if (_driveID != nil)
+	{
+		return (OCLocationTypeDrive);
+	}
+
+	if (_bookmarkUUID != nil)
+	{
+		return (OCLocationTypeAccount);
+	}
+
+	return (OCLocationTypeUnknown);
+}
+
 + (BOOL)driveID:(nullable OCDriveID)driveID1 isEqualDriveID:(nullable OCDriveID)driveID2
 {
 	driveID1 = OCDriveIDUnwrap(driveID1);

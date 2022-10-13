@@ -126,6 +126,37 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	_protectedByPassword = protectedByPassword;
 }
 
+#pragma mark - Conversions
++ (OCShareTypesMask)maskForType:(OCShareType)type
+{
+	switch (type)
+	{
+		case OCShareTypeUnknown:		return (OCShareTypesMaskNone);
+		case OCShareTypeUserShare:		return (OCShareTypesMaskUserShare);
+		case OCShareTypeGroupShare:		return (OCShareTypesMaskGroupShare);
+		case OCShareTypeLink:			return (OCShareTypesMaskLink);
+		case OCShareTypeGuest:			return (OCShareTypesMaskGuest);
+		case OCShareTypeRemote:			return (OCShareTypesMaskRemote);
+	}
+
+	return (OCShareTypesMaskNone);
+}
+
++ (OCShareType)typeForMask:(OCShareTypesMask)mask
+{
+	switch (mask)
+	{
+		case OCShareTypesMaskNone:		return (OCShareTypeUnknown);
+		case OCShareTypesMaskUserShare:		return (OCShareTypeUserShare);
+		case OCShareTypesMaskGroupShare:	return (OCShareTypeGroupShare);
+		case OCShareTypesMaskLink:		return (OCShareTypeLink);
+		case OCShareTypesMaskGuest:		return (OCShareTypeGuest);
+		case OCShareTypesMaskRemote:		return (OCShareTypeRemote);
+	}
+
+	return (OCShareTypeUnknown);
+}
+
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
@@ -196,7 +227,15 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 				_itemLocation = [OCLocation legacyRootPath:itemPath];
 			}
 		}
-		_itemType = [decoder decodeIntegerForKey:@"itemType"];
+
+		OCItemType legacyType = [decoder decodeIntegerForKey:@"itemType"];
+		_itemType = (legacyType == OCItemTypeFile) ? OCLocationTypeFile : OCLocationTypeFolder;
+		OCLocationType itemType = [decoder decodeIntegerForKey:@"itemLType"];
+		if (itemType != OCLocationTypeUnknown)
+		{
+			_itemType = itemType;
+		}
+
 		_itemOwner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"itemOwner"];
 		_itemMIMEType = [decoder decodeObjectOfClass:[NSString class] forKey:@"itemMIMEType"];
 
@@ -229,7 +268,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeInteger:_type forKey:@"type"];
 
 	[coder encodeObject:_itemLocation forKey:@"itemLocation"];
-	[coder encodeInteger:_itemType forKey:@"itemType"];
+	[coder encodeInteger:_itemType forKey:@"itemLType"];
 	[coder encodeObject:_itemOwner forKey:@"itemOwner"];
 	[coder encodeObject:_itemMIMEType forKey:@"itemMIMEType"];
 
@@ -255,7 +294,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 #pragma mark - Description
 - (NSString *)description
 {
-	NSString *typeAsString = nil, *permissionsString = @"";
+	NSString *typeAsString = nil, *permissionsString = @"", *itemTypeString = nil;
 
 	switch (_type)
 	{
@@ -299,7 +338,26 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		permissionsString = @"none";
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemLocation: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemLocation, ((_itemType == OCItemTypeFile) ? @"file" : @"folder"), _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateRejected] ? @", state: rejected" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
+	switch (_itemType)
+	{
+		case OCLocationTypeUnknown:
+			itemTypeString = @"unknown";
+		break;
+		case OCLocationTypeFile:
+			itemTypeString = @"file";
+		break;
+		case OCLocationTypeFolder:
+			itemTypeString = @"folder";
+		break;
+		case OCLocationTypeDrive:
+			itemTypeString = @"drive";
+		break;
+		case OCLocationTypeAccount:
+			itemTypeString = @"account";
+		break;
+	}
+
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemLocation: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemLocation, itemTypeString, _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateRejected] ? @", state: rejected" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
 }
 
 #pragma mark - Copying

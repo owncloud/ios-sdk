@@ -150,6 +150,31 @@
 "Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
 "Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
 
+/* Share roles */
+"Viewer" = "Viewer";
+"Download and preview" = "Download and preview";
+"Download, preview and share" = "Download, preview and share";
+"Recipients can view and download contents." = "Recipients can view and download contents.";
+
+"Uploader" = "Uploader";
+"Recipients can upload but existing contents are not revealed." = "Recipients can upload but existing contents are not revealed.";
+
+"Contributor" = "Contributor";
+"Recipients can view, download and upload contents." = "Recipients can view, download and upload contents.";
+
+"Editor" = "Editor";
+"Edit, download, preview and share" = "Edit, download, preview and share";
+"Upload, edit, delete, download and preview" = "Upload, edit, delete, download and preview";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Recipients can view, download and edit contents." = "Recipients can view, download and edit contents.";
+"Recipients can view, download, edit, delete and upload contents." = "Recipients can view, download, edit, delete and upload contents.";
+
+"Manager" = "Manager";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+
+"Custom" = "Custom";
+"Set detailed permissions" = "Set detailed permissions";
+
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
 

@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCShareType type; //!< The type of share (i.e. public or user)
 
 @property(strong,nonatomic) OCLocation *itemLocation; //!< Location of the shared item
-@property(assign) OCItemType itemType; //!< Type of the shared item
+@property(assign) OCLocationType itemType; //!< Type of the shared item
 @property(nullable,strong) OCUser *itemOwner; //!< Owner of the item
 @property(nullable,strong) NSString *itemMIMEType; //!< MIME-Type of the shared item
 
@@ -134,6 +134,10 @@ NS_ASSUME_NONNULL_BEGIN
  @return An OCShare instance configured with the respective options.
  */
 + (instancetype)shareWithPublicLinkToLocation:(OCLocation *)location linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
+
+#pragma mark - Conversions
++ (OCShareTypesMask)maskForType:(OCShareType)type; //!< Converts share types into mask values.
++ (OCShareType)typeForMask:(OCShareTypesMask)mask; //!< Converts single-type mask values into types. Multi-type masks are returned as OCShareTypeUnknown
 
 @end
 

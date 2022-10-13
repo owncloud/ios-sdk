@@ -62,7 +62,24 @@
 
 			if (sharePath != nil)
 			{
-				share.itemLocation = [OCLocation legacyRootPath:sharePath];
+				NSString *itemSource;
+
+				if ((itemSource = shareNode.keyValues[@"item_source"]) != nil)
+				{
+					// Extract drive ID from item_source, which follows format "[driveID]![fileID]"
+					NSArray<NSString *> *itemSourceIDs = [itemSource componentsSeparatedByString:@"!"];
+
+					if (itemSourceIDs.count == 2)
+					{
+						share.itemLocation = [[OCLocation alloc] initWithDriveID:itemSourceIDs.firstObject path:sharePath];
+					}
+				}
+
+				if (share.itemLocation == nil)
+				{
+					// Fall back to OC10 legacy location
+					share.itemLocation = [OCLocation legacyRootPath:sharePath];
+				}
 			}
 			else
 			{
@@ -87,11 +104,11 @@
 			{
 				if ([itemType isEqual:@"file"])
 				{
-					share.itemType = OCItemTypeFile;
+					share.itemType = OCLocationTypeFile;
 				}
 				else if ([itemType isEqual:@"folder"])
 				{
-					share.itemType = OCItemTypeCollection;
+					share.itemType = OCLocationTypeFolder;
 				}
 			}
 			else
@@ -103,18 +120,18 @@
 				{
 					if ([type isEqual:@"file"])
 					{
-						share.itemType = OCItemTypeFile;
+						share.itemType = OCLocationTypeFile;
 					}
 					else if ([type isEqual:@"dir"])
 					{
-						share.itemType = OCItemTypeCollection;
+						share.itemType = OCLocationTypeFolder;
 					}
 				}
 			}
 
-			if (share.itemType == OCItemTypeCollection)
+			if (share.itemType == OCLocationTypeFolder)
 			{
-				// Ensure itemPath conforms to OCPath convention that directories end with a "/"
+				// Ensure itemLocation.path conforms to OCPath convention that directories end with a "/"
 				share.itemLocation = share.itemLocation.normalizedDirectoryPathLocation;
 			}
 
