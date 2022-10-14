@@ -18,6 +18,7 @@
 
 #import "OCSyncActionCopyMove.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCLocaleFilterVariables.h"
 
 @interface OCSyncActionCopyMove ()
 {
@@ -77,6 +78,15 @@
 		if ([self.identifier isEqual:OCSyncActionIdentifierCopy])
 		{
 			OCItem *placeholderItem = [OCItem placeholderItemOfType:sourceItem.type];
+
+			// Prevent copying an item into itself
+			if ([_targetParentItem.location isLocatedIn:sourceItem.location])
+			{
+				syncContext.error = OCErrorWithDescription(OCErrorItemOperationForbidden, OCLocalizedFormat(@"{{itemName}} can't be copied into itself.", @{
+					@"itemName" : ((self.localItem.name != nil) ? self.localItem.name : @"Item")
+				}));
+				return;
+			}
 
 			// Copy filesystem metadata from existing item
 			[placeholderItem copyFilesystemMetadataFrom:sourceItem];
@@ -141,6 +151,15 @@
 		else if ([self.identifier isEqual:OCSyncActionIdentifierMove])
 		{
 			OCItem *updatedItem;
+
+			// Prevent moving an item into itself
+			if ([_targetParentItem.location isLocatedIn:sourceItem.location])
+			{
+				syncContext.error = OCErrorWithDescription(OCErrorItemOperationForbidden, OCLocalizedFormat(@"{{itemName}} can't be moved into itself.", @{
+					@"itemName" : ((self.localItem.name != nil) ? self.localItem.name : @"Item")
+				}));
+				return;
+			}
 
 			// Add sync record reference to source item
 			[sourceItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];

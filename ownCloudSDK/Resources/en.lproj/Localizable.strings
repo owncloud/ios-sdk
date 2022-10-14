@@ -97,6 +97,9 @@
 "Moving %@ to %@…" = "Moving %@ to %@…";
 "Copying %@ to %@…" = "Copying %@ to %@…";
 
+"{{itemName}} can't be copied into itself." = "{{itemName}} can't be copied into itself.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} can't be moved into itself.";
+
 /* Upload */
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
 "Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";

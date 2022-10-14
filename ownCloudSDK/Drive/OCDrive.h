@@ -75,9 +75,9 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @end
 
-extern OCDriveType OCDriveTypePersonal;
-extern OCDriveType OCDriveTypeVirtual;
-extern OCDriveType OCDriveTypeProject;
+extern OCDriveType OCDriveTypePersonal; //!< A users personal space
+extern OCDriveType OCDriveTypeVirtual;	//!< Virtual space containing all items shared with the user
+extern OCDriveType OCDriveTypeProject;	//!< Regular spaces
 extern OCDriveType OCDriveTypeShare;
 
 #define OCDriveIDNil ((OCDriveID)NSNull.null)

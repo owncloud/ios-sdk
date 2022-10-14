@@ -177,7 +177,7 @@
 
 	if ([OCLocation driveID:location.driveID isEqualDriveID:_driveID])
 	{
-		return ([_path hasPrefix:location.path]);
+		return ([_path hasPrefix:location.path] && location.path.isNormalizedDirectoryPath);
 	}
 
 	return (NO);

@@ -22,6 +22,7 @@
 #import "OCFile.h"
 #import "OCItem+OCItemCreationDebugging.h"
 #import "OCMacros.h"
+#import "NSString+OCPath.h"
 
 @interface OCItem ()
 {
@@ -293,7 +294,7 @@
 		return (_location);
 	}
 
-	OCLocation *location = [[OCLocation alloc] initWithDriveID:_driveID path:_path];
+	OCLocation *location = [[OCLocation alloc] initWithDriveID:_driveID path:(_type == OCItemTypeCollection) ? _path.normalizedDirectoryPath : _path];
 
 	_location = location;
 
