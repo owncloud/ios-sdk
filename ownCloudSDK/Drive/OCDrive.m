@@ -132,6 +132,22 @@
 	 	OCNANotEqual(drive.rootETag, self.rootETag));
 }
 
+#pragma mark - Overrides
+- (NSString *)name
+{
+	if ([self.type isEqual:OCDriveTypePersonal])
+	{
+		return (OCLocalized(@"Personal"));
+	}
+
+	if ([self.type isEqual:OCDriveTypeVirtual])
+	{
+		return (OCLocalized(@"Shares"));
+	}
+
+	return (_name);
+}
+
 #pragma mark - Utility accessors
 - (OCLocation *)rootLocation
 {

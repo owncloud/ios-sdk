@@ -47,7 +47,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(readonly,nonatomic) BOOL isDeactivated;
 
-@property(strong,nullable) NSString *name;
+@property(strong,nullable,nonatomic) NSString *name;
 @property(strong,nullable) NSString *desc;
 
 @property(strong,nullable) NSURL *davRootURL;

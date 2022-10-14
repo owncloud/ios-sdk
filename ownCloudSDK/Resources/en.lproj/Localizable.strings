@@ -175,6 +175,10 @@
 "Custom" = "Custom";
 "Set detailed permissions" = "Set detailed permissions";
 
+/* Drives */
+"Personal" = "Personal";
+"Shares" = "Shares";
+
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
 
