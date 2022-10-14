@@ -18,9 +18,7 @@
 
 #import "OCQuota.h"
 
-@implementation OCQuota
-
-@end
-
 OCQuotaState OCQuotaStateNormal = @"normal";
+OCQuotaState OCQuotaStateNearing = @"nearing";
+OCQuotaState OCQuotaStateCritical = @"critical";
 OCQuotaState OCQuotaStateExceeded = @"exceeded";

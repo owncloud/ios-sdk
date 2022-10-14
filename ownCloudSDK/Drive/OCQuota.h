@@ -20,11 +20,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCQuota : GAQuota
-
-@end
-
 extern OCQuotaState OCQuotaStateNormal;
+extern OCQuotaState OCQuotaStateNearing;
+extern OCQuotaState OCQuotaStateCritical;
 extern OCQuotaState OCQuotaStateExceeded;
 
 NS_ASSUME_NONNULL_END

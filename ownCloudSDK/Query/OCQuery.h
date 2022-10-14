@@ -125,8 +125,8 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)updateWithAddedItems:(nullable OCCoreItemList *)addedItems updatedItems:(nullable OCCoreItemList *)updatedItems removedItems:(nullable OCCoreItemList *)removedItems; //!< OCQuery subclasses can provide their own custom updating logic for custom queries (.isCustom = YES) here. The default implementation uses .inputFilter in combination with -modifyFullQueryResults: to keep the internal full query results up-to-date.
 
 #pragma mark - State
-@property(assign) OCQueryState state;		//!< Current state of the query
-@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query
+@property(assign) OCQueryState state; //!< Current state of the query
+@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query is stopped
 
 #pragma mark - Sorting
 @property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
@@ -145,6 +145,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 @property(assign,nonatomic) BOOL includeRootItem; //!< If YES, the rootItem is included in the queryResults and change sets. If NO, it's only exposed via .rootItem.
 
 @property(nullable,strong,readonly,nonatomic) OCDataSource *queryResultsDataSource; //!< Returns a data source providing the OCItems in .queryResults. The data source is only created on demand.
+@property(assign) BOOL queryResultsDataSourceIncludesStatistics; //!< Controls whether the data source also provide an OCStatistic as special item. Ideally, this should be set before starting the query as special items currently don't trigger updates when changed independent of items. Defaults to NO.
 
 #pragma mark - Change Sets
 @property(assign,nonatomic) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval

@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 @property(assign) OCDataSourceState state;
 
 @property(readonly,nonatomic) NSUInteger numberOfItems;
-@property(strong,nullable) NSDictionary<OCDataSourceSpecialItem, OCDataItemReference> *specialItemReferences; //!< Headers, Footers, …
+@property(strong,nullable) NSDictionary<OCDataSourceSpecialItem, id<OCDataItem>> *specialItems; //!< Headers, Footers, … - !! please note setting this alone does not currently trigger an update, only changes to the data sources itemReferences !! If this is needed in the future, subscriptions also need to track specialItems and their updates. Therefore, if specialItems change alongside content, make sure to update .specialItems BEFORE updating the content.
 
 #pragma mark - Item retrieval
 @property(copy,nullable) OCDataSourceItemRecordForReferenceProvider itemRecordForReferenceProvider;
@@ -82,7 +82,7 @@ extern OCDataSourceSpecialItem OCDataSourceSpecialItemHeader;
 extern OCDataSourceSpecialItem OCDataSourceSpecialItemFooter;
 
 extern OCDataSourceSpecialItem OCDataSourceSpecialItemRootItem;
-extern OCDataSourceSpecialItem OCDataSourceSpecialItemSearchTokens;
+extern OCDataSourceSpecialItem OCDataSourceSpecialItemFolderStatistics;
 
 NS_ASSUME_NONNULL_END
 

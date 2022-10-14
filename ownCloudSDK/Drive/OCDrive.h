@@ -52,7 +52,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(strong,nullable) NSURL *davRootURL;
 
-@property(strong,nullable) OCQuota *quota;
+@property(strong,nullable) GAQuota *quota;
 
 @property(strong,nullable) GADrive *gaDrive;
 

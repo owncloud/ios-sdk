@@ -18,6 +18,7 @@
 
 #import "OCQuery+Internal.h"
 #import "OCCoreItemList.h"
+#import "OCStatistic.h"
 
 @implementation OCQuery (Internal)
 
@@ -157,8 +158,49 @@
 			_needsRecomputation = NO;
 
 			_queryResultsDataSource.state = [self _dataSourceState];
+			[self updateDataSourceSpecialItemsForItems:newProcessedResults];
 			[_queryResultsDataSource setVersionedItems:newProcessedResults];
 		}
+	}
+}
+
+- (void)updateDataSourceSpecialItemsForItems:(NSArray<OCItem *> *)items
+{
+	if (self.queryResultsDataSourceIncludesStatistics)
+	{
+		NSUInteger fileCount = 0, folderCount = 0, sizeInBytes = 0;
+
+		for (OCItem *item in items)
+		{
+			switch (item.type)
+			{
+				case OCItemTypeFile:
+					fileCount += 1;
+				break;
+
+				case OCItemTypeCollection:
+					folderCount += 1;
+				break;
+			}
+
+			NSInteger size = item.size;
+
+			if (size > 0)
+			{
+				sizeInBytes += item.size;
+			}
+		}
+
+		OCStatistic *statistic = [OCStatistic new];
+
+		statistic.itemCount = @(folderCount + fileCount);
+		statistic.folderCount = @(folderCount);
+		statistic.fileCount = @(fileCount);
+		statistic.sizeInBytes = @(sizeInBytes);
+
+		_queryResultsDataSource.specialItems = @{
+			OCDataSourceSpecialItemFolderStatistics : statistic
+		};
 	}
 }
 

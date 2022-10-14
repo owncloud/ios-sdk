@@ -51,7 +51,7 @@
 
 		drive.davRootURL = gDrive.root.webDavUrl;
 
-		drive.quota = (OCQuota *)gDrive.quota;
+		drive.quota = gDrive.quota;
 
 		drive.gaDrive = gDrive;
 	}

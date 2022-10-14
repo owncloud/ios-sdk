@@ -101,7 +101,7 @@
 			snapshot.removedItems = [_removedItemRefs copy];
 		}
 
-		snapshot.specialItems = [_source.specialItemReferences copy];
+		snapshot.specialItems = [_source.specialItems copy];
 	}
 
 	return (snapshot);

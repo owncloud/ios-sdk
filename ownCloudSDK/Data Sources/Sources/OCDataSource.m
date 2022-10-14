@@ -153,3 +153,9 @@
 }
 
 @end
+
+OCDataSourceSpecialItem OCDataSourceSpecialItemHeader = @"header";
+OCDataSourceSpecialItem OCDataSourceSpecialItemFooter = @"footer";
+
+OCDataSourceSpecialItem OCDataSourceSpecialItemRootItem = @"rootItem";
+OCDataSourceSpecialItem OCDataSourceSpecialItemFolderStatistics = @"folderStatistics";

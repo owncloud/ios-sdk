@@ -17,6 +17,7 @@
  */
 
 #import "OCQuery.h"
+#import "OCDataTypes.h"
 
 @interface OCQuery (Internal)
 
@@ -27,6 +28,9 @@
 - (void)mergeItemsToFullQueryResults:(NSArray <OCItem *> *)mergeItems syncAnchor:(OCSyncAnchor)syncAnchor;
 
 - (OCCoreItemList *)fullQueryResultsItemList;
+
+#pragma mark - Data source
+- (void)updateDataSourceSpecialItemsForItems:(NSArray<OCItem *> *)items;
 
 #pragma mark - Update processed results
 - (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;

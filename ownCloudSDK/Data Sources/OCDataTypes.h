@@ -66,6 +66,7 @@ extern OCDataItemType OCDataItemTypeTextResource; //!< Item of type OCResourceTe
 extern OCDataItemType OCDataItemTypeMessage; //!< Item of type message
 extern OCDataItemType OCDataItemTypeAction;  //!< Item of type OCAction
 extern OCDataItemType OCDataItemTypeSavedSearch; //!< Item of type OCSavedSearch
+extern OCDataItemType OCDataItemTypeStatistic; //!< Item of type OCStatistic
 extern OCDataItemType OCDataItemTypeView;  //!< Item of type UIView
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance

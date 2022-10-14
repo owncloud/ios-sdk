@@ -362,6 +362,7 @@
 		{
 			_queryResultsDataSource = [[OCDataSourceArray alloc] init];
 
+			[self updateDataSourceSpecialItemsForItems:_processedQueryResults];
 			[_queryResultsDataSource setVersionedItems:_processedQueryResults];
 		}
 	}

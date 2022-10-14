@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSSet<OCDataItemReference> *updatedItems; //!< Updated items since last snapshot
 @property(strong,nullable) NSSet<OCDataItemReference> *removedItems; //!< Removed items since last snapshot
 
-@property(strong,nullable) NSDictionary<OCDataSourceSpecialItem, OCDataItemReference> *specialItems; //!< The current special item references at the time of snapshot
+@property(strong,nullable) NSDictionary<OCDataSourceSpecialItem, id<OCDataItem>> *specialItems; //!< The current special items at the time of snapshot
 
 @end
 
