@@ -148,7 +148,7 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 - (NSString *)valueForHeaderField:(OCHTTPHeaderFieldName)headerField;
 - (void)setValue:(NSString *)value forHeaderField:(OCHTTPHeaderFieldName)headerField;
 
-- (void)addHeaderFields:(NSDictionary<OCHTTPHeaderFieldName,NSString*> *)headerFields;
+- (void)addHeaderFields:(OCHTTPStaticHeaderFields)headerFields;
 
 - (OCHTTPRequestStatusPolicy)policyForStatus:(OCHTTPStatusCode)statusCode;
 - (void)setPolicy:(OCHTTPRequestStatusPolicy)policy forStatus:(OCHTTPStatusCode)statusCode;

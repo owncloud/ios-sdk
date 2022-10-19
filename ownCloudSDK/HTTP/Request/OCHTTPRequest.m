@@ -175,7 +175,7 @@
 	}
 }
 
-- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields
+- (void)addHeaderFields:(OCHTTPStaticHeaderFields)headerFields
 {
 	if (headerFields != nil)
 	{

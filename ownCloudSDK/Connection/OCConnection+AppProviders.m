@@ -148,6 +148,8 @@
 
 	if ((request = [OCHTTPRequest requestWithURL:appListURL]) != nil)
 	{
+		OCHTTPStaticHeaderFields staticHeaderFields = self.staticHeaderFields;
+
 		request.method = OCHTTPMethodPOST;
 		request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
 		request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
@@ -200,13 +202,18 @@
 					if ([methodString isEqual:@"POST"]) { httpMethod = OCHTTPMethodPOST; }
 				}
 
+				if (staticHeaderFields.count > 0)
+				{
+					requestHeaderFields = [[NSMutableDictionary alloc] initWithDictionary:staticHeaderFields];
+				}
+
 				if ([httpMethod isEqual:OCHTTPMethodGET])
 				{
 					NSDictionary<NSString *, id> *rawHeaders;
 
 					if ((rawHeaders = OCTypedCast(jsonResponse[@"headers"], NSDictionary)) != nil)
 					{
-						requestHeaderFields = [NSMutableDictionary new];
+						if (requestHeaderFields == nil) { requestHeaderFields = [NSMutableDictionary new]; }
 
 						[rawHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
 							NSString *stringKey, *stringValue;
@@ -266,7 +273,6 @@
 			if (error == nil)
 			{
 				NSMutableURLRequest *urlRequest;
-
 
 				// Apply URL + HTTP method
 				urlRequest = [NSMutableURLRequest requestWithURL:appURL];

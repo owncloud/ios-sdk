@@ -153,7 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCBookmark *bookmark;
 @property(nullable,strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
-@property(nullable,strong) NSDictionary<NSString *, NSString *> *staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
+@property(nullable,strong) OCHTTPStaticHeaderFields staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
 
 @property(nullable,strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
