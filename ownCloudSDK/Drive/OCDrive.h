@@ -29,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString *OCDriveType NS_TYPED_ENUM;
 typedef NSString* OCDriveAlias;
 
+typedef NSString *OCDriveSpecialType NS_TYPED_ENUM;
+
 typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 {
 	OCDriveDetachedStateNone,
@@ -44,6 +46,8 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(strong) OCDriveID identifier;
 @property(strong) OCDriveType type;
+
+@property(readonly,nonatomic,nullable) OCDriveSpecialType specialType; //!< Convenience accessor to determine if a drive is the personal or shares jail drive.
 
 @property(readonly,nonatomic) BOOL isDeactivated;
 
@@ -79,6 +83,12 @@ extern OCDriveType OCDriveTypePersonal; //!< A users personal space
 extern OCDriveType OCDriveTypeVirtual;	//!< Virtual space containing all items shared with the user
 extern OCDriveType OCDriveTypeProject;	//!< Regular spaces
 extern OCDriveType OCDriveTypeShare;
+
+extern OCDriveSpecialType OCDriveSpecialTypePersonal;	//!< The user's personal space
+extern OCDriveSpecialType OCDriveSpecialTypeShares;	//!< The Shares Jail space
+extern OCDriveSpecialType OCDriveSpecialTypeSpace;	//!< Regular project spaces
+
+extern OCDriveID OCDriveIDSharesJail; //!< The static UUID of the Shares Jail
 
 #define OCDriveIDNil ((OCDriveID)NSNull.null)
 #define OCDriveIDWrap(driveID) ((OCDriveID)((driveID == nil) ? OCDriveIDNil : driveID))

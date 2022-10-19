@@ -132,15 +132,41 @@
 	 	OCNANotEqual(drive.rootETag, self.rootETag));
 }
 
+#pragma mark - Special types
+- (OCDriveSpecialType)specialType
+{
+	// Personal space, identified by type
+	if ([self.type isEqual:OCDriveTypePersonal])
+	{
+		return (OCDriveSpecialTypePersonal);
+	}
+
+	// Shares space, identified by UUID
+	if ([self.identifier isEqual:OCDriveIDSharesJail])
+	{
+		return (OCDriveSpecialTypeShares);
+	}
+
+	// Project space, identified by type
+	if ([self.type isEqual:OCDriveTypeProject])
+	{
+		return (OCDriveSpecialTypeSpace);
+	}
+
+	return (nil);
+}
+
 #pragma mark - Overrides
 - (NSString *)name
 {
-	if ([self.type isEqual:OCDriveTypePersonal])
+	OCDriveSpecialType specialType = self.specialType;
+
+	if (specialType == OCDriveSpecialTypePersonal)
 	{
 		return (OCLocalized(@"Personal"));
 	}
 
-	if ([self.type isEqual:OCDriveTypeVirtual])
+	if (specialType == OCDriveSpecialTypeShares)
 	{
 		return (OCLocalized(@"Shares"));
 	}
@@ -269,3 +295,9 @@ OCDriveType OCDriveTypePersonal = @"personal";
 OCDriveType OCDriveTypeVirtual = @"virtual";
 OCDriveType OCDriveTypeProject = @"project";
 OCDriveType OCDriveTypeShare = @"share";
+
+OCDriveSpecialType OCDriveSpecialTypePersonal = @"personal";
+OCDriveSpecialType OCDriveSpecialTypeShares = @"shares";
+OCDriveSpecialType OCDriveSpecialTypeSpace = @"space";
+
+OCDriveID OCDriveIDSharesJail = @"a0ca6a90-a365-4782-871e-d44447bbc668$a0ca6a90-a365-4782-871e-d44447bbc668";
