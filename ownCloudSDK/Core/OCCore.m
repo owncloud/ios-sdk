@@ -68,6 +68,7 @@
 #import "OCCore+DataSources.h"
 #import "OCDataSourceKVO.h"
 #import "OCVault+Internal.h"
+#import "OCLocale+SystemLanguage.h"
 
 @interface OCCore ()
 {
@@ -357,16 +358,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
 		{
-			NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+			NSString *acceptLanguage;
 
-			if (preferredLocalizations.count > 0)
+			if ((acceptLanguage = OCLocale.sharedLocale.acceptLanguageString) != nil)
 			{
-				NSString *acceptLanguage;
-
-				if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
-				{
-					_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
-				}
+				_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
 			}
 		}
 

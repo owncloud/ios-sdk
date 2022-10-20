@@ -381,6 +381,8 @@
 		DC5D9E6824963DED00BFFE8E /* OCMessageChoice.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5D9E6624963DED00BFFE8E /* OCMessageChoice.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC5D9E6924963DED00BFFE8E /* OCMessageChoice.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5D9E6724963DED00BFFE8E /* OCMessageChoice.m */; };
 		DC61E931221423D2002889D6 /* HTTPPipelineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC61E930221423D2002889D6 /* HTTPPipelineTests.m */; };
+		DC622C4E29019515001D73A0 /* OCLocale+SystemLanguage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC622C4C29019515001D73A0 /* OCLocale+SystemLanguage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC622C4F29019515001D73A0 /* OCLocale+SystemLanguage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC622C4D29019515001D73A0 /* OCLocale+SystemLanguage.m */; };
 		DC62FD62211B11FD0034B628 /* OCItem+OCThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */; };
 		DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */; };
 		DC66C6B420540DBD00189B9A /* NSDate+OCDateParser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1356,6 +1358,8 @@
 		DC5D9E6624963DED00BFFE8E /* OCMessageChoice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMessageChoice.h; sourceTree = "<group>"; };
 		DC5D9E6724963DED00BFFE8E /* OCMessageChoice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMessageChoice.m; sourceTree = "<group>"; };
 		DC61E930221423D2002889D6 /* HTTPPipelineTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPPipelineTests.m; sourceTree = "<group>"; };
+		DC622C4C29019515001D73A0 /* OCLocale+SystemLanguage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCLocale+SystemLanguage.h"; sourceTree = "<group>"; };
+		DC622C4D29019515001D73A0 /* OCLocale+SystemLanguage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCLocale+SystemLanguage.m"; sourceTree = "<group>"; };
 		DC62FD60211B11FD0034B628 /* OCItem+OCThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCThumbnail.h"; sourceTree = "<group>"; };
 		DC62FD61211B11FD0034B628 /* OCItem+OCThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCThumbnail.m"; sourceTree = "<group>"; };
 		DC66C6B220540DBD00189B9A /* NSDate+OCDateParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+OCDateParser.h"; sourceTree = "<group>"; };
@@ -1932,6 +1936,8 @@
 				DC0376EC271B1C8500151E8C /* OCLocaleFilterClassSettings.h */,
 				DC0376F1271B1D4600151E8C /* OCLocaleFilterVariables.m */,
 				DC0376F0271B1D4600151E8C /* OCLocaleFilterVariables.h */,
+				DC622C4D29019515001D73A0 /* OCLocale+SystemLanguage.m */,
+				DC622C4C29019515001D73A0 /* OCLocale+SystemLanguage.h */,
 			);
 			path = Locale;
 			sourceTree = "<group>";
@@ -4310,6 +4316,7 @@
 				DCF575DF27956D84003BEBBA /* OCViewProviderContext.h in Headers */,
 				DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */,
 				DC47E4DD27A5820D0020E8EF /* GAODataError.h in Headers */,
+				DC622C4E29019515001D73A0 /* OCLocale+SystemLanguage.h in Headers */,
 				DC47E4D727A5820D0020E8EF /* GAQuota.h in Headers */,
 				DC1C7AC6253F8EE3002F2B9F /* NSError+OCClassSettings.h in Headers */,
 				DC3C7FE121A6EDE00064D193 /* NSError+OCHTTPStatus.h in Headers */,
@@ -5123,6 +5130,7 @@
 				DC8913652092088600028999 /* NSString+OCVersionCompare.m in Sources */,
 				DC75D30C214BF1BA00B6FB62 /* NSString+OCFormatting.m in Sources */,
 				DCADC0452072CCC900DB8E83 /* OCCoreItemListTask.m in Sources */,
+				DC622C4F29019515001D73A0 /* OCLocale+SystemLanguage.m in Sources */,
 				DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */,
 				DC381FC822C80BA400284699 /* OCCore+NameConflicts.m in Sources */,
 				DC6ABF7A25365CB100689C7B /* OCHostSimulator+BuiltIn.m in Sources */,

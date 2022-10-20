@@ -22,6 +22,7 @@
 #import "OCMacros.h"
 #import "OCAppProviderApp.h"
 #import "NSDictionary+OCFormEncoding.h"
+#import "OCLocale+SystemLanguage.h"
 
 @implementation OCConnection (AppProviders)
 
@@ -156,6 +157,15 @@
 			item.fileID,	@"file_id",
 			app.name,	@"app_name",
 		nil];
+
+		NSString *primaryLanguage = OCLocale.sharedLocale.primaryUserLanguage;
+
+		if (primaryLanguage != nil)
+		{
+			[request addParameters:@{
+				@"lang" : primaryLanguage
+			}];
+		}
 
 		if (viewMode != nil)
 		{
