@@ -265,7 +265,20 @@
 			}
 			else if (error == nil)
 			{
-				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:response.status.error];
+				NSError *fallbackError = nil;
+
+				switch (response.status.code)
+				{
+					case OCHTTPStatusCodeTOO_EARLY:
+						fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalized(@"This file is currently being processed and is not yet available for use. Please try again shortly."));
+					break;
+
+					default:
+						fallbackError = response.status.error;
+					break;
+				}
+
+				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:fallbackError];
 			}
 
 			if (error == nil)
@@ -366,7 +379,20 @@
 			}
 			else
 			{
-				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:response.status.error];
+				NSError *fallbackError = nil;
+
+				switch (response.status.code)
+				{
+					case OCHTTPStatusCodeTOO_EARLY:
+						fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalized(@"This file is currently being processed and is not yet available for use. Please try again shortly."));
+					break;
+
+					default:
+						fallbackError = response.status.error;
+					break;
+				}
+
+				error = [NSError errorFromOCISErrorDictionary:jsonResponse underlyingError:fallbackError];
 			}
 
 			completionHandler(error, (error == nil) ? webURL : nil);
