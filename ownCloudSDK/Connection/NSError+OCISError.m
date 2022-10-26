@@ -54,6 +54,11 @@
 				errorCode = OCErrorInvalidParameter;
 			}
 
+			if ([ocisCode isEqual:@"TOO_EARLY"])
+			{
+				errorCode = OCErrorItemProcessing;
+			}
+
 			if (underlyingError != nil)
 			{
 				errorUserInfo[NSUnderlyingErrorKey] = underlyingError;
