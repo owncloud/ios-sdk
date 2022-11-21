@@ -407,6 +407,10 @@
 		DC6BFFEE231FB9F8005FA5CB /* OCEventRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */; };
 		DC6BFFF623206215005FA5CB /* OCEventQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFF423206215005FA5CB /* OCEventQueue.h */; };
 		DC6BFFF723206215005FA5CB /* OCEventQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFF523206215005FA5CB /* OCEventQueue.m */; };
+		DC6C0A4C2923A0050045FF2A /* OCBookmark+DataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6C0A4A2923A0050045FF2A /* OCBookmark+DataItem.h */; };
+		DC6C0A4D2923A0050045FF2A /* OCBookmark+DataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6C0A4B2923A0050045FF2A /* OCBookmark+DataItem.m */; };
+		DC6C0A512923A59A0045FF2A /* OCDataSourceMapped.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6C0A4F2923A59A0045FF2A /* OCDataSourceMapped.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6C0A522923A59A0045FF2A /* OCDataSourceMapped.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6C0A502923A59A0045FF2A /* OCDataSourceMapped.m */; };
 		DC6CC30726428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CC30526428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC6CC30826428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6CC30626428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m */; };
 		DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6CC30D2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h */; };
@@ -1380,6 +1384,10 @@
 		DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventRecord.m; sourceTree = "<group>"; };
 		DC6BFFF423206215005FA5CB /* OCEventQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventQueue.h; sourceTree = "<group>"; };
 		DC6BFFF523206215005FA5CB /* OCEventQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventQueue.m; sourceTree = "<group>"; };
+		DC6C0A4A2923A0050045FF2A /* OCBookmark+DataItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+DataItem.h"; sourceTree = "<group>"; };
+		DC6C0A4B2923A0050045FF2A /* OCBookmark+DataItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+DataItem.m"; sourceTree = "<group>"; };
+		DC6C0A4F2923A59A0045FF2A /* OCDataSourceMapped.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataSourceMapped.h; sourceTree = "<group>"; };
+		DC6C0A502923A59A0045FF2A /* OCDataSourceMapped.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDataSourceMapped.m; sourceTree = "<group>"; };
 		DC6CC30526428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionCustomScheme.h; sourceTree = "<group>"; };
 		DC6CC30626428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionCustomScheme.m; sourceTree = "<group>"; };
 		DC6CC30D2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionMIBrowser.h; sourceTree = "<group>"; };
@@ -2801,6 +2809,15 @@
 			path = Internal;
 			sourceTree = "<group>";
 		};
+		DC6C0A4E2923A50A0045FF2A /* Mapped */ = {
+			isa = PBXGroup;
+			children = (
+				DC6C0A502923A59A0045FF2A /* OCDataSourceMapped.m */,
+				DC6C0A4F2923A59A0045FF2A /* OCDataSourceMapped.h */,
+			);
+			path = Mapped;
+			sourceTree = "<group>";
+		};
 		DC6CC30426428DA40040ECAC /* Custom Scheme */ = {
 			isa = PBXGroup;
 			children = (
@@ -3156,6 +3173,8 @@
 			children = (
 				DCC8F9E12028554E00EB6701 /* OCBookmark.m */,
 				DCC8F9E02028554E00EB6701 /* OCBookmark.h */,
+				DC6C0A4B2923A0050045FF2A /* OCBookmark+DataItem.m */,
+				DC6C0A4A2923A0050045FF2A /* OCBookmark+DataItem.h */,
 				DC3E6E7E2609473200D7D847 /* OCBookmark+DBMigration.m */,
 				DC3E6E7D2609473200D7D847 /* OCBookmark+DBMigration.h */,
 				DCD49A0924E68BD5008D9544 /* OCBookmark+Diagnostics.m */,
@@ -3570,6 +3589,7 @@
 				DCD3F6A227EA887B00D86662 /* Array Backed */,
 				DCB4F6E928324B70005AD181 /* KVO Backed */,
 				DCFC9EDE28004767005D9144 /* Composition */,
+				DC6C0A4E2923A50A0045FF2A /* Mapped */,
 				DC04FFBF27F5988F00F22569 /* Subscriptions */,
 				DC04FFC027F5989B00F22569 /* Snapshots */,
 				DC04FFC127F598A800F22569 /* Item Records */,
@@ -4402,6 +4422,7 @@
 				DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */,
 				DC2F636F2239557B0063C2DA /* OCShareQuery+Internal.h in Headers */,
 				DC3CE0402429FAA200AB8B88 /* OCMessage.h in Headers */,
+				DC6C0A4C2923A0050045FF2A /* OCBookmark+DataItem.h in Headers */,
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
 				DCD63276223BB1710090169E /* OCCapabilities.h in Headers */,
 				DC47E4D427A5820D0020E8EF /* GAPasswordProfile.h in Headers */,
@@ -4454,6 +4475,7 @@
 				DC139CC820DBB8440090175A /* OCChecksum.h in Headers */,
 				DCC8FA032029BA7A00EB6701 /* OCVault.h in Headers */,
 				DC29F4C224323C4900347658 /* OCMessageTemplate.h in Headers */,
+				DC6C0A512923A59A0045FF2A /* OCDataSourceMapped.h in Headers */,
 				DC0BE5B128F80BBA00CE2101 /* OCShareRole.h in Headers */,
 				DCA35D5924CF6B2000DBE2B0 /* OCSyncRecord+Diagnostic.h in Headers */,
 				DC82665F2818972200F91F7D /* OCVaultLocation.h in Headers */,
@@ -4909,6 +4931,7 @@
 				DCC8F9EF2028558000EB6701 /* OCQuery.m in Sources */,
 				DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */,
 				DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */,
+				DC6C0A522923A59A0045FF2A /* OCDataSourceMapped.m in Sources */,
 				DCEE0B5725E68C53006534B5 /* OCBookmarkManager+ItemResolution.m in Sources */,
 				DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */,
 				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
@@ -5050,6 +5073,7 @@
 				DCF072E92798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m in Sources */,
 				DC47E4C027A5820D0020E8EF /* GAUser.m in Sources */,
 				DCADC0492072CDEA00DB8E83 /* OCCoreItemList.m in Sources */,
+				DC6C0A4D2923A0050045FF2A /* OCBookmark+DataItem.m in Sources */,
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,

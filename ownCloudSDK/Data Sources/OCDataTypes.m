@@ -20,6 +20,7 @@
 
 OCDataItemType OCDataItemTypeItem = @"item";
 OCDataItemType OCDataItemTypeDrive = @"drive";
+OCDataItemType OCDataItemTypeLocation = @"location";
 OCDataItemType OCDataItemTypePresentable = @"presentable";
 OCDataItemType OCDataItemTypeTextResource = @"textResource";
 OCDataItemType OCDataItemTypeMessage = @"message";
@@ -27,6 +28,7 @@ OCDataItemType OCDataItemTypeAction = @"action";
 OCDataItemType OCDataItemTypeSavedSearch = @"savedSearch";
 OCDataItemType OCDataItemTypeStatistic = @"statistic";
 OCDataItemType OCDataItemTypeView = @"view";
+OCDataItemType OCDataItemTypeBookmark = @"bookmark";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

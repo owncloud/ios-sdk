@@ -21,6 +21,9 @@
 #import "NSString+OCPath.h"
 #import "OCDrive.h"
 #import "OCLogger.h"
+#import "OCDataRenderer.h"
+#import "OCDataConverter.h"
+#import "OCDataItemPresentable.h"
 
 @interface OCLocation ()
 {
@@ -312,6 +315,81 @@
 	}
 
 	return (NO);
+}
+
+#pragma mark - OCDataItem
+- (OCDataItemType)dataItemType
+{
+	return (OCDataItemTypeLocation);
+}
+
+- (OCDataItemReference)dataItemReference
+{
+	return (self.string);
+}
+
+#pragma mark - OCDataItemVersioning
+- (OCDataItemVersion)dataItemVersion
+{
+	// Version remains the same as the reference changes when the content changes
+	return (@(0));
+}
+
+#pragma mark - OCDataConverter for OCLocation
++ (void)load
+{
+	OCDataConverter *locationToPresentableConverter;
+
+	locationToPresentableConverter = [[OCDataConverter alloc] initWithInputType:OCDataItemTypeLocation outputType:OCDataItemTypePresentable conversion:^id _Nullable(OCDataConverter * _Nonnull converter, OCLocation * _Nullable inLocation, OCDataRenderer * _Nullable renderer, NSError * _Nullable __autoreleasing * _Nullable outError, OCDataViewOptions  _Nullable options) {
+		OCDataItemPresentable *presentable = nil;
+
+		if (inLocation != nil)
+		{
+			presentable = [[OCDataItemPresentable alloc] initWithItem:inLocation];
+			presentable.title = inLocation.lastPathComponent;
+
+			switch (inLocation.type)
+			{
+				case OCLocationTypeFile:
+					presentable.image = [UIImage systemImageNamed:@"doc"];
+				break;
+
+				case OCLocationTypeDrive:
+					presentable.image = [UIImage systemImageNamed:@"square.grid.2x2"];
+				break;
+
+				default:
+				case OCLocationTypeFolder:
+					if (inLocation.isRoot)
+					{
+						if (inLocation.driveID == nil)
+						{
+							presentable.title = OCLocalized(@"Personal");
+							presentable.image = [UIImage systemImageNamed:@"person"];
+						}
+						else
+						{
+							presentable.image = [UIImage systemImageNamed:@"square.grid.2x2"];
+						}
+					}
+					else
+					{
+						presentable.image = [UIImage systemImageNamed:@"folder"];
+					}
+				break;
+
+				case OCLocationTypeAccount:
+					presentable.image = [UIImage systemImageNamed:@"person"];
+				break;
+			}
+		}
+
+		return (presentable);
+	}];
+
+	[OCDataRenderer.defaultRenderer addConverters:@[
+		locationToPresentableConverter
+	]];
 }
 
 @end

@@ -19,8 +19,13 @@
 #import "OCBookmarkManager.h"
 #import "OCAppIdentity.h"
 #import "OCLogger.h"
+#import "OCDataSourceArray.h"
+#import "OCBookmark+DataItem.h"
 
 @implementation OCBookmarkManager
+{
+	OCDataSourceArray *_bookmarksDatasource;
+}
 
 @synthesize bookmarks = _bookmarks;
 
@@ -240,6 +245,8 @@
 	@synchronized(self)
 	{
 		[_bookmarks addObject:bookmark];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -252,6 +259,8 @@
 	@synchronized(self)
 	{
 		[_bookmarks removeObject:bookmark];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -265,6 +274,8 @@
 
 		[_bookmarks removeObject:bookmark];
 		[_bookmarks insertObject:bookmark atIndex:toIndex];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -283,10 +294,27 @@
 
 	if (saveAndPostUpdate)
 	{
+		@synchronized (self)
+		{
+			[_bookmarksDatasource setItems:_bookmarks updated:[NSSet setWithObject:bookmark]];
+		}
 		[self saveBookmarks];
 	}
 
 	return (saveAndPostUpdate);
+}
+
+#pragma mark - Data sources
+- (OCDataSource *)bookmarksDatasource
+{
+	@synchronized(self)
+	{
+		if (_bookmarksDatasource == nil)
+		{
+			_bookmarksDatasource = [[OCDataSourceArray alloc] initWithItems:_bookmarks];
+		}
+	}
+	return (_bookmarksDatasource);
 }
 
 #pragma mark - Acessing bookmarks

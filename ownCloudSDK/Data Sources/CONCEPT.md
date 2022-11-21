@@ -33,6 +33,8 @@
 	- allow sorting and filtering through blocks, either on item references or item records
 		- leveraging converters and presentable intermediates allows implementing filters and sorting that work across data types
 
+- mapped
+	- maps/converts a source datasource's items into other items and allows keeping them in sync with minimum effort
 
 ## Composition example
 The following code shows examples for various customizations. NOTE: not all of the customizations shown make sense at the same time.

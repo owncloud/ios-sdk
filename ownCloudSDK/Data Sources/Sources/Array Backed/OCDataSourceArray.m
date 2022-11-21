@@ -20,6 +20,16 @@
 
 @implementation OCDataSourceArray
 
+- (instancetype)initWithItems:(nullable NSArray<id<OCDataItem>> *)items
+{
+	if ((self = [self init]) != nil)
+	{
+		[self setItems:items updated:nil];
+	}
+
+	return (self);
+}
+
 - (void)setItems:(nullable NSArray<id<OCDataItem>> *)items updated:(nullable NSSet<id<OCDataItem>> *)updatedItems
 {
 	NSMapTable<OCDataItemReference, id<OCDataItem>> *itemsByReference = [NSMapTable strongToStrongObjectsMapTable];

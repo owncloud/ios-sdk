@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCTypes.h"
 #import "OCBookmark.h"
+#import "OCDataTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,7 +35,7 @@ typedef NS_OPTIONS(NSInteger, OCLocationType) {
 	OCLocationTypeAccount	= (1 << 3)	//!< Location points to an entire account
 };
 
-@interface OCLocation : NSObject <NSSecureCoding, NSCopying>
+@interface OCLocation : NSObject <NSSecureCoding, NSCopying, OCDataItem, OCDataItemVersioning>
 
 @property(class,strong,readonly,nonatomic) OCLocation *legacyRootLocation;
 + (OCLocation *)legacyRootPath:(nullable OCPath)path;

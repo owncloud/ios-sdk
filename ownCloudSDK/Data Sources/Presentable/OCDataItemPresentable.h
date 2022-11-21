@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import "OCDataTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,6 +38,7 @@ typedef OCResourceRequest * _Nullable(^OCDataItemPresentableResourceRequestProvi
 @property(nullable,strong) OCDataItemVersion dataItemVersion;
 
 #pragma mark - Presentable properties
+@property(strong,nullable) UIImage *image;
 @property(strong,nullable) NSString *title;
 @property(strong,nullable) NSString *subtitle;
 

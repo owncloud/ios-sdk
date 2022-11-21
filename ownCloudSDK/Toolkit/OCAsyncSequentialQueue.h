@@ -27,6 +27,8 @@ typedef void(^OCAsyncSequentialQueueExecutor)(OCAsyncSequentialQueueJob job, dis
 
 @property(copy) OCAsyncSequentialQueueExecutor executor;
 
+- (instancetype)initWithQueue:(dispatch_queue_t)dispatchQueue;
+
 - (void)async:(OCAsyncSequentialQueueJob)job;
 
 @end
