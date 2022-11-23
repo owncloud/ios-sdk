@@ -607,7 +607,7 @@
 		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
 		DCB4F6E728324A3A005AD181 /* OCVaultDriveList.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB4F6E528324A3A005AD181 /* OCVaultDriveList.h */; };
 		DCB4F6E828324A3A005AD181 /* OCVaultDriveList.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB4F6E628324A3A005AD181 /* OCVaultDriveList.m */; };
-		DCB4F6EC28324B90005AD181 /* OCDataSourceKVO.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB4F6EA28324B90005AD181 /* OCDataSourceKVO.h */; };
+		DCB4F6EC28324B90005AD181 /* OCDataSourceKVO.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB4F6EA28324B90005AD181 /* OCDataSourceKVO.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB4F6ED28324B90005AD181 /* OCDataSourceKVO.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB4F6EB28324B90005AD181 /* OCDataSourceKVO.m */; };
 		DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB572AC2099EFC600B793CE /* OCDatabase+Schemas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB572AD2099EFC600B793CE /* OCDatabase+Schemas.m */; };

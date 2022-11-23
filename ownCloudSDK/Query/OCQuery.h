@@ -69,7 +69,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 	NSMutableArray <OCItem *> *_fullQueryResults; 	  		// All items matching the query, before applying filters and sorting.
 	NSMutableArray <OCItem *> *_processedQueryResults; 		// Like full query results, but after applying sorting and filtering.
-	BOOL _processedQueryResultsHasItems; // YES if there is 1 or more items in processedQueryResults
+	BOOL _fullQueryResultsSetOnce;					// YES if fullQueryResults have been set at least once
 	OCDataSourceArray *_queryResultsDataSource;
 
 	OCCoreItemList *_fullQueryResultsItemList;			// Cached item list of _fullQueryResults used in the default

@@ -28,6 +28,7 @@
 	@synchronized(self)
 	{
 		_fullQueryResults = fullQueryResults;
+		_fullQueryResultsSetOnce = YES;
 
 		// Release cached item list
 		_fullQueryResultsItemList = nil;
@@ -154,7 +155,6 @@
 
 			// We just recomputed
 			_processedQueryResults = newProcessedResults;
-			_processedQueryResultsHasItems = (newProcessedResults.count > 0);
 			_needsRecomputation = NO;
 
 			_queryResultsDataSource.state = [self _dataSourceState];
@@ -213,7 +213,7 @@
 		break;
 
 		case OCQueryStateWaitingForServerReply:
-			if (!_processedQueryResultsHasItems)
+			if (!_fullQueryResultsSetOnce)
 			{
 				return (OCDataSourceStateLoading);
 			}

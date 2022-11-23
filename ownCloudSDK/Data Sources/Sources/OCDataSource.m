@@ -43,6 +43,21 @@
 	return (self);
 }
 
+- (void)dealloc
+{
+	NSArray<OCDataSourceSubscription *> *subscriptions;
+
+	@synchronized (_subscriptions)
+	{
+		subscriptions = [_subscriptions copy];
+	}
+
+	for (OCDataSourceSubscription *subscription in subscriptions)
+	{
+		[self terminateSubscription:subscription];
+	}
+}
+
 #pragma mark - Item retrieval
 - (OCDataItemRecord *)recordForItemRef:(OCDataItemReference)itemRef error:(NSError * _Nullable __autoreleasing *)error
 {

@@ -24,6 +24,7 @@
 #import "OCDataRenderer.h"
 #import "OCDataConverter.h"
 #import "OCDataItemPresentable.h"
+#import "OCSymbol.h"
 
 @interface OCLocation ()
 {
@@ -351,11 +352,11 @@
 			switch (inLocation.type)
 			{
 				case OCLocationTypeFile:
-					presentable.image = [UIImage systemImageNamed:@"doc"];
+					presentable.image = [OCSymbol iconForSymbolName:@"doc"];
 				break;
 
 				case OCLocationTypeDrive:
-					presentable.image = [UIImage systemImageNamed:@"square.grid.2x2"];
+					presentable.image = [OCSymbol iconForSymbolName:@"square.grid.2x2"];
 				break;
 
 				default:
@@ -364,22 +365,27 @@
 					{
 						if (inLocation.driveID == nil)
 						{
-							presentable.title = OCLocalized(@"Personal");
-							presentable.image = [UIImage systemImageNamed:@"person"];
+							// Identical to ocis
+							// presentable.title = OCLocalized(@"Personal");
+							// presentable.image = [OCSymbol iconForSymbolName:@"person"];
+
+							// OC10 style
+							presentable.title = OCLocalized(@"Files");
+							presentable.image = [OCSymbol iconForSymbolName:@"folder"];
 						}
 						else
 						{
-							presentable.image = [UIImage systemImageNamed:@"square.grid.2x2"];
+							presentable.image = [OCSymbol iconForSymbolName:@"square.grid.2x2"];
 						}
 					}
 					else
 					{
-						presentable.image = [UIImage systemImageNamed:@"folder"];
+						presentable.image = [OCSymbol iconForSymbolName:@"folder"];
 					}
 				break;
 
 				case OCLocationTypeAccount:
-					presentable.image = [UIImage systemImageNamed:@"person"];
+					presentable.image = [OCSymbol iconForSymbolName:@"person"];
 				break;
 			}
 		}
