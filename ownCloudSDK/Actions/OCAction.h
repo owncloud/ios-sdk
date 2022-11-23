@@ -26,10 +26,13 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString* OCActionIdentifier;
 typedef NSString* OCActionVersion;
 
-typedef NSString* OCActionOptionKey NS_TYPED_ENUM;
-typedef NSDictionary<OCActionOptionKey,id>* OCActionOptions;
+typedef NSString* OCActionPropertyKey NS_TYPED_ENUM;
+typedef NSDictionary<OCActionPropertyKey,id>* OCActionProperties;
 
-typedef void(^OCActionBlock)(OCAction *action, OCActionOptions _Nullable options, void(^completionHandler)(NSError * _Nullable error));
+typedef NSString* OCActionRunOptionKey NS_TYPED_ENUM;
+typedef NSDictionary<OCActionRunOptionKey,id>* OCActionRunOptions;
+
+typedef void(^OCActionBlock)(OCAction *action, OCActionRunOptions _Nullable options, void(^completionHandler)(NSError * _Nullable error));
 
 typedef NS_ENUM(NSInteger, OCActionType) {
 	OCActionTypeRegular,
@@ -43,6 +46,8 @@ typedef NS_ENUM(NSInteger, OCActionType) {
 
 @property(assign) OCActionType type;
 
+@property(strong) OCActionProperties properties;
+
 @property(strong) NSString *title;
 @property(strong, nullable) UIImage *icon;
 
@@ -50,7 +55,7 @@ typedef NS_ENUM(NSInteger, OCActionType) {
 
 - (instancetype)initWithTitle:(NSString *)title icon:(nullable UIImage *)icon action:(nullable OCActionBlock)actionBlock;
 
-- (void)runActionWithOptions:(nullable OCActionOptions)options completionHandler:(nullable void(^)(NSError * _Nullable error))completionHandler;
+- (void)runActionWithOptions:(nullable OCActionRunOptions)options completionHandler:(nullable void(^)(NSError * _Nullable error))completionHandler;
 
 @end
 

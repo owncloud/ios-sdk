@@ -167,6 +167,17 @@
 	}
 }
 
+- (void)signalUpdatesForItemReferences:(nullable NSSet<OCDataItemReference> *)updatedItemRefs
+{
+	@synchronized (_subscriptions)
+	{
+		for (OCDataSourceSubscription *subscription in _subscriptions)
+		{
+			[subscription _updateWithItemReferences:_itemReferences updated:updatedItemRefs];
+		}
+	}
+}
+
 @end
 
 OCDataSourceSpecialItem OCDataSourceSpecialItemHeader = @"header";

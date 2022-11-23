@@ -31,6 +31,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_reference = NSUUID.UUID.UUIDString;
+		_properties = [NSMutableDictionary new];
 	}
 
 	return (self);
@@ -48,7 +49,7 @@
 	return (self);
 }
 
-- (void)runActionWithOptions:(OCActionOptions)options completionHandler:(void(^)(NSError * _Nullable error))completionHandler
+- (void)runActionWithOptions:(OCActionRunOptions)options completionHandler:(void(^)(NSError * _Nullable error))completionHandler
 {
 	if (_actionBlock != nil)
 	{

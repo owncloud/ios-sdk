@@ -75,6 +75,7 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 
 #pragma mark - Managing content
 - (void)setItemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updated:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
+- (void)signalUpdatesForItemReferences:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
 
 @end
 
