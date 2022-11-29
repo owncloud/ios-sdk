@@ -28,14 +28,14 @@
 	OCDataSourceMappedItemCreator _itemCreator;
 	OCDataSourceMappedItemUpdater _itemUpdater;
 	OCDataSourceMappedItemDestroyer _itemDestroyer;
+
+	dispatch_queue_t _queue;
 }
 
 - (instancetype)initWithSource:(OCDataSource *)source creator:(OCDataSourceMappedItemCreator)itemCreator updater:(nullable OCDataSourceMappedItemUpdater)itemUpdater destroyer:(nullable OCDataSourceMappedItemDestroyer)itemDestroyer queue:(nullable dispatch_queue_t)queue
 {
 	if ((self = [super initWithItems:nil]) != nil)
 	{
-		_source = source;
-
 		_itemCreator = itemCreator;
 		_itemUpdater = itemUpdater;
 		_itemDestroyer = itemDestroyer;
@@ -43,19 +43,45 @@
 		_mappedItems = NSMutableArray.new;
 		_mappedItemBySourceItemReference = NSMapTable.strongToWeakObjectsMapTable;
 
-		__weak OCDataSourceMapped *weakSelf = self;
+		_queue = queue;
 
-		_subscription = [_source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
-			OCDataSourceSnapshot *snapshot;
-
-			if ((snapshot = [subscription snapshotResettingChangeTracking:YES]) != nil)
-			{
-				[weakSelf _handleSourceSnapshot:snapshot];
-			}
-		} onQueue:queue trackDifferences:YES performIntialUpdate:YES];
+		self.source = source;
 	}
 
 	return (self);
+}
+
+- (void)setSource:(OCDataSource *)source
+{
+	if ((_source != nil) && (source != _source))
+	{
+		[_subscription terminate];
+		_subscription = nil;
+
+		if (_itemDestroyer != nil)
+		{
+			NSDictionary<OCDataItemReference, id<OCDataItem>> *mappedItemBySourceItemReference = _mappedItemBySourceItemReference.dictionaryRepresentation;
+
+			[mappedItemBySourceItemReference enumerateKeysAndObjectsUsingBlock:^(OCDataItemReference  _Nonnull sourceItemRef, id<OCDataItem>  _Nonnull mappedItem, BOOL * _Nonnull stop) {
+				_itemDestroyer(self, sourceItemRef, mappedItem);
+			}];
+
+			[_mappedItems removeAllObjects];
+			[_mappedItemBySourceItemReference removeAllObjects];
+		}
+	}
+
+	_source = source;
+
+	__weak OCDataSourceMapped *weakSelf = self;
+	_subscription = [_source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+		OCDataSourceSnapshot *snapshot;
+
+		if ((snapshot = [subscription snapshotResettingChangeTracking:YES]) != nil)
+		{
+			[weakSelf _handleSourceSnapshot:snapshot];
+		}
+	} onQueue:_queue trackDifferences:YES performIntialUpdate:YES];
 }
 
 - (void)_handleSourceSnapshot:(OCDataSourceSnapshot *)snapshot

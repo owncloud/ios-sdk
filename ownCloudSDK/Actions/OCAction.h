@@ -36,8 +36,9 @@ typedef void(^OCActionBlock)(OCAction *action, OCActionRunOptions _Nullable opti
 
 typedef NS_ENUM(NSInteger, OCActionType) {
 	OCActionTypeRegular,
+	OCActionTypeWarning,
 	OCActionTypeDestructive
-};
+} __attribute__((enum_extensibility(closed)));
 
 @interface OCAction : NSObject <OCDataItem, OCDataItemVersioning>
 

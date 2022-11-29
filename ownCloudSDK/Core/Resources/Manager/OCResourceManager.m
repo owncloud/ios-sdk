@@ -22,6 +22,7 @@
 #import "OCResourceSourceStorage.h"
 #import "OCLogger.h"
 #import "NSError+OCError.h"
+#import "NSError+OCHTTPStatus.h"
 
 @interface OCResourceManager ()
 {
@@ -448,6 +449,16 @@
 - (void)_handleError:(nullable NSError *)error resource:(nullable OCResource *)resource forJob:(OCResourceManagerJob *)job seed:(OCResourceManagerJobSeed)originalSeed from:(OCResourceSource *)source // RUNS ON _QUEUE
 {
 	OCTLogDebug(@[@"ResMan"], @"Source %@ returned resource=%@, error=%@", source.identifier, resource, error);
+
+	if ([error isHTTPStatusErrorWithCode:OCHTTPStatusCodeTOO_EARLY])
+	{
+		// Resource is not available yet (f.ex. still processed by the server):
+		// - log, but don't try again because resource could remain in processing for a loooong time
+		// - handle as if resoruce does not exist
+		OCTLogDebug(@[@"ResMan"], @"Handling source %@ returned resource=%@ error=%@ (!! remote resource processing - will not retry !!) as OCErrorResourceDoesNotExist", source.identifier, resource, error);
+
+		error = OCErrorFromError(OCErrorResourceDoesNotExist, error);
+	}
 
 	if ([error isOCErrorWithCode:OCErrorResourceDoesNotExist])
 	{

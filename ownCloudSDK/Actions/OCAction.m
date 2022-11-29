@@ -51,6 +51,13 @@
 
 - (void)runActionWithOptions:(OCActionRunOptions)options completionHandler:(void(^)(NSError * _Nullable error))completionHandler
 {
+	if (completionHandler == nil)
+	{
+		// Provide dummy completionHandler if none is provided
+		completionHandler = ^(NSError *error){
+		};
+	}
+
 	if (_actionBlock != nil)
 	{
 		_actionBlock(self, options, completionHandler);

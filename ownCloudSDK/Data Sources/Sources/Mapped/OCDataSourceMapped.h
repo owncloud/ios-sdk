@@ -28,7 +28,7 @@ typedef void(^OCDataSourceMappedItemDestroyer)(OCDataSourceMapped *mappedSource,
 
 @interface OCDataSourceMapped : OCDataSourceArray
 
-@property(strong) OCDataSource *source;
+@property(nullable,strong,nonatomic) OCDataSource *source;
 
 - (instancetype)initWithItems:(nullable NSArray<id<OCDataItem>> *)items NS_UNAVAILABLE;
 
