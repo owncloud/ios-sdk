@@ -1591,7 +1591,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
 				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
-				if ((item = [core cachedItemAtLocation:[[OCLocation alloc] initWithDriveID:driveID path:path.normalizedDirectoryPath] error:&error]) != nil)
+				if ((item = [core cachedItemAtLocation:[[OCLocation alloc] initWithBookmarkUUID:core.bookmark.uuid driveID:driveID path:path.normalizedDirectoryPath] error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
 				}
@@ -1739,6 +1739,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (cachedItem);
 }
 
+- (void)cachedItemAtLocation:(OCLocation *)location resultHandler:(void (^)(NSError * _Nullable, OCItem * _Nullable))resultHandler
+{
+	if (location.path != nil)
+	{
+		[self.vault.database retrieveCacheItemsAtLocation:location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			resultHandler(error, items.firstObject);
+		}];
+	}
+	else
+	{
+		resultHandler(OCError(OCErrorInsufficientParameters), nil);
+	}
+}
+
 - (nullable OCItem *)cachedItemInParentLocation:(OCLocation *)parentLocation withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
 	NSString *path = [parentLocation.path stringByAppendingPathComponent:name];
@@ -1748,7 +1762,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		path = [path normalizedDirectoryPath];
 	}
 
-	return ([self cachedItemAtLocation:[[OCLocation alloc] initWithDriveID:parentLocation.driveID path:path] error:outError]);
+	return ([self cachedItemAtLocation:[[OCLocation alloc] initWithBookmarkUUID:_bookmark.uuid driveID:parentLocation.driveID path:path] error:outError]);
 }
 
 - (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError

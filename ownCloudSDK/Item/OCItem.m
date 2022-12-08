@@ -296,6 +296,11 @@
 
 	OCLocation *location = [[OCLocation alloc] initWithDriveID:_driveID path:(_type == OCItemTypeCollection) ? _path.normalizedDirectoryPath : _path];
 
+	if (self.bookmarkUUID != nil)
+	{
+		location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:self.bookmarkUUID];
+	}
+
 	_location = location;
 
 	return (location);

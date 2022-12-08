@@ -22,6 +22,8 @@
 
 #import "OCBookmark.h"
 #import "OCCertificate.h"
+#import "OCCertificateStore.h"
+#import "OCCertificateStoreRecord.h"
 #import "OCChecksum.h"
 #import "OCClaim.h"
 #import "OCEventRecord.h"
@@ -82,6 +84,8 @@
 				// OC classes
 				OCBookmark.class,
 				OCCertificate.class,
+				OCCertificateStore.class,
+				OCCertificateStoreRecord.class,
 				OCChecksum.class,
 				OCClaim.class,
 				OCEvent.class,

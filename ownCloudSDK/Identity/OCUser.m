@@ -18,6 +18,7 @@
 
 #import "OCUser.h"
 #import "OCMacros.h"
+#import "OCLogger.h"
 
 @implementation OCUser
 
@@ -120,10 +121,41 @@
 {
 	if (name.length > 0)
 	{
-		NSPersonNameComponentsFormatter *localizedFormatter = OCUser.localizedInitialsFormatter;
-		NSPersonNameComponents *nameComponents = [localizedFormatter personNameComponentsFromString:name];
+		NSString *localizedInitials = nil;
 
-		return ([localizedFormatter stringFromPersonNameComponents:nameComponents]);
+		@try {
+			NSPersonNameComponentsFormatter *localizedFormatter = OCUser.localizedInitialsFormatter;
+			NSPersonNameComponents *nameComponents;
+
+			if ((nameComponents = [localizedFormatter personNameComponentsFromString:name]) != nil)
+			{
+				localizedInitials = [localizedFormatter stringFromPersonNameComponents:nameComponents];
+			}
+		} @catch (NSException *exception) {
+			OCLogDebug(@"Exception asking the OS for localized initials for %@: %@", name, exception);
+		}
+
+		if (localizedInitials == nil)
+		{
+			// Simple fallback algorithm taking the first letter of each word
+			NSArray<NSString *> *nameParts = [name componentsSeparatedByString:@" "];
+			NSMutableString *initials = [NSMutableString new];
+
+			for (NSString *namePart in nameParts)
+			{
+				if (namePart.length > 0)
+				{
+					[initials appendString:[[namePart substringToIndex:1] uppercaseString]];
+				}
+			}
+
+			if (initials.length > 0)
+			{
+				localizedInitials = initials;
+			}
+		}
+
+		return (localizedInitials);
 	}
 
 	return (nil);
@@ -131,9 +163,19 @@
 
 - (NSString *)localizedInitials
 {
-	NSString *name = (self.displayName.length > 0) ? self.displayName : self.userName;
+	NSString *localizedInitials = nil;
 
-	return ([OCUser localizedInitialsForName:name]);
+	if (self.displayName.length > 0)
+	{
+		localizedInitials = [OCUser localizedInitialsForName:self.displayName];
+	}
+
+	if (localizedInitials == nil)
+	{
+		localizedInitials = [OCUser localizedInitialsForName:self.userName];
+	}
+
+	return (localizedInitials);
 }
 
 #pragma mark - Comparison

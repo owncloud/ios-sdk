@@ -2654,7 +2654,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 {
 	OCProgress *requestProgress = nil;
 	NSURL *sourceItemURL, *destinationURL;
-	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }];
+	NSURL *sourceWebDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
+	NSURL *destinationWebDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }];
 
 	if (self.useDriveAPI && ((item.driveID == nil) || (parentItem.driveID == nil)))
 	{
@@ -2664,9 +2665,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return (nil);
 	}
 
-	if ((sourceItemURL = [webDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
+	if ((sourceItemURL = [sourceWebDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
 	{
-		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
+		if ((destinationURL = [[destinationWebDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
 		{
 			OCHTTPRequest *request = [OCHTTPRequest requestWithURL:sourceItemURL];
 

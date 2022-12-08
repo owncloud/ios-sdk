@@ -87,7 +87,7 @@
 
 		if ((parentPath = _path.parentPath) != nil)
 		{
-			_parentLocation = [[OCLocation alloc] initWithDriveID:_driveID path:parentPath];
+			_parentLocation = [[OCLocation alloc] initWithBookmarkUUID:_bookmarkUUID driveID:_driveID path:parentPath];
 		}
 	}
 
@@ -102,7 +102,7 @@
 
 		if ((normalizedDirectoryPath = _path.normalizedDirectoryPath) != nil)
 		{
-			_normalizedDirectoryPathLocation = [[OCLocation alloc] initWithDriveID:_driveID path:normalizedDirectoryPath];
+			_normalizedDirectoryPathLocation = [[OCLocation alloc] initWithBookmarkUUID:_bookmarkUUID driveID:_driveID path:normalizedDirectoryPath];
 		}
 	}
 
@@ -117,7 +117,7 @@
 
 		if ((normalizedFilePath = _path.normalizedFilePath) != nil)
 		{
-			_normalizedFilePathLocation = [[OCLocation alloc] initWithDriveID:_driveID path:normalizedFilePath];
+			_normalizedFilePathLocation = [[OCLocation alloc] initWithBookmarkUUID:_bookmarkUUID driveID:_driveID path:normalizedFilePath];
 		}
 	}
 
@@ -309,10 +309,22 @@
 	{
 		#define compareVar(var) ((otherLocation->var == var) || [otherLocation->var isEqual:var])
 
-		return (compareVar(_bookmarkUUID) &&
-			compareVar(_driveID) &&
-			compareVar(_path)
-		);
+		if (compareVar(_driveID) && compareVar(_path))
+		{
+			if (_driveID != nil)
+			{
+				// If driveID is set and identical, assume the _bookmarkUUID is identical
+				// if one location has it set and the other hasn't
+				if (((_bookmarkUUID != nil) && (otherLocation->_bookmarkUUID == nil)) ||
+				    ((_bookmarkUUID == nil) && (otherLocation->_bookmarkUUID != nil)))
+				{
+					return (YES);
+				}
+			}
+
+			// Compare _bookmarkUUID for identity
+			return (compareVar(_bookmarkUUID));
+		}
 	}
 
 	return (NO);
