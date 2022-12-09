@@ -148,7 +148,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			- ISRG Root X1:
 				96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6
 		*/
-
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionForceBackgroundURLSessions		: @(NO),
@@ -330,6 +329,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionRenewedCertificateAcceptanceRule: @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to `never` if the user should always be prompted when a server's certificate changed.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionAssociatedCertificatesTrackingRule : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met by a hostname other than a bookmark's hostname for the associated certificate to be added to the bookmark, tracked for changes and validated by the same rules as the bookmark's primary certificate. No value (default) or a value of `(0 == 1)` disables this feature. A value of `$hostname like \"*.mycompany.com\"` tracks the certificates for all hosts ending with mycompany.com.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Security",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
@@ -3320,6 +3327,7 @@ OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"preferred-au
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"allowed-authentication-methods";
 OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"certificate-extended-validation-rule";
 OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"renewed-certificate-acceptance-rule";
+OCClassSettingsKey OCConnectionAssociatedCertificatesTrackingRule = @"associated-certificates-tracking-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-url-sessions";

@@ -23,11 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCertificateStoreRecord : NSObject <NSSecureCoding>
 
-@property(strong) NSString *hostname; //!< Hostname this certificate is used for
-@property(strong) NSDate *lastModifiedDate; //!< Date the certificate stored in this record was last modified.
-@property(strong) OCCertificate *certificate;
+@property(strong,readonly) NSString *hostname; //!< Hostname this certificate is used for
+@property(strong,readonly) NSDate *lastModifiedDate; //!< Date the certificate stored in this record was last modified.
+@property(strong,readonly) OCCertificate *certificate;
 
 - (instancetype)initWithCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname;
+- (instancetype)initWithCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname lastModifiedDate:(NSDate *)lastModifiedDate;
 
 @end
 

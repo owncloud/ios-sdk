@@ -22,6 +22,7 @@
 #import "OCDatabase+Versions.h"
 #import "OCViewProvider.h"
 #import "OCUser.h"
+#import "OCCertificateStore.h"
 
 typedef NSUUID* OCBookmarkUUID;
 typedef NSString* OCBookmarkUUIDString;
@@ -55,8 +56,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
 @property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
-@property(strong,nullable) OCCertificate *certificate; //!< Certificate last used by the server this bookmark refers to
-@property(strong,nullable) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
+@property(strong,nullable) OCCertificateStore *certificateStore; //!< Certificate store
+@property(readonly,nullable) OCCertificate *primaryCertificate; //!< Primary certificate for the bookmark (usually the certificate for url.host - or the only certificate in the store)
 
 @property(strong,nullable) OCAuthenticationMethodIdentifier authenticationMethodIdentifier; //!< Identifies the authentication method to use
 @property(strong,nonatomic,nullable) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.

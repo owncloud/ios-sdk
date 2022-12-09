@@ -16,7 +16,7 @@
  *
  */
 
-#import <ownCloudSDK/ownCloudSDK.h>
+#import "OCSQLiteCollation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

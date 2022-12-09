@@ -34,6 +34,19 @@
 	return (self);
 }
 
+- (instancetype)initWithMigrationOfCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname lastModifiedDate:(NSDate *)lastModifiedDate
+{
+	if ((self = [self init]) != nil)
+	{
+		if (hostname != nil)
+		{
+			_recordsByHostname[hostname] = [[OCCertificateStoreRecord alloc] initWithCertificate:certificate forHostname:hostname lastModifiedDate:lastModifiedDate];
+		}
+	}
+
+	return (self);
+}
+
 #pragma mark - Store & retrieve certificates
 - (void)storeCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname
 {
@@ -77,6 +90,14 @@
 	return ((hostnames.count > 0) ? hostnames.allObjects : nil);
 }
 
+- (NSArray<OCCertificateStoreRecord *> *)allRecords
+{
+	@synchronized(_recordsByHostname)
+	{
+		return (_recordsByHostname.allValues);
+	}
+}
+
 #pragma mark - Remove certificates
 - (BOOL)removeCertificateForHostname:(NSString *)hostname
 {
@@ -93,6 +114,14 @@
 	}
 
 	return (NO);
+}
+
+- (void)removeAllCertificates
+{
+	@synchronized(_recordsByHostname)
+	{
+		[_recordsByHostname removeAllObjects];
+	}
 }
 
 #pragma mark - Secure Coding

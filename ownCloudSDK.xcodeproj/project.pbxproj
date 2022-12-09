@@ -532,9 +532,9 @@
 		DC9A116927CFCC1300D90BA4 /* GAPermission.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9A116727CFCC1200D90BA4 /* GAPermission.m */; };
 		DC9B4D3922E987EF0089BF78 /* OCClaim.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1D4D3E20DC2281005A3DFC /* OCClaim.m */; };
 		DC9B4D3A22E987EF0089BF78 /* OCClaim.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1D4D3D20DC2281005A3DFC /* OCClaim.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC9B4FD12941FF540037F8F8 /* OCCertificateStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9B4FCF2941FF540037F8F8 /* OCCertificateStore.h */; };
+		DC9B4FD12941FF540037F8F8 /* OCCertificateStore.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9B4FCF2941FF540037F8F8 /* OCCertificateStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9B4FD22941FF540037F8F8 /* OCCertificateStore.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9B4FD02941FF540037F8F8 /* OCCertificateStore.m */; };
-		DC9B4FD52941FF630037F8F8 /* OCCertificateStoreRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9B4FD32941FF630037F8F8 /* OCCertificateStoreRecord.h */; };
+		DC9B4FD52941FF630037F8F8 /* OCCertificateStoreRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9B4FD32941FF630037F8F8 /* OCCertificateStoreRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9B4FD62941FF630037F8F8 /* OCCertificateStoreRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9B4FD42941FF630037F8F8 /* OCCertificateStoreRecord.m */; };
 		DC9C19E227839E440021222E /* OCResourceSourceStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9C19E027839E440021222E /* OCResourceSourceStorage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC9C19E327839E440021222E /* OCResourceSourceStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9C19E127839E440021222E /* OCResourceSourceStorage.m */; };

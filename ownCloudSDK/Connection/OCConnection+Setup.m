@@ -136,8 +136,7 @@
 						{
 							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 
-							self->_bookmark.certificate = certificate;
-							self->_bookmark.certificateModificationDate = [NSDate date];
+							[self->_bookmark.certificateStore storeCertificate:certificate forHostname:request.hostname];
 						}
 					}]);
 				}
@@ -148,8 +147,7 @@
 					AddIssue([OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelInformal issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 						if (decision == OCIssueDecisionApprove)
 						{
-							self->_bookmark.certificate = certificate;
-							self->_bookmark.certificateModificationDate = [NSDate date];
+							[self->_bookmark.certificateStore storeCertificate:certificate forHostname:request.hostname];
 						}
 					}]);
 

@@ -17,6 +17,7 @@
  */
 
 #import "OCCertificateStoreRecord.h"
+#import "OCMacros.h"
 
 @implementation OCCertificateStoreRecord
 
@@ -28,9 +29,14 @@
 
 - (instancetype)initWithCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname
 {
+	return ([self initWithCertificate:certificate forHostname:hostname lastModifiedDate:NSDate.new]);
+}
+
+- (instancetype)initWithCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname lastModifiedDate:(NSDate *)lastModifiedDate;
+{
 	if ((self = [super init]) != nil)
 	{
-		_lastModifiedDate = NSDate.new;
+		_lastModifiedDate = lastModifiedDate;
 		_certificate = certificate;
 		_hostname = hostname;
 	}
@@ -55,6 +61,15 @@
 	}
 
 	return (self);
+}
+
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self,
+		OCExpandVar(hostname),
+		OCExpandVar(certificate),
+		OCExpandVar(lastModifiedDate)
+	]);
 }
 
 @end

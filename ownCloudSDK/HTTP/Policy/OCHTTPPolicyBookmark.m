@@ -91,13 +91,17 @@
 	}
 }
 
-+ (void)validateBookmark:(OCBookmark *)bookmark certificate:(nonnull OCCertificate *)certificate forRequest:(nonnull OCHTTPRequest *)request validationResult:(OCCertificateValidationResult)validationResult validationError:(nonnull NSError *)validationError proceedHandler:(nonnull OCConnectionCertificateProceedHandler)proceedHandler
++ (void)validateBookmark:(OCBookmark *)bookmark certificate:(nonnull OCCertificate *)certificateToValidate forRequest:(nonnull OCHTTPRequest *)request validationResult:(OCCertificateValidationResult)validationResult validationError:(nonnull NSError *)validationError proceedHandler:(nonnull OCConnectionCertificateProceedHandler)proceedHandler
 {
 	BOOL defaultWouldProceed = ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted));
 	BOOL fulfillsBookmarkRequirements = defaultWouldProceed;
+	BOOL trackNewCertificatesInBookmark = NO;
+
+	NSString *requestHostname = request.hostname;
+	OCCertificate *storedCertificateForHostname = [bookmark.certificateStore certificateForHostname:requestHostname lastModified:NULL];
 
 	// Enforce bookmark certificate
-	if (bookmark.certificate != nil)
+	if (storedCertificateForHostname != nil)
 	{
 		BOOL extendedValidationPassed = NO;
 		NSString *extendedValidationRule = nil;
@@ -107,7 +111,7 @@
 			// Check extended validation rule
 			OCCertificateRuleChecker *ruleChecker = nil;
 
-			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:bookmark.certificate newCertificate:certificate rule:extendedValidationRule]) != nil)
+			if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:storedCertificateForHostname newCertificate:certificateToValidate rule:extendedValidationRule]) != nil)
 			{
 				extendedValidationPassed = [ruleChecker evaluateRule];
 			}
@@ -115,7 +119,7 @@
 		else
 		{
 			// Check if certificate SHA-256 fingerprints are identical
-			extendedValidationPassed = [bookmark.certificate isEqual:certificate];
+			extendedValidationPassed = [storedCertificateForHostname isEqual:certificateToValidate];
 		}
 
 		if (extendedValidationPassed)
@@ -129,41 +133,59 @@
 
 			fulfillsBookmarkRequirements = NO;
 
-			OCLogWarning(@"Certificate %@ does not match bookmark certificate %@. Checking with rule: %@", OCLogPrivate(certificate), OCLogPrivate(bookmark.certificate), OCLogPrivate(renewalAcceptanceRule));
+			OCLogWarning(@"Certificate %@ does not match bookmark stored certificate %@. Checking with rule: %@", OCLogPrivate(certificateToValidate), OCLogPrivate(storedCertificateForHostname), OCLogPrivate(renewalAcceptanceRule));
 
 			if ((renewalAcceptanceRule = [OCConnection classSettingForOCClassSettingsKey:OCConnectionRenewedCertificateAcceptanceRule]) != nil)
 			{
 				OCCertificateRuleChecker *ruleChecker;
 
-				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:bookmark.certificate newCertificate:certificate rule:renewalAcceptanceRule]) != nil)
+				if ((ruleChecker = [OCCertificateRuleChecker ruleWithCertificate:storedCertificateForHostname newCertificate:certificateToValidate rule:renewalAcceptanceRule]) != nil)
 				{
 					fulfillsBookmarkRequirements = [ruleChecker evaluateRule];
 
 					if (fulfillsBookmarkRequirements)	// New certificate fulfills the requirements of the renewed certificate acceptance rule
 					{
 						// Auto-accept successor to user-accepted certificate that also would prompt for confirmation
-						if ((bookmark.certificate.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
+						if ((storedCertificateForHostname.userAccepted) && (validationResult == OCCertificateValidationResultPromptUser))
 						{
-							[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
+							[certificateToValidate userAccepted:YES withReason:OCCertificateAcceptanceReasonAutoAccepted description:[NSString stringWithFormat:@"Certificate fulfills renewal acceptance rule: %@", ruleChecker.rule]];
 
 							validationResult = OCCertificateValidationResultUserAccepted;
 						}
 
 						// Update bookmark certificate
-						bookmark.certificate = certificate;
-						bookmark.certificateModificationDate = [NSDate date];
+						[bookmark.certificateStore storeCertificate:certificateToValidate forHostname:requestHostname];
 
 						[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:bookmark];
 						[bookmark postCertificateUserApprovalUpdateNotification];
 
-						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(bookmark), certificate);
+						OCLogWarning(@"Updated stored certificate for bookmark %@ with certificate %@", OCLogPrivate(bookmark), certificateToValidate);
 					}
 
 					defaultWouldProceed = fulfillsBookmarkRequirements;
 				}
 			}
 
-			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificate), fulfillsBookmarkRequirements);
+			OCLogWarning(@"Certificate %@ renewal rule check result: %d", OCLogPrivate(certificateToValidate), fulfillsBookmarkRequirements);
+		}
+	}
+	else if (requestHostname != nil)
+	{
+		// No certificate is stored yet in the bookmark for this domain
+		NSString *trackingRule;
+
+		if ((trackingRule = [OCConnection classSettingForOCClassSettingsKey:OCConnectionAssociatedCertificatesTrackingRule]) != nil)
+		{
+			@try {
+				NSPredicate *predicate = [NSPredicate predicateWithFormat:trackingRule, nil];
+
+				trackNewCertificatesInBookmark = [predicate evaluateWithObject:nil substitutionVariables:@{
+					@"hostname" : requestHostname,
+					@"certificate" : certificateToValidate
+				}];
+			} @catch (NSException *exception) {
+				OCLogError(@"evaluation of associated certificate tracking rule %@ threw an exception: %@", trackingRule, exception);
+			}
 		}
 	}
 
@@ -191,16 +213,15 @@
 			OCErrorAddDateFromResponse(errorIssue, request.httpResponse);
 
 			// Embed issue
-			OCIssue *issue = [OCIssue issueForCertificate:certificate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
+			OCIssue *issue = [OCIssue issueForCertificate:certificateToValidate validationResult:validationResult url:request.url level:OCIssueLevelWarning issueHandler:^(OCIssue *issue, OCIssueDecision decision) {
 				if (decision == OCIssueDecisionApprove)
 				{
 					if (changeUserAccepted)
 					{
-						[certificate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
+						[certificateToValidate userAccepted:YES withReason:OCCertificateAcceptanceReasonUserAccepted description:nil];
 					}
 
-					bookmark.certificate = certificate;
-					bookmark.certificateModificationDate = [NSDate date];
+					[bookmark.certificateStore storeCertificate:certificateToValidate forHostname:requestHostname];
 
 					[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:bookmark];
 					[bookmark postCertificateUserApprovalUpdateNotification];
@@ -213,11 +234,20 @@
 
 				if (validationResult == OCCertificateValidationResultPassed)
 				{
-					issue.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The certificate for %@ passes TLS validation but doesn't pass the acceptance rule to replace the certificate for %@.", nil), certificate.hostName, bookmark.certificate.hostName];
+					issue.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"The certificate for %@ passes TLS validation but doesn't pass the acceptance rule to replace the certificate for %@.", nil), certificateToValidate.hostName, storedCertificateForHostname.hostName];
 				}
 			}
 
 			errorIssue = [errorIssue errorByEmbeddingIssue:issue];
+		}
+
+		if (doProceed && trackNewCertificatesInBookmark)
+		{
+			// Add certificate to bookmark to track changes to it
+			[bookmark.certificateStore storeCertificate:certificateToValidate forHostname:requestHostname];
+
+			[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:bookmark];
+			[bookmark postCertificateUserApprovalUpdateNotification];
 		}
 
 		proceedHandler(doProceed, errorIssue);

@@ -18,19 +18,25 @@
 
 #import <Foundation/Foundation.h>
 #import "OCCertificate.h"
+#import "OCCertificateStoreRecord.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCCertificateStore : NSObject <NSSecureCoding>
 
+- (instancetype)initWithMigrationOfCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname lastModifiedDate:(NSDate *)lastModifiedDate; //!< Convenience initializer for migration from bookmarks without certificate store
+
 #pragma mark - Store & retrieve certificates
 - (void)storeCertificate:(OCCertificate *)certificate forHostname:(NSString *)hostname; //!< Stores the provided certificate for the provided hostname
-- (nullable OCCertificate *)certificateForHostname:(NSString *)hostname lastModified:(NSDate * _Nullable * _Nullable)outLastModified; //!< Returns the 
+- (nullable OCCertificate *)certificateForHostname:(nullable NSString *)hostname lastModified:(NSDate * _Nullable * _Nullable)outLastModified; //!< Returns the certificate and last modified date for the provided hostname
 
 - (nullable NSArray<NSString *> *)hostnamesForCertificate:(OCCertificate *)certificate; //!< Returns all host names (or nil) for which the provided certificate is stored
 
+@property(readonly,nonatomic,strong) NSArray<OCCertificateStoreRecord *> *allRecords; //!< Returns the contents of the certificate store
+
 #pragma mark - Remove certificates
 - (BOOL)removeCertificateForHostname:(NSString *)hostname; //!< Returns YES if a certificate for the provided hostname was removed
+- (void)removeAllCertificates; //!< Removes all certificates from the store
 
 @end
 

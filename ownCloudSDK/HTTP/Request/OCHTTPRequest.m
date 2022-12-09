@@ -235,6 +235,18 @@
 	return (_redirectPolicy);
 }
 
+- (NSString *)hostname
+{
+	NSString *hostname = self.effectiveURL.host;
+
+	if (hostname == nil)
+	{
+		hostname = self.url.host;
+	}
+
+	return (hostname);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
