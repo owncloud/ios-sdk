@@ -51,6 +51,11 @@
 	return (self);
 }
 
+- (void)dealloc
+{
+	self.source = nil;
+}
+
 - (void)setSource:(OCDataSource *)source
 {
 	if ((_source != nil) && (source != _source))

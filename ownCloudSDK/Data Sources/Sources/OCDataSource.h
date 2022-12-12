@@ -31,6 +31,8 @@ typedef void(^OCDataSourceItemForReferenceProvider)(OCDataSource *source, OCData
 
 typedef OCDataSource * _Nullable (^OCDataSourceChildDataSourceProvider)(OCDataSource *source, OCDataItemReference itemRef);
 
+typedef void(^OCDataSourceSubscriptionObserver)(OCDataSource *source, id<NSObject> owner, BOOL hasSubscribers);
+
 typedef NS_ENUM(NSInteger, OCDataSourceState)
 {
 	OCDataSourceStateLoading,
@@ -72,6 +74,10 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 #pragma mark - Managing subscriptions
 - (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate;
 - (void)terminateSubscription:(OCDataSourceSubscription *)subscription;
+
+#pragma mark - Observing subscriptions
+- (void)addSubscriptionObserver:(OCDataSourceSubscriptionObserver)subscriptionObserver withOwner:(id)owner performInitial:(BOOL)performInitial; //!< Observes the subscription status of the data source and calls the provided block with the result of (subscriberCount > 0) when ever that result changes
+- (void)removeSubscriptionObserverForOwner:(id<NSObject>)owner; //!< Removes the subscription observer for the owner. Performed automatically when owner is deallocated.
 
 #pragma mark - Managing content
 - (void)setItemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updated:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;

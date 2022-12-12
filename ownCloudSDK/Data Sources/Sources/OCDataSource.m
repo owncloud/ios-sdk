@@ -24,6 +24,10 @@
 @interface OCDataSource ()
 {
 	OCCache<OCDataItemReference, id<OCDataItem>> *_cachedItems;
+
+	BOOL _hasSubscriptions;
+
+	NSMapTable<id<NSObject>, OCDataSourceSubscriptionObserver> *_subscriptionObserversByOwner;
 }
 @end
 
@@ -35,6 +39,7 @@
 	{
 		_itemReferences = [NSMutableArray new];
 		_subscriptions = [NSMutableArray new];
+		_subscriptionObserversByOwner = [NSMapTable weakToStrongObjectsMapTable];
 		_uuid = NSUUID.UUID.UUIDString;
 
 		_state = OCDataSourceStateIdle;
@@ -132,6 +137,8 @@
 	{
 		subscription = [[OCDataSourceSubscription alloc] initWithSource:self trackDifferences:trackDifferences itemReferences:_itemReferences updateHandler:updateHandler onQueue:updateQueue];
 		[_subscriptions addObject:subscription];
+
+		[self setHasSubscriptions:(_subscriptions.count > 0)];
 	}
 
 	if (performIntialUpdate)
@@ -150,6 +157,49 @@
 	@synchronized (_subscriptions)
 	{
 		[_subscriptions removeObject:subscription];
+
+		[self setHasSubscriptions:(_subscriptions.count > 0)];
+	}
+}
+
+#pragma mark - Observing subscriptions
+- (void)setHasSubscriptions:(BOOL)hasSubscriptions
+{
+	@synchronized(_subscriptionObserversByOwner)
+	{
+		if (_hasSubscriptions != hasSubscriptions)
+		{
+			_hasSubscriptions = hasSubscriptions;
+
+			for (id owner in _subscriptionObserversByOwner)
+			{
+				OCDataSourceSubscriptionObserver observer = [_subscriptionObserversByOwner objectForKey:owner];
+				observer(self, owner, hasSubscriptions);
+			}
+		}
+	}
+}
+
+- (void)addSubscriptionObserver:(OCDataSourceSubscriptionObserver)subscriptionObserver withOwner:(id)owner performInitial:(BOOL)performInitial
+{
+	subscriptionObserver = [subscriptionObserver copy];
+
+	@synchronized(_subscriptionObserversByOwner)
+	{
+		[_subscriptionObserversByOwner setObject:subscriptionObserver forKey:owner];
+
+		if (performInitial)
+		{
+			subscriptionObserver(self, owner, _hasSubscriptions);
+		}
+	}
+}
+
+- (void)removeSubscriptionObserverForOwner:(id<NSObject>)owner
+{
+	@synchronized(_subscriptionObserversByOwner)
+	{
+		[_subscriptionObserversByOwner setObject:nil forKey:owner];
 	}
 }
 
