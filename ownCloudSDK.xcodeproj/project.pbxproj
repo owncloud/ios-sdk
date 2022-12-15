@@ -157,7 +157,7 @@
 		DC27BBC0230498C3002CC2F8 /* OCHTTPCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27BBBE230498C3002CC2F8 /* OCHTTPCookieStorage.m */; };
 		DC27BBC32304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27BBC12304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC27BBC42304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27BBC22304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m */; };
-		DC28F823294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC28F821294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h */; };
+		DC28F823294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC28F821294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC28F824294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DC28F822294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m */; };
 		DC29F4C224323C4900347658 /* OCMessageTemplate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC29F4C024323C4900347658 /* OCMessageTemplate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC29F4C124323C4900347658 /* OCMessageTemplate.m */; };
