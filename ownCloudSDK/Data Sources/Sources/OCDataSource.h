@@ -72,8 +72,8 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 - (nullable OCDataSource *)dataSourceForChildrenOfItemReference:(OCDataItemReference)itemRef;
 
 #pragma mark - Managing subscriptions
-- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate;
-- (void)terminateSubscription:(OCDataSourceSubscription *)subscription;
+- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate; //!< Subscribes for updates to the datasource. The subscription needs to be explicitely terminated when no longer used. The subscription does NOT auto-terminate by the release of all strong references to it.
+- (void)terminateSubscription:(OCDataSourceSubscription *)subscription; //!< Terminates a subscription. Calling OCDataSourceSubscription.terminate() is preferred.
 
 #pragma mark - Observing subscriptions
 - (void)addSubscriptionObserver:(OCDataSourceSubscriptionObserver)subscriptionObserver withOwner:(id)owner performInitial:(BOOL)performInitial; //!< Observes the subscription status of the data source and calls the provided block with the result of (subscriberCount > 0) when ever that result changes

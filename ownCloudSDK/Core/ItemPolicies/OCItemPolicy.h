@@ -19,9 +19,12 @@
 #import <Foundation/Foundation.h>
 #import "OCQueryCondition.h"
 #import "OCTypes.h"
+#import "OCDataTypes.h"
 
 typedef NSString* OCItemPolicyKind NS_TYPED_ENUM;
 typedef NSString* OCItemPolicyIdentifier;
+
+typedef NSString* OCItemPolicyUUID;
 
 typedef NS_ENUM(NSUInteger, OCItemPolicyAutoRemovalMethod)
 {
@@ -32,6 +35,8 @@ typedef NS_ENUM(NSUInteger, OCItemPolicyAutoRemovalMethod)
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCItemPolicy : NSObject <NSSecureCoding>
+
+@property(strong) OCItemPolicyUUID uuid; //!< UUID of the item policy
 
 #pragma mark - Database glue
 @property(nullable,strong) OCDatabaseID databaseID; //!< OCDatabase-specific ID referencing the policy in the database

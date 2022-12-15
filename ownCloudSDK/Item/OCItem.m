@@ -235,7 +235,7 @@
 #pragma mark - Metadata
 - (NSString *)name
 {
-	return ([self.path lastPathComponent]);
+	return (self.path.lastPathComponent);
 }
 
 - (void)setETag:(OCFileETag)eTag
@@ -273,6 +273,11 @@
 - (NSString *)ownerUserName
 {
 	return (_owner.userName);
+}
+
+- (OCLocationString)locationString
+{
+	return ([[NSString alloc] initWithFormat:@";%@:%@", ((_driveID != nil) ? _driveID : @""), ((_path != nil) ? _path : @"")]);
 }
 
 - (void)setPath:(OCPath)path
@@ -874,6 +879,7 @@ OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOff
 
 OCItemPropertyName OCItemPropertyNameType = @"type";
 OCItemPropertyName OCItemPropertyNameDriveID = @"driveID";
+OCItemPropertyName OCItemPropertyNameLocationString = @"locationString";
 OCItemPropertyName OCItemPropertyNamePath = @"path";
 OCItemPropertyName OCItemPropertyNameName = @"name";
 OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";

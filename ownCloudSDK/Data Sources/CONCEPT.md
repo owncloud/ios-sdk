@@ -40,9 +40,9 @@
 The following code shows examples for various customizations. NOTE: not all of the customizations shown make sense at the same time.
 
 ```swift
-// Create a composed data source concating core.hierarchicDrivesDataSource and core.projectDrivesDataSource
+// Create a composed data source concating core.personalAndSharedDrivesDataSource and core.projectDrivesDataSource
 let composedDataSource = OCDataSourceComposition(sources: [
-	core.hierarchicDrivesDataSource,
+	core.personalAndSharedDrivesDataSource,
 	core.projectDrivesDataSource
 ], applyCustomizations: { (composedDataSource) in
 	// Apply customizations before first assembly

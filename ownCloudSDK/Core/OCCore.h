@@ -40,6 +40,7 @@
 #import "OCLock.h"
 #import "OCLockRequest.h"
 #import "OCDataSourceArray.h"
+#import "OCDataSourceComposition.h"
 #import "OCDataItemPresentable.h"
 #import "OCShareRole.h"
 
@@ -244,14 +245,33 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableDictionary<OCDriveID, OCFileETag> *_lastRootETagsByDriveID;
 
 	OCDataSourceArray *_drivesDataSource;
-	OCDataSourceSubscription *_drivesDataSourceSubscription;
-
 	OCDataSourceArray *_subscribedDrivesDataSource;
-
-	OCDataSourceArray *_hierarchicDrivesDataSource;
-	OCDataItemPresentable *_hierarchicDrivesLogicalProjectsFolderPresentable;
-
+	OCDataSourceArray *_personalAndSharedDrivesDataSource;
 	OCDataSourceArray *_projectDrivesDataSource;
+
+	dispatch_source_t _pollingDataSourcesTimer;
+	NSUInteger _pollingDataSourcesSubscribers;
+	NSUInteger _pollingDataSourcesOutstandingRequests;
+
+	OCDataSourceArray *_sharedWithMeDataSource;
+	OCDataSourceArray *_sharedWithMePendingDataSource;
+	OCDataSourceArray *_sharedWithMeAcceptedDataSource;
+	OCDataSourceArray *_sharedWithMeDeclinedDataSource;
+
+	OCDataSourceArray *_sharedByMeDataSource;
+	OCDataSourceArray *_sharedByLinkDataSource;
+
+	OCQuery *_favoritesQuery; // provides content for .favoritesDataSource
+	BOOL _favoritesDataSourceHasSubscribers;
+	OCDataSourceComposition *_favoritesDataSource;
+
+	BOOL _availableOfflineItemPoliciesDataSourceHasSubscribers;
+	BOOL _observesOfflineItemPolicies;
+	OCDataSourceArray *_availableOfflineItemPoliciesDataSource;
+
+	OCQuery *_availableOfflineFilesQuery;
+	BOOL _availableOfflineFilesDataSourceHasSubscribers;
+	OCDataSourceComposition *_availableOfflineFilesDataSource;
 
 	__weak id <OCCoreDelegate> _delegate;
 

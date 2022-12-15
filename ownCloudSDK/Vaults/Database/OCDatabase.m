@@ -296,6 +296,7 @@
 			@"locallyModified" 	: @(item.locallyModified),
 			@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 			@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
+			@"locationString"	: item.locationString,
 			@"path" 		: item.path,
 			@"parentPath" 		: [item.path parentPath],
 			@"name"			: [item.path lastPathComponent],
@@ -369,6 +370,7 @@
 				@"locallyModified" 	: @(item.locallyModified),
 				@"localRelativePath"	: OCSQLiteNullProtect(item.localRelativePath),
 				@"downloadTrigger"	: OCSQLiteNullProtect(item.downloadTriggerIdentifier),
+				@"locationString"	: item.locationString,
 				@"path" 		: item.path,
 				@"parentPath" 		: [item.path parentPath],
 				@"name"			: [item.path lastPathComponent],
@@ -821,6 +823,7 @@
 			OCItemPropertyNameName : @"name",
 			OCItemPropertyNameDriveID : @"driveID",
 			OCItemPropertyNamePath : @"path",
+			OCItemPropertyNameLocationString : @"locationString",
 
 			OCItemPropertyNameLocalRelativePath 	: @"localRelativePath",
 			OCItemPropertyNameLocallyModified 	: @"locallyModified",

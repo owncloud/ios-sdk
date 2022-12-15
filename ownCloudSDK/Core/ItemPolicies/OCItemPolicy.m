@@ -20,6 +20,16 @@
 
 @implementation OCItemPolicy
 
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_uuid = NSUUID.UUID.UUIDString;
+	}
+
+	return (self);
+}
+
 - (instancetype)initWithKind:(OCItemPolicyKind)kind condition:(OCQueryCondition *)condition
 {
 	if ((self = [self init]) != nil)
@@ -38,7 +48,14 @@
 	switch (item.type)
 	{
 		case OCItemTypeCollection:
-			condition = [OCQueryCondition where:OCItemPropertyNamePath startsWith:item.path];
+			if (item.driveID != nil)
+			{
+				condition = [OCQueryCondition where:OCItemPropertyNameLocationString startsWith:item.locationString];
+			}
+			else
+			{
+				condition = [OCQueryCondition where:OCItemPropertyNamePath startsWith:item.path];
+			}
 		break;
 
 		case OCItemTypeFile:
@@ -59,8 +76,10 @@
 {
 	if ((self = [self init]) != nil)
 	{
-		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
-		_policyDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"policyDescription"];
+		_uuid = [decoder decodeObjectOfClass:NSString.class forKey:@"uuid"];
+
+		_identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
+		_policyDescription = [decoder decodeObjectOfClass:NSString.class forKey:@"policyDescription"];
 
 		_location = [decoder decodeObjectOfClass:OCLocation.class forKey:@"location"];
 		if (_location == nil)
@@ -72,13 +91,13 @@
 				_location = [OCLocation legacyRootPath:path];
 			}
 		}
-		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
+		_localID = [decoder decodeObjectOfClass:NSString.class forKey:@"localID"];
 
-		_kind = [decoder decodeObjectOfClass:[NSString class] forKey:@"kind"];
-		_condition = [decoder decodeObjectOfClass:[OCQueryCondition class] forKey:@"condition"];
+		_kind = [decoder decodeObjectOfClass:NSString.class forKey:@"kind"];
+		_condition = [decoder decodeObjectOfClass:OCQueryCondition.class forKey:@"condition"];
 
 		_policyAutoRemovalMethod = [decoder decodeIntegerForKey:@"policyAutoRemovalMethod"];
-		_policyAutoRemovalCondition = [decoder decodeObjectOfClass:[OCQueryCondition class] forKey:@"policyAutoRemovalCondition"];
+		_policyAutoRemovalCondition = [decoder decodeObjectOfClass:OCQueryCondition.class forKey:@"policyAutoRemovalCondition"];
 	}
 
 	return (self);
@@ -86,6 +105,16 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+	OCItemPolicyUUID uuid = _uuid;
+
+	if (uuid == nil)
+	{
+		// Add missing UUID when saving without modifying the live object
+		uuid = NSUUID.UUID.UUIDString;
+	}
+
+	[coder encodeObject:uuid forKey:@"uuid"];
+
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_policyDescription forKey:@"policyDescription"];
 

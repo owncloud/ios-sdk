@@ -29,6 +29,7 @@ OCDataItemType OCDataItemTypeSavedSearch = @"savedSearch";
 OCDataItemType OCDataItemTypeStatistic = @"statistic";
 OCDataItemType OCDataItemTypeView = @"view";
 OCDataItemType OCDataItemTypeBookmark = @"bookmark";
+OCDataItemType OCDataItemTypeItemPolicy = @"itemPolicy";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

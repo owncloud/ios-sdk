@@ -70,6 +70,7 @@ extern OCDataItemType OCDataItemTypeSavedSearch; //!< Item of type OCSavedSearch
 extern OCDataItemType OCDataItemTypeStatistic; //!< Item of type OCStatistic
 extern OCDataItemType OCDataItemTypeView;  //!< Item of type UIView
 extern OCDataItemType OCDataItemTypeBookmark; //!< Item of type OCBookmark
+extern OCDataItemType OCDataItemTypeItemPolicy; //!< Item of type OCItemPolicy
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
 extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill

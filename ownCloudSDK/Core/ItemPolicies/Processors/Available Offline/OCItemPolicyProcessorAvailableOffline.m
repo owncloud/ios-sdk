@@ -79,21 +79,43 @@
 				{
 					if (![changedItem.location isEqual:policy.location])
 					{
-						if ((policy.condition.operator == OCQueryConditionOperatorPropertyHasPrefix) &&
-						    ([policy.condition.property isEqual:OCItemPropertyNamePath]) && // TODO:SPACES
-						    ([policy.condition.value isEqual:policy.location.path])) // TODO:SPACES
+						BOOL updatePolicy = NO;
+
+						if (policy.condition.operator == OCQueryConditionOperatorPropertyHasPrefix)
 						{
-							OCLogDebug(@"Updating existing policy from path %@ to %@", policy.location.path, changedItem.location.path);
+							// Legacy / OC10 policy
+							if (([policy.condition.property isEqual:OCItemPropertyNamePath]) &&
+						       	    ([policy.condition.value isEqual:policy.location.path]))
+							{
+								OCLogDebug(@"Updating existing policy from %@ to %@", policy.location, changedItem.location);
 
-							policy.condition.value = changedItem.path;
-							policy.location = changedItem.location;
+								policy.condition.value = changedItem.path;
+								policy.location = changedItem.location;
 
-							OCSyncExec(waitForPolicyUpdate, {
-								[self.core updateItemPolicy:policy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:^(NSError * _Nullable error) {
-									OCLogDebug(@"Updated %@ with error=%@", policy, error);
-									OCSyncExecDone(waitForPolicyUpdate);
-								}];
-							});
+								updatePolicy = YES;
+							}
+
+							// Drive-based policy
+							if (([policy.condition.property isEqual:OCItemPropertyNameLocationString]) &&
+						       	    ([policy.condition.value isEqual:policy.location.string]))
+							{
+								OCLogDebug(@"Updating existing policy from %@ to %@", policy.location, changedItem.location);
+
+								policy.condition.value = changedItem.locationString;
+								policy.location = changedItem.location;
+
+								updatePolicy = YES;
+							}
+
+							if (updatePolicy)
+							{
+								OCSyncExec(waitForPolicyUpdate, {
+									[self.core updateItemPolicy:policy options:OCCoreItemPolicyOptionSkipTrigger completionHandler:^(NSError * _Nullable error) {
+										OCLogDebug(@"Updated %@ with error=%@", policy, error);
+										OCSyncExecDone(waitForPolicyUpdate);
+									}];
+								});
+							}
 						}
 					}
 				}

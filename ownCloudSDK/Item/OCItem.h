@@ -135,6 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong,nonatomic) OCDriveID driveID; //!< Identifier of the drive the item is located on
 @property(nullable,strong,nonatomic) OCLocation *location; //!< Abstract location (encapsulates all information needed to find the item's location in an account)
+@property(readonly,nonatomic) OCLocationString locationString; //!< Single-string representation of locationString that can be used to determine if one item is located inside another (like paths, but with awareness for driveIDs)
 
 @property(nullable,strong,nonatomic) OCFileID parentFileID; //!< Unique identifier of the parent folder (persists over lifetime of file, incl. across modifications)
 @property(nullable,strong,nonatomic) OCFileID fileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications)
@@ -240,6 +241,7 @@ extern OCItemPropertyName OCItemPropertyNameLocalAttributes;
 // Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameDriveID; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameLocationString; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder

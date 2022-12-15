@@ -157,6 +157,8 @@
 		DC27BBC0230498C3002CC2F8 /* OCHTTPCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27BBBE230498C3002CC2F8 /* OCHTTPCookieStorage.m */; };
 		DC27BBC32304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h in Headers */ = {isa = PBXBuildFile; fileRef = DC27BBC12304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC27BBC42304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m in Sources */ = {isa = PBXBuildFile; fileRef = DC27BBC22304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m */; };
+		DC28F823294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC28F821294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h */; };
+		DC28F824294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DC28F822294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m */; };
 		DC29F4C224323C4900347658 /* OCMessageTemplate.h in Headers */ = {isa = PBXBuildFile; fileRef = DC29F4C024323C4900347658 /* OCMessageTemplate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC29F4C124323C4900347658 /* OCMessageTemplate.m */; };
 		DC2A127628D05DD30088A2B7 /* OCItem+OCTypeAlias.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2A127428D05DD20088A2B7 /* OCItem+OCTypeAlias.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1142,6 +1144,8 @@
 		DC27BBBE230498C3002CC2F8 /* OCHTTPCookieStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPCookieStorage.m; sourceTree = "<group>"; };
 		DC27BBC12304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPCookie+OCCookies.h"; sourceTree = "<group>"; };
 		DC27BBC22304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPCookie+OCCookies.m"; sourceTree = "<group>"; };
+		DC28F821294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCItemPolicy+OCDataItem.h"; sourceTree = "<group>"; };
+		DC28F822294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItemPolicy+OCDataItem.m"; sourceTree = "<group>"; };
 		DC29F4C024323C4900347658 /* OCMessageTemplate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMessageTemplate.h; sourceTree = "<group>"; };
 		DC29F4C124323C4900347658 /* OCMessageTemplate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCMessageTemplate.m; sourceTree = "<group>"; };
 		DC2A127428D05DD20088A2B7 /* OCItem+OCTypeAlias.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCItem+OCTypeAlias.h"; sourceTree = "<group>"; };
@@ -3946,6 +3950,8 @@
 				DCE227D622D612EC000BE0A5 /* OCCore+ItemPolicies.h */,
 				DCE227D222D60D49000BE0A5 /* OCItemPolicy.m */,
 				DCE227D122D60D49000BE0A5 /* OCItemPolicy.h */,
+				DC28F822294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m */,
+				DC28F821294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h */,
 				DC2AA56C22DD1308001D5C39 /* Processors */,
 			);
 			path = ItemPolicies;
@@ -4219,6 +4225,7 @@
 				DC8556ED204DEA2900189B9A /* OCHTTPDAVRequest.h in Headers */,
 				DC6DEEB124C5990D00E3772E /* OCHTTPPolicy+PipelinePolicyHandler.h in Headers */,
 				DC302AEE221EAC55003218C6 /* OCProxyProgress.h in Headers */,
+				DC28F823294B6DE600AC4013 /* OCItemPolicy+OCDataItem.h in Headers */,
 				DC49B55328339BE200DAF13B /* NSArray+OCMapping.h in Headers */,
 				DC0AE4F22311C75300428681 /* OCKeyValueStack.h in Headers */,
 				DC6B0472268D1950003FDEC1 /* OCBookmark+Prepopulation.h in Headers */,
@@ -4996,6 +5003,7 @@
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
 				DCEEB2D92042F84B00189B9A /* NSObject+OCClassSettings.m in Sources */,
 				DCC4F3F827D757FE00ABF4C9 /* OCDataConverter.m in Sources */,
+				DC28F824294B6DE600AC4013 /* OCItemPolicy+OCDataItem.m in Sources */,
 				DC2218C328228F7000808BCE /* OCVFSContent.m in Sources */,
 				DC0CE18028C63232009ABDFB /* OCConnection+AppProviders.m in Sources */,
 				DC114A9922A7AA2E00CBD597 /* NSString+OCRandom.m in Sources */,

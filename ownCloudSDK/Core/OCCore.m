@@ -69,6 +69,7 @@
 #import "OCDataSourceKVO.h"
 #import "OCVault+Internal.h"
 #import "OCLocale+SystemLanguage.h"
+#import "OCCore+DataSources.h"
 
 @interface OCCore ()
 {
@@ -300,17 +301,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				return ([drive.type isEqual:OCDriveTypeProject]);
 			}]);
 		}];
-		_hierarchicDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+		_personalAndSharedDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
 				return ([drive.type isEqual:OCDriveTypePersonal] || [drive.type isEqual:OCDriveTypeVirtual]);
 			}]);
 		}];
-
-		_hierarchicDrivesLogicalProjectsFolderPresentable = [[OCDataItemPresentable alloc] initWithReference:@"_projects" originalDataItemType:nil version:@"1"];
-		_hierarchicDrivesLogicalProjectsFolderPresentable.title = @"Spaces";
-		_hierarchicDrivesLogicalProjectsFolderPresentable.childrenDataSourceProvider = ^OCDataSource * _Nullable(OCDataSource * _Nonnull parentItemDataSource, id<OCDataItem>  _Nonnull parentItem) {
-			return ([weakSelf projectDrivesDataSource]);
-		};
 
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
@@ -416,6 +411,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 {
 	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
 	NSArray<OCLogTagName> *deallocTags = (runIDTag != nil) ? @[@"DEALLOC", runIDTag] : @[@"DEALLOC"];
+
+	[self unsubscribeFromPollingDatasourcesTimer:OCCoreDataSourcePollTypeAll withForcedStop:YES];
 
 	[self stopIPCObserveration];
 

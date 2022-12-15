@@ -20,6 +20,12 @@
 #import "OCCoreItemListTask.h"
 #import "OCShareQuery.h"
 
+typedef NS_ENUM(NSUInteger, OCCoreDataSourcePollType)
+{
+	OCCoreDataSourcePollTypeAll,
+	OCCoreDataSourcePollTypeFavorites
+};
+
 @interface OCCore (Internal)
 
 #pragma mark - Managed
@@ -57,5 +63,8 @@
 - (void)stopShareQuery:(OCShareQuery *)shareQuery;
 
 - (void)_pollNextShareQuery;
+
+#pragma mark - Data sources
+- (void)unsubscribeFromPollingDatasourcesTimer:(OCCoreDataSourcePollType)pollType withForcedStop:(BOOL)force;
 
 @end
