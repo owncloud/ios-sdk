@@ -24,9 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCDataSourceArray : OCDataSource
 {
 	NSMapTable<OCDataItemReference,id<OCDataItem>> *_itemsByReference;
+	NSMapTable<OCDataItemReference,OCDataItemVersion> *_versionsByReference;
 }
 
 @property(copy,nullable) OCDataItemHasChildrenProvider dataItemHasChildrenProvider;
+@property(assign) BOOL trackItemVersions; //!< If YES, tracks versions internally, allowing to detect/track changes to the same object
 
 - (instancetype)initWithItems:(nullable NSArray<id<OCDataItem>> *)items;
 

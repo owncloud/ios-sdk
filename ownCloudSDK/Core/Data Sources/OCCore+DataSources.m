@@ -177,7 +177,8 @@
 		if (_sharedWithMeDataSource == nil)
 		{
 			_sharedWithMeDataSource = [[OCDataSourceArray alloc] initWithItems:nil];
-			_sharedWithMeDataSource.synchronizationGroup = dispatch_group_create();
+			_sharedWithMeDataSource.synchronizationGroup = dispatch_group_create(); // Ensure consistency of derived data sources
+			_sharedWithMeDataSource.trackItemVersions = YES; // Track item versions, so changes in status can be detected as actual changes
 		}
 	}
 

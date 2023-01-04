@@ -73,6 +73,13 @@
 
 	@synchronized(_subscriptions)
 	{
+		if (_trackItemVersions)
+		{
+			if (_versionsByReference == nil) {
+				_versionsByReference = [NSMapTable weakToStrongObjectsMapTable];
+			}
+		}
+
 		for (id<OCDataItem,OCDataItemVersioning> item in items)
 		{
 			OCDataItemReference itemRef;
@@ -81,10 +88,12 @@
 			{
 				id<OCDataItem,OCDataItemVersioning> oldItem;
 
+				OCDataItemVersion newVersion = item.dataItemVersion;
+
 				if ((oldItem = (id<OCDataItem,OCDataItemVersioning>)[_itemsByReference objectForKey:itemRef]) != nil)
 				{
 					OCDataItemVersion newVersion = item.dataItemVersion;
-					OCDataItemVersion oldVersion = oldItem.dataItemVersion;
+					OCDataItemVersion oldVersion = _trackItemVersions ? [_versionsByReference objectForKey:itemRef] : oldItem.dataItemVersion;
 
 					if (![newVersion isEqual:oldVersion])
 					{
@@ -92,6 +101,11 @@
 
 						[updatedItems addObject:item];
 					}
+				}
+
+				if (_trackItemVersions)
+				{
+					[_versionsByReference setObject:newVersion forKey:itemRef];
 				}
 			}
 		}

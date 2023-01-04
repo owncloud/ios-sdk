@@ -35,7 +35,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state]);
+	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted]);
 }
 
 #pragma mark - OCDataConverter for OCDrives
