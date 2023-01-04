@@ -79,7 +79,7 @@
 	_source = source;
 
 	__weak OCDataSourceMapped *weakSelf = self;
-	_subscription = [_source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+	_subscription = [_source associateWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 		OCDataSourceSnapshot *snapshot;
 
 		if ((snapshot = [subscription snapshotResettingChangeTracking:YES]) != nil)

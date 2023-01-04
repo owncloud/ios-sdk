@@ -29,6 +29,7 @@
 	GA_SET(application, GAIdentity, Nil);
 	GA_SET(device, GAIdentity, Nil);
 	GA_SET(user, GAIdentity, Nil);
+	GA_SET(group, GAIdentity, Nil);
 
 	return (instance);
 }
@@ -46,6 +47,7 @@
 		_application = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"application"];
 		_device = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"device"];
 		_user = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"user"];
+		_group = [decoder decodeObjectOfClass:GAIdentity.class forKey:@"group"];
 	}
 
 	return (self);
@@ -57,12 +59,13 @@
 	[coder encodeObject:_application forKey:@"application"];
 	[coder encodeObject:_device forKey:@"device"];
 	[coder encodeObject:_user forKey:@"user"];
+	[coder encodeObject:_group forKey:@"group"];
 }
 
 // occgen: type debug description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@>", NSStringFromClass(self.class), self, ((_application!=nil) ? [NSString stringWithFormat:@", application: %@", _application] : @""), ((_device!=nil) ? [NSString stringWithFormat:@", device: %@", _device] : @""), ((_user!=nil) ? [NSString stringWithFormat:@", user: %@", _user] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@>", NSStringFromClass(self.class), self, ((_application!=nil) ? [NSString stringWithFormat:@", application: %@", _application] : @""), ((_device!=nil) ? [NSString stringWithFormat:@", device: %@", _device] : @""), ((_user!=nil) ? [NSString stringWithFormat:@", user: %@", _user] : @""), ((_group!=nil) ? [NSString stringWithFormat:@", group: %@", _group] : @"")]);
 }
 
 // occgen: type protected {"locked":true}

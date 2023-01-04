@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface GAPermission : NSObject <GAGraphObject, NSSecureCoding>
 
 // occgen: type properties
-@property(strong, nullable) NSArray<GAIdentitySet *> *grantedTo;
+@property(strong, nullable) NSArray<GAIdentitySet *> *grantedToIdentities;
 @property(strong, nullable) NSArray<NSString *> *roles;
 
 // occgen: type protected {"locked":true}

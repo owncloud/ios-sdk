@@ -1,8 +1,8 @@
 //
-//  OCDataSourceSubscription+Internal.h
+//  OCShare+OCDataItem.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 16.03.22.
+//  Created by Felix Schwarz on 19.12.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,17 +16,12 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCDataSourceSubscription.h"
+#import "OCDataTypes.h"
+#import "OCShare.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCDataSourceSubscription (Internal)
-
-@property(nonatomic) BOOL isInterDataSourceSubscription;
-
-- (void)_updateWithItemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updated:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
-- (void)setNeedsUpdateHandling;
+@interface OCShare (OCDataItem) <OCDataItem, OCDataItemVersioning>
 
 @end
 

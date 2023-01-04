@@ -77,11 +77,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCShare : NSObject <NSSecureCoding, NSCopying>
 
-@property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share
+@property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share (server-provided instances are guaranteed to have an ID, locally created ones do typically NOT have an ID)
 
 @property(assign) OCShareType type; //!< The type of share (i.e. public or user)
 
 @property(strong,nonatomic) OCLocation *itemLocation; //!< Location of the shared item
+@property(strong,nullable) OCFileID itemFileID; //!< File ID of item
 @property(assign) OCLocationType itemType; //!< Type of the shared item
 @property(nullable,strong) OCUser *itemOwner; //!< Owner of the item
 @property(nullable,strong) NSString *itemMIMEType; //!< MIME-Type of the shared item
@@ -143,6 +144,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCShareState OCShareStateAccepted;
 extern OCShareState OCShareStatePending;
-extern OCShareState OCShareStateRejected;
+extern OCShareState OCShareStateDeclined;
 
 NS_ASSUME_NONNULL_END

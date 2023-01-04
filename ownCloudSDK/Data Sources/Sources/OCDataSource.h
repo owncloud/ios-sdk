@@ -73,6 +73,7 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 
 #pragma mark - Managing subscriptions
 - (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate; //!< Subscribes for updates to the datasource. The subscription needs to be explicitely terminated when no longer used. The subscription does NOT auto-terminate by the release of all strong references to it.
+- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate; //!< Like subscribeWithUpdateHandler, but for subscriptions feeding other data sources. Do not use this API unless you implement a new data source type.
 - (void)terminateSubscription:(OCDataSourceSubscription *)subscription; //!< Terminates a subscription. Calling OCDataSourceSubscription.terminate() is preferred.
 
 #pragma mark - Observing subscriptions
@@ -82,6 +83,9 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 #pragma mark - Managing content
 - (void)setItemReferences:(nullable NSArray<OCDataItemReference> *)itemRefs updated:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
 - (void)signalUpdatesForItemReferences:(nullable NSSet<OCDataItemReference> *)updatedItemRefs;
+
+#pragma mark - Synchronization
+@property(strong,nullable) dispatch_group_t synchronizationGroup; //!< If the contents of several data sources should be updated "atomically", notifications need to be withheld until the last data source has completed updating. Providing this dispatch group allows synchronization of change notifications across data sources. The synchronizationGroup is only used for subscriptions with an .updateQueue. A warning is logged otherwise.
 
 @end
 

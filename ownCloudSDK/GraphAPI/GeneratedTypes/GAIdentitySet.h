@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) GAIdentity *application; //!< Optional. The application associated with this action.
 @property(strong, nullable) GAIdentity *device; //!< Optional. The device associated with this action.
 @property(strong, nullable) GAIdentity *user; //!< Optional. The user associated with this action.
+@property(strong, nullable) GAIdentity *group; //!< Optional. The group associated with this action.
 
 // occgen: type protected {"locked":true}
 

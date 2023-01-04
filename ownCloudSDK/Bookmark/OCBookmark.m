@@ -548,6 +548,7 @@ OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPCo
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creation";
 
 OCBookmarkCapability OCBookmarkCapabilityDrives = @"drives";
+OCBookmarkCapability OCBookmarkCapabilityFavorites = @"favorites";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

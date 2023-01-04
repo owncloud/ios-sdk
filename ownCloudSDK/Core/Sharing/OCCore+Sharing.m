@@ -220,7 +220,7 @@
 		}
 		else if (updatedShare != nil)
 		{
-			if ([updatedShare.state isEqual:OCShareStateRejected])
+			if ([updatedShare.state isEqual:OCShareStateDeclined])
 			{
 				// Update parent path of removed items to quickly bring the item back in sync
 				if (updatedShare.itemLocation.parentLocation != nil)
@@ -311,7 +311,7 @@
 			{
 				case OCShareTypeUserShare:
 				case OCShareTypeGroupShare:
-					share.state = accept ? OCShareStateAccepted : OCShareStateRejected;
+					share.state = accept ? OCShareStateAccepted : OCShareStateDeclined;
 					[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil limitScope:@(OCShareScopeSharedWithUser)];
 				break;
 

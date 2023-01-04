@@ -30,6 +30,7 @@ OCDataItemType OCDataItemTypeStatistic = @"statistic";
 OCDataItemType OCDataItemTypeView = @"view";
 OCDataItemType OCDataItemTypeBookmark = @"bookmark";
 OCDataItemType OCDataItemTypeItemPolicy = @"itemPolicy";
+OCDataItemType OCDataItemTypeShare = @"share";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

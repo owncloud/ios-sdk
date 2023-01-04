@@ -294,6 +294,7 @@
 OCDriveType OCDriveTypePersonal = @"personal";
 OCDriveType OCDriveTypeVirtual = @"virtual";
 OCDriveType OCDriveTypeProject = @"project";
+OCDriveType OCDriveTypeMountpoint = @"mountpoint";
 OCDriveType OCDriveTypeShare = @"share";
 
 OCDriveSpecialType OCDriveSpecialTypePersonal = @"personal";

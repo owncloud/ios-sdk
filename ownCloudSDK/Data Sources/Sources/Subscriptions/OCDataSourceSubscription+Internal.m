@@ -17,6 +17,7 @@
  */
 
 #import "OCDataSourceSubscription+Internal.h"
+#import "OCDataSource.h"
 #import "OCLogger.h"
 
 @implementation OCDataSourceSubscription (Internal)
@@ -24,6 +25,8 @@
 - (void)setNeedsUpdateHandling
 {
 	__weak OCDataSourceSubscription *weakSelf = self;
+	BOOL isInterDataSourceSubscription = _isInterDataSourceSubscription;
+	dispatch_group_t synchronizationGroup = self.source.synchronizationGroup;
 	dispatch_queue_t updateQueue = self.updateQueue;
 	dispatch_block_t updateHandlingBlock = ^{
 		OCDataSourceSubscription *strongSelf;
@@ -40,18 +43,40 @@
 
 			updateHandler(strongSelf);
 		}
+
+		if (isInterDataSourceSubscription && (synchronizationGroup != nil))
+		{
+			dispatch_group_leave(synchronizationGroup);
+		}
 	};
 
 	@synchronized(self) {
 		_needsUpdateHandling = YES;
 	};
 
+	if (isInterDataSourceSubscription && (synchronizationGroup != nil))
+	{
+		dispatch_group_enter(synchronizationGroup);
+	}
+
 	if (updateQueue != nil)
 	{
-		dispatch_async(updateQueue, updateHandlingBlock);
+		if ((synchronizationGroup != nil) && !isInterDataSourceSubscription)
+		{
+			dispatch_group_notify(synchronizationGroup, updateQueue, updateHandlingBlock);
+		}
+		else
+		{
+			dispatch_async(updateQueue, updateHandlingBlock);
+		}
 	}
 	else
 	{
+		if ((synchronizationGroup != nil) && !isInterDataSourceSubscription)
+		{
+			OCLogWarning(@"Subscription to a source using a .synchronizationGroup does not provide an .updateQueue - and may notify about updates before all data sources content is in sync.");
+		}
+
 		updateHandlingBlock();
 	}
 }
@@ -184,6 +209,16 @@
 		// Notify of changes
 		[self setNeedsUpdateHandling];
 	}
+}
+
+- (BOOL)isInterDataSourceSubscription
+{
+	return (_isInterDataSourceSubscription);
+}
+
+- (void)setIsInterDataSourceSubscription:(BOOL)isInterDataSourceSubscription
+{
+	_isInterDataSourceSubscription = isInterDataSourceSubscription;
 }
 
 @end

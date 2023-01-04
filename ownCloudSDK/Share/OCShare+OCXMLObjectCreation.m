@@ -57,6 +57,14 @@
 				}
 			}
 
+			// State
+			OCShareState state;
+
+			if ((state = shareNode.keyValues[@"state"]) != nil)
+			{
+				share.state = state;
+			}
+
 			// Item path
 			OCPath sharePath = shareNode.keyValues[@"path"];
 
@@ -66,12 +74,21 @@
 
 				if ((itemSource = shareNode.keyValues[@"item_source"]) != nil)
 				{
-					// Extract drive ID from item_source, which follows format "[driveID]![fileID]"
-					NSArray<NSString *> *itemSourceIDs = [itemSource componentsSeparatedByString:@"!"];
-
-					if (itemSourceIDs.count == 2)
+					// OCIS (drive ID could be extracted from item_source, which follows format "[driveID]![fileID]")
+					if ([itemSource containsString:@"!"] && [state isEqual:OCShareStateAccepted])
 					{
-						share.itemLocation = [[OCLocation alloc] initWithDriveID:itemSourceIDs.firstObject path:sharePath];
+						// Compute location and FileID in Shares Jail
+						share.itemFileID = [OCDriveIDSharesJail stringByAppendingFormat:@"!%@", shareID]; // Item ID in Shares Jail = OCDriveIDSharesJail + "!" + shareID (via https://github.com/owncloud/web/blob/master/packages/web-client/src/helpers/space/functions.ts#L53 )
+						share.itemLocation = [[OCLocation alloc] initWithDriveID:OCDriveIDSharesJail path:sharePath.lastPathComponent]; // Item is located in Shares Jail
+					}
+					else
+					{
+						NSArray<NSString *> *itemSourceIDs = [itemSource componentsSeparatedByString:@"!"];
+
+						if (itemSourceIDs.count == 2)
+						{
+							share.itemLocation = [[OCLocation alloc] initWithDriveID:itemSourceIDs.firstObject path:sharePath];
+						}
 					}
 				}
 
@@ -289,14 +306,6 @@
 			if ((accepted = shareNode.keyValues[@"accepted"]) != nil)
 			{
 				share.accepted = @(accepted.integerValue);
-			}
-
-			// State
-			OCShareState state;
-
-			if ((state = shareNode.keyValues[@"state"]) != nil)
-			{
-				share.state = state;
 			}
 		}
 	}

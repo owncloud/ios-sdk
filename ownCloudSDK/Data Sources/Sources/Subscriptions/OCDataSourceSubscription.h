@@ -34,6 +34,8 @@ typedef void(^OCDataSourceSubscriptionUpdateHandler)(OCDataSourceSubscription *s
 	NSMutableSet<OCDataItemReference> *_removedItemRefs;
 
 	BOOL _needsUpdateHandling;
+
+	BOOL _isInterDataSourceSubscription;
 }
 
 @property(class,strong,readonly,nonatomic) dispatch_queue_t defaultUpdateQueue;

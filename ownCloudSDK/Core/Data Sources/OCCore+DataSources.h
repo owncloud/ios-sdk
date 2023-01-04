@@ -25,15 +25,15 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Drives data sources (event-driven)
 @property(readonly,strong,nonatomic) OCDataSource *drivesDataSource; //!< ALL drives
 @property(readonly,strong,nonatomic) OCDataSource *subscribedDrivesDataSource; //!< Drives the user is subscribed to
-@property(readonly,strong,nonatomic) OCDataSource *personalAndSharedDrivesDataSource; //!< Personal + Shares Jail spaces
+@property(readonly,strong,nonatomic) OCDataSource *personalDriveDataSource; //!< Personal drive
+@property(readonly,strong,nonatomic) OCDataSource *shareJailDriveDataSource; //!< Shares Jail drive
 @property(readonly,strong,nonatomic) OCDataSource *projectDrivesDataSource; //!< Spaces the user is subscribed to (applies filter on .subscribedDrivesDataSource)
 
 #pragma mark - Sharing data sources (on-demand)
 // On-demand data sources require constant polling or other additional overhead - they are only updated when they have subscribers
 // Therefore subscriptions should not be "hoarded" on on-demand data sources, but only be kept around for as long as needed - and then terminated.
-@property(readonly,strong,nonatomic) OCDataSource *sharedWithMeDataSource;
 @property(readonly,strong,nonatomic) OCDataSource *sharedWithMePendingDataSource;
-@property(readonly,strong,nonatomic) OCDataSource *sharedWithMeAcceptedDataSource;
+@property(readonly,strong,nonatomic) OCDataSource *sharedWithMeAcceptedDataSource;  //!< Contents same as the Shared Jail drive
 @property(readonly,strong,nonatomic) OCDataSource *sharedWithMeDeclinedDataSource;
 
 @property(readonly,strong,nonatomic) OCDataSource *sharedByMeDataSource;

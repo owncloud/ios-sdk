@@ -21,6 +21,8 @@
 
 @implementation OCCore (DataSources)
 
+#pragma mark - Drive selections
+
 - (OCDataSource *)drivesDataSource
 {
 	return (_drivesDataSource);
@@ -31,9 +33,14 @@
 	return (_subscribedDrivesDataSource);
 }
 
-- (OCDataSource *)personalAndSharedDrivesDataSource
+- (OCDataSource *)personalDriveDataSource
 {
-	return (_personalAndSharedDrivesDataSource);
+	return (_personalDriveDataSource);
+}
+
+- (OCDataSource *)shareJailDriveDataSource
+{
+	return (_shareJailDriveDataSource);
 }
 
 - (OCDataSource *)projectDrivesDataSource
@@ -41,35 +48,243 @@
 	return (_projectDrivesDataSource);
 }
 
-- (OCDataSource *)sharedWithMeDataSource
+#pragma mark - Shared with me
+/*
+		// Shared with user
+		shareQueryWithUser = OCShareQuery(scope: .sharedWithUser, item: nil)
+
+		if let shareQueryWithUser = shareQueryWithUser {
+			shareQueryWithUser.refreshInterval = 60
+
+			shareQueryWithUser.initialPopulationHandler = { [weak self] (_) in
+				self?.updateSharedWithYouResult()
+				self?.updatePendingSharesResult()
+			}
+			shareQueryWithUser.changesAvailableNotificationHandler = shareQueryWithUser.initialPopulationHandler
+
+			start(query: shareQueryWithUser)
+		}
+
+		if core?.connection.capabilities?.federatedSharingSupported == true {
+			// Accepted cloud shares
+			shareQueryAcceptedCloudShares = OCShareQuery(scope: .acceptedCloudShares, item: nil)
+
+			if let shareQueryAcceptedCloudShares = shareQueryAcceptedCloudShares {
+				shareQueryAcceptedCloudShares.refreshInterval = 60
+
+				shareQueryAcceptedCloudShares.initialPopulationHandler = { [weak self] (_) in
+					self?.updateSharedWithYouResult()
+					self?.updatePendingSharesResult()
+				}
+				shareQueryAcceptedCloudShares.changesAvailableNotificationHandler = shareQueryAcceptedCloudShares.initialPopulationHandler
+
+				start(query: shareQueryAcceptedCloudShares)
+			}
+
+			// Pending cloud shares
+			shareQueryPendingCloudShares = OCShareQuery(scope: .pendingCloudShares, item: nil)
+
+			if let shareQueryPendingCloudShares = shareQueryPendingCloudShares {
+				shareQueryPendingCloudShares.refreshInterval = 60
+
+				shareQueryPendingCloudShares.initialPopulationHandler = { [weak self] (query) in
+					if let library = self {
+						library.pendingCloudSharesCounter = query.queryResults.count
+						self?.updatePendingSharesResult()
+					}
+				}
+				shareQueryPendingCloudShares.changesAvailableNotificationHandler = shareQueryPendingCloudShares.initialPopulationHandler
+
+				start(query: shareQueryPendingCloudShares)
+			}
+		}
+
+		// Shared by user
+		shareQueryByUser = OCShareQuery(scope: .sharedByUser, item: nil)
+
+		if let shareQueryByUser = shareQueryByUser {
+			shareQueryByUser.refreshInterval = 60
+
+			shareQueryByUser.initialPopulationHandler = { [weak self] (_) in
+				self?.updateSharedByUserResults()
+			}
+			shareQueryByUser.changesAvailableNotificationHandler = shareQueryByUser.initialPopulationHandler
+
+			start(query: shareQueryByUser)
+		}
+*/
+
+- (void)_updateSharedWithMeQueryForceStop:(BOOL)forceStop
 {
-	// Needs implementation
+	BOOL hasSubscribers;
+
+	@synchronized (self)
+	{
+		hasSubscribers = _sharedWithMeSubscribingDataSources > 0;
+	}
+
+	if (hasSubscribers)
+	{
+		BOOL startQuery = NO;
+
+		@synchronized(self)
+		{
+			if (_sharedWithMeQuery == nil)
+			{
+				__weak OCCore *weakSelf = self;
+
+				_sharedWithMeQuery = [OCShareQuery queryWithScope:OCShareScopeSharedWithUser item:nil];
+				_sharedWithMeQuery.refreshInterval = 60;
+
+				_sharedWithMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
+					OCWLogDebug(@"SharedWithMe: %@", query.queryResults);
+					[[weakSelf _sharedWithMeDataSource] setVersionedItems:query.queryResults];
+				};
+
+				startQuery = YES;
+			}
+		}
+
+		if (startQuery)
+		{
+			[self startQuery:_sharedWithMeQuery];
+		}
+	}
+	else
+	{
+		OCShareQuery *shareQuery = nil;
+
+		@synchronized(self)
+		{
+			if (_sharedWithMeQuery != nil)
+			{
+				shareQuery = _sharedWithMeQuery;
+				_sharedWithMeQuery = nil;
+			}
+		}
+
+		if (shareQuery != nil)
+		{
+			[self stopQuery:shareQuery];
+		}
+	}
+}
+
+- (OCDataSourceArray *)_sharedWithMeDataSource
+{
+	@synchronized(self)
+	{
+		if (_sharedWithMeDataSource == nil)
+		{
+			_sharedWithMeDataSource = [[OCDataSourceArray alloc] initWithItems:nil];
+			_sharedWithMeDataSource.synchronizationGroup = dispatch_group_create();
+		}
+	}
+
 	return (_sharedWithMeDataSource);
+}
+
+- (void)_sharedWithMeSubscriberChange:(NSInteger)subscriberChange
+{
+	@synchronized(self)
+	{
+		_sharedWithMeSubscribingDataSources += subscriberChange;
+	}
+
+	[self beginActivity:@"Update shared with me query"];
+
+	[self queueBlock:^{
+		[self _updateSharedWithMeQueryForceStop:NO];
+		[self endActivity:@"Update shared with me query"];
+	}];
+}
+
+- (OCDataSourceComposition *)_compositionDataSourceForShareState:(OCShareState)shareState
+{
+	OCDataSource *sharedWithMeDataSource = self._sharedWithMeDataSource;
+	dispatch_group_t synchronizationGroup = sharedWithMeDataSource.synchronizationGroup;
+
+	return ([[OCDataSourceComposition alloc] initWithSources:@[ sharedWithMeDataSource ] applyCustomizations:^(OCDataSourceComposition *dataSource) {
+		dataSource.synchronizationGroup = synchronizationGroup;
+
+		[dataSource setFilter:^BOOL(OCDataSource * _Nonnull source, OCDataItemReference  _Nonnull itemRef) {
+			OCDataItemRecord *record;
+
+			if ((record = [source recordForItemRef:itemRef error:NULL]) != nil)
+			{
+				OCShare *share;
+
+				if ((share = OCTypedCast(record.item, OCShare)) != nil)
+				{
+					return ([share.state isEqual:shareState]);
+				}
+			}
+
+			return (NO);
+		}];
+	}]);
 }
 
 - (OCDataSource *)sharedWithMePendingDataSource
 {
-	// Needs implementation
+	@synchronized(self)
+	{
+		if (_sharedWithMePendingDataSource == nil)
+		{
+			_sharedWithMePendingDataSource = [self _compositionDataSourceForShareState:OCShareStatePending];
+
+			[_sharedWithMePendingDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _sharedWithMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
 	return (_sharedWithMePendingDataSource);
 }
 
 - (OCDataSource *)sharedWithMeAcceptedDataSource
 {
-	// Needs implementation
+	@synchronized(self)
+	{
+		if (_sharedWithMeAcceptedDataSource == nil)
+		{
+			_sharedWithMeAcceptedDataSource = [self _compositionDataSourceForShareState:OCShareStateAccepted];
+
+			[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _sharedWithMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
 	return (_sharedWithMeAcceptedDataSource);
 }
 
 - (OCDataSource *)sharedWithMeDeclinedDataSource
 {
-	// Needs implementation
+	@synchronized(self)
+	{
+		if (_sharedWithMeDeclinedDataSource == nil)
+		{
+			_sharedWithMeDeclinedDataSource = [self _compositionDataSourceForShareState:OCShareStateDeclined];
+
+			[_sharedWithMeDeclinedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _sharedWithMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
 	return (_sharedWithMeDeclinedDataSource);
 }
+
+#pragma mark - Shared by me
 
 - (OCDataSource *)sharedByMeDataSource
 {
 	// Needs implementation
 	return (_sharedByMeDataSource);
 }
+
+#pragma mark - Shared by link
 
 - (OCDataSource *)sharedByLinkDataSource
 {
@@ -100,7 +315,7 @@
 					[core _setFavoritesDataSourceSubscriptionHasUpdate];
 					[core endActivity:@"Update favorites data source"];
 				}];
-			} withOwner:self performInitial:YES];
+			} withOwner:self performInitial:NO];
 		}
 	}
 
@@ -193,7 +408,7 @@
 					[core _setOfflineItemPoliciesDataSourceSubscriptionHasUpdate];
 					[core endActivity:@"Update offline item policies data source"];
 				}];
-			} withOwner:self performInitial:YES];
+			} withOwner:self performInitial:NO];
 		}
 	}
 
@@ -274,7 +489,7 @@
 					[core _setAvailableOfflineFilesDataSourceSubscriptionHasUpdate];
 					[core endActivity:@"Update favorites data source"];
 				}];
-			} withOwner:self performInitial:YES];
+			} withOwner:self performInitial:NO];
 		}
 	}
 
@@ -384,8 +599,11 @@
 
 	if (stop)
 	{
-		dispatch_source_cancel(_pollingDataSourcesTimer);
-		_pollingDataSourcesTimer = NULL;
+		if (_pollingDataSourcesTimer != NULL)
+		{
+			dispatch_source_cancel(_pollingDataSourcesTimer);
+			_pollingDataSourcesTimer = NULL;
+		}
 	}
 }
 

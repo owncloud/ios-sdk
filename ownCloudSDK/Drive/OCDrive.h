@@ -82,6 +82,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 extern OCDriveType OCDriveTypePersonal; //!< A users personal space
 extern OCDriveType OCDriveTypeVirtual;	//!< Virtual space containing all items shared with the user
 extern OCDriveType OCDriveTypeProject;	//!< Regular spaces
+extern OCDriveType OCDriveTypeMountpoint; //!< Accepted shared items
 extern OCDriveType OCDriveTypeShare;
 
 extern OCDriveSpecialType OCDriveSpecialTypePersonal;	//!< The user's personal space

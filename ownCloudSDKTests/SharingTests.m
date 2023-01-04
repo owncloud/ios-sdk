@@ -402,7 +402,7 @@
 																if ([share.identifier isEqual:newShare.identifier])
 																{
 																	// .. and check that it's now accepted.
-																	XCTAssert([share.state isEqual:OCShareStateRejected]);
+																	XCTAssert([share.state isEqual:OCShareStateDeclined]);
 																}
 															}
 

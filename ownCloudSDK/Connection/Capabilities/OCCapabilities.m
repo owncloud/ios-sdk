@@ -433,6 +433,11 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"files"][@"versioning"], NSNumber));
 }
 
+- (OCCapabilityBool)supportsFavorites
+{
+	return (OCTypedCast(_capabilities[@"files"][@"favorites"], NSNumber));
+}
+
 #pragma mark - Sharing
 - (OCCapabilityBool)sharingAPIEnabled
 {

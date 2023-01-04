@@ -131,11 +131,22 @@
 #pragma mark - Managing subscriptions
 - (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate
 {
+	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performIntialUpdate:trackDifferences isInternal:NO]);
+}
+
+- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate
+{
+	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performIntialUpdate:trackDifferences isInternal:YES]);
+}
+
+- (OCDataSourceSubscription *)_subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate isInternal:(BOOL)isInternal
+{
 	OCDataSourceSubscription *subscription;
 
 	@synchronized (_subscriptions)
 	{
 		subscription = [[OCDataSourceSubscription alloc] initWithSource:self trackDifferences:trackDifferences itemReferences:_itemReferences updateHandler:updateHandler onQueue:updateQueue];
+		subscription.isInterDataSourceSubscription = isInternal;
 		[_subscriptions addObject:subscription];
 
 		[self setHasSubscriptions:(_subscriptions.count > 0)];
@@ -208,11 +219,21 @@
 {
 	@synchronized (_subscriptions)
 	{
+		if (_synchronizationGroup != nil)
+		{
+			dispatch_group_enter(_synchronizationGroup);
+		}
+
 		[_itemReferences setArray:itemRefs];
 
 		for (OCDataSourceSubscription *subscription in _subscriptions)
 		{
 			[subscription _updateWithItemReferences:itemRefs updated:updatedItemRefs];
+		}
+
+		if (_synchronizationGroup != nil)
+		{
+			dispatch_group_leave(_synchronizationGroup);
 		}
 	}
 }

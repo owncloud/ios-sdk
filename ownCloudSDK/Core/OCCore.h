@@ -246,17 +246,20 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCDataSourceArray *_drivesDataSource;
 	OCDataSourceArray *_subscribedDrivesDataSource;
-	OCDataSourceArray *_personalAndSharedDrivesDataSource;
+	OCDataSourceArray *_personalDriveDataSource;
+	OCDataSourceArray *_shareJailDriveDataSource;
 	OCDataSourceArray *_projectDrivesDataSource;
 
 	dispatch_source_t _pollingDataSourcesTimer;
 	NSUInteger _pollingDataSourcesSubscribers;
 	NSUInteger _pollingDataSourcesOutstandingRequests;
 
+	OCShareQuery *_sharedWithMeQuery;
 	OCDataSourceArray *_sharedWithMeDataSource;
-	OCDataSourceArray *_sharedWithMePendingDataSource;
-	OCDataSourceArray *_sharedWithMeAcceptedDataSource;
-	OCDataSourceArray *_sharedWithMeDeclinedDataSource;
+	NSInteger _sharedWithMeSubscribingDataSources;
+	OCDataSourceComposition *_sharedWithMePendingDataSource;
+	OCDataSourceComposition *_sharedWithMeAcceptedDataSource;
+	OCDataSourceComposition *_sharedWithMeDeclinedDataSource;
 
 	OCDataSourceArray *_sharedByMeDataSource;
 	OCDataSourceArray *_sharedByLinkDataSource;

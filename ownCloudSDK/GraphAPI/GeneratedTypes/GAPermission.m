@@ -26,7 +26,7 @@
 {
 	GAPermission *instance = [self new];
 
-	GA_SET(grantedTo, GAIdentitySet, NSArray.class);
+	GA_SET(grantedToIdentities, GAIdentitySet, NSArray.class);
 	GA_SET(roles, NSString, NSArray.class);
 
 	return (instance);
@@ -42,7 +42,7 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_grantedTo = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAIdentitySet.class, NSArray.class, nil] forKey:@"grantedTo"];
+		_grantedToIdentities = [decoder decodeObjectOfClasses:[NSSet setWithObjects: GAIdentitySet.class, NSArray.class, nil] forKey:@"grantedToIdentities"];
 		_roles = [decoder decodeObjectOfClasses:[NSSet setWithObjects: NSString.class, NSArray.class, nil] forKey:@"roles"];
 	}
 
@@ -52,14 +52,14 @@
 // occgen: type native serialization
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeObject:_grantedTo forKey:@"grantedTo"];
+	[coder encodeObject:_grantedToIdentities forKey:@"grantedToIdentities"];
 	[coder encodeObject:_roles forKey:@"roles"];
 }
 
 // occgen: type debug description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_grantedTo!=nil) ? [NSString stringWithFormat:@", grantedTo: %@", _grantedTo] : @""), ((_roles!=nil) ? [NSString stringWithFormat:@", roles: %@", _roles] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self, ((_grantedToIdentities!=nil) ? [NSString stringWithFormat:@", grantedToIdentities: %@", _grantedToIdentities] : @""), ((_roles!=nil) ? [NSString stringWithFormat:@", roles: %@", _roles] : @"")]);
 }
 
 // occgen: type protected {"locked":true}

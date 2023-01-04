@@ -1456,6 +1456,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 
 										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+											BOOL saveBookmark = NO;
+
 											self.loggedInUser = loggedInUser;
 
 											// Update bookmark.userDisplayName if it has changed
@@ -1465,11 +1467,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 												self.bookmark.user = loggedInUser;
 												self.bookmark.userDisplayName = loggedInUser.displayName;
 
-												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
-												{
-													// Update bookmark - IF it is not a working copy
-													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
-												}
+												saveBookmark = YES;
 											}
 
 											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
@@ -1480,6 +1478,22 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 											}
 											else
 											{
+												// Favorites
+												if (capabilities.supportsFavorites.boolValue != [self.bookmark hasCapability:OCBookmarkCapabilityFavorites])
+												{
+													if (capabilities.supportsFavorites)
+													{
+														[self.bookmark addCapability:OCBookmarkCapabilityFavorites];
+													}
+													else
+													{
+														[self.bookmark removeCapability:OCBookmarkCapabilityFavorites];
+													}
+
+													saveBookmark = YES;
+												}
+
+												// Drives
 												if (self.useDriveAPI)
 												{
 													// Drives
@@ -1487,6 +1501,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 													if (![self.bookmark hasCapability:OCBookmarkCapabilityDrives])
 													{
 														[self.bookmark addCapability:OCBookmarkCapabilityDrives];
+														saveBookmark = YES;
 													}
 
 													// Get a list of drives
@@ -1513,6 +1528,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 													self.state = OCConnectionStateConnected;
 
 													completionHandler(nil, nil);
+												}
+
+												if (saveBookmark && (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain))
+												{
+													// Update bookmark - IF it is not a working copy
+													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
 												}
 											}
 										}];

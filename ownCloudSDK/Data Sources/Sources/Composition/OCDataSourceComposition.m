@@ -334,6 +334,13 @@
 
 	__weak OCDataSourceComposition *weakSelf = self;
 
+	dispatch_group_t synchronizationGroup = self.synchronizationGroup;
+
+	if (synchronizationGroup != nil)
+	{
+		dispatch_group_enter(synchronizationGroup);
+	}
+
 	dispatch_async(_compositionQueue, ^{
 		OCDataSourceComposition *strongSelf;
 
@@ -354,6 +361,11 @@
 			{
 				[self _updateComposition];
 			}
+		}
+
+		if (synchronizationGroup != nil)
+		{
+			dispatch_group_leave(synchronizationGroup);
 		}
 	});
 }
@@ -569,7 +581,7 @@
 		_include = YES;
 
 		_source = source;
-		_subscription = [source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+		_subscription = [source associateWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 			[weakSelf updateWithSubscription:subscription];
 		} onQueue:composition.compositionQueue trackDifferences:YES performIntialUpdate:YES];
 	}

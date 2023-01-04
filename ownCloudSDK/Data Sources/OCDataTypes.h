@@ -71,6 +71,7 @@ extern OCDataItemType OCDataItemTypeStatistic; //!< Item of type OCStatistic
 extern OCDataItemType OCDataItemTypeView;  //!< Item of type UIView
 extern OCDataItemType OCDataItemTypeBookmark; //!< Item of type OCBookmark
 extern OCDataItemType OCDataItemTypeItemPolicy; //!< Item of type OCItemPolicy
+extern OCDataItemType OCDataItemTypeShare; //!< Item of type OCShare
 
 extern OCDataViewOption OCDataViewOptionCore; //!< OCCore instance
 extern OCDataViewOption OCDataViewOptionListContentConfiguration; //!< UIListContentConfiguration instance to fill
