@@ -132,7 +132,7 @@
 		// In parallel: remove thumbnails from in-memory cache for removed items
 		OCWaitWillStartTask(cacheUpdatesGroup);
 
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 			for (OCItem *removeItem in removedItems)
 			{
 				[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
