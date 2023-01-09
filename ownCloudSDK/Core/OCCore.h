@@ -128,6 +128,8 @@ typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice)
 
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
 
+typedef void(^OCCoreShareJailQueryCustomizer)(OCQuery *query); // Used by OCCore+DataSources.shareJailQueryCustomizer
+
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
 
 typedef NSString* OCCoreOption NS_TYPED_ENUM;
@@ -258,6 +260,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCDataSourceArray *_sharedWithMeDataSource;
 	NSInteger _sharedWithMeSubscribingDataSources;
 	OCQuery *_sharesJailQuery;
+	OCCoreShareJailQueryCustomizer _shareJailQueryCustomizer;
 	OCDataSourceComposition *_sharedWithMePendingDataSource;
 	OCDataSourceComposition *_sharedWithMeAcceptedDataSource;
 	OCDataSourceComposition *_sharedWithMeDeclinedDataSource;

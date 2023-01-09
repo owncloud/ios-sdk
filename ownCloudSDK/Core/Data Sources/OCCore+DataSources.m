@@ -296,6 +296,11 @@
 
 							core->_sharesJailQuery = query;
 
+							if (core->_shareJailQueryCustomizer != nil)
+							{
+								core->_shareJailQueryCustomizer(query);
+							}
+
 							[core startQuery:query];
 						}
 					}
@@ -350,6 +355,26 @@
 
 	return (_sharedWithMeDeclinedDataSource);
 }
+
+
+- (void)setShareJailQueryCustomizer:(OCCoreShareJailQueryCustomizer)shareJailQueryCustomizer
+{
+	_shareJailQueryCustomizer = [shareJailQueryCustomizer copy];
+
+	if (_shareJailQueryCustomizer != nil)
+	{
+		if (_sharesJailQuery != nil)
+		{
+			_shareJailQueryCustomizer(_sharesJailQuery);
+		}
+	}
+}
+
+- (OCCoreShareJailQueryCustomizer)shareJailQueryCustomizer
+{
+	return (_shareJailQueryCustomizer);
+}
+
 
 #pragma mark - Shared by me
 - (void)_updateAllSharedByMeQueryForceStop:(BOOL)forceStop
