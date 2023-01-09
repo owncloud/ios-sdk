@@ -67,5 +67,6 @@ typedef NS_ENUM(NSUInteger, OCCoreDataSourcePollType)
 #pragma mark - Data sources
 - (void)unsubscribeFromPollingDatasourcesTimer:(OCCoreDataSourcePollType)pollType withForcedStop:(BOOL)force;
 - (void)_updateSharedWithMeQueryForceStop:(BOOL)forceStop;
+- (void)_updateAllSharedByMeQueryForceStop:(BOOL)forceStop;
 
 @end

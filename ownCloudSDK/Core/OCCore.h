@@ -257,10 +257,14 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCShareQuery *_sharedWithMeQuery;
 	OCDataSourceArray *_sharedWithMeDataSource;
 	NSInteger _sharedWithMeSubscribingDataSources;
+	OCQuery *_sharesJailQuery;
 	OCDataSourceComposition *_sharedWithMePendingDataSource;
 	OCDataSourceComposition *_sharedWithMeAcceptedDataSource;
 	OCDataSourceComposition *_sharedWithMeDeclinedDataSource;
 
+	OCShareQuery *_allSharedByMeQuery;
+	OCDataSourceArray *_allSharedByMeDataSource;
+	NSInteger _allSharedByMeSubscribingDataSources;
 	OCDataSourceArray *_sharedByMeDataSource;
 	OCDataSourceArray *_sharedByLinkDataSource;
 

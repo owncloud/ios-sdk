@@ -60,6 +60,8 @@
 		}
 	}
 
+	share.category = OCShareCategoryByMe;
+
 	share.recipient = recipient;
 
 	share.itemLocation = location;
@@ -75,6 +77,7 @@
 	OCShare *share = [OCShare new];
 
 	share.type = OCShareTypeLink;
+	share.category = OCShareCategoryByMe;
 
 	share.name = name;
 
@@ -174,6 +177,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		return (compareVar(_identifier) &&
 
 			(otherShare->_type == _type) &&
+			(otherShare->_category == _category) &&
 
 			compareVar(_itemLocation) &&
 			(otherShare->_itemType == _itemType) &&
@@ -216,6 +220,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		_identifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"identifier"];
 
 		_type = [decoder decodeIntegerForKey:@"type"];
+		_category = [decoder decodeIntegerForKey:@"category"];
 
 		_itemLocation = [decoder decodeObjectOfClass:OCLocation.class forKey:@"itemLocation"];
 		if (_itemLocation == nil)
@@ -266,6 +271,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeObject:_identifier forKey:@"identifier"];
 
 	[coder encodeInteger:_type forKey:@"type"];
+	[coder encodeInteger:_category forKey:@"category"];
 
 	[coder encodeObject:_itemLocation forKey:@"itemLocation"];
 	[coder encodeInteger:_itemType forKey:@"itemLType"];
@@ -294,7 +300,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 #pragma mark - Description
 - (NSString *)description
 {
-	NSString *typeAsString = nil, *permissionsString = @"", *itemTypeString = nil;
+	NSString *typeAsString = nil, *permissionsString = @"", *itemTypeString = nil, *categoryAsString = nil;
 
 	switch (_type)
 	{
@@ -320,6 +326,19 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 		case OCShareTypeUnknown:
 			typeAsString = @"unknown";
+		break;
+	}
+
+	switch (_category)
+	{
+		case OCShareCategoryUnknown:
+			categoryAsString = @"unknown";
+		break;
+		case OCShareCategoryByMe:
+			categoryAsString = @"by me";
+		break;
+		case OCShareCategoryWithMe:
+			categoryAsString = @"with me";
 		break;
 	}
 
@@ -357,7 +376,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, name: %@, itemLocation: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, _name, _itemLocation, itemTypeString, _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateDeclined] ? @", state: declined" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, category: %@, name: %@, itemLocation: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, categoryAsString, _name, _itemLocation, itemTypeString, _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateDeclined] ? @", state: declined" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
 }
 
 #pragma mark - Copying
@@ -367,6 +386,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 
 	copiedShare->_identifier = _identifier;
 	copiedShare->_type = _type;
+	copiedShare->_category = _category;
 
 	copiedShare->_itemLocation = _itemLocation;
 	copiedShare->_itemType = _itemType;

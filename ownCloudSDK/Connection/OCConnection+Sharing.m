@@ -112,7 +112,7 @@
 @implementation OCConnection (Sharing)
 
 #pragma mark - Retrieval
-- (NSArray<OCShare *> *)_parseSharesResponse:(OCHTTPResponse *)response data:(NSData *)responseData error:(NSError **)outError status:(OCSharingResponseStatus **)outStatus statusErrorMapper:(NSError*(^)(OCSharingResponseStatus *status))statusErrorMapper
+- (NSArray<OCShare *> *)_parseSharesResponse:(OCHTTPResponse *)response data:(NSData *)responseData category:(OCShareCategory)shareCategory error:(NSError **)outError status:(OCSharingResponseStatus **)outStatus statusErrorMapper:(NSError*(^)(OCSharingResponseStatus *status))statusErrorMapper
 {
 	OCXMLParser *parser = nil;
 	NSError *error;
@@ -121,7 +121,8 @@
 	{
 		if ((parser = [[OCXMLParser alloc] initWithData:responseData]) != nil)
 		{
-			[parser addObjectCreationClasses:@[ [OCShare class], [OCShareSingle class], [OCSharingResponseStatus class] ]];
+			parser.options[@"_shareCategory"] = @(shareCategory);
+			[parser addObjectCreationClasses:@[ OCShare.class, OCShareSingle.class, OCSharingResponseStatus.class ]];
 
 			if ([parser parse])
 			{
@@ -171,6 +172,7 @@
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+	OCShareCategory shareCategory = OCShareCategoryUnknown;
 
 	request = [OCHTTPRequest new];
 	request.requiredSignals = self.propFindSignals;
@@ -190,22 +192,36 @@
 		break;
 	}
 
+	if ((item != nil) && self.useDriveAPI)
+	{
+		// Add the file ID to allow the server to determine the item's location (path, of course, isn't sufficient there)
+		if (item.fileID != nil)
+		{
+			[request setValue:item.fileID forParameter:@"space_ref"];
+		}
+	}
+
 	switch (scope)
 	{
 		case OCShareScopeSharedByUser:
 			// No options to set
+			shareCategory = OCShareCategoryByMe;
 		break;
 
 		case OCShareScopeSharedWithUser:
+			shareCategory = OCShareCategoryWithMe;
+
 			[request setValue:@"true" forParameter:@"shared_with_me"];
 			[request setValue:@"all" forParameter:@"state"];
 		break;
 
 		case OCShareScopePendingCloudShares:
+			shareCategory = OCShareCategoryWithMe;
 			url = [[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"];
 		break;
 
 		case OCShareScopeAcceptedCloudShares:
+			shareCategory = OCShareCategoryWithMe;
 			url = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
 		break;
 
@@ -246,7 +262,7 @@
 
 		if (error == nil)
 		{
-			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:response data:response.bodyData category:shareCategory error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -318,7 +334,7 @@
 
 		if (!((response.error != nil) && ![response.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
-			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:response data:response.bodyData category:OCShareCategoryUnknown error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
 
 					switch (status.statusCode.integerValue)
@@ -415,7 +431,7 @@
 		{
 			NSArray <OCShare *> *shares = nil;
 
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -613,7 +629,7 @@
 			NSArray <OCShare *> *shares = nil;
 			NSError *parseError = nil;
 
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -728,7 +744,7 @@
 		}
 		else
 		{
-			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -831,7 +847,7 @@
 		}
 		else
 		{
-			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryWithMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)

@@ -123,7 +123,7 @@
 		hasSubscribers = _sharedWithMeSubscribingDataSources > 0;
 	}
 
-	if (hasSubscribers)
+	if (hasSubscribers && !forceStop)
 	{
 		BOOL startQuery = NO;
 
@@ -134,11 +134,24 @@
 				__weak OCCore *weakSelf = self;
 
 				_sharedWithMeQuery = [OCShareQuery queryWithScope:OCShareScopeSharedWithUser item:nil];
-				_sharedWithMeQuery.refreshInterval = 60;
+				_sharedWithMeQuery.refreshInterval = 20;
 
 				_sharedWithMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
 					OCWLogDebug(@"SharedWithMe: %@", query.queryResults);
-					[[weakSelf _sharedWithMeDataSource] setVersionedItems:query.queryResults];
+					NSArray<OCShare *> *sortedShares = [query.queryResults sortedArrayUsingComparator:^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
+						NSString *name1, *name2;
+
+						name1 = share1.itemLocation.lastPathComponent;
+						name2 = share2.itemLocation.lastPathComponent;
+
+						if ((name1 != nil) && (name2 != nil))
+						{
+							return ([name1 localizedCaseInsensitiveCompare:name2]);
+						}
+
+						return (NSOrderedDescending);
+					}];
+					[[weakSelf _sharedWithMeDataSource] setVersionedItems:sortedShares];
 				};
 
 				startQuery = YES;
@@ -153,6 +166,7 @@
 	else
 	{
 		OCShareQuery *shareQuery = nil;
+		OCQuery *sharesJailQuery = nil;
 
 		@synchronized(self)
 		{
@@ -161,11 +175,22 @@
 				shareQuery = _sharedWithMeQuery;
 				_sharedWithMeQuery = nil;
 			}
+
+			if ((_sharesJailQuery != nil) && forceStop)
+			{
+				sharesJailQuery = _sharesJailQuery;
+				_sharesJailQuery = nil;
+			}
 		}
 
 		if (shareQuery != nil)
 		{
 			[self stopQuery:shareQuery];
+		}
+
+		if (sharesJailQuery != nil)
+		{
+			[self stopQuery:sharesJailQuery];
 		}
 	}
 }
@@ -249,11 +274,60 @@
 	{
 		if (_sharedWithMeAcceptedDataSource == nil)
 		{
-			_sharedWithMeAcceptedDataSource = [self _compositionDataSourceForShareState:OCShareStateAccepted];
+			if (self.useDrives)
+			{
+				// Provide contents of share jail drive
+				_sharedWithMeAcceptedDataSource = [[OCDataSourceComposition alloc] initWithSources:@[] applyCustomizations:nil];
 
-			[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
-				[(OCCore *)owner _sharedWithMeSubscriberChange:(hasSubscribers ? 1 : -1)];
-			} withOwner:self performInitial:NO];
+				[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+					OCCore *core = (OCCore *)owner;
+					OCDataSourceComposition *dataSource = (OCDataSourceComposition *)source;
+
+					if (hasSubscribers)
+					{
+						if (core->_sharesJailQuery == nil)
+						{
+							OCQuery *query = [OCQuery queryForLocation:[[OCLocation alloc] initWithDriveID:OCDriveIDSharesJail path:@"/"]];
+							OCDataSource *queryResultsDataSource = query.queryResultsDataSource;
+							if (queryResultsDataSource != nil)
+							{
+								[dataSource addSources:@[ queryResultsDataSource ]];
+							}
+
+							core->_sharesJailQuery = query;
+
+							[core startQuery:query];
+						}
+					}
+					else
+					{
+						OCQuery *query;
+
+						if ((query = core->_sharesJailQuery) != nil)
+						{
+							OCDataSource *queryResultsDataSource;
+
+							if ((queryResultsDataSource = query.queryResultsDataSource) != nil)
+							{
+								[dataSource removeSources:@[ queryResultsDataSource ]];
+							}
+
+							[core stopQuery:query];
+
+							core->_sharesJailQuery = nil;
+						}
+					}
+				} withOwner:self performInitial:NO];
+			}
+			else
+			{
+				// Provide applicable results from sharedWithMe data source
+				_sharedWithMeAcceptedDataSource = [self _compositionDataSourceForShareState:OCShareStateAccepted];
+
+				[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+					[(OCCore *)owner _sharedWithMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+				} withOwner:self performInitial:NO];
+			}
 		}
 	}
 
@@ -278,18 +352,213 @@
 }
 
 #pragma mark - Shared by me
+- (void)_updateAllSharedByMeQueryForceStop:(BOOL)forceStop
+{
+	BOOL hasSubscribers;
 
+	@synchronized (self)
+	{
+		hasSubscribers = _allSharedByMeSubscribingDataSources > 0;
+	}
+
+	if (hasSubscribers && !forceStop)
+	{
+		BOOL startQuery = NO;
+
+		@synchronized(self)
+		{
+			if (_allSharedByMeQuery == nil)
+			{
+				__weak OCCore *weakSelf = self;
+
+				_allSharedByMeQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
+				_allSharedByMeQuery.refreshInterval = 20;
+
+				_allSharedByMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
+					OCWLogDebug(@"SharedByMe: %@", query.queryResults);
+
+					// Group shares
+					NSArray<OCShare *> *allSharedByMeShares = query.queryResults;
+					NSMutableDictionary<OCLocation *, OCShare *> *sharesByLocation = [NSMutableDictionary new];
+					NSMutableArray<OCShare *> *primaryShares = [NSMutableArray new];
+					NSMutableArray<OCShare *> *linkShares = [NSMutableArray new];
+
+					for (OCShare *share in allSharedByMeShares)
+					{
+						OCLocation *shareLocation;
+
+						if (share.type == OCShareTypeLink)
+						{
+							// Separate link shares so they can't become hidden by / hide non-link shares
+							[linkShares addObject:share];
+						}
+						else
+						{
+							// Group shares by location, add additional shares to .otherItemShares of non-link share of same location
+							if ((shareLocation = share.itemLocation) != nil)
+							{
+								OCShare *existingShare;
+
+								if ((existingShare = sharesByLocation[shareLocation]) != nil)
+								{
+									NSMutableArray<OCShare *> *otherItemShares;
+
+									if ((otherItemShares = (NSMutableArray *)existingShare.otherItemShares) == nil)
+									{
+										otherItemShares = [NSMutableArray new];
+										existingShare.otherItemShares = otherItemShares;
+									}
+
+									[otherItemShares addObject:share];
+								}
+								else
+								{
+									sharesByLocation[shareLocation] = share;
+									[primaryShares addObject:share];
+								}
+							}
+						}
+					}
+
+					// Add link shares to primary shares
+					[primaryShares addObjectsFromArray:linkShares];
+
+					// Sort by name
+					[primaryShares sortUsingComparator:^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
+						NSString *name1, *name2;
+
+						name1 = share1.itemLocation.lastPathComponent;
+						name2 = share2.itemLocation.lastPathComponent;
+
+						if ((name1 != nil) && (name2 != nil))
+						{
+							return ([name1 localizedCaseInsensitiveCompare:name2]);
+						}
+
+						return (NSOrderedDescending);
+					}];
+
+					[[weakSelf _allSharedByMeDataSource] setVersionedItems:primaryShares];
+				};
+
+				startQuery = YES;
+			}
+		}
+
+		if (startQuery)
+		{
+			[self startQuery:_allSharedByMeQuery];
+		}
+	}
+	else
+	{
+		OCShareQuery *shareQuery = nil;
+
+		@synchronized(self)
+		{
+			if (_allSharedByMeQuery != nil)
+			{
+				shareQuery = _allSharedByMeQuery;
+				_allSharedByMeQuery = nil;
+			}
+		}
+
+		if (shareQuery != nil)
+		{
+			[self stopQuery:shareQuery];
+		}
+	}
+}
+
+- (OCDataSourceArray *)_allSharedByMeDataSource
+{
+	@synchronized(self)
+	{
+		if (_allSharedByMeDataSource == nil)
+		{
+			_allSharedByMeDataSource = [[OCDataSourceArray alloc] initWithItems:nil];
+			_allSharedByMeDataSource.synchronizationGroup = dispatch_group_create(); // Ensure consistency of derived data sources
+			_allSharedByMeDataSource.trackItemVersions = YES; // Track item versions, so changes in status can be detected as actual changes
+		}
+	}
+
+	return (_allSharedByMeDataSource);
+}
+
+- (void)_allSharedByMeSubscriberChange:(NSInteger)subscriberChange
+{
+	@synchronized(self)
+	{
+		_allSharedByMeSubscribingDataSources += subscriberChange;
+	}
+
+	[self beginActivity:@"Update shared by me query"];
+
+	[self queueBlock:^{
+		[self _updateAllSharedByMeQueryForceStop:NO];
+		[self endActivity:@"Update shared by me query"];
+	}];
+}
+
+- (OCDataSourceComposition *)_compositionDataSourceForShareTypeLink:(BOOL)shareTypeLink
+{
+	OCDataSource *allSharedByMeDataSource = [self _allSharedByMeDataSource];
+	dispatch_group_t synchronizationGroup = allSharedByMeDataSource.synchronizationGroup;
+
+	return ([[OCDataSourceComposition alloc] initWithSources:@[ allSharedByMeDataSource ] applyCustomizations:^(OCDataSourceComposition *dataSource) {
+		dataSource.synchronizationGroup = synchronizationGroup;
+
+		[dataSource setFilter:^BOOL(OCDataSource * _Nonnull source, OCDataItemReference  _Nonnull itemRef) {
+			OCDataItemRecord *record;
+
+			if ((record = [source recordForItemRef:itemRef error:NULL]) != nil)
+			{
+				OCShare *share;
+
+				if ((share = OCTypedCast(record.item, OCShare)) != nil)
+				{
+					return ((share.type == OCShareTypeLink) == shareTypeLink);
+				}
+			}
+
+			return (NO);
+		}];
+	}]);
+}
+
+#pragma mark - Shared by me (to other users)
 - (OCDataSource *)sharedByMeDataSource
 {
-	// Needs implementation
+	@synchronized(self)
+	{
+		if (_sharedByMeDataSource == nil)
+		{
+			_sharedByMeDataSource = [self _compositionDataSourceForShareTypeLink:NO];
+
+			[_sharedByMeDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _allSharedByMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
 	return (_sharedByMeDataSource);
 }
 
 #pragma mark - Shared by link
-
 - (OCDataSource *)sharedByLinkDataSource
 {
-	// Needs implementation
+	@synchronized(self)
+	{
+		if (_sharedByLinkDataSource == nil)
+		{
+			_sharedByLinkDataSource = [self _compositionDataSourceForShareTypeLink:YES];
+
+			[_sharedByLinkDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _allSharedByMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
 	return (_sharedByLinkDataSource);
 }
 

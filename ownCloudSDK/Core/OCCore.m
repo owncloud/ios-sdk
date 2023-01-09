@@ -419,6 +419,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	[self unsubscribeFromPollingDatasourcesTimer:OCCoreDataSourcePollTypeAll withForcedStop:YES];
 	[self _updateSharedWithMeQueryForceStop:YES];
+	[self _updateAllSharedByMeQueryForceStop:YES];
 
 	[self stopIPCObserveration];
 

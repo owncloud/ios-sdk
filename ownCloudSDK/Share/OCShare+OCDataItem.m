@@ -35,7 +35,18 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted]);
+	NSArray<OCShare *> *otherItemShares = self.otherItemShares;
+	NSString *otherItemSharesVersions = @"";
+
+	if ((otherItemShares != nil) && (otherItemShares.count > 0))
+	{
+		for (OCShare *share in otherItemShares)
+		{
+			otherItemSharesVersions = [otherItemSharesVersions stringByAppendingString:(NSString *)share.dataItemVersion];
+		}
+	}
+
+	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted, otherItemSharesVersions]);
 }
 
 #pragma mark - OCDataConverter for OCDrives

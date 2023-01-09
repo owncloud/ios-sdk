@@ -64,6 +64,13 @@ typedef NS_ENUM(NSUInteger, OCShareScope)
 	OCShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
 };
 
+typedef NS_ENUM(NSUInteger, OCShareCategory)
+{
+	OCShareCategoryUnknown,
+	OCShareCategoryWithMe,
+	OCShareCategoryByMe
+};
+
 typedef NSString* OCShareOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCShareOptionKey,id>* OCShareOptions;
 
@@ -80,6 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share (server-provided instances are guaranteed to have an ID, locally created ones do typically NOT have an ID)
 
 @property(assign) OCShareType type; //!< The type of share (i.e. public or user)
+@property(assign) OCShareCategory category; //!< Category of share (with me/by me)
 
 @property(strong,nonatomic) OCLocation *itemLocation; //!< Location of the shared item
 @property(strong,nullable) OCFileID itemFileID; //!< File ID of item
@@ -111,6 +119,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
 @property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
 @property(nullable,strong) NSNumber *accepted; //!< Federated share has been accepted
+
+@property(nullable,strong) NSArray<OCShare *> *otherItemShares; //!< Other shares targeting the same item (! not serialized !)
 
 #pragma mark - Convenience constructors
 /**

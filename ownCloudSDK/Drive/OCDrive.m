@@ -279,10 +279,11 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@, isDetached: %d%@%@>", NSStringFromClass(self.class), self,
+	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@, isDetached: %d%@%@>", NSStringFromClass(self.class), self,
 		OCExpandVar(identifier),
 		OCExpandVar(type),
 		OCExpandVar(name),
+		[NSString stringWithFormat:@", rootETag: %@", self.rootETag],
 		self.isDetached,
 		OCExpandVar(quota),
 		OCExpandVar(davRootURL)
