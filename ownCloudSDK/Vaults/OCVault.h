@@ -55,6 +55,8 @@
 
 		"messageQueue.dat"					- OCMessageQueue.globalQueue KVS
 
+		"postBuildSettings.plist"				- OCClassSettingsFlatSourcePostBuild storage
+
 
 	[NSFileProviderManager documentStorageURL]/
 		"VFS"/							- OCVault.vfsStorageRootURLForBookmarkUUID:nil
