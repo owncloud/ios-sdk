@@ -30,7 +30,7 @@
 + (NSDictionary<OCClassSettingsKey,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCClassSettingsKeyPostBuildAllowedFlatIdentifiers : @[ ]
+		OCClassSettingsKeyPostBuildAllowedSettings : @[ ]
 	});
 }
 
@@ -50,7 +50,7 @@
 {
 	return (@{
 		// Allowed Post Build Flat Identifiers
-		OCClassSettingsKeyPostBuildAllowedFlatIdentifiers : @{
+		OCClassSettingsKeyPostBuildAllowedSettings : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	: @"List of settings (as flat identifiers) that are allowed to be changed post-build via the app's URL scheme. Including a value of \"*\" allows any setting to be changed. Defaults to an empty array (equalling not allowed). ",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
@@ -90,7 +90,7 @@
 {
 	NSMutableDictionary<OCClassSettingsFlatIdentifier,id> *settingsDict = [self _settingsDict];
 	NSError *error = nil;
-	NSArray<OCClassSettingsFlatIdentifier> *allowedKeys = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyPostBuildAllowedFlatIdentifiers];
+	NSArray<OCClassSettingsFlatIdentifier> *allowedKeys = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyPostBuildAllowedSettings];
 
 	if ( (allowedKeys == nil) ||
 	    ((allowedKeys != nil) && ![allowedKeys containsObject:flatID] && ![allowedKeys containsObject:@"*"])
@@ -140,7 +140,7 @@
 
 //	NSArray<OCClassSettingsFlatIdentifier> *allowedKeys;
 //
-//	if ((allowedKeys = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyPostBuildAllowedFlatIdentifiers]) &&
+//	if ((allowedKeys = [self classSettingForOCClassSettingsKey:OCClassSettingsKeyPostBuildAllowedSettings]) &&
 //	    (allowedKeys.count > 0))
 //	{
 //		// Make sure only those settings are applied that are allowed at the time
@@ -149,7 +149,7 @@
 //
 //	return (nil);
 
-	// Return full chontents of post-build settings file
+	// Return full contents of post-build settings file
 	return ([self _settingsDict]);
 }
 
@@ -158,4 +158,4 @@
 OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierPostBuild = @"pb";
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierPostBuildSettings = @"post-build";
-OCClassSettingsKey OCClassSettingsKeyPostBuildAllowedFlatIdentifiers = @"allowed-flat-identifiers";
+OCClassSettingsKey OCClassSettingsKeyPostBuildAllowedSettings = @"allowed-settings";

@@ -34,6 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 extern OCClassSettingsSourceIdentifier OCClassSettingsSourceIdentifierPostBuild;
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierPostBuildSettings;
-extern OCClassSettingsKey OCClassSettingsKeyPostBuildAllowedFlatIdentifiers;
+extern OCClassSettingsKey OCClassSettingsKeyPostBuildAllowedSettings;
 
 NS_ASSUME_NONNULL_END
