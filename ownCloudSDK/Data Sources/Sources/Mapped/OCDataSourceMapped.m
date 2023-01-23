@@ -78,15 +78,18 @@
 
 	_source = source;
 
-	__weak OCDataSourceMapped *weakSelf = self;
-	_subscription = [_source associateWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
-		OCDataSourceSnapshot *snapshot;
+	if (source != nil)
+	{
+		__weak OCDataSourceMapped *weakSelf = self;
+		_subscription = [_source associateWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
+			OCDataSourceSnapshot *snapshot;
 
-		if ((snapshot = [subscription snapshotResettingChangeTracking:YES]) != nil)
-		{
-			[weakSelf _handleSourceSnapshot:snapshot];
-		}
-	} onQueue:_queue trackDifferences:YES performIntialUpdate:YES];
+			if ((snapshot = [subscription snapshotResettingChangeTracking:YES]) != nil)
+			{
+				[weakSelf _handleSourceSnapshot:snapshot];
+			}
+		} onQueue:_queue trackDifferences:YES performIntialUpdate:YES];
+	}
 }
 
 - (void)_handleSourceSnapshot:(OCDataSourceSnapshot *)snapshot
