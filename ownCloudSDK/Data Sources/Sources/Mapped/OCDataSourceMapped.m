@@ -88,7 +88,7 @@
 			{
 				[weakSelf _handleSourceSnapshot:snapshot];
 			}
-		} onQueue:_queue trackDifferences:YES performIntialUpdate:YES];
+		} onQueue:_queue trackDifferences:YES performInitialUpdate:YES];
 	}
 }
 

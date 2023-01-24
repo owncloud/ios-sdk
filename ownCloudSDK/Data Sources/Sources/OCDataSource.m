@@ -129,17 +129,17 @@
 }
 
 #pragma mark - Managing subscriptions
-- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate
+- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performInitialUpdate:(BOOL)performInitialUpdate
 {
-	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performIntialUpdate:trackDifferences isInternal:NO]);
+	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performInitialUpdate:performInitialUpdate isInternal:NO]);
 }
 
-- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate
+- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performInitialUpdate:(BOOL)performInitialUpdate
 {
-	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performIntialUpdate:trackDifferences isInternal:YES]);
+	return ([self _subscribeWithUpdateHandler:updateHandler onQueue:updateQueue trackDifferences:trackDifferences performInitialUpdate:performInitialUpdate isInternal:YES]);
 }
 
-- (OCDataSourceSubscription *)_subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate isInternal:(BOOL)isInternal
+- (OCDataSourceSubscription *)_subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performInitialUpdate:(BOOL)performInitialUpdate isInternal:(BOOL)isInternal
 {
 	OCDataSourceSubscription *subscription;
 
@@ -152,7 +152,7 @@
 		[self setHasSubscriptions:(_subscriptions.count > 0)];
 	}
 
-	if (performIntialUpdate)
+	if (performInitialUpdate)
 	{
 		[subscription setNeedsUpdateHandling];
 	}

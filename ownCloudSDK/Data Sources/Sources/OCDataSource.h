@@ -72,8 +72,8 @@ typedef NS_ENUM(NSInteger, OCDataSourceState)
 - (nullable OCDataSource *)dataSourceForChildrenOfItemReference:(OCDataItemReference)itemRef;
 
 #pragma mark - Managing subscriptions
-- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate; //!< Subscribes for updates to the datasource. The subscription needs to be explicitely terminated when no longer used. The subscription does NOT auto-terminate by the release of all strong references to it.
-- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performIntialUpdate:(BOOL)performIntialUpdate; //!< Like subscribeWithUpdateHandler, but for subscriptions feeding other data sources. Do not use this API unless you implement a new data source type.
+- (OCDataSourceSubscription *)subscribeWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(nullable dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performInitialUpdate:(BOOL)performInitialUpdate; //!< Subscribes for updates to the datasource. The subscription needs to be explicitely terminated when no longer used. The subscription does NOT auto-terminate by the release of all strong references to it.
+- (OCDataSourceSubscription *)associateWithUpdateHandler:(OCDataSourceSubscriptionUpdateHandler)updateHandler onQueue:(dispatch_queue_t)updateQueue trackDifferences:(BOOL)trackDifferences performInitialUpdate:(BOOL)performInitialUpdate; //!< Like subscribeWithUpdateHandler, but for subscriptions feeding other data sources. Do not use this API unless you implement a new data source type.
 - (void)terminateSubscription:(OCDataSourceSubscription *)subscription; //!< Terminates a subscription. Calling OCDataSourceSubscription.terminate() is preferred.
 
 #pragma mark - Observing subscriptions

@@ -68,7 +68,7 @@ OCDataItemType DataTypeE = @"E";
 
 	OCDataSourceSubscription *subscription = [source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 		OCLog(@"Subscription notified of update");
-	} onQueue:nil trackDifferences:YES performIntialUpdate:NO];
+	} onQueue:nil trackDifferences:YES performInitialUpdate:NO];
 
 	// Take snapshot
 	snapshot = [subscription snapshotResettingChangeTracking:YES];
@@ -119,7 +119,7 @@ OCDataItemType DataTypeE = @"E";
 
 	OCDataSourceSubscription *subscription = [source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 		OCLog(@"Subscription notified of update");
-	} onQueue:nil trackDifferences:YES performIntialUpdate:NO];
+	} onQueue:nil trackDifferences:YES performInitialUpdate:NO];
 
 	// Take snapshot, check if contents is in it
 	snapshot = [subscription snapshotResettingChangeTracking:YES];
@@ -248,7 +248,7 @@ OCDataItemType DataTypeE = @"E";
 
 	OCDataSourceSubscription *subscription = [source subscribeWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 		OCLog(@"Subscription notified of update");
-	} onQueue:nil trackDifferences:YES performIntialUpdate:NO];
+	} onQueue:nil trackDifferences:YES performInitialUpdate:NO];
 
 	// Take snapshot, check if contents is in it
 	snapshot = [subscription snapshotResettingChangeTracking:YES];

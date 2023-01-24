@@ -583,7 +583,7 @@
 		_source = source;
 		_subscription = [source associateWithUpdateHandler:^(OCDataSourceSubscription * _Nonnull subscription) {
 			[weakSelf updateWithSubscription:subscription];
-		} onQueue:composition.compositionQueue trackDifferences:YES performIntialUpdate:YES];
+		} onQueue:composition.compositionQueue trackDifferences:YES performInitialUpdate:YES];
 	}
 
 	return (self);
