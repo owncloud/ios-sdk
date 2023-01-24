@@ -291,6 +291,11 @@
 	{
 		vfsContainerPath = @"/";
 		containerNode = self.rootNode;
+
+		if (containerNode.location != nil)
+		{
+			queryLocation = containerNode.location;
+		}
 	}
 	else
 	{
