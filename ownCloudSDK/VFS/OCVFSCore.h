@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (OCVFSNode *)nodeAtPath:(OCPath)vfsPath;
 - (OCVFSNode *)driveRootNodeForLocation:(OCLocation *)location;
 
-- (OCCore *)_acquireCoreForVaultLocation:(OCVaultLocation *)location error:(NSError **)outError;
+- (nullable OCCore *)_acquireCoreForVaultLocation:(OCVaultLocation *)location error:(NSError **)outError;
 - (void)_relinquishCore:(OCCore *)core;
 
 //- (nullable OCVFSNode *)nodeForID:(OCVFSNodeID)nodeID;

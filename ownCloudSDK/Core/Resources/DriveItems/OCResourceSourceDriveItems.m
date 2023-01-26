@@ -47,9 +47,7 @@
 {
 	if ([request isKindOfClass:OCResourceRequestDriveItem.class] && [request.reference isKindOfClass:GADriveItem.class])
 	{
-		GADriveItem *driveItem;
-
-		if ((driveItem = OCTypedCast(request.reference, GADriveItem)) != nil)
+		if (OCTypedCast(request.reference, GADriveItem) != nil)
 		{
 			return (OCResourceQualityNormal);
 		}

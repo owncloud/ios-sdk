@@ -298,11 +298,14 @@
 
 			if (error == nil)
 			{
-				NSMutableURLRequest *urlRequest;
+				NSMutableURLRequest *urlRequest = nil;
 
-				// Apply URL + HTTP method
-				urlRequest = [NSMutableURLRequest requestWithURL:appURL];
-				urlRequest.HTTPMethod = httpMethod;
+				if ((appURL != nil) && (httpMethod != nil)) // error-checked above already, this condition is only here to satisfy the static analyzer
+				{
+					// Apply URL + HTTP method
+					urlRequest = [NSMutableURLRequest requestWithURL:appURL];
+					urlRequest.HTTPMethod = httpMethod;
+				}
 
 				if (requestHeaderFields != nil)
 				{

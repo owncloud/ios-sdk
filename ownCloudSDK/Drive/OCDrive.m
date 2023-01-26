@@ -59,11 +59,6 @@
 	return (drive);
 }
 
-+ (instancetype)personalDrive
-{
-	return(nil);
-}
-
 #pragma mark - OCDataConverter for OCDrives
 + (void)load
 {

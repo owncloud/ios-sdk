@@ -62,9 +62,7 @@
 	{
 		if ((request.maxPixelSize.width > 0) && (request.maxPixelSize.height > 0))
 		{
-			OCUser *user;
-
-			if ((user = OCTypedCast(request.reference, OCUser)) != nil)
+			if (OCTypedCast(request.reference, OCUser) != nil)
 			{
 				return (OCResourceQualityCached);
 			}

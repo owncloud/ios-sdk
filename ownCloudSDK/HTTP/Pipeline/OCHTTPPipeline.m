@@ -2207,7 +2207,14 @@
 
 			if (task != nil)
 			{
-				[self evaluateCertificate:certificate forTask:task proceedHandler:proceedHandler];
+				if (certificate == nil)
+				{
+					proceedHandler(NO, OCError(OCErrorCertificateMissing));
+				}
+				else
+				{
+					[self evaluateCertificate:certificate forTask:task proceedHandler:proceedHandler];
+				}
 			}
 			else
 			{

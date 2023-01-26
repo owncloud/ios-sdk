@@ -1481,7 +1481,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 												// Favorites
 												if (capabilities.supportsFavorites.boolValue != [self.bookmark hasCapability:OCBookmarkCapabilityFavorites])
 												{
-													if (capabilities.supportsFavorites)
+													if (capabilities.supportsFavorites.boolValue)
 													{
 														[self.bookmark addCapability:OCBookmarkCapabilityFavorites];
 													}

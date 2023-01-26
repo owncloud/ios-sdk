@@ -72,9 +72,8 @@
 	if (@available(iOS 13, macOS 10.15, *))
 	{
 		OCItem *item;
-		OCResourceRequestItemThumbnail *thumbnailRequest;
 
-		if (((thumbnailRequest = OCTypedCast(request, OCResourceRequestItemThumbnail)) != nil) &&
+		if ((OCTypedCast(request, OCResourceRequestItemThumbnail) != nil) &&
 		    ((item = OCTypedCast(request.reference, OCItem)) != nil))
 		{
 			NSURL *localURL;
@@ -103,7 +102,12 @@
 							CGImageDestinationSetProperties(imageDestinationRef, (__bridge CFDictionaryRef)@{ (__bridge id)kCGImageDestinationLossyCompressionQuality : @(1.0) });
 							CGImageDestinationAddImage(imageDestinationRef, imageRef, NULL);
 
-							if (CGImageDestinationFinalize(imageDestinationRef))
+							bool success = CGImageDestinationFinalize(imageDestinationRef);
+
+							CFRelease(imageDestinationRef);
+							imageDestinationRef = NULL;
+
+							if (success)
 							{
 								OCResourceImage *thumbnailImage;
 

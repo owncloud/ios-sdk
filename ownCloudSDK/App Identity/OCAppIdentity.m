@@ -63,8 +63,6 @@
 			self.appGroupIdentifier 	   = bundleInfoDictionary[@"OCAppGroupIdentifier"];
 
 			_componentIdentifier	   	   = bundleInfoDictionary[@"OCAppComponentIdentifier"];
-			
-			self.appGroupContainerURL	   = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:[self appGroupIdentifier]];
 		}
 	}
 	
@@ -83,6 +81,14 @@
 	if (_appGroupContainerURL == nil)
 	{
 		_appGroupContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:self.appGroupIdentifier];
+
+		if (_appGroupContainerURL == nil)
+		{
+			NSError *error = nil;
+			_appGroupContainerURL = [NSFileManager.defaultManager URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:true error:&error];
+
+			OCLogWarning(@"Could not get appGroupContainerURL for groupID=%@, using app's documents folder as group container instead: %@ (error=%@)", self.appGroupIdentifier, _appGroupContainerURL, error);
+		}
 	}
 	
 	return (_appGroupContainerURL);
@@ -92,8 +98,8 @@
 {
 	if (_appGroupLogsContainerURL == nil)
 	{
-		_appGroupLogsContainerURL = [[self appGroupContainerURL] URLByAppendingPathComponent:@"logs"];
-		if (![[NSFileManager defaultManager] fileExistsAtPath:[_appGroupLogsContainerURL path]])
+		_appGroupLogsContainerURL = [self.appGroupContainerURL URLByAppendingPathComponent:@"logs"];
+		if (![[NSFileManager defaultManager] fileExistsAtPath:_appGroupLogsContainerURL.path])
 		{
 			[[NSFileManager defaultManager] createDirectoryAtURL:_appGroupLogsContainerURL
 						 withIntermediateDirectories:NO

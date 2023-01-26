@@ -214,7 +214,10 @@
 			OCLocation *location;
 
 			location = [[self alloc] initWithDriveID:driveID path:path];
-			location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:bookmarkUUIDString];
+			if (bookmarkUUIDString != nil)
+			{
+				location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:bookmarkUUIDString];
+			}
 
 			return (location);
 		}

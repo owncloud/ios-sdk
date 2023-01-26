@@ -40,9 +40,7 @@
 {
 	if ([request isKindOfClass:OCResourceRequestURLItem.class] && [request.reference isKindOfClass:NSURL.class])
 	{
-		NSURL *url;
-
-		if ((url = OCTypedCast(request.reference, NSURL)) != nil)
+		if (OCTypedCast(request.reference, NSURL) != nil)
 		{
 			return (OCResourceQualityNormal);
 		}

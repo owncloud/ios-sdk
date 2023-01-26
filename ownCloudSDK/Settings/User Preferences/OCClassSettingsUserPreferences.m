@@ -94,12 +94,12 @@ static OCIPCNotificationName OCIPCNotificationNameClassSettingsUserPreferencesCh
 		if ((classSettingsIdentifier = [theClass classSettingsIdentifier]) != nil)
 		{
 			[self _setValue:value forClassSettingsKey:key classSettingsIdentifier:classSettingsIdentifier];
+
+			[OCClassSettings.sharedSettings clearSourceCache];
+
+			[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:[NSString flatIdentifierFromIdentifier:classSettingsIdentifier key:key]];
+			[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameClassSettingsUserPreferencesChanged ignoreSelf:YES];
 		}
-
-		[OCClassSettings.sharedSettings clearSourceCache];
-
-		[NSNotificationCenter.defaultCenter postNotificationName:OCClassSettingsChangedNotification object:[NSString flatIdentifierFromIdentifier:classSettingsIdentifier key:key]];
-		[OCIPNotificationCenter.sharedNotificationCenter postNotificationForName:OCIPCNotificationNameClassSettingsUserPreferencesChanged ignoreSelf:YES];
 	}
 
 	return (changeAllowed);

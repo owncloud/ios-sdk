@@ -96,7 +96,14 @@
 		if (!self.trackDifferences)
 		{
 			// Do not track differences
-			[_itemRefs setArray:newItemRefs];
+			if (newItemRefs != nil)
+			{
+				[_itemRefs setArray:newItemRefs];
+			}
+			else
+			{
+				[_itemRefs removeAllObjects];
+			}
 
 			wasUpdated = YES;
 		}

@@ -72,7 +72,6 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 #pragma mark - Instantiation
 + (instancetype)driveFromGADrive:(GADrive *)drive; //!< oCIS drive, initialized from a GADrive instance
-+ (instancetype)personalDrive; //!< OC10 root folder drive
 
 #pragma mark - Comparison
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive;

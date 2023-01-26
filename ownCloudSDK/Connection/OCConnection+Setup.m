@@ -600,7 +600,7 @@
 			}
 		}
 
-		completionHandler([OCIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:supportedMethodIdentifiers]);
+		completionHandler([OCIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:(supportedMethodIdentifiers == nil) ? @[] : supportedMethodIdentifiers]);
 	}
 }
 

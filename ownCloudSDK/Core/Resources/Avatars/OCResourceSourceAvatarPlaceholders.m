@@ -36,9 +36,7 @@
 {
 	if ([request isKindOfClass:OCResourceRequestAvatar.class] && [request.reference isKindOfClass:OCUser.class])
 	{
-		OCUser *user;
-
-		if ((user = OCTypedCast(request.reference, OCUser)) != nil)
+		if (OCTypedCast(request.reference, OCUser) != nil)
 		{
 			return (OCResourceQualityFallback);
 		}

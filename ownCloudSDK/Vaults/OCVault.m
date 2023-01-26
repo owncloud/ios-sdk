@@ -1165,8 +1165,7 @@
 							}
 						}
 					}
-
-					if ([pathComponents[1] isEqual:OCVaultPathDrives]) // [Bookmark UUID]/Drives/…
+					else if ([pathComponents[1] isEqual:OCVaultPathDrives]) // [Bookmark UUID]/Drives/…
 					{
 						parsedElements = 2;
 						if (pathComponents.count > 2)

@@ -159,7 +159,7 @@
 
 			_queryResultsDataSource.state = [self _dataSourceState];
 			[self updateDataSourceSpecialItemsForItems:newProcessedResults];
-			[_queryResultsDataSource setVersionedItems:newProcessedResults];
+			[_queryResultsDataSource setVersionedItems:(NSArray<id<OCDataItem,OCDataItemVersioning>> *)newProcessedResults];
 		}
 	}
 }

@@ -51,7 +51,7 @@ typedef NS_OPTIONS(NSInteger, OCLocationType) {
 - (instancetype)initWithBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID driveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
 
 #pragma mark - Tools
-@property(strong,readonly,nonatomic) OCLocation *parentLocation;
+@property(strong,nullable,readonly,nonatomic) OCLocation *parentLocation; //! Returns nil if .path is nil
 @property(strong,nullable,readonly,nonatomic) OCLocation *normalizedDirectoryPathLocation;
 @property(strong,nullable,readonly,nonatomic) OCLocation *normalizedFilePathLocation;
 @property(strong,nullable,readonly,nonatomic) NSString *lastPathComponent;
