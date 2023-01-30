@@ -163,7 +163,7 @@
 
 	if (specialType == OCDriveSpecialTypeShares)
 	{
-		return (OCLocalized(@"Shares"));
+		return (OCLocalized(@"Shared with me"));
 	}
 
 	return (_name);

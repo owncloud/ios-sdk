@@ -181,6 +181,7 @@
 /* Drives */
 "Personal" = "Personal";
 "Shares" = "Shares";
+"Shared with me" = "Shared with me";
 
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
