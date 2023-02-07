@@ -68,9 +68,9 @@
 - (NSMutableDictionary<OCClassSettingsFlatIdentifier,id> *)_settingsDict
 {
 	NSError *error = nil;
-	NSMutableDictionary<OCClassSettingsFlatIdentifier,id> *settingsDict;
+	NSMutableDictionary<OCClassSettingsFlatIdentifier,id> *settingsDict = nil;
 
-	settingsDict = (id) [NSMutableDictionary dictionaryWithContentsOfURL:self.postBuildSettingsFileURL error:&error];
+	settingsDict = (id) [[NSDictionary dictionaryWithContentsOfURL:self.postBuildSettingsFileURL error:&error] mutableCopy]; // Invoking this method on NSMutableDictionary still returns a NSDictionary here, but we need a NSMutableDictionary. Therefore using NSDictionary + mutableCopy to get a mutable copy
 
 	if (settingsDict == nil)
 	{
