@@ -109,7 +109,6 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCCapabilities.h>
-#import <ownCloudSDK/OCThemeValues.h>
 
 #import <ownCloudSDK/OCLockManager.h>
 #import <ownCloudSDK/OCLockRequest.h>

@@ -102,52 +102,6 @@
 	return (progress);
 }
 
-#pragma mark - Retrieve theme values
-- (NSProgress *)retrieveThemeJSONWithURL:(NSURL *)inURL completionHandler:(void(^)(NSError * _Nullable error, OCThemeValues * _Nullable themeValues))completionHandler
-{
-    OCHTTPRequest *request;
-    NSProgress *progress = nil;
-
-    if ((request = [OCHTTPRequest requestWithURL:inURL]) != nil)
-    {
-        progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-            NSData *responseBody = response.bodyData;
-            OCThemeValues *themeValues = nil;
-
-            if ((error == nil) && response.status.isSuccess && (responseBody!=nil))
-            {
-                NSDictionary<NSString *, id> *rawJSON;
-
-                if ((rawJSON = [NSJSONSerialization JSONObjectWithData:responseBody options:0 error:&error]) != nil)
-                {
-                    if ((rawJSON = OCTypedCast(rawJSON, NSDictionary)) != nil)
-                    {
-                            if ((themeValues = [[OCThemeValues alloc] initWithRawJSON:rawJSON]) != nil)
-                            {
-                                self.themeValues = themeValues;
-                            }
-                    }
-                    else
-                    {
-                        error = OCError(OCErrorResponseUnknownFormat);
-                    }
-                }
-            }
-            else
-            {
-                if (error == nil)
-                {
-                    error = response.status.error;
-                }
-            }
-
-            completionHandler(error, themeValues);
-        }];
-    }
-
-    return (progress);
-}
-
 #pragma mark - Version
 - (NSString *)serverVersion
 {

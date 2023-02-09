@@ -1374,13 +1374,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		// Check status
 		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
-            
-            
-            
-            [self retrieveThemeJSONWithURL:[NSURL URLWithString:@"https://ocis.ocis-web.latest.owncloud.works/themes/owncloud/theme.json"] completionHandler:^(NSError * _Nullable error, OCThemeValues * _Nullable themeValues) {
-                NSLog(@"-->rawJSON %@", themeValues.logo);
-            }];
-            
 			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				self.connectionInitializationPhaseCompleted = YES;
 

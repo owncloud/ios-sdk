@@ -36,7 +36,6 @@
 #import "OCAvatar.h"
 #import "OCDrive.h"
 #import "OCAppProviderApp.h"
-#import "OCThemeValues.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -160,7 +159,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable,strong) OCUser *loggedInUser;
 @property(nullable,strong) OCCapabilities *capabilities;
-@property(nullable,strong) OCThemeValues *themeValues;
 
 @property(nullable,strong) OCHTTPPipeline *ephermalPipeline; //!< Pipeline for requests whose response is only interesting for the instance making them (f.ex. login, status, PROPFINDs)
 @property(nullable,strong) OCHTTPPipeline *commandPipeline;  //!< Pipeline for requests whose response is important across instances (f.ex. commands like move, delete)
@@ -396,8 +394,6 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 #pragma mark - Retrieve capabilities
 - (nullable NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler;
-
-- (nullable NSProgress *)retrieveThemeJSONWithURL:(NSURL *)inURL completionHandler:(void(^)(NSError * _Nullable error, OCThemeValues * _Nullable themeValues))completionHandler;
 
 #pragma mark - Version
 @property(readonly,strong,nullable,nonatomic) NSString *serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
