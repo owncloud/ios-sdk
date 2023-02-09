@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3912D8A829943E5A00EDCB9A /* OCThemeValues.m in Sources */ = {isa = PBXBuildFile; fileRef = 3912D8A729943E5A00EDCB9A /* OCThemeValues.m */; };
+		3912D8AA299441DE00EDCB9A /* OCThemeValues.h in Headers */ = {isa = PBXBuildFile; fileRef = 3912D8A929943E6900EDCB9A /* OCThemeValues.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
 		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -987,6 +989,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3912D8A729943E5A00EDCB9A /* OCThemeValues.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCThemeValues.m; sourceTree = "<group>"; };
+		3912D8A929943E6900EDCB9A /* OCThemeValues.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCThemeValues.h; sourceTree = "<group>"; };
 		3999BD3025FA2C8100DB7C47 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		3999BD3125FA2C8200DB7C47 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
@@ -1973,6 +1977,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3912D8A429943DD600EDCB9A /* ThemeValues */ = {
+			isa = PBXGroup;
+			children = (
+				3912D8A729943E5A00EDCB9A /* OCThemeValues.m */,
+				3912D8A929943E6900EDCB9A /* OCThemeValues.h */,
+			);
+			path = ThemeValues;
+			sourceTree = "<group>";
+		};
 		4C7295E6228DACE600FA4E68 /* Records */ = {
 			isa = PBXGroup;
 			children = (
@@ -3305,6 +3318,7 @@
 				DCD63279223BB1930090169E /* Capabilities */,
 				DC85570A204FEA5E00189B9A /* Categories */,
 				DCDB760F2739D26100EE7A06 /* ServerLocator */,
+				3912D8A429943DD600EDCB9A /* ThemeValues */,
 			);
 			path = Connection;
 			sourceTree = "<group>";
@@ -4247,6 +4261,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3912D8AA299441DE00EDCB9A /* OCThemeValues.h in Headers */,
 				DC7014252209CE7A009D4FD9 /* OCHTTPPipelineManager.h in Headers */,
 				DCB6D05822A13E7500CA47C5 /* NSString+OCSQLTools.h in Headers */,
 				DC9C19E6278488360021222E /* OCResourceManagerJob.h in Headers */,
@@ -4799,6 +4814,7 @@
 					};
 					DCC8F9AA202852A200EB6701 = {
 						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1410;
 						ProvisioningStyle = Automatic;
 					};
 					DCC8F9B3202852A200EB6701 = {
@@ -5230,6 +5246,7 @@
 				DC49B55428339BE200DAF13B /* NSArray+OCMapping.m in Sources */,
 				DC4AFAB1206A8C1D00189B9A /* OCSQLiteStatement.m in Sources */,
 				DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */,
+				3912D8A829943E5A00EDCB9A /* OCThemeValues.m in Sources */,
 				DC24F8F121E4F5BF00C9119C /* OCSQLiteDB+Internal.m in Sources */,
 				DCB572AF2099EFC600B793CE /* OCDatabase+Schemas.m in Sources */,
 				DC8EB2FF23951AAB009148F9 /* OCAuthenticationBrowserSession.m in Sources */,
@@ -5835,6 +5852,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -5856,6 +5874,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -5864,6 +5884,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -5884,6 +5905,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
