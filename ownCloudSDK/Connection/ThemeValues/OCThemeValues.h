@@ -34,7 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithRawJSON:(NSDictionary<NSString *, id> *)rawJSON;
 - (void)retrieveLogoWithCore:(OCCore *)core ChangeHandler:(OCResourceRequestChangeHandler)changeHandler;
-- (OCResourceRequest *)logoResourceRequest;
 
 @end
 

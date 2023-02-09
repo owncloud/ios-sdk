@@ -18,12 +18,12 @@
 
 #import "OCThemeValues.h"
 #import "OCResourceRequestURLItem.h"
+#import "OCResourceRequest.h"
 
 @interface OCThemeValues()
 {
     NSDictionary<NSString *, id> *_common;
     NSDictionary<NSString *, id> *_ios;
-    OCResourceRequest *_iconResourceRequest;
 }
 
 @end
@@ -47,24 +47,13 @@
     return (self);
 }
 
-- (void)retrieveLogoWithCore:(OCCore *)core ChangeHandler:(OCResourceRequestChangeHandler)changeHandler {
-    
+- (void)retrieveLogoWithCore:(OCCore *)core ChangeHandler:(OCResourceRequestChangeHandler)changeHandler
+{
     OCResourceRequest *iconResourceRequest = [OCResourceRequestURLItem requestURLItem:[NSURL URLWithString:[NSString stringWithFormat:@"https://ocis.ocis-web.latest.owncloud.works/%@", self.logo]] identifier:nil version:OCResourceRequestURLItem.daySpecificVersion structureDescription:@"icon" waitForConnectivity:YES changeHandler:changeHandler];
+    iconResourceRequest.lifetime = OCResourceRequestLifetimeSingleRun;
 
     OCResourceManager *resourceManager = core.vault.resourceManager;
     [resourceManager startRequest:iconResourceRequest];
-}
-
-
-- (OCResourceRequest *)logoResourceRequest
-{
-    if (_iconResourceRequest == nil)
-    {
-        NSLog(@"-->rawJSON %@", [NSURL URLWithString:[NSString stringWithFormat:@"https://ocis.ocis-web.latest.owncloud.works/%@", self.logo]]);
-        OCResourceRequest *iconResourceRequest = [OCResourceRequestURLItem requestURLItem:[NSURL URLWithString:[NSString stringWithFormat:@"https://ocis.ocis-web.latest.owncloud.works/%@", self.logo]] identifier:nil version:OCResourceRequestURLItem.daySpecificVersion structureDescription:@"icon" waitForConnectivity:YES changeHandler:nil];
-    }
-
-    return (_iconResourceRequest);
 }
 
 #pragma mark - Helpers
