@@ -63,9 +63,9 @@
 		DC0CE18828C63B15009ABDFB /* OCAppProviderApp.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0CE18628C63B15009ABDFB /* OCAppProviderApp.m */; };
 		DC0CE18B28C63B2E009ABDFB /* OCAppProviderFileType.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0CE18928C63B2E009ABDFB /* OCAppProviderFileType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC0CE18C28C63B2E009ABDFB /* OCAppProviderFileType.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0CE18A28C63B2E009ABDFB /* OCAppProviderFileType.m */; };
-		DC0CE19628C8907D009ABDFB /* OCResourceRequestURLItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0CE19428C8907D009ABDFB /* OCResourceRequestURLItem.h */; };
+		DC0CE19628C8907D009ABDFB /* OCResourceRequestURLItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0CE19428C8907D009ABDFB /* OCResourceRequestURLItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC0CE19728C8907D009ABDFB /* OCResourceRequestURLItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0CE19528C8907D009ABDFB /* OCResourceRequestURLItem.m */; };
-		DC0CE19A28C89227009ABDFB /* OCResourceSourceURLItems.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0CE19828C89227009ABDFB /* OCResourceSourceURLItems.h */; };
+		DC0CE19A28C89227009ABDFB /* OCResourceSourceURLItems.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0CE19828C89227009ABDFB /* OCResourceSourceURLItems.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC0CE19B28C89227009ABDFB /* OCResourceSourceURLItems.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0CE19928C89227009ABDFB /* OCResourceSourceURLItems.m */; };
 		DC114A9422A7A87C00CBD597 /* NSData+OCRandom.h in Headers */ = {isa = PBXBuildFile; fileRef = DC114A9222A7A87C00CBD597 /* NSData+OCRandom.h */; };
 		DC114A9522A7A87C00CBD597 /* NSData+OCRandom.m in Sources */ = {isa = PBXBuildFile; fileRef = DC114A9322A7A87C00CBD597 /* NSData+OCRandom.m */; };
