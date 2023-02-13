@@ -283,6 +283,7 @@
 {
 	OCLocation *location = [OCLocation new];
 
+	location->_bookmarkUUID = _bookmarkUUID;
 	location->_driveID = _driveID;
 	location->_path = _path;
 
