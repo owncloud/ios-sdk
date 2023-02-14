@@ -296,7 +296,8 @@
 	{
 		@synchronized (self)
 		{
-			[_bookmarksDatasource setItems:_bookmarks updated:[NSSet setWithObject:bookmark]];
+			// [_bookmarksDatasource setItems:_bookmarks updated:[NSSet setWithObject:bookmark]] is more accurate, but leads to unnecessary recreation and navigation issues since this forces a recreation of mapped objects in the client sidebar even if there are no relevant changes. Therefore, make sure that user-facing important changes are included in OCBookmark+DataItem versioning - and depend on its mechanisms for this data source.
+			[_bookmarksDatasource setVersionedItems:_bookmarks];
 		}
 		[self saveBookmarks];
 	}
