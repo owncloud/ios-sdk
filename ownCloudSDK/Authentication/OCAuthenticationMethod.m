@@ -393,6 +393,7 @@ OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"
 OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
 OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey = @"requiredUsername";
 OCAuthenticationMethodKey OCAuthenticationMethodWebFingerAccountLookupURLKey = @"webFingerAccountLookupURL";
+OCAuthenticationMethodKey OCAuthenticationMethodAuthenticationRefererURL = @"authenticationRefererURL";
 OCAuthenticationMethodKey OCAuthenticationMethodSkipWWWAuthenticateChecksKey = @"skipWWWAuthenticateChecks";
 OCAuthenticationMethodKey OCAuthenticationMethodAllowedMethods = @"allowedMethods";
 

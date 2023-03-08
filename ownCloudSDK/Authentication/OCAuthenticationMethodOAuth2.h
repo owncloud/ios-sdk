@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
 - (NSDictionary<NSString *, NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options;
 - (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection;
 - (NSDictionary<NSString *, id> *)postProcessAuthenticationDataDict:(NSDictionary<NSString *, id> *)authDataDict;
-- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError * _Nullable error))completionHandler;
 - (nullable NSString *)scope;
 - (nullable NSString *)prompt;
 - (NSString *)clientID;

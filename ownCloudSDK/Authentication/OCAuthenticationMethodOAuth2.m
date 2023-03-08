@@ -199,7 +199,7 @@ OCAuthenticationMethodAutoRegister
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]);
 }
 
-- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options completionHandler:(nonnull void (^)(NSError * _Nullable))completionHandler
 {
 	completionHandler(OCError(OCErrorFeatureNotImplemented));
 }
@@ -832,7 +832,7 @@ OCAuthenticationMethodAutoRegister
 	if (tokenEndpointURL == nil)
 	{
 		// No token endpoint URL known => retrieve it first.
-		[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
+		[self retrieveEndpointInformationForConnection:connection options:options completionHandler:^(NSError * _Nonnull error) {
 			if (error == nil)
 			{
 				[self sendTokenRequestToConnection:connection withParameters:parameters options:options requestType:requestType completionHandler:completionHandler];

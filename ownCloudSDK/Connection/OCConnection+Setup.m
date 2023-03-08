@@ -24,6 +24,7 @@
 #import "OCAuthenticationMethodOpenIDConnect.h"
 #import "OCServerInstance.h"
 #import "OCHTTPPipelineManager.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
 
 @interface OCAuthenticationMethod (RequestAuthentication)
 + (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request withAuthenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData;
@@ -39,7 +40,7 @@
 
 		1) Perform server location if username is provided and flag for it is passed
 
-		2) Query [url]/.well-known/webfinger?resource=https%3A%2F%2Flookup
+		2) Query [url]/.well-known/webfinger?resource=https%3A%2F%2Furl
 		   - Error -> ignore
 		   - Success (Example: `{"subject":"acct:me","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}` )
 		        - links[rel=http://openid.net/specs/connect/1.0/issuer]['href'] in JSON response?
@@ -73,6 +74,7 @@
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
 	OCServerLocatorIdentifier serverLocatorIdentifier = OCServerLocator.useServerLocatorIdentifier;
 	NSURL *webFingerAccountInfoURL = nil;
+	NSURL *refererForIDPURL = nil;
 
 	// Tools
 	void (^AddIssue)(OCIssue *issue) = ^(OCIssue *issue) {
@@ -415,13 +417,18 @@
 		}
 	}
 
-	// Query [url]/.well-known/webfinger?resource=https%3A%2F%2Flookup - WebFinger https://github.com/owncloud/enterprise/issues/5579
-	{
-		NSString *webFingerLookupURLString = [url.absoluteString stringByAppendingPathComponent:@".well-known/webfinger?resource=https%3A%2F%2Flookup"];
-		NSURL *webFingerLookupURL = [[NSURL alloc] initWithString:webFingerLookupURLString];
+	// Query [url]/.well-known/webfinger?resource=https%3A%2F%2Furl - WebFinger https://github.com/owncloud/enterprise/issues/5579
+	NSURL *rootURL = url.rootURL;
 
-		NSString *webFingerAccountMeURLString = [url.absoluteString stringByAppendingPathComponent:@".well-known/webfinger?resource=acct%3Ame"];
-		NSURL *webFingerAccountMeURL = [[NSURL alloc] initWithString:webFingerAccountMeURLString];
+	if (rootURL != nil)
+	{
+		NSURL *webFingerLookupURL = [[url URLByAppendingPathComponent:@".well-known/webfinger" isDirectory:NO] urlByAppendingQueryParameters:@{
+			@"resource" : rootURL.absoluteString
+		} replaceExisting:YES];
+
+		NSURL *webFingerAccountMeURL = [[url URLByAppendingPathComponent:@".well-known/webfinger" isDirectory:NO] urlByAppendingQueryParameters:@{
+			@"resource" : [NSString stringWithFormat:@"acct:me@%@", url.host]
+		} replaceExisting:YES];
 
 		if (webFingerLookupURL != nil)
 		{
@@ -434,9 +441,9 @@
 			{
 				if (jsonDict != nil)
 				{
-					// Example: {"subject":"acct:me","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}
-					// Require subject = acct:me
-					if ([jsonDict[@"subject"] isEqual:@"https://lookup"])
+					// Example: {"subject":"acct:me@host","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}
+					// Require subject = rootURL.absoluteString
+					if ([jsonDict[@"subject"] isEqual:rootURL.absoluteString])
 					{
 						NSArray<NSDictionary<NSString*,id> *> *linksArray;
 
@@ -459,6 +466,7 @@
 											{
 												completed = YES; // Skip status.php check step
 												webFingerAccountInfoURL = webFingerAccountMeURL;
+												refererForIDPURL = url;
 												break;
 											}
 										}
@@ -611,6 +619,7 @@
 	{
 		OCAuthenticationMethodDetectionOptions detectionOptions = (webFingerAccountInfoURL != nil) ? @{
 			OCAuthenticationMethodWebFingerAccountLookupURLKey : webFingerAccountInfoURL,
+			OCAuthenticationMethodAuthenticationRefererURL : refererForIDPURL,
 			OCAuthenticationMethodSkipWWWAuthenticateChecksKey : @(YES)
 //			OCAuthenticationMethodAllowedMethods: @[
 //				OCAuthenticationMethodIdentifierOpenIDConnect

@@ -116,4 +116,19 @@
 	return (self.host);
 }
 
+- (NSURL *)rootURL
+{
+	NSURLComponents *urlComponents;
+
+	if ((urlComponents = [[NSURLComponents alloc] initWithURL:self resolvingAgainstBaseURL:YES]) != nil)
+	{
+		urlComponents.path = @"/";
+		urlComponents.queryItems = nil;
+
+		return (urlComponents.URL);
+	}
+
+	return (nil);
+}
+
 @end

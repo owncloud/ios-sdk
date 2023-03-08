@@ -169,7 +169,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return ([super tokenRequestAuthorizationHeaderForType:requestType connection:connection]);
 }
 
-- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options completionHandler:(nonnull void (^)(NSError * _Nullable))completionHandler
 {
 	NSURL *openidConfigURL;
 
@@ -178,6 +178,12 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
 		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
+
+		NSURL *refererForIDPURL;
+		if ((refererForIDPURL = options[OCAuthenticationMethodAuthenticationRefererURL]) != nil)
+		{
+			[openidConfigRequest setValue:refererForIDPURL.absoluteString forHeaderField:@"Referer"];
+		}
 
 		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;
@@ -606,7 +612,15 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{
-			return ([oidcDetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
+			OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
+
+			NSURL *refererForIDPURL;
+			if ((refererForIDPURL = options[OCAuthenticationMethodAuthenticationRefererURL]) != nil)
+			{
+				[openidConfigRequest setValue:refererForIDPURL.absoluteString forHeaderField:@"Referer"];
+			}
+
+			return ([oidcDetectionURLs arrayByAddingObject:openidConfigRequest]);
 		}
 	}
 
@@ -720,7 +734,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
-	[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
+	[self retrieveEndpointInformationForConnection:connection options:options completionHandler:^(NSError * _Nonnull error) {
 		if (error == nil)
 		{
 			[super generateBookmarkAuthenticationDataWithConnection:connection options:options completionHandler:completionHandler];
