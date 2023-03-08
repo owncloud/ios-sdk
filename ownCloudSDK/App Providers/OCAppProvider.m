@@ -42,6 +42,7 @@
 {
 	OCAppProviderAppList newAppList;
 
+	// Response format documented at https://owncloud.dev/services/app-registry/apps/
 	if ((newAppList = OCTypedCast(inAppList,NSArray)) != nil)
 	{
 		NSMutableArray<OCAppProviderApp *> *apps = [NSMutableArray new];

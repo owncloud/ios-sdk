@@ -44,7 +44,8 @@ typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for tw
 	NSMutableSet <OCHTTPRequestAuthDetectionID> *detectionRequestAuthDetectionIDs = [NSMutableSet new];
 	NSMutableDictionary <NSString *, NSArray <OCHTTPRequestAuthDetectionID> *> *detectionIDsByMethod = [NSMutableDictionary dictionary];
 	NSMutableDictionary <OCHTTPRequestAuthDetectionID, OCHTTPRequest *> *detectionRequestsByDetectionID = [NSMutableDictionary dictionary];
-	
+	NSArray<OCAuthenticationMethodIdentifier> *allowedMethodIdentifiers = options[OCAuthenticationMethodAllowedMethods];
+
 	if (completionHandler==nil) { return; }
 	
 	// Add OCAuthenticationMethodAllowURLProtocolUpgrades support
@@ -77,9 +78,14 @@ typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for tw
 		
 		if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
 		{
+			if ((allowedMethodIdentifiers != nil) && ![allowedMethodIdentifiers containsObject:authMethodIdentifier])
+			{
+				break;
+			}
+
 			NSArray <OCHTTPRequest *> *authMethodDetectionRequests;
 			
-			if ((authMethodDetectionRequests = [authenticationMethodClass detectionRequestsForConnection:self]) != nil)
+			if ((authMethodDetectionRequests = [authenticationMethodClass detectionRequestsForConnection:self options:options]) != nil)
 			{
 				NSMutableArray<OCHTTPRequestAuthDetectionID> *detectionIDs = [NSMutableArray new];
 
@@ -145,6 +151,11 @@ typedef NSString* OCHTTPRequestAuthDetectionID; //!< ID that is identical for tw
 			
 			if ((authMethodIdentifier = [authenticationMethodClass identifier]) != nil)
 			{
+				if ((allowedMethodIdentifiers != nil) && ![allowedMethodIdentifiers containsObject:authMethodIdentifier])
+				{
+					break;
+				}
+
 				NSMutableDictionary <NSURL *, OCHTTPRequest *> *resultsByURL = [NSMutableDictionary dictionary];
 				
 				// Compile pre-load results

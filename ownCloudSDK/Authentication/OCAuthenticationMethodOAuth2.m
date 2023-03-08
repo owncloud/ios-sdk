@@ -269,8 +269,14 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey], NSNumber).boolValue)
+	{
+ 		// Skip if WWW-Authenticate checks are not allowed
+ 		return @[];
+	}
+
 	NSArray <OCHTTPRequest *> *detectionRequests = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
 	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
 
@@ -282,6 +288,13 @@ OCAuthenticationMethodAutoRegister
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
 	NSURL *tokenEndpointURL;
+
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey], NSNumber).boolValue)
+	{
+		// Skip if WWW-Authenticate checks are not allowed
+		completionHandler(self.identifier, NO);
+		return;
+	}
 
 	if ((tokenEndpointURL = [self tokenEndpointURLForConnection:connection]) != nil)
 	{

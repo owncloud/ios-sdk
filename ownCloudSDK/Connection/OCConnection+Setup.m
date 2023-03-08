@@ -21,18 +21,32 @@
 #import "NSURL+OCURLNormalization.h"
 #import "OCServerLocator.h"
 #import "OCMacros.h"
+#import "OCAuthenticationMethodOpenIDConnect.h"
+#import "OCServerInstance.h"
+#import "OCHTTPPipelineManager.h"
+
+@interface OCAuthenticationMethod (RequestAuthentication)
++ (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request withAuthenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData;
+@end
 
 @implementation OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions generationOptions))completionHandler
 {
 	/*
 		Setup preparation steps overview:
 
 		1) Perform server location if username is provided and flag for it is passed
 
-		2) Query [url]/status.php.
+		2) Query [url]/.well-known/webfinger?resource=https%3A%2F%2Flookup
+		   - Error -> ignore
+		   - Success (Example: `{"subject":"acct:me","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}` )
+		        - links[rel=http://openid.net/specs/connect/1.0/issuer]['href'] in JSON response?
+		        	-> use as new base URL, OpenID Connect should be found via [new base URL]/.well-known/openid-configuration by requestSupportedAuthenticationMethodsWithOptions…
+		        	-> skip step 3
+
+		3) Query [url]/status.php.
 		   - Redirect? Create issue, follow redirect, restart at 1).
 		   - Error (no OC status.php content):
 		     - check if [url] last path component is "owncloud".
@@ -40,9 +54,9 @@
 		       - if YES: load [url] directly and check if there's a redirection:
 		         - if YES: create a redirect issue, use redirection URL as [url] and repeat step 1
 		         - if NO: create error issue
-		   - Success (OC status.php content): proceed to step 2
+		   - Success (OC status.php content): proceed to step 4
 
-		3) Send PROPFIND to [finalurl]/remote.php/dav/files to determine available authentication mechanisms (=> use -requestSupportedAuthenticationMethodsWithOptions:.. for this)
+		4) Send authentication method provided requests and parse the responses to determine available authentication mechanism via -requestSupportedAuthenticationMethodsWithOptions:..
 	*/
 
 	// Since this is far easier to implement when making requests synchronously, move the whole method to a private method and execute it asynchronously on a global queue
@@ -51,13 +65,14 @@
 	});
 }
 
-- (void)_prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods))completionHandler
+- (void)_prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions generationOptions))completionHandler
 {
 	NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
 	NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 	NSMutableSet <OCCertificate *> *certificatesUsedInIssues = [NSMutableSet new];
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
 	OCServerLocatorIdentifier serverLocatorIdentifier = OCServerLocator.useServerLocatorIdentifier;
+	NSURL *webFingerAccountInfoURL = nil;
 
 	// Tools
 	void (^AddIssue)(OCIssue *issue) = ^(OCIssue *issue) {
@@ -336,7 +351,7 @@
 
 		if (issue != nil)
 		{
-			completionHandler(issue, nil, nil, nil);
+			completionHandler(issue, nil, nil, nil, nil);
 			return;
 		}
 	}
@@ -354,7 +369,7 @@
 
 		if (userName == nil)
 		{
-			completionHandler([OCIssue issueForError:OCError(OCErrorInsufficientParameters) level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+			completionHandler([OCIssue issueForError:OCError(OCErrorInsufficientParameters) level:OCIssueLevelError issueHandler:nil], nil, nil, nil, nil);
 			return;
 		}
 
@@ -363,7 +378,7 @@
 
 		if (locator == nil)
 		{
-			completionHandler([OCIssue issueForError:OCError(OCErrorUnknown) level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+			completionHandler([OCIssue issueForError:OCError(OCErrorUnknown) level:OCIssueLevelError issueHandler:nil], nil, nil, nil, nil);
 			return;
 		}
 
@@ -379,7 +394,7 @@
 		{
 			if (completionHandler != nil)
 			{
-				completionHandler([OCIssue issueForError:locatorError level:OCIssueLevelError issueHandler:nil], nil, nil, nil);
+				completionHandler([OCIssue issueForError:locatorError level:OCIssueLevelError issueHandler:nil], nil, nil, nil, nil);
 				return;
 			}
 		}
@@ -396,6 +411,63 @@
 				_bookmark.serverLocationUserName = locator.userName;
 				_bookmark.url = locator.url;
 				url = locator.url;
+			}
+		}
+	}
+
+	// Query [url]/.well-known/webfinger?resource=https%3A%2F%2Flookup - WebFinger https://github.com/owncloud/enterprise/issues/5579
+	{
+		NSString *webFingerLookupURLString = [url.absoluteString stringByAppendingPathComponent:@".well-known/webfinger?resource=https%3A%2F%2Flookup"];
+		NSURL *webFingerLookupURL = [[NSURL alloc] initWithString:webFingerLookupURLString];
+
+		NSString *webFingerAccountMeURLString = [url.absoluteString stringByAppendingPathComponent:@".well-known/webfinger?resource=acct%3Ame"];
+		NSURL *webFingerAccountMeURL = [[NSURL alloc] initWithString:webFingerAccountMeURLString];
+
+		if (webFingerLookupURL != nil)
+		{
+			NSDictionary *jsonDict = nil;
+			NSError *error = nil;
+			NSURL *redirectionURL = nil;
+			OCHTTPRequest *request = nil;
+
+			if ((error = MakeJSONRequest(webFingerLookupURL, &request, &redirectionURL, &jsonDict)) == nil)
+			{
+				if (jsonDict != nil)
+				{
+					// Example: {"subject":"acct:me","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}
+					// Require subject = acct:me
+					if ([jsonDict[@"subject"] isEqual:@"https://lookup"])
+					{
+						NSArray<NSDictionary<NSString*,id> *> *linksArray;
+
+						// Look for first link with relation http://openid.net/specs/connect/1.0/issuer
+						if ((linksArray = OCTypedCast(jsonDict[@"links"], NSArray)) != nil)
+						{
+							for (id link in linksArray)
+							{
+								NSDictionary<NSString*,id> *linkDict;
+
+								if ((linkDict = OCTypedCast(link, NSDictionary)) != nil)
+								{
+									if ([linkDict[@"rel"] isEqual:@"http://openid.net/specs/connect/1.0/issuer"])
+									{
+										NSString *urlString;
+
+										if ((urlString = OCTypedCast(linkDict[@"href"],NSString)) != nil)
+										{
+											if ((successURL = [NSURL URLWithString:urlString]) != nil)
+											{
+												completed = YES; // Skip status.php check step
+												webFingerAccountInfoURL = webFingerAccountMeURL;
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -537,6 +609,14 @@
 	
 	if (completionHandler != nil)
 	{
+		OCAuthenticationMethodDetectionOptions detectionOptions = (webFingerAccountInfoURL != nil) ? @{
+			OCAuthenticationMethodWebFingerAccountLookupURLKey : webFingerAccountInfoURL,
+			OCAuthenticationMethodSkipWWWAuthenticateChecksKey : @(YES)
+//			OCAuthenticationMethodAllowedMethods: @[
+//				OCAuthenticationMethodIdentifierOpenIDConnect
+//			]
+		} : nil;
+
 		__block NSArray<OCAuthenticationMethodIdentifier> *supportedMethodIdentifiers = nil;
 
 		if (successURL != nil)
@@ -548,14 +628,14 @@
 				__block NSError *supportedAuthError = nil;
 				
 				NSURL *savedBookmarkURL = _bookmark.url; // Save original bookmark URL
-				
+
 				do
 				{
 					dispatch_group_enter(waitForSupportedAuthenticationMethodsGroup);
 				
 					_bookmark.url = successURL;
 				
-					[self requestSupportedAuthenticationMethodsWithOptions:nil completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods) {
+					[self requestSupportedAuthenticationMethodsWithOptions:detectionOptions completionHandler:^(NSError *error, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods) {
 						supportedAuthError = error;
 						supportedMethodIdentifiers = supportedMethods;
 
@@ -600,8 +680,143 @@
 			}
 		}
 
-		completionHandler([OCIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:(supportedMethodIdentifiers == nil) ? @[] : supportedMethodIdentifiers]);
+		completionHandler([OCIssue issueForIssues:issues completionHandler:nil], successURL, supportedMethodIdentifiers, [self filteredAndSortedMethodIdentifiers:(supportedMethodIdentifiers == nil) ? @[] : supportedMethodIdentifiers], detectionOptions);
 	}
+}
+
+
+
+#pragma mark - Retrieve instances
+- (void)retrieveAvailableInstancesWithOptions:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options authenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData completionHandler:(void(^)(NSError * _Nullable error, NSArray<OCServerInstance *> * _Nullable availableInstances))completionHandler
+{
+	NSURL *webFingerAccountLookupURL;
+
+	if ((webFingerAccountLookupURL = options[OCAuthenticationMethodWebFingerAccountLookupURLKey]) != nil)
+	{
+		// Send authenticated request to webfinger account lookup URL to retrieve list of available servers
+		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:webFingerAccountLookupURL];
+
+		request = [OCAuthenticationMethod authorizeRequest:request withAuthenticationMethodIdentifier:authenticationMethodIdentifier authenticationData:authenticationData];
+
+		request.ephermalResultHandler = ^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
+			if (error != nil)
+			{
+				completionHandler(error, nil);
+				return;
+			}
+
+			if (response.status.isSuccess)
+			{
+				NSError *jsonError = nil;
+				NSDictionary *jsonDict = nil;
+				NSMutableArray<OCServerInstance *> *serverInstances = nil;
+
+				if ((jsonDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+				{
+					NSArray<NSDictionary<NSString*,id> *> *linksArray;
+
+					// Look for first link with relation http://openid.net/specs/connect/1.0/issuer
+					if ((linksArray = OCTypedCast(jsonDict[@"links"], NSArray)) != nil)
+					{
+						serverInstances = [NSMutableArray new];
+
+						for (id link in linksArray)
+						{
+							NSDictionary<NSString*,id> *linkDict;
+
+							if ((linkDict = OCTypedCast(link, NSDictionary)) != nil)
+							{
+								if ([linkDict[@"rel"] isEqual:@"http://webfinger.owncloud/rel/server-instance"])
+								{
+									NSString *urlString;
+									NSURL *serverURL = nil;
+									NSDictionary <NSString *, NSString *> *titlesByLanguageCode = nil;
+
+									if ((urlString = OCTypedCast(linkDict[@"href"],NSString)) != nil)
+									{
+										if ((serverURL = [NSURL URLWithString:urlString]) != nil)
+										{
+										}
+									}
+
+									if ((titlesByLanguageCode = OCTypedCast(linkDict[@"titles"],NSDictionary)) != nil)
+									{
+										// Ensure that "titles" dictionary contains only strings, reject it otherwise
+										__block BOOL isNotAllStrings = NO;
+
+										[titlesByLanguageCode enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSString * _Nonnull obj, BOOL * _Nonnull stop) {
+											if (![key isKindOfClass:NSString.class] || ![obj isKindOfClass:NSString.class])
+											{
+												isNotAllStrings = YES;
+												*stop = YES;
+											}
+										}];
+
+										if (isNotAllStrings)
+										{
+											titlesByLanguageCode = nil;
+										}
+									}
+
+									if (serverURL != nil)
+									{
+										OCServerInstance *instance = [[OCServerInstance alloc] initWithURL:serverURL];
+
+										instance.titlesByLanguageCode = titlesByLanguageCode;
+
+										[serverInstances addObject:instance];
+									}
+								}
+							}
+						}
+					}
+				}
+
+				completionHandler((serverInstances == nil) ? OCError(OCErrorWebFingerLacksServerInstanceRelation) : nil, serverInstances);
+			}
+			else
+			{
+				completionHandler(response.status.error, nil);
+			}
+		};
+
+		if ((request != nil) && (self.ephermalPipeline != nil))
+		{
+			[self.ephermalPipeline enqueueRequest:request forPartitionID:self.partitionID isFinal:YES];
+		}
+		else
+		{
+			completionHandler(OCError(OCErrorInternal), nil);
+		}
+	}
+	else if (_bookmark.url != nil)
+	{
+		// Return instance based on bookmark URL
+		OCServerInstance *instance = [[OCServerInstance alloc] initWithURL:_bookmark.url];
+		completionHandler(nil, @[ instance ]);
+	}
+	else
+	{
+		// Return nil
+		completionHandler(OCError(OCErrorInternal), nil);
+	}
+}
+
+@end
+
+
+#pragma mark - Single request authentication
+@implementation OCAuthenticationMethod (RequestAuthentication)
++ (OCHTTPRequest *)authorizeRequest:(OCHTTPRequest *)request withAuthenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData
+{
+	OCBookmark *bookmark = [OCBookmark new];
+	bookmark.authenticationDataStorage = OCBookmarkAuthenticationDataStorageMemory;
+	bookmark.authenticationMethodIdentifier = authenticationMethodIdentifier;
+	bookmark.authenticationData = authenticationData;
+
+	OCConnection *connection = [[OCConnection alloc] initWithBookmark:bookmark];
+
+	return ([connection.authenticationMethod authorizeRequest:request forConnection:connection]);
 }
 
 @end

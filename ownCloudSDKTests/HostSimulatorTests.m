@@ -53,7 +53,7 @@
 	connection = [[OCConnection alloc] initWithBookmark:bookmark];
 	connection.hostSimulator = hostSimulator;
 
-	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods) {
+	[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue *issue,  NSURL *suggestedURL, NSArray<OCAuthenticationMethodIdentifier> *supportedMethods, NSArray<OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable generationOptions) {
 		OCLog(@"Issues: %@", issue.issues);
 		OCLog(@"SuggestedURL: %@", suggestedURL);
 		OCLog(@"Supported authentication methods: %@ - Preferred authentication methods: %@", supportedMethods, preferredAuthenticationMethods);

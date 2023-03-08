@@ -586,16 +586,27 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
 }
 
-+ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
 	NSURL *openidConfigURL;
-	NSArray <OCHTTPRequest *> *oAuth2DetectionURLs;
+	NSArray <OCHTTPRequest *> *oidcDetectionURLs = nil;
 
-	if ((oAuth2DetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey],NSNumber).boolValue)
+	{
+		// Do not perform "Bearer" check requests to determine OIDC support
+		oidcDetectionURLs = @[];
+	}
+	else
+	{
+		// Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
+		oidcDetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
+	}
+
+	if (oidcDetectionURLs != nil)
 	{
 		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
 		{
-			return ([oAuth2DetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
+			return ([oidcDetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
 		}
 	}
 
@@ -604,56 +615,69 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
-	[super detectAuthenticationMethodSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
-
-		if (supported)
-		{
-			// OAuth2 supported => continue
-			NSURL *wellKnownURL;
-			BOOL completeWithNotSupported = YES;
-
-			if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey],NSNumber).boolValue)
+	{
+		// No "Bearer" check requests were performed, so perform just a validity check for the OIDC configuration response
+		[self detectOIDCSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:completionHandler];
+	}
+	else
+	{
+		// Since OIDC is a superset of OAuth2, ensure criteria for OAuth2 are also met
+		[super detectAuthenticationMethodSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
+			if (supported)
 			{
-				OCHTTPRequest *wellKnownRequest;
+				// OAuth2 supported => continue
+				[self detectOIDCSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:completionHandler];
+			}
+			else
+			{
+				// OAuth2 not supported => OIDC requirement not met
+				completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
+			}
+		}];
+	}
+}
 
-				if ((wellKnownRequest = [serverResponses objectForKey:wellKnownURL]) != nil)
++ (void)detectOIDCSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
+{
+	NSURL *wellKnownURL;
+	BOOL completeWithNotSupported = YES;
+
+	if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+	{
+		OCHTTPRequest *wellKnownRequest;
+
+		if ((wellKnownRequest = [serverResponses objectForKey:wellKnownURL]) != nil)
+		{
+			OCHTTPResponse *response = wellKnownRequest.httpResponse;
+
+			if (response.status.isSuccess)
+			{
+				if ([response.contentType hasSuffix:@"/json"])
 				{
-					OCHTTPResponse *response = wellKnownRequest.httpResponse;
+					NSError *error = nil;
 
-					if (response.status.isSuccess)
+					if ([response bodyConvertedDictionaryFromJSONWithError:&error] != nil)
 					{
-						if ([response.contentType hasSuffix:@"/json"])
-						{
-							NSError *error = nil;
-
-							if ([response bodyConvertedDictionaryFromJSONWithError:&error] != nil)
-							{
-								// OIDC supported
-								completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, YES);
-								completeWithNotSupported = NO;
-							}
-							else
-							{
-								OCLogError(@"Error decoding OIDC configuration JSON: %@", OCLogPrivate(error));
-							}
-						}
+						// OIDC supported
+						completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, YES);
+						completeWithNotSupported = NO;
+					}
+					else
+					{
+						OCLogError(@"Error decoding OIDC configuration JSON: %@", OCLogPrivate(error));
 					}
 				}
 			}
+		}
+	}
 
-			// Fallback completion handler call
-			if (completeWithNotSupported)
-			{
-				// OIDC not supported
-				completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
-			}
-		}
-		else
-		{
-			// OAuth2 not supported => OIDC requirement not met
-			completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
-		}
-	}];
+	// Fallback completion handler call
+	if (completeWithNotSupported)
+	{
+		// OIDC not supported
+		completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
+	}
 }
 
 #pragma mark - Requests

@@ -789,6 +789,10 @@
 		DCE62EAA2771EA0200E3193F /* OCResourceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE62EA82771EA0200E3193F /* OCResourceManager.m */; };
 		DCE62EAD2771ED5700E3193F /* OCResourceImage.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE62EAB2771ED5700E3193F /* OCResourceImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE62EAE2771ED5700E3193F /* OCResourceImage.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE62EAC2771ED5700E3193F /* OCResourceImage.m */; };
+		DCE741D829B7DD5000BFF393 /* OCServerInstance.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE741D629B7DD5000BFF393 /* OCServerInstance.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCE741D929B7DD5000BFF393 /* OCServerInstance.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE741D729B7DD5000BFF393 /* OCServerInstance.m */; };
+		DCE741DC29B7EA7000BFF393 /* OCBookmark+ServerInstance.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCE741DD29B7EA7000BFF393 /* OCBookmark+ServerInstance.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */; };
 		DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */; };
 		DCE784FC2232748100733F01 /* OCHTTPResponse+DAVError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */; };
 		DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */; };
@@ -1816,6 +1820,10 @@
 		DCE62EA82771EA0200E3193F /* OCResourceManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceManager.m; sourceTree = "<group>"; };
 		DCE62EAB2771ED5700E3193F /* OCResourceImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceImage.h; sourceTree = "<group>"; };
 		DCE62EAC2771ED5700E3193F /* OCResourceImage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceImage.m; sourceTree = "<group>"; };
+		DCE741D629B7DD5000BFF393 /* OCServerInstance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCServerInstance.h; sourceTree = "<group>"; };
+		DCE741D729B7DD5000BFF393 /* OCServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerInstance.m; sourceTree = "<group>"; };
+		DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+ServerInstance.h"; sourceTree = "<group>"; };
+		DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+ServerInstance.m"; sourceTree = "<group>"; };
 		DCE784F722325D4F00733F01 /* OCConnection+Recipients.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Recipients.m"; sourceTree = "<group>"; };
 		DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPResponse+DAVError.h"; sourceTree = "<group>"; };
 		DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPResponse+DAVError.m"; sourceTree = "<group>"; };
@@ -3803,6 +3811,7 @@
 				DC4B12002209C24F0062BCDD /* HTTP */,
 				DC72E41C2061666900189B9A /* Host Simulator */,
 				DCFE3B7327A1660C00939415 /* GraphAPI */,
+				DCE741D129B74D6000BFF393 /* Setup */,
 				DC855708204FEA3400189B9A /* Connection */,
 				DC0CE17828C5DDC6009ABDFB /* App Providers */,
 				DCF39B572458290200DEA137 /* TUS */,
@@ -4052,6 +4061,17 @@
 			path = Manager;
 			sourceTree = "<group>";
 		};
+		DCE741D129B74D6000BFF393 /* Setup */ = {
+			isa = PBXGroup;
+			children = (
+				DCE741D729B7DD5000BFF393 /* OCServerInstance.m */,
+				DCE741D629B7DD5000BFF393 /* OCServerInstance.h */,
+				DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */,
+				DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */,
+			);
+			path = Setup;
+			sourceTree = "<group>";
+		};
 		DCEA7D942093553300F25223 /* Toolkit */ = {
 			isa = PBXGroup;
 			children = (
@@ -4253,6 +4273,7 @@
 				DC2AA57022DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.h in Headers */,
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DCC3700F24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h in Headers */,
+				DCE741D829B7DD5000BFF393 /* OCServerInstance.h in Headers */,
 				DCDBB5EA2523E3AF00FAD707 /* OCAvatar.h in Headers */,
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
 				DC75D30F214C015F00B6FB62 /* OCItem+OCItemCreationDebugging.h in Headers */,
@@ -4339,6 +4360,7 @@
 				DC47E4D927A5820D0020E8EF /* GASpecialFolder.h in Headers */,
 				DC36EC7C27B5362800967483 /* OCConnection+OData.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */,
+				DCE741DC29B7EA7000BFF393 /* OCBookmark+ServerInstance.h in Headers */,
 				DCC4F3F727D757FE00ABF4C9 /* OCDataConverter.h in Headers */,
 				DCFE3B9D27A1A6E500939415 /* GAGraphData+Decoder.h in Headers */,
 				DC1C7AC2253F3CD9002F2B9F /* OCClassSettings+Metadata.h in Headers */,
@@ -5164,6 +5186,7 @@
 				DC47E4DF27A5820D0020E8EF /* GAHashes.m in Sources */,
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCDBB5E72523DDA200FAD707 /* OCConnection+Avatars.m in Sources */,
+				DCE741DD29B7EA7000BFF393 /* OCBookmark+ServerInstance.m in Sources */,
 				DC9219E72964CB4500F538EE /* GAEntity.m in Sources */,
 				DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */,
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
@@ -5196,6 +5219,7 @@
 				DCDBEE392049EF3C00189B9A /* NSURL+OCURLNormalization.m in Sources */,
 				DCC8F9DA202854FB00EB6701 /* OCCore.m in Sources */,
 				DCAEB07221FA67060067E147 /* OCActivityUpdate.m in Sources */,
+				DCE741D929B7DD5000BFF393 /* OCServerInstance.m in Sources */,
 				DCC832CF242BB05A00153F8C /* OCCore+MessageResponseHandler.m in Sources */,
 				DC51FD8E247565080069AB79 /* OCCellularSwitch.m in Sources */,
 				DC47E4F627A83D9B0020E8EF /* OCQuota.m in Sources */,

@@ -20,6 +20,7 @@
 #import "OCAuthenticationMethod+OCTools.h"
 #import "NSError+OCError.h"
 #import "OCHTTPRequest.h"
+#import "OCMacros.h"
 
 static NSString *OCAuthenticationMethodBasicAuthAuthenticationHeaderValueKey = @"BasicAuthString";
 
@@ -123,14 +124,27 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey], NSNumber).boolValue)
+	{
+ 		// Skip if WWW-Authenticate checks are not allowed
+ 		return @[];
+	}
+
 	return ([self detectionRequestsBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection]);
 }
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
-	return ([self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler]);
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey], NSNumber).boolValue)
+	{
+		// Skip if WWW-Authenticate checks are not allowed
+		completionHandler(self.identifier, NO);
+		return;
+	}
+
+	[self detectAuthenticationMethodSupportBasedOnWWWAuthenticateMethod:@"Basic" forConnection:connection withServerResponses:serverResponses completionHandler:completionHandler];
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")

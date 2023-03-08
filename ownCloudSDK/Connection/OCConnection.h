@@ -43,6 +43,7 @@
 @class OCConnection;
 @class OCXMLNode;
 @class OCAppProviderFileType;
+@class OCServerInstance;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -248,7 +249,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(nullable NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+- (void)prepareForSetupWithOptions:(nullable NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable generationOptions))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+
+#pragma mark - Retrieve instances
+- (void)retrieveAvailableInstancesWithOptions:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options authenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData completionHandler:(void(^)(NSError * _Nullable error, NSArray<OCServerInstance *> * _Nullable availableInstances))completionHandler;
 
 @end
 
