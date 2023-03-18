@@ -162,6 +162,12 @@
 
 		if (primaryLanguage != nil)
 		{
+			if (primaryLanguage.length > 2)
+			{
+				// Ensure ISO-639-1 (uses only 2 characters) by cutting off any differentiators (f.ex. "en-GB" becomes "en")
+				primaryLanguage = [primaryLanguage substringToIndex:2];
+			}
+
 			[request addParameters:@{
 				@"lang" : primaryLanguage
 			}];
