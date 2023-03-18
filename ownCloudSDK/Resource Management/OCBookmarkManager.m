@@ -170,6 +170,8 @@
 				{
 					[_bookmarks removeAllObjects];
 				}
+
+				[_bookmarksDatasource setVersionedItems:_bookmarks];
 			}
 		}
 		else
@@ -177,6 +179,7 @@
 			@synchronized(self)
 			{
 				[_bookmarks removeAllObjects];
+				[_bookmarksDatasource setVersionedItems:_bookmarks];
 			}
 		}
 	}
