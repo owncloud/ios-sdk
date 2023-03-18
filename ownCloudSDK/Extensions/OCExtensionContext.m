@@ -22,7 +22,7 @@
 
 + (instancetype)contextWithLocation:(OCExtensionLocation *)location requirements:(OCExtensionRequirements)requirements preferences:(OCExtensionRequirements)preferences
 {
-	OCExtensionContext *context = [OCExtensionContext new];
+	OCExtensionContext *context = [self new];
 
 	context.location = location;
 	context.requirements = requirements;
