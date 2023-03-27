@@ -74,6 +74,7 @@
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
 	OCServerLocatorIdentifier serverLocatorIdentifier = OCServerLocator.useServerLocatorIdentifier;
 	NSURL *webFingerAccountInfoURL = nil;
+	NSURL *webFingerAlternativeIDPBaseURL = nil;
 	NSURL *refererForIDPURL = nil;
 
 	// Tools
@@ -466,6 +467,7 @@
 											{
 												completed = YES; // Skip status.php check step
 												webFingerAccountInfoURL = webFingerAccountMeURL;
+												webFingerAlternativeIDPBaseURL = successURL; 
 												refererForIDPURL = url;
 												break;
 											}
@@ -617,14 +619,25 @@
 	
 	if (completionHandler != nil)
 	{
-		OCAuthenticationMethodDetectionOptions detectionOptions = (webFingerAccountInfoURL != nil) ? @{
-			OCAuthenticationMethodWebFingerAccountLookupURLKey : webFingerAccountInfoURL,
-			OCAuthenticationMethodAuthenticationRefererURL : refererForIDPURL,
-			OCAuthenticationMethodSkipWWWAuthenticateChecksKey : @(YES)
-//			OCAuthenticationMethodAllowedMethods: @[
-//				OCAuthenticationMethodIdentifierOpenIDConnect
-//			]
-		} : nil;
+		NSMutableDictionary<OCAuthenticationMethodKey, id> *detectionOptions = [NSMutableDictionary new];
+
+		if (webFingerAccountInfoURL != nil)
+		{
+			detectionOptions[OCAuthenticationMethodWebFingerAccountLookupURLKey] = webFingerAccountInfoURL;
+			detectionOptions[OCAuthenticationMethodAuthenticationRefererURL] = refererForIDPURL;
+			detectionOptions[OCAuthenticationMethodSkipWWWAuthenticateChecksKey] = @(YES);
+			// detectionOptions[OCAuthenticationMethodAllowedMethods] = @[ OCAuthenticationMethodIdentifierOpenIDConnect ]; // implemented, but not used/needed at the moment
+		}
+
+		if (webFingerAlternativeIDPBaseURL != nil)
+		{
+			detectionOptions[OCAuthenticationMethodWebFingerAlternativeIDPKey] = webFingerAlternativeIDPBaseURL;
+		}
+
+		if (detectionOptions.count == 0)
+		{
+			detectionOptions = nil;
+		}
 
 		__block NSArray<OCAuthenticationMethodIdentifier> *supportedMethodIdentifiers = nil;
 

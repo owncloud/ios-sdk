@@ -104,7 +104,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 }
 
 #pragma mark - OAuth2 extensions
-- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection
+- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
 	NSString *authorizationEndpointURLString;
 
@@ -116,7 +116,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return (nil);
 }
 
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
+- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
 	NSString *tokenEndpointURLString;
 
@@ -173,7 +173,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 {
 	NSURL *openidConfigURL;
 
-	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection]) != nil)
+	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection options:options]) != nil)
 	{
 		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
@@ -587,9 +587,18 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSURL *)_openIDConfigurationURLForConnection:(OCConnection *)connection
++ (NSURL *)_openIDConfigurationURLForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
-	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
+	OCAuthenticationMethodDetectionOptions detectionOptions = @{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" };
+
+	if (options != nil)
+	{
+		NSMutableDictionary<OCAuthenticationMethodKey, id> *mutableOptions = [[NSMutableDictionary alloc] initWithDictionary:options];
+		[mutableOptions addEntriesFromDictionary:detectionOptions];
+		detectionOptions = mutableOptions;
+	}
+
+	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:detectionOptions]);
 }
 
 + (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
@@ -610,7 +619,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 	if (oidcDetectionURLs != nil)
 	{
-		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection options:options]) != nil)
 		{
 			OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
@@ -657,7 +666,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	NSURL *wellKnownURL;
 	BOOL completeWithNotSupported = YES;
 
-	if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+	if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection options:options]) != nil)
 	{
 		OCHTTPRequest *wellKnownRequest;
 

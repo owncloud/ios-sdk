@@ -179,19 +179,19 @@ OCAuthenticationMethodAutoRegister
 }
 
 #pragma mark - Subclassing points
-- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection
+- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
-	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2AuthorizationEndpoint]]);
+	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2AuthorizationEndpoint] withAlternativeURL:options[OCAuthenticationMethodWebFingerAlternativeIDPKey]]);
 }
 
-+ (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection
++ (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
-	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint]]);
+	return ([connection URLForEndpointPath:[self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2TokenEndpoint] withAlternativeURL:options[OCAuthenticationMethodWebFingerAlternativeIDPKey]]);
 }
 
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection
+- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
-	return ([self.class tokenEndpointURLForConnection:connection]);
+	return ([self.class tokenEndpointURLForConnection:connection options:options]);
 }
 
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
@@ -278,7 +278,7 @@ OCAuthenticationMethodAutoRegister
 	}
 
 	NSArray <OCHTTPRequest *> *detectionRequests = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
-	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
+	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection options:options]; // Add token endpoint for detection / differenciation between OC-OAuth2 and other bearer-based auth methods (like OIDC)
 
 	detectionRequests = [detectionRequests arrayByAddingObject:[OCHTTPRequest requestWithURL:tokenEndpointURL]];
 
@@ -296,7 +296,7 @@ OCAuthenticationMethodAutoRegister
 		return;
 	}
 
-	if ((tokenEndpointURL = [self tokenEndpointURLForConnection:connection]) != nil)
+	if ((tokenEndpointURL = [self tokenEndpointURLForConnection:connection options:options]) != nil)
 	{
 		OCHTTPRequest *tokenEndpointRequest;
 
@@ -394,7 +394,7 @@ OCAuthenticationMethodAutoRegister
 
 		parameters = [self prepareAuthorizationRequestParameters:parameters forConnection:connection options:options];
 
-		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection] urlByAppendingQueryParameters:parameters replaceExisting:NO];
+		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection options:options] urlByAppendingQueryParameters:parameters replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			void (^oauth2CompletionHandler)(NSURL *callbackURL, NSError *error) = ^(NSURL *callbackURL, NSError *error) {
@@ -827,7 +827,7 @@ OCAuthenticationMethodAutoRegister
 	parameters = sanitizedParameters;
 
 	// Check for endpoint
-	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection];
+	NSURL *tokenEndpointURL = [self tokenEndpointURLForConnection:connection options:options];
 
 	if (tokenEndpointURL == nil)
 	{
@@ -936,7 +936,7 @@ OCAuthenticationMethodAutoRegister
 						bearerString = [NSString stringWithFormat:@"Bearer %@", jsonResponseDict[@"access_token"]];
 
 						// Finalize
-						void (^CompleteWithJSONResponseDict)(NSDictionary *jsonResponseDict) = ^(NSDictionary *jsonResponseDict) {
+						void (^CompleteWithJSONResponseDict)(NSDictionary *jsonResponseDict, BOOL tolerateMissingUserID) = ^(NSDictionary *jsonResponseDict, BOOL tolerateMissingUserID) {
 							NSError *error = nil;
 							NSDictionary *authenticationDataDict;
 							NSData *authenticationData;
@@ -954,7 +954,7 @@ OCAuthenticationMethodAutoRegister
 										error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"You logged in as user %@, but must log in as user %@. Please retry."), newUserID, requiredUserID]));
 									}
 								}
-								else
+								else if (!tolerateMissingUserID)
 								{
 									error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"Login as user %@ required. Please retry."), requiredUserID]));
 								}
@@ -1002,28 +1002,38 @@ OCAuthenticationMethodAutoRegister
 						if (jsonResponseDict[@"user_id"] == nil)
 						{
 							// Retrieve user_id if it wasn't provided with the token request response
-							[connection retrieveLoggedInUserWithRequestCustomization:^(OCHTTPRequest * _Nonnull request) {
-								request.requiredSignals = nil;
-								[request setValue:bearerString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
-							} completionHandler:^(NSError * _Nullable error, OCUser * _Nullable loggedInUser) {
-								if (error == nil)
-								{
-									NSMutableDictionary *jsonResponseUpdated = [jsonResponseDict mutableCopy];
+							if (options[OCAuthenticationMethodWebFingerAccountLookupURLKey] != nil)
+							{
+								// user_id can't be retrieved at this time as final instance is still to be determined - will be fetched on first full -connect:
+								CompleteWithJSONResponseDict(jsonResponseDict, YES);
+							}
+							else
+							{
+								// Retrieve user_id from the user endpoint
+								[connection retrieveLoggedInUserWithRequestCustomization:^(OCHTTPRequest * _Nonnull request) {
+									request.requiredSignals = nil;
+									[request setValue:bearerString forHeaderField:OCHTTPHeaderFieldNameAuthorization];
+								} completionHandler:^(NSError * _Nullable error, OCUser * _Nullable loggedInUser) {
+									if (error == nil)
+									{
+										NSMutableDictionary *jsonResponseUpdated = [jsonResponseDict mutableCopy];
 
-									jsonResponseUpdated[@"user_id"] = loggedInUser.userName;
+										jsonResponseUpdated[@"user_id"] = loggedInUser.userName;
 
-									CompleteWithJSONResponseDict(jsonResponseUpdated);
-								}
-								else
-								{
-									completionHandler(error, nil, nil);
-								}
-							}];
+										CompleteWithJSONResponseDict(jsonResponseUpdated, NO);
+									}
+									else
+									{
+										// Return error
+										completionHandler(error, nil, nil);
+									}
+								}];
+							}
 						}
 						else
 						{
 							// user_id was already provided - we're all set!
-							CompleteWithJSONResponseDict(jsonResponseDict);
+							CompleteWithJSONResponseDict(jsonResponseDict, NO);
 						}
 					}
 				}

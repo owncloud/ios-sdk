@@ -76,6 +76,15 @@
 - (NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(NSDictionary <OCConnectionEndpointURLOption,id> *)options
 {
 	NSString *endpointPath;
+	NSURL *alternativeBaseURL = nil;
+
+	if (options[OCAuthenticationMethodWebFingerAlternativeIDPKey] != nil)
+	{
+		if ([endpoint isEqual:OCConnectionEndpointIDWellKnown])
+		{
+			alternativeBaseURL = options[OCAuthenticationMethodWebFingerAlternativeIDPKey];
+		}
+	}
 
 	if ([endpoint isEqual:OCConnectionEndpointIDPreview])
 	{
@@ -118,7 +127,7 @@
 
 	if ((endpointPath = [self pathForEndpoint:endpoint]) != nil)
 	{
-		NSURL *url = [self URLForEndpointPath:endpointPath];
+		NSURL *url = [self URLForEndpointPath:endpointPath withAlternativeURL:alternativeBaseURL];
 
 		if ([endpoint isEqualToString:OCConnectionEndpointIDWellKnown])
 		{
@@ -173,12 +182,12 @@
 	return (nil);
 }
 
-- (NSURL *)URLForEndpointPath:(OCPath)endpointPath
+- (NSURL *)URLForEndpointPath:(OCPath)endpointPath withAlternativeURL:(nullable NSURL *)alternativeURL
 {
+	NSURL *bookmarkURL = (alternativeURL != nil) ? alternativeURL : _bookmark.url;
+
 	if (endpointPath != nil)
 	{
-		NSURL *bookmarkURL = _bookmark.url;
-
 		if ([endpointPath hasPrefix:@"/"]) // Absolute path
 		{
 			// Remove leading "/"
@@ -194,8 +203,9 @@
 		return ([[bookmarkURL URLByAppendingPathComponent:endpointPath] absoluteURL]);
 	}
 	
-	return (_bookmark.url);
+	return (bookmarkURL);
 }
+
 
 #pragma mark - Base URL Extract
 - (NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL

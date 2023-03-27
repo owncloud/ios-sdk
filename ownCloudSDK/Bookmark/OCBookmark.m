@@ -215,7 +215,12 @@
 
 		if ((authMethod = [OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:self.authenticationMethodIdentifier]) != nil)
 		{
-			return ([authMethod userNameFromAuthenticationData:self.authenticationData]);
+			NSString *userName = nil;
+
+			if ((userName = [authMethod userNameFromAuthenticationData:self.authenticationData]) != nil)
+			{
+				return (userName);
+			}
 		}
 	}
 
