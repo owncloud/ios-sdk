@@ -23,13 +23,27 @@
 #pragma mark - Locale
 - (NSString *)acceptLanguageString
 {
-	NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+	NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:NSBundle.mainBundle.localizations forPreferences:nil];
 
 	if (preferredLocalizations.count > 0)
 	{
 		NSString *acceptLanguage;
+		NSMutableArray<NSString *> *iso6391Languages = [NSMutableArray new];
 
-		if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
+		for (NSString *preferredLocalization in preferredLocalizations)
+		{
+			if (preferredLocalization.length > 2)
+			{
+				// Ensure that codes are formatted correctly (f.ex. en-US rather than en_US)
+				[iso6391Languages addObject:[preferredLocalization stringByReplacingOccurrencesOfString:@"_" withString:@"-"]];
+			}
+			else
+			{
+				[iso6391Languages addObject:preferredLocalization];
+			}
+		}
+
+		if ((acceptLanguage = [iso6391Languages componentsJoinedByString:@","].lowercaseString) != nil)
 		{
 			return (acceptLanguage);
 		}
