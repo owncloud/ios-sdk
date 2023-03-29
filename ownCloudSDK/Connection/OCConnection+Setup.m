@@ -184,11 +184,15 @@
 		return (error);
 	};
 
-	NSError *(^MakeRequest)(NSURL *url, OCHTTPRequest **outRequest) = ^(NSURL *url, OCHTTPRequest **outRequest) {
+	NSError *(^MakeRequest)(NSURL *url, BOOL handleRedirectLocally, OCHTTPRequest **outRequest) = ^(NSURL *url, BOOL handleRedirectLocally, OCHTTPRequest **outRequest) {
 		OCHTTPRequest *request;
 		NSError *error = nil;
 
 		request = [OCHTTPRequest requestWithURL:url];
+		if (handleRedirectLocally)
+		{
+			request.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
+		}
 
 		error = MakeRawRequest(request);
 
@@ -200,11 +204,11 @@
 		return (error);
 	};
 
-	NSError *(^MakeJSONRequest)(NSURL *url, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict) = ^(NSURL *url, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict){
+	NSError *(^MakeJSONRequest)(NSURL *url, BOOL handleRedirectLocally, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict) = ^(NSURL *url, BOOL handleRedirectLocally, OCHTTPRequest **outRequest, NSURL **outRedirectionURL, NSDictionary **outJSONDict){
 		OCHTTPRequest *request = nil;
 		NSError *error;
 		
-		if ((error = MakeRequest(url, &request)) == nil)
+		if ((error = MakeRequest(url, handleRedirectLocally, &request)) == nil)
 		{
 			if (request.httpResponse.status.isSuccess)
 			{
@@ -247,7 +251,7 @@
 		OCHTTPRequest *request = nil;
 		NSURL *statusURL = [url URLByAppendingPathComponent:statusEndpointPath];
 
-		if ((error = MakeJSONRequest(statusURL, &request, &redirectionURL, &jsonDict)) == nil)
+		if ((error = MakeJSONRequest(statusURL, NO, &request, &redirectionURL, &jsonDict)) == nil)
 		{
 			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || (jsonDict==nil))
 			{
@@ -438,7 +442,7 @@
 			NSURL *redirectionURL = nil;
 			OCHTTPRequest *request = nil;
 
-			if ((error = MakeJSONRequest(webFingerLookupURL, &request, &redirectionURL, &jsonDict)) == nil)
+			if ((error = MakeJSONRequest(webFingerLookupURL, YES, &request, &redirectionURL, &jsonDict)) == nil)
 			{
 				if (jsonDict != nil)
 				{
@@ -478,6 +482,10 @@
 						}
 					}
 				}
+			}
+			else
+			{
+				OCLogDebug(@"Error performing webfinger lookup: %@", error);
 			}
 		}
 	}
