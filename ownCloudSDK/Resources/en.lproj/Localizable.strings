@@ -58,6 +58,10 @@
 /* Copies */
 "copy" = "copy";
 
+/* Sync errors */
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.";
+"Exception occured performing action" = "Exception occured performing action";
+
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
 "%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";

@@ -57,6 +57,7 @@ typedef NS_OPTIONS(NSInteger, OCLocationType) {
 @property(strong,nullable,readonly,nonatomic) NSString *lastPathComponent;
 
 @property(readonly,nonatomic) BOOL isRoot;
+@property(readonly,nonatomic) BOOL isDriveRoot;
 @property(readonly,nonatomic) OCLocationType type;
 
 + (BOOL)driveID:(nullable OCDriveID)driveID1 isEqualDriveID:(nullable OCDriveID)driveID2;

@@ -134,6 +134,11 @@
 	return (_path.isRootPath);
 }
 
+- (BOOL)isDriveRoot
+{
+	return (_path.isRootPath && (_driveID != nil));
+}
+
 - (OCLocationType)type
 {
 	if (_path != nil)

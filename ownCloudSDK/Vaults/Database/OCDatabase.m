@@ -1249,27 +1249,29 @@
 
 				@synchronized(db)
 				{
-					if (syncRecord.recordID != nil)
+					OCSyncRecordID recordID = syncRecord.recordID;
+
+					if (recordID != nil)
 					{
 						if (self->_syncRecordsByID != nil)
 						{
  							// Add to cache
- 							self->_syncRecordsByID[syncRecord.recordID] = syncRecord;
+ 							self->_syncRecordsByID[recordID] = syncRecord;
 						}
 
 						if (syncRecord.progress != nil)
 						{
-							self->_progressBySyncRecordID[syncRecord.recordID] = syncRecord.progress.progress;
+							self->_progressBySyncRecordID[recordID] = syncRecord.progress.progress;
 						}
 
 						if (syncRecord.resultHandler != nil)
 						{
-							self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
+							self->_resultHandlersBySyncRecordID[recordID] = syncRecord.resultHandler;
 						}
 
 						if (syncRecord.action.ephermalParameters != nil)
 						{
-							self->_ephermalParametersBySyncRecordID[syncRecord.recordID] = syncRecord.action.ephermalParameters;
+							self->_ephermalParametersBySyncRecordID[recordID] = syncRecord.action.ephermalParameters;
 						}
 					}
 				}
@@ -1291,7 +1293,7 @@
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
-		if (syncRecord.recordID != nil)
+		if ((syncRecord.recordID != nil) && !syncRecord.removed)
 		{
 			// Increment revision of record
 			syncRecord.revision = @(syncRecord.revision.longLongValue + 1);
@@ -1354,17 +1356,23 @@
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
+		if (syncRecord.removed)
+		{
+			OCLogError(@"Sync record with recordID=%@ already deleted: %@", syncRecord.recordID, syncRecord);
+			continue;
+		}
+
 		if (syncRecord.recordID != nil)
 		{
 			[queries addObject:[OCSQLiteQuery queryDeletingRowWithID:syncRecord.recordID fromTable:OCDatabaseTableNameSyncJournal completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				OCSyncRecordID syncRecordID;
 
-				if ((syncRecordID = syncRecord.recordID) != nil)
+				if (((syncRecordID = syncRecord.recordID) != nil) && !syncRecord.removed)
 				{
-					syncRecord.recordID = nil;
-
 					@synchronized(db)
 					{
+						syncRecord.removed = YES;
+
 						[self->_progressBySyncRecordID removeObjectForKey:syncRecordID];
 						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecordID];
 						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecordID];
@@ -1405,7 +1413,7 @@
 	}]];
 }
 
-- (OCSyncRecord *)_syncRecordFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary
+- (OCSyncRecord *)_syncRecordFromRowDictionary:(NSDictionary<NSString *,id<NSObject>> *)rowDictionary cache:(BOOL)cache
 {
 	OCSyncRecord *syncRecord = nil;
 	OCSyncRecordID recordID;
@@ -1421,8 +1429,19 @@
 				{
 					if ([_syncRecordsByID[recordID].revision isEqual:revision])
 					{
-						// Use cached sync record if its revision hasn't changed
-						syncRecord = _syncRecordsByID[recordID];
+						if (syncRecord.removed)
+						{
+							// Ensure instance hasn't been deleted
+							OCLogWarning(@"Removed syncRecord found in cache: %@", syncRecord);
+						}
+						else
+						{
+							// Use cached sync record if its revision hasn't changed
+							if (syncRecord.recordID != nil) // ensure this instance has a recordID
+							{
+								syncRecord = _syncRecordsByID[recordID];
+							}
+						}
 					}
 				}
 			}
@@ -1435,12 +1454,15 @@
 				syncRecord.recordID = recordID;
 				syncRecord.revision = revision;
 
-				// Add to cache
-				if (_syncRecordsByID != nil)
+				if (cache)
 				{
-					@synchronized(self.sqlDB)
+					// Add to cache
+					if (_syncRecordsByID != nil)
 					{
-						_syncRecordsByID[recordID] = syncRecord;
+						@synchronized(self.sqlDB)
+						{
+							_syncRecordsByID[recordID] = syncRecord;
+						}
 					}
 				}
 			}
@@ -1450,9 +1472,9 @@
 		{
 			@synchronized(self.sqlDB)
 			{
-				syncRecord.progress.progress = _progressBySyncRecordID[syncRecord.recordID];
-				syncRecord.resultHandler = _resultHandlersBySyncRecordID[syncRecord.recordID];
-				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[syncRecord.recordID];
+				syncRecord.progress.progress = _progressBySyncRecordID[recordID];
+				syncRecord.resultHandler = _resultHandlersBySyncRecordID[recordID];
+				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[recordID];
 			}
 		}
 	}
@@ -1506,7 +1528,7 @@
 		if (error == nil)
 		{
 			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-				syncRecord = [self _syncRecordFromRowDictionary:rowDictionary];
+				syncRecord = [self _syncRecordFromRowDictionary:rowDictionary cache:NO];
 				*stop = YES;
 			} error:&iterationError];
 		}
@@ -1531,7 +1553,7 @@
 		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
 			OCSyncRecord *syncRecord;
 
-			if ((syncRecord = [self _syncRecordFromRowDictionary:rowDictionary]) != nil)
+			if ((syncRecord = [self _syncRecordFromRowDictionary:rowDictionary cache:NO]) != nil)
 			{
 				[syncRecords addObject:syncRecord];
 			}
@@ -1554,7 +1576,7 @@
 		NSError *iterationError = error;
 
 		[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
-			syncRecord = [self _syncRecordFromRowDictionary:rowDictionary];
+			syncRecord = [self _syncRecordFromRowDictionary:rowDictionary cache:YES];
 			*stop = YES;
 		} error:&iterationError];
 
