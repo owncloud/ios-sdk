@@ -243,7 +243,6 @@ typedef id<NSObject> OCCoreItemTracking;
 	NSMutableArray <OCCertificate *> *_warnedCertificates;
 
 	NSMutableArray<OCDrive *> *_drives;
-	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
 	NSMutableDictionary<OCDriveID, OCFileETag> *_lastRootETagsByDriveID;
 
 	OCDataSourceArray *_drivesDataSource;

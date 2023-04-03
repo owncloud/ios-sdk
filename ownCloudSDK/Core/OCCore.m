@@ -290,7 +290,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_progressByLocalID = [NSMutableDictionary new];
 
 		_drives = [NSMutableArray new];
-		_drivesByID = [NSMutableDictionary new];
 		_lastRootETagsByDriveID = [NSMutableDictionary new];
 
 		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
@@ -2093,7 +2092,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	{
 		for (OCDrive *drive in self.vault.activeDrives)
 		{
-			_drivesByID[drive.identifier] = drive;
 			_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
 		}
 
@@ -2137,10 +2135,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 {
 	if (driveID == nil) { return (nil); }
 
-	@synchronized (_drives)
-	{
-		return (_drivesByID[driveID]);
-	}
+	return ([self.vault driveWithIdentifier:driveID]);
 }
 
 - (void)_handleDetachedDrivesUpdate:(NSNotification *)notification
