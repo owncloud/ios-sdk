@@ -32,7 +32,7 @@ static OIDCDictKeyPath OIDCKeyPathClientRegistrationExpirationDate	= @"clientReg
 static OIDCDictKeyPath OIDCKeyPathClientID				= @"clientRegistrationClientID";
 static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSecret";
 
-@interface OCAuthenticationMethodOpenIDConnect ()
+@implementation OCAuthenticationMethodOpenIDConnect
 {
 	NSDictionary<NSString *, id> *_clientRegistrationResponse; // JSON response from client registration
 	NSURL *_clientRegistrationEndpointURL; // URL the client registration was last performed at
@@ -42,9 +42,6 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	NSString *_clientID;
 	NSString *_clientSecret;
 }
-@end
-
-@implementation OCAuthenticationMethodOpenIDConnect
 
 #pragma mark - Class settings
 + (void)load
@@ -55,6 +52,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	[self registerOCClassSettingsDefaults:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile",
+		OCAuthenticationMethodOpenIDConnectPrompt      : @"select_account consent",
 		OCAuthenticationMethodOpenIDRegisterClient     : @(YES),
 		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}",
 		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES)
@@ -67,6 +65,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDConnectScope : @{
 			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Scope",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		},
+		OCAuthenticationMethodOpenIDConnectPrompt : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Prompt",
 			OCClassSettingsMetadataKeyCategory    : @"OIDC"
 		},
 		OCAuthenticationMethodOpenIDRegisterClient : @{
@@ -259,7 +262,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (NSString *)prompt
 {
-	return (@"select_account consent");
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectPrompt]);
 }
 
 #pragma mark - Dynamic Client Registration
@@ -761,6 +764,7 @@ OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect =
 
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPrompt = @"oidc-prompt";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClient = @"oidc-register-client";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClientNameTemplate = @"oidc-register-client-name-template";
 OCClassSettingsKey OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure = @"oidc-fallback-on-client-registration-failure";
