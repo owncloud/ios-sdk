@@ -247,4 +247,5 @@
 
 OCAppComponentIdentifier OCAppComponentIdentifierApp = @"app";
 OCAppComponentIdentifier OCAppComponentIdentifierFileProviderExtension = @"fileProviderExtension";
+OCAppComponentIdentifier OCAppComponentIdentifierFileProviderUIExtension = @"fileProviderUIExtension";
 OCAppComponentIdentifier OCAppComponentIdentifierShareExtension = @"shareExtension";

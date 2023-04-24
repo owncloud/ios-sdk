@@ -452,11 +452,17 @@
 					[primaryShares addObjectsFromArray:linkShares];
 
 					// Sort by name
-					[primaryShares sortUsingComparator:^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
+					NSComparator sharesComparator = ^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
 						NSString *name1, *name2;
 
 						name1 = share1.itemLocation.lastPathComponent;
 						name2 = share2.itemLocation.lastPathComponent;
+
+						if ([name1 isEqual:name2])
+						{
+							name1 = share1.recipient.displayName;
+							name2 = share2.recipient.displayName;
+						}
 
 						if ((name1 != nil) && (name2 != nil))
 						{
@@ -464,8 +470,12 @@
 						}
 
 						return (NSOrderedDescending);
-					}];
+					};
 
+					[primaryShares sortUsingComparator:sharesComparator];
+					[flatShares sortUsingComparator:sharesComparator];
+
+					// Update data sources
 					[[weakSelf _allSharedByMeDataSource] setVersionedItems:primaryShares];
 
 					OCCore *strongSelf;

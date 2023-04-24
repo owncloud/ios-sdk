@@ -95,6 +95,7 @@ typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 
 extern OCAppComponentIdentifier OCAppComponentIdentifierApp;
 extern OCAppComponentIdentifier OCAppComponentIdentifierFileProviderExtension;
+extern OCAppComponentIdentifier OCAppComponentIdentifierFileProviderUIExtension;
 extern OCAppComponentIdentifier OCAppComponentIdentifierShareExtension;
 
 NS_ASSUME_NONNULL_END
