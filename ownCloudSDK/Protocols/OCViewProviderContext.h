@@ -36,5 +36,6 @@ typedef NSString* OCViewProviderContextKey NS_TYPED_ENUM;
 @end
 
 extern OCViewProviderContextKey OCViewProviderContextKeyContentMode; //!< UIViewContentMode for content arrangement
+extern OCViewProviderContextKey OCViewProviderContextKeyUseCircular; //!< BOOL for using a circular masking view or not
 
 NS_ASSUME_NONNULL_END

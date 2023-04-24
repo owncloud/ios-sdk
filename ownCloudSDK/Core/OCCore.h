@@ -268,6 +268,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCDataSourceArray *_allSharedByMeDataSource;
 	NSInteger _allSharedByMeSubscribingDataSources;
 	OCDataSourceArray *_sharedByMeDataSource;
+	OCDataSourceArray *_sharedByMeGroupedDataSource;
 	OCDataSourceArray *_sharedByLinkDataSource;
 
 	OCQuery *_favoritesQuery; // provides content for .favoritesDataSource

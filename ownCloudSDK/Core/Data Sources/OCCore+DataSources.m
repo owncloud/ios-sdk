@@ -406,6 +406,7 @@
 					NSArray<OCShare *> *allSharedByMeShares = query.queryResults;
 					NSMutableDictionary<OCLocation *, OCShare *> *sharesByLocation = [NSMutableDictionary new];
 					NSMutableArray<OCShare *> *primaryShares = [NSMutableArray new];
+					NSMutableArray<OCShare *> *flatShares = [NSMutableArray new];
 					NSMutableArray<OCShare *> *linkShares = [NSMutableArray new];
 
 					for (OCShare *share in allSharedByMeShares)
@@ -419,6 +420,8 @@
 						}
 						else
 						{
+							[flatShares addObject:share];
+
 							// Group shares by location, add additional shares to .otherItemShares of non-link share of same location
 							if ((shareLocation = share.itemLocation) != nil)
 							{
@@ -464,6 +467,12 @@
 					}];
 
 					[[weakSelf _allSharedByMeDataSource] setVersionedItems:primaryShares];
+
+					OCCore *strongSelf;
+					if ((strongSelf = weakSelf) != nil)
+					{
+						[strongSelf->_sharedByMeDataSource setVersionedItems:flatShares];
+					}
 				};
 
 				startQuery = YES;
@@ -558,7 +567,17 @@
 	{
 		if (_sharedByMeDataSource == nil)
 		{
-			_sharedByMeDataSource = [self _compositionDataSourceForShareTypeLink:NO];
+			NSArray<OCShare *> *flatSharedByMe = nil;
+
+			if (_allSharedByMeQuery != nil)
+			{
+				flatSharedByMe = [_allSharedByMeQuery.queryResults filteredArrayUsingBlock:^BOOL(OCShare * _Nonnull share, BOOL * _Nonnull stop) {
+					return (share.type != OCShareTypeLink);
+				}];
+			}
+
+			_sharedByMeDataSource = [[OCDataSourceArray alloc] initWithItems:flatSharedByMe];
+			_sharedByMeDataSource.synchronizationGroup = [self _allSharedByMeDataSource].synchronizationGroup;
 
 			[_sharedByMeDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
 				[(OCCore *)owner _allSharedByMeSubscriberChange:(hasSubscribers ? 1 : -1)];
@@ -567,6 +586,23 @@
 	}
 
 	return (_sharedByMeDataSource);
+}
+
+- (OCDataSource *)sharedByMeGroupedDataSource
+{
+	@synchronized(self)
+	{
+		if (_sharedByMeGroupedDataSource == nil)
+		{
+			_sharedByMeGroupedDataSource = [self _compositionDataSourceForShareTypeLink:NO];
+
+			[_sharedByMeGroupedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+				[(OCCore *)owner _allSharedByMeSubscriberChange:(hasSubscribers ? 1 : -1)];
+			} withOwner:self performInitial:NO];
+		}
+	}
+
+	return (_sharedByMeGroupedDataSource);
 }
 
 #pragma mark - Shared by link

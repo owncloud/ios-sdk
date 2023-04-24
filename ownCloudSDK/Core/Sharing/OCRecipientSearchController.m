@@ -20,20 +20,20 @@
 #import "OCRateLimiter.h"
 #import "OCCore+Internal.h"
 #import "OCMacros.h"
+#import "OCDataSourceArray.h"
+#import "OCIdentity+DataItem.h"
 
-@interface OCRecipientSearchController ()
+@implementation OCRecipientSearchController
 {
 	OCRateLimiter *_rateLimiter;
 	OCItemType _itemType;
 	NSUInteger _activeRetrievalCounter;
 
+	OCDataSourceArray *_recipientsDataSource;
+
 	NSUInteger _lastSearchID;
 	NSUInteger _searchIDCounter;
 }
-
-@end
-
-@implementation OCRecipientSearchController
 
 - (instancetype)initWithCore:(OCCore *)core item:(nonnull OCItem *)item
 {
@@ -112,6 +112,8 @@
 		}
 
 		[core.connection retrieveRecipientsForItemType:_itemType ofShareType:self.shareTypes searchTerm:self.searchTerm maximumNumberOfRecipients:self.maximumResultCount completionHandler:^(NSError * _Nullable error, NSArray<OCIdentity *> * _Nullable recipients) {
+			OCDataSourceArray *recipientsDataSource = nil;
+
 			@synchronized(self)
 			{
 				self->_activeRetrievalCounter--;
@@ -129,9 +131,12 @@
 				}
 
 				self->_lastSearchID = searchID;
+
+				recipientsDataSource = self->_recipientsDataSource;
 			}
 
 			self.recipients = recipients;
+			[recipientsDataSource setVersionedItems:recipients];
 
 			if ((self.delegate!=nil) && [self.delegate respondsToSelector:@selector(searchControllerHasNewResults:error:)])
 			{
@@ -139,6 +144,23 @@
 			}
 		}];
 	}
+}
+
+- (OCDataSource *)recipientsDataSource
+{
+	OCDataSource *recipientsDataSource = nil;
+
+	@synchronized(self)
+	{
+		if (_recipientsDataSource == nil)
+		{
+			_recipientsDataSource = [[OCDataSourceArray alloc] initWithItems:self.recipients];
+		}
+
+		recipientsDataSource = _recipientsDataSource;
+	}
+
+	return (recipientsDataSource);
 }
 
 @end

@@ -44,6 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign,nonatomic) BOOL isWaitingForResults; //!< YES if the search controller is waiting for a result.
 
 @property(nullable,strong,nonatomic) NSArray <OCIdentity *> *recipients; //!< The recipients returned from the server
+@property(nullable,strong,nonatomic) OCDataSource *recipientsDataSource; //!< Data source wrapping .recipients and .isWaitingForResults
 
 @property(weak) id<OCRecipientSearchControllerDelegate> delegate; //!< Delegate receiving events. Alternatively, it's also possible to KVO-observe this class' properties.
 

@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly,strong,nonatomic) OCDataSource *sharedWithMeDeclinedDataSource;
 
 @property(readonly,strong,nonatomic) OCDataSource *sharedByMeDataSource;
+@property(readonly,strong,nonatomic) OCDataSource *sharedByMeGroupedDataSource;
 @property(readonly,strong,nonatomic) OCDataSource *sharedByLinkDataSource;
 
 @property(copy,nullable,nonatomic) OCCoreShareJailQueryCustomizer shareJailQueryCustomizer; //!< If sharedWithMeAcceptedDataSource contents is provided by a query on the Shares Jail, this block is applied to customize its sorting/filtering.

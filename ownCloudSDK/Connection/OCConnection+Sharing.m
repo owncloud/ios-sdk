@@ -388,9 +388,15 @@
 
 	[request setValue:[NSString stringWithFormat:@"%ld", share.permissions] forParameter:@"permissions"];
 
+	if ((share.itemFileID != nil) && self.useDriveAPI)
+	{
+		// Add the file ID to allow the server to determine the item's location (path, of course, isn't sufficient there)
+		[request setValue:share.itemFileID forParameter:@"space_ref"];
+	}
+
 	if (share.expirationDate != nil)
 	{
-		[request setValue:share.expirationDate.compactUTCStringDateOnly forParameter:@"expireDate"];
+		[request setValue:(self.useDriveAPI ? share.expirationDate.compactISO8601String : share.expirationDate.compactUTCStringDateOnly) forParameter:@"expireDate"];
 	}
 
 	if (share.type != OCShareTypeLink)
@@ -525,14 +531,21 @@
 
 	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
 	{
-		if (share.type == OCShareTypeLink)
+		NSString *expirationDate = @"";
+
+		if (share.expirationDate != nil)
 		{
-			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+			if (self.useDriveAPI)
+			{
+				expirationDate = share.expirationDate.compactISO8601String;
+			}
+			else
+			{
+				expirationDate = share.expirationDate.compactUTCStringDateOnly;
+			}
 		}
-		else
-		{
-			returnLinkShareOnlyError = YES;
-		}
+
+		changedValuesByPropertyNames[@"expireDate"] = expirationDate;
 	}
 
 	if (share.permissions != previousPermissions)

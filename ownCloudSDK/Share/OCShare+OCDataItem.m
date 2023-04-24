@@ -46,7 +46,7 @@
 		}
 	}
 
-	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted, otherItemSharesVersions]);
+	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@%@%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted, self.expirationDate, otherItemSharesVersions]);
 }
 
 #pragma mark - OCDataConverter for OCDrives

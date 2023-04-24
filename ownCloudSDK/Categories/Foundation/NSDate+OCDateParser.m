@@ -54,6 +54,43 @@
 	return (dateFormatter);
 }
 
++ (NSISO8601DateFormatter *)_ocDateFormatterISO8601WithFractionalSeconds
+{
+	static NSISO8601DateFormatter *dateFormatter;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		if ((dateFormatter = [NSISO8601DateFormatter new]) != nil)
+		{
+			dateFormatter.formatOptions = NSISO8601DateFormatWithInternetDateTime |
+						      NSISO8601DateFormatWithDashSeparatorInDate |
+						      NSISO8601DateFormatWithColonSeparatorInTime |
+						      NSISO8601DateFormatWithColonSeparatorInTimeZone |
+						      NSISO8601DateFormatWithFractionalSeconds;
+		}
+	});
+
+	return (dateFormatter);
+}
+
++ (NSISO8601DateFormatter *)_ocDateFormatterISO8601
+{
+	static NSISO8601DateFormatter *dateFormatter;
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		if ((dateFormatter = [NSISO8601DateFormatter new]) != nil)
+		{
+			dateFormatter.formatOptions = NSISO8601DateFormatWithInternetDateTime |
+						      NSISO8601DateFormatWithDashSeparatorInDate |
+						      NSISO8601DateFormatWithColonSeparatorInTime |
+						      NSISO8601DateFormatWithColonSeparatorInTimeZone;
+		}
+	});
+
+	return (dateFormatter);
+}
+
 + (NSDateFormatter *)_ocDateFormatterCompactLocalTimeZone
 {
 	static NSDateFormatter *dateFormatter;
@@ -83,7 +120,19 @@
 
 + (instancetype)dateParsedFromCompactUTCString:(NSString *)dateString error:(NSError **)error
 {
-	return ([[self _ocDateFormatterCompactUTC] dateFromString:dateString]);
+	NSDate *date;
+
+	date = [[self _ocDateFormatterCompactUTC] dateFromString:dateString];
+
+	if (date == nil) {
+		date = [[self _ocDateFormatterISO8601] dateFromString:dateString];
+	}
+
+	if (date == nil) {
+		date = [[self _ocDateFormatterISO8601WithFractionalSeconds] dateFromString:dateString];
+	}
+
+	return (date);
 }
 
 - (NSString *)compactUTCString
@@ -98,6 +147,18 @@
 	if (dateString.length >= 10)
 	{
 		return ([dateString substringToIndex:10]);
+	}
+
+	return (nil);
+}
+
+- (NSString *)compactISO8601String
+{
+	NSString *dateString = [[[self class] _ocDateFormatterISO8601] stringFromDate:self];
+
+	if (dateString.length >= 10)
+	{
+		return (dateString);
 	}
 
 	return (nil);

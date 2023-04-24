@@ -633,6 +633,10 @@
 		DCB0A46521B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */; };
 		DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */; };
 		DCB0A46D21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */; };
+		DCB330C629EF2F0F00BFF393 /* OCIdentity+DataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB330C429EF2F0F00BFF393 /* OCIdentity+DataItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCB330C729EF2F0F00BFF393 /* OCIdentity+DataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB330C529EF2F0F00BFF393 /* OCIdentity+DataItem.m */; };
+		DCB330DD29F142FB00BFF393 /* OCShareRole+OCDataItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB330DB29F142FB00BFF393 /* OCShareRole+OCDataItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCB330DE29F142FB00BFF393 /* OCShareRole+OCDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB330DC29F142FB00BFF393 /* OCShareRole+OCDataItem.m */; };
 		DCB4F6E728324A3A005AD181 /* OCVaultDriveList.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB4F6E528324A3A005AD181 /* OCVaultDriveList.h */; };
 		DCB4F6E828324A3A005AD181 /* OCVaultDriveList.m in Sources */ = {isa = PBXBuildFile; fileRef = DCB4F6E628324A3A005AD181 /* OCVaultDriveList.m */; };
 		DCB4F6EC28324B90005AD181 /* OCDataSourceKVO.h in Headers */ = {isa = PBXBuildFile; fileRef = DCB4F6EA28324B90005AD181 /* OCDataSourceKVO.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1659,6 +1663,10 @@
 		DCB0A46321B922A400FAC4E9 /* OCCoreConnectionStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreConnectionStatusSignalProvider.m; sourceTree = "<group>"; };
 		DCB0A46A21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreServerStatusSignalProvider.h; sourceTree = "<group>"; };
 		DCB0A46B21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreServerStatusSignalProvider.m; sourceTree = "<group>"; };
+		DCB330C429EF2F0F00BFF393 /* OCIdentity+DataItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCIdentity+DataItem.h"; sourceTree = "<group>"; };
+		DCB330C529EF2F0F00BFF393 /* OCIdentity+DataItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCIdentity+DataItem.m"; sourceTree = "<group>"; };
+		DCB330DB29F142FB00BFF393 /* OCShareRole+OCDataItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCShareRole+OCDataItem.h"; sourceTree = "<group>"; };
+		DCB330DC29F142FB00BFF393 /* OCShareRole+OCDataItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCShareRole+OCDataItem.m"; sourceTree = "<group>"; };
 		DCB4F6E528324A3A005AD181 /* OCVaultDriveList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCVaultDriveList.h; sourceTree = "<group>"; };
 		DCB4F6E628324A3A005AD181 /* OCVaultDriveList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCVaultDriveList.m; sourceTree = "<group>"; };
 		DCB4F6EA28324B90005AD181 /* OCDataSourceKVO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataSourceKVO.h; sourceTree = "<group>"; };
@@ -2101,6 +2109,8 @@
 			children = (
 				DC0BE5B028F80BBA00CE2101 /* OCShareRole.m */,
 				DC0BE5AF28F80BBA00CE2101 /* OCShareRole.h */,
+				DCB330DC29F142FB00BFF393 /* OCShareRole+OCDataItem.m */,
+				DCB330DB29F142FB00BFF393 /* OCShareRole+OCDataItem.h */,
 			);
 			path = Roles;
 			sourceTree = "<group>";
@@ -2771,6 +2781,8 @@
 			children = (
 				DCDD9B17222989E50052A001 /* OCIdentity.m */,
 				DCDD9B16222989E50052A001 /* OCIdentity.h */,
+				DCB330C529EF2F0F00BFF393 /* OCIdentity+DataItem.m */,
+				DCB330C429EF2F0F00BFF393 /* OCIdentity+DataItem.h */,
 				DC545E79203F7DD0006111FA /* OCUser.m */,
 				DC545E78203F7DD0006111FA /* OCUser.h */,
 				DCDD9B1B22298D050052A001 /* OCGroup.m */,
@@ -4398,6 +4410,7 @@
 				DC3AB1912808B3C400789435 /* OCItem+OCDataItem.h in Headers */,
 				DC8913642092088600028999 /* NSString+OCVersionCompare.h in Headers */,
 				DCF00BF527E28A77001F2AFC /* OCDataSourceSubscription+Internal.h in Headers */,
+				DCB330C629EF2F0F00BFF393 /* OCIdentity+DataItem.h in Headers */,
 				DCC8F9E62028556500EB6701 /* OCConnection.h in Headers */,
 				DC24F8E821E2B3EF00C9119C /* OCWaitConditionIssue.h in Headers */,
 				DC47E4E427A5820D0020E8EF /* GADeleted.h in Headers */,
@@ -4441,6 +4454,7 @@
 				DCC599F422EEE65700499B29 /* OCCore+Claims.h in Headers */,
 				DC2CD12622E84AC30099C665 /* OCItemPolicyProcessorVacuum.h in Headers */,
 				DC826680281FE66600F91F7D /* OCVFSTypes.h in Headers */,
+				DCB330DD29F142FB00BFF393 /* OCShareRole+OCDataItem.h in Headers */,
 				DC179CD1209475C20018DF7F /* UIImage+OCTools.h in Headers */,
 				DCB572AE2099EFC600B793CE /* OCDatabase+Schemas.h in Headers */,
 				DC07C29C2124526000B815A4 /* OCExtensionContext.h in Headers */,
@@ -5333,6 +5347,7 @@
 				DC6CC3102642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m in Sources */,
 				DCED67D327F1A48000686E4F /* OCDataTypes.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
+				DCB330C729EF2F0F00BFF393 /* OCIdentity+DataItem.m in Sources */,
 				DCE62EAE2771ED5700E3193F /* OCResourceImage.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,
 				DC8556F2204DEB9200189B9A /* OCXMLNode.m in Sources */,
@@ -5365,6 +5380,7 @@
 				DC434D0F20D68C3000740056 /* NSString+OCPath.m in Sources */,
 				DCC8F9F32028559600EB6701 /* OCItem.m in Sources */,
 				DCA35D4E24CF685B00DBE2B0 /* OCDiagnosticNode.m in Sources */,
+				DCB330DE29F142FB00BFF393 /* OCShareRole+OCDataItem.m in Sources */,
 				DCDD9B19222989E50052A001 /* OCIdentity.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
 				DC35969B2240EC0A00C4D6E6 /* OCQueryCondition+Item.m in Sources */,

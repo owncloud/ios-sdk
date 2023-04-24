@@ -31,6 +31,8 @@ OCDataItemType OCDataItemTypeView = @"view";
 OCDataItemType OCDataItemTypeBookmark = @"bookmark";
 OCDataItemType OCDataItemTypeItemPolicy = @"itemPolicy";
 OCDataItemType OCDataItemTypeShare = @"share";
+OCDataItemType OCDataItemTypeShareRole = @"shareRole";
+OCDataItemType OCDataItemTypeIdentity = @"identity";
 
 OCDataViewOption OCDataViewOptionCore = @"core";
 OCDataViewOption OCDataViewOptionListContentConfiguration = @"listContentConfiguration";

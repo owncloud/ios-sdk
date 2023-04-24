@@ -33,3 +33,4 @@
 @end
 
 OCViewProviderContextKey OCViewProviderContextKeyContentMode = @"contentMode";
+OCViewProviderContextKey OCViewProviderContextKeyUseCircular = @"useCircular";

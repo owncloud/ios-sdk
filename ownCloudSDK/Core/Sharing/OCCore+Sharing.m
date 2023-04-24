@@ -354,9 +354,9 @@
 
 	@synchronized(_shareRoles)
 	{
-		if (_shareRoles == nil)
+		if (_shareRoles.count == 0)
 		{
-			_shareRoles = [[NSMutableArray alloc] initWithObjects:
+			[_shareRoles addObjectsFromArray:@[
 				// # USERS & GROUPS
 				// ## Viewer
 				// - files, folders
@@ -496,8 +496,8 @@
 						       locations:OCLocationTypeFolder
 						      symbolName:@"pencil"
 						   localizedName:OCLocalized(@"Editor")
-					    localizedDescription:OCLocalized(@"Recipients can view, download, edit, delete and upload contents.")],
-			nil];
+					    localizedDescription:OCLocalized(@"Recipients can view, download, edit, delete and upload contents.")]
+			]];
 		}
 
 		roles = [_shareRoles filteredArrayUsingBlock:^BOOL(OCShareRole * _Nonnull role, BOOL * _Nonnull stop) {
