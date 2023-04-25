@@ -24,16 +24,14 @@
 #import "OCMacros.h"
 #import "NSString+OCPath.h"
 
-@interface OCItem ()
+@implementation OCItem
 {
 	OCLocation *_location;
 }
-@end
-
-@implementation OCItem
 
 @dynamic cloudStatus;
 @dynamic hasLocalAttributes;
+@dynamic parentPath;
 
 + (OCLocalID)generateNewLocalID
 {
@@ -316,6 +314,11 @@
 	_driveID = location.driveID;
 	_path = location.path;
 	_location = location;
+}
+
+- (OCPath)parentPath
+{
+	return (_path.parentPath);
 }
 
 #pragma mark - Thumbnails
@@ -881,6 +884,7 @@ OCItemPropertyName OCItemPropertyNameType = @"type";
 OCItemPropertyName OCItemPropertyNameDriveID = @"driveID";
 OCItemPropertyName OCItemPropertyNameLocationString = @"locationString";
 OCItemPropertyName OCItemPropertyNamePath = @"path";
+OCItemPropertyName OCItemPropertyNameParentPath = @"parentPath";
 OCItemPropertyName OCItemPropertyNameName = @"name";
 OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";
 OCItemPropertyName OCItemPropertyNameSize = @"size";

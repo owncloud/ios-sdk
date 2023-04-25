@@ -823,6 +823,7 @@
 			OCItemPropertyNameName : @"name",
 			OCItemPropertyNameDriveID : @"driveID",
 			OCItemPropertyNamePath : @"path",
+			OCItemPropertyNameParentPath : @"parentPath",
 			OCItemPropertyNameLocationString : @"locationString",
 
 			OCItemPropertyNameLocalRelativePath 	: @"localRelativePath",

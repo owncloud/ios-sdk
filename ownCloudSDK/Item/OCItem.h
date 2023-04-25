@@ -123,6 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCItem *remoteItem; //!< If .locallyModified==YES or .localRelativePath!=nil and a different version is available remotely (on the server), the item as retrieved from the server.
 
 @property(nullable,strong,nonatomic) OCPath path; //!< Path of the item on the server relative to root
+@property(nullable,readonly,nonatomic) OCPath parentPath; //!< Parent path of the item on the server relative to root. The parentPath of "/" is "/" (follows NSString.stringByDeletingLastPathComponent logic)
 @property(nullable,readonly,nonatomic) NSString *name; //!< Name of the item, derived from .path. (dynamic/ephermal)
 
 @property(nullable,strong) OCPath previousPath; //!< A previous path of the item, f.ex. before being moved (dynamic/ephermal)
@@ -243,6 +244,7 @@ extern OCItemPropertyName OCItemPropertyNameType; //!< Supported by OCQueryCondi
 extern OCItemPropertyName OCItemPropertyNameDriveID; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameLocationString; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNamePath; //!< Supported by OCQueryCondition SQLBuilder
+extern OCItemPropertyName OCItemPropertyNameParentPath; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameName; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameMIMEType; //!< Supported by OCQueryCondition SQLBuilder
 extern OCItemPropertyName OCItemPropertyNameTypeAlias; //!< Supported by OCQueryCondition SQLBuilder
