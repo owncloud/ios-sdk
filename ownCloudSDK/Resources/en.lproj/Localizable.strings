@@ -182,6 +182,9 @@
 "Custom" = "Custom";
 "Set detailed permissions" = "Set detailed permissions";
 
+/* Sharing */
+"Sharing requires an internet connection." = "Sharing requires an internet connection.";
+
 /* Drives */
 "Personal" = "Personal";
 "Shares" = "Shares";

@@ -37,6 +37,7 @@
 #import "OCHTTPDAVRequest.h"
 #import "NSString+OCPath.h"
 #import "NSURL+OCPrivateLink.h"
+#import "NSError+OCNetworkFailure.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -429,7 +430,11 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -633,7 +638,11 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -751,7 +760,11 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
