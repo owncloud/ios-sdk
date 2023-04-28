@@ -457,7 +457,7 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
 
 - (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)type location:(OCLocation *)location; //!< Returns the share roles available for this location and type. Returns nil if none are available.
-- (nullable OCShareRole *)matchingShareRoleForItem:(OCItem *)item share:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
+- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
 
 @end
 

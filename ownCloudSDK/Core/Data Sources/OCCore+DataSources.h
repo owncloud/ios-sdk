@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(copy,nullable,nonatomic) OCCoreShareJailQueryCustomizer shareJailQueryCustomizer; //!< If sharedWithMeAcceptedDataSource contents is provided by a query on the Shares Jail, this block is applied to customize its sorting/filtering.
 
+@property(class,readonly,nonatomic) NSComparator sharesSortComparator; //!< NSComparator sorting shares by name, then recipient
+
 #pragma mark - Special datasources (on-demand)
 // On-demand data sources require constant polling or other additional overhead - they are only updated when they have subscribers
 // Therefore subscriptions should not be "hoarded" on on-demand data sources, but only be kept around for as long as needed - and then terminated.

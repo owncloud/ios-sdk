@@ -229,6 +229,7 @@
 		case OCShareScopeItem:
 		case OCShareScopeItemWithReshares:
 		case OCShareScopeSubItems:
+			shareCategory = OCShareCategoryByMe;
 			if (item == nil)
 			{
 				OCLogError(@"item required for retrieval of shares with scope=%lu", scope);

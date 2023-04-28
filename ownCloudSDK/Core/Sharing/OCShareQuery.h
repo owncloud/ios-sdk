@@ -20,6 +20,7 @@
 #import "OCCoreQuery.h"
 #import "OCItem.h"
 #import "OCShare.h"
+#import "OCDataSourceArray.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -40,6 +41,8 @@ typedef void(^OCShareQueryChangesAvailableNotificationHandler)(OCShareQuery *que
 
 @property(nullable,copy) OCShareQueryChangesAvailableNotificationHandler initialPopulationHandler; //!< If set, this block is called when the query results have been initially populated with the first server response triggered by the query. Once the block was called, this property is set to nil.
 @property(nullable,copy) OCShareQueryChangesAvailableNotificationHandler changesAvailableNotificationHandler; //!< If set, this block is called whenever the .queryResults have changed.
+
+@property(readonly,nonatomic) OCDataSourceArray *dataSource; //!< Data source (created on demand) serving query results
 
 + (nullable instancetype)queryWithScope:(OCShareScope)scope item:(nullable OCItem *)item;
 

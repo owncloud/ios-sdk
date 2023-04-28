@@ -356,6 +356,9 @@
 	{
 		if (_shareRoles.count == 0)
 		{
+			// Roles as described in
+			// - https://github.com/owncloud/ocis/issues/4848#issuecomment-1283678879
+			// - https://github.com/owncloud/web/blob/master/packages/web-client/src/helpers/share/role.ts
 			[_shareRoles addObjectsFromArray:@[
 				// # USERS & GROUPS
 				// ## Viewer
@@ -514,7 +517,7 @@
 	return (roles);
 }
 
-- (nullable OCShareRole *)matchingShareRoleForItem:(OCItem *)item share:(OCShare *)share
+- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share
 {
 	NSArray<OCShareRole *> *roles = [self availableShareRolesForType:share.type location:share.itemLocation];
 	OCShareRole *customRole = nil;

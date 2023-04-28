@@ -20,17 +20,19 @@
 #import "OCShareQuery+Internal.h"
 #import "OCLogger.h"
 #import "OCDrive.h"
+#import "OCShare+OCDataItem.h"
+#import "OCCore+DataSources.h"
 
-@interface OCShareQuery ()
+@implementation OCShareQuery
 {
 	NSMutableDictionary <OCShareID, OCShare *> *_sharesByID;
 	NSMutableArray <OCShare *> *_shares;
 	NSArray <OCShare *> *_queryResults;
+
+	OCDataSourceArray *_dataSource;
 }
 
-@end
-
-@implementation OCShareQuery
+@dynamic dataSource;
 
 #pragma mark - Convenience initializers
 + (instancetype)queryWithScope:(OCShareScope)scope item:(OCItem *)item
@@ -89,6 +91,12 @@
 		if (updateBlock != nil)
 		{
 			updateBlock();
+		}
+
+		// Update dataSource (if exists)
+		if (_dataSource != nil)
+		{
+			[_dataSource setVersionedItems:[self->_shares sortedArrayUsingComparator:OCCore.sharesSortComparator]];
 		}
 	}
 	[self didChangeValueForKey:@"queryResults"];
@@ -287,6 +295,20 @@
 	}
 
 	return (queryResults);
+}
+
+#pragma mark - Data source
+- (OCDataSourceArray *)dataSource
+{
+	@synchronized(self)
+	{
+		if (_dataSource == nil)
+		{
+			_dataSource = [[OCDataSourceArray alloc] initWithItems:_queryResults];
+		}
+	}
+
+	return (_dataSource);
 }
 
 @end

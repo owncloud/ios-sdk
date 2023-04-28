@@ -48,6 +48,37 @@
 	return (_projectDrivesDataSource);
 }
 
+#pragma mark - Shared sort comparator
++ (NSComparator)sharesSortComparator
+{
+	static dispatch_once_t onceToken;
+	static NSComparator sharesSortComparator;
+
+	dispatch_once(&onceToken, ^{
+		sharesSortComparator =  [^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
+			NSString *name1, *name2;
+
+			name1 = share1.itemLocation.lastPathComponent;
+			name2 = share2.itemLocation.lastPathComponent;
+
+			if ([name1 isEqual:name2])
+			{
+				name1 = share1.recipient.displayName;
+				name2 = share2.recipient.displayName;
+			}
+
+			if ((name1 != nil) && (name2 != nil))
+			{
+				return ([name1 localizedCaseInsensitiveCompare:name2]);
+			}
+
+			return (NSOrderedDescending);
+		} copy];
+	});
+
+	return (sharesSortComparator);
+}
+
 #pragma mark - Shared with me
 /*
 		// Shared with user
@@ -138,20 +169,7 @@
 
 				_sharedWithMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
 					OCWLogDebug(@"SharedWithMe: %@", query.queryResults);
-					NSArray<OCShare *> *sortedShares = [query.queryResults sortedArrayUsingComparator:^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
-						NSString *name1, *name2;
-
-						name1 = share1.itemLocation.lastPathComponent;
-						name2 = share2.itemLocation.lastPathComponent;
-
-						if ((name1 != nil) && (name2 != nil))
-						{
-							return ([name1 localizedCaseInsensitiveCompare:name2]);
-						}
-
-						return (NSOrderedDescending);
-					}];
-					[[weakSelf _sharedWithMeDataSource] setVersionedItems:sortedShares];
+					[[weakSelf _sharedWithMeDataSource] setVersionedItems:[query.queryResults sortedArrayUsingComparator:OCCore.sharesSortComparator]];
 				};
 
 				startQuery = YES;
@@ -452,25 +470,7 @@
 					[primaryShares addObjectsFromArray:linkShares];
 
 					// Sort by name
-					NSComparator sharesComparator = ^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
-						NSString *name1, *name2;
-
-						name1 = share1.itemLocation.lastPathComponent;
-						name2 = share2.itemLocation.lastPathComponent;
-
-						if ([name1 isEqual:name2])
-						{
-							name1 = share1.recipient.displayName;
-							name2 = share2.recipient.displayName;
-						}
-
-						if ((name1 != nil) && (name2 != nil))
-						{
-							return ([name1 localizedCaseInsensitiveCompare:name2]);
-						}
-
-						return (NSOrderedDescending);
-					};
+					NSComparator sharesComparator = OCCore.sharesSortComparator;
 
 					[primaryShares sortUsingComparator:sharesComparator];
 					[flatShares sortUsingComparator:sharesComparator];
