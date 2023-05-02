@@ -292,57 +292,57 @@
 	{
 		if (_sharedWithMeAcceptedDataSource == nil)
 		{
-			if (self.useDrives)
-			{
-				// Provide contents of share jail drive
-				_sharedWithMeAcceptedDataSource = [[OCDataSourceComposition alloc] initWithSources:@[] applyCustomizations:nil];
-
-				[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
-					OCCore *core = (OCCore *)owner;
-					OCDataSourceComposition *dataSource = (OCDataSourceComposition *)source;
-
-					if (hasSubscribers)
-					{
-						if (core->_sharesJailQuery == nil)
-						{
-							OCQuery *query = [OCQuery queryForLocation:[[OCLocation alloc] initWithDriveID:OCDriveIDSharesJail path:@"/"]];
-							OCDataSource *queryResultsDataSource = query.queryResultsDataSource;
-							if (queryResultsDataSource != nil)
-							{
-								[dataSource addSources:@[ queryResultsDataSource ]];
-							}
-
-							core->_sharesJailQuery = query;
-
-							if (core->_shareJailQueryCustomizer != nil)
-							{
-								core->_shareJailQueryCustomizer(query);
-							}
-
-							[core startQuery:query];
-						}
-					}
-					else
-					{
-						OCQuery *query;
-
-						if ((query = core->_sharesJailQuery) != nil)
-						{
-							OCDataSource *queryResultsDataSource;
-
-							if ((queryResultsDataSource = query.queryResultsDataSource) != nil)
-							{
-								[dataSource removeSources:@[ queryResultsDataSource ]];
-							}
-
-							[core stopQuery:query];
-
-							core->_sharesJailQuery = nil;
-						}
-					}
-				} withOwner:self performInitial:NO];
-			}
-			else
+//			if (self.useDrives)
+//			{
+//				// Provide contents of share jail drive
+//				_sharedWithMeAcceptedDataSource = [[OCDataSourceComposition alloc] initWithSources:@[] applyCustomizations:nil];
+//
+//				[_sharedWithMeAcceptedDataSource addSubscriptionObserver:^(OCDataSource * _Nonnull source, id<NSObject>  _Nonnull owner, BOOL hasSubscribers) {
+//					OCCore *core = (OCCore *)owner;
+//					OCDataSourceComposition *dataSource = (OCDataSourceComposition *)source;
+//
+//					if (hasSubscribers)
+//					{
+//						if (core->_sharesJailQuery == nil)
+//						{
+//							OCQuery *query = [OCQuery queryForLocation:[[OCLocation alloc] initWithDriveID:OCDriveIDSharesJail path:@"/"]];
+//							OCDataSource *queryResultsDataSource = query.queryResultsDataSource;
+//							if (queryResultsDataSource != nil)
+//							{
+//								[dataSource addSources:@[ queryResultsDataSource ]];
+//							}
+//
+//							core->_sharesJailQuery = query;
+//
+//							if (core->_shareJailQueryCustomizer != nil)
+//							{
+//								core->_shareJailQueryCustomizer(query);
+//							}
+//
+//							[core startQuery:query];
+//						}
+//					}
+//					else
+//					{
+//						OCQuery *query;
+//
+//						if ((query = core->_sharesJailQuery) != nil)
+//						{
+//							OCDataSource *queryResultsDataSource;
+//
+//							if ((queryResultsDataSource = query.queryResultsDataSource) != nil)
+//							{
+//								[dataSource removeSources:@[ queryResultsDataSource ]];
+//							}
+//
+//							[core stopQuery:query];
+//
+//							core->_sharesJailQuery = nil;
+//						}
+//					}
+//				} withOwner:self performInitial:NO];
+//			}
+//			else
 			{
 				// Provide applicable results from sharedWithMe data source
 				_sharedWithMeAcceptedDataSource = [self _compositionDataSourceForShareState:OCShareStateAccepted];
