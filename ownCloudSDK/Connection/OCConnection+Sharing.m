@@ -433,7 +433,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -641,7 +641,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -763,7 +763,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an internet connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{

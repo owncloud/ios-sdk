@@ -183,7 +183,7 @@
 "Set detailed permissions" = "Set detailed permissions";
 
 /* Sharing */
-"Sharing requires an internet connection." = "Sharing requires an internet connection.";
+"Sharing requires an active connection." = "Sharing requires an active connection.";
 
 /* Drives */
 "Personal" = "Personal";
