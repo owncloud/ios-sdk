@@ -158,6 +158,9 @@
 "Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
 
 /* Share roles */
+"Invited persons" = "Invited persons";
+"Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
+
 "Viewer" = "Viewer";
 "Download and preview" = "Download and preview";
 "Download, preview and share" = "Download, preview and share";

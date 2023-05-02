@@ -444,9 +444,26 @@
 						      symbolName:@"gearshape.fill"
 						   localizedName:OCLocalized(@"Custom")
 					    localizedDescription:OCLocalized(@"Set detailed permissions")],
+			]];
 
+			// # LINKS
+			if (self.useDrives)
+			{
+				// ## Internal
+				// - files, folders
+				[_shareRoles addObjectsFromArray:@[
+					[[OCShareRole alloc] initWithType:OCShareRoleTypeInternal
+							       shareTypes:OCShareTypesMaskLink
+							     permissions:OCSharePermissionsMaskInternal
+						 customizablePermissions:OCSharePermissionsMaskNone
+							       locations:OCLocationTypeFile|OCLocationTypeFolder
+							      symbolName:@"person.fill"
+							   localizedName:OCLocalized(@"Invited persons")
+						    localizedDescription:OCLocalized(@"Only invited persons have access. Login required.")]
+				]];
+			}
 
-				// # LINKS
+			[_shareRoles addObjectsFromArray:@[
 				// ## Viewer
 				// - files, folders
 				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer

@@ -46,6 +46,7 @@ typedef NS_OPTIONS(NSInteger, OCShareTypesMask)
 typedef NS_OPTIONS(NSInteger, OCSharePermissionsMask)
 {
 	OCSharePermissionsMaskNone    	= 0,
+	OCSharePermissionsMaskInternal 	= 0,		// 0
 	OCSharePermissionsMaskRead    	= (1<<0),	// 1
 	OCSharePermissionsMaskUpdate  	= (1<<1),	// 2
 	OCSharePermissionsMaskCreate  	= (1<<2),	// 4

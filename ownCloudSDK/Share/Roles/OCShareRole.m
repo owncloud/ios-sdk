@@ -42,6 +42,7 @@
 
 @end
 
+OCShareRoleType OCShareRoleTypeInternal = @"internal";
 OCShareRoleType OCShareRoleTypeViewer = @"viewer";
 OCShareRoleType OCShareRoleTypeUploader = @"uploader";
 OCShareRoleType OCShareRoleTypeEditor = @"editor";

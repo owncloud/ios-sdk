@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+extern OCShareRoleType OCShareRoleTypeInternal;
 extern OCShareRoleType OCShareRoleTypeViewer;
 extern OCShareRoleType OCShareRoleTypeUploader;
 extern OCShareRoleType OCShareRoleTypeEditor;
