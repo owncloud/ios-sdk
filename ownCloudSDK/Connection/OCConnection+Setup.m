@@ -764,8 +764,9 @@
 
 									if ((urlString = OCTypedCast(linkDict[@"href"],NSString)) != nil)
 									{
-										if ((serverURL = [NSURL URLWithString:urlString]) != nil)
+										if ((serverURL = [NSURL URLWithString:urlString]) == nil)
 										{
+											OCLogDebug(@"Server instance href '%@' could not be converted into server URL.", urlString); // This debug message also serves to retain self in this block, to avoid the OCConnection from being deallocated before the completion handler is called
 										}
 									}
 
