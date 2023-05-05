@@ -62,7 +62,10 @@ typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 	OCItemPermissionCreateFolder	= (1<<5), 	//!< Code "K" 	Folder		can create folder (mkdir)
 	OCItemPermissionDelete		= (1<<6), 	//!< Code "D"	File or Folder	can delete file or folder
 	OCItemPermissionRename		= (1<<7), 	//!< Code "N"	File or Folder	can rename file or folder
-	OCItemPermissionMove		= (1<<8)	//!< Code "V"	File or Folder	can move file or folder
+	OCItemPermissionMove		= (1<<8),	//!< Code "V"	File or Folder	can move file or folder
+
+	// unimplemented in parsing at the time of writing (2023-05-05)
+	OCItemPermissionDeniable	= (1<<9)	//!< Code "Z"	File or Folder	can limit access (experimental as of 2023-05-05)
 } __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)
