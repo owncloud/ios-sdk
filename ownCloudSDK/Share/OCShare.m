@@ -379,6 +379,21 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, type: %@, category: %@, name: %@, itemLocation: %@, itemType: %@, itemMIMEType: %@, itemOwner: %@, creationDate: %@, expirationDate: %@, permissions: %@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, _identifier, typeAsString, categoryAsString, _name, _itemLocation, itemTypeString, _itemMIMEType, _itemOwner, _creationDate, _expirationDate, permissionsString, ((_password!=nil) ? @", password: [redacted]" : (_protectedByPassword ? @", protectedByPassword" : @"")), ((_token!=nil)?[NSString stringWithFormat:@", token: %@", _token] : @""), ((_url!=nil)?[NSString stringWithFormat:@", url: %@", _url] : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), ((_recipient!=nil) ? [NSString stringWithFormat:@", recipient: %@", _recipient] : @""), ((_accepted!=nil) ? [NSString stringWithFormat:@", accepted: %@", _accepted] : @""), ((_state!=nil) ? ([_state isEqual:OCShareStateAccepted] ? @", state: accepted" : ([_state isEqual:OCShareStateDeclined] ? @", state: declined" : [_state isEqual:OCShareStatePending] ? @", state: pending" : @", state: ?!")) : @"")]);
 }
 
+- (OCShareState)effectiveState
+{
+	if (_type == OCShareTypeRemote)
+	{
+		if (self.accepted.boolValue)
+		{
+			return (OCShareStateAccepted);
+		}
+
+		return (OCShareStatePending);
+	}
+
+	return (_state);
+}
+
 #pragma mark - Copying
 - (id)copyWithZone:(NSZone *)zone
 {

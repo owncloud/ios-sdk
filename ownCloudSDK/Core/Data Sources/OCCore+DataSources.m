@@ -162,15 +162,39 @@
 		{
 			if (_sharedWithMeQuery == nil)
 			{
-				__weak OCCore *weakSelf = self;
+				NSMutableArray<OCDataSource *> *sources = [NSMutableArray new];
+				OCDataSource *source;
+				dispatch_group_t synchronizationGroup = [self _sharedWithMeDataSource].synchronizationGroup;
 
 				_sharedWithMeQuery = [OCShareQuery queryWithScope:OCShareScopeSharedWithUser item:nil];
-				_sharedWithMeQuery.refreshInterval = 20;
+				_sharedWithMeQuery.refreshInterval = 10;
 
-				_sharedWithMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
-					OCWLogDebug(@"SharedWithMe: %@", query.queryResults);
-					[[weakSelf _sharedWithMeDataSource] setVersionedItems:[query.queryResults sortedArrayUsingComparator:OCCore.sharesSortComparator]];
-				};
+				if ((source = _sharedWithMeQuery.dataSource) != nil)
+				{
+					source.synchronizationGroup = synchronizationGroup;
+					[sources addObject:source];
+				}
+
+				if (_connection.capabilities.federatedSharingSupported)
+				{
+					_pendingCloudSharesQuery = [OCShareQuery queryWithScope:OCShareScopePendingCloudShares item:nil];
+					_pendingCloudSharesQuery.refreshInterval = 10;
+					if ((source = _pendingCloudSharesQuery.dataSource) != nil)
+					{
+						source.synchronizationGroup = synchronizationGroup;
+						[sources addObject:source];
+					}
+
+					_acceptedCloudSharesQuery = [OCShareQuery queryWithScope:OCShareScopeAcceptedCloudShares item:nil];
+					_acceptedCloudSharesQuery.refreshInterval = 10;
+					if ((source = _acceptedCloudSharesQuery.dataSource) != nil)
+					{
+						source.synchronizationGroup = synchronizationGroup;
+						[sources addObject:source];
+					}
+				}
+
+				[[self _sharedWithMeDataSource] setSources:sources];
 
 				startQuery = YES;
 			}
@@ -179,11 +203,21 @@
 		if (startQuery)
 		{
 			[self startQuery:_sharedWithMeQuery];
+
+			if (_acceptedCloudSharesQuery != nil)
+			{
+				[self startQuery:_acceptedCloudSharesQuery];
+			}
+
+			if (_pendingCloudSharesQuery != nil)
+			{
+				[self startQuery:_pendingCloudSharesQuery];
+			}
 		}
 	}
 	else
 	{
-		OCShareQuery *shareQuery = nil;
+		OCShareQuery *shareQuery = nil, *acceptedCloudShareQuery = nil, *pendingCloudShareQuery = nil;
 		OCQuery *sharesJailQuery = nil;
 
 		@synchronized(self)
@@ -194,16 +228,40 @@
 				_sharedWithMeQuery = nil;
 			}
 
+			if (_acceptedCloudSharesQuery != nil)
+			{
+				acceptedCloudShareQuery = _acceptedCloudSharesQuery;
+				_acceptedCloudSharesQuery = nil;
+			}
+
+			if (_pendingCloudSharesQuery != nil)
+			{
+				pendingCloudShareQuery = _pendingCloudSharesQuery;
+				_pendingCloudSharesQuery = nil;
+			}
+
 			if ((_sharesJailQuery != nil) && forceStop)
 			{
 				sharesJailQuery = _sharesJailQuery;
 				_sharesJailQuery = nil;
 			}
+
+			[_sharedWithMeDataSource setSources:@[]];
 		}
 
 		if (shareQuery != nil)
 		{
 			[self stopQuery:shareQuery];
+		}
+
+		if (acceptedCloudShareQuery != nil)
+		{
+			[self stopQuery:acceptedCloudShareQuery];
+		}
+
+		if (pendingCloudShareQuery != nil)
+		{
+			[self stopQuery:pendingCloudShareQuery];
 		}
 
 		if (sharesJailQuery != nil)
@@ -213,15 +271,21 @@
 	}
 }
 
-- (OCDataSourceArray *)_sharedWithMeDataSource
+- (OCDataSourceComposition *)_sharedWithMeDataSource
 {
 	@synchronized(self)
 	{
 		if (_sharedWithMeDataSource == nil)
 		{
-			_sharedWithMeDataSource = [[OCDataSourceArray alloc] initWithItems:nil];
+			_sharedWithMeDataSource = [[OCDataSourceComposition alloc] initWithSources:@[] applyCustomizations:nil];
 			_sharedWithMeDataSource.synchronizationGroup = dispatch_group_create(); // Ensure consistency of derived data sources
-			_sharedWithMeDataSource.trackItemVersions = YES; // Track item versions, so changes in status can be detected as actual changes
+
+			[_sharedWithMeDataSource setSortComparator:^NSComparisonResult(OCDataSource * _Nonnull source1, OCDataItemReference  _Nonnull itemRef1, OCDataSource * _Nonnull source2, OCDataItemReference  _Nonnull itemRef2) {
+				id obj1 = [source1 recordForItemRef:itemRef1 error:NULL].item;
+				id obj2 = [source2 recordForItemRef:itemRef2 error:NULL].item;
+
+				return (OCCore.sharesSortComparator(obj1, obj2));
+			}];
 		}
 	}
 
@@ -260,7 +324,7 @@
 
 				if ((share = OCTypedCast(record.item, OCShare)) != nil)
 				{
-					return ([share.state isEqual:shareState]);
+					return ([share.effectiveState isEqual:shareState]);
 				}
 			}
 
@@ -415,7 +479,7 @@
 				__weak OCCore *weakSelf = self;
 
 				_allSharedByMeQuery = [OCShareQuery queryWithScope:OCShareScopeSharedByUser item:nil];
-				_allSharedByMeQuery.refreshInterval = 20;
+				_allSharedByMeQuery.refreshInterval = 10;
 
 				_allSharedByMeQuery.changesAvailableNotificationHandler = ^(OCShareQuery * _Nonnull query) {
 					OCWLogDebug(@"SharedByMe: %@", query.queryResults);

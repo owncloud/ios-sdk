@@ -305,6 +305,7 @@
 		if (_dataSource == nil)
 		{
 			_dataSource = [[OCDataSourceArray alloc] initWithItems:_queryResults];
+			_dataSource.trackItemVersions = YES; // Track item versions, so changes in status can be detected as actual changes
 		}
 	}
 

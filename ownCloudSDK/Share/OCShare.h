@@ -121,6 +121,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
 @property(nullable,strong) NSNumber *accepted; //!< Federated share has been accepted
 
+@property(nullable,readonly,nonatomic) OCShareState effectiveState; //!< Unified state information for both remote and local shares
+
 @property(nullable,strong) NSArray<OCShare *> *otherItemShares; //!< Other shares targeting the same item (! not serialized !)
 
 #pragma mark - Convenience constructors

@@ -304,6 +304,7 @@
 {
 	OCProgress *progress;
 
+
 	progress = [self.connection makeDecisionOnShare:share accept:accept resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
@@ -315,7 +316,7 @@
 					[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil limitScope:@(OCShareScopeSharedWithUser)];
 				break;
 
-				case OCShareTypeRemote:
+				case OCShareTypeRemote: {
 					share.accepted = @(accept);
 
 					if (accept)
@@ -328,6 +329,23 @@
 						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopeAcceptedCloudShares)];
 						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopePendingCloudShares)];
 					}
+
+					// Accepting a share can change a share's path (f.ex. if an item with the same name already exists in the target folder), so directly perform a refresh
+					if (accept)
+					{
+						OCShareQuery *acceptedCloudSharesQuery = self->_acceptedCloudSharesQuery;
+						if (acceptedCloudSharesQuery != nil)
+						{
+							[self reloadQuery:acceptedCloudSharesQuery];
+						}
+
+						OCShareQuery *pendingCloudSharesQuery = self->_pendingCloudSharesQuery;
+						if (pendingCloudSharesQuery != nil)
+						{
+							[self reloadQuery:pendingCloudSharesQuery];
+						}
+					}
+				}
 				break;
 
 				default: break;

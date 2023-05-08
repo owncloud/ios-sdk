@@ -897,6 +897,28 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	OCMeasureEvent(coreQuery, @"query", @"Starting");
 
+	if ((query != nil) && self.useDrives)
+	{
+		// Adapt query location from; legacy root to personal folder
+		OCLocation *queryLocation;
+
+		if ((queryLocation = query.queryLocation) != nil)
+		{
+			// No drive ID? => legacy/OC10 location
+			if (queryLocation.driveID == nil)
+			{
+				// Find personal drive
+				OCDrive *personalDrive;
+
+				if ((personalDrive = self.personalDrive) != nil)
+				{
+					// Set personal drive ID from personal drive
+					queryLocation.driveID = personalDrive.identifier;
+				}
+			}
+		}
+	}
+
 	if (query != nil)
 	{
 		// Add query to list of queries
@@ -2136,6 +2158,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	if (driveID == nil) { return (nil); }
 
 	return ([self.vault driveWithIdentifier:driveID]);
+}
+
+- (OCDrive *)personalDrive
+{
+	return ([self.drives firstObjectMatching:^BOOL(OCDrive * _Nonnull drive) {
+		return ([drive.specialType isEqual:OCDriveSpecialTypePersonal]);
+	}]);
 }
 
 - (void)_handleDetachedDrivesUpdate:(NSNotification *)notification
