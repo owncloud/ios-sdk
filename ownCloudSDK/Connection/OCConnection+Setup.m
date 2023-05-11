@@ -422,13 +422,22 @@
 		}
 	}
 
-	// Query [url]/.well-known/webfinger?resource=https%3A%2F%2Furl - WebFinger https://github.com/owncloud/enterprise/issues/5579
-	NSURL *rootURL = url.rootURL;
+	// WEBFINGER
+	NSURL *webfingerRootURL = nil;
+	NSArray <OCAuthenticationMethodIdentifier> *allowedAuthenticationMethodIdentifiers = [self classSettingForOCClassSettingsKey:OCConnectionAllowedAuthenticationMethodIDs];
 
-	if (rootURL != nil)
+	// - check that OIDC is allowed - and only perform WebFinger if it is
+	if ((allowedAuthenticationMethodIdentifiers == nil) || // default: all allowed
+	    ((allowedAuthenticationMethodIdentifiers != nil) && [allowedAuthenticationMethodIdentifiers containsObject:OCAuthenticationMethodIdentifierOpenIDConnect])) // list provided, only continue if OIDC is part of it
+	{
+		webfingerRootURL = url.rootURL;
+	}
+
+	// - query [url]/.well-known/webfinger?resource=https%3A%2F%2Furl - WebFinger https://github.com/owncloud/enterprise/issues/5579
+	if (webfingerRootURL != nil)
 	{
 		NSURL *webFingerLookupURL = [[url URLByAppendingPathComponent:@".well-known/webfinger" isDirectory:NO] urlByAppendingQueryParameters:@{
-			@"resource" : rootURL.absoluteString
+			@"resource" : webfingerRootURL.absoluteString
 		} replaceExisting:YES];
 
 		NSURL *webFingerAccountMeURL = [[url URLByAppendingPathComponent:@".well-known/webfinger" isDirectory:NO] urlByAppendingQueryParameters:@{
@@ -448,7 +457,7 @@
 				{
 					// Example: {"subject":"acct:me@host","links":[{"rel":"http://openid.net/specs/connect/1.0/issuer","href":"https://ocis.ocis-wopi.latest.owncloud.works"}]}
 					// Require subject = rootURL.absoluteString
-					if ([jsonDict[@"subject"] isEqual:rootURL.absoluteString])
+					if ([jsonDict[@"subject"] isEqual:webfingerRootURL.absoluteString])
 					{
 						NSArray<NSDictionary<NSString*,id> *> *linksArray;
 
