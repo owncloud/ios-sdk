@@ -18,6 +18,8 @@
 
 #import "OCBookmark+DataItem.h"
 #import "OCDataTypes.h"
+#import "OCResource.h"
+#import "OCMacros.h"
 
 @implementation OCBookmark (DataItem)
 
@@ -33,7 +35,10 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@%@%@%@%@%@", self.name, self.url, self.originURL, self.userName, self.userDisplayName, self.authenticationDataID]);
+	OCResource *avatarResource = OCTypedCast(self.avatar, OCResource);
+	NSString *avatarVersion = ((avatarResource != nil) ? avatarResource.version : @"");
+
+	return ([NSString stringWithFormat:@"%@%@%@%@%@%@%@", self.name, self.url, self.originURL, self.userName, self.userDisplayName, self.authenticationDataID, avatarVersion]);
 }
 
 @end

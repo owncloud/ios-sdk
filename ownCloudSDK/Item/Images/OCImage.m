@@ -19,13 +19,10 @@
 #import "OCImage.h"
 #import "UIImage+OCTools.h"
 
-@interface OCImage ()
+@implementation OCImage
 {
 	NSMutableDictionary <NSValue *, UIImage *> *_imageByRequestedMaximumSize;
 }
-@end
-
-@implementation OCImage
 
 @synthesize url = _url;
 
@@ -44,7 +41,6 @@
 
 	return(self);
 }
-
 
 - (NSData *)data
 {

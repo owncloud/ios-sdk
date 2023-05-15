@@ -316,6 +316,7 @@
 		if (_bookmarksDatasource == nil)
 		{
 			_bookmarksDatasource = [[OCDataSourceArray alloc] initWithItems:_bookmarks];
+			_bookmarksDatasource.trackItemVersions = YES;
 		}
 	}
 	return (_bookmarksDatasource);
