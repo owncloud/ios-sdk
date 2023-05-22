@@ -32,6 +32,7 @@
 	}
 
 	request.version = item.eTag;
+	request.remoteVersion = item.eTag;
 	request.structureDescription = item.thumbnailSpecID;
 
 	request.reference = item;

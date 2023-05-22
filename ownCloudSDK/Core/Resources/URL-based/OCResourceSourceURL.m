@@ -1,13 +1,13 @@
 //
-//  OCResourceSourceURLItems.m
+//  OCResourceSourceURL.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 07.09.22.
-//  Copyright © 2022 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 22.05.23.
+//  Copyright © 2023 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2022, ownCloud GmbH.
+ * Copyright (C) 2023, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -16,56 +16,43 @@
  *
  */
 
-#import "OCResourceSourceURLItems.h"
-#import "OCResourceRequestURLItem.h"
+#import "OCResourceSourceURL.h"
+#import "OCCore.h"
+#import "OCConnection.h"
+#import "OCMacros.h"
+#import "OCResourceImage.h"
+#import "OCResourceText.h"
+#import "NSError+OCError.h"
 
-@implementation OCResourceSourceURLItems
-
-- (OCResourceType)type
-{
-	return (OCResourceTypeURLItem);
-}
-
-- (OCResourceSourceIdentifier)identifier
-{
-	return (OCResourceSourceIdentifierURLItem);
-}
+@implementation OCResourceSourceURL
 
 - (OCResourceSourcePriority)priorityForType:(OCResourceType)type
 {
 	return (OCResourceSourcePriorityRemote);
 }
 
-- (OCResourceQuality)qualityForRequest:(OCResourceRequest *)request
+- (void)provideResourceForRequest:(OCResourceRequest *)resourceRequest url:(NSURL *)url eTag:(OCFileETag)eTag resultHandler:(OCResourceSourceResultHandler)resultHandler
 {
-	if ([request isKindOfClass:OCResourceRequestURLItem.class] && [request.reference isKindOfClass:NSURL.class])
-	{
-		if (OCTypedCast(request.reference, NSURL) != nil)
-		{
-			return (OCResourceQualityNormal);
-		}
-	}
-
-	return (OCResourceQualityNone);
-}
-
-- (void)provideResourceForRequest:(OCResourceRequest *)request resultHandler:(OCResourceSourceResultHandler)resultHandler
-{
-	OCResourceRequestURLItem *urlItemRequest;
-	NSURL *url;
-
-	if (((urlItemRequest = OCTypedCast(request, OCResourceRequestURLItem)) != nil) &&
-	    ((url = OCTypedCast(urlItemRequest.reference, NSURL)) != nil))
+	if (url != nil)
 	{
 		OCConnection *connection;
 
 		if ((connection = self.core.connection) != nil)
 		{
 			NSProgress *progress = nil;
+			OCResource *existingResource = resourceRequest.resource;
+			OCFileETag existingETag = existingResource.remoteVersion;
 
 			OCHTTPRequest *httpRequest = [OCHTTPRequest requestWithURL:url];
-			httpRequest.requiredSignals = request.waitForConnectivity ? connection.actionSignals : connection.propFindSignals;
+			httpRequest.requiredSignals = resourceRequest.waitForConnectivity ? connection.actionSignals : connection.propFindSignals;
 			httpRequest.redirectPolicy = OCHTTPRequestRedirectPolicyAllowSameHost;
+
+			if (existingETag != nil)
+			{
+				[httpRequest addHeaderFields:@{
+					@"If-None-Match" : existingETag
+				}];
+			}
 
 			progress = [connection sendRequest:httpRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 				if (error != nil)
@@ -77,10 +64,12 @@
 					NSString *contentType = response.contentType;
 					OCResource *returnResource = nil;
 
+					resourceRequest.remoteVersion = response.headerFields[OCHTTPHeaderFieldNameETag]; // propagate ETag to resource init calls
+
 					if ([contentType hasPrefix:@"image/"])
 					{
 						// Image
-						OCResourceImage *resource = [[OCResourceImage alloc] initWithRequest:urlItemRequest];
+						OCResourceImage *resource = [[OCResourceImage alloc] initWithRequest:resourceRequest];
 
 						resource.data = response.bodyData;
 
@@ -90,7 +79,7 @@
 					if ([contentType hasPrefix:@"text/"])
 					{
 						// Text
-						OCResourceText *resource = [[OCResourceText alloc] initWithRequest:urlItemRequest];
+						OCResourceText *resource = [[OCResourceText alloc] initWithRequest:resourceRequest];
 
 						resource.text = [response bodyAsStringWithFallbackEncoding:NSUTF8StringEncoding]; // takes encoding passed in Content-Type into account, defaults to UTF-8
 
@@ -100,13 +89,24 @@
 					if (returnResource == nil)
 					{
 						// Data
-						returnResource = [[OCResource alloc] initWithRequest:urlItemRequest];
+						returnResource = [[OCResource alloc] initWithRequest:resourceRequest];
 					}
 
 					returnResource.quality = OCResourceQualityNormal;
 					returnResource.mimeType = contentType;
 
 					resultHandler(nil, returnResource);
+				}
+				else if (response.status.code == OCHTTPStatusCodeNOT_MODIFIED)
+				{
+					// Remote URL resource has not been modified (If-None-Match fulfilled)
+					//
+					// Passing back no resource since the existing resource already is identical:
+					// - considered passing back the existing resource with an updated version, but this
+					//   would likely only create unnecessary overhead for storing the same data again and
+					//   sending out updates
+					// - resource job processing should complete regardless because the result handler was called
+					resultHandler(nil, nil);
 				}
 				else if (response.status.code == OCHTTPStatusCodeNOT_FOUND)
 				{
@@ -118,7 +118,7 @@
 				}
 			}];
 
-			request.job.cancellationHandler = ^{
+			resourceRequest.job.cancellationHandler = ^{
 				[progress cancel];
 			};
 
@@ -130,5 +130,3 @@
 }
 
 @end
-
-OCResourceSourceIdentifier OCResourceSourceIdentifierURLItem = @"core.urlItem";

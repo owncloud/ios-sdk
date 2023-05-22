@@ -62,7 +62,7 @@
 				OCAvatar *avatar = [[OCAvatar alloc] init];
 
 				avatar.userIdentifier = user.userIdentifier;
-				avatar.eTag = response.headerFields[@"ETag"];
+				avatar.eTag = response.headerFields[OCHTTPHeaderFieldNameETag];
 				avatar.mimeType = response.contentType;
 				avatar.data = response.bodyData;
 				avatar.timestamp = [NSDate new];

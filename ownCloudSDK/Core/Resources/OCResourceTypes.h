@@ -40,7 +40,8 @@ typedef NS_ENUM(NSInteger, OCResourceQuality)
 
 typedef NSString* OCResourceType NS_TYPED_ENUM; //!< Type of resource, f.ex. thumbnail or avatar
 typedef NSString* OCResourceIdentifier; //!< An identifier that identifies the resource, f.ex. the file ID or user name
-typedef NSString* OCResourceVersion; //!< A string that can be used to distinguish versions (throug equality comparison), f.ex. ETags or checksums
+typedef NSString* OCResourceVersion; //!< A string that can be used to distinguish versions (through equality comparison - *this is the version that counts to detect changes*), f.ex. checksums, timeframe-specific values to limit request frequency or even ETags
+typedef NSString* OCResourceRemoteVersion; //!< A string provided by a remote location indicating its version of the resource, f.ex. ETags, purely for use cases to improve request-efficiency (f.ex. via If-Match headers)
 typedef NSString* OCResourceStructureDescription; //!< A string describing the structure properties of the resource that can affect resource generation or return, such as f.ex. the MIME type (which can change after a rename, without causing ID or version to change)
 typedef NSString* OCResourceMetadata; //!< A resource-specific string with metadata on the resource's data
 

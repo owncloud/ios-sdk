@@ -1,8 +1,8 @@
 //
-//  OCResourceSourceDriveItems.h
+//  OCResourceSourceURLItems.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 12.04.22.
+//  Created by Felix Schwarz on 07.09.22.
 //  Copyright © 2022 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,14 +16,14 @@
  *
  */
 
-#import "OCResourceSource.h"
+#import "OCResourceSourceURL.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface OCResourceSourceDriveItems : OCResourceSource
+@interface OCResourceSourceURLItems : OCResourceSourceURL
 
 @end
 
-extern OCResourceSourceIdentifier OCResourceSourceIdentifierDriveItem;
+extern OCResourceSourceIdentifier OCResourceSourceIdentifierURLItem;
 
 NS_ASSUME_NONNULL_END

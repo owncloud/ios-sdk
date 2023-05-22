@@ -699,6 +699,7 @@ OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID = @"Original-Reques
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameETag = @"ETag";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination = @"Destination";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite = @"Overwrite";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNamePrefer = @"Prefer";

@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCResourceType type;
 @property(strong) OCResourceIdentifier identifier;
 @property(strong,nullable) OCResourceVersion version;
+@property(strong,nullable) OCResourceRemoteVersion remoteVersion;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
 @property(strong,nullable) OCResourceSourceIdentifier originSourceIdentifier; //!< Identifier of the source the resource originated from (optional, NOT serialized)

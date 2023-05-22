@@ -715,6 +715,8 @@
 		DCD038A02542CA4500F97534 /* NSString+OCClassSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD0389E2542CA4500F97534 /* NSString+OCClassSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD038A12542CA4500F97534 /* NSString+OCClassSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD0389F2542CA4500F97534 /* NSString+OCClassSettings.m */; };
 		DCD039442544D17E00F97534 /* class-settings-sdk in CopyFiles */ = {isa = PBXBuildFile; fileRef = DCD039432544D17E00F97534 /* class-settings-sdk */; };
+		DCD09E3C2A1B573100BFF393 /* OCResourceSourceURL.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD09E3A2A1B573100BFF393 /* OCResourceSourceURL.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCD09E3D2A1B573100BFF393 /* OCResourceSourceURL.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD09E3B2A1B573100BFF393 /* OCResourceSourceURL.m */; };
 		DCD2D40322F059190071FB8F /* OCClassSettingsUserPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = DCD2D40122F059190071FB8F /* OCClassSettingsUserPreferences.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCD2D40422F059190071FB8F /* OCClassSettingsUserPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD2D40222F059190071FB8F /* OCClassSettingsUserPreferences.m */; };
 		DCD2D42322F180EF0071FB8F /* ItemPolicyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD2D42222F180EF0071FB8F /* ItemPolicyTests.m */; };
@@ -1751,6 +1753,8 @@
 		DCD0389E2542CA4500F97534 /* NSString+OCClassSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCClassSettings.h"; sourceTree = "<group>"; };
 		DCD0389F2542CA4500F97534 /* NSString+OCClassSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCClassSettings.m"; sourceTree = "<group>"; };
 		DCD039432544D17E00F97534 /* class-settings-sdk */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "class-settings-sdk"; path = "doc/class-settings-sdk"; sourceTree = "<group>"; };
+		DCD09E3A2A1B573100BFF393 /* OCResourceSourceURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceURL.h; sourceTree = "<group>"; };
+		DCD09E3B2A1B573100BFF393 /* OCResourceSourceURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceSourceURL.m; sourceTree = "<group>"; };
 		DCD2D40122F059190071FB8F /* OCClassSettingsUserPreferences.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsUserPreferences.h; sourceTree = "<group>"; };
 		DCD2D40222F059190071FB8F /* OCClassSettingsUserPreferences.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsUserPreferences.m; sourceTree = "<group>"; };
 		DCD2D42222F180EF0071FB8F /* ItemPolicyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ItemPolicyTests.m; sourceTree = "<group>"; };
@@ -3951,6 +3955,17 @@
 			path = DAVResponse;
 			sourceTree = "<group>";
 		};
+		DCD09E392A1B56E100BFF393 /* URL-based */ = {
+			isa = PBXGroup;
+			children = (
+				DCD09E3B2A1B573100BFF393 /* OCResourceSourceURL.m */,
+				DCD09E3A2A1B573100BFF393 /* OCResourceSourceURL.h */,
+				DCEAF0432805B7C900980B6D /* DriveItems */,
+				DC0CE19328C8904E009ABDFB /* URLItems */,
+			);
+			path = "URL-based";
+			sourceTree = "<group>";
+		};
 		DCD2D40022F058FC0071FB8F /* User Preferences */ = {
 			isa = PBXGroup;
 			children = (
@@ -4033,8 +4048,7 @@
 				DC41C79E25EA60D20074F23B /* Request */,
 				DC41C79D25EA60C30074F23B /* Resource */,
 				DC41C7D925EA62B20074F23B /* Avatars */,
-				DCEAF0432805B7C900980B6D /* DriveItems */,
-				DC0CE19328C8904E009ABDFB /* URLItems */,
+				DCD09E392A1B56E100BFF393 /* URL-based */,
 				DC41C7B725EA62240074F23B /* Thumbnails */,
 			);
 			path = Resources;
@@ -4304,6 +4318,7 @@
 				DC27A1A020CBE8BD008ACB6C /* OCCore+FileProvider.h in Headers */,
 				DC72E4322063DD7600189B9A /* OCClassSettingsFlatSourcePropertyList.h in Headers */,
 				DCC4F3F327D756C300ABF4C9 /* OCDataTypes.h in Headers */,
+				DCD09E3C2A1B573100BFF393 /* OCResourceSourceURL.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DC9B4FD52941FF630037F8F8 /* OCCertificateStoreRecord.h in Headers */,
 				DC826665281AC59D00F91F7D /* OCVFSCore.h in Headers */,
@@ -5287,6 +5302,7 @@
 				DC434D0A20D5AA9E00740056 /* OCCore+CommandCreateFolder.m in Sources */,
 				DC6ABF742534683800689C7B /* OCExtension+HostSimulation.m in Sources */,
 				DC47E4D527A5820D0020E8EF /* GADeleted.m in Sources */,
+				DCD09E3D2A1B573100BFF393 /* OCResourceSourceURL.m in Sources */,
 				DC47E4EB27A5820D0020E8EF /* GAODataErrorDetail.m in Sources */,
 				DCEAA0B225CEB7290017F99B /* OCLockManager.m in Sources */,
 				DCF1C6902631C296004D8B0F /* OCMeasurementEvent.m in Sources */,

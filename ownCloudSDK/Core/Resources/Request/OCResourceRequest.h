@@ -62,6 +62,7 @@ typedef NSString* OCResourceRequestGroupIdentifier;
 @property(assign) OCResourceQuality minimumQuality; //!< Require minimum quality for requested resource. Allows to f.ex. exclude placeholders from being returned. This filtering could also take place via resource.quality, but memory + CPU cycles would be wasted that way. Defaults to OCResourceQualityFallback.
 
 @property(strong,nullable) OCResourceVersion version;
+@property(strong,nullable) OCResourceRemoteVersion remoteVersion;
 @property(strong,nullable) OCResourceStructureDescription structureDescription;
 
 @property(assign) CGSize maxPointSize; 	//!< Maximum size in points on screen

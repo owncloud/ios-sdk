@@ -29,6 +29,7 @@
 		_identifier = request.identifier;
 
 		_version = request.version;
+		_remoteVersion = request.remoteVersion;
 		_structureDescription = request.structureDescription;
 	}
 
@@ -62,6 +63,7 @@
 	[coder encodeObject:_type forKey:@"type"];
 	[coder encodeObject:_identifier forKey:@"identifier"];
 	[coder encodeObject:_version forKey:@"version"];
+	[coder encodeObject:_remoteVersion forKey:@"remoteVersion"];
 	[coder encodeObject:_structureDescription forKey:@"structureDescription"];
 
 	[coder encodeInteger:_quality forKey:@"quality"];
@@ -85,6 +87,7 @@
 		_type = [coder decodeObjectOfClass:NSString.class forKey:@"type"];
 		_identifier = [coder decodeObjectOfClass:NSString.class forKey:@"identifier"];
 		_version = [coder decodeObjectOfClass:NSString.class forKey:@"version"];
+		_remoteVersion = [coder decodeObjectOfClass:NSString.class forKey:@"remoteVersion"];
 		_structureDescription = [coder decodeObjectOfClass:NSString.class forKey:@"structureDescription"];
 
 		_quality = [coder decodeIntegerForKey:@"quality"];

@@ -169,6 +169,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCResourceManager.h>
 #import <ownCloudSDK/OCResourceManagerJob.h>
 #import <ownCloudSDK/OCResourceSource.h>
+#import <ownCloudSDK/OCResourceSourceURL.h>
 #import <ownCloudSDK/OCResourceSourceStorage.h>
 #import <ownCloudSDK/OCResourceRequest.h>
 #import <ownCloudSDK/OCResourceRequestImage.h>
