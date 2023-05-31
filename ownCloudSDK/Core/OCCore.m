@@ -1734,6 +1734,72 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (trackingObject);
 }
 
+- (OCCoreItemTracking)trackItemWithCondition:(OCQueryCondition *)queryCondition trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+{
+	NSObject *trackingObject = [NSObject new];
+	__weak NSObject *weakTrackingObject = trackingObject;
+	__weak OCCore *weakSelf = self;
+
+	// Detect unnormalized path
+	if (queryCondition == nil)
+	{
+		trackingHandler(OCError(OCErrorInsufficientParameters), nil, YES);
+		return (nil);
+	}
+
+	[self queueBlock:^{
+		NSError *error = nil;
+		OCQuery *query = nil;
+		NSObject *trackingObject = weakTrackingObject;
+		__block BOOL isFirstInvocation = YES;
+		OCCore *core = weakSelf;
+
+		if (trackingObject == nil)
+		{
+			return;
+		}
+
+		if (core == nil)
+		{
+			trackingHandler(OCError(OCErrorInternal), nil, YES);
+			return;
+		}
+
+		query = [OCQuery queryWithCondition:queryCondition inputFilter:nil];
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if (weakTrackingObject != nil)
+			{
+				if ((query.state == OCQueryStateContentsFromCache) || (query.state == OCQueryStateIdle))
+				{
+					trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+					isFirstInvocation = NO;
+				}
+			}
+		};
+
+		if (query != nil)
+		{
+			__weak OCCore *weakCore = core;
+			__weak OCQuery *weakQuery = query;
+
+			[core startQuery:query];
+
+			// Stop query as soon as trackingObject is deallocated
+			[OCDeallocAction addAction:^{
+				OCCore *core = weakCore;
+				OCQuery *query = weakQuery;
+
+				if ((core != nil) && (query != nil))
+				{
+					[core stopQuery:query];
+				}
+			} forDeallocationOfObject:trackingObject];
+		}
+	}];
+
+	return (trackingObject);
+}
+
 - (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
 	__block OCItem *cachedItem = nil;

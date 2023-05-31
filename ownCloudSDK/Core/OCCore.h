@@ -362,6 +362,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 #pragma mark - Item lookup and information
 - (nullable OCCoreItemTracking)trackItemAtLocation:(OCLocation *)location trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
+- (nullable OCCoreItemTracking)trackItemWithCondition:(OCQueryCondition *)queryCondition trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Like -trackItemAtLocation:trackingHandler:, but backed by a query condition. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking.
 
 - (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified location from the cache.
 - (void)cachedItemAtLocation:(OCLocation *)location resultHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))resultHandler; //!< If one exists, returns the item at the specified location from the cache.
