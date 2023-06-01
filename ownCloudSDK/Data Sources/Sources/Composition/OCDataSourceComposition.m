@@ -45,7 +45,6 @@
 #pragma mark - Composition
 @interface OCDataSourceComposition ()
 {
-	NSMutableArray<OCDataItemReference> *_combinedItemReferences;
 	NSMutableArray<OCDataSourceCompositionRecord *> *_sourceRecords;
 
 	NSMapTable<OCDataItemReference, OCDataSourceCompositionRecord *> *_compositionRecordByItemReference;
@@ -76,7 +75,6 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		_combinedItemReferences = [NSMutableArray new];
 		_sourceRecords = [NSMutableArray new];
 
 		_compositionQueue = OCDataSourceComposition.sharedCompositionQueue;
@@ -241,6 +239,7 @@
 
 	@synchronized(_sourceRecords)
 	{
+		_sources = sources;
 		[_sourceRecords setArray:newSourceRecords];
 	}
 
