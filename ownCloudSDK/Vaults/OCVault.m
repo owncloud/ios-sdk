@@ -163,7 +163,7 @@
 	if (OCVault.hostHasFileProvider)
 	{
 		dispatch_once(&onceToken, ^{
-			storageRootURL = NSFileProviderManager.defaultManager.documentStorageURL;
+			storageRootURL = NSFileProviderManager.defaultManager.documentStorageURL.URLByStandardizingPath;
 		});
 
 		return (storageRootURL);
@@ -1115,7 +1115,7 @@
 + (nullable OCVaultLocation *)locationForURL:(NSURL *)url
 {
 	OCVaultLocation *location = nil;
-	NSString *urlPath = url.path;
+	NSString *urlPath = url.URLByStandardizingPath.path;
 	NSString *storageRootPath = OCVault.storageRootURL.path.normalizedDirectoryPath;
 
 	if (![urlPath hasPrefix:storageRootPath])
