@@ -38,6 +38,9 @@ typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
 #pragma mark - PKCE support
 @property(strong,nullable) OCPKCE *pkce; //!< pre-configured PKCE object to use for Proof Key for Code Exchange
 
+#pragma mark - State
+@property(strong,nullable) NSString *state; //!< pre-filled UUID string to use as state parameter (specification: https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-00#section-4.1.1.3)
+
 #pragma mark - Subclassing points
 - (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options;
 - (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options;

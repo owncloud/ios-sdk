@@ -162,6 +162,16 @@ OCAuthenticationMethodAutoRegister
 	});
 }
 
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		self.state = NSUUID.UUID.UUIDString;
+	}
+
+	return (self);
+}
+
 #pragma mark - Identification
 + (OCAuthenticationMethodType)type
 {
@@ -383,6 +393,8 @@ OCAuthenticationMethodAutoRegister
 			@"client_id" 	  	 : [self clientID],
 			@"redirect_uri"   	 : [self redirectURIForConnection:connection],
 
+			@"state"		 : (self.state != nil) ? self.state : ((NSString *)NSNull.null),
+
 			// OAuth2 PKCE
 			@"code_challenge" 	 : (self.pkce.codeChallenge != nil) ? self.pkce.codeChallenge : ((NSString *)NSNull.null),
 			@"code_challenge_method" : (self.pkce.method != nil) ? self.pkce.method : ((NSString *)NSNull.null),
@@ -402,12 +414,32 @@ OCAuthenticationMethodAutoRegister
 				OCLogDebug(@"Auth session returned with callbackURL=%@, error=%@", OCLogPrivate(callbackURL), error);
 
 				// Handle authentication session result
+				if ((error == nil) && (self.state != nil))
+				{
+					// Verify "state" requirements from https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-00#name-authorization-response
+					NSString *returnedState;
+
+					if ((returnedState = callbackURL.queryParameters[@"state"]) != nil)
+					{
+						if (![returnedState isEqual:self.state])
+						{
+							// Returned "state" differs from the "state" that was sent
+							error = OCError(OCErrorAuthorizationFailed);
+						}
+					}
+					else
+					{
+						// If "state" was sent with the authorization request, it is REQUIRED to be returned
+						error = OCError(OCErrorAuthorizationFailed);
+					}
+				}
+
 				if (error == nil)
 				{
 					NSString *authorizationCode;
 
 					// Obtain Authorization Code
-					if ((authorizationCode = [callbackURL queryParameters][@"code"]) != nil)
+					if ((authorizationCode = callbackURL.queryParameters[@"code"]) != nil)
 					{
 						OCLogDebug(@"Auth session concluded with authorization code: %@", OCLogPrivate(authorizationCode));
 
